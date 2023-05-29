@@ -1,0 +1,16 @@
+running develop
+running egg_info
+writing my_robot_controller.egg-info/PKG-INFO
+writing dependency_links to my_robot_controller.egg-info/dependency_links.txt
+writing entry points to my_robot_controller.egg-info/entry_points.txt
+writing requirements to my_robot_controller.egg-info/requires.txt
+writing top-level names to my_robot_controller.egg-info/top_level.txt
+reading manifest file 'my_robot_controller.egg-info/SOURCES.txt'
+writing manifest file 'my_robot_controller.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/my_robot_controller/lib/python3.8/site-packages/site.py
+Creating /home/utilizador/charmie_ws/install/my_robot_controller/lib/python3.8/site-packages/my-robot-controller.egg-link (link to .)
+Installing test_node script to /home/utilizador/charmie_ws/install/my_robot_controller/lib/my_robot_controller
+
+Installed /home/utilizador/charmie_ws/build/my_robot_controller
+running install_data

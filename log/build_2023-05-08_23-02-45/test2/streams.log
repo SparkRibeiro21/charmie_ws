@@ -1,0 +1,22 @@
+[0.997s] Invoking command in '/home/utilizador/charmie_ws/src/test2': PYTHONPATH=/home/utilizador/charmie_ws/build/test2/prefix_override:/home/utilizador/charmie_ws/install/test2/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/test2 build --build-base /home/utilizador/charmie_ws/build/test2/build install --record /home/utilizador/charmie_ws/build/test2/install.log --install-scripts $base/lib/test2 --single-version-externally-managed
+[1.224s] running egg_info
+[1.225s] writing ../../build/test2/test2.egg-info/PKG-INFO
+[1.225s] writing dependency_links to ../../build/test2/test2.egg-info/dependency_links.txt
+[1.225s] writing entry points to ../../build/test2/test2.egg-info/entry_points.txt
+[1.225s] writing requirements to ../../build/test2/test2.egg-info/requires.txt
+[1.226s] writing top-level names to ../../build/test2/test2.egg-info/top_level.txt
+[1.261s] reading manifest file '../../build/test2/test2.egg-info/SOURCES.txt'
+[1.262s] writing manifest file '../../build/test2/test2.egg-info/SOURCES.txt'
+[1.262s] running build
+[1.262s] running build_py
+[1.263s] running install
+[1.263s] running install_lib
+[1.265s] running install_data
+[1.265s] running install_egg_info
+[1.267s] removing '/home/utilizador/charmie_ws/install/test2/lib/python3.8/site-packages/test2-0.0.0-py3.8.egg-info' (and everything under it)
+[1.267s] Copying ../../build/test2/test2.egg-info to /home/utilizador/charmie_ws/install/test2/lib/python3.8/site-packages/test2-0.0.0-py3.8.egg-info
+[1.268s] running install_scripts
+[1.287s] Installing listener script to /home/utilizador/charmie_ws/install/test2/lib/test2
+[1.287s] Installing talker script to /home/utilizador/charmie_ws/install/test2/lib/test2
+[1.287s] writing list of installed files to '/home/utilizador/charmie_ws/build/test2/install.log'
+[1.332s] Invoked command in '/home/utilizador/charmie_ws/src/test2' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/test2/prefix_override:/home/utilizador/charmie_ws/install/test2/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/test2 build --build-base /home/utilizador/charmie_ws/build/test2/build install --record /home/utilizador/charmie_ws/build/test2/install.log --install-scripts $base/lib/test2 --single-version-externally-managed
