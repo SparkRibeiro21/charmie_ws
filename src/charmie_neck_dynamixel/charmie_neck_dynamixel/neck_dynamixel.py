@@ -75,6 +75,11 @@ DXL_MOVING_STATUS_THRESHOLD = 20  # Dynamixel moving status threshold
 DEGREES_TO_SERVO_TICKS_CONST = 11.3777292
 SERVO_TICKS_TO_DEGREES_CONST = 0.087891
 
+MAX_PAN_ANGLE = 270
+MIN_PAN_ANGLE = 90
+MAX_TILT_ANGLE = 235
+MIN_TILT_ANGLE = 120
+
 pan = 2048
 tilt = 2048
 
@@ -127,33 +132,56 @@ class NeckNode(Node):
             tilt_corr = tilt
         
         # print("PAN = " + str(pan) + " TILT = " + str(tilt) + "PAN_F = " + str(pan_corr) + " TILT_F = " + str(tilt_corr))
-        print("PAN = ", pan, " TILT = ", tilt, " PAN_F = ", pan_corr, " TILT_F = ", tilt_corr)
+        # print("PAN = ", pan, " TILT = ", tilt, " PAN_F = ", pan_corr, " TILT_F = ", tilt_corr)
+        print("PAN_F = ", int(pan_corr * SERVO_TICKS_TO_DEGREES_CONST + 0.5), " TILT_F = ", int(tilt_corr * SERVO_TICKS_TO_DEGREES_CONST + 0.5))
 
     def neck_coordinates_callback(self, coords: Pose2D):
 
-        pan = int(coords.x * 11.3777292 + 0.5)
-        tilt = int(coords.y * 11.3777292 + 0.5)
-
+        # pan = int(coords.x * 11.3777292 + 0.5)
+        # tilt = int(coords.y * 11.3777292 + 0.5)
 
         print("Received: pan =", coords.x, " tilt = ", coords.y)
-        print("Converted: pan =", pan, " tilt = ", tilt)
-        
-        dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_GOAL_POSITION, pan)
-        if dxl_comm_result != COMM_SUCCESS:
-            print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-        elif dxl_error != 0:
-            print("%s" % packetHandler.getRxPacketError(dxl_error))
+        # print("Converted: pan =", pan, " tilt = ", tilt)
 
-        dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_GOAL_POSITION, tilt)
-        if dxl_comm_result != COMM_SUCCESS:
-            print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-        elif dxl_error != 0:
-            print("%s" % packetHandler.getRxPacketError(dxl_error))
+        move_neck(coords.x, coords.y)
 
 
+    def neck_error_callback(self, error: Pose2D):
+        print(error)
+        k_e = 0.5
+        print(pan_corr)
 
-    def neck_error_callback(self, coords: Pose2D):
+        move_neck((pan_corr * SERVO_TICKS_TO_DEGREES_CONST) - (error.x*k_e), (tilt_corr * SERVO_TICKS_TO_DEGREES_CONST) - (error.y*k_e))
         pass
+
+
+def move_neck(p, t):
+    print(p,t)
+
+    if p > MAX_PAN_ANGLE:
+        p = MAX_PAN_ANGLE
+    if p < MIN_PAN_ANGLE:
+        p = MIN_PAN_ANGLE
+
+    if t > MAX_TILT_ANGLE:
+        t = MAX_TILT_ANGLE
+    if t < MIN_TILT_ANGLE:
+        t = MIN_TILT_ANGLE
+
+    p = int(p * DEGREES_TO_SERVO_TICKS_CONST + 0.5)
+    t = int(t * DEGREES_TO_SERVO_TICKS_CONST + 0.5)
+    
+    dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_GOAL_POSITION, p)
+    if dxl_comm_result != COMM_SUCCESS:
+        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+    elif dxl_error != 0:
+        print("%s" % packetHandler.getRxPacketError(dxl_error))
+
+    dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_GOAL_POSITION, t)
+    if dxl_comm_result != COMM_SUCCESS:
+        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+    elif dxl_error != 0:
+        print("%s" % packetHandler.getRxPacketError(dxl_error))
 
 
 def main(args=None):
@@ -212,18 +240,7 @@ def main(args=None):
     # pan, dxl_comm_result, dxl_error = packetHandler.read4ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_PRESENT_POSITION)
     # tilt, dxl_comm_result, dxl_error = packetHandler.read4ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_PRESENT_POSITION)
 
-
-    dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_GOAL_POSITION, pan)
-    if dxl_comm_result != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    elif dxl_error != 0:
-        print("%s" % packetHandler.getRxPacketError(dxl_error))
-
-    dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_GOAL_POSITION, tilt)
-    if dxl_comm_result != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    elif dxl_error != 0:
-        print("%s" % packetHandler.getRxPacketError(dxl_error))
+    move_neck(180, 180)
 
     tilt_move = 0
     pan_move = 0

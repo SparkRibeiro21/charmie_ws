@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D 
-import cv2
+import time
 
 class TRNode(Node):
 
@@ -15,7 +15,7 @@ class TRNode(Node):
         self.neck_error_publisher = self.create_publisher(Pose2D, "neck_error", 10)
         self.counter = 0
 
-        self.create_timer(2.5, self.timer_callback)
+        self.create_timer(5, self.timer_callback)
 
     def neck_position_callback(self, pos: Pose2D):
         print("Received: pan =", int(pos.x), " tilt = ", int(pos.y))
@@ -23,17 +23,73 @@ class TRNode(Node):
     def timer_callback(self):
         cmd = Pose2D()
 
+        cmd.x = 180.0
+        cmd.y = 180.0 
+        self.neck_coordinates_publisher.publish(cmd)
+        time.sleep(2)
+
+        cmd.x = 60.0
+        cmd.y = 60.0 
+        self.neck_error_publisher.publish(cmd)
+        time.sleep(0.05)
+
+        cmd.x = 60.0
+        cmd.y = 60.0 
+        self.neck_error_publisher.publish(cmd)
+        time.sleep(0.05)
+
+        cmd.x = 60.0
+        cmd.y = 60.0 
+        self.neck_error_publisher.publish(cmd)
+        time.sleep(0.05)
+
+        cmd.x = 60.0
+        cmd.y = 60.0 
+        self.neck_error_publisher.publish(cmd)
+        time.sleep(0.05)
+
+        cmd.x = 60.0
+        cmd.y = 60.0 
+        self.neck_error_publisher.publish(cmd)
+        time.sleep(0.05)
+
+        cmd.x = 60.0
+        cmd.y = 60.0 
+        self.neck_error_publisher.publish(cmd)
+        time.sleep(0.05)
+
+        cmd.x = 60.0
+        cmd.y = 60.0 
+        self.neck_error_publisher.publish(cmd)
+        time.sleep(0.05)
+
+        cmd.x = 60.0
+        cmd.y = 60.0 
+        self.neck_error_publisher.publish(cmd)
+        time.sleep(0.05)
+
+        cmd.x = 60.0
+        cmd.y = 60.0 
+        self.neck_error_publisher.publish(cmd)
+        time.sleep(0.05)
+
+        cmd.x = 60.0
+        cmd.y = 60.0 
+        self.neck_error_publisher.publish(cmd)
+        time.sleep(0.05)
+
+        """
         if self.counter == 0:
             cmd.x = 180.0
             cmd.y = 180.0 
         if self.counter == 1:
-            cmd.x = 270.0
+            cmd.x = 300.0
             cmd.y = 180.0 
         if self.counter == 2:
             cmd.x = 180.0
             cmd.y = 180.0 
         if self.counter == 3:
-            cmd.x = 90.0
+            cmd.x = 60.0
             cmd.y = 180.0 
         if self.counter == 4:
             cmd.x = 180.0
@@ -46,7 +102,7 @@ class TRNode(Node):
             cmd.y = 180.0 
         if self.counter == 7:
             cmd.x = 180.0
-            cmd.y = 210.0 
+            cmd.y = 270.0 
             self.counter = -1
         
         # k = cv2.waitKey(1)
@@ -60,7 +116,7 @@ class TRNode(Node):
 
         self.neck_coordinates_publisher.publish(cmd)
         self.counter+=1
-
+        """
 
 def main(args=None):
     rclpy.init(args=args)
