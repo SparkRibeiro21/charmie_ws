@@ -106,6 +106,7 @@ class NeckNode(Node):
     def __init__(self):
         super().__init__("Neck")
         self.get_logger().info("Initialised CHARMIE Neck Node")
+        print("Connected to Neck Board via:", DEVICENAME)  # check which port was really used
         self.neck_position_subscriber = self.create_subscription(Pose2D, "neck_pos", self.neck_position_callback ,10)
         self.neck_error_subscriber = self.create_subscription(Pose2D, "neck_error", self.neck_error_callback , 10)
         self.neck_get_position_publisher = self.create_publisher(Pose2D, "get_neck_pos", 10)
