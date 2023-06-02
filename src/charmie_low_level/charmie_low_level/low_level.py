@@ -7,6 +7,10 @@ from std_msgs.msg import Bool, Int16
 import serial
 
 
+# TO DO:
+#   change the way NumBytes work, these only make sense for variables that are requested
+# to the MD49 boards, not for variables that are requested just to the low level board
+
 class RobotControl:
 
     def __init__(self):
@@ -40,6 +44,8 @@ class RobotControl:
         # self.CURRENT = {'GetVar': 'i', 'Value': [0, 0, 0, 0], 'NoBytes': 2}
         # self.VI = {'GetVar': 'p', 'Value': [0, 0, 0, 0, 0, 0], 'NoBytes': 3}
         self.ENCODERS = {'GetVar': 'e', 'Value': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'NoBytes': 8}
+        self.START_BUTTON = {'GetVar': 'B', 'Value': [0, 0], 'NoBytes': 1}
+        self.VCCS = {'GetVar': 'U', 'Value': [0, 0], 'NoBytes': 1}
 
         # SETS
         self.RGB = {'SetVar': 'Q', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 255}
@@ -216,21 +222,39 @@ class LowLevelNode(Node):
         self.start_button_publisher = self.create_publisher(Bool, "get_start_button", 10)
         self.flag_start_button_subscriber = self.create_subscription(Bool, "flag_start_button", self.flag_start_button_callback , 10)
         
+        self.vccs_publisher = self.create_publisher(Pose2D, "get_vccs", 10)
+        self.flag_vccs_subscriber = self.create_subscription(Bool, "flag_vccs", self.flag_vccs_callback , 10)
+           
         self.create_timer(0.1, self.timer_callback)
 
         self.robot = RobotControl()
         self.flag_get_start_button = False
+        self.flag_get_vccs = False
 
     def timer_callback(self):
 
-        # print( self.flag_get_start_button)
         if  self.flag_get_start_button:
-
+            
             # request start button here
+            aux1 = self.robot.get_omni_variables(self.robot.START_BUTTON)
+            print("Start Button State: ", bool(aux1[0]))
 
             cmd = Bool()
-            cmd.data = True
+            cmd.data = bool(aux1[0])
             self.start_button_publisher.publish(cmd)
+
+
+        if  self.flag_get_vccs:
+            
+            # request vccs here
+            aux2 = self.robot.get_omni_variables(self.robot.VCCS)
+            print("VCC: ", aux2[0]/10, " Emergency: ", bool(aux2[1]))
+
+            cmd = Pose2D()
+            cmd.x = aux2[0]/10
+            cmd.y = float(aux2[1])
+            self.vccs_publisher.publish(cmd)
+
 
     def rgb_mode_callback(self, mode: Int16):
         print("Received RGB mode: ", mode.data)
@@ -244,6 +268,13 @@ class LowLevelNode(Node):
             self.get_logger().info("Received Reading Start Button State False")
         self.flag_get_start_button = flag.data
 
+    def flag_vccs_callback(self, flag: Bool):
+        # print("Flag Start Button Set To: ", flag.data)
+        if flag.data:
+            self.get_logger().info("Received Reading VCCs State True")
+        else:
+            self.get_logger().info("Received Reading VCCs State False")
+        self.flag_get_vccs = flag.data
 
 def main(args=None):
     rclpy.init(args=args)

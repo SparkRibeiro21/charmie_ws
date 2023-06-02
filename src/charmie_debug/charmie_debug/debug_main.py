@@ -22,12 +22,15 @@ class TRNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback ,10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
+        self.vccs_subscriber = self.create_subscription(Pose2D, "get_vccs", self.get_vccs_callback ,10)
+        self.flag_vccs_publisher = self.create_publisher(Bool, "flag_vccs", 10)
         
         self.counter = 1 # starts at 1 to avoid initial 
         self.create_timer(4, self.timer_callback)
 
         self.flag_get_neck_position = False 
         self.flag_get_start_button = False 
+        self.flag_get_vccs = False 
 
     def get_neck_position_callback(self, pos: Pose2D):
         print("Received Neck Position: pan =", int(pos.x), " tilt = ", int(pos.y))
@@ -35,10 +38,14 @@ class TRNode(Node):
     def get_start_button_callback(self, state: Bool):
         print("Received Start Button: ", state.data)
 
+    def get_vccs_callback(self, vcc: Pose2D):
+        print("Received VCC: ", vcc.x, ", and Emergency: ", bool(vcc.y))
+
     def timer_callback(self):
         cmd = Pose2D()
         flag_neck = Bool()
         flag_start_button = Bool()
+        flag_vccs = Bool()
         mode = Int16()
 
         if self.counter == 0:
@@ -46,6 +53,7 @@ class TRNode(Node):
             cmd.y = 180.0 
             self.flag_get_neck_position = False
             self.flag_get_start_button = False
+            self.flag_get_vccs = False
             mode.data = 1
             self.rgb_mode_publisher.publish(mode)
         if self.counter == 1:
@@ -56,6 +64,7 @@ class TRNode(Node):
             cmd.y = 180.0 
             self.flag_get_neck_position = True
             self.flag_get_start_button = True
+            self.flag_get_vccs = True
             mode.data = 2
             self.rgb_mode_publisher.publish(mode)
         if self.counter == 3:
@@ -66,6 +75,7 @@ class TRNode(Node):
             cmd.y = 180.0 
             self.flag_get_neck_position = False
             self.flag_get_start_button = False
+            self.flag_get_vccs = False
             mode.data = 3
             self.rgb_mode_publisher.publish(mode)
         if self.counter == 5:
@@ -76,6 +86,7 @@ class TRNode(Node):
             cmd.y = 180.0 
             self.flag_get_neck_position = True
             self.flag_get_start_button = True
+            self.flag_get_vccs = True
             mode.data = 4
             self.rgb_mode_publisher.publish(mode)
         if self.counter == 7:
@@ -91,9 +102,12 @@ class TRNode(Node):
         flag_start_button.data = self.flag_get_start_button
         self.flag_start_button_publisher.publish(flag_start_button)
 
+        flag_vccs.data = self.flag_get_vccs
+        self.flag_vccs_publisher.publish(flag_vccs)
 
         print("DATA SENT ", self.counter)
         self.counter+=1
+        
 
 def main(args=None):
     rclpy.init(args=args)
