@@ -1,0 +1,333 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!--3 juntas ombro + 2 juntas cotovelo + 2 mao + 1 garra __ 7DOF-->
+
+    <!--SHOULDER-ELBOW--> 
+     
+    <joint name="R_shoulder_joint" type="fixed">
+        <parent link="upper_body_link"/>
+        <child link="R_shoulder_aux_link"/>
+        <origin xyz="0 -0.13 0.45" rpy="0 0 0"/>
+    </joint>
+
+    <link name="R_shoulder_aux_link">
+        <xacro:inertial_box mass="0.1" x="0" y="0" z="0">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="R_shoulder_joint_y" type="revolute">
+        <parent link="R_shoulder_aux_link"/>
+        <child link="R_shoulder_link_y"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="-1 0 0"/>
+        <limit effort="1000.0" lower="0" upper="0.785" velocity="0.5"/>
+    </joint>
+
+    <link name="R_shoulder_link_y">
+        <xacro:inertial_box mass="0.1" x="0" y="0" z="0">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="R_shoulder_joint_x" type="revolute">
+        <parent link="R_shoulder_link_y"/>
+        <child link="R_shoulder_link_x"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 -1 0"/>
+        <limit effort="1000.0" lower="-0.785" upper="2.356" velocity="0.5"/>
+    </joint>
+
+    <link name="R_shoulder_link_x">
+        <xacro:inertial_box mass="0.1" x="0" y="0" z="0">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+    
+    <joint name="R_shoulder_final_joint" type="fixed">
+        <parent link="R_shoulder_link_x"/>
+        <child link="R_shoulder_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="R_shoulder_link">
+        <visual>
+            <origin xyz="0 0 -0.09" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <box size="0.05 0.05 0.3"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 -0.08" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <box size="0.05 0.05 0.2"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.1" x="0.05" y="0.05" z="0.2">
+            <origin xyz="0 0 -0.08" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <gazebo reference="R_shoulder_link">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <!--LIGAÇAO ELBOW--> 
+
+    <joint name="R_shoulder_arm_joint" type="fixed">
+        <parent link="R_shoulder_link"/>
+        <child link="R_SE_link"/>
+        <origin xyz="0 0 -0.2" rpy="0 0 0"/>
+    </joint>
+
+    <link name="R_SE_link">
+        <visual>
+            <geometry>
+                <sphere radius="0.01"/>
+            </geometry>
+            <material name="red"/>
+        </visual>
+        <collision>
+            <geometry>
+                <sphere radius="0.01"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_sphere mass="0.1" radius="0.01">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_sphere>
+    </link>
+
+    <gazebo reference="R_SE_link">
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+    <!--ELBOW-WRIST--> 
+
+    <joint name="R_elbow_joint" type="fixed">
+        <parent link="R_SE_link"/>
+        <child link="R_elbow_aux_link"/>
+        <origin xyz="0 0 -0.04" rpy="0 0 0"/>
+    </joint>
+
+    <link name="R_elbow_aux_link">
+        <xacro:inertial_box mass="0.1" x="0" y="0" z="0">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="R_elbow_joint_z" type="revolute">
+        <parent link="R_elbow_aux_link"/>
+        <child link="R_elbow_link_z"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="1000.0" lower="0" upper="1.445" velocity="0.5"/>
+    </joint>
+
+    <link name="R_elbow_link_z">
+        <xacro:inertial_box mass="0.1" x="0" y="0" z="0">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="R_elbow_joint_x" type="revolute">
+        <parent link="R_elbow_link_z"/>
+        <child link="R_elbow_link_x"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 -1 0"/>
+        <limit effort="1000.0" lower="0" upper="2.225" velocity="0.5"/>
+    </joint>
+
+    <link name="R_elbow_link_x">
+        <xacro:inertial_box mass="0.1" x="0" y="0" z="0">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+    
+    <joint name="R_elbow_final_joint" type="fixed">
+        <parent link="R_elbow_link_x"/>
+        <child link="R_elbow_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="R_elbow_link">
+        <visual>
+            <origin xyz="0 0 -0.08" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <box size="0.05 0.05 0.2"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 -0.08" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <box size="0.05 0.05 0.3"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.1" x="0.05" y="0.05" z="0.2">
+            <origin xyz="0 0 -0.08" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <gazebo reference="R_elbow_link">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <!--LIGAÇAO WRIST-HAND--> 
+
+    <joint name="R_WH_joint" type="fixed">
+        <parent link="R_elbow_link"/>
+        <child link="R_WH_link"/>
+        <origin xyz="0 0 -0.2" rpy="0 0 0"/>
+    </joint>
+
+    <link name="R_WH_link">
+        <visual>
+            <geometry>
+                <sphere radius="0.01"/>
+            </geometry>
+            <material name="red"/>
+        </visual>
+        <collision>
+            <geometry>
+                <sphere radius="0.01"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_sphere mass="0.1" radius="0.01">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_sphere>
+    </link>
+
+    <gazebo reference="R_WH_link">
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+    <!--HAND-->
+
+    <joint name="R_hand_joint" type="fixed">
+        <parent link="R_WH_link"/>
+        <child link="R_hand_aux_link"/>
+        <origin xyz="0 0 -0.03" rpy="0 0 0"/>
+    </joint>
+
+    <link name="R_hand_aux_link">
+        <xacro:inertial_box mass="0.1" x="0" y="0" z="0">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="R_hand_joint_z" type="revolute">
+        <parent link="R_hand_aux_link"/>
+        <child link="R_hand_link_z"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit effort="1000.0" lower="-0.785" upper="0.785" velocity="0.5"/>
+    </joint>
+
+    <link name="R_hand_link_z">
+        <xacro:inertial_box mass="0.1" x="0" y="0" z="0">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="R_hand_joint_x" type="revolute">
+        <parent link="R_hand_link_z"/>
+        <child link="R_hand_link_x"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 -1 0"/>
+        <limit effort="1000.0" lower="-0.785" upper="0.785" velocity="0.5"/>
+    </joint>
+
+    <link name="R_hand_link_x">
+        <xacro:inertial_box mass="0.1" x="0" y="0" z="0">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+    
+    <joint name="R_hand_final_joint" type="fixed">
+        <parent link="R_hand_link_x"/>
+        <child link="R_hand_base_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>    
+
+    <link name="R_hand_base_link">
+        <visual>
+            <geometry>
+                <box size="0.02 0.08 0.02"/>
+            </geometry>
+            <material name="red"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.02 0.08 0.02"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.1" x="0.02" y="0.08" z="0.02">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+    <gazebo reference="R_hand_base_link">
+        <material>Gazebo/White</material>
+    </gazebo>
+
+    <!--GRIPPER-->
+
+    <joint name="R_left_gripper_slide_joint" type="prismatic">
+        <parent link="R_hand_base_link"/>
+        <child link="R_left_gripper_link"/>
+        <origin xyz="0 0.032 -0.035"/>
+        <axis xyz="0 -1 0"/>
+        <limit effort="10.0" lower="0" upper="0.015" velocity="0.1"/>
+    </joint>
+
+    <link name="R_left_gripper_link">
+        <visual>
+            <geometry>
+                <box size="0.015 0.015 0.05"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.015 0.015 0.05"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.1" x="0.015" y="0.015" z="0.05">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="R_right_gripper_slide_joint" type="prismatic">
+        <parent link="R_hand_base_link"/>
+        <child link="R_right_gripper_link"/>
+        <origin xyz="0 -0.032 -0.035"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="10.0" lower="0" upper="0.015" velocity="0.1"/>
+    </joint>
+
+    <link name="R_right_gripper_link">
+        <visual>
+            <geometry>
+                <box size="0.015 0.015 0.05"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.015 0.015 0.05"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.1" x="0.015" y="0.015" z="0.05">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <gazebo reference="R_left_gripper_link">
+        <material>Gazebo/Red</material>
+    </gazebo>
+    <gazebo reference="R_right_gripper_link">
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+</robot>
