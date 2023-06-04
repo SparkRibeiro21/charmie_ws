@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Pose2D 
+from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16
 # import time
 
@@ -28,6 +28,11 @@ class TRNode(Node):
         self.get_torso_pos_subscriber = self.create_subscription(Pose2D, "get_torso_pos", self.get_torso_pos_callback,10)
         self.flag_torso_pos_publisher = self.create_publisher(Bool, "flag_torso_pos", 10)
         
+        self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
+        self.get_encoders_subscriber = self.create_subscription(Bool, "get_encoders", self.get_encoders_callback,10)
+        self.flag_encoders_publisher = self.create_publisher(Bool, "flag_encoders", 10)
+        
+
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
         self.create_timer(5, self.timer_callback)
@@ -50,6 +55,8 @@ class TRNode(Node):
     def get_torso_pos_callback(self, torso_pos: Pose2D):
         print("Received Legs Angle: ", torso_pos.x, ", and Torso Angle: ", torso_pos.y)
 
+    def get_encoders_callback(self, encoders: Bool):
+        pass
 
     def timer_callback(self):
         neck = Pose2D()
@@ -59,6 +66,7 @@ class TRNode(Node):
         flag_torso = Bool()
         rgb_mode = Int16()
         torso_pos = Pose2D()
+        omni_move = Vector3()
 
         if self.counter == 0:
             neck.x = 180.0
@@ -72,9 +80,17 @@ class TRNode(Node):
             torso_pos.x = 66.0
             torso_pos.y = 85.0
             self.torso_pos_publisher.publish(torso_pos)
+            omni_move.x = 0.0
+            omni_move.y = 0.0
+            omni_move.z = 100.0 - 10.0
+            self.omni_move_publisher.publish(omni_move)
         if self.counter == 1:
             neck.x = 270.0
             neck.y = 180.0 
+            omni_move.x = 0.0
+            omni_move.y = 0.0
+            omni_move.z = 100.0 + 10.0
+            self.omni_move_publisher.publish(omni_move)
         if self.counter == 2:
             neck.x = 180.0
             neck.y = 180.0 
@@ -87,9 +103,17 @@ class TRNode(Node):
             torso_pos.x = 64.0
             torso_pos.y = 75.0
             self.torso_pos_publisher.publish(torso_pos)
+            omni_move.x = 0.0
+            omni_move.y = 20.0
+            omni_move.z = 100.0
+            self.omni_move_publisher.publish(omni_move)
         if self.counter == 3:
             neck.x = 90.0
             neck.y = 180.0 
+            omni_move.x = 180.0
+            omni_move.y = 20.0
+            omni_move.z = 100.0
+            self.omni_move_publisher.publish(omni_move)
         if self.counter == 4:
             neck.x = 180.0
             neck.y = 180.0 
@@ -102,9 +126,17 @@ class TRNode(Node):
             torso_pos.x = 66.0
             torso_pos.y = 85.0
             self.torso_pos_publisher.publish(torso_pos)
+            omni_move.x = 90.0
+            omni_move.y = 20.0
+            omni_move.z = 100.0
+            self.omni_move_publisher.publish(omni_move)
         if self.counter == 5:
             neck.x = 180.0
             neck.y = 120.0 
+            omni_move.x = 270.0
+            omni_move.y = 20.0
+            omni_move.z = 100.0
+            self.omni_move_publisher.publish(omni_move)
         if self.counter == 6:
             neck.x = 180.0
             neck.y = 180.0 
@@ -117,10 +149,18 @@ class TRNode(Node):
             torso_pos.x = 64.0
             torso_pos.y = 75.0
             self.torso_pos_publisher.publish(torso_pos)
+            omni_move.x = 0.0
+            omni_move.y = 20.0
+            omni_move.z = 100.0 - 10.0
+            self.omni_move_publisher.publish(omni_move)
         if self.counter == 7:
             neck.x = 180.0
             neck.y = 235.0 
             self.counter = -1
+            omni_move.x = 0.0
+            omni_move.y = 20.0
+            omni_move.z = 100.0 + 10.0
+            self.omni_move_publisher.publish(omni_move)
 
         self.neck_position_publisher.publish(neck)
 

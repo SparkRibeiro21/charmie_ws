@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Pose2D 
+from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16
 import serial
 
@@ -16,7 +16,7 @@ import serial
 class RobotControl:
 
     def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB1', baudrate=115200)  # open serial port
+        self.ser = serial.Serial('/dev/ttyUSB1', baudrate=9600)  # open serial port
         print("Connected to Motor Board via:", self.ser.name)  # check which port was really used
 
         # FLAGS
@@ -234,6 +234,11 @@ class LowLevelNode(Node):
         self.get_torso_pos_publisher = self.create_publisher(Pose2D, "get_torso_pos", 10)
         self.flag_torso_pos_subscriber = self.create_subscription(Bool, "flag_torso_pos", self.flag_torso_pos_callback , 10)
 
+        self.omni_move_subscriber = self.create_subscription(Vector3, "omni_move", self.omni_move_callback , 10)
+        self.get_encoders_publisher = self.create_publisher(Bool, "get_encoders", 10)
+        self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
+
+
         self.create_timer(0.1, self.timer_callback)
 
         self.robot = RobotControl()
@@ -266,19 +271,14 @@ class LowLevelNode(Node):
 
         if  self.flag_get_torso_pos:
             # request torso pos here
-            aux2 = self.robot.get_omni_variables(self.robot.LIN_ACT)
-            print("Legs_pos: ", aux2[0], " Torso_pos: ", aux2[1])
-
+            aux3 = self.robot.get_omni_variables(self.robot.LIN_ACT)
+            print("Legs_pos: ", aux3[0], " Torso_pos: ", aux3[1])
+        
             cmd = Pose2D()
-            cmd.x = float(aux2[0])
-            cmd.y = float(aux2[1])
+            cmd.x = float(aux3[0])
+            cmd.y = float(aux3[1])
             self.get_torso_pos_publisher.publish(cmd)
 
-
-
-    def rgb_mode_callback(self, mode: Int16):
-        print("Received RGB mode: ", mode.data)
-        self.robot.set_omni_variables(self.robot.RGB, mode.data)
 
     def flag_start_button_callback(self, flag: Bool):
         # print("Flag Start Button Set To: ", flag.data)
@@ -304,11 +304,25 @@ class LowLevelNode(Node):
             self.get_logger().info("Received Reading Torso State False")
         self.flag_get_torso_pos = flag.data
 
+    def flag_encoders_callback(self, flag: Bool):
+        pass
+
+
+
+    def rgb_mode_callback(self, mode: Int16):
+        print("Received RGB mode: ", mode.data)
+        self.robot.set_omni_variables(self.robot.RGB, mode.data)
+
     def torso_pos_callback(self, pos: Pose2D):
         print("Received TORSO pos:", pos.x, pos.y)
         self.robot.set_omni_variables(self.robot.LEGS, int(pos.x))
         self.robot.set_omni_variables(self.robot.TORSO, int(pos.y))
-        
+
+    def omni_move_callback(self, omni:Vector3):
+        print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
+        self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
+
+
 
 def main(args=None):
     rclpy.init(args=args)
