@@ -10,6 +10,8 @@ import serial
 # TO DO:
 #   change the way NumBytes work, these only make sense for variables that are requested
 # to the MD49 boards, not for variables that are requested just to the low level board
+#   when setting torso and legs position i need to send two variables, but the way it is
+# made I can only send one command value, for MD49 I just needed to send one
 
 class RobotControl:
 
@@ -46,9 +48,12 @@ class RobotControl:
         self.ENCODERS = {'GetVar': 'e', 'Value': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'NoBytes': 8}
         self.START_BUTTON = {'GetVar': 'B', 'Value': [0, 0], 'NoBytes': 1}
         self.VCCS = {'GetVar': 'U', 'Value': [0, 0], 'NoBytes': 1}
-
+        self.LIN_ACT = {'GetVar': 'w', 'Value': [0, 0], 'NoBytes': 1}
+        
         # SETS
         self.RGB = {'SetVar': 'Q', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 255}
+        self.LEGS = {'SetVar': 'Y', 'Value': [0, 0], 'NoBytes': 1, 'Min': 0, 'Max': 90}
+        self.TORSO = {'SetVar': 'Z', 'Value': [0, 0], 'NoBytes': 1, 'Min': 0, 'Max': 90}
         
         self.LINEAR_V = {'SetVar': 'V', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 100}
         self.ANGULAR_V = {'SetVar': 'W', 'Value': [100], 'NoBytes': 1, 'Min': 0, 'Max': 200}
@@ -224,17 +229,21 @@ class LowLevelNode(Node):
         
         self.vccs_publisher = self.create_publisher(Pose2D, "get_vccs", 10)
         self.flag_vccs_subscriber = self.create_subscription(Bool, "flag_vccs", self.flag_vccs_callback , 10)
-           
+
+        self.torso_pos_subscriber = self.create_subscription(Pose2D, "torso_pos", self.torso_pos_callback , 10)
+        self.get_torso_pos_publisher = self.create_publisher(Pose2D, "get_torso_pos", 10)
+        self.flag_torso_pos_subscriber = self.create_subscription(Bool, "flag_torso_pos", self.flag_torso_pos_callback , 10)
+
         self.create_timer(0.1, self.timer_callback)
 
         self.robot = RobotControl()
         self.flag_get_start_button = False
         self.flag_get_vccs = False
+        self.flag_get_torso_pos = False
 
     def timer_callback(self):
 
         if  self.flag_get_start_button:
-            
             # request start button here
             aux1 = self.robot.get_omni_variables(self.robot.START_BUTTON)
             print("Start Button State: ", bool(aux1[0]))
@@ -245,15 +254,26 @@ class LowLevelNode(Node):
 
 
         if  self.flag_get_vccs:
-            
             # request vccs here
             aux2 = self.robot.get_omni_variables(self.robot.VCCS)
             print("VCC: ", aux2[0]/10, " Emergency: ", bool(aux2[1]))
 
             cmd = Pose2D()
-            cmd.x = aux2[0]/10
+            cmd.x = float(aux2[0]/10)
             cmd.y = float(aux2[1])
             self.vccs_publisher.publish(cmd)
+
+
+        if  self.flag_get_torso_pos:
+            # request torso pos here
+            aux2 = self.robot.get_omni_variables(self.robot.LIN_ACT)
+            print("Legs_pos: ", aux2[0], " Torso_pos: ", aux2[1])
+
+            cmd = Pose2D()
+            cmd.x = float(aux2[0])
+            cmd.y = float(aux2[1])
+            self.get_torso_pos_publisher.publish(cmd)
+
 
 
     def rgb_mode_callback(self, mode: Int16):
@@ -269,17 +289,29 @@ class LowLevelNode(Node):
         self.flag_get_start_button = flag.data
 
     def flag_vccs_callback(self, flag: Bool):
-        # print("Flag Start Button Set To: ", flag.data)
+        # print("Flag VCCS Set To: ", flag.data)
         if flag.data:
             self.get_logger().info("Received Reading VCCs State True")
         else:
             self.get_logger().info("Received Reading VCCs State False")
         self.flag_get_vccs = flag.data
 
+    def flag_torso_pos_callback(self, flag: Bool):
+        # print("Flag Torso Set To: ", flag.data)
+        if flag.data:
+            self.get_logger().info("Received Reading Torso State True")
+        else:
+            self.get_logger().info("Received Reading Torso State False")
+        self.flag_get_torso_pos = flag.data
+
+    def torso_pos_callback(self, pos: Pose2D):
+        print("Received TORSO pos:", pos.x, pos.y)
+        self.robot.set_omni_variables(self.robot.LEGS, int(pos.x))
+        self.robot.set_omni_variables(self.robot.TORSO, int(pos.y))
+        
+
 def main(args=None):
     rclpy.init(args=args)
     node = LowLevelNode()
-
-
     rclpy.spin(node)
     rclpy.shutdown()
