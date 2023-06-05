@@ -1,0 +1,17 @@
+[2.288s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_low_level': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_low_level/prefix_override:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_low_level/build --no-deps install_data
+[2.610s] running develop
+[2.793s] running egg_info
+[2.793s] writing charmie_low_level.egg-info/PKG-INFO
+[2.794s] writing dependency_links to charmie_low_level.egg-info/dependency_links.txt
+[2.794s] writing entry points to charmie_low_level.egg-info/entry_points.txt
+[2.794s] writing requirements to charmie_low_level.egg-info/requires.txt
+[2.794s] writing top-level names to charmie_low_level.egg-info/top_level.txt
+[2.858s] reading manifest file 'charmie_low_level.egg-info/SOURCES.txt'
+[2.859s] writing manifest file 'charmie_low_level.egg-info/SOURCES.txt'
+[2.927s] running build_ext
+[2.927s] Creating /home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages/charmie-low-level.egg-link (link to .)
+[2.929s] Installing low_level script to /home/utilizador/charmie_ws/install/charmie_low_level/lib/charmie_low_level
+[2.929s] 
+[2.929s] Installed /home/utilizador/charmie_ws/build/charmie_low_level
+[2.929s] running install_data
+[2.992s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_low_level' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_low_level/prefix_override:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_low_level/build --no-deps install_data

@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16
+from charmie_interfaces.msg import Encoders
 import serial
 
 
@@ -235,7 +236,7 @@ class LowLevelNode(Node):
         self.flag_torso_pos_subscriber = self.create_subscription(Bool, "flag_torso_pos", self.flag_torso_pos_callback , 10)
 
         self.omni_move_subscriber = self.create_subscription(Vector3, "omni_move", self.omni_move_callback , 10)
-        self.get_encoders_publisher = self.create_publisher(Bool, "get_encoders", 10)
+        self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
 
 
@@ -278,6 +279,14 @@ class LowLevelNode(Node):
             cmd.x = float(aux3[0])
             cmd.y = float(aux3[1])
             self.get_torso_pos_publisher.publish(cmd)
+
+
+        cmd = Encoders()
+        cmd.enc_m1 = 1000
+        cmd.enc_m2 = 2000
+        cmd.enc_m3 = 3000
+        cmd.enc_m4 = 4000
+        self.get_encoders_publisher.publish(cmd)
 
 
     def flag_start_button_callback(self, flag: Bool):

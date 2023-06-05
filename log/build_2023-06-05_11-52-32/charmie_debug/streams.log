@@ -1,0 +1,17 @@
+[2.392s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_debug': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_debug/build --no-deps install_data
+[2.713s] running develop
+[2.982s] running egg_info
+[2.982s] writing charmie_debug.egg-info/PKG-INFO
+[2.983s] writing dependency_links to charmie_debug.egg-info/dependency_links.txt
+[2.983s] writing entry points to charmie_debug.egg-info/entry_points.txt
+[2.983s] writing requirements to charmie_debug.egg-info/requires.txt
+[2.983s] writing top-level names to charmie_debug.egg-info/top_level.txt
+[3.034s] reading manifest file 'charmie_debug.egg-info/SOURCES.txt'
+[3.034s] writing manifest file 'charmie_debug.egg-info/SOURCES.txt'
+[3.073s] running build_ext
+[3.074s] Creating /home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages/charmie-debug.egg-link (link to .)
+[3.076s] Installing debug_main script to /home/utilizador/charmie_ws/install/charmie_debug/lib/charmie_debug
+[3.076s] 
+[3.076s] Installed /home/utilizador/charmie_ws/build/charmie_debug
+[3.076s] running install_data
+[3.127s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_debug' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_debug/build --no-deps install_data

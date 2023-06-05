@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16
+from charmie_interfaces.msg import Encoders
 # import time
 
 class TRNode(Node):
@@ -27,9 +28,8 @@ class TRNode(Node):
         self.torso_pos_publisher = self.create_publisher(Pose2D, "torso_pos", 10)
         self.get_torso_pos_subscriber = self.create_subscription(Pose2D, "get_torso_pos", self.get_torso_pos_callback,10)
         self.flag_torso_pos_publisher = self.create_publisher(Bool, "flag_torso_pos", 10)
-        
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
-        self.get_encoders_subscriber = self.create_subscription(Bool, "get_encoders", self.get_encoders_callback,10)
+        self.get_encoders_subscriber = self.create_subscription(Encoders, "get_encoders", self.get_encoders_callback,10)
         self.flag_encoders_publisher = self.create_publisher(Bool, "flag_encoders", 10)
         
 
@@ -56,6 +56,7 @@ class TRNode(Node):
         print("Received Legs Angle: ", torso_pos.x, ", and Torso Angle: ", torso_pos.y)
 
     def get_encoders_callback(self, encoders: Bool):
+        print("Encoders: ", encoders)
         pass
 
     def timer_callback(self):
