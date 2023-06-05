@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+charmie_camera_realsense/__init__.py
+charmie_camera_realsense/camera_realsense.py
+charmie_camera_realsense.egg-info/PKG-INFO
+charmie_camera_realsense.egg-info/SOURCES.txt
+charmie_camera_realsense.egg-info/dependency_links.txt
+charmie_camera_realsense.egg-info/entry_points.txt
+charmie_camera_realsense.egg-info/requires.txt
+charmie_camera_realsense.egg-info/top_level.txt
+charmie_camera_realsense.egg-info/zip-safe
+resource/charmie_camera_realsense

@@ -1,4 +1,0 @@
-[console_scripts]
-listener = test2.subscriber:main
-talker = test2.publisher:main
-

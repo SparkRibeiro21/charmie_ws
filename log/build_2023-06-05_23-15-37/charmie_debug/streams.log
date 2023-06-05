@@ -1,0 +1,17 @@
+[1.606s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_debug': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/test2:/home/utilizador/charmie_ws/build/my_robot_controller:/home/utilizador/charmie_ws/build/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_neck_dynamixel:/home/utilizador/charmie_ws/build/charmie_low_level:/home/utilizador/charmie_ws/build/charmie_debug:/home/utilizador/charmie_ws/install/test2/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/my_robot_controller/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_debug/build --no-deps install_data
+[1.878s] running develop
+[2.038s] running egg_info
+[2.038s] writing charmie_debug.egg-info/PKG-INFO
+[2.038s] writing dependency_links to charmie_debug.egg-info/dependency_links.txt
+[2.038s] writing entry points to charmie_debug.egg-info/entry_points.txt
+[2.038s] writing requirements to charmie_debug.egg-info/requires.txt
+[2.039s] writing top-level names to charmie_debug.egg-info/top_level.txt
+[2.071s] reading manifest file 'charmie_debug.egg-info/SOURCES.txt'
+[2.072s] writing manifest file 'charmie_debug.egg-info/SOURCES.txt'
+[2.107s] running build_ext
+[2.107s] Creating /home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages/charmie-debug.egg-link (link to .)
+[2.108s] Installing debug_main script to /home/utilizador/charmie_ws/install/charmie_debug/lib/charmie_debug
+[2.109s] 
+[2.109s] Installed /home/utilizador/charmie_ws/build/charmie_debug
+[2.109s] running install_data
+[2.143s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_debug' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/test2:/home/utilizador/charmie_ws/build/my_robot_controller:/home/utilizador/charmie_ws/build/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_neck_dynamixel:/home/utilizador/charmie_ws/build/charmie_low_level:/home/utilizador/charmie_ws/build/charmie_debug:/home/utilizador/charmie_ws/install/test2/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/my_robot_controller/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_debug/build --no-deps install_data

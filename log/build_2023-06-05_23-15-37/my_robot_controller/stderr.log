@@ -1,0 +1,2 @@
+/usr/lib/python3/dist-packages/setuptools/command/easy_install.py:368: UserWarning: Unbuilt egg for charmie-neck-dynamixel 0.0.0 (/home/utilizador/charmie_ws/build/charmie_neck_dynamixel)
+  self.local_index = Environment(self.shadow_path + sys.path)

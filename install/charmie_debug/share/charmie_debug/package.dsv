@@ -4,3 +4,6 @@ source;share/charmie_debug/hook/pythonpath.sh
 source;share/charmie_debug/hook/ament_prefix_path.ps1
 source;share/charmie_debug/hook/ament_prefix_path.dsv
 source;share/charmie_debug/hook/ament_prefix_path.sh
+source;../../build/charmie_debug/share/charmie_debug/hook/pythonpath_develop.ps1
+source;../../build/charmie_debug/share/charmie_debug/hook/pythonpath_develop.dsv
+source;../../build/charmie_debug/share/charmie_debug/hook/pythonpath_develop.sh

@@ -11,7 +11,11 @@ setup.py
 my_robot_controller/__init__.py
 my_robot_controller/my_first_node.py
 my_robot_controller/turtle_controller.py
+my_robot_controller.egg-info/PKG-INFO
+my_robot_controller.egg-info/SOURCES.txt
+my_robot_controller.egg-info/dependency_links.txt
+my_robot_controller.egg-info/entry_points.txt
+my_robot_controller.egg-info/requires.txt
+my_robot_controller.egg-info/top_level.txt
+my_robot_controller.egg-info/zip-safe
 resource/my_robot_controller
-test/test_copyright.py
-test/test_flake8.py
-test/test_pep257.py
