@@ -56,7 +56,7 @@ bool charmie_interfaces__msg__encoders__convert_from_py(PyObject * _pymsg, void 
       return false;
     }
     assert(PyLong_Check(field));
-    ros_message->enc_m1 = (int32_t)PyLong_AsLong(field);
+    ros_message->enc_m1 = PyLong_AsUnsignedLong(field);
     Py_DECREF(field);
   }
   {  // enc_m2
@@ -65,7 +65,7 @@ bool charmie_interfaces__msg__encoders__convert_from_py(PyObject * _pymsg, void 
       return false;
     }
     assert(PyLong_Check(field));
-    ros_message->enc_m2 = (int32_t)PyLong_AsLong(field);
+    ros_message->enc_m2 = PyLong_AsUnsignedLong(field);
     Py_DECREF(field);
   }
   {  // enc_m3
@@ -74,7 +74,7 @@ bool charmie_interfaces__msg__encoders__convert_from_py(PyObject * _pymsg, void 
       return false;
     }
     assert(PyLong_Check(field));
-    ros_message->enc_m3 = (int32_t)PyLong_AsLong(field);
+    ros_message->enc_m3 = PyLong_AsUnsignedLong(field);
     Py_DECREF(field);
   }
   {  // enc_m4
@@ -83,7 +83,7 @@ bool charmie_interfaces__msg__encoders__convert_from_py(PyObject * _pymsg, void 
       return false;
     }
     assert(PyLong_Check(field));
-    ros_message->enc_m4 = (int32_t)PyLong_AsLong(field);
+    ros_message->enc_m4 = PyLong_AsUnsignedLong(field);
     Py_DECREF(field);
   }
 
@@ -110,7 +110,7 @@ PyObject * charmie_interfaces__msg__encoders__convert_to_py(void * raw_ros_messa
   charmie_interfaces__msg__Encoders * ros_message = (charmie_interfaces__msg__Encoders *)raw_ros_message;
   {  // enc_m1
     PyObject * field = NULL;
-    field = PyLong_FromLong(ros_message->enc_m1);
+    field = PyLong_FromUnsignedLong(ros_message->enc_m1);
     {
       int rc = PyObject_SetAttrString(_pymessage, "enc_m1", field);
       Py_DECREF(field);
@@ -121,7 +121,7 @@ PyObject * charmie_interfaces__msg__encoders__convert_to_py(void * raw_ros_messa
   }
   {  // enc_m2
     PyObject * field = NULL;
-    field = PyLong_FromLong(ros_message->enc_m2);
+    field = PyLong_FromUnsignedLong(ros_message->enc_m2);
     {
       int rc = PyObject_SetAttrString(_pymessage, "enc_m2", field);
       Py_DECREF(field);
@@ -132,7 +132,7 @@ PyObject * charmie_interfaces__msg__encoders__convert_to_py(void * raw_ros_messa
   }
   {  // enc_m3
     PyObject * field = NULL;
-    field = PyLong_FromLong(ros_message->enc_m3);
+    field = PyLong_FromUnsignedLong(ros_message->enc_m3);
     {
       int rc = PyObject_SetAttrString(_pymessage, "enc_m3", field);
       Py_DECREF(field);
@@ -143,7 +143,7 @@ PyObject * charmie_interfaces__msg__encoders__convert_to_py(void * raw_ros_messa
   }
   {  // enc_m4
     PyObject * field = NULL;
-    field = PyLong_FromLong(ros_message->enc_m4);
+    field = PyLong_FromUnsignedLong(ros_message->enc_m4);
     {
       int rc = PyObject_SetAttrString(_pymessage, "enc_m4", field);
       Py_DECREF(field);

@@ -37,10 +37,10 @@ struct Encoders_
     if (rosidl_runtime_cpp::MessageInitialization::ALL == _init ||
       rosidl_runtime_cpp::MessageInitialization::ZERO == _init)
     {
-      this->enc_m1 = 0l;
-      this->enc_m2 = 0l;
-      this->enc_m3 = 0l;
-      this->enc_m4 = 0l;
+      this->enc_m1 = 0ul;
+      this->enc_m2 = 0ul;
+      this->enc_m3 = 0ul;
+      this->enc_m4 = 0ul;
     }
   }
 
@@ -50,48 +50,48 @@ struct Encoders_
     if (rosidl_runtime_cpp::MessageInitialization::ALL == _init ||
       rosidl_runtime_cpp::MessageInitialization::ZERO == _init)
     {
-      this->enc_m1 = 0l;
-      this->enc_m2 = 0l;
-      this->enc_m3 = 0l;
-      this->enc_m4 = 0l;
+      this->enc_m1 = 0ul;
+      this->enc_m2 = 0ul;
+      this->enc_m3 = 0ul;
+      this->enc_m4 = 0ul;
     }
   }
 
   // field types and members
   using _enc_m1_type =
-    int32_t;
+    uint32_t;
   _enc_m1_type enc_m1;
   using _enc_m2_type =
-    int32_t;
+    uint32_t;
   _enc_m2_type enc_m2;
   using _enc_m3_type =
-    int32_t;
+    uint32_t;
   _enc_m3_type enc_m3;
   using _enc_m4_type =
-    int32_t;
+    uint32_t;
   _enc_m4_type enc_m4;
 
   // setters for named parameter idiom
   Type & set__enc_m1(
-    const int32_t & _arg)
+    const uint32_t & _arg)
   {
     this->enc_m1 = _arg;
     return *this;
   }
   Type & set__enc_m2(
-    const int32_t & _arg)
+    const uint32_t & _arg)
   {
     this->enc_m2 = _arg;
     return *this;
   }
   Type & set__enc_m3(
-    const int32_t & _arg)
+    const uint32_t & _arg)
   {
     this->enc_m3 = _arg;
     return *this;
   }
   Type & set__enc_m4(
-    const int32_t & _arg)
+    const uint32_t & _arg)
   {
     this->enc_m4 = _arg;
     return *this;

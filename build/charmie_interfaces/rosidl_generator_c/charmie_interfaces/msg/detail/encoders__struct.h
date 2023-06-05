@@ -20,10 +20,10 @@ extern "C"
 // Struct defined in msg/Encoders in the package charmie_interfaces.
 typedef struct charmie_interfaces__msg__Encoders
 {
-  int32_t enc_m1;
-  int32_t enc_m2;
-  int32_t enc_m3;
-  int32_t enc_m4;
+  uint32_t enc_m1;
+  uint32_t enc_m2;
+  uint32_t enc_m3;
+  uint32_t enc_m4;
 } charmie_interfaces__msg__Encoders;
 
 // Struct for a sequence of charmie_interfaces__msg__Encoders.

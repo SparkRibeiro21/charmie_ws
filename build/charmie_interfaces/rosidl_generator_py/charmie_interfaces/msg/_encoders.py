@@ -60,17 +60,17 @@ class Encoders(metaclass=Metaclass_Encoders):
     ]
 
     _fields_and_field_types = {
-        'enc_m1': 'int32',
-        'enc_m2': 'int32',
-        'enc_m3': 'int32',
-        'enc_m4': 'int32',
+        'enc_m1': 'uint32',
+        'enc_m2': 'uint32',
+        'enc_m3': 'uint32',
+        'enc_m4': 'uint32',
     }
 
     SLOT_TYPES = (
-        rosidl_parser.definition.BasicType('int32'),  # noqa: E501
-        rosidl_parser.definition.BasicType('int32'),  # noqa: E501
-        rosidl_parser.definition.BasicType('int32'),  # noqa: E501
-        rosidl_parser.definition.BasicType('int32'),  # noqa: E501
+        rosidl_parser.definition.BasicType('uint32'),  # noqa: E501
+        rosidl_parser.definition.BasicType('uint32'),  # noqa: E501
+        rosidl_parser.definition.BasicType('uint32'),  # noqa: E501
+        rosidl_parser.definition.BasicType('uint32'),  # noqa: E501
     )
 
     def __init__(self, **kwargs):
@@ -137,8 +137,8 @@ class Encoders(metaclass=Metaclass_Encoders):
             assert \
                 isinstance(value, int), \
                 "The 'enc_m1' field must be of type 'int'"
-            assert value >= -2147483648 and value < 2147483648, \
-                "The 'enc_m1' field must be an integer in [-2147483648, 2147483647]"
+            assert value >= 0 and value < 4294967296, \
+                "The 'enc_m1' field must be an unsigned integer in [0, 4294967295]"
         self._enc_m1 = value
 
     @property
@@ -152,8 +152,8 @@ class Encoders(metaclass=Metaclass_Encoders):
             assert \
                 isinstance(value, int), \
                 "The 'enc_m2' field must be of type 'int'"
-            assert value >= -2147483648 and value < 2147483648, \
-                "The 'enc_m2' field must be an integer in [-2147483648, 2147483647]"
+            assert value >= 0 and value < 4294967296, \
+                "The 'enc_m2' field must be an unsigned integer in [0, 4294967295]"
         self._enc_m2 = value
 
     @property
@@ -167,8 +167,8 @@ class Encoders(metaclass=Metaclass_Encoders):
             assert \
                 isinstance(value, int), \
                 "The 'enc_m3' field must be of type 'int'"
-            assert value >= -2147483648 and value < 2147483648, \
-                "The 'enc_m3' field must be an integer in [-2147483648, 2147483647]"
+            assert value >= 0 and value < 4294967296, \
+                "The 'enc_m3' field must be an unsigned integer in [0, 4294967295]"
         self._enc_m3 = value
 
     @property
@@ -182,6 +182,6 @@ class Encoders(metaclass=Metaclass_Encoders):
             assert \
                 isinstance(value, int), \
                 "The 'enc_m4' field must be of type 'int'"
-            assert value >= -2147483648 and value < 2147483648, \
-                "The 'enc_m4' field must be an integer in [-2147483648, 2147483647]"
+            assert value >= 0 and value < 4294967296, \
+                "The 'enc_m4' field must be an unsigned integer in [0, 4294967295]"
         self._enc_m4 = value

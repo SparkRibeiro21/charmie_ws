@@ -239,54 +239,63 @@ class LowLevelNode(Node):
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
 
-
         self.create_timer(0.1, self.timer_callback)
 
         self.robot = RobotControl()
+
+        self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
+        self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
+        self.robot.set_omni_flags(self.robot.TIMEOUT, False)
+        print(self.robot.get_omni_variables(self.robot.ACCELERATION))
+
         self.flag_get_start_button = False
         self.flag_get_vccs = False
         self.flag_get_torso_pos = False
+        self.flag_get_encoders = False
 
     def timer_callback(self):
 
         if  self.flag_get_start_button:
             # request start button here
-            aux1 = self.robot.get_omni_variables(self.robot.START_BUTTON)
-            print("Start Button State: ", bool(aux1[0]))
+            aux_b = self.robot.get_omni_variables(self.robot.START_BUTTON)
+            print("Start Button State: ", bool(aux_b[0]))
 
             cmd = Bool()
-            cmd.data = bool(aux1[0])
+            cmd.data = bool(aux_b[0])
             self.start_button_publisher.publish(cmd)
-
 
         if  self.flag_get_vccs:
             # request vccs here
-            aux2 = self.robot.get_omni_variables(self.robot.VCCS)
-            print("VCC: ", aux2[0]/10, " Emergency: ", bool(aux2[1]))
+            aux_v = self.robot.get_omni_variables(self.robot.VCCS)
+            print("VCC: ", aux_v[0]/10, " Emergency: ", bool(aux_v[1]))
 
             cmd = Pose2D()
-            cmd.x = float(aux2[0]/10)
-            cmd.y = float(aux2[1])
+            cmd.x = float(aux_v[0]/10)
+            cmd.y = float(aux_v[1])
             self.vccs_publisher.publish(cmd)
-
 
         if  self.flag_get_torso_pos:
             # request torso pos here
-            aux3 = self.robot.get_omni_variables(self.robot.LIN_ACT)
-            print("Legs_pos: ", aux3[0], " Torso_pos: ", aux3[1])
+            aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
+            print("Legs_pos: ", aux_t[0], " Torso_pos: ", aux_t[1])
         
             cmd = Pose2D()
-            cmd.x = float(aux3[0])
-            cmd.y = float(aux3[1])
+            cmd.x = float(aux_t[0])
+            cmd.y = float(aux_t[1])
             self.get_torso_pos_publisher.publish(cmd)
 
-
-        cmd = Encoders()
-        cmd.enc_m1 = 1000
-        cmd.enc_m2 = 2000
-        cmd.enc_m3 = 3000
-        cmd.enc_m4 = 4000
-        self.get_encoders_publisher.publish(cmd)
+        if  self.flag_get_encoders:
+            # request encoders here
+            aux_e = self.robot.get_omni_variables(self.robot.ENCODERS)
+            # print(aux_e)
+            
+            cmd = Encoders()
+            cmd.enc_m1 = (aux_e[0] << 24) + (aux_e[1] << 16) + (aux_e[2] << 8) + aux_e[3]
+            cmd.enc_m2 = (aux_e[4] << 24) + (aux_e[5] << 16) + (aux_e[6] << 8) + aux_e[7]
+            cmd.enc_m3 = (aux_e[8] << 24) + (aux_e[9] << 16) + (aux_e[10] << 8) + aux_e[11]
+            cmd.enc_m4 = (aux_e[12] << 24) + (aux_e[13] << 16) + (aux_e[14] << 8) + aux_e[15]
+            print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
+            self.get_encoders_publisher.publish(cmd)
 
 
     def flag_start_button_callback(self, flag: Bool):
@@ -314,8 +323,12 @@ class LowLevelNode(Node):
         self.flag_get_torso_pos = flag.data
 
     def flag_encoders_callback(self, flag: Bool):
-        pass
-
+        # print("Flag Encoders Set To: ", flag.data)
+        if flag.data:
+            self.get_logger().info("Received Reading Encoder State True")
+        else:
+            self.get_logger().info("Received Reading Encoder State False")
+        self.flag_get_encoders = flag.data
 
 
     def rgb_mode_callback(self, mode: Int16):
@@ -330,7 +343,6 @@ class LowLevelNode(Node):
     def omni_move_callback(self, omni:Vector3):
         print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
         self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
-
 
 
 def main(args=None):
