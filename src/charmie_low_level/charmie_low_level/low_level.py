@@ -6,6 +6,7 @@ from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16
 from charmie_interfaces.msg import Encoders
 import serial
+import time
 
 
 # TO DO:
@@ -58,7 +59,7 @@ class RobotControl:
         
         self.LINEAR_V = {'SetVar': 'V', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 100}
         self.ANGULAR_V = {'SetVar': 'W', 'Value': [100], 'NoBytes': 1, 'Min': 0, 'Max': 200}
-        self.DIRECTION = {'SetVar': 'D', 'Value': [0], 'NoBytes': 2, 'Min': 0, 'Max': 359}  # NoBytes=2 since Max > 255
+        self.DIRECTION = {'SetVar': 'D', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 359}  # NoBytes=2 since Max > 255
 
         # once the lienar actuators have the encoders we will have to change how they are controlled
         # self.LIN_ACT_LEGS_POS = {'SetVar': 'V', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 100}
@@ -85,6 +86,7 @@ class RobotControl:
                 # print(comm_dict['SetVar'], comm_dict['Value'])
 
                 self.ser.write(comm_dict['SetVar'].encode('utf-8'))
+                time.sleep(0.002)
                 self.ser.write(comm_dict['Value'][0].to_bytes(comm_dict['NoBytes'], 'big'))
                 return 0  # No error
             else:
@@ -98,6 +100,7 @@ class RobotControl:
         if 'GetVar' in comm_dict:  # check if it is a variable that can be 'get'
             # print(comm_dict['GetVar'], comm_dict['NoBytes'])
             self.ser.write(comm_dict['GetVar'].encode('utf-8'))  # sends get command
+            time.sleep(0.002)
 
             while self.ser.in_waiting < comm_dict['NoBytes'] * 2:  # 2x NoBytes since there are two motor drivers
                 pass  # waits until all the variables have been returned
@@ -206,12 +209,21 @@ class RobotControl:
         # L2_ant = int(controller.L2dist * 100)
         # print(int(controller.L2dist * 100))
 
+        dir_aux = int(255*self.OMNI_MOVE['Dir']/359)
+
+        # print(type(self.OMNI_MOVE['Dir']))
+        # print(type(dir_aux))
+        
         print('SENT VALUE')
         print(self.OMNI_MOVE['CommVar'], " -> ", self.OMNI_MOVE['Dir'], self.OMNI_MOVE['Lin'], self.OMNI_MOVE['Ang'])
+        # print(dir_aux)
 
         self.ser.write(self.OMNI_MOVE['CommVar'].encode('utf-8'))
-        self.ser.write(self.OMNI_MOVE['Dir'].to_bytes(2, 'big'))
+        time.sleep(0.002)
+        self.ser.write(dir_aux.to_bytes(1, 'big'))
+        time.sleep(0.002)
         self.ser.write(self.OMNI_MOVE['Lin'].to_bytes(1, 'big'))
+        time.sleep(0.002)
         self.ser.write(self.OMNI_MOVE['Ang'].to_bytes(1, 'big'))
 
         self.OMNI_MOVE_ANT['Lin'] = self.OMNI_MOVE['Lin']
