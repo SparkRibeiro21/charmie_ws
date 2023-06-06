@@ -104,4 +104,7 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c__pyext.dir/ros
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.h
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__struct.h
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__type_support.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__type_support.h
  rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h

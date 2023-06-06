@@ -26,3 +26,14 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/cha
  /opt/ros/foxy/include/rosidl_typesupport_interface/macros.h
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__struct.h
  rosidl_typesupport_c/charmie_interfaces/msg/rosidl_typesupport_c__visibility_control.h
+CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/ps4_controller__type_support.cpp.o
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/ps4_controller__type_support.cpp
+ /opt/ros/foxy/include/rosidl_runtime_c/message_type_support_struct.h
+ /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_c/identifier.h
+ /opt/ros/foxy/include/rosidl_typesupport_c/message_type_support_dispatch.h
+ /opt/ros/foxy/include/rosidl_typesupport_c/type_support_map.h
+ /opt/ros/foxy/include/rosidl_typesupport_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_interface/macros.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__struct.h
+ rosidl_typesupport_c/charmie_interfaces/msg/rosidl_typesupport_c__visibility_control.h

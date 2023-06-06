@@ -24,6 +24,7 @@ find_package(std_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ExampleTR.msg"
   "msg/Encoders.msg"
+  "msg/PS4Controller.msg"
   DEPENDENCIES std_msgs geometry_msgs
 )
 

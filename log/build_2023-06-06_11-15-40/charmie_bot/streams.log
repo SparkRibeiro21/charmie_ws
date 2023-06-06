@@ -1,0 +1,44 @@
+[0.097s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/test2:/home/utilizador/charmie_ws/install/my_robot_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_camera_realsense:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+[1.762s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/test2:/home/utilizador/charmie_ws/install/my_robot_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_camera_realsense:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+[1.870s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/test2:/home/utilizador/charmie_ws/install/my_robot_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_camera_realsense:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_bot
+[1.893s] -- Install configuration: ""
+[1.893s] -- Execute custom install script
+[1.893s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/empty.yaml
+[1.893s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/joystick.yaml
+[1.894s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/main.rviz
+[1.894s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/mapper_params_online_async.yaml
+[1.894s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/slam_nav.rviz
+[1.894s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/twist_mux.yaml
+[1.894s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/arms.xacro
+[1.894s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/camera.xacro
+[1.894s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/depth_camera.xacro
+[1.894s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/gazebo_control.xacro
+[1.895s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/inertial_macros.xacro
+[1.895s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/left_arm.xacro
+[1.895s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/lidar.xacro
+[1.896s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/right_arm.xacro
+[1.897s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/robot.urdf.xacro
+[1.898s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/robot_core.xacro
+[1.898s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/robot_core_Rui.xacro
+[1.900s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/joystick.launch.py
+[1.901s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/launch_sim.launch.py
+[1.901s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/rsp.launch.py
+[1.902s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/empty.world
+[1.903s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/robocup_house.world
+[1.903s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/world_test.world
+[1.904s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/ament_index/resource_index/package_run_dependencies/charmie_bot
+[1.905s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/ament_index/resource_index/parent_prefix_path/charmie_bot
+[1.906s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/ament_prefix_path.sh
+[1.907s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/ament_prefix_path.dsv
+[1.908s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/path.sh
+[1.909s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/path.dsv
+[1.910s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.bash
+[1.910s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.sh
+[1.911s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.zsh
+[1.912s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.dsv
+[1.913s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.dsv
+[1.929s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/ament_index/resource_index/packages/charmie_bot
+[1.930s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/cmake/charmie_botConfig.cmake
+[1.931s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/cmake/charmie_botConfig-version.cmake
+[1.931s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.xml
+[1.945s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/test2:/home/utilizador/charmie_ws/install/my_robot_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_camera_realsense:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_bot

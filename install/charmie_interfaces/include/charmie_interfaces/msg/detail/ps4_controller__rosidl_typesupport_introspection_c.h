@@ -1,0 +1,1 @@
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_introspection_c.h

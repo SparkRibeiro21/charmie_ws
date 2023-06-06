@@ -1,0 +1,18 @@
+[2.535s] Invoking command in '/home/utilizador/charmie_ws/build/my_robot_controller': PYTHONPATH=/home/utilizador/charmie_ws/build/my_robot_controller/prefix_override:/home/utilizador/charmie_ws/install/my_robot_controller/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/my_robot_controller/build --no-deps install_data
+[3.001s] running develop
+[3.266s] running egg_info
+[3.267s] writing my_robot_controller.egg-info/PKG-INFO
+[3.267s] writing dependency_links to my_robot_controller.egg-info/dependency_links.txt
+[3.267s] writing entry points to my_robot_controller.egg-info/entry_points.txt
+[3.268s] writing requirements to my_robot_controller.egg-info/requires.txt
+[3.268s] writing top-level names to my_robot_controller.egg-info/top_level.txt
+[3.304s] reading manifest file 'my_robot_controller.egg-info/SOURCES.txt'
+[3.305s] writing manifest file 'my_robot_controller.egg-info/SOURCES.txt'
+[3.342s] running build_ext
+[3.343s] Creating /home/utilizador/charmie_ws/install/my_robot_controller/lib/python3.8/site-packages/my-robot-controller.egg-link (link to .)
+[3.344s] Installing test_node script to /home/utilizador/charmie_ws/install/my_robot_controller/lib/my_robot_controller
+[3.344s] Installing turtle_controller script to /home/utilizador/charmie_ws/install/my_robot_controller/lib/my_robot_controller
+[3.344s] 
+[3.344s] Installed /home/utilizador/charmie_ws/build/my_robot_controller
+[3.345s] running install_data
+[3.524s] Invoked command in '/home/utilizador/charmie_ws/build/my_robot_controller' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/my_robot_controller/prefix_override:/home/utilizador/charmie_ws/install/my_robot_controller/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/my_robot_controller/build --no-deps install_data

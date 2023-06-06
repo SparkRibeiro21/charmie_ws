@@ -11,7 +11,11 @@ set(CMAKE_MULTIPLE_OUTPUT_PAIRS
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__builder.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__struct.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__traits.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__builder.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__struct.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__traits.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/ps4_controller.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   )
 
 

@@ -7,6 +7,8 @@ file(REMOVE_RECURSE
   "../rosidl_generator_py/charmie_interfaces/msg/_encoders_s.c"
   "../rosidl_generator_py/charmie_interfaces/msg/_example_tr.py"
   "../rosidl_generator_py/charmie_interfaces/msg/_example_tr_s.c"
+  "../rosidl_generator_py/charmie_interfaces/msg/_ps4_controller.py"
+  "../rosidl_generator_py/charmie_interfaces/msg/_ps4_controller_s.c"
   "CMakeFiles/charmie_interfaces__py"
 )
 

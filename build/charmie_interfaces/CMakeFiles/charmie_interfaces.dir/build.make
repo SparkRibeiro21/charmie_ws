@@ -55,6 +55,7 @@ include CMakeFiles/charmie_interfaces.dir/progress.make
 
 CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/ExampleTR.msg
 CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/Encoders.msg
+CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/PS4Controller.msg
 CMakeFiles/charmie_interfaces: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 CMakeFiles/charmie_interfaces: /opt/ros/foxy/share/std_msgs/msg/Byte.idl
 CMakeFiles/charmie_interfaces: /opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl

@@ -58,9 +58,11 @@ charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/ch
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_c.c
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_example_tr.py
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_encoders.py
+charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_ps4_controller.py
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/__init__.py
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_example_tr_s.c
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_encoders_s.c
+charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_ps4_controller_s.c
 
 
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: /opt/ros/foxy/lib/rosidl_generator_py/rosidl_generator_py
@@ -78,6 +80,7 @@ rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesuppo
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: /opt/ros/foxy/share/rosidl_generator_py/resource/_srv.py.em
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: rosidl_adapter/charmie_interfaces/msg/ExampleTR.idl
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: rosidl_adapter/charmie_interfaces/msg/Encoders.idl
+rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: rosidl_adapter/charmie_interfaces/msg/PS4Controller.idl
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: /opt/ros/foxy/share/std_msgs/msg/Byte.idl
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: /opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl
@@ -154,6 +157,9 @@ rosidl_generator_py/charmie_interfaces/msg/_example_tr.py: rosidl_generator_py/c
 rosidl_generator_py/charmie_interfaces/msg/_encoders.py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_py/charmie_interfaces/msg/_encoders.py
 
+rosidl_generator_py/charmie_interfaces/msg/_ps4_controller.py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_py/charmie_interfaces/msg/_ps4_controller.py
+
 rosidl_generator_py/charmie_interfaces/msg/__init__.py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_py/charmie_interfaces/msg/__init__.py
 
@@ -163,15 +169,20 @@ rosidl_generator_py/charmie_interfaces/msg/_example_tr_s.c: rosidl_generator_py/
 rosidl_generator_py/charmie_interfaces/msg/_encoders_s.c: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_py/charmie_interfaces/msg/_encoders_s.c
 
+rosidl_generator_py/charmie_interfaces/msg/_ps4_controller_s.c: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_py/charmie_interfaces/msg/_ps4_controller_s.c
+
 charmie_interfaces__py: charmie_interfaces__py/CMakeFiles/charmie_interfaces__py
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_introspection_c.c
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_c.c
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_example_tr.py
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_encoders.py
+charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_ps4_controller.py
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/__init__.py
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_example_tr_s.c
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_encoders_s.c
+charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_ps4_controller_s.c
 charmie_interfaces__py: charmie_interfaces__py/CMakeFiles/charmie_interfaces__py.dir/build.make
 
 .PHONY : charmie_interfaces__py

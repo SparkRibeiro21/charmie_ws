@@ -2,3 +2,5 @@ msg/Encoders.idl
 msg/Encoders.msg
 msg/ExampleTR.idl
 msg/ExampleTR.msg
+msg/PS4Controller.idl
+msg/PS4Controller.msg
