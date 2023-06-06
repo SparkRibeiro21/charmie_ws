@@ -1,0 +1,17 @@
+[2.707s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_ps4_controller': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_ps4_controller/prefix_override:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_ps4_controller/build --no-deps install_data
+[3.390s] running develop
+[3.881s] running egg_info
+[3.881s] writing charmie_ps4_controller.egg-info/PKG-INFO
+[3.883s] writing dependency_links to charmie_ps4_controller.egg-info/dependency_links.txt
+[3.885s] writing entry points to charmie_ps4_controller.egg-info/entry_points.txt
+[3.888s] writing requirements to charmie_ps4_controller.egg-info/requires.txt
+[3.888s] writing top-level names to charmie_ps4_controller.egg-info/top_level.txt
+[4.109s] reading manifest file 'charmie_ps4_controller.egg-info/SOURCES.txt'
+[4.118s] writing manifest file 'charmie_ps4_controller.egg-info/SOURCES.txt'
+[4.336s] running build_ext
+[4.336s] Creating /home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages/charmie-ps4-controller.egg-link (link to .)
+[4.338s] Installing ps4_controller script to /home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/charmie_ps4_controller
+[4.338s] 
+[4.338s] Installed /home/utilizador/charmie_ws/build/charmie_ps4_controller
+[4.339s] running install_data
+[4.484s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_ps4_controller' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_ps4_controller/prefix_override:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_ps4_controller/build --no-deps install_data

@@ -1,0 +1,17 @@
+[2.543s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_camera_realsense': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_camera_realsense/prefix_override:/home/utilizador/charmie_ws/install/charmie_camera_realsense/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_camera_realsense/build --no-deps install_data
+[2.965s] running develop
+[3.152s] running egg_info
+[3.153s] writing charmie_camera_realsense.egg-info/PKG-INFO
+[3.154s] writing dependency_links to charmie_camera_realsense.egg-info/dependency_links.txt
+[3.154s] writing entry points to charmie_camera_realsense.egg-info/entry_points.txt
+[3.154s] writing requirements to charmie_camera_realsense.egg-info/requires.txt
+[3.154s] writing top-level names to charmie_camera_realsense.egg-info/top_level.txt
+[3.189s] reading manifest file 'charmie_camera_realsense.egg-info/SOURCES.txt'
+[3.191s] writing manifest file 'charmie_camera_realsense.egg-info/SOURCES.txt'
+[3.230s] running build_ext
+[3.231s] Creating /home/utilizador/charmie_ws/install/charmie_camera_realsense/lib/python3.8/site-packages/charmie-camera-realsense.egg-link (link to .)
+[3.232s] Installing camera_realsense script to /home/utilizador/charmie_ws/install/charmie_camera_realsense/lib/charmie_camera_realsense
+[3.232s] 
+[3.232s] Installed /home/utilizador/charmie_ws/build/charmie_camera_realsense
+[3.233s] running install_data
+[3.424s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_camera_realsense' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_camera_realsense/prefix_override:/home/utilizador/charmie_ws/install/charmie_camera_realsense/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_camera_realsense/build --no-deps install_data

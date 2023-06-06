@@ -1,0 +1,15 @@
+running develop
+running egg_info
+writing charmie_camera_realsense.egg-info/PKG-INFO
+writing dependency_links to charmie_camera_realsense.egg-info/dependency_links.txt
+writing entry points to charmie_camera_realsense.egg-info/entry_points.txt
+writing requirements to charmie_camera_realsense.egg-info/requires.txt
+writing top-level names to charmie_camera_realsense.egg-info/top_level.txt
+reading manifest file 'charmie_camera_realsense.egg-info/SOURCES.txt'
+writing manifest file 'charmie_camera_realsense.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_camera_realsense/lib/python3.8/site-packages/charmie-camera-realsense.egg-link (link to .)
+Installing camera_realsense script to /home/utilizador/charmie_ws/install/charmie_camera_realsense/lib/charmie_camera_realsense
+
+Installed /home/utilizador/charmie_ws/build/charmie_camera_realsense
+running install_data

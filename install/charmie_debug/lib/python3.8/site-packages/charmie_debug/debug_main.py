@@ -37,7 +37,7 @@ class TRNode(Node):
 
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
-        self.create_timer(0.1, self.timer_callback)
+        self.create_timer(0.05, self.timer_callback)
 
         # Get Flags
         self.flag_get_neck_position = False 
@@ -110,6 +110,7 @@ class TRNode(Node):
             
            
             self.omni_move_publisher.publish(omni_move)
+            self.controller_updated = False
             
         """
         if self.counter == 0:

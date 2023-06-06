@@ -102,214 +102,214 @@ class MyController(Controller):
 
     def on_up_arrow_press(self):
         # print("on_up_arrow_press")
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.ARROW_UP] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
 
     def on_down_arrow_press(self):
         # print("on_down_arrow_press")
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.ARROW_DOWN] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
 
     def on_up_down_arrow_release(self):
         # print("on_up_down_arrow_release")
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.ARROW_UP] = 0
         self.buttons[self.ARROW_DOWN] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
 
     def on_left_arrow_press(self):
         # print("on_left_arrow_press")
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.ARROW_LEFT] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
 
     def on_right_arrow_press(self):
         # print("on_right_arrow_press")
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.ARROW_RIGHT] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
 
     def on_left_right_arrow_release(self):
         # print("on_left_right_arrow_release")
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.ARROW_LEFT] = 0
         self.buttons[self.ARROW_RIGHT] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
 
     def on_x_press(self):
-        self.every_button_update()
+        # self.every_button_update()
         # print("Hello world")
         self.buttons[self.CROSS] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # pass
 
     def on_x_release(self):
-        self.every_button_update()
+        # self.every_button_update()
         # print("Goodbye world")
         self.buttons[self.CROSS] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # self.a = False
         # h.set_var_false()
         # print(controller.a)
 
     def on_triangle_press(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.TRIANGLE] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_triangle_press")
 
     def on_triangle_release(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.TRIANGLE] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_triangle_release")
 
     def on_circle_press(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.CIRCLE] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_circle_press")
 
     def on_circle_release(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.CIRCLE] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_circle_release")
 
     def on_square_press(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.SQUARE] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_square_press")
 
     def on_square_release(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.SQUARE] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_square_release")
 
     def on_L1_press(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.L1] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_L1_press")
 
     def on_L1_release(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.L1] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_L1_release")
 
     def on_R1_press(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.R1] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_R1_press")
 
     def on_R1_release(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.R1] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_R1_release")
 
     def on_L3_press(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.L3] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_L3_press")
 
     def on_L3_release(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.L3] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_L3_release")
 
     def on_R3_press(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.R3] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_R3_press")
 
     def on_R3_release(self):
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.R3] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("on_R3_release")
 
     def on_options_press(self):
         # self.buttons_ant = self.buttons
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.OPTIONS] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
         # print("on_options_press")
 
     def on_options_release(self):
         # self.buttons_ant = self.buttons
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.OPTIONS] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
         # print("on_options_release")
 
     def on_share_press(self):
         # self.buttons_ant = self.buttons
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.SHARE] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
         # print("on_share_press")
 
     def on_share_release(self):
         # self.buttons_ant = self.buttons
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.SHARE] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
         # print("on_share_release")
 
     def on_playstation_button_press(self):
         # self.buttons_ant = self.buttons
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.PS] = 1
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
         # print("on_playstation_button_press")
 
     def on_playstation_button_release(self):
         # self.buttons_ant = self.buttons
-        self.every_button_update()
+        # self.every_button_update()
         self.buttons[self.PS] = 0
-        self.buttons_updated = True
+        # self.buttons_updated = True
         self.values_updated = True
         # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
         # print("on_playstation_button_release")
@@ -355,19 +355,19 @@ class MyController(Controller):
     def on_L2_release(self):
         self.L2dist = 0.0
         # print("TR: L2_release", ",\t{}".format(self.L2dist))
-        self.L2R2_updated = True
+        # self.L2R2_updated = True
         self.values_updated = True
 
     def on_R2_press(self, value):
         self.R2dist = ((value+pow15) / (2*pow15))
         # print("TR: R2: {}".format(value), ",\t{:.2f}%".format(self.R2dist*100), ",\t{}".format(self.R2dist))
-        self.L2R2_updated = True
+        # self.L2R2_updated = True
         self.values_updated = True
 
     def on_R2_release(self):
         self.R2dist = 0.0
         # print("TR: R2_release", ",\t{}".format(self.R2dist))
-        self.L2R2_updated = True
+        # self.L2R2_updated = True
         self.values_updated = True
 
     def on_L3_up(self, value):
@@ -405,8 +405,7 @@ class MyController(Controller):
         self.update_L3()
 
     def update_L3(self):
-        print("oi?")
-        self.every_button_update() # added in the ROS version
+        # self.every_button_update() # added in the ROS version
         # contas: para angulo, é a tangente yy/xx para dist é a hipotenusa
         # self.L3ang = math.atan2(self.L3yy, self.L3xx)/math.pi*180
         # with this the angles are the same as the trigonometric circle
@@ -417,7 +416,7 @@ class MyController(Controller):
         if self.L3ang < 0.0:
             self.L3ang += 360
         # print("TR: ang: {:.2f}".format(self.L3ang), "\tdist: {:.2f}".format(self.L3dist))
-        self.analogs_updated = True
+        # self.analogs_updated = True
         self.values_updated = True
 
     def on_R3_up(self, value):
@@ -463,12 +462,9 @@ class MyController(Controller):
         if self.R3ang < 0.0:
             self.R3ang += 360
         # print("TR: ang: {:.2f}".format(self.R3ang), "\tdist: {:.2f}".format(self.R3dist), "X=", self.R3xx, "Y=", self.R3yy)
-        self.analogs_updated = True
+        # self.analogs_updated = True
         self.values_updated = True
         
-
-
-
 
 class ControllerNode(Node):
 
@@ -486,8 +482,6 @@ class ControllerNode(Node):
     def timer_callback(self):
         ps_con = PS4Controller()
         if self.controller.values_updated == True:
-            # print("IN")
-            # print(type(self.controller.button_state(self.controller.CROSS)))
 
             ps_con.arrow_up = int(self.controller.button_state(self.controller.ARROW_UP))
             ps_con.arrow_right = int(self.controller.button_state(self.controller.ARROW_RIGHT))
@@ -522,7 +516,8 @@ class ControllerNode(Node):
             ps_con.r3_yy = float(self.controller.R3yy)
 
             self.controller_publisher.publish(ps_con)
-
+            
+            self.controller.every_button_update()
             self.controller.values_updated = False
 
 
