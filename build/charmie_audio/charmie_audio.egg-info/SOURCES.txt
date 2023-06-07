@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+charmie_audio/__init__.py
+charmie_audio/audio.py
+charmie_audio.egg-info/PKG-INFO
+charmie_audio.egg-info/SOURCES.txt
+charmie_audio.egg-info/dependency_links.txt
+charmie_audio.egg-info/entry_points.txt
+charmie_audio.egg-info/requires.txt
+charmie_audio.egg-info/top_level.txt
+charmie_audio.egg-info/zip-safe
+resource/charmie_audio
