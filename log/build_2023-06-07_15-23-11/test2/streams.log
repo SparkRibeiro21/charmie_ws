@@ -1,0 +1,18 @@
+[2.533s] Invoking command in '/home/utilizador/charmie_ws/build/test2': PYTHONPATH=/home/utilizador/charmie_ws/build/test2/prefix_override:/home/utilizador/charmie_ws/install/test2/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/test2/build --no-deps install_data
+[2.982s] running develop
+[3.253s] running egg_info
+[3.253s] writing test2.egg-info/PKG-INFO
+[3.253s] writing dependency_links to test2.egg-info/dependency_links.txt
+[3.254s] writing entry points to test2.egg-info/entry_points.txt
+[3.254s] writing requirements to test2.egg-info/requires.txt
+[3.254s] writing top-level names to test2.egg-info/top_level.txt
+[3.314s] reading manifest file 'test2.egg-info/SOURCES.txt'
+[3.316s] writing manifest file 'test2.egg-info/SOURCES.txt'
+[3.382s] running build_ext
+[3.382s] Creating /home/utilizador/charmie_ws/install/test2/lib/python3.8/site-packages/test2.egg-link (link to .)
+[3.383s] Installing listener script to /home/utilizador/charmie_ws/install/test2/lib/test2
+[3.384s] Installing talker script to /home/utilizador/charmie_ws/install/test2/lib/test2
+[3.384s] 
+[3.384s] Installed /home/utilizador/charmie_ws/build/test2
+[3.384s] running install_data
+[3.484s] Invoked command in '/home/utilizador/charmie_ws/build/test2' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/test2/prefix_override:/home/utilizador/charmie_ws/install/test2/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/test2/build --no-deps install_data

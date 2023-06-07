@@ -9,9 +9,13 @@ setup.py
 ../../build/test2/test2.egg-info/top_level.txt
 ../../build/test2/test2.egg-info/zip-safe
 resource/test2
-test/test_copyright.py
-test/test_flake8.py
-test/test_pep257.py
 test2/__init__.py
 test2/publisher.py
 test2/subscriber.py
+test2.egg-info/PKG-INFO
+test2.egg-info/SOURCES.txt
+test2.egg-info/dependency_links.txt
+test2.egg-info/entry_points.txt
+test2.egg-info/requires.txt
+test2.egg-info/top_level.txt
+test2.egg-info/zip-safe

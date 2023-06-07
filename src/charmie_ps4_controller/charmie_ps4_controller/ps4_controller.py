@@ -473,12 +473,12 @@ class ControllerNode(Node):
         self.get_logger().info("Initialised CHARMIE PS4 Controller Node")
 
         self.controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
-
+        
         self.controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
 
         self.create_timer(0.05, self.timer_callback)
 
-
+        
     def timer_callback(self):
         ps_con = PS4Controller()
         if self.controller.values_updated == True:
