@@ -468,7 +468,7 @@ class LidarNode(Node):
         scan = self.laser.get_single_scan()
         ranges = []
         for key, value in scan.items():
-            ranges.append(float(value))
+            ranges.append(float(value/1000))
             # print(key, value)
 
         laser_scan.header.stamp = self.get_clock().now().to_msg()
