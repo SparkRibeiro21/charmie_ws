@@ -1,3 +1,0 @@
-[console_scripts]
-camera_realsense = charmie_camera_realsense.camera_realsense:main
-

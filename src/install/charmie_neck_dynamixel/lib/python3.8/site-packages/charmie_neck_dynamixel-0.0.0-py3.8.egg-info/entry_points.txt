@@ -1,3 +1,0 @@
-[console_scripts]
-neck_dynamixel = charmie_neck_dynamixel.neck_dynamixel:main
-

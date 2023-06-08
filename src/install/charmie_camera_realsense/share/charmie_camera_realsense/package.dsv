@@ -1,6 +1,0 @@
-source;share/charmie_camera_realsense/hook/pythonpath.ps1
-source;share/charmie_camera_realsense/hook/pythonpath.dsv
-source;share/charmie_camera_realsense/hook/pythonpath.sh
-source;share/charmie_camera_realsense/hook/ament_prefix_path.ps1
-source;share/charmie_camera_realsense/hook/ament_prefix_path.dsv
-source;share/charmie_camera_realsense/hook/ament_prefix_path.sh
