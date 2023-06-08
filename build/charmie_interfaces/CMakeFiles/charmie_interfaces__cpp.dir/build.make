@@ -65,6 +65,10 @@ CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__builder.hpp
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__struct.hpp
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__traits.hpp
+CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/robot_speech.hpp
+CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__builder.hpp
+CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__struct.hpp
+CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__traits.hpp
 
 
 rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp: /opt/ros/foxy/lib/rosidl_generator_cpp/rosidl_generator_cpp
@@ -85,6 +89,7 @@ rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp: /opt/ros/foxy/share/
 rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp: rosidl_adapter/charmie_interfaces/msg/ExampleTR.idl
 rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp: rosidl_adapter/charmie_interfaces/msg/Encoders.idl
 rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp: rosidl_adapter/charmie_interfaces/msg/PS4Controller.idl
+rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp: rosidl_adapter/charmie_interfaces/msg/RobotSpeech.idl
 rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp: /opt/ros/foxy/share/std_msgs/msg/Byte.idl
 rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp: /opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl
@@ -182,6 +187,18 @@ rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__struct.hpp: r
 rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__traits.hpp: rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__traits.hpp
 
+rosidl_generator_cpp/charmie_interfaces/msg/robot_speech.hpp: rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/robot_speech.hpp
+
+rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__builder.hpp: rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__builder.hpp
+
+rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__struct.hpp: rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__struct.hpp
+
+rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__traits.hpp: rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__traits.hpp
+
 charmie_interfaces__cpp: CMakeFiles/charmie_interfaces__cpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__builder.hpp
@@ -195,6 +212,10 @@ charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/ps4_control
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__builder.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__struct.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__traits.hpp
+charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/robot_speech.hpp
+charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__builder.hpp
+charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__struct.hpp
+charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__traits.hpp
 charmie_interfaces__cpp: CMakeFiles/charmie_interfaces__cpp.dir/build.make
 
 .PHONY : charmie_interfaces__cpp

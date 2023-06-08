@@ -1,0 +1,37 @@
+[1.528s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_debug': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${CMAKE_PREFIX_PATH} LD_LIBRARY_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/src/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/charmie_debug build --build-base /home/utilizador/charmie_ws/src/build/charmie_debug/build install --record /home/utilizador/charmie_ws/src/build/charmie_debug/install.log --install-scripts $base/lib/charmie_debug --single-version-externally-managed
+[1.848s] running egg_info
+[1.848s] creating ../build/charmie_debug/charmie_debug.egg-info
+[1.849s] writing ../build/charmie_debug/charmie_debug.egg-info/PKG-INFO
+[1.849s] writing dependency_links to ../build/charmie_debug/charmie_debug.egg-info/dependency_links.txt
+[1.850s] writing entry points to ../build/charmie_debug/charmie_debug.egg-info/entry_points.txt
+[1.850s] writing requirements to ../build/charmie_debug/charmie_debug.egg-info/requires.txt
+[1.850s] writing top-level names to ../build/charmie_debug/charmie_debug.egg-info/top_level.txt
+[1.852s] writing manifest file '../build/charmie_debug/charmie_debug.egg-info/SOURCES.txt'
+[1.895s] reading manifest file '../build/charmie_debug/charmie_debug.egg-info/SOURCES.txt'
+[1.896s] writing manifest file '../build/charmie_debug/charmie_debug.egg-info/SOURCES.txt'
+[1.897s] running build
+[1.897s] running build_py
+[1.897s] creating /home/utilizador/charmie_ws/src/build/charmie_debug/build
+[1.897s] creating /home/utilizador/charmie_ws/src/build/charmie_debug/build/lib
+[1.897s] creating /home/utilizador/charmie_ws/src/build/charmie_debug/build/lib/charmie_debug
+[1.898s] copying charmie_debug/debug_main.py -> /home/utilizador/charmie_ws/src/build/charmie_debug/build/lib/charmie_debug
+[1.898s] copying charmie_debug/__init__.py -> /home/utilizador/charmie_ws/src/build/charmie_debug/build/lib/charmie_debug
+[1.898s] running install
+[1.899s] running install_lib
+[1.900s] creating /home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages/charmie_debug
+[1.900s] copying /home/utilizador/charmie_ws/src/build/charmie_debug/build/lib/charmie_debug/debug_main.py -> /home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages/charmie_debug
+[1.901s] copying /home/utilizador/charmie_ws/src/build/charmie_debug/build/lib/charmie_debug/__init__.py -> /home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages/charmie_debug
+[1.901s] byte-compiling /home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages/charmie_debug/debug_main.py to debug_main.cpython-38.pyc
+[1.904s] byte-compiling /home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages/charmie_debug/__init__.py to __init__.cpython-38.pyc
+[1.905s] running install_data
+[1.905s] creating /home/utilizador/charmie_ws/src/install/charmie_debug/share/ament_index
+[1.906s] creating /home/utilizador/charmie_ws/src/install/charmie_debug/share/ament_index/resource_index
+[1.906s] creating /home/utilizador/charmie_ws/src/install/charmie_debug/share/ament_index/resource_index/packages
+[1.906s] copying resource/charmie_debug -> /home/utilizador/charmie_ws/src/install/charmie_debug/share/ament_index/resource_index/packages
+[1.906s] copying package.xml -> /home/utilizador/charmie_ws/src/install/charmie_debug/share/charmie_debug
+[1.906s] running install_egg_info
+[1.908s] Copying ../build/charmie_debug/charmie_debug.egg-info to /home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages/charmie_debug-0.0.0-py3.8.egg-info
+[1.909s] running install_scripts
+[1.932s] Installing debug_main script to /home/utilizador/charmie_ws/src/install/charmie_debug/lib/charmie_debug
+[1.933s] writing list of installed files to '/home/utilizador/charmie_ws/src/build/charmie_debug/install.log'
+[1.974s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_debug' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${CMAKE_PREFIX_PATH} LD_LIBRARY_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/src/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/charmie_debug build --build-base /home/utilizador/charmie_ws/src/build/charmie_debug/build install --record /home/utilizador/charmie_ws/src/build/charmie_debug/install.log --install-scripts $base/lib/charmie_debug --single-version-externally-managed

@@ -9,9 +9,13 @@ file(REMOVE_RECURSE
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__builder.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__struct.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__traits.hpp"
+  "rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__builder.hpp"
+  "rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__struct.hpp"
+  "rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__traits.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/ps4_controller.hpp"
+  "rosidl_generator_cpp/charmie_interfaces/msg/robot_speech.hpp"
 )
 
 # Per-language clean rules from dependency scanning.

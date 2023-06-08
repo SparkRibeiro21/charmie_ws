@@ -7,6 +7,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp.o"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp.o"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/ps4_controller__type_support_c.cpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/ps4_controller__type_support_c.cpp.o"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/robot_speech__type_support_c.cpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/robot_speech__type_support_c.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
@@ -47,6 +48,8 @@ set(CMAKE_MULTIPLE_OUTPUT_PAIRS
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_c.h"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_fastrtps_c.h" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_c.h"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/ps4_controller__type_support_c.cpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_c.h"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_fastrtps_c.h" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_c.h"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/robot_speech__type_support_c.cpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_c.h"
   )
 
 

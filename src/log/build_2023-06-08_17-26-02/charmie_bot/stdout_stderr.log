@@ -1,0 +1,69 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 0.9.11 (/opt/ros/foxy/share/ament_cmake/cmake)
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python3
+-- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)
+-- Added test 'copyright' to check source files copyright and LICENSE
+-- Added test 'flake8' to check Python code syntax and style conventions
+-- Added test 'lint_cmake' to check CMake code style
+-- Added test 'pep257' to check Python code against some of the style conventions in PEP 257
+-- Added test 'xmllint' to check XML markup files
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/utilizador/charmie_ws/src/build/charmie_bot
+-- Install configuration: ""
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/config
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/config/twist_mux.yaml
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/config/joystick.yaml
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/config/slam_nav.rviz
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/config/mapper_params_online_async.yaml
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/config/main.rviz
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/config/empty.yaml
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/depth_camera.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/left_arm.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/inertial_macros.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/robot_core.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/gazebo_control.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/right_arm.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/lidar.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/arms.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/robot_core_Rui.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/camera.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/description/robot.urdf.xacro
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/launch
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/launch/joystick.launch.py
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/launch/rsp.launch.py
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/launch/launch_sim.launch.py
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/worlds
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/worlds/empty.world
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/worlds/world_test.world
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/worlds/robocup_house.world
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/ament_index/resource_index/package_run_dependencies/charmie_bot
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/ament_index/resource_index/parent_prefix_path/charmie_bot
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/environment/ament_prefix_path.sh
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/environment/ament_prefix_path.dsv
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/environment/path.sh
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/environment/path.dsv
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/local_setup.bash
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/local_setup.sh
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/local_setup.zsh
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/local_setup.dsv
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/package.dsv
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/ament_index/resource_index/packages/charmie_bot
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/cmake/charmie_botConfig.cmake
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/cmake/charmie_botConfig-version.cmake
+-- Installing: /home/utilizador/charmie_ws/src/install/charmie_bot/share/charmie_bot/package.xml

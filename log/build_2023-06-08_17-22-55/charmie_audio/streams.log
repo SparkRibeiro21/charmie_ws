@@ -1,0 +1,34 @@
+[2.829s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_audio': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_audio/prefix_override:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --uninstall --editable --build-directory /home/utilizador/charmie_ws/build/charmie_audio/build
+[3.323s] running develop
+[3.626s] Removing /home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages/charmie-audio.egg-link (link to .)
+[3.699s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_audio' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_audio/prefix_override:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --uninstall --editable --build-directory /home/utilizador/charmie_ws/build/charmie_audio/build
+[3.701s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_audio': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_audio/prefix_override:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_audio build --build-base /home/utilizador/charmie_ws/build/charmie_audio/build install --record /home/utilizador/charmie_ws/build/charmie_audio/install.log --install-scripts $base/lib/charmie_audio --single-version-externally-managed
+[4.187s] running egg_info
+[4.188s] writing ../../build/charmie_audio/charmie_audio.egg-info/PKG-INFO
+[4.189s] writing dependency_links to ../../build/charmie_audio/charmie_audio.egg-info/dependency_links.txt
+[4.189s] writing entry points to ../../build/charmie_audio/charmie_audio.egg-info/entry_points.txt
+[4.190s] writing requirements to ../../build/charmie_audio/charmie_audio.egg-info/requires.txt
+[4.190s] writing top-level names to ../../build/charmie_audio/charmie_audio.egg-info/top_level.txt
+[4.261s] reading manifest file '../../build/charmie_audio/charmie_audio.egg-info/SOURCES.txt'
+[4.261s] writing manifest file '../../build/charmie_audio/charmie_audio.egg-info/SOURCES.txt'
+[4.262s] running build
+[4.262s] running build_py
+[4.262s] creating /home/utilizador/charmie_ws/build/charmie_audio/build
+[4.262s] creating /home/utilizador/charmie_ws/build/charmie_audio/build/lib
+[4.262s] creating /home/utilizador/charmie_ws/build/charmie_audio/build/lib/charmie_audio
+[4.263s] copying charmie_audio/audio.py -> /home/utilizador/charmie_ws/build/charmie_audio/build/lib/charmie_audio
+[4.263s] copying charmie_audio/__init__.py -> /home/utilizador/charmie_ws/build/charmie_audio/build/lib/charmie_audio
+[4.263s] running install
+[4.265s] running install_lib
+[4.266s] creating /home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages/charmie_audio
+[4.266s] copying /home/utilizador/charmie_ws/build/charmie_audio/build/lib/charmie_audio/audio.py -> /home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages/charmie_audio
+[4.267s] copying /home/utilizador/charmie_ws/build/charmie_audio/build/lib/charmie_audio/__init__.py -> /home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages/charmie_audio
+[4.268s] byte-compiling /home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages/charmie_audio/audio.py to audio.cpython-38.pyc
+[4.271s] byte-compiling /home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages/charmie_audio/__init__.py to __init__.cpython-38.pyc
+[4.271s] running install_data
+[4.272s] running install_egg_info
+[4.283s] Copying ../../build/charmie_audio/charmie_audio.egg-info to /home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages/charmie_audio-0.0.0-py3.8.egg-info
+[4.284s] running install_scripts
+[4.312s] Installing audio script to /home/utilizador/charmie_ws/install/charmie_audio/lib/charmie_audio
+[4.313s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_audio/install.log'
+[4.403s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_audio' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_audio/prefix_override:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_audio build --build-base /home/utilizador/charmie_ws/build/charmie_audio/build install --record /home/utilizador/charmie_ws/build/charmie_audio/install.log --install-scripts $base/lib/charmie_audio --single-version-externally-managed

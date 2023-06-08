@@ -3,8 +3,8 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
-from std_msgs.msg import Bool, Int16
-from charmie_interfaces.msg import Encoders, PS4Controller
+from std_msgs.msg import Bool, Int16, String
+from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech
 # import time
 
 class TRNode(Node):
@@ -35,9 +35,18 @@ class TRNode(Node):
         # PS4 Controller
         self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.get_controller_callback, 10)
 
+        # LIDAR Hokuyo
+        pass
+
+        # Speaker
+        self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
+        self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
+
+
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
         self.create_timer(0.05, self.timer_callback)
+        self.create_timer(5, self.timer_callback2)
 
         # Get Flags
         self.flag_get_neck_position = False 
@@ -75,6 +84,20 @@ class TRNode(Node):
         print("R3_ang = ", controller.r3_ang, "R3_dis = ", controller.r3_dist, "R3_xx = ", controller.r3_xx, "R3_yy = ", controller.r3_yy)
         self.ps4_controller = controller
         self.controller_updated = True
+
+    def get_speech_done_callback(self, state: Bool):
+        print("Received Speech Flag: ", state.data)
+
+    def timer_callback2(self):
+        speech_str = RobotSpeech()
+        speech_str.command = "Hello my name is Tiago."
+        # speech_str.language = 'en'
+        # speech_str.command = "Bom dia, o meu nome é Tiago e gosto de Robôs. Já agora, qual é a comida na cantina hoje?"
+        # speech_str.command = "Qual é a comida na cantina hoje?"
+        speech_str.command = "Hello my name is Tiago."
+        speech_str.language = 'en'
+        self.speaker_publisher.publish(speech_str)
+
 
     def timer_callback(self):
         neck = Pose2D()

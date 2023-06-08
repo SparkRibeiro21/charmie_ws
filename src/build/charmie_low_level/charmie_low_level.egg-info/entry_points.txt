@@ -1,0 +1,3 @@
+[console_scripts]
+low_level = charmie_low_level.low_level:main
+

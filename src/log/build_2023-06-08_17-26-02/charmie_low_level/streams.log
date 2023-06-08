@@ -1,0 +1,37 @@
+[1.611s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_low_level': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${CMAKE_PREFIX_PATH} LD_LIBRARY_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/src/build/charmie_low_level/prefix_override:/home/utilizador/charmie_ws/src/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/charmie_low_level build --build-base /home/utilizador/charmie_ws/src/build/charmie_low_level/build install --record /home/utilizador/charmie_ws/src/build/charmie_low_level/install.log --install-scripts $base/lib/charmie_low_level --single-version-externally-managed
+[1.923s] running egg_info
+[1.924s] creating ../build/charmie_low_level/charmie_low_level.egg-info
+[1.924s] writing ../build/charmie_low_level/charmie_low_level.egg-info/PKG-INFO
+[1.925s] writing dependency_links to ../build/charmie_low_level/charmie_low_level.egg-info/dependency_links.txt
+[1.925s] writing entry points to ../build/charmie_low_level/charmie_low_level.egg-info/entry_points.txt
+[1.925s] writing requirements to ../build/charmie_low_level/charmie_low_level.egg-info/requires.txt
+[1.925s] writing top-level names to ../build/charmie_low_level/charmie_low_level.egg-info/top_level.txt
+[1.927s] writing manifest file '../build/charmie_low_level/charmie_low_level.egg-info/SOURCES.txt'
+[1.973s] reading manifest file '../build/charmie_low_level/charmie_low_level.egg-info/SOURCES.txt'
+[1.974s] writing manifest file '../build/charmie_low_level/charmie_low_level.egg-info/SOURCES.txt'
+[1.974s] running build
+[1.974s] running build_py
+[1.975s] creating /home/utilizador/charmie_ws/src/build/charmie_low_level/build
+[1.975s] creating /home/utilizador/charmie_ws/src/build/charmie_low_level/build/lib
+[1.975s] creating /home/utilizador/charmie_ws/src/build/charmie_low_level/build/lib/charmie_low_level
+[1.975s] copying charmie_low_level/low_level.py -> /home/utilizador/charmie_ws/src/build/charmie_low_level/build/lib/charmie_low_level
+[1.975s] copying charmie_low_level/__init__.py -> /home/utilizador/charmie_ws/src/build/charmie_low_level/build/lib/charmie_low_level
+[1.976s] running install
+[1.976s] running install_lib
+[1.976s] creating /home/utilizador/charmie_ws/src/install/charmie_low_level/lib/python3.8/site-packages/charmie_low_level
+[1.976s] copying /home/utilizador/charmie_ws/src/build/charmie_low_level/build/lib/charmie_low_level/low_level.py -> /home/utilizador/charmie_ws/src/install/charmie_low_level/lib/python3.8/site-packages/charmie_low_level
+[1.976s] copying /home/utilizador/charmie_ws/src/build/charmie_low_level/build/lib/charmie_low_level/__init__.py -> /home/utilizador/charmie_ws/src/install/charmie_low_level/lib/python3.8/site-packages/charmie_low_level
+[1.976s] byte-compiling /home/utilizador/charmie_ws/src/install/charmie_low_level/lib/python3.8/site-packages/charmie_low_level/low_level.py to low_level.cpython-38.pyc
+[1.978s] byte-compiling /home/utilizador/charmie_ws/src/install/charmie_low_level/lib/python3.8/site-packages/charmie_low_level/__init__.py to __init__.cpython-38.pyc
+[1.978s] running install_data
+[1.979s] creating /home/utilizador/charmie_ws/src/install/charmie_low_level/share/ament_index
+[1.979s] creating /home/utilizador/charmie_ws/src/install/charmie_low_level/share/ament_index/resource_index
+[1.979s] creating /home/utilizador/charmie_ws/src/install/charmie_low_level/share/ament_index/resource_index/packages
+[1.980s] copying resource/charmie_low_level -> /home/utilizador/charmie_ws/src/install/charmie_low_level/share/ament_index/resource_index/packages
+[1.981s] copying package.xml -> /home/utilizador/charmie_ws/src/install/charmie_low_level/share/charmie_low_level
+[1.981s] running install_egg_info
+[1.982s] Copying ../build/charmie_low_level/charmie_low_level.egg-info to /home/utilizador/charmie_ws/src/install/charmie_low_level/lib/python3.8/site-packages/charmie_low_level-0.0.0-py3.8.egg-info
+[1.983s] running install_scripts
+[2.005s] Installing low_level script to /home/utilizador/charmie_ws/src/install/charmie_low_level/lib/charmie_low_level
+[2.006s] writing list of installed files to '/home/utilizador/charmie_ws/src/build/charmie_low_level/install.log'
+[2.041s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_low_level' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${CMAKE_PREFIX_PATH} LD_LIBRARY_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/src/build/charmie_low_level/prefix_override:/home/utilizador/charmie_ws/src/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/charmie_low_level build --build-base /home/utilizador/charmie_ws/src/build/charmie_low_level/build install --record /home/utilizador/charmie_ws/src/build/charmie_low_level/install.log --install-scripts $base/lib/charmie_low_level --single-version-externally-managed

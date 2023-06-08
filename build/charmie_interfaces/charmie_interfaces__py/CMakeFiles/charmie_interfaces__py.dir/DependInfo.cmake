@@ -14,6 +14,8 @@ set(CMAKE_MULTIPLE_OUTPUT_PAIRS
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/msg/_example_tr_s.c" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/msg/_ps4_controller.py" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/msg/_ps4_controller_s.c" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/msg/_robot_speech.py" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/msg/_robot_speech_s.c" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c"
   )
 
 

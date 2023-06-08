@@ -5,7 +5,8 @@
   "idl_tuples": [
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/ExampleTR.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/Encoders.idl",
-    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/PS4Controller.idl"
+    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/PS4Controller.idl",
+    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/RobotSpeech.idl"
   ],
   "ros_interface_dependencies": [
     "std_msgs:/opt/ros/foxy/share/std_msgs/msg/Bool.idl",
@@ -80,6 +81,7 @@
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/ExampleTR.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Encoders.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/PS4Controller.idl",
+    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/RobotSpeech.idl",
     "/opt/ros/foxy/share/std_msgs/msg/Bool.idl",
     "/opt/ros/foxy/share/std_msgs/msg/Byte.idl",
     "/opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl",
