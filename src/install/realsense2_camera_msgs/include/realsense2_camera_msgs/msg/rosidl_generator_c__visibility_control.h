@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/src/build/realsense2_camera_msgs/rosidl_generator_c/realsense2_camera_msgs/msg/rosidl_generator_c__visibility_control.h

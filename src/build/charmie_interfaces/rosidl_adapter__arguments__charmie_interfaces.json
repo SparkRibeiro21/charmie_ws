@@ -1,9 +1,0 @@
-{
-  "package_name": "charmie_interfaces",
-  "non_idl_tuples": [
-    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/ExampleTR.msg",
-    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/Encoders.msg",
-    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/PS4Controller.msg",
-    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/RobotSpeech.msg"
-  ]
-}

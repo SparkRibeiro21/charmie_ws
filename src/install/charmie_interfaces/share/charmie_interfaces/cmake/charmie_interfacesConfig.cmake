@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/src/build/charmie_interfaces/ament_cmake_core/charmie_interfacesConfig.cmake

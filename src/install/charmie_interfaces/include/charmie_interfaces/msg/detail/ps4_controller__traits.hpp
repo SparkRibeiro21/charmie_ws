@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/src/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/ps4_controller__traits.hpp
