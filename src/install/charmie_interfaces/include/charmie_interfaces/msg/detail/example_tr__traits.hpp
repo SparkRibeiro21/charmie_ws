@@ -1,0 +1,1 @@
+/home/utilizador/charmie_ws/src/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__traits.hpp

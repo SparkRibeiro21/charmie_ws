@@ -1,0 +1,1 @@
+ament_cmake_symlink_install_targets("TARGET_FILES" "/home/utilizador/charmie_ws/src/build/charmie_interfaces/libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so" "TARGETS" "charmie_interfaces__rosidl_typesupport_fastrtps_c" "ARCHIVE_DESTINATION" "lib" "LIBRARY_DESTINATION" "lib" "RUNTIME_DESTINATION" "bin")

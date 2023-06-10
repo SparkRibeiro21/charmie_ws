@@ -1,0 +1,1 @@
+ament_cmake_symlink_install_targets("TARGET_FILES" "/home/utilizador/charmie_ws/build/realsense2_camera_msgs/rosidl_generator_py/realsense2_camera_msgs/librealsense2_camera_msgs__python.so" "TARGETS" "realsense2_camera_msgs__python" "ARCHIVE_DESTINATION" "lib" "LIBRARY_DESTINATION" "lib" "RUNTIME_DESTINATION" "bin")

@@ -4,8 +4,13 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16, String
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, Image
 from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech
+
+
+from cv_bridge import CvBridge
+import cv2 
+
 # import time
 
 class TRNode(Node):
@@ -43,6 +48,10 @@ class TRNode(Node):
         self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
         self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
 
+        # Intel Realsense
+        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
+        self.depth_image_subscriber = self.create_subscription(Image, "/depth/image_rect_raw", self.get_depth_image_callback, 10)
+
 
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
@@ -59,6 +68,8 @@ class TRNode(Node):
         # Get Variables
         self.ps4_controller = PS4Controller()
         self.controller_updated = False
+
+        self.br = CvBridge()
 
     def get_neck_position_callback(self, pos: Pose2D):
         print("Received Neck Position: pan =", int(pos.x), " tilt = ", int(pos.y))
@@ -92,6 +103,23 @@ class TRNode(Node):
 
     def get_speech_done_callback(self, state: Bool):
         print("Received Speech Flag: ", state.data)
+
+    def get_color_image_callback(self, img: Image):
+        # print(img)
+        print("---")
+        self.get_logger().info('Receiving color video frame')
+        current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
+        cv2.imshow("c_camera", current_frame)   
+        cv2.waitKey(1)
+
+    def get_depth_image_callback(self, img: Image):
+        # print(img)
+        print("---")
+        self.get_logger().info('Receiving depth video frame')
+        current_frame = self.br.imgmsg_to_cv2(img)
+        cv2.imshow("d_camera", current_frame)   
+        cv2.waitKey(1)
+
 
     def timer_callback2(self):
         speech_str = RobotSpeech()

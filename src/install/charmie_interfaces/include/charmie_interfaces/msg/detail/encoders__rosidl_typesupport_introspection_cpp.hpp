@@ -1,0 +1,1 @@
+/home/utilizador/charmie_ws/src/build/charmie_interfaces/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_cpp.hpp

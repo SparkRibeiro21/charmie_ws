@@ -1,0 +1,1 @@
+/home/utilizador/charmie_ws/src/build/realsense2_camera_msgs/rosidl_cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake

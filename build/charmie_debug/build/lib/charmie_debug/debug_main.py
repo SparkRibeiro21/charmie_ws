@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16, String
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, Image
 from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech
 # import time
 
@@ -42,6 +42,9 @@ class TRNode(Node):
         # Speaker
         self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
         self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
+
+        # Intel Realsense
+        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
 
 
         # Timers
@@ -92,6 +95,9 @@ class TRNode(Node):
 
     def get_speech_done_callback(self, state: Bool):
         print("Received Speech Flag: ", state.data)
+
+    def get_color_image_callback(self, img: Image):
+        print(img)
 
     def timer_callback2(self):
         speech_str = RobotSpeech()

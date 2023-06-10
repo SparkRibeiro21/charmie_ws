@@ -1,0 +1,17 @@
+[1.610s] Invoking command in '/home/utilizador/charmie_ws/src/build/charmie_debug': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${CMAKE_PREFIX_PATH} LD_LIBRARY_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/src/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/src/build/charmie_debug/build --no-deps install_data
+[1.959s] running develop
+[2.138s] running egg_info
+[2.139s] writing charmie_debug.egg-info/PKG-INFO
+[2.139s] writing dependency_links to charmie_debug.egg-info/dependency_links.txt
+[2.139s] writing entry points to charmie_debug.egg-info/entry_points.txt
+[2.139s] writing requirements to charmie_debug.egg-info/requires.txt
+[2.139s] writing top-level names to charmie_debug.egg-info/top_level.txt
+[2.179s] reading manifest file 'charmie_debug.egg-info/SOURCES.txt'
+[2.179s] writing manifest file 'charmie_debug.egg-info/SOURCES.txt'
+[2.220s] running build_ext
+[2.220s] Creating /home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages/charmie-debug.egg-link (link to .)
+[2.221s] Installing debug_main script to /home/utilizador/charmie_ws/src/install/charmie_debug/lib/charmie_debug
+[2.222s] 
+[2.222s] Installed /home/utilizador/charmie_ws/src/build/charmie_debug
+[2.222s] running install_data
+[2.264s] Invoked command in '/home/utilizador/charmie_ws/src/build/charmie_debug' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces:${CMAKE_PREFIX_PATH} LD_LIBRARY_PATH=/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/src/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/src/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/src/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/src/build/charmie_debug/build --no-deps install_data

@@ -1,2 +1,1 @@
-source;share/charmie_bot/environment/ament_prefix_path.sh
-source;share/charmie_bot/environment/path.sh
+/home/utilizador/charmie_ws/build/charmie_bot/ament_cmake_environment_hooks/local_setup.dsv

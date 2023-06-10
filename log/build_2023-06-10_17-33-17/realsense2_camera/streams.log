@@ -1,0 +1,71 @@
+[0.026s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/realsense2_camera
+[0.042s] -- Create Release Build.
+[0.042s] -- Found ament_cmake: 0.9.11 (/opt/ros/foxy/share/ament_cmake/cmake)
+[0.075s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[0.313s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.326s] -- Found builtin_interfaces: 1.0.0 (/opt/ros/foxy/share/builtin_interfaces/cmake)
+[0.363s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.369s] -- Found rosidl_adapter: 1.3.0 (/opt/ros/foxy/share/rosidl_adapter/cmake)
+[0.496s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.522s] -- Found cv_bridge: 3.0.7 (/opt/ros/foxy/share/cv_bridge/cmake)
+[0.694s] -- Found image_transport: 2.4.0 (/opt/ros/foxy/share/image_transport/cmake)
+[0.738s] -- Found rmw_implementation_cmake: 1.0.4 (/opt/ros/foxy/share/rmw_implementation_cmake/cmake)
+[0.740s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[0.924s] -- Found rclcpp_components: 2.4.2 (/opt/ros/foxy/share/rclcpp_components/cmake)
+[0.975s] -- Found realsense2_camera_msgs: 4.51.1 (/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake)
+[1.013s] -- Found nav_msgs: 2.0.5 (/opt/ros/foxy/share/nav_msgs/cmake)
+[1.087s] -- Found tf2_ros: 0.13.14 (/opt/ros/foxy/share/tf2_ros/cmake)
+[1.560s] -- Found diagnostic_updater: 3.1.2 (/opt/ros/foxy/share/diagnostic_updater/cmake)
+[1.630s] -- Build for ROS2 Foxy
+[1.780s] -- Configuring done
+[1.828s] -- Generating done
+[1.830s] -- Build files have been written to: /home/utilizador/charmie_ws/build/realsense2_camera
+[1.843s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera' returned '0': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/realsense2_camera
+[1.844s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera -- -j8 -l8
+[1.915s] [  6%] [32m[1mLinking CXX executable realsense2_camera_node[0m
+[1.992s] [ 12%] [32m[1mLinking CXX shared library librealsense2_camera.so[0m
+[2.052s] [ 18%] Built target realsense2_camera_node
+[2.892s] [100%] Built target realsense2_camera
+[2.905s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera' returned '0': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera -- -j8 -l8
+[2.963s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera
+[2.972s] -- Install configuration: "Release"
+[2.972s] -- Execute custom install script
+[2.973s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/lib/realsense2_camera/realsense2_camera_node
+[2.984s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/lib/librealsense2_camera.so
+[2.996s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/base_realsense_node.h
+[3.006s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/constants.h
+[3.016s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/dynamic_params.h
+[3.025s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/image_publisher.h
+[3.036s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/named_filter.h
+[3.046s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/profile_manager.h
+[3.056s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/realsense_node_factory.h
+[3.066s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/ros_param_backend.h
+[3.076s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/ros_sensor.h
+[3.086s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/ros_utils.h
+[3.096s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/sensor_params.h
+[3.107s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/launch/default.rviz
+[3.116s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/launch/rs_intra_process_demo_launch.py
+[3.127s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/launch/rs_launch.py
+[3.136s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/launch/rs_multi_camera_launch.py
+[3.147s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/library_path.sh
+[3.158s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/library_path.dsv
+[3.169s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/ament_index/resource_index/package_run_dependencies/realsense2_camera
+[3.178s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/ament_index/resource_index/parent_prefix_path/realsense2_camera
+[3.188s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/ament_prefix_path.sh
+[3.198s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/ament_prefix_path.dsv
+[3.208s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/path.sh
+[3.220s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/path.dsv
+[3.231s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/local_setup.bash
+[3.241s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/local_setup.sh
+[3.253s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/local_setup.zsh
+[3.265s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/local_setup.dsv
+[3.275s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.dsv
+[3.287s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/ament_index/resource_index/packages/realsense2_camera
+[3.296s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/ament_index/resource_index/rclcpp_components/realsense2_camera
+[3.306s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/cmake/ament_cmake_export_include_directories-extras.cmake
+[3.317s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/cmake/ament_cmake_export_libraries-extras.cmake
+[3.327s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/cmake/ament_cmake_export_dependencies-extras.cmake
+[3.337s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/cmake/realsense2_cameraConfig.cmake
+[3.349s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/cmake/realsense2_cameraConfig-version.cmake
+[3.361s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.xml
+[3.375s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera' returned '0': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera
