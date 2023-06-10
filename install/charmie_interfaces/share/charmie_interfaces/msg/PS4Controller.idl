@@ -1,1 +1,62 @@
-/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/PS4Controller.idl
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from charmie_interfaces/msg/PS4Controller.msg
+// generated code does not contain a copyright notice
+
+
+module charmie_interfaces {
+  module msg {
+    @verbatim (language="comment", text=
+      " message to get the data from all the buttons and joysticks from the ps4 controller")
+    struct PS4Controller {
+      uint8 triangle;
+
+      uint8 circle;
+
+      uint8 cross;
+
+      uint8 square;
+
+      uint8 arrow_up;
+
+      uint8 arrow_right;
+
+      uint8 arrow_down;
+
+      uint8 arrow_left;
+
+      uint8 l1;
+
+      uint8 r1;
+
+      uint8 l3;
+
+      uint8 r3;
+
+      uint8 share;
+
+      uint8 options;
+
+      uint8 ps;
+
+      float l3_ang;
+
+      float l3_dist;
+
+      float l3_xx;
+
+      float l3_yy;
+
+      float r3_ang;
+
+      float r3_dist;
+
+      float r3_xx;
+
+      float r3_yy;
+
+      float l2;
+
+      float r2;
+    };
+  };
+};

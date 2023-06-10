@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16, String
+from sensor_msgs.msg import LaserScan
 from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech
 # import time
 
@@ -36,7 +37,7 @@ class TRNode(Node):
         self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.get_controller_callback, 10)
 
         # LIDAR Hokuyo
-        pass
+        self.lidar_subscriber = self.create_subscription(LaserScan, "lidar_scan", self.get_lidar_callback, 10)
 
         # Speaker
         self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
@@ -84,6 +85,10 @@ class TRNode(Node):
         print("R3_ang = ", controller.r3_ang, "R3_dis = ", controller.r3_dist, "R3_xx = ", controller.r3_xx, "R3_yy = ", controller.r3_yy)
         self.ps4_controller = controller
         self.controller_updated = True
+
+    def get_lidar_callback(self, scan: LaserScan):
+        # print(scan)
+        pass
 
     def get_speech_done_callback(self, state: Bool):
         print("Received Speech Flag: ", state.data)

@@ -1,1 +1,8 @@
-/home/utilizador/charmie_ws/build/charmie_interfaces/ament_cmake_index/share/ament_index/resource_index/rosidl_interfaces/charmie_interfaces
+msg/Encoders.idl
+msg/Encoders.msg
+msg/ExampleTR.idl
+msg/ExampleTR.msg
+msg/PS4Controller.idl
+msg/PS4Controller.msg
+msg/RobotSpeech.idl
+msg/RobotSpeech.msg

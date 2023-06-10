@@ -1,0 +1,291 @@
+[0.070s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/test2:/home/utilizador/charmie_ws/install/my_robot_controller:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_camera_realsense:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake /home/utilizador/charmie_ws/src/charmie_interfaces -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/charmie_interfaces
+[1.222s] -- The C compiler identification is GNU 9.4.0
+[1.223s] -- The CXX compiler identification is GNU 9.4.0
+[1.225s] -- Check for working C compiler: /usr/bin/cc
+[1.227s] -- Check for working C compiler: /usr/bin/cc -- works
+[1.227s] -- Detecting C compiler ABI info
+[1.228s] -- Detecting C compiler ABI info - done
+[1.229s] -- Detecting C compile features
+[1.229s] -- Detecting C compile features - done
+[1.229s] -- Check for working CXX compiler: /usr/bin/c++
+[1.232s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[1.232s] -- Detecting CXX compiler ABI info
+[1.232s] -- Detecting CXX compiler ABI info - done
+[1.232s] -- Detecting CXX compile features
+[1.233s] -- Detecting CXX compile features - done
+[1.233s] -- Found ament_cmake: 0.9.11 (/opt/ros/foxy/share/ament_cmake/cmake)
+[1.233s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+[1.233s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.233s] -- Found rosidl_default_generators: 1.0.1 (/opt/ros/foxy/share/rosidl_default_generators/cmake)
+[1.233s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.233s] -- Found rosidl_adapter: 1.3.0 (/opt/ros/foxy/share/rosidl_adapter/cmake)
+[1.233s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "1.1.1f")  
+[1.234s] -- Found FastRTPS: /opt/ros/foxy/include  
+[1.234s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.234s] -- Found geometry_msgs: 2.0.5 (/opt/ros/foxy/share/geometry_msgs/cmake)
+[1.234s] -- Found PythonInterp: /usr/bin/python3 (found version "3.8.10") 
+[1.525s] -- Found ament_cmake_ros: 0.9.2 (/opt/ros/foxy/share/ament_cmake_ros/cmake)
+[1.813s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.943s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.976s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3.5") 
+[1.980s] -- Found python_cmake_module: 0.8.1 (/opt/ros/foxy/share/python_cmake_module/cmake)
+[2.028s] -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.8.so (found suitable version "3.8.10", minimum required is "3.5") 
+[2.028s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[2.028s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8
+[2.028s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so
+[2.071s] -- Found PythonExtra: .so  
+[2.178s] -- Configuring done
+[2.245s] -- Generating done
+[2.248s] -- Build files have been written to: /home/utilizador/charmie_ws/build/charmie_interfaces
+[2.259s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/test2:/home/utilizador/charmie_ws/install/my_robot_controller:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_camera_realsense:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake /home/utilizador/charmie_ws/src/charmie_interfaces -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/charmie_interfaces
+[2.261s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/test2:/home/utilizador/charmie_ws/install/my_robot_controller:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_camera_realsense:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_interfaces -- -j8 -l8
+[2.307s] [  1%] [34m[1mGenerating C code for ROS interfaces[0m
+[2.307s] [35m[1mScanning dependencies of target charmie_interfaces__cpp[0m
+[2.320s] [  3%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[2.741s] [  3%] Built target charmie_interfaces__cpp
+[2.759s] [  5%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[2.766s] [  9%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[2.766s] [  9%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[2.774s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_generator_c[0m
+[2.789s] [ 10%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.c.o[0m
+[2.793s] [ 16%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.c.o[0m
+[2.793s] [ 16%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c.o[0m
+[2.793s] [ 16%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/encoders__functions.c.o[0m
+[2.868s] [ 18%] [32m[1mLinking C shared library libcharmie_interfaces__rosidl_generator_c.so[0m
+[2.911s] [ 18%] Built target charmie_interfaces__rosidl_generator_c
+[2.922s] [ 20%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[2.928s] [ 21%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[3.114s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_cpp[0m
+[3.132s] [ 27%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp.o[0m
+[3.132s] [ 27%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp.o[0m
+[3.132s] [ 27%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/ps4_controller__type_support.cpp.o[0m
+[3.132s] [ 29%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/robot_speech__type_support.cpp.o[0m
+[3.231s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_introspection_cpp[0m
+[3.255s] [ 30%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/example_tr__type_support.cpp.o[0m
+[3.273s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_fastrtps_cpp[0m
+[3.333s] [ 32%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/example_tr__type_support.cpp.o[0m
+[3.533s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_c[0m
+[3.557s] [ 34%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/example_tr__type_support.cpp.o[0m
+[3.605s] [ 36%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/encoders__type_support.cpp.o[0m
+[3.605s] [ 38%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/encoders__type_support.cpp.o[0m
+[3.653s] [ 41%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/encoders__type_support.cpp.o[0m
+[3.653s] [ 41%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/ps4_controller__type_support.cpp.o[0m
+[3.658s] [ 43%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/ps4_controller__type_support.cpp.o[0m
+[3.662s] [ 45%] [32m[1mLinking CXX shared library libcharmie_interfaces__rosidl_typesupport_cpp.so[0m
+[3.673s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_introspection_c[0m
+[3.699s] [ 47%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__type_support.c.o[0m
+[3.707s] [ 49%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/robot_speech__type_support.cpp.o[0m
+[3.734s] [ 49%] Built target charmie_interfaces__rosidl_typesupport_cpp
+[3.749s] [ 50%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/encoders__type_support.c.o[0m
+[3.755s] [ 52%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller__type_support.c.o[0m
+[3.760s] [ 54%] [32m[1mLinking CXX shared library libcharmie_interfaces__rosidl_typesupport_c.so[0m
+[3.801s] [ 56%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/robot_speech__type_support.cpp.o[0m
+[3.808s] [ 58%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c.o[0m
+[3.813s] [ 60%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/ps4_controller__type_support.cpp.o[0m
+[3.829s] [ 60%] Built target charmie_interfaces__rosidl_typesupport_c
+[3.849s] [ 61%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/robot_speech__type_support.cpp.o[0m
+[3.864s] [ 63%] [32m[1mLinking C shared library libcharmie_interfaces__rosidl_typesupport_introspection_c.so[0m
+[3.923s] [ 63%] Built target charmie_interfaces__rosidl_typesupport_introspection_c
+[4.307s] [ 65%] [32m[1mLinking CXX shared library libcharmie_interfaces__rosidl_typesupport_introspection_cpp.so[0m
+[4.384s] [ 65%] Built target charmie_interfaces__rosidl_typesupport_introspection_cpp
+[4.476s] [ 67%] [32m[1mLinking CXX shared library libcharmie_interfaces__rosidl_typesupport_fastrtps_cpp.so[0m
+[4.578s] [ 67%] Built target charmie_interfaces__rosidl_typesupport_fastrtps_cpp
+[4.592s] [ 69%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[4.965s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_fastrtps_c[0m
+[4.985s] [ 72%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp.o[0m
+[4.985s] [ 72%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/ps4_controller__type_support_c.cpp.o[0m
+[4.988s] [ 74%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp.o[0m
+[4.989s] [ 76%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/robot_speech__type_support_c.cpp.o[0m
+[5.363s] [ 78%] [32m[1mLinking CXX shared library libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so[0m
+[5.468s] [ 78%] Built target charmie_interfaces__rosidl_typesupport_fastrtps_c
+[5.481s] [35m[1mScanning dependencies of target charmie_interfaces[0m
+[5.495s] [ 78%] Built target charmie_interfaces
+[5.509s] [35m[1mScanning dependencies of target charmie_interfaces__py[0m
+[5.524s] [ 80%] [34m[1mGenerating Python code for ROS interfaces[0m
+[6.239s] [ 80%] Built target charmie_interfaces__py
+[6.254s] [35m[1mScanning dependencies of target charmie_interfaces__python[0m
+[6.281s] [ 83%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_ps4_controller_s.c.o[0m
+[6.282s] [ 83%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_encoders_s.c.o[0m
+[6.285s] [ 85%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_example_tr_s.c.o[0m
+[6.285s] [ 87%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_robot_speech_s.c.o[0m
+[6.393s] [ 89%] [32m[1mLinking C shared library rosidl_generator_py/charmie_interfaces/libcharmie_interfaces__python.so[0m
+[6.448s] [ 89%] Built target charmie_interfaces__python
+[6.460s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_introspection_c__pyext[0m
+[6.460s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_c__pyext[0m
+[6.461s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_fastrtps_c__pyext[0m
+[6.479s] [ 90%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_c.c.o[0m
+[6.480s] [ 92%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[6.481s] [ 94%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[6.570s] [ 98%] [32m[1mLinking C shared library rosidl_generator_py/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so[0m
+[6.571s] [ 98%] [32m[1mLinking C shared library rosidl_generator_py/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so[0m
+[6.571s] [100%] [32m[1mLinking CXX shared library rosidl_generator_py/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so[0m
+[6.614s] [100%] Built target charmie_interfaces__rosidl_typesupport_introspection_c__pyext
+[6.614s] [100%] Built target charmie_interfaces__rosidl_typesupport_c__pyext
+[6.648s] [100%] Built target charmie_interfaces__rosidl_typesupport_fastrtps_c__pyext
+[6.660s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/test2:/home/utilizador/charmie_ws/install/my_robot_controller:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_camera_realsense:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_interfaces -- -j8 -l8
+[6.749s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/test2:/home/utilizador/charmie_ws/install/my_robot_controller:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_camera_realsense:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_interfaces
+[6.763s] -- Install configuration: ""
+[6.763s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/rosidl_interfaces/charmie_interfaces
+[6.763s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces
+[6.763s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg
+[6.764s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/example_tr.h
+[6.764s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/ps4_controller.h
+[6.764s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+[6.764s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/encoders.h
+[6.764s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/robot_speech.h
+[6.764s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail
+[6.764s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__functions.c
+[6.764s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__functions.h
+[6.764s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__struct.h
+[6.765s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__functions.c
+[6.765s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__struct.h
+[6.765s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__type_support.h
+[6.765s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__type_support.h
+[6.765s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__functions.h
+[6.765s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__struct.h
+[6.765s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__functions.h
+[6.765s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__type_support.h
+[6.765s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__type_support.h
+[6.766s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__functions.c
+[6.766s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__functions.c
+[6.766s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__struct.h
+[6.766s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__functions.h
+[6.766s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/library_path.sh
+[6.766s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/library_path.dsv
+[6.766s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_generator_c.so
+[6.766s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_generator_c.so" to ""
+[6.766s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces
+[6.766s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg
+[6.766s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[6.767s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail
+[6.767s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_fastrtps_c.h
+[6.767s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_fastrtps_c.h
+[6.767s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
+[6.767s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_c.h
+[6.767s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so
+[6.767s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so" to ""
+[6.768s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces
+[6.768s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg
+[6.768s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[6.768s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail
+[6.768s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_cpp.hpp
+[6.768s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/dds_fastrtps
+[6.768s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_fastrtps_cpp.hpp
+[6.768s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_cpp.hpp
+[6.768s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_fastrtps_cpp.hpp
+[6.768s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_fastrtps_cpp.so
+[6.769s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_fastrtps_cpp.so" to ""
+[6.769s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces
+[6.769s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg
+[6.769s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[6.769s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail
+[6.769s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__type_support.c
+[6.769s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_c.h
+[6.769s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__type_support.c
+[6.769s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_c.h
+[6.769s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__type_support.c
+[6.770s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__type_support.c
+[6.770s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_introspection_c.h
+[6.770s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h
+[6.770s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_introspection_c.so
+[6.770s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_introspection_c.so" to ""
+[6.770s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_c.so
+[6.771s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_c.so" to ""
+[6.771s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces
+[6.771s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg
+[6.771s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/ps4_controller.hpp
+[6.771s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/encoders.hpp
+[6.771s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/example_tr.hpp
+[6.771s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/robot_speech.hpp
+[6.771s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail
+[6.771s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__struct.hpp
+[6.772s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__traits.hpp
+[6.772s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__builder.hpp
+[6.772s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__traits.hpp
+[6.772s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__builder.hpp
+[6.772s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__builder.hpp
+[6.772s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__struct.hpp
+[6.772s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__builder.hpp
+[6.772s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__struct.hpp
+[6.772s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__struct.hpp
+[6.772s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__traits.hpp
+[6.773s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__traits.hpp
+[6.773s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces
+[6.773s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg
+[6.773s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail
+[6.773s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_cpp.hpp
+[6.773s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_introspection_cpp.hpp
+[6.773s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__type_support.cpp
+[6.773s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_cpp.hpp
+[6.773s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__type_support.cpp
+[6.773s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_cpp.hpp
+[6.773s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__type_support.cpp
+[6.773s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__type_support.cpp
+[6.774s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_introspection_cpp.so
+[6.774s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_introspection_cpp.so" to ""
+[6.774s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_cpp.so
+[6.774s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_cpp.so" to ""
+[6.774s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/pythonpath.sh
+[6.774s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/pythonpath.dsv
+[6.774s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/__init__.py
+[6.811s] Compiling '/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/__init__.py'...
+[6.816s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg
+[6.816s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_example_tr.py
+[6.816s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_robot_speech.py
+[6.816s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_encoders.py
+[6.817s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_robot_speech_s.c
+[6.817s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_encoders_s.c
+[6.817s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_example_tr_s.c
+[6.817s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_ps4_controller.py
+[6.817s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_ps4_controller_s.c
+[6.817s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/__init__.py
+[6.817s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so
+[6.818s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so" to ""
+[6.818s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so
+[6.819s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so" to ""
+[6.819s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so
+[6.819s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so" to ""
+[6.820s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__python.so
+[6.820s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__python.so" to ""
+[6.820s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ExampleTR.idl
+[6.820s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Encoders.idl
+[6.821s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/PS4Controller.idl
+[6.821s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/RobotSpeech.idl
+[6.821s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ExampleTR.msg
+[6.821s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Encoders.msg
+[6.821s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/PS4Controller.msg
+[6.821s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/RobotSpeech.msg
+[6.822s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/package_run_dependencies/charmie_interfaces
+[6.822s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/parent_prefix_path/charmie_interfaces
+[6.822s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/ament_prefix_path.sh
+[6.822s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/ament_prefix_path.dsv
+[6.822s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/path.sh
+[6.823s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/path.dsv
+[6.823s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/local_setup.bash
+[6.823s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/local_setup.sh
+[6.823s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/local_setup.zsh
+[6.823s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/local_setup.dsv
+[6.823s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.dsv
+[6.824s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/packages/charmie_interfaces
+[6.824s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_generator_cExport.cmake
+[6.824s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_generator_cExport-noconfig.cmake
+[6.824s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_introspection_cExport.cmake
+[6.825s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[6.825s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_cExport.cmake
+[6.825s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_cExport-noconfig.cmake
+[6.825s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_generator_cppExport.cmake
+[6.826s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_introspection_cppExport.cmake
+[6.826s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[6.826s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_cppExport.cmake
+[6.826s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_cppExport-noconfig.cmake
+[6.826s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/rosidl_cmake-extras.cmake
+[6.827s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/ament_cmake_export_dependencies-extras.cmake
+[6.827s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/ament_cmake_export_libraries-extras.cmake
+[6.827s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/ament_cmake_export_targets-extras.cmake
+[6.827s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/ament_cmake_export_include_directories-extras.cmake
+[6.827s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[6.828s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[6.828s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfacesConfig.cmake
+[6.828s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfacesConfig-version.cmake
+[6.828s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.xml
+[6.834s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/test2:/home/utilizador/charmie_ws/install/my_robot_controller:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_camera_realsense:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_interfaces

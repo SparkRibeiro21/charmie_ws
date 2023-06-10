@@ -4,7 +4,8 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16, String
-from charmie_interfaces.msg import Encoders, PS4Controller
+from sensor_msgs.msg import LaserScan
+from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech
 # import time
 
 class TRNode(Node):
@@ -36,10 +37,11 @@ class TRNode(Node):
         self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.get_controller_callback, 10)
 
         # LIDAR Hokuyo
-        pass
+        self.lidar_subscriber = self.create_subscription(LaserScan, "lidar_scan", self.get_lidar_callback, 10)
 
         # Speaker
-        self.speaker_publisher = self.create_publisher(String, "speaker_command", 10)
+        self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
+        self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
 
 
         # Timers
@@ -84,11 +86,21 @@ class TRNode(Node):
         self.ps4_controller = controller
         self.controller_updated = True
 
+    def get_lidar_callback(self, scan: LaserScan):
+        # print(scan)
+        pass
+
+    def get_speech_done_callback(self, state: Bool):
+        print("Received Speech Flag: ", state.data)
+
     def timer_callback2(self):
-        speech_str = String()
-        speech_str.data = "Hello my name is Tiago."
-        speech_str.data = "Bom dia, o meu nome é Tiago e gosto de Robôs."
-        speech_str.data = "Qual é a comida na cantina hoje?"
+        speech_str = RobotSpeech()
+        speech_str.command = "Hello my name is Tiago."
+        # speech_str.language = 'en'
+        # speech_str.command = "Bom dia, o meu nome é Tiago e gosto de Robôs. Já agora, qual é a comida na cantina hoje?"
+        # speech_str.command = "Qual é a comida na cantina hoje?"
+        speech_str.command = "Hello my name is Tiago."
+        speech_str.language = 'en'
         self.speaker_publisher.publish(speech_str)
 
 

@@ -1,1 +1,11 @@
-/home/utilizador/charmie_ws/src/charmie_bot/config/twist_mux.yaml
+twist_mux:
+  ros__parameters:
+    topics:
+      navigation:
+        topic: cmd_vel
+        timeout: 0.5
+        priority: 10
+      joystick:
+        topic: cmd_vel_joy
+        timeout: 0.5
+        priority: 100

@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/src/charmie_camera_realsense/setup.py
