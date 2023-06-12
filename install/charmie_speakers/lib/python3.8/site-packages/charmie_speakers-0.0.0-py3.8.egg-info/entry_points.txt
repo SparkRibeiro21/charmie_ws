@@ -1,0 +1,3 @@
+[console_scripts]
+speakers = charmie_speakers.speakers:main
+

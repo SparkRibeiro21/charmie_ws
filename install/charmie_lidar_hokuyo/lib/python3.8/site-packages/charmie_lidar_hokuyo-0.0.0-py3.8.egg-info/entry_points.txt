@@ -1,0 +1,3 @@
+[console_scripts]
+lidar_hokuyo = charmie_lidar_hokuyo.lidar_hokuyo:main
+
