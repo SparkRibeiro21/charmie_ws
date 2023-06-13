@@ -1,0 +1,893 @@
+[0.334s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--symlink-install']
+[0.334s] DEBUG:colcon:Parsed command line arguments: Namespace(allow_overriding=[], ament_cmake_args=None, base_paths=['.'], build_base='build', catkin_cmake_args=None, catkin_skip_building_tests=False, cmake_args=None, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, cmake_target=None, cmake_target_skip_unavailable=False, continue_on_error=False, event_handlers=None, executor='parallel', ignore_user_meta=False, install_base='install', log_base=None, log_level=None, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7f5b44c019d0>>, merge_install=False, metas=['./colcon.meta'], packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_end=None, packages_ignore=None, packages_ignore_regex=None, packages_select=None, packages_select_build_failed=False, packages_select_by_dep=None, packages_select_regex=None, packages_select_test_failures=False, packages_skip=None, packages_skip_build_finished=False, packages_skip_by_dep=None, packages_skip_regex=None, packages_skip_test_passed=False, packages_skip_up_to=None, packages_start=None, packages_up_to=None, packages_up_to_regex=None, parallel_workers=8, paths=None, symlink_install=True, test_result_base=None, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7f5b44c019d0>, verb_name='build', verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x7f5b44c01f40>)
+[0.385s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.385s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.385s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.385s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.385s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.385s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.385s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/utilizador/charmie_ws'
+[0.385s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.385s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.385s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.385s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.386s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.386s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.386s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.386s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.386s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.406s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.406s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.406s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.406s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.406s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.406s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.406s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.406s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.407s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extensions ['ignore', 'ignore_ament_install']
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extension 'ignore'
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extension 'ignore_ament_install'
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extensions ['colcon_pkg']
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extension 'colcon_pkg'
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extensions ['colcon_meta']
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extension 'colcon_meta'
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extensions ['ros']
+[0.408s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extension 'ros'
+[0.412s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_audio' with type 'ros.ament_python' and name 'charmie_audio'
+[0.412s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extensions ['ignore', 'ignore_ament_install']
+[0.412s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extension 'ignore'
+[0.412s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extension 'ignore_ament_install'
+[0.412s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extensions ['colcon_pkg']
+[0.412s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extension 'colcon_pkg'
+[0.413s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extensions ['colcon_meta']
+[0.413s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extension 'colcon_meta'
+[0.413s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extensions ['ros']
+[0.413s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extension 'ros'
+[0.413s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_bot' with type 'ros.ament_cmake' and name 'charmie_bot'
+[0.413s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extensions ['ignore', 'ignore_ament_install']
+[0.414s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extension 'ignore'
+[0.414s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extension 'ignore_ament_install'
+[0.414s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extensions ['colcon_pkg']
+[0.414s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extension 'colcon_pkg'
+[0.414s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extensions ['colcon_meta']
+[0.414s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extension 'colcon_meta'
+[0.414s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extensions ['ros']
+[0.414s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extension 'ros'
+[0.415s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_debug' with type 'ros.ament_python' and name 'charmie_debug'
+[0.415s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extensions ['ignore', 'ignore_ament_install']
+[0.415s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extension 'ignore'
+[0.415s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extension 'ignore_ament_install'
+[0.415s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extensions ['colcon_pkg']
+[0.415s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extension 'colcon_pkg'
+[0.415s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extensions ['colcon_meta']
+[0.415s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extension 'colcon_meta'
+[0.416s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extensions ['ros']
+[0.416s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extension 'ros'
+[0.416s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_face_shiningrgb' with type 'ros.ament_python' and name 'charmie_face_shiningrgb'
+[0.416s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extensions ['ignore', 'ignore_ament_install']
+[0.416s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extension 'ignore'
+[0.416s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extension 'ignore_ament_install'
+[0.416s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extensions ['colcon_pkg']
+[0.417s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extension 'colcon_pkg'
+[0.417s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extensions ['colcon_meta']
+[0.417s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extension 'colcon_meta'
+[0.417s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extensions ['ros']
+[0.417s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extension 'ros'
+[0.417s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_interfaces' with type 'ros.ament_cmake' and name 'charmie_interfaces'
+[0.418s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extensions ['ignore', 'ignore_ament_install']
+[0.418s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extension 'ignore'
+[0.418s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extension 'ignore_ament_install'
+[0.418s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extensions ['colcon_pkg']
+[0.418s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extension 'colcon_pkg'
+[0.418s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extensions ['colcon_meta']
+[0.418s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extension 'colcon_meta'
+[0.418s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extensions ['ros']
+[0.418s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extension 'ros'
+[0.419s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_lidar_hokuyo' with type 'ros.ament_python' and name 'charmie_lidar_hokuyo'
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extensions ['ignore', 'ignore_ament_install']
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extension 'ignore'
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extension 'ignore_ament_install'
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extensions ['colcon_pkg']
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extension 'colcon_pkg'
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extensions ['colcon_meta']
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extension 'colcon_meta'
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extensions ['ros']
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extension 'ros'
+[0.421s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_low_level' with type 'ros.ament_python' and name 'charmie_low_level'
+[0.421s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extensions ['ignore', 'ignore_ament_install']
+[0.421s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extension 'ignore'
+[0.421s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extension 'ignore_ament_install'
+[0.421s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extensions ['colcon_pkg']
+[0.421s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extension 'colcon_pkg'
+[0.421s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extensions ['colcon_meta']
+[0.421s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extension 'colcon_meta'
+[0.421s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extensions ['ros']
+[0.421s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extension 'ros'
+[0.422s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_neck_dynamixel' with type 'ros.ament_python' and name 'charmie_neck_dynamixel'
+[0.422s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extensions ['ignore', 'ignore_ament_install']
+[0.422s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extension 'ignore'
+[0.422s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extension 'ignore_ament_install'
+[0.422s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extensions ['colcon_pkg']
+[0.422s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extension 'colcon_pkg'
+[0.422s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extensions ['colcon_meta']
+[0.422s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extension 'colcon_meta'
+[0.422s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extensions ['ros']
+[0.422s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extension 'ros'
+[0.423s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_ps4_controller' with type 'ros.ament_python' and name 'charmie_ps4_controller'
+[0.423s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extensions ['ignore', 'ignore_ament_install']
+[0.423s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extension 'ignore'
+[0.423s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extension 'ignore_ament_install'
+[0.423s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extensions ['colcon_pkg']
+[0.423s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extension 'colcon_pkg'
+[0.423s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extensions ['colcon_meta']
+[0.423s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extension 'colcon_meta'
+[0.423s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extensions ['ros']
+[0.423s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extension 'ros'
+[0.424s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_speakers' with type 'ros.ament_python' and name 'charmie_speakers'
+[0.424s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['ignore', 'ignore_ament_install']
+[0.424s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'ignore'
+[0.424s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'ignore_ament_install'
+[0.424s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['colcon_pkg']
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'colcon_pkg'
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['colcon_meta']
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'colcon_meta'
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['ros']
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'ros'
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['cmake', 'python']
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'cmake'
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'python'
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['python_setup_py']
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'python_setup_py'
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extensions ['ignore', 'ignore_ament_install']
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extension 'ignore'
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extension 'ignore_ament_install'
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extensions ['colcon_pkg']
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extension 'colcon_pkg'
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extensions ['colcon_meta']
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extension 'colcon_meta'
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extensions ['ros']
+[0.425s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extension 'ros'
+[0.427s] DEBUG:colcon.colcon_core.package_identification:Package 'src/realsense-ros/realsense2_camera' with type 'ros.ament_cmake' and name 'realsense2_camera'
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extensions ['ignore', 'ignore_ament_install']
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extension 'ignore'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extension 'ignore_ament_install'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extensions ['colcon_pkg']
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extension 'colcon_pkg'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extensions ['colcon_meta']
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extension 'colcon_meta'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extensions ['ros']
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extension 'ros'
+[0.429s] DEBUG:colcon.colcon_core.package_identification:Package 'src/realsense-ros/realsense2_camera_msgs' with type 'ros.ament_cmake' and name 'realsense2_camera_msgs'
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extensions ['ignore', 'ignore_ament_install']
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extension 'ignore'
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extension 'ignore_ament_install'
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extensions ['colcon_pkg']
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extension 'colcon_pkg'
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extensions ['colcon_meta']
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extension 'colcon_meta'
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extensions ['ros']
+[0.430s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extension 'ros'
+[0.430s] DEBUG:colcon.colcon_core.package_identification:Package 'src/realsense-ros/realsense2_description' with type 'ros.ament_cmake' and name 'realsense2_description'
+[0.430s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['ignore', 'ignore_ament_install']
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'ignore'
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'ignore_ament_install'
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['colcon_pkg']
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'colcon_pkg'
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['colcon_meta']
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'colcon_meta'
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['ros']
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'ros'
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['cmake', 'python']
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'cmake'
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'python'
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['python_setup_py']
+[0.431s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'python_setup_py'
+[0.431s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.431s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.431s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.431s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.431s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.459s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.460s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.464s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 12 installed packages in /home/utilizador/charmie_ws/install
+[0.466s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 258 installed packages in /opt/ros/foxy
+[0.467s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.560s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_args' from command line to 'None'
+[0.560s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_target' from command line to 'None'
+[0.561s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.561s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_clean_cache' from command line to 'False'
+[0.561s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_clean_first' from command line to 'False'
+[0.561s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_force_configure' from command line to 'False'
+[0.561s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'ament_cmake_args' from command line to 'None'
+[0.561s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'catkin_cmake_args' from command line to 'None'
+[0.561s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.561s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_audio' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_audio', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_audio', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_audio', 'symlink_install': True, 'test_result_base': None}
+[0.562s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_args' from command line to 'None'
+[0.562s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_target' from command line to 'None'
+[0.562s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.562s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_clean_cache' from command line to 'False'
+[0.562s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_clean_first' from command line to 'False'
+[0.562s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_force_configure' from command line to 'False'
+[0.562s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'ament_cmake_args' from command line to 'None'
+[0.562s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'catkin_cmake_args' from command line to 'None'
+[0.562s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.562s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_bot' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_bot', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_bot', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_bot', 'symlink_install': True, 'test_result_base': None}
+[0.563s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_args' from command line to 'None'
+[0.563s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_target' from command line to 'None'
+[0.563s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.563s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_clean_cache' from command line to 'False'
+[0.563s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_clean_first' from command line to 'False'
+[0.563s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_force_configure' from command line to 'False'
+[0.563s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'ament_cmake_args' from command line to 'None'
+[0.563s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'catkin_cmake_args' from command line to 'None'
+[0.563s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.563s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_face_shiningrgb' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_face_shiningrgb', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_face_shiningrgb', 'symlink_install': True, 'test_result_base': None}
+[0.565s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_args' from command line to 'None'
+[0.565s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_target' from command line to 'None'
+[0.565s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.565s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_clean_cache' from command line to 'False'
+[0.565s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_clean_first' from command line to 'False'
+[0.565s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_force_configure' from command line to 'False'
+[0.565s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'ament_cmake_args' from command line to 'None'
+[0.565s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'catkin_cmake_args' from command line to 'None'
+[0.565s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.565s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_interfaces' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_interfaces', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_interfaces', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_interfaces', 'symlink_install': True, 'test_result_base': None}
+[0.566s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_args' from command line to 'None'
+[0.566s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_target' from command line to 'None'
+[0.566s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.566s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_clean_cache' from command line to 'False'
+[0.566s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_clean_first' from command line to 'False'
+[0.566s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_force_configure' from command line to 'False'
+[0.566s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'ament_cmake_args' from command line to 'None'
+[0.566s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'catkin_cmake_args' from command line to 'None'
+[0.566s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.566s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_lidar_hokuyo' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo', 'symlink_install': True, 'test_result_base': None}
+[0.567s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_args' from command line to 'None'
+[0.568s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_target' from command line to 'None'
+[0.568s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.568s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_clean_cache' from command line to 'False'
+[0.568s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_clean_first' from command line to 'False'
+[0.568s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_force_configure' from command line to 'False'
+[0.568s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'ament_cmake_args' from command line to 'None'
+[0.568s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'catkin_cmake_args' from command line to 'None'
+[0.568s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.568s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_neck_dynamixel' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_neck_dynamixel', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_neck_dynamixel', 'symlink_install': True, 'test_result_base': None}
+[0.569s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_args' from command line to 'None'
+[0.569s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_target' from command line to 'None'
+[0.569s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.569s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_clean_cache' from command line to 'False'
+[0.569s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_clean_first' from command line to 'False'
+[0.569s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_force_configure' from command line to 'False'
+[0.569s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'ament_cmake_args' from command line to 'None'
+[0.569s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'catkin_cmake_args' from command line to 'None'
+[0.569s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.569s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_ps4_controller' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_ps4_controller', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_ps4_controller', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_ps4_controller', 'symlink_install': True, 'test_result_base': None}
+[0.570s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_args' from command line to 'None'
+[0.570s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_target' from command line to 'None'
+[0.570s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.570s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_clean_cache' from command line to 'False'
+[0.570s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_clean_first' from command line to 'False'
+[0.570s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_force_configure' from command line to 'False'
+[0.570s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'ament_cmake_args' from command line to 'None'
+[0.570s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'catkin_cmake_args' from command line to 'None'
+[0.570s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.570s] DEBUG:colcon.colcon_core.verb:Building package 'realsense2_camera_msgs' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/realsense2_camera_msgs', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/realsense2_camera_msgs', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs', 'symlink_install': True, 'test_result_base': None}
+[0.571s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_args' from command line to 'None'
+[0.571s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_target' from command line to 'None'
+[0.571s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.571s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_clean_cache' from command line to 'False'
+[0.571s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_clean_first' from command line to 'False'
+[0.571s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_force_configure' from command line to 'False'
+[0.571s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'ament_cmake_args' from command line to 'None'
+[0.571s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'catkin_cmake_args' from command line to 'None'
+[0.571s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.571s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_debug' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_debug', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_debug', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_debug', 'symlink_install': True, 'test_result_base': None}
+[0.572s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_args' from command line to 'None'
+[0.573s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_target' from command line to 'None'
+[0.573s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.573s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_clean_cache' from command line to 'False'
+[0.573s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_clean_first' from command line to 'False'
+[0.573s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_force_configure' from command line to 'False'
+[0.573s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'ament_cmake_args' from command line to 'None'
+[0.573s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'catkin_cmake_args' from command line to 'None'
+[0.573s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.573s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_low_level' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_low_level', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_low_level', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_low_level', 'symlink_install': True, 'test_result_base': None}
+[0.574s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_args' from command line to 'None'
+[0.574s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_target' from command line to 'None'
+[0.574s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.574s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_clean_cache' from command line to 'False'
+[0.574s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_clean_first' from command line to 'False'
+[0.574s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_force_configure' from command line to 'False'
+[0.574s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'ament_cmake_args' from command line to 'None'
+[0.574s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'catkin_cmake_args' from command line to 'None'
+[0.574s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.574s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_speakers' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_speakers', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_speakers', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_speakers', 'symlink_install': True, 'test_result_base': None}
+[0.575s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_args' from command line to 'None'
+[0.575s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_target' from command line to 'None'
+[0.575s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.575s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_clean_cache' from command line to 'False'
+[0.575s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_clean_first' from command line to 'False'
+[0.575s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_force_configure' from command line to 'False'
+[0.575s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'ament_cmake_args' from command line to 'None'
+[0.575s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'catkin_cmake_args' from command line to 'None'
+[0.575s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.575s] DEBUG:colcon.colcon_core.verb:Building package 'realsense2_camera' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/realsense2_camera', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/realsense2_camera', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera', 'symlink_install': True, 'test_result_base': None}
+[0.576s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_args' from command line to 'None'
+[0.576s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_target' from command line to 'None'
+[0.576s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.576s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_clean_cache' from command line to 'False'
+[0.576s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_clean_first' from command line to 'False'
+[0.576s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_force_configure' from command line to 'False'
+[0.576s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'ament_cmake_args' from command line to 'None'
+[0.576s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'catkin_cmake_args' from command line to 'None'
+[0.576s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.576s] DEBUG:colcon.colcon_core.verb:Building package 'realsense2_description' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/realsense2_description', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/realsense2_description', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description', 'symlink_install': True, 'test_result_base': None}
+[0.577s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.581s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.581s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_interfaces' with build type 'ament_cmake'
+[0.581s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/utilizador/charmie_ws/src/charmie_interfaces'
+[0.589s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.589s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.589s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.597s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs' with build type 'ament_cmake'
+[0.597s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs'
+[0.599s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.599s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.606s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_audio' with build type 'ament_python'
+[0.607s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_audio', 'ament_prefix_path')
+[0.609s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/hook/ament_prefix_path.ps1'
+[0.610s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/hook/ament_prefix_path.dsv'
+[0.611s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/hook/ament_prefix_path.sh'
+[0.614s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.615s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.625s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_bot' with build type 'ament_cmake'
+[0.626s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/utilizador/charmie_ws/src/charmie_bot'
+[0.629s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.629s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.637s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_face_shiningrgb' with build type 'ament_python'
+[0.638s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_face_shiningrgb', 'ament_prefix_path')
+[0.639s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/ament_prefix_path.ps1'
+[0.640s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/ament_prefix_path.dsv'
+[0.641s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/ament_prefix_path.sh'
+[0.643s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.643s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.651s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo' with build type 'ament_python'
+[0.651s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_lidar_hokuyo', 'ament_prefix_path')
+[0.655s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/ament_prefix_path.ps1'
+[0.656s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/ament_prefix_path.dsv'
+[0.656s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/ament_prefix_path.sh'
+[0.659s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.659s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.668s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_neck_dynamixel' with build type 'ament_python'
+[0.669s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_neck_dynamixel', 'ament_prefix_path')
+[0.670s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/ament_prefix_path.ps1'
+[0.671s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/ament_prefix_path.dsv'
+[0.672s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/ament_prefix_path.sh'
+[0.674s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.674s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.681s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_ps4_controller' with build type 'ament_python'
+[0.682s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_ps4_controller', 'ament_prefix_path')
+[0.684s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/hook/ament_prefix_path.ps1'
+[0.685s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/hook/ament_prefix_path.dsv'
+[0.685s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/hook/ament_prefix_path.sh'
+[0.687s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.687s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.702s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_interfaces -- -j8 -l8
+[0.712s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera_msgs -- -j8 -l8
+[1.040s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_audio'
+[1.042s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.042s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.054s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+[1.319s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_face_shiningrgb'
+[1.322s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.322s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.584s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo'
+[1.586s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.586s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.847s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_neck_dynamixel'
+[1.849s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.849s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[2.112s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_ps4_controller'
+[2.114s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[2.114s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[2.147s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_interfaces -- -j8 -l8
+[2.148s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+[2.149s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera_msgs -- -j8 -l8
+[2.195s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_bot
+[2.256s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera_msgs
+[2.259s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_bot)
+[2.261s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_bot
+[2.275s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot' for CMake module files
+[2.277s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot' for CMake config files
+[2.278s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_bot', 'cmake_prefix_path')
+[2.282s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/hook/cmake_prefix_path.ps1'
+[2.284s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/hook/cmake_prefix_path.dsv'
+[2.285s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/hook/cmake_prefix_path.sh'
+[2.286s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot/bin'
+[2.286s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot/lib/pkgconfig/charmie_bot.pc'
+[2.287s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot/lib/python3.8/site-packages'
+[2.287s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot/bin'
+[2.291s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.ps1'
+[2.294s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.dsv'
+[2.296s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.sh'
+[2.298s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.bash'
+[2.302s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.zsh'
+[2.304s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_bot/share/colcon-core/packages/charmie_bot)
+[2.326s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_interfaces
+[2.355s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_bot)
+[2.360s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot' for CMake module files
+[2.363s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot' for CMake config files
+[2.364s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_bot', 'cmake_prefix_path')
+[2.368s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/hook/cmake_prefix_path.ps1'
+[2.369s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/hook/cmake_prefix_path.dsv'
+[2.370s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/hook/cmake_prefix_path.sh'
+[2.372s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot/bin'
+[2.372s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot/lib/pkgconfig/charmie_bot.pc'
+[2.372s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot/lib/python3.8/site-packages'
+[2.373s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_bot/bin'
+[2.376s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.ps1'
+[2.378s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.dsv'
+[2.380s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.sh'
+[2.381s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.bash'
+[2.382s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.zsh'
+[2.383s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_bot/share/colcon-core/packages/charmie_bot)
+[2.467s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(realsense2_camera_msgs)
+[2.471s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs' for CMake module files
+[2.473s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs' for CMake config files
+[2.473s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera_msgs
+[2.475s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_camera_msgs', 'cmake_prefix_path')
+[2.478s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/cmake_prefix_path.ps1'
+[2.479s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/cmake_prefix_path.dsv'
+[2.479s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/cmake_prefix_path.sh'
+[2.480s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib'
+[2.481s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_camera_msgs', 'ld_library_path_lib')
+[2.483s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/ld_library_path_lib.ps1'
+[2.484s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/ld_library_path_lib.dsv'
+[2.484s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/ld_library_path_lib.sh'
+[2.485s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/bin'
+[2.485s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/pkgconfig/realsense2_camera_msgs.pc'
+[2.486s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages'
+[2.486s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_camera_msgs', 'pythonpath')
+[2.489s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/pythonpath.ps1'
+[2.489s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/pythonpath.dsv'
+[2.490s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/pythonpath.sh'
+[2.491s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/bin'
+[2.494s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.ps1'
+[2.495s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.dsv'
+[2.496s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.sh'
+[2.497s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.bash'
+[2.498s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.zsh'
+[2.498s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/colcon-core/packages/realsense2_camera_msgs)
+[2.527s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_interfaces)
+[2.533s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces' for CMake module files
+[2.534s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces' for CMake config files
+[2.536s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_interfaces
+[2.536s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_interfaces', 'cmake_prefix_path')
+[2.540s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/cmake_prefix_path.ps1'
+[2.541s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/cmake_prefix_path.dsv'
+[2.541s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/cmake_prefix_path.sh'
+[2.542s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces/lib'
+[2.542s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_interfaces', 'ld_library_path_lib')
+[2.545s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/ld_library_path_lib.ps1'
+[2.546s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/ld_library_path_lib.dsv'
+[2.547s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/ld_library_path_lib.sh'
+[2.547s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces/bin'
+[2.548s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces/lib/pkgconfig/charmie_interfaces.pc'
+[2.548s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages'
+[2.548s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_interfaces', 'pythonpath')
+[2.551s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/pythonpath.ps1'
+[2.552s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/pythonpath.dsv'
+[2.552s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/pythonpath.sh'
+[2.553s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces/bin'
+[2.557s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.ps1'
+[2.558s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.dsv'
+[2.558s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.sh'
+[2.561s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.bash'
+[2.561s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.zsh'
+[2.562s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_interfaces/share/colcon-core/packages/charmie_interfaces)
+[2.633s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(realsense2_camera_msgs)
+[2.635s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs' for CMake module files
+[2.636s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs' for CMake config files
+[2.637s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_camera_msgs', 'cmake_prefix_path')
+[2.639s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/cmake_prefix_path.ps1'
+[2.639s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/cmake_prefix_path.dsv'
+[2.640s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/cmake_prefix_path.sh'
+[2.640s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib'
+[2.640s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_camera_msgs', 'ld_library_path_lib')
+[2.642s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/ld_library_path_lib.ps1'
+[2.642s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/ld_library_path_lib.dsv'
+[2.643s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/ld_library_path_lib.sh'
+[2.643s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/bin'
+[2.643s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/pkgconfig/realsense2_camera_msgs.pc'
+[2.644s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages'
+[2.644s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_camera_msgs', 'pythonpath')
+[2.645s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/pythonpath.ps1'
+[2.646s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/pythonpath.dsv'
+[2.646s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/hook/pythonpath.sh'
+[2.647s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/bin'
+[2.649s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.ps1'
+[2.649s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.dsv'
+[2.650s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.sh'
+[2.650s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.bash'
+[2.651s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.zsh'
+[2.651s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/colcon-core/packages/realsense2_camera_msgs)
+[2.652s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera' with build type 'ament_cmake'
+[2.652s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera'
+[2.654s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[2.654s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[2.668s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description' with build type 'ament_cmake'
+[2.669s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description'
+[2.673s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[2.673s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[2.692s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera -- -j8 -l8
+[2.705s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/realsense2_description': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_description -- -j8 -l8
+[2.729s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_interfaces)
+[2.733s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces' for CMake module files
+[2.735s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces' for CMake config files
+[2.736s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_interfaces', 'cmake_prefix_path')
+[2.739s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/cmake_prefix_path.ps1'
+[2.740s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/cmake_prefix_path.dsv'
+[2.740s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/cmake_prefix_path.sh'
+[2.741s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces/lib'
+[2.742s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_interfaces', 'ld_library_path_lib')
+[2.744s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/ld_library_path_lib.ps1'
+[2.745s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/ld_library_path_lib.dsv'
+[2.745s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/ld_library_path_lib.sh'
+[2.746s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces/bin'
+[2.746s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces/lib/pkgconfig/charmie_interfaces.pc'
+[2.746s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages'
+[2.746s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_interfaces', 'pythonpath')
+[2.748s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/pythonpath.ps1'
+[2.749s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/pythonpath.dsv'
+[2.750s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/hook/pythonpath.sh'
+[2.751s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_interfaces/bin'
+[2.754s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.ps1'
+[2.756s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.dsv'
+[2.756s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.sh'
+[2.757s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.bash'
+[2.758s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.zsh'
+[2.759s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_interfaces/share/colcon-core/packages/charmie_interfaces)
+[2.761s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_debug' with build type 'ament_python'
+[2.761s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_debug', 'ament_prefix_path')
+[2.764s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/hook/ament_prefix_path.ps1'
+[2.764s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/hook/ament_prefix_path.dsv'
+[2.765s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/hook/ament_prefix_path.sh'
+[2.769s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[2.769s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[2.787s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/realsense2_description' returned '0': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_description -- -j8 -l8
+[3.115s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_debug'
+[3.117s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[3.117s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[3.128s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera' returned '0': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera -- -j8 -l8
+[3.134s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/realsense2_description': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_description
+[3.139s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_audio': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_audio/prefix_override:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_audio/build --no-deps install_data
+[3.143s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/prefix_override:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/build --no-deps install_data
+[3.148s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_ps4_controller': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_ps4_controller/prefix_override:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_ps4_controller/build --no-deps install_data
+[3.153s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_neck_dynamixel': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_neck_dynamixel/prefix_override:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build --no-deps install_data
+[3.159s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_face_shiningrgb': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_face_shiningrgb/prefix_override:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_face_shiningrgb/build --no-deps install_data
+[3.190s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(realsense2_description)
+[3.195s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description' for CMake module files
+[3.196s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/realsense2_description' returned '0': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_description
+[3.197s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description' for CMake config files
+[3.198s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_description', 'cmake_prefix_path')
+[3.201s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/hook/cmake_prefix_path.ps1'
+[3.202s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/hook/cmake_prefix_path.dsv'
+[3.203s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/hook/cmake_prefix_path.sh'
+[3.203s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description/bin'
+[3.204s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description/lib/pkgconfig/realsense2_description.pc'
+[3.204s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description/lib/python3.8/site-packages'
+[3.205s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description/bin'
+[3.208s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.ps1'
+[3.209s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.dsv'
+[3.210s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.sh'
+[3.210s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.bash'
+[3.211s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.zsh'
+[3.211s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/realsense2_description/share/colcon-core/packages/realsense2_description)
+[3.222s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera
+[3.250s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(realsense2_description)
+[3.254s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description' for CMake module files
+[3.258s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description' for CMake config files
+[3.259s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_description', 'cmake_prefix_path')
+[3.263s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/hook/cmake_prefix_path.ps1'
+[3.264s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/hook/cmake_prefix_path.dsv'
+[3.266s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/hook/cmake_prefix_path.sh'
+[3.268s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description/bin'
+[3.268s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description/lib/pkgconfig/realsense2_description.pc'
+[3.269s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description/lib/python3.8/site-packages'
+[3.269s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_description/bin'
+[3.273s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.ps1'
+[3.274s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.dsv'
+[3.275s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.sh'
+[3.276s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.bash'
+[3.277s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.zsh'
+[3.277s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/realsense2_description/share/colcon-core/packages/realsense2_description)
+[3.279s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_low_level' with build type 'ament_python'
+[3.279s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_low_level', 'ament_prefix_path')
+[3.283s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/hook/ament_prefix_path.ps1'
+[3.283s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/hook/ament_prefix_path.dsv'
+[3.284s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/hook/ament_prefix_path.sh'
+[3.288s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[3.289s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[3.306s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(realsense2_camera)
+[3.307s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera' returned '0': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/charmie_bot:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera
+[3.312s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera' for CMake module files
+[3.313s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera' for CMake config files
+[3.314s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_camera', 'cmake_prefix_path')
+[3.318s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/cmake_prefix_path.ps1'
+[3.319s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/cmake_prefix_path.dsv'
+[3.319s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/cmake_prefix_path.sh'
+[3.320s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera/lib'
+[3.320s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_camera', 'ld_library_path_lib')
+[3.323s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/ld_library_path_lib.ps1'
+[3.325s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/ld_library_path_lib.dsv'
+[3.326s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/ld_library_path_lib.sh'
+[3.327s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera/bin'
+[3.327s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera/lib/pkgconfig/realsense2_camera.pc'
+[3.328s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera/lib/python3.8/site-packages'
+[3.329s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera/bin'
+[3.332s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.ps1'
+[3.334s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.dsv'
+[3.334s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.sh'
+[3.335s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.bash'
+[3.335s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.zsh'
+[3.336s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/realsense2_camera/share/colcon-core/packages/realsense2_camera)
+[3.667s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_low_level'
+[3.669s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[3.669s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[3.682s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(realsense2_camera)
+[3.685s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera' for CMake module files
+[3.686s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera' for CMake config files
+[3.686s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_camera', 'cmake_prefix_path')
+[3.687s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/cmake_prefix_path.ps1'
+[3.688s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/cmake_prefix_path.dsv'
+[3.689s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/cmake_prefix_path.sh'
+[3.689s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera/lib'
+[3.689s] Level 1:colcon.colcon_core.shell:create_environment_hook('realsense2_camera', 'ld_library_path_lib')
+[3.691s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/ld_library_path_lib.ps1'
+[3.691s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/ld_library_path_lib.dsv'
+[3.692s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/hook/ld_library_path_lib.sh'
+[3.692s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera/bin'
+[3.692s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera/lib/pkgconfig/realsense2_camera.pc'
+[3.692s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera/lib/python3.8/site-packages'
+[3.693s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/realsense2_camera/bin'
+[3.694s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.ps1'
+[3.695s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.dsv'
+[3.695s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.sh'
+[3.696s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.bash'
+[3.696s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.zsh'
+[3.697s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/realsense2_camera/share/colcon-core/packages/realsense2_camera)
+[3.698s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_speakers' with build type 'ament_python'
+[3.698s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_speakers', 'ament_prefix_path')
+[3.700s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/hook/ament_prefix_path.ps1'
+[3.701s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/hook/ament_prefix_path.dsv'
+[3.701s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/hook/ament_prefix_path.sh'
+[3.703s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[3.703s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[4.175s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_speakers'
+[4.177s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[4.177s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[4.187s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_audio', 'pythonpath_develop')
+[4.189s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_audio/share/charmie_audio/hook/pythonpath_develop.ps1'
+[4.189s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_audio' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_audio/prefix_override:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_audio/build --no-deps install_data
+[4.190s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/build/charmie_audio/share/charmie_audio/hook/pythonpath_develop.dsv'
+[4.190s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_audio/share/charmie_audio/hook/pythonpath_develop.sh'
+[4.193s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_audio' for CMake module files
+[4.193s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_audio' for CMake config files
+[4.194s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_audio/lib'
+[4.194s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_audio/bin'
+[4.194s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_audio/lib/pkgconfig/charmie_audio.pc'
+[4.194s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages'
+[4.194s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_audio', 'pythonpath')
+[4.195s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/hook/pythonpath.ps1'
+[4.196s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/hook/pythonpath.dsv'
+[4.196s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/hook/pythonpath.sh'
+[4.197s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_audio/bin'
+[4.197s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_audio)
+[4.198s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/package.ps1'
+[4.199s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/package.dsv'
+[4.199s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/package.sh'
+[4.199s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/package.bash'
+[4.200s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_audio/share/charmie_audio/package.zsh'
+[4.200s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_audio/share/colcon-core/packages/charmie_audio)
+[4.200s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_neck_dynamixel', 'pythonpath_develop')
+[4.202s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/pythonpath_develop.ps1'
+[4.203s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/build/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/pythonpath_develop.dsv'
+[4.203s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_neck_dynamixel' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_neck_dynamixel/prefix_override:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build --no-deps install_data
+[4.204s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/pythonpath_develop.sh'
+[4.206s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel' for CMake module files
+[4.207s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel' for CMake config files
+[4.207s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib'
+[4.207s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/bin'
+[4.207s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/pkgconfig/charmie_neck_dynamixel.pc'
+[4.207s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages'
+[4.208s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_neck_dynamixel', 'pythonpath')
+[4.209s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/pythonpath.ps1'
+[4.209s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/pythonpath.dsv'
+[4.210s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/pythonpath.sh'
+[4.210s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/bin'
+[4.210s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_neck_dynamixel)
+[4.212s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/package.ps1'
+[4.212s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/package.dsv'
+[4.213s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/package.sh'
+[4.213s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/package.bash'
+[4.214s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/package.zsh'
+[4.214s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/colcon-core/packages/charmie_neck_dynamixel)
+[4.214s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_ps4_controller', 'pythonpath_develop')
+[4.216s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_ps4_controller/share/charmie_ps4_controller/hook/pythonpath_develop.ps1'
+[4.217s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/build/charmie_ps4_controller/share/charmie_ps4_controller/hook/pythonpath_develop.dsv'
+[4.217s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_ps4_controller' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_ps4_controller/prefix_override:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_ps4_controller/build --no-deps install_data
+[4.218s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_ps4_controller/share/charmie_ps4_controller/hook/pythonpath_develop.sh'
+[4.220s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_ps4_controller' for CMake module files
+[4.221s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_ps4_controller' for CMake config files
+[4.221s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib'
+[4.221s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_ps4_controller/bin'
+[4.221s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/pkgconfig/charmie_ps4_controller.pc'
+[4.222s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages'
+[4.222s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_ps4_controller', 'pythonpath')
+[4.223s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/hook/pythonpath.ps1'
+[4.223s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/hook/pythonpath.dsv'
+[4.224s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/hook/pythonpath.sh'
+[4.224s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_ps4_controller/bin'
+[4.224s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_ps4_controller)
+[4.226s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/package.ps1'
+[4.226s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/package.dsv'
+[4.227s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/package.sh'
+[4.227s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/package.bash'
+[4.228s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller/package.zsh'
+[4.228s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_ps4_controller/share/colcon-core/packages/charmie_ps4_controller)
+[4.228s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_face_shiningrgb', 'pythonpath_develop')
+[4.230s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/pythonpath_develop.ps1'
+[4.231s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_face_shiningrgb' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_face_shiningrgb/prefix_override:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_face_shiningrgb/build --no-deps install_data
+[4.231s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/build/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/pythonpath_develop.dsv'
+[4.231s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/pythonpath_develop.sh'
+[4.234s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb' for CMake module files
+[4.234s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb' for CMake config files
+[4.235s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/lib'
+[4.235s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/bin'
+[4.235s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/lib/pkgconfig/charmie_face_shiningrgb.pc'
+[4.235s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/lib/python3.8/site-packages'
+[4.235s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_face_shiningrgb', 'pythonpath')
+[4.237s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/pythonpath.ps1'
+[4.237s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/pythonpath.dsv'
+[4.237s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/pythonpath.sh'
+[4.238s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/bin'
+[4.238s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_face_shiningrgb)
+[4.239s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/package.ps1'
+[4.240s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/package.dsv'
+[4.240s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/package.sh'
+[4.241s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/package.bash'
+[4.241s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/package.zsh'
+[4.241s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/colcon-core/packages/charmie_face_shiningrgb)
+[4.242s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_lidar_hokuyo', 'pythonpath_develop')
+[4.243s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/pythonpath_develop.ps1'
+[4.244s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/prefix_override:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/build --no-deps install_data
+[4.244s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/pythonpath_develop.dsv'
+[4.245s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/pythonpath_develop.sh'
+[4.247s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo' for CMake module files
+[4.247s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo' for CMake config files
+[4.248s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib'
+[4.248s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/bin'
+[4.248s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/pkgconfig/charmie_lidar_hokuyo.pc'
+[4.248s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages'
+[4.248s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_lidar_hokuyo', 'pythonpath')
+[4.250s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/pythonpath.ps1'
+[4.250s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/pythonpath.dsv'
+[4.251s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/pythonpath.sh'
+[4.251s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/bin'
+[4.251s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_lidar_hokuyo)
+[4.253s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/package.ps1'
+[4.253s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/package.dsv'
+[4.254s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/package.sh'
+[4.254s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/package.bash'
+[4.255s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/package.zsh'
+[4.255s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/colcon-core/packages/charmie_lidar_hokuyo)
+[4.259s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_debug': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/charmie_bot LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_debug:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_audio:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_debug/build --no-deps install_data
+[4.394s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_low_level': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/charmie_bot LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_low_level/prefix_override:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_debug:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_audio:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_low_level/build --no-deps install_data
+[4.862s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_speakers': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/charmie_bot LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_speakers/prefix_override:/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_debug:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_audio:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_speakers/build --no-deps install_data
+[4.928s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_debug', 'pythonpath_develop')
+[4.930s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_debug/share/charmie_debug/hook/pythonpath_develop.ps1'
+[4.931s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_debug' returned '0': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/charmie_bot LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_debug:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_audio:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_debug/build --no-deps install_data
+[4.931s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/build/charmie_debug/share/charmie_debug/hook/pythonpath_develop.dsv'
+[4.932s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_debug/share/charmie_debug/hook/pythonpath_develop.sh'
+[4.934s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_debug' for CMake module files
+[4.935s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_debug' for CMake config files
+[4.935s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_debug/lib'
+[4.936s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_debug/bin'
+[4.936s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_debug/lib/pkgconfig/charmie_debug.pc'
+[4.936s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages'
+[4.936s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_debug', 'pythonpath')
+[4.938s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/hook/pythonpath.ps1'
+[4.938s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/hook/pythonpath.dsv'
+[4.939s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/hook/pythonpath.sh'
+[4.939s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_debug/bin'
+[4.939s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_debug)
+[4.941s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/package.ps1'
+[4.942s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/package.dsv'
+[4.942s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/package.sh'
+[4.943s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/package.bash'
+[4.943s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/package.zsh'
+[4.944s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_debug/share/colcon-core/packages/charmie_debug)
+[4.945s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_low_level', 'pythonpath_develop')
+[4.947s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_low_level/share/charmie_low_level/hook/pythonpath_develop.ps1'
+[4.947s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_low_level' returned '0': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/charmie_bot LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_low_level/prefix_override:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_debug:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_audio:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_low_level/build --no-deps install_data
+[4.947s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/build/charmie_low_level/share/charmie_low_level/hook/pythonpath_develop.dsv'
+[4.948s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_low_level/share/charmie_low_level/hook/pythonpath_develop.sh'
+[4.950s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_low_level' for CMake module files
+[4.951s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_low_level' for CMake config files
+[4.951s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_low_level/lib'
+[4.951s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_low_level/bin'
+[4.951s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_low_level/lib/pkgconfig/charmie_low_level.pc'
+[4.951s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages'
+[4.951s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_low_level', 'pythonpath')
+[4.953s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/hook/pythonpath.ps1'
+[4.953s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/hook/pythonpath.dsv'
+[4.954s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/hook/pythonpath.sh'
+[4.954s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_low_level/bin'
+[4.954s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_low_level)
+[4.956s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/package.ps1'
+[4.956s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/package.dsv'
+[4.957s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/package.sh'
+[4.957s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/package.bash'
+[4.957s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_low_level/share/charmie_low_level/package.zsh'
+[4.958s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_low_level/share/colcon-core/packages/charmie_low_level)
+[5.398s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_speakers', 'pythonpath_develop')
+[5.400s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_speakers/share/charmie_speakers/hook/pythonpath_develop.ps1'
+[5.401s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/utilizador/charmie_ws/build/charmie_speakers' returned '0': CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:/home/utilizador/charmie_ws/install/realsense2_description:/home/utilizador/charmie_ws/install/realsense2_camera:/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/home/utilizador/charmie_ws/install/charmie_bot LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:/home/utilizador/charmie_ws/install/realsense2_camera/lib:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_speakers/prefix_override:/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_debug:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/build/charmie_audio:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_speakers/build --no-deps install_data
+[5.401s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/build/charmie_speakers/share/charmie_speakers/hook/pythonpath_develop.dsv'
+[5.402s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/build/charmie_speakers/share/charmie_speakers/hook/pythonpath_develop.sh'
+[5.404s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_speakers' for CMake module files
+[5.404s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_speakers' for CMake config files
+[5.405s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_speakers/lib'
+[5.405s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_speakers/bin'
+[5.405s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_speakers/lib/pkgconfig/charmie_speakers.pc'
+[5.405s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages'
+[5.406s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_speakers', 'pythonpath')
+[5.407s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/hook/pythonpath.ps1'
+[5.407s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/hook/pythonpath.dsv'
+[5.407s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/hook/pythonpath.sh'
+[5.408s] Level 1:colcon.colcon_core.environment:checking '/home/utilizador/charmie_ws/install/charmie_speakers/bin'
+[5.408s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(charmie_speakers)
+[5.410s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/package.ps1'
+[5.410s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/package.dsv'
+[5.410s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/package.sh'
+[5.411s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/package.bash'
+[5.411s] INFO:colcon.colcon_core.shell:Creating package script '/home/utilizador/charmie_ws/install/charmie_speakers/share/charmie_speakers/package.zsh'
+[5.411s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/utilizador/charmie_ws/install/charmie_speakers/share/colcon-core/packages/charmie_speakers)
+[5.412s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[5.412s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[5.412s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[5.412s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[5.421s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[5.422s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[5.422s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[5.433s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[5.435s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/utilizador/charmie_ws/install/local_setup.ps1'
+[5.436s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/utilizador/charmie_ws/install/_local_setup_util_ps1.py'
+[5.438s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/utilizador/charmie_ws/install/setup.ps1'
+[5.441s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/utilizador/charmie_ws/install/local_setup.sh'
+[5.441s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/utilizador/charmie_ws/install/_local_setup_util_sh.py'
+[5.442s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/utilizador/charmie_ws/install/setup.sh'
+[5.444s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/utilizador/charmie_ws/install/local_setup.bash'
+[5.444s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/utilizador/charmie_ws/install/setup.bash'
+[5.446s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/utilizador/charmie_ws/install/local_setup.zsh'
+[5.447s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/utilizador/charmie_ws/install/setup.zsh'

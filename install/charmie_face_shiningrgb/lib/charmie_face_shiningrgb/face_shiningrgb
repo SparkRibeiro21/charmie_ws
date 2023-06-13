@@ -1,0 +1,12 @@
+#!/usr/bin/python3
+# EASY-INSTALL-ENTRY-SCRIPT: 'charmie-face-shiningrgb','console_scripts','face_shiningrgb'
+__requires__ = 'charmie-face-shiningrgb'
+import re
+import sys
+from pkg_resources import load_entry_point
+
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
+    sys.exit(
+        load_entry_point('charmie-face-shiningrgb', 'console_scripts', 'face_shiningrgb')()
+    )
