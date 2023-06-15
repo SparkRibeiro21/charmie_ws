@@ -52,11 +52,14 @@ class TRNode(Node):
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
         self.depth_image_subscriber = self.create_subscription(Image, "/depth/image_rect_raw", self.get_depth_image_callback, 10)
 
-
+        # Face Shining RGB
+        self.face_publisher = self.create_publisher(Int16, "face_command", 10)
+        
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
         self.create_timer(0.05, self.timer_callback)
         self.create_timer(5, self.timer_callback2)
+        self.create_timer(2, self.timer_callback3)
 
         # Get Flags
         self.flag_get_neck_position = False 
@@ -68,6 +71,11 @@ class TRNode(Node):
         # Get Variables
         self.ps4_controller = PS4Controller()
         self.controller_updated = False
+
+
+        # Extras
+        self.face_counter = 0
+
 
         self.br = CvBridge()
 
@@ -131,6 +139,16 @@ class TRNode(Node):
         speech_str.language = 'en'
         self.speaker_publisher.publish(speech_str)
 
+    def timer_callback3(self):
+        face = Int16()
+        
+        face.data = self.face_counter
+        self.face_publisher.publish(face)
+
+        self.face_counter += 1
+
+        if self.face_counter > 1:
+            self.face_counter = 0
 
     def timer_callback(self):
         neck = Pose2D()
