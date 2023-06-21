@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+charmie_odometry/__init__.py
+charmie_odometry/odometry.py
+charmie_odometry.egg-info/PKG-INFO
+charmie_odometry.egg-info/SOURCES.txt
+charmie_odometry.egg-info/dependency_links.txt
+charmie_odometry.egg-info/entry_points.txt
+charmie_odometry.egg-info/requires.txt
+charmie_odometry.egg-info/top_level.txt
+charmie_odometry.egg-info/zip-safe
+resource/charmie_odometry

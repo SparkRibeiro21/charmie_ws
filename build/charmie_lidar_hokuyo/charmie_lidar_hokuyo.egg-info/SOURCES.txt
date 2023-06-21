@@ -10,7 +10,11 @@ setup.py
 ../../build/charmie_lidar_hokuyo/charmie_lidar_hokuyo.egg-info/zip-safe
 charmie_lidar_hokuyo/__init__.py
 charmie_lidar_hokuyo/lidar_hokuyo.py
+charmie_lidar_hokuyo.egg-info/PKG-INFO
+charmie_lidar_hokuyo.egg-info/SOURCES.txt
+charmie_lidar_hokuyo.egg-info/dependency_links.txt
+charmie_lidar_hokuyo.egg-info/entry_points.txt
+charmie_lidar_hokuyo.egg-info/requires.txt
+charmie_lidar_hokuyo.egg-info/top_level.txt
+charmie_lidar_hokuyo.egg-info/zip-safe
 resource/charmie_lidar_hokuyo
-test/test_copyright.py
-test/test_flake8.py
-test/test_pep257.py

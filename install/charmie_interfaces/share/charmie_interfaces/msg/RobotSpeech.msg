@@ -1,2 +1,1 @@
-string command
-string language
+/home/utilizador/charmie_ws/src/charmie_interfaces/msg/RobotSpeech.msg

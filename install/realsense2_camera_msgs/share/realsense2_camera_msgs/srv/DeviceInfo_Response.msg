@@ -1,8 +1,1 @@
-
-string device_name
-string serial_number
-string firmware_version
-string usb_type_descriptor
-string firmware_update_id
-string sensors
-string physical_port
+/home/utilizador/charmie_ws/build/realsense2_camera_msgs/rosidl_cmake/srv/DeviceInfo_Response.msg
