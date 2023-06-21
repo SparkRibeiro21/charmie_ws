@@ -86,6 +86,24 @@ charmie_interfaces/msg/detail/robot_speech__struct.h
 rosidl_runtime_c/string_functions.h
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/rosidl_runtime_c/string_functions.h
 
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c
+stddef.h
+-
+charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_c.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_c.h
+charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+rosidl_typesupport_introspection_c/field_types.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/rosidl_typesupport_introspection_c/field_types.h
+rosidl_typesupport_introspection_c/identifier.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/rosidl_typesupport_introspection_c/identifier.h
+rosidl_typesupport_introspection_c/message_introspection.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/rosidl_typesupport_introspection_c/message_introspection.h
+charmie_interfaces/msg/detail/speech_type__functions.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/detail/speech_type__functions.h
+charmie_interfaces/msg/detail/speech_type__struct.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/detail/speech_type__struct.h
+
 /opt/ros/foxy/include/geometry_msgs/msg/detail/point__functions.h
 stdbool.h
 -
@@ -278,6 +296,26 @@ stdint.h
 rosidl_runtime_c/string.h
 rosidl_generator_c/charmie_interfaces/msg/detail/rosidl_runtime_c/string.h
 
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h
+stdbool.h
+-
+stdlib.h
+-
+rosidl_runtime_c/visibility_control.h
+rosidl_generator_c/charmie_interfaces/msg/detail/rosidl_runtime_c/visibility_control.h
+charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+rosidl_generator_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+charmie_interfaces/msg/detail/speech_type__struct.h
+rosidl_generator_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/detail/speech_type__struct.h
+
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h
+stdbool.h
+-
+stddef.h
+-
+stdint.h
+-
+
 rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
 
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_c.h
@@ -305,6 +343,14 @@ charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
 
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_c.h
+rosidl_runtime_c/message_type_support_struct.h
+rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/rosidl_runtime_c/message_type_support_struct.h
+rosidl_typesupport_interface/macros.h
+rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/rosidl_typesupport_interface/macros.h
+charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+
+rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_c.h
 rosidl_runtime_c/message_type_support_struct.h
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/rosidl_runtime_c/message_type_support_struct.h
 rosidl_typesupport_interface/macros.h

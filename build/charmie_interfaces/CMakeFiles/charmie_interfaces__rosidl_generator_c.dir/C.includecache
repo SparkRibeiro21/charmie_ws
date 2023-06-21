@@ -68,6 +68,20 @@ rcutils/allocator.h
 rosidl_runtime_c/string_functions.h
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/rosidl_runtime_c/string_functions.h
 
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c
+charmie_interfaces/msg/detail/speech_type__functions.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/detail/speech_type__functions.h
+assert.h
+-
+stdbool.h
+-
+stdlib.h
+-
+string.h
+-
+rcutils/allocator.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/rcutils/allocator.h
+
 /opt/ros/foxy/include/geometry_msgs/msg/detail/point__functions.h
 stdbool.h
 -
@@ -239,6 +253,26 @@ stdint.h
 -
 rosidl_runtime_c/string.h
 rosidl_generator_c/charmie_interfaces/msg/detail/rosidl_runtime_c/string.h
+
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h
+stdbool.h
+-
+stdlib.h
+-
+rosidl_runtime_c/visibility_control.h
+rosidl_generator_c/charmie_interfaces/msg/detail/rosidl_runtime_c/visibility_control.h
+charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+rosidl_generator_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+charmie_interfaces/msg/detail/speech_type__struct.h
+rosidl_generator_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/detail/speech_type__struct.h
+
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h
+stdbool.h
+-
+stddef.h
+-
+stdint.h
+-
 
 rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
 

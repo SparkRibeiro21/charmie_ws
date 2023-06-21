@@ -45,6 +45,12 @@ charmie_interfaces/msg/detail/robot_speech__struct.h
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/charmie_interfaces/msg/detail/robot_speech__struct.h
 charmie_interfaces/msg/detail/robot_speech__functions.h
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/charmie_interfaces/msg/detail/robot_speech__functions.h
+charmie_interfaces/msg/detail/speech_type__type_support.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/charmie_interfaces/msg/detail/speech_type__type_support.h
+charmie_interfaces/msg/detail/speech_type__struct.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/charmie_interfaces/msg/detail/speech_type__struct.h
+charmie_interfaces/msg/detail/speech_type__functions.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_py/charmie_interfaces/charmie_interfaces/msg/detail/speech_type__functions.h
 
 /opt/ros/foxy/include/geometry_msgs/msg/detail/point__struct.h
 stdbool.h
@@ -707,6 +713,34 @@ rosidl_runtime_c/string.h
 rosidl_generator_c/charmie_interfaces/msg/detail/rosidl_runtime_c/string.h
 
 rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__type_support.h
+rosidl_typesupport_interface/macros.h
+rosidl_generator_c/charmie_interfaces/msg/detail/rosidl_typesupport_interface/macros.h
+charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+rosidl_generator_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+rosidl_runtime_c/message_type_support_struct.h
+rosidl_generator_c/charmie_interfaces/msg/detail/rosidl_runtime_c/message_type_support_struct.h
+
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h
+stdbool.h
+-
+stdlib.h
+-
+rosidl_runtime_c/visibility_control.h
+rosidl_generator_c/charmie_interfaces/msg/detail/rosidl_runtime_c/visibility_control.h
+charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+rosidl_generator_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+charmie_interfaces/msg/detail/speech_type__struct.h
+rosidl_generator_c/charmie_interfaces/msg/detail/charmie_interfaces/msg/detail/speech_type__struct.h
+
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h
+stdbool.h
+-
+stddef.h
+-
+stdint.h
+-
+
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__type_support.h
 rosidl_typesupport_interface/macros.h
 rosidl_generator_c/charmie_interfaces/msg/detail/rosidl_typesupport_interface/macros.h
 charmie_interfaces/msg/rosidl_generator_c__visibility_control.h

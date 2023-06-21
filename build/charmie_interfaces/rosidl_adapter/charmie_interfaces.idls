@@ -2,3 +2,4 @@
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/Encoders.idl
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/PS4Controller.idl
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/RobotSpeech.idl
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/SpeechType.idl

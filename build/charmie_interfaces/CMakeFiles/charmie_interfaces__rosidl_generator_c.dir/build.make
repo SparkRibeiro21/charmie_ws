@@ -74,6 +74,7 @@ rosidl_generator_c/charmie_interfaces/msg/example_tr.h: rosidl_adapter/charmie_i
 rosidl_generator_c/charmie_interfaces/msg/example_tr.h: rosidl_adapter/charmie_interfaces/msg/Encoders.idl
 rosidl_generator_c/charmie_interfaces/msg/example_tr.h: rosidl_adapter/charmie_interfaces/msg/PS4Controller.idl
 rosidl_generator_c/charmie_interfaces/msg/example_tr.h: rosidl_adapter/charmie_interfaces/msg/RobotSpeech.idl
+rosidl_generator_c/charmie_interfaces/msg/example_tr.h: rosidl_adapter/charmie_interfaces/msg/SpeechType.idl
 rosidl_generator_c/charmie_interfaces/msg/example_tr.h: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 rosidl_generator_c/charmie_interfaces/msg/example_tr.h: /opt/ros/foxy/share/std_msgs/msg/Byte.idl
 rosidl_generator_c/charmie_interfaces/msg/example_tr.h: /opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl
@@ -183,6 +184,18 @@ rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__struct.h: rosidl_
 rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__type_support.h: rosidl_generator_c/charmie_interfaces/msg/example_tr.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__type_support.h
 
+rosidl_generator_c/charmie_interfaces/msg/speech_type.h: rosidl_generator_c/charmie_interfaces/msg/example_tr.h
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/charmie_interfaces/msg/speech_type.h
+
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h: rosidl_generator_c/charmie_interfaces/msg/example_tr.h
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h
+
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h: rosidl_generator_c/charmie_interfaces/msg/example_tr.h
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h
+
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__type_support.h: rosidl_generator_c/charmie_interfaces/msg/example_tr.h
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__type_support.h
+
 rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.c: rosidl_generator_c/charmie_interfaces/msg/example_tr.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.c
 
@@ -194,6 +207,9 @@ rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.c: ro
 
 rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c: rosidl_generator_c/charmie_interfaces/msg/example_tr.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c
+
+rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c: rosidl_generator_c/charmie_interfaces/msg/example_tr.h
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c
 
 CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.c.o: CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/flags.make
 CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.c.o: rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.c
@@ -247,12 +263,26 @@ CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c -o CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c.s
 
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.o: CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/flags.make
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.o: rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.o   -c /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c
+
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c > CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.i
+
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c -o CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.s
+
 # Object files for target charmie_interfaces__rosidl_generator_c
 charmie_interfaces__rosidl_generator_c_OBJECTS = \
 "CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.c.o" \
 "CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/encoders__functions.c.o" \
 "CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.c.o" \
-"CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c.o"
+"CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c.o" \
+"CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.o"
 
 # External object files for target charmie_interfaces__rosidl_generator_c
 charmie_interfaces__rosidl_generator_c_EXTERNAL_OBJECTS =
@@ -261,6 +291,7 @@ libcharmie_interfaces__rosidl_generator_c.so: CMakeFiles/charmie_interfaces__ros
 libcharmie_interfaces__rosidl_generator_c.so: CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/encoders__functions.c.o
 libcharmie_interfaces__rosidl_generator_c.so: CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.c.o
 libcharmie_interfaces__rosidl_generator_c.so: CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c.o
+libcharmie_interfaces__rosidl_generator_c.so: CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.o
 libcharmie_interfaces__rosidl_generator_c.so: CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/build.make
 libcharmie_interfaces__rosidl_generator_c.so: /opt/ros/foxy/lib/libgeometry_msgs__rosidl_typesupport_introspection_c.so
 libcharmie_interfaces__rosidl_generator_c.so: /opt/ros/foxy/lib/libgeometry_msgs__rosidl_typesupport_c.so
@@ -285,7 +316,7 @@ libcharmie_interfaces__rosidl_generator_c.so: /opt/ros/foxy/lib/librosidl_runtim
 libcharmie_interfaces__rosidl_generator_c.so: /opt/ros/foxy/lib/librcpputils.so
 libcharmie_interfaces__rosidl_generator_c.so: /opt/ros/foxy/lib/librcutils.so
 libcharmie_interfaces__rosidl_generator_c.so: CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking C shared library libcharmie_interfaces__rosidl_generator_c.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking C shared library libcharmie_interfaces__rosidl_generator_c.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -313,10 +344,15 @@ CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c
 CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.h
 CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__struct.h
 CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__type_support.h
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/speech_type.h
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__type_support.h
 CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.c
 CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/encoders__functions.c
 CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.c
 CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend: rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c
 	cd /home/utilizador/charmie_ws/build/charmie_interfaces && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/utilizador/charmie_ws/src/charmie_interfaces /home/utilizador/charmie_ws/src/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/depend
 

@@ -110,4 +110,7 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_c__pyext.dir/rosidl_generator_
  rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.h
  rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__struct.h
  rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__type_support.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__type_support.h
  rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h

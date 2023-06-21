@@ -69,6 +69,7 @@ rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__ros
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h: rosidl_adapter/charmie_interfaces/msg/Encoders.idl
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h: rosidl_adapter/charmie_interfaces/msg/PS4Controller.idl
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h: rosidl_adapter/charmie_interfaces/msg/RobotSpeech.idl
+rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h: rosidl_adapter/charmie_interfaces/msg/SpeechType.idl
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h: /opt/ros/foxy/share/std_msgs/msg/Byte.idl
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h: /opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl
@@ -142,6 +143,9 @@ rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller_
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_c.h: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_c.h
 
+rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_c.h: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_c.h
+
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__type_support.c: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__type_support.c
 
@@ -153,6 +157,9 @@ rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller_
 
 rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c
+
+rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c
 
 CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__type_support.c.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/flags.make
 CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__type_support.c.o: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__type_support.c
@@ -206,12 +213,26 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typ
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c -o CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c.s
 
+CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/flags.make
+CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.o: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.o   -c /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c
+
+CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c > CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.i
+
+CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c -o CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.s
+
 # Object files for target charmie_interfaces__rosidl_typesupport_introspection_c
 charmie_interfaces__rosidl_typesupport_introspection_c_OBJECTS = \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__type_support.c.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/encoders__type_support.c.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller__type_support.c.o" \
-"CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c.o"
+"CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c.o" \
+"CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.o"
 
 # External object files for target charmie_interfaces__rosidl_typesupport_introspection_c
 charmie_interfaces__rosidl_typesupport_introspection_c_EXTERNAL_OBJECTS =
@@ -220,6 +241,7 @@ libcharmie_interfaces__rosidl_typesupport_introspection_c.so: CMakeFiles/charmie
 libcharmie_interfaces__rosidl_typesupport_introspection_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/encoders__type_support.c.o
 libcharmie_interfaces__rosidl_typesupport_introspection_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller__type_support.c.o
 libcharmie_interfaces__rosidl_typesupport_introspection_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c.o
+libcharmie_interfaces__rosidl_typesupport_introspection_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.o
 libcharmie_interfaces__rosidl_typesupport_introspection_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/build.make
 libcharmie_interfaces__rosidl_typesupport_introspection_c.so: libcharmie_interfaces__rosidl_generator_c.so
 libcharmie_interfaces__rosidl_typesupport_introspection_c.so: /opt/ros/foxy/lib/libgeometry_msgs__rosidl_typesupport_c.so
@@ -245,7 +267,7 @@ libcharmie_interfaces__rosidl_typesupport_introspection_c.so: /opt/ros/foxy/lib/
 libcharmie_interfaces__rosidl_typesupport_introspection_c.so: /opt/ros/foxy/lib/librosidl_runtime_c.so
 libcharmie_interfaces__rosidl_typesupport_introspection_c.so: /opt/ros/foxy/lib/librcutils.so
 libcharmie_interfaces__rosidl_typesupport_introspection_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking C shared library libcharmie_interfaces__rosidl_typesupport_introspection_c.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking C shared library libcharmie_interfaces__rosidl_typesupport_introspection_c.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -261,10 +283,12 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend: ro
 CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_c.h
 CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_introspection_c.h
 CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_c.h
+CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_c.h
 CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__type_support.c
 CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/encoders__type_support.c
 CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller__type_support.c
 CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c
+CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c
 	cd /home/utilizador/charmie_ws/build/charmie_interfaces && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/utilizador/charmie_ws/src/charmie_interfaces /home/utilizador/charmie_ws/src/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/depend
 

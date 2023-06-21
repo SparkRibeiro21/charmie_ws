@@ -3,6 +3,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__type_support.c.o"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller__type_support.c.o"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c.o"
+  "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.o"
   "libcharmie_interfaces__rosidl_typesupport_introspection_c.pdb"
   "libcharmie_interfaces__rosidl_typesupport_introspection_c.so"
   "rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_c.h"
@@ -13,6 +14,8 @@ file(REMOVE_RECURSE
   "rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller__type_support.c"
   "rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_c.h"
   "rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c"
+  "rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c"
 )
 
 # Per-language clean rules from dependency scanning.

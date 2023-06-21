@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16, String
 from sensor_msgs.msg import LaserScan, Image
-from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech
+from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType
 
 
 from cv_bridge import CvBridge
@@ -138,6 +138,10 @@ class TRNode(Node):
         speech_str.command = "Hello my name is Tiago."
         speech_str.language = 'en'
         self.speaker_publisher.publish(speech_str)
+
+        audio = SpeechType()
+        print(audio)
+
 
     def timer_callback3(self):
         face = Int16()

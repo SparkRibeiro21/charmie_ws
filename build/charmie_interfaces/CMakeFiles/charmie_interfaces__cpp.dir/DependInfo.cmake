@@ -17,9 +17,13 @@ set(CMAKE_MULTIPLE_OUTPUT_PAIRS
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__builder.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__struct.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/robot_speech__traits.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/speech_type__builder.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/speech_type__struct.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/speech_type__traits.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/ps4_controller.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/robot_speech.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
+  "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/speech_type.hpp" "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
   )
 
 

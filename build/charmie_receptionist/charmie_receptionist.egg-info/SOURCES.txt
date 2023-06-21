@@ -1,0 +1,16 @@
+package.xml
+setup.cfg
+setup.py
+../../build/charmie_receptionist/charmie_receptionist.egg-info/PKG-INFO
+../../build/charmie_receptionist/charmie_receptionist.egg-info/SOURCES.txt
+../../build/charmie_receptionist/charmie_receptionist.egg-info/dependency_links.txt
+../../build/charmie_receptionist/charmie_receptionist.egg-info/entry_points.txt
+../../build/charmie_receptionist/charmie_receptionist.egg-info/requires.txt
+../../build/charmie_receptionist/charmie_receptionist.egg-info/top_level.txt
+../../build/charmie_receptionist/charmie_receptionist.egg-info/zip-safe
+charmie_receptionist/__init__.py
+charmie_receptionist/receptionist.py
+resource/charmie_receptionist
+test/test_copyright.py
+test/test_flake8.py
+test/test_pep257.py

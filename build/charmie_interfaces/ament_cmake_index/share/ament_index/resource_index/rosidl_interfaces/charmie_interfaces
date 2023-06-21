@@ -6,3 +6,5 @@ msg/PS4Controller.idl
 msg/PS4Controller.msg
 msg/RobotSpeech.idl
 msg/RobotSpeech.msg
+msg/SpeechType.idl
+msg/SpeechType.msg

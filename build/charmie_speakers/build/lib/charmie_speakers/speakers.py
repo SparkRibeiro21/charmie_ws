@@ -56,8 +56,6 @@ class SpeakerNode(Node):
         self.flag_speech_done_publisher.publish(flag)
         print("Finished Speaking.")
 
-        
-
 
 def main(args=None):
     rclpy.init(args=args)

@@ -74,3 +74,18 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typ
  rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
  rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_c.h
  rosidl_typesupport_introspection_c/charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.o
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c
+ /opt/ros/foxy/include/rosidl_runtime_c/message_initialization.h
+ /opt/ros/foxy/include/rosidl_runtime_c/message_type_support_struct.h
+ /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_interface/macros.h
+ /opt/ros/foxy/include/rosidl_typesupport_introspection_c/field_types.h
+ /opt/ros/foxy/include/rosidl_typesupport_introspection_c/identifier.h
+ /opt/ros/foxy/include/rosidl_typesupport_introspection_c/message_introspection.h
+ /opt/ros/foxy/include/rosidl_typesupport_introspection_c/visibility_control.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+ rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_c.h
+ rosidl_typesupport_introspection_c/charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
