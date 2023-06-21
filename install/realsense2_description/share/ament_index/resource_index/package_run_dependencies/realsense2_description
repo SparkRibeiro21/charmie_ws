@@ -1,1 +1,1 @@
-/home/utilizador/charmie_ws/build/realsense2_description/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/realsense2_description
+rclcpp;rclcpp_components;realsense2_camera_msgs;launch_ros;xacro;ament_lint_auto;ament_lint_common

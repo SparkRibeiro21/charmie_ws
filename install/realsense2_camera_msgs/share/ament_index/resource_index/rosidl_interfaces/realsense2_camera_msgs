@@ -1,1 +1,10 @@
-/home/utilizador/charmie_ws/build/realsense2_camera_msgs/ament_cmake_index/share/ament_index/resource_index/rosidl_interfaces/realsense2_camera_msgs
+msg/Extrinsics.idl
+msg/Extrinsics.msg
+msg/IMUInfo.idl
+msg/IMUInfo.msg
+msg/Metadata.idl
+msg/Metadata.msg
+srv/DeviceInfo.idl
+srv/DeviceInfo.srv
+srv/DeviceInfo_Request.msg
+srv/DeviceInfo_Response.msg

@@ -10,6 +10,7 @@ setup.py
 ../../build/charmie_audio/charmie_audio.egg-info/zip-safe
 charmie_audio/__init__.py
 charmie_audio/audio.py
+charmie_audio/words_dict.py
 resource/charmie_audio
 test/test_copyright.py
 test/test_flake8.py

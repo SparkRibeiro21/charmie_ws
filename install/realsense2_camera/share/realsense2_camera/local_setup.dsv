@@ -1,1 +1,3 @@
-/home/utilizador/charmie_ws/build/realsense2_camera/ament_cmake_environment_hooks/local_setup.dsv
+source;share/realsense2_camera/environment/ament_prefix_path.sh
+source;share/realsense2_camera/environment/library_path.sh
+source;share/realsense2_camera/environment/path.sh

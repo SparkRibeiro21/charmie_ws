@@ -1,0 +1,37 @@
+[1.845s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_neck_dynamixel': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_neck_dynamixel/prefix_override:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_neck_dynamixel build --build-base /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build install --record /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/install.log --install-scripts $base/lib/charmie_neck_dynamixel --single-version-externally-managed
+[2.237s] running egg_info
+[2.238s] creating ../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info
+[2.239s] writing ../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info/PKG-INFO
+[2.239s] writing dependency_links to ../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info/dependency_links.txt
+[2.239s] writing entry points to ../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info/entry_points.txt
+[2.239s] writing requirements to ../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info/requires.txt
+[2.239s] writing top-level names to ../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info/top_level.txt
+[2.241s] writing manifest file '../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info/SOURCES.txt'
+[2.302s] reading manifest file '../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info/SOURCES.txt'
+[2.303s] writing manifest file '../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info/SOURCES.txt'
+[2.303s] running build
+[2.304s] running build_py
+[2.304s] creating /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build
+[2.304s] creating /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build/lib
+[2.304s] creating /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build/lib/charmie_neck_dynamixel
+[2.304s] copying charmie_neck_dynamixel/neck_dynamixel.py -> /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build/lib/charmie_neck_dynamixel
+[2.304s] copying charmie_neck_dynamixel/__init__.py -> /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build/lib/charmie_neck_dynamixel
+[2.304s] running install
+[2.306s] running install_lib
+[2.311s] creating /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages/charmie_neck_dynamixel
+[2.312s] copying /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build/lib/charmie_neck_dynamixel/neck_dynamixel.py -> /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages/charmie_neck_dynamixel
+[2.312s] copying /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build/lib/charmie_neck_dynamixel/__init__.py -> /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages/charmie_neck_dynamixel
+[2.312s] byte-compiling /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages/charmie_neck_dynamixel/neck_dynamixel.py to neck_dynamixel.cpython-38.pyc
+[2.312s] byte-compiling /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages/charmie_neck_dynamixel/__init__.py to __init__.cpython-38.pyc
+[2.313s] running install_data
+[2.314s] creating /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/ament_index
+[2.314s] creating /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/ament_index/resource_index
+[2.314s] creating /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/ament_index/resource_index/packages
+[2.314s] copying resource/charmie_neck_dynamixel -> /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/ament_index/resource_index/packages
+[2.314s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel
+[2.314s] running install_egg_info
+[2.319s] Copying ../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info to /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages/charmie_neck_dynamixel-0.0.0-py3.8.egg-info
+[2.320s] running install_scripts
+[2.335s] Installing neck_dynamixel script to /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/charmie_neck_dynamixel
+[2.335s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_neck_dynamixel/install.log'
+[2.368s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_neck_dynamixel' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_neck_dynamixel/prefix_override:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_neck_dynamixel build --build-base /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/build install --record /home/utilizador/charmie_ws/build/charmie_neck_dynamixel/install.log --install-scripts $base/lib/charmie_neck_dynamixel --single-version-externally-managed

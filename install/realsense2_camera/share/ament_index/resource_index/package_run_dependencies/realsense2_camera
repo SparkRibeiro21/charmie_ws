@@ -1,1 +1,1 @@
-/home/utilizador/charmie_ws/build/realsense2_camera/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/realsense2_camera
+eigen;builtin_interfaces;cv_bridge;image_transport;librealsense2;rclcpp;rclcpp_components;realsense2_camera_msgs;sensor_msgs;geometry_msgs;std_msgs;nav_msgs;tf2;tf2_ros;diagnostic_updater;launch_ros

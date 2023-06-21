@@ -1,1 +1,2 @@
-/home/utilizador/charmie_ws/build/realsense2_description/ament_cmake_environment_hooks/local_setup.dsv
+source;share/realsense2_description/environment/ament_prefix_path.sh
+source;share/realsense2_description/environment/path.sh

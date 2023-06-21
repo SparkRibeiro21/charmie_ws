@@ -1,1 +1,2 @@
-/home/utilizador/charmie_ws/src/charmie_interfaces/msg/ExampleTR.msg
+string name
+geometry_msgs/Point coordinates

@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16, String
 from sensor_msgs.msg import LaserScan, Image
-from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech
+from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType
 
 
 from cv_bridge import CvBridge
@@ -54,12 +54,19 @@ class TRNode(Node):
 
         # Face Shining RGB
         self.face_publisher = self.create_publisher(Int16, "face_command", 10)
+
+        # Audio
+        self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
+        self.flag_listening_subscriber = self.create_subscription(Bool, "flag_listening", self.flag_listening_callback, 10)
+        self.get_speech_subscriber = self.create_subscription(String, "get_speech", self.get_speech_callback, 10)
+        
         
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
         self.create_timer(0.05, self.timer_callback)
-        self.create_timer(5, self.timer_callback2)
+        self.create_timer(1, self.timer_callback2)
         self.create_timer(2, self.timer_callback3)
+
 
         # Get Flags
         self.flag_get_neck_position = False 
@@ -75,9 +82,10 @@ class TRNode(Node):
 
         # Extras
         self.face_counter = 0
-
+        self.init = True
 
         self.br = CvBridge()
+
 
     def get_neck_position_callback(self, pos: Pose2D):
         print("Received Neck Position: pan =", int(pos.x), " tilt = ", int(pos.y))
@@ -111,6 +119,7 @@ class TRNode(Node):
 
     def get_speech_done_callback(self, state: Bool):
         print("Received Speech Flag: ", state.data)
+        self.start_audio()
 
     def get_color_image_callback(self, img: Image):
         # print(img)
@@ -128,16 +137,40 @@ class TRNode(Node):
         cv2.imshow("d_camera", current_frame)   
         cv2.waitKey(1)
 
+    def flag_listening_callback(self, flag: Bool):
+        print("Finished Listening, now analising...")
+
+    def get_speech_callback(self, speech: String):
+        speech_str = RobotSpeech()
+
+        if speech.data == "ERROR":
+            speech_str.command = "I could not understand what you said, can you repeat please?"
+            speech_str.language = 'en'
+            self.speaker_publisher.publish(speech_str)
+        else:
+            # speech_str.command = "Hello my name is Tiago."
+            # speech_str.language = 'en'
+            # speech_str.command = "Bom dia, o meu nome é Tiago e gosto de Robôs. Já agora, qual é a comida na cantina hoje?"
+            # speech_str.command = "Qual é a comida na cantina hoje?"
+            speech_str.command = speech.data
+            speech_str.language = 'en'
+            self.speaker_publisher.publish(speech_str)
+
+
+    def start_audio(self):
+        # print(snet)
+        aud = SpeechType()
+        aud.yes_or_no = True
+        aud.receptionist = False
+        self.audio_command_publisher.publish(aud)
+        print(aud)
 
     def timer_callback2(self):
-        speech_str = RobotSpeech()
-        speech_str.command = "Hello my name is Tiago."
-        # speech_str.language = 'en'
-        # speech_str.command = "Bom dia, o meu nome é Tiago e gosto de Robôs. Já agora, qual é a comida na cantina hoje?"
-        # speech_str.command = "Qual é a comida na cantina hoje?"
-        speech_str.command = "Hello my name is Tiago."
-        speech_str.language = 'en'
-        self.speaker_publisher.publish(speech_str)
+        
+        if self.init == True:
+            self.start_audio()
+            self.init = False
+        
 
     def timer_callback3(self):
         face = Int16()
@@ -310,11 +343,11 @@ def main(args=None):
     rclpy.init(args=args)
     node = TRNode()
 
-    cmd = Pose2D()
-    cmd.x = 180.0
-    cmd.y = 180.0
-    node.neck_position_publisher.publish(cmd)
-    print("INITIAL STATE")
+    # cmd = Pose2D()
+    # cmd.x = 180.0
+    # cmd.y = 180.0
+    # node.neck_position_publisher.publish(cmd)
+    # print("INITIAL STATE")
 
     rclpy.spin(node)
     rclpy.shutdown()

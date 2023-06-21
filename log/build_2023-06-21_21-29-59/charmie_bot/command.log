@@ -1,0 +1,6 @@
+Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /home/utilizador/charmie_ws/src/charmie_bot -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/charmie_bot
+Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /home/utilizador/charmie_ws/src/charmie_bot -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/charmie_bot
+Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_bot
+Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_bot
