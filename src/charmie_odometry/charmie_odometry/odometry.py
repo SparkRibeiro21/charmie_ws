@@ -7,6 +7,7 @@ from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import Encoders
 
 import math
+import numpy as np
 
 class RobotOdometry():
     def __init__(self):
@@ -137,6 +138,11 @@ class RobotOdometry():
         xx_ = vel_lin_enc*0.05 * math.cos(fi)
         yy_ = vel_lin_enc*0.05 * math.sin(fi)
 
+
+        #transforms from mm to m
+        xx_ /= 1000
+        yy_ /= 1000
+
         self.coord_rel_x_ += xx_
         self.coord_rel_y_ += yy_
 
@@ -160,7 +166,7 @@ class RobotOdometry():
         # time_to_50ms = 0.05 - (end - start)
         # print(time_to_50ms)
 
-        return self.coord_rel_x_, self.coord_rel_y_, self.coord_rel_t
+        return self.coord_rel_x_, self.coord_rel_y_, self.coord_rel_t, G[0]/1000, G[1]/1000, vel_ang_enc
         # return self.coord_rel_x_ + self.safety_rel_x, self.coord_rel_y_ + self.safety_rel_y, self.coord_rel_t + self.safety_rel_t
 
     def normalize_angles(self, ang):
@@ -171,6 +177,25 @@ class RobotOdometry():
             ang -= 360
 
         return ang
+    
+    def get_quaternion_from_euler(self, roll, pitch, yaw):
+        """
+        Convert an Euler angle to a quaternion.
+        
+        Input
+            :param roll: The roll (rotation around x-axis) angle in radians.
+            :param pitch: The pitch (rotation around y-axis) angle in radians.
+            :param yaw: The yaw (rotation around z-axis) angle in radians.
+        
+        Output
+            :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+        """
+        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        
+        return [qx, qy, qz, qw]
 
 
 class OdometryNode(Node):
@@ -188,11 +213,33 @@ class OdometryNode(Node):
         self.flag_enc = Bool()
         self.flag_enc.data = True
         self.flag_encoders_publisher.publish(self.flag_enc)
+    
+        self.create_timer(1.0, self.timer_callback)
 
+    def timer_callback(self):
+        quaternion = self.robot_odom.get_quaternion_from_euler(0,0,1.57079633)
+        print(quaternion, quaternion[0], quaternion[1], quaternion[2], quaternion[3])
         
     def get_encoders_callback(self, enc: Encoders):
-        self.coordinates = self.robot_odom.localization(enc) 
-        print(self.coordinates)
+        coord_x, coord_y, coord_theta, vel_x, vel_y, vel_theta = self.robot_odom.localization(enc) 
+        print(coord_x, coord_y, coord_theta)
+
+        quaternion = self.robot_odom.get_quaternion_from_euler(0,0,coord_theta)
+
+        odom = Odometry()
+        odom.pose.pose.position.x = coord_x # x corrdinates
+        odom.pose.pose.position.y = coord_y # y corrdinates 
+        
+        odom.pose.pose.orientation.x = quaternion[0]
+        odom.pose.pose.orientation.y = quaternion[1]
+        odom.pose.pose.orientation.z = quaternion[2]
+        odom.pose.pose.orientation.w = quaternion[3] 
+
+        odom.twist.twist.linear.x = vel_x 
+        odom.twist.twist.linear.y = vel_y
+        odom.twist.twist.angular.z = vel_theta
+        self.odometry_publisher.publish(odom)
+        
 
 
     def normalize_angles(self, ang):

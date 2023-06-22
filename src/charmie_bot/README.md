@@ -9,7 +9,7 @@ para usar joystick:
 - ros2 launch charmie_bot joystick.launch.py
 - L1 (normal) ou R1 (turbo) manter premido para acionar, quando solto robo para
 - joystick esquerdo move X e Y
-- joysitck  
+- joysitck
 
 iniciar ambiente gazebo:
 - ambiente com robo - ros2 launch charmie_bot launch_sim.launch.py

@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!--WHEELS-->
+
+    <!--LEFT FRONT-->
+    <joint name="left_front_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="left_front_link"/>
+        <origin xyz="0.2 0.2 0" rpy="-${pi/2} 0 -${pi/4}"/>
+    </joint>
+
+    <link name="left_front_link">
+        <visual>
+            <geometry>
+                <mesh filename="file://$(find charmie_bot)/description/meshes/omni_wheel.stl" scale="0.001 0.001 0.001"/>
+                <!-- <cylinder radius="0.105" length="0.04"/> -->
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.105" length="0.04"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="0.1" length="0.04" radius="0.105">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="left_front_link">
+        <material>Gazebo/Grey</material>
+        <mu1 value="0.001"/>
+        <mu2 value="0.001"/>
+    </gazebo>
+
+    <!--LEFT BACK-->
+    <joint name="left_back_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="left_back_link"/>
+        <origin xyz="-0.2 0.2 0" rpy="0 -${pi/2} -${pi/4}"/>
+    </joint>
+
+    <link name="left_back_link">
+        <visual>
+            <geometry>
+                <mesh filename="file://$(find charmie_bot)/description/meshes/omni_wheel.stl" scale="0.001 0.001 0.001"/>
+                <!--<cylinder radius="0.1" length="0.04"/>-->
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.105" length="0.04"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="0.1" length="0.04" radius="0.105">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="left_back_link">
+        <material>Gazebo/Grey</material>
+        <mu1 value="0.001"/>
+        <mu2 value="0.001"/>
+    </gazebo>
+
+    <!--RIGHT FRONT-->
+    <joint name="right_front_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="right_front_link"/>
+        <origin xyz="0.2 -0.2 0" rpy="0 ${pi/2} -${pi/4}"/>
+    </joint>
+
+    <link name="right_front_link">
+        <visual>
+            <geometry>
+                <mesh filename="file://$(find charmie_bot)/description/meshes/omni_wheel.stl" scale="0.001 0.001 0.001"/>
+                <!--<cylinder radius="0.1" length="0.04"/>-->
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.105" length="0.04"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="0.1" length="0.04" radius="0.105">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="right_front_link">
+        <material>Gazebo/Grey</material>
+        <mu1 value="0.001"/>
+        <mu2 value="0.001"/>
+    </gazebo>
+
+    <!--RIGHT BACK-->
+    <joint name="right_back_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="right_back_link"/>
+        <origin xyz="-0.2 -0.2 0" rpy="${pi/2} 0 -${pi/4}"/>
+    </joint>
+
+    <link name="right_back_link">
+        <visual>
+            <geometry>
+                <mesh filename="file://$(find charmie_bot)/description/meshes/omni_wheel.stl" scale="0.001 0.001 0.001"/>
+                <!--<cylinder radius="0.1" length="0.04"/>-->
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.105" length="0.04"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="0.1" length="0.04" radius="0.105">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="right_back_link">
+        <material>Gazebo/Grey</material>
+        <mu1 value="0.001"/>
+        <mu2 value="0.001"/>
+    </gazebo>
+          
+
+</robot>

@@ -18,7 +18,7 @@ import time
 class RobotControl:
 
     def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB0', baudrate=9600)  # open serial port
+        self.ser = serial.Serial('/dev/ttyUSB1', baudrate=9600)  # open serial port
         print("Connected to Motor Board via:", self.ser.name)  # check which port was really used
 
         # FLAGS
@@ -251,7 +251,7 @@ class LowLevelNode(Node):
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
 
-        self.create_timer(0.1, self.timer_callback)
+        self.create_timer(0.05, self.timer_callback)
 
         self.robot = RobotControl()
 
