@@ -2,6 +2,10 @@ msg/Encoders.idl
 msg/Encoders.msg
 msg/ExampleTR.idl
 msg/ExampleTR.msg
+msg/ObstacleInfo.idl
+msg/ObstacleInfo.msg
+msg/Obstacles.idl
+msg/Obstacles.msg
 msg/PS4Controller.idl
 msg/PS4Controller.msg
 msg/RobotSpeech.idl

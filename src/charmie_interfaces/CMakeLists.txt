@@ -27,6 +27,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PS4Controller.msg"
   "msg/RobotSpeech.msg"
   "msg/SpeechType.msg"
+  "msg/ObstacleInfo.msg"
+  "msg/Obstacles.msg"
   DEPENDENCIES std_msgs geometry_msgs
 )
 

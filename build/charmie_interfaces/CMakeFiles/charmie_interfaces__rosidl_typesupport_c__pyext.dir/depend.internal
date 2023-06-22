@@ -104,6 +104,12 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_c__pyext.dir/rosidl_generator_
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.h
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__struct.h
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__type_support.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__type_support.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacles__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacles__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacles__type_support.h
  rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.h
  rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__struct.h
  rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__type_support.h

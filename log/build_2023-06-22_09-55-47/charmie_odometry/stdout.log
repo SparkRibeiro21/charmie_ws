@@ -1,0 +1,16 @@
+running develop
+running egg_info
+writing charmie_odometry.egg-info/PKG-INFO
+writing dependency_links to charmie_odometry.egg-info/dependency_links.txt
+writing entry points to charmie_odometry.egg-info/entry_points.txt
+writing requirements to charmie_odometry.egg-info/requires.txt
+writing top-level names to charmie_odometry.egg-info/top_level.txt
+reading manifest file 'charmie_odometry.egg-info/SOURCES.txt'
+writing manifest file 'charmie_odometry.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages/charmie-odometry.egg-link (link to .)
+Installing odometry script to /home/utilizador/charmie_ws/install/charmie_odometry/lib/charmie_odometry
+
+Installed /home/utilizador/charmie_ws/build/charmie_odometry
+running install_data
+copying package.xml -> /home/utilizador/charmie_ws/install/charmie_odometry/share/charmie_odometry

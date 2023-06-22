@@ -1,0 +1,24 @@
+[2.689s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_obstacles': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_obstacles/prefix_override:/home/utilizador/charmie_ws/install/charmie_obstacles/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_obstacles/build --no-deps install_data
+[3.142s] running develop
+[3.325s] running egg_info
+[3.327s] creating charmie_obstacles.egg-info
+[3.328s] writing charmie_obstacles.egg-info/PKG-INFO
+[3.330s] writing dependency_links to charmie_obstacles.egg-info/dependency_links.txt
+[3.333s] writing entry points to charmie_obstacles.egg-info/entry_points.txt
+[3.333s] writing requirements to charmie_obstacles.egg-info/requires.txt
+[3.333s] writing top-level names to charmie_obstacles.egg-info/top_level.txt
+[3.333s] writing manifest file 'charmie_obstacles.egg-info/SOURCES.txt'
+[3.366s] reading manifest file 'charmie_obstacles.egg-info/SOURCES.txt'
+[3.367s] writing manifest file 'charmie_obstacles.egg-info/SOURCES.txt'
+[3.423s] running build_ext
+[3.423s] Creating /home/utilizador/charmie_ws/install/charmie_obstacles/lib/python3.8/site-packages/site.py
+[3.427s] Creating /home/utilizador/charmie_ws/install/charmie_obstacles/lib/python3.8/site-packages/charmie-obstacles.egg-link (link to .)
+[3.428s] 
+[3.429s] Installed /home/utilizador/charmie_ws/build/charmie_obstacles
+[3.429s] running install_data
+[3.429s] creating /home/utilizador/charmie_ws/install/charmie_obstacles/share/ament_index
+[3.429s] creating /home/utilizador/charmie_ws/install/charmie_obstacles/share/ament_index/resource_index
+[3.429s] creating /home/utilizador/charmie_ws/install/charmie_obstacles/share/ament_index/resource_index/packages
+[3.429s] copying resource/charmie_obstacles -> /home/utilizador/charmie_ws/install/charmie_obstacles/share/ament_index/resource_index/packages
+[3.429s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_obstacles/share/charmie_obstacles
+[4.263s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_obstacles' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_obstacles/prefix_override:/home/utilizador/charmie_ws/install/charmie_obstacles/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_obstacles/build --no-deps install_data

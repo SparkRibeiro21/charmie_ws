@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+charmie_obstacles/__init__.py
+charmie_obstacles/obstacles_lidar.py
+charmie_obstacles.egg-info/PKG-INFO
+charmie_obstacles.egg-info/SOURCES.txt
+charmie_obstacles.egg-info/dependency_links.txt
+charmie_obstacles.egg-info/entry_points.txt
+charmie_obstacles.egg-info/requires.txt
+charmie_obstacles.egg-info/top_level.txt
+charmie_obstacles.egg-info/zip-safe
+resource/charmie_obstacles
