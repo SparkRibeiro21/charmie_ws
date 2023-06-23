@@ -1,0 +1,17 @@
+[2.190s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_face_shiningrgb': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_face_shiningrgb/prefix_override:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_face_shiningrgb/build --no-deps install_data
+[2.654s] running develop
+[2.892s] running egg_info
+[2.892s] writing charmie_face_shiningrgb.egg-info/PKG-INFO
+[2.892s] writing dependency_links to charmie_face_shiningrgb.egg-info/dependency_links.txt
+[2.893s] writing entry points to charmie_face_shiningrgb.egg-info/entry_points.txt
+[2.893s] writing requirements to charmie_face_shiningrgb.egg-info/requires.txt
+[2.893s] writing top-level names to charmie_face_shiningrgb.egg-info/top_level.txt
+[2.928s] reading manifest file 'charmie_face_shiningrgb.egg-info/SOURCES.txt'
+[2.929s] writing manifest file 'charmie_face_shiningrgb.egg-info/SOURCES.txt'
+[2.966s] running build_ext
+[2.966s] Creating /home/utilizador/charmie_ws/install/charmie_face_shiningrgb/lib/python3.8/site-packages/charmie-face-shiningrgb.egg-link (link to .)
+[2.967s] Installing face_shiningrgb script to /home/utilizador/charmie_ws/install/charmie_face_shiningrgb/lib/charmie_face_shiningrgb
+[2.968s] 
+[2.968s] Installed /home/utilizador/charmie_ws/build/charmie_face_shiningrgb
+[2.968s] running install_data
+[3.010s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_face_shiningrgb' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_face_shiningrgb/prefix_override:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_face_shiningrgb/build --no-deps install_data

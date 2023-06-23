@@ -3,11 +3,13 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
+from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import Encoders
 
 import math
 import numpy as np
+import time
 
 class RobotOdometry():
     def __init__(self):
@@ -206,19 +208,22 @@ class OdometryNode(Node):
 
         self.encoders_subscriber = self.create_subscription(Encoders, "get_encoders", self.get_encoders_callback, 10)
         self.flag_encoders_publisher = self.create_publisher(Bool, "flag_encoders", 10)
-        self.odometry_publisher = self.create_publisher(Odometry, "odom", 10)
+        self.odometry_publisher = self.create_publisher(Odometry, "odom_robot", 10)
+        self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel_robot", 10)
 
         self.robot_odom = RobotOdometry()
 
+        time.sleep(0.100)
+        
         self.flag_enc = Bool()
         self.flag_enc.data = True
         self.flag_encoders_publisher.publish(self.flag_enc)
     
-        self.create_timer(1.0, self.timer_callback)
+        # self.create_timer(1.0, self.timer_callback)
 
-    def timer_callback(self):
-        quaternion = self.robot_odom.get_quaternion_from_euler(0,0,1.57079633)
-        print(quaternion, quaternion[0], quaternion[1], quaternion[2], quaternion[3])
+    # def timer_callback(self):
+        # quaternion = self.robot_odom.get_quaternion_from_euler(0,0,1.57079633)
+        # print(quaternion, quaternion[0], quaternion[1], quaternion[2], quaternion[3])
         
     def get_encoders_callback(self, enc: Encoders):
         coord_x, coord_y, coord_theta, vel_x, vel_y, vel_theta = self.robot_odom.localization(enc) 
@@ -239,6 +244,12 @@ class OdometryNode(Node):
         odom.twist.twist.linear.y = vel_y
         odom.twist.twist.angular.z = vel_theta
         self.odometry_publisher.publish(odom)
+
+        twist = Twist()
+        twist.angular.z = vel_theta
+        twist.linear.x = vel_x
+        twist.linear.y = vel_y
+        self.cmd_vel_publisher.publish(twist)
         
 
 
