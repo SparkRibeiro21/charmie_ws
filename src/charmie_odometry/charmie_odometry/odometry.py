@@ -21,7 +21,7 @@ class RobotOdometry():
         self.wheel_diameter = 203  # mm
         self.robot_radius = 265  # this value is yet to be confimed by the 3D modulation of the robot !!!!!!!!!!
         
-        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
         self.scale = 0.12*1000
         
         self.xc = 400
@@ -36,17 +36,14 @@ class RobotOdometry():
         self.all_pos_x_val = []
         self.all_pos_y_val = []
 
-        # self.coord_rel_x = 0
-        # self.coord_rel_y = 0
         self.coord_rel_t = 0
-        self.coord_rel_x_ = 0 # coord_rel_x
-        self.coord_rel_y_ = 0 # coord_rel_y
+        self.coord_rel_x_ = 0 
+        self.coord_rel_y_ = 0 
 
-        # self.ctr = 0
-        # self.flag_first_time = True
-        # self.safety_rel_t = 0
-        # self.safety_rel_x = 0
-        # self.safety_rel_y = 0
+        self.emergency_value = (100 << 24) + (100 << 16) + (100 << 8) + 100 # 1684300900
+        self.emergency_flag = False
+        self.emergency_ant_flag = False
+        self.emergency_status = 0
 
     
     def localization(self, enc: Encoders):
@@ -56,7 +53,43 @@ class RobotOdometry():
         self.MOT_ENC[2] = enc.enc_m3
         self.MOT_ENC[3] = enc.enc_m4
 
-        # for x,y in self.MOT_ENC, self.MOT_ENC_ANT:
+        ### START OF EMERGENCY STOP CODE ###
+
+        # print("---")
+        # print(self.MOT_ENC)
+
+        self.emergency_ant_flag = self.emergency_flag
+
+        # ctr_ant = self.ctr
+        self.ctr = 0
+        for i in range(len(self.MOT_ENC)):
+            if self.MOT_ENC[i] == self.emergency_value:
+                self.ctr += 1
+        if self.ctr == len(self.MOT_ENC):
+            # print("EMERGENCY")
+            self.emergency_flag = True
+        else:
+            self.emergency_flag = False
+
+        self.emergency_status = self.emergency_flag*2 + self.emergency_ant_flag
+        # print(self.emergency_status)
+        # 0 LOW  -> LOW  = OFF
+        # 1 LOW  -> HIGH = FALLING
+        # 2 HIGH -> LOW  = RISING
+        # 3 HIGH -> HIGH = ON
+        
+        # everytime it detects it is in emergency stop
+        if self.emergency_status == 2 or self.emergency_status == 3:
+            self.MOT_ENC = self.MOT_ENC_ANT
+
+        # first frame emergency stops
+        if self.emergency_status == 1:
+            self.MOT_ENC_ANT = self.MOT_ENC
+
+        # print(self.MOT_ENC, self.MOT_ENC_ANT)
+
+        ### END OF EMERGENCY STOP CODE ###
+
         DIFF_MOT_ENC = [0, 0, 0, 0]
 
         # print(val_enc)
@@ -79,10 +112,11 @@ class RobotOdometry():
 
         # calculate the linear speed of each wheel
 
-        d = [0, 0, 0, 0]
+        # d = [0, 0, 0, 0]
         v = [0, 0, 0, 0]
         for i in range(len(self.MOT_ENC)):
-            d[i] = (((math.pi*self.wheel_diameter)/self.pulse_per_rotation)*self.MOT_ENC[i])
+            # in the report this variable is calculated, however it is not used for anything, thus is commented
+            # d[i] = (((math.pi*self.wheel_diameter)/self.pulse_per_rotation)*self.MOT_ENC[i])
             v[i] = (((math.pi*self.wheel_diameter)/self.pulse_per_rotation)*DIFF_MOT_ENC[i])/0.05
 
         # print("v:", v)
@@ -224,9 +258,8 @@ class RobotOdometry():
             self.test_image[:, :] = 0
         
         
-        
         return self.coord_rel_x_, self.coord_rel_y_, self.coord_rel_t, G[0]/1000, G[1]/1000, vel_ang_enc
-        # return self.coord_rel_x_ + self.safety_rel_x, self.coord_rel_y_ + self.safety_rel_y, self.coord_rel_t + self.safety_rel_t
+    
 
     def normalize_angles(self, ang):
 
