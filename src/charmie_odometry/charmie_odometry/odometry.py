@@ -7,6 +7,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import Encoders
 
+import cv2
 import math
 import numpy as np
 import time
@@ -19,6 +20,22 @@ class RobotOdometry():
         self.pulse_per_rotation = 980  # encoder pulses for a full wheel rotation
         self.wheel_diameter = 203  # mm
         self.robot_radius = 265  # this value is yet to be confimed by the 3D modulation of the robot !!!!!!!!!!
+        
+        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.scale = 0.12*1000
+        
+        self.xc = 400
+        self.yc = 400
+
+        self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
+
+        # debug dists
+        self.robot_radius_d = 0.560/2
+        self.lidar_radius_d = 0.050/2
+
+        self.all_pos_x_val = []
+        self.all_pos_y_val = []
+
         # self.coord_rel_x = 0
         # self.coord_rel_y = 0
         self.coord_rel_t = 0
@@ -30,6 +47,7 @@ class RobotOdometry():
         # self.safety_rel_t = 0
         # self.safety_rel_x = 0
         # self.safety_rel_y = 0
+
     
     def localization(self, enc: Encoders):
 
@@ -168,6 +186,45 @@ class RobotOdometry():
         # time_to_50ms = 0.05 - (end - start)
         # print(time_to_50ms)
 
+        if self.DEBUG_DRAW_IMAGE:
+            # cv2.circle(self.test_image, (self.xc, self.yc), (int)(self.OBS_THRESH*self.scale), (0, 255, 255), 1)
+            # cv2.line(self.test_image2, (60, (int)(self.yc + 100 - self.OBS_THRESH*self.scale)), (800-60+1, (int)(self.yc + 100 - self.OBS_THRESH*self.scale)), (0, 255, 255), 1)
+            for i in range(10):
+                cv2.line(self.test_image, (int(self.xc + self.scale*i), 0), (int(self.xc + self.scale*i), self.xc*2), (255, 255, 255), 1)
+                cv2.line(self.test_image, (int(self.xc - self.scale*i), 0), (int(self.xc - self.scale*i), self.xc*2), (255, 255, 255), 1)
+                cv2.line(self.test_image, (0, int(self.yc - self.scale*i)), (self.yc*2, int(self.yc - self.scale*i)), (255, 255, 255), 1)
+                cv2.line(self.test_image, (0, int(self.yc + self.scale*i)), (self.yc*2, int(self.yc + self.scale*i)), (255, 255, 255), 1)
+            
+            
+            self.all_pos_x_val.append(self.coord_rel_x_)
+            self.all_pos_y_val.append(self.coord_rel_y_)
+            for i in range(len(self.all_pos_x_val)):
+                cv2.circle(self.test_image, (int(self.xc + self.scale*self.all_pos_x_val[i]), int(self.yc - self.scale * self.all_pos_y_val[i])), 1, (0, 0, 255), -1)
+
+
+            cv2.circle(self.test_image, (int(self.xc + self.scale*self.coord_rel_x_), int(self.yc - self.scale * self.coord_rel_y_)), (int)(self.scale*self.robot_radius_d), (0, 255, 255), 1)
+            cv2.circle(self.test_image, (int(self.xc + self.scale*self.coord_rel_x_), int(self.yc - self.scale * self.coord_rel_y_)), (int)(self.scale*self.robot_radius_d/10), (0, 255, 255), 1)
+            cv2.circle(self.test_image, (int(self.xc + self.scale*self.coord_rel_x_ + (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.cos(self.coord_rel_t + math.pi/2)),
+                                         int(self.yc - self.scale*self.coord_rel_y_ - (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.sin(self.coord_rel_t + math.pi/2))), (int)(self.scale*self.lidar_radius_d), (0, 255, 255), -1)
+            
+
+
+
+            cv2.imshow("Odometry", self.test_image)
+            
+            k = cv2.waitKey(1)
+            if k == ord('+'):
+                self.scale /= 0.8
+            if k == ord('-'):
+                self.scale *= 0.8
+            if k == ord('0'):
+                self.all_pos_x_val.clear()
+                self.all_pos_y_val.clear()
+
+            self.test_image[:, :] = 0
+        
+        
+        
         return self.coord_rel_x_, self.coord_rel_y_, self.coord_rel_t, G[0]/1000, G[1]/1000, vel_ang_enc
         # return self.coord_rel_x_ + self.safety_rel_x, self.coord_rel_y_ + self.safety_rel_y, self.coord_rel_t + self.safety_rel_t
 
@@ -250,8 +307,7 @@ class OdometryNode(Node):
         twist.linear.x = vel_x
         twist.linear.y = vel_y
         self.cmd_vel_publisher.publish(twist)
-        
-
+    
 
     def normalize_angles(self, ang):
 
