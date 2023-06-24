@@ -250,7 +250,7 @@ class AudioNode(Node):
 
         speech = String()
         if keywords is None:
-            speech.data = speech_heard
+            speech.data = "ERROR"
         else:
             speech.data = keywords
 
