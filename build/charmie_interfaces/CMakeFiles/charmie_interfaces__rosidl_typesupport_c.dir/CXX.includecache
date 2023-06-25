@@ -146,7 +146,35 @@ rosidl_typesupport_c/visibility_control.h
 rosidl_typesupport_interface/macros.h
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/rosidl_typesupport_interface/macros.h
 
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/tar_nav_sdnl__type_support.cpp
+cstddef
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/cstddef
+rosidl_runtime_c/message_type_support_struct.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/rosidl_runtime_c/message_type_support_struct.h
+charmie_interfaces/msg/rosidl_typesupport_c__visibility_control.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/charmie_interfaces/msg/rosidl_typesupport_c__visibility_control.h
+charmie_interfaces/msg/detail/tar_nav_sdnl__struct.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/charmie_interfaces/msg/detail/tar_nav_sdnl__struct.h
+rosidl_typesupport_c/identifier.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/rosidl_typesupport_c/identifier.h
+rosidl_typesupport_c/message_type_support_dispatch.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/rosidl_typesupport_c/message_type_support_dispatch.h
+rosidl_typesupport_c/type_support_map.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/rosidl_typesupport_c/type_support_map.h
+rosidl_typesupport_c/visibility_control.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/rosidl_typesupport_c/visibility_control.h
+rosidl_typesupport_interface/macros.h
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_c/charmie_interfaces/msg/rosidl_typesupport_interface/macros.h
+
 /opt/ros/foxy/include/geometry_msgs/msg/detail/point__struct.h
+stdbool.h
+-
+stddef.h
+-
+stdint.h
+-
+
+/opt/ros/foxy/include/geometry_msgs/msg/detail/pose2_d__struct.h
 stdbool.h
 -
 stddef.h
@@ -257,6 +285,16 @@ stddef.h
 -
 stdint.h
 -
+
+rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__struct.h
+stdbool.h
+-
+stddef.h
+-
+stdint.h
+-
+geometry_msgs/msg/detail/pose2_d__struct.h
+rosidl_generator_c/charmie_interfaces/msg/detail/geometry_msgs/msg/detail/pose2_d__struct.h
 
 rosidl_typesupport_c/charmie_interfaces/msg/rosidl_typesupport_c__visibility_control.h
 

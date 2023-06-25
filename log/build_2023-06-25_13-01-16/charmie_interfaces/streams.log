@@ -1,0 +1,320 @@
+[0.090s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_interfaces -- -j8 -l8
+[1.291s] -- Found ament_cmake: 0.9.11 (/opt/ros/foxy/share/ament_cmake/cmake)
+[1.291s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+[1.292s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.292s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.292s] -- Found rosidl_default_generators: 1.0.1 (/opt/ros/foxy/share/rosidl_default_generators/cmake)
+[1.292s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.292s] -- Found rosidl_adapter: 1.3.0 (/opt/ros/foxy/share/rosidl_adapter/cmake)
+[1.293s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.293s] -- Found geometry_msgs: 2.0.5 (/opt/ros/foxy/share/geometry_msgs/cmake)
+[1.294s] -- Found PythonInterp: /usr/bin/python3 (found version "3.8.10") 
+[1.294s] -- Found ament_cmake_ros: 0.9.2 (/opt/ros/foxy/share/ament_cmake_ros/cmake)
+[1.296s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.503s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.581s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3.5") 
+[1.582s] -- Found python_cmake_module: 0.8.1 (/opt/ros/foxy/share/python_cmake_module/cmake)
+[1.634s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.634s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8
+[1.634s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so
+[1.790s] -- Configuring done
+[1.932s] -- Generating done
+[1.938s] -- Build files have been written to: /home/utilizador/charmie_ws/build/charmie_interfaces
+[2.005s] [  1%] [34m[1mGenerating C code for ROS interfaces[0m
+[2.028s] [  2%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[3.101s] [  2%] Built target charmie_interfaces__cpp
+[3.113s] [  5%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[3.114s] [  5%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[3.114s] [  5%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[3.266s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_generator_c[0m
+[3.287s] [ 11%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.o[0m
+[3.287s] [ 11%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.c.o[0m
+[3.287s] [ 11%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/encoders__functions.c.o[0m
+[3.287s] [ 11%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c.o[0m
+[3.287s] [ 11%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.c.o[0m
+[3.363s] [ 13%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__functions.c.o[0m
+[3.363s] [ 13%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/obstacles__functions.c.o[0m
+[3.364s] [ 14%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.c.o[0m
+[3.436s] [ 16%] [32m[1mLinking C shared library libcharmie_interfaces__rosidl_generator_c.so[0m
+[3.481s] [ 16%] Built target charmie_interfaces__rosidl_generator_c
+[3.493s] [ 17%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[3.499s] [ 18%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[3.641s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_cpp[0m
+[3.661s] [ 22%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/ps4_controller__type_support.cpp.o[0m
+[3.662s] [ 22%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp.o[0m
+[3.662s] [ 22%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/robot_speech__type_support.cpp.o[0m
+[3.662s] [ 22%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp.o[0m
+[3.947s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_introspection_cpp[0m
+[3.975s] [ 24%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/example_tr__type_support.cpp.o[0m
+[4.086s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_fastrtps_cpp[0m
+[4.130s] [ 25%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/example_tr__type_support.cpp.o[0m
+[4.145s] [ 27%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/encoders__type_support.cpp.o[0m
+[4.145s] [ 27%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/ps4_controller__type_support.cpp.o[0m
+[4.185s] [ 28%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/obstacle_info__type_support.cpp.o[0m
+[4.185s] [ 29%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/speech_type__type_support.cpp.o[0m
+[4.306s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_c[0m
+[4.330s] [ 31%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/example_tr__type_support.cpp.o[0m
+[4.383s] [ 32%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/encoders__type_support.cpp.o[0m
+[4.434s] [ 33%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/ps4_controller__type_support.cpp.o[0m
+[4.485s] [ 34%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/robot_speech__type_support.cpp.o[0m
+[4.492s] [ 35%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/encoders__type_support.cpp.o[0m
+[4.535s] [ 36%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/speech_type__type_support.cpp.o[0m
+[4.585s] [ 37%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/obstacle_info__type_support.cpp.o[0m
+[4.635s] [ 39%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/obstacles__type_support.cpp.o[0m
+[4.643s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_introspection_c[0m
+[4.671s] [ 40%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/obstacles__type_support.cpp.o[0m
+[4.674s] [ 42%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/tar_nav_sdnl__type_support.cpp.o[0m
+[4.674s] [ 42%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/example_tr__type_support.c.o[0m
+[4.686s] [ 43%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/charmie_interfaces/msg/tar_nav_sdnl__type_support.cpp.o[0m
+[4.733s] [ 44%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/encoders__type_support.c.o[0m
+[4.737s] [ 45%] [32m[1mLinking CXX shared library libcharmie_interfaces__rosidl_typesupport_c.so[0m
+[4.788s] [ 47%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/ps4_controller__type_support.c.o[0m
+[4.813s] [ 47%] Built target charmie_interfaces__rosidl_typesupport_c
+[4.829s] [ 48%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/robot_speech__type_support.c.o[0m
+[4.845s] [ 49%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/speech_type__type_support.c.o[0m
+[4.887s] [ 50%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/ps4_controller__type_support.cpp.o[0m
+[4.899s] [ 51%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/robot_speech__type_support.cpp.o[0m
+[4.901s] [ 52%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/obstacle_info__type_support.c.o[0m
+[4.906s] [ 54%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/speech_type__type_support.cpp.o[0m
+[4.914s] [ 55%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/obstacle_info__type_support.cpp.o[0m
+[4.970s] [ 56%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/obstacles__type_support.c.o[0m
+[5.011s] [ 57%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/robot_speech__type_support.cpp.o[0m
+[5.031s] [ 58%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support.c.o[0m
+[5.088s] [ 59%] [32m[1mLinking C shared library libcharmie_interfaces__rosidl_typesupport_introspection_c.so[0m
+[5.148s] [ 59%] Built target charmie_interfaces__rosidl_typesupport_introspection_c
+[5.164s] [ 62%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/obstacles__type_support.cpp.o[0m
+[5.165s] [ 62%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/speech_type__type_support.cpp.o[0m
+[5.171s] [ 63%] [32m[1mLinking CXX shared library libcharmie_interfaces__rosidl_typesupport_cpp.so[0m
+[5.249s] [ 63%] Built target charmie_interfaces__rosidl_typesupport_cpp
+[5.265s] [ 64%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/obstacle_info__type_support.cpp.o[0m
+[5.401s] [ 65%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/obstacles__type_support.cpp.o[0m
+[5.548s] [ 66%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support.cpp.o[0m
+[5.643s] [ 67%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/charmie_interfaces/msg/detail/dds_fastrtps/tar_nav_sdnl__type_support.cpp.o[0m
+[5.975s] [ 68%] [32m[1mLinking CXX shared library libcharmie_interfaces__rosidl_typesupport_introspection_cpp.so[0m
+[6.065s] [ 68%] Built target charmie_interfaces__rosidl_typesupport_introspection_cpp
+[6.172s] [ 70%] [32m[1mLinking CXX shared library libcharmie_interfaces__rosidl_typesupport_fastrtps_cpp.so[0m
+[6.274s] [ 70%] Built target charmie_interfaces__rosidl_typesupport_fastrtps_cpp
+[6.291s] [ 71%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[6.807s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_fastrtps_c[0m
+[6.834s] [ 77%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp.o[0m
+[6.834s] [ 77%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/ps4_controller__type_support_c.cpp.o[0m
+[6.834s] [ 77%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp.o[0m
+[6.834s] [ 78%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacles__type_support_c.cpp.o[0m
+[6.835s] [ 79%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacle_info__type_support_c.cpp.o[0m
+[6.835s] [ 77%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/robot_speech__type_support_c.cpp.o[0m
+[6.835s] [ 77%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/speech_type__type_support_c.cpp.o[0m
+[6.844s] [ 80%] [32mBuilding CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support_c.cpp.o[0m
+[7.469s] [ 81%] [32m[1mLinking CXX shared library libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so[0m
+[7.575s] [ 81%] Built target charmie_interfaces__rosidl_typesupport_fastrtps_c
+[7.604s] [ 81%] Built target charmie_interfaces
+[7.633s] [ 82%] [34m[1mGenerating Python code for ROS interfaces[0m
+[8.730s] [ 82%] Built target charmie_interfaces__py
+[8.745s] [35m[1mScanning dependencies of target charmie_interfaces__python[0m
+[8.778s] [ 83%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_ps4_controller_s.c.o[0m
+[8.778s] [ 85%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_encoders_s.c.o[0m
+[8.779s] [ 86%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_robot_speech_s.c.o[0m
+[8.779s] [ 87%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_speech_type_s.c.o[0m
+[8.784s] [ 88%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_example_tr_s.c.o[0m
+[8.787s] [ 89%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_obstacle_info_s.c.o[0m
+[8.790s] [ 90%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl_s.c.o[0m
+[8.792s] [ 91%] [32mBuilding C object CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces/msg/_obstacles_s.c.o[0m
+[9.025s] [ 93%] [32m[1mLinking C shared library rosidl_generator_py/charmie_interfaces/libcharmie_interfaces__python.so[0m
+[9.080s] [ 93%] Built target charmie_interfaces__python
+[9.094s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_c__pyext[0m
+[9.096s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_introspection_c__pyext[0m
+[9.097s] [35m[1mScanning dependencies of target charmie_interfaces__rosidl_typesupport_fastrtps_c__pyext[0m
+[9.117s] [ 94%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_c.c.o[0m
+[9.122s] [ 95%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[9.128s] [ 96%] [32mBuilding C object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[9.259s] [ 97%] [32m[1mLinking C shared library rosidl_generator_py/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so[0m
+[9.267s] [ 98%] [32m[1mLinking CXX shared library rosidl_generator_py/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so[0m
+[9.282s] [100%] [32m[1mLinking C shared library rosidl_generator_py/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so[0m
+[9.329s] [100%] Built target charmie_interfaces__rosidl_typesupport_introspection_c__pyext
+[9.337s] [100%] Built target charmie_interfaces__rosidl_typesupport_c__pyext
+[9.373s] [100%] Built target charmie_interfaces__rosidl_typesupport_fastrtps_c__pyext
+[9.388s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_interfaces -- -j8 -l8
+[9.539s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_interfaces
+[9.549s] -- Install configuration: ""
+[9.550s] -- Execute custom install script
+[9.550s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/rosidl_interfaces/charmie_interfaces
+[9.551s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__functions.h
+[9.551s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__struct.h
+[9.551s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__type_support.h
+[9.552s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__functions.h
+[9.552s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__struct.h
+[9.552s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__type_support.h
+[9.552s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__functions.h
+[9.553s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__struct.h
+[9.553s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__type_support.h
+[9.553s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacles__functions.h
+[9.554s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacles__struct.h
+[9.554s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacles__type_support.h
+[9.554s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__functions.h
+[9.554s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__struct.h
+[9.554s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__type_support.h
+[9.555s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__functions.h
+[9.555s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__struct.h
+[9.556s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__type_support.h
+[9.556s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__functions.h
+[9.556s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__struct.h
+[9.556s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__type_support.h
+[9.556s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.h
+[9.557s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__struct.h
+[9.557s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support.h
+[9.557s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/encoders.h
+[9.557s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/example_tr.h
+[9.558s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/obstacle_info.h
+[9.558s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/obstacles.h
+[9.558s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/ps4_controller.h
+[9.559s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/robot_speech.h
+[9.559s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+[9.559s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/speech_type.h
+[9.559s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/tar_nav_sdnl.h
+[9.560s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/library_path.sh
+[9.560s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/library_path.dsv
+[9.561s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
+[9.561s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_c.h
+[9.562s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__rosidl_typesupport_fastrtps_c.h
+[9.562s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacles__rosidl_typesupport_fastrtps_c.h
+[9.562s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_fastrtps_c.h
+[9.562s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_fastrtps_c.h
+[9.563s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_fastrtps_c.h
+[9.563s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__rosidl_typesupport_fastrtps_c.h
+[9.563s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[9.564s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so
+[9.565s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_cpp.hpp
+[9.565s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_cpp.hpp
+[9.566s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__rosidl_typesupport_fastrtps_cpp.hpp
+[9.566s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacles__rosidl_typesupport_fastrtps_cpp.hpp
+[9.566s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_fastrtps_cpp.hpp
+[9.566s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_fastrtps_cpp.hpp
+[9.567s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_fastrtps_cpp.hpp
+[9.567s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__rosidl_typesupport_fastrtps_cpp.hpp
+[9.567s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[9.567s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_fastrtps_cpp.so
+[9.568s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_c.h
+[9.568s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h
+[9.569s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__rosidl_typesupport_introspection_c.h
+[9.569s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacles__rosidl_typesupport_introspection_c.h
+[9.569s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_introspection_c.h
+[9.569s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_c.h
+[9.570s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_c.h
+[9.570s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__rosidl_typesupport_introspection_c.h
+[9.570s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[9.571s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__builder.hpp
+[9.571s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__struct.hpp
+[9.572s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__traits.hpp
+[9.572s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__builder.hpp
+[9.572s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__struct.hpp
+[9.572s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__traits.hpp
+[9.572s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__builder.hpp
+[9.572s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__struct.hpp
+[9.573s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__traits.hpp
+[9.573s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacles__builder.hpp
+[9.573s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacles__struct.hpp
+[9.573s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacles__traits.hpp
+[9.574s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__builder.hpp
+[9.574s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__struct.hpp
+[9.574s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__traits.hpp
+[9.574s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__builder.hpp
+[9.575s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__struct.hpp
+[9.575s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__traits.hpp
+[9.575s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__builder.hpp
+[9.576s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__struct.hpp
+[9.576s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__traits.hpp
+[9.576s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__builder.hpp
+[9.576s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__struct.hpp
+[9.576s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__traits.hpp
+[9.577s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/encoders.hpp
+[9.577s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/example_tr.hpp
+[9.577s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/obstacle_info.hpp
+[9.577s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/obstacles.hpp
+[9.577s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/ps4_controller.hpp
+[9.578s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/robot_speech.hpp
+[9.578s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/speech_type.hpp
+[9.578s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/tar_nav_sdnl.hpp
+[9.579s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_cpp.hpp
+[9.579s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_cpp.hpp
+[9.579s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__rosidl_typesupport_introspection_cpp.hpp
+[9.579s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacles__rosidl_typesupport_introspection_cpp.hpp
+[9.580s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_introspection_cpp.hpp
+[9.580s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_cpp.hpp
+[9.580s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_cpp.hpp
+[9.580s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__rosidl_typesupport_introspection_cpp.hpp
+[9.581s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/pythonpath.sh
+[9.581s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/pythonpath.dsv
+[9.581s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/__init__.py
+[9.582s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/__init__.py
+[9.582s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_encoders.py
+[9.582s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_example_tr.py
+[9.582s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_obstacle_info.py
+[9.583s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_obstacles.py
+[9.583s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_ps4_controller.py
+[9.583s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_robot_speech.py
+[9.583s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_speech_type.py
+[9.583s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_tar_nav_sdnl.py
+[9.584s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so
+[9.584s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so
+[9.585s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so
+[9.585s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__python.so
+[9.585s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ExampleTR.idl
+[9.586s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Encoders.idl
+[9.586s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/PS4Controller.idl
+[9.586s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/RobotSpeech.idl
+[9.587s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/SpeechType.idl
+[9.587s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ObstacleInfo.idl
+[9.587s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Obstacles.idl
+[9.588s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/TarNavSDNL.idl
+[9.588s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ExampleTR.msg
+[9.588s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Encoders.msg
+[9.588s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/PS4Controller.msg
+[9.589s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/RobotSpeech.msg
+[9.589s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/SpeechType.msg
+[9.589s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ObstacleInfo.msg
+[9.590s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Obstacles.msg
+[9.590s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/TarNavSDNL.msg
+[9.591s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/package_run_dependencies/charmie_interfaces
+[9.591s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/parent_prefix_path/charmie_interfaces
+[9.591s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/ament_prefix_path.sh
+[9.591s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/ament_prefix_path.dsv
+[9.592s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/path.sh
+[9.592s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/path.dsv
+[9.592s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/local_setup.bash
+[9.592s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/local_setup.sh
+[9.593s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/local_setup.zsh
+[9.593s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/local_setup.dsv
+[9.593s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.dsv
+[9.604s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/packages/charmie_interfaces
+[9.604s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/rosidl_cmake-extras.cmake
+[9.604s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/ament_cmake_export_dependencies-extras.cmake
+[9.604s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/ament_cmake_export_libraries-extras.cmake
+[9.605s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/ament_cmake_export_targets-extras.cmake
+[9.605s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/ament_cmake_export_include_directories-extras.cmake
+[9.605s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[9.606s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[9.606s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfacesConfig.cmake
+[9.606s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfacesConfig-version.cmake
+[9.606s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/package.xml
+[9.607s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_generator_c.so
+[9.607s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_generator_c.so" to ""
+[9.608s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_introspection_c.so
+[9.608s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_introspection_c.so" to ""
+[9.608s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_c.so
+[9.609s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_c.so" to ""
+[9.609s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_introspection_cpp.so
+[9.610s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_introspection_cpp.so" to ""
+[9.610s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_cpp.so
+[9.611s] -- Set runtime path of "/home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_cpp.so" to ""
+[9.666s] Compiling '/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/__init__.py'...
+[9.673s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_generator_cExport.cmake
+[9.673s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_generator_cExport-noconfig.cmake
+[9.673s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_introspection_cExport.cmake
+[9.674s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[9.674s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_cExport.cmake
+[9.674s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_cExport-noconfig.cmake
+[9.674s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_generator_cppExport.cmake
+[9.675s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_introspection_cppExport.cmake
+[9.675s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[9.675s] -- Up-to-date: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_cppExport.cmake
+[9.675s] -- Installing: /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/cmake/charmie_interfaces__rosidl_typesupport_cppExport-noconfig.cmake
+[9.684s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_interfaces

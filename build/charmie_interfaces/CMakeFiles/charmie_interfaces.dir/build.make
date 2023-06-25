@@ -60,6 +60,7 @@ CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interface
 CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/SpeechType.msg
 CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/ObstacleInfo.msg
 CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/Obstacles.msg
+CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/TarNavSDNL.msg
 CMakeFiles/charmie_interfaces: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 CMakeFiles/charmie_interfaces: /opt/ros/foxy/share/std_msgs/msg/Byte.idl
 CMakeFiles/charmie_interfaces: /opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl

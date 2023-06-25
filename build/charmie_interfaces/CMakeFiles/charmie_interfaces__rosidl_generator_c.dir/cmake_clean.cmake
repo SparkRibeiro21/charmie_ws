@@ -6,6 +6,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.c.o"
   "CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.c.o"
   "CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.o"
+  "CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.c.o"
   "libcharmie_interfaces__rosidl_generator_c.pdb"
   "libcharmie_interfaces__rosidl_generator_c.so"
   "rosidl_generator_c/charmie_interfaces/msg/detail/encoders__functions.c"
@@ -36,6 +37,10 @@ file(REMOVE_RECURSE
   "rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h"
   "rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h"
   "rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__type_support.h"
+  "rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.c"
+  "rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.h"
+  "rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__struct.h"
+  "rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support.h"
   "rosidl_generator_c/charmie_interfaces/msg/encoders.h"
   "rosidl_generator_c/charmie_interfaces/msg/example_tr.h"
   "rosidl_generator_c/charmie_interfaces/msg/obstacle_info.h"
@@ -43,6 +48,7 @@ file(REMOVE_RECURSE
   "rosidl_generator_c/charmie_interfaces/msg/ps4_controller.h"
   "rosidl_generator_c/charmie_interfaces/msg/robot_speech.h"
   "rosidl_generator_c/charmie_interfaces/msg/speech_type.h"
+  "rosidl_generator_c/charmie_interfaces/msg/tar_nav_sdnl.h"
 )
 
 # Per-language clean rules from dependency scanning.

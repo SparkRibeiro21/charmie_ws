@@ -1,0 +1,24 @@
+[2.560s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_navigation_sdnl': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_navigation_sdnl/prefix_override:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/build --no-deps install_data
+[3.052s] running develop
+[3.347s] running egg_info
+[3.347s] creating charmie_navigation_sdnl.egg-info
+[3.347s] writing charmie_navigation_sdnl.egg-info/PKG-INFO
+[3.348s] writing dependency_links to charmie_navigation_sdnl.egg-info/dependency_links.txt
+[3.348s] writing entry points to charmie_navigation_sdnl.egg-info/entry_points.txt
+[3.348s] writing requirements to charmie_navigation_sdnl.egg-info/requires.txt
+[3.348s] writing top-level names to charmie_navigation_sdnl.egg-info/top_level.txt
+[3.351s] writing manifest file 'charmie_navigation_sdnl.egg-info/SOURCES.txt'
+[3.430s] reading manifest file 'charmie_navigation_sdnl.egg-info/SOURCES.txt'
+[3.431s] writing manifest file 'charmie_navigation_sdnl.egg-info/SOURCES.txt'
+[3.520s] running build_ext
+[3.521s] Creating /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/site.py
+[3.525s] Creating /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie-navigation-sdnl.egg-link (link to .)
+[3.527s] 
+[3.528s] Installed /home/utilizador/charmie_ws/build/charmie_navigation_sdnl
+[3.528s] running install_data
+[3.528s] creating /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/share/ament_index
+[3.528s] creating /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/share/ament_index/resource_index
+[3.528s] creating /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/share/ament_index/resource_index/packages
+[3.528s] copying resource/charmie_navigation_sdnl -> /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/share/ament_index/resource_index/packages
+[3.529s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/share/charmie_navigation_sdnl
+[3.700s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_navigation_sdnl' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_navigation_sdnl/prefix_override:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/build --no-deps install_data

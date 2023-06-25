@@ -29,6 +29,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SpeechType.msg"
   "msg/ObstacleInfo.msg"
   "msg/Obstacles.msg"
+  "msg/TarNavSDNL.msg"
   DEPENDENCIES std_msgs geometry_msgs
 )
 

@@ -17,6 +17,8 @@ file(REMOVE_RECURSE
   "../rosidl_generator_py/charmie_interfaces/msg/_robot_speech_s.c"
   "../rosidl_generator_py/charmie_interfaces/msg/_speech_type.py"
   "../rosidl_generator_py/charmie_interfaces/msg/_speech_type_s.c"
+  "../rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl.py"
+  "../rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl_s.c"
   "CMakeFiles/charmie_interfaces__py"
 )
 

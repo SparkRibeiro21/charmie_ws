@@ -12,3 +12,5 @@ msg/RobotSpeech.idl
 msg/RobotSpeech.msg
 msg/SpeechType.idl
 msg/SpeechType.msg
+msg/TarNavSDNL.idl
+msg/TarNavSDNL.msg

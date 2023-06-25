@@ -20,6 +20,9 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__functions.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__struct.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__type_support.h
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.h
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__struct.h
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/encoders.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/example_tr.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/obstacle_info.h
@@ -28,6 +31,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/robot_speech.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/speech_type.h
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/tar_nav_sdnl.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/library_path.sh
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/library_path.dsv
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
@@ -37,6 +41,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_fastrtps_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_fastrtps_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_fastrtps_c.h
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__rosidl_typesupport_fastrtps_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_cpp.hpp
@@ -46,6 +51,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_fastrtps_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_fastrtps_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_fastrtps_cpp.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__rosidl_typesupport_fastrtps_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_fastrtps_cpp.so
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_c.h
@@ -55,6 +61,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_introspection_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_c.h
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__rosidl_typesupport_introspection_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__builder.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__struct.hpp
@@ -77,6 +84,9 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__builder.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__struct.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__traits.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__builder.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__struct.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__traits.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/encoders.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/example_tr.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/obstacle_info.hpp
@@ -84,6 +94,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/ps4_controller.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/robot_speech.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/speech_type.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/tar_nav_sdnl.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/obstacle_info__rosidl_typesupport_introspection_cpp.hpp
@@ -91,6 +102,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/ps4_controller__rosidl_typesupport_introspection_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_introspection_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_introspection_cpp.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/tar_nav_sdnl__rosidl_typesupport_introspection_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/pythonpath.sh
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/pythonpath.dsv
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/__init__.py
@@ -102,6 +114,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_ps4_controller.py
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_robot_speech.py
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_speech_type.py
+/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_tar_nav_sdnl.py
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/charmie_interfaces_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so
@@ -113,6 +126,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/SpeechType.idl
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ObstacleInfo.idl
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Obstacles.idl
+/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/TarNavSDNL.idl
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ExampleTR.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Encoders.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/PS4Controller.msg
@@ -120,6 +134,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/SpeechType.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ObstacleInfo.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Obstacles.msg
+/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/TarNavSDNL.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/package_run_dependencies/charmie_interfaces
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/parent_prefix_path/charmie_interfaces
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/ament_prefix_path.sh
