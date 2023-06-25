@@ -8,6 +8,7 @@ from charmie_interfaces.msg import ObstacleInfo, Obstacles
 import cv2
 import numpy as np
 import math
+import time
 
 class ObstaclesLIDAR:
 
@@ -31,8 +32,8 @@ class ObstaclesLIDAR:
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
         self.test_image2 = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
 
-        self.DEBUG_DRAW_IMAGE = True
-        self.DEBUG_PRINT = False
+        self.DEBUG_DRAW_IMAGE = False
+        self.DEBUG_PRINT = True
         self.is_TRFilter = True         
         self.is_dummy_points = True
         self.is_obs = True
@@ -48,6 +49,9 @@ class ObstaclesLIDAR:
         self.robot_radius = 0.560/2
         self.lidar_radius = 0.050/2
 
+
+        self.stop_image_for_debug = False # variable so that we do a 1 second delay in a frame when we are debuging
+
     def lidar_readings_to_obstacles(self, ls: LaserScan):
         # readings = scan.ranges
         self.lidar_dicts(ls.ranges)
@@ -62,8 +66,8 @@ class ObstaclesLIDAR:
             if self.is_TRFilter:
                 self.TRFilter()
 
-            obst_list = self.draw_points_and_obstacle_detection()  # test_image, test_image2, centre_data, valores_dict, valores_id, scale, OBS_THRESH, DIST_MIN_THRESH, is_dummy_points, DEBUG_DRAW_IMAGE, DEBUG_PRINT)
-            obs_dict_v = self.obstacle_detection(obst_list)  # obst_list, test_image, test_image2, centre_data, valores_id, scale, is_obs, DEBUG_DRAW_IMAGE, DEBUG_PRINT)
+            obst_list = self.draw_points_and_obstacle_detection() 
+            obs_dict_v = self.obstacle_detection(obst_list) 
 
 
             # print(self.valores_id)
@@ -81,6 +85,10 @@ class ObstaclesLIDAR:
                 
                 # cv2.imshow("LIDAR Linear", self.test_image2)
                 cv2.imshow("LIDAR Circular", self.test_image)
+
+                # if self.stop_image_for_debug:
+                #     self.stop_image_for_debug = False
+                #     time.sleep(5)
                 
                 k = cv2.waitKey(1)
                 if k == ord('+'):
@@ -128,7 +136,7 @@ class ObstaclesLIDAR:
             else:
                 aux = self.valores_dict[key]
 
-    def draw_points_and_obstacle_detection(self):  #test_image, test_image2, centre_data, valores_dict, valores_id, scale, OBS_THRESH, DIST_MIN_THRESH, is_dummy_points, DEBUG_DRAW_IMAGE, DEBUG_PRINT):
+    def draw_points_and_obstacle_detection(self):  
 
         obst_dict = {}
         obst_list = []
@@ -144,11 +152,7 @@ class ObstaclesLIDAR:
         if self.DEBUG_DRAW_IMAGE:
             cv2.line(self.test_image2, (self.test_image.shape[1] - self.centre_data - 0, self.yc + 250), (self.test_image.shape[1] - self.centre_data - self.NumberOfLasers, int(self.yc + 250 + self.scale * 0.5 * 0)), (255, 0, 0))
 
-        if self.DEBUG_PRINT:
-            pass
-            # print(" ########## TR ########## ")
-        
-        
+
         for key, value in self.valores_id.items():
             # print(value, ":", key, ":", self.valores_dict[key])
 
@@ -303,7 +307,7 @@ class ObstaclesLIDAR:
         # print(obst_list)
         return obst_list
         
-    def obstacle_detection(self, obst_list):  #,test_image, test_image2, centre_data, valores_id, scale, is_obs, DEBUG_DRAW_IMAGE, DEBUG_PRINT):
+    def obstacle_detection(self, obst_list):
 
         # # # obst_dict is a list of dicts, each dict is an obstacle with the following parameters:
         # alfa_i: starting angle of the obstacle
@@ -392,20 +396,41 @@ class ObstaclesLIDAR:
             obstacle_['dist'] = math.sqrt(self.lidar_to_robot_center*self.lidar_to_robot_center + obstacle['dist']*obstacle['dist'] -
                                           2*self.lidar_to_robot_center*obstacle['dist']*math.cos(math.pi-math.radians(obstacle['alfa'])))
             
-            if obstacle['alfa'] > 0:
-                obstacle_['alfa'] = +math.acos((self.lidar_to_robot_center*self.lidar_to_robot_center + obstacle_['dist']*obstacle_['dist'] -
-                                                obstacle['dist']*obstacle['dist'])/(2*self.lidar_to_robot_center*obstacle_['dist']))
-            else:
-                obstacle_['alfa'] = -math.acos((self.lidar_to_robot_center*self.lidar_to_robot_center + obstacle_['dist']*obstacle_['dist'] -
-                                                obstacle['dist']*obstacle['dist'])/(2*self.lidar_to_robot_center*obstacle_['dist']))
+            # prevents crashes that happened previously due to roundings fo 1.0 to 1.0000000000000004 (pasted from terminal) which are
+            # outside the scope of acos which is between -1 and 1, inclusive
+            aux = (self.lidar_to_robot_center*self.lidar_to_robot_center + obstacle_['dist']*obstacle_['dist'] -
+                                                obstacle['dist']*obstacle['dist'])/(2*self.lidar_to_robot_center*obstacle_['dist'])
             
+            
+            # print("old =", obstacle['alfa'])
+            # with this function I force the value to 1.0 if it rounds up to bigger than 1.0
+            # it is not necessary to do this for -1, since i cannot detect obstacles in the back of the robot
+            # The 1.0 input to the arcos is for angle 0 (front of the robot), the -1 is for angle 180 (deg) so the back of the robot
+            if aux > 1.0:
+                if self.DEBUG_PRINT:
+                    print("Input of acos > 1.0 prevented!")
+                aux = 1.0
+                # self.stop_image_for_debug = True
+
+            # however there is still a visual bug, due to roundings, check rosbag. (/charmie_ws/rosbags/erro_acos)
+            # what can be done is just check the distance of both points in the circle and just draw in the image the one that is nearer.
+            # OU DESENHAR DE MANEIRA DIFERENTE porque se o angulo e a distancia estão certos porque é que preciso de calcular os pontos, 
+            # nao posso so desenhar a partir do centro e "apagar o resto" devo estar a fazer algo que não é a maneira mais eficiente
+
+            if obstacle['alfa'] > 0:
+                obstacle_['alfa'] = +math.acos(aux)
+            else:
+                obstacle_['alfa'] = -math.acos(aux)
+            
+
             obstacle_['length_cm'] = obstacle['length_cm']
             obstacle_['length_deg'] = obstacle['length_deg']
             
 
             obstacle_['alfa'] = math.degrees(obstacle_['alfa'])
+            # print("new =", obstacle_['alfa'])
+            # print("dist =", obstacle_['dist'])
             
-
 
             if self.DEBUG_DRAW_IMAGE:
                 if self.is_obs:
@@ -461,7 +486,8 @@ class ObstaclesLIDAR:
                     
                     if x1 == x2:
                         x2+=1
-                        print("Division by 0 prevented!")
+                        if self.DEBUG_PRINT:
+                            print("Division by 0 prevented!")
                     
                     m = (y2-y1)/(x2-x1)
                     b = y1 - (m*x1)
@@ -509,6 +535,11 @@ class ObstaclesLIDAR:
                     #            int(self.yc + self.lidar_to_robot_center*self.scale - self.scale * (obstacle_['dist']+self.robot_radius) * math.sin(math.radians(-obstacle_['alfa'] + 90)))),
                     #           (255, 255, 255))
                     
+                    
+                    # Visual Bug: Does not influence the working of the robot, because of angle 0 acos > 1.0
+                    # explained when calculating acos
+
+                    
                     # ponto de interseção da linha distancia do centro do robo ao obstaculo com o raio do robo
                     cv2.circle(self.test_image, (int(pi_x), int(pi_y)), (int)(4), (255, 0, 255), -1)
  
@@ -518,11 +549,12 @@ class ObstaclesLIDAR:
                                int(pi_y - self.scale * (obstacle_['dist']-self.robot_radius) * math.sin(math.radians(-obstacle_['alfa'] + 90)))),
                               (255, 255, 255))
                     
+
+
+
                     # erro antigo em que:
                     # 1) valores estao centradas no lidar e não no robo
                     # 2) é assumido que os valores estão todos a sair da margem do robo e nao do centro 
-
-
 
                     # y = mx + b
                     (x1, y1) = (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale))
@@ -531,7 +563,8 @@ class ObstaclesLIDAR:
                     
                     if x1 == x2:
                         x2+=1
-                        print("Division by 0 prevented!")
+                        if self.DEBUG_PRINT:
+                            print("Division by 0 prevented!")
                     
                     m = (y2-y1)/(x2-x1)
                     b = y1 - (m*x1)
@@ -569,10 +602,10 @@ class ObstaclesLIDAR:
                         pi_y = y4
 
 
-                    cv2.line(self.test_image, (int(pi_x), int(pi_y)), 
-                             (int(pi_x - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90))),
-                              int(pi_y - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)))),
-                              (0, 255, 0))
+                    # cv2.line(self.test_image, (int(pi_x), int(pi_y)), 
+                    #          (int(pi_x - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90))),
+                    #           int(pi_y - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)))),
+                    #           (0, 255, 0))
 
 
             obstacle['length_deg'] = math.radians(obstacle['length_deg'])
@@ -595,8 +628,8 @@ class ObstaclesLIDAR:
             # print(obs_list_v)
             for obs in obs_list_v:
                 pass
-                # print(obs)
-            # print()
+                print(obs)
+            print()
 
         return obs_list_v
     
