@@ -32,7 +32,7 @@ class ObstaclesLIDAR:
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
         self.test_image2 = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
 
-        self.DEBUG_DRAW_IMAGE = False
+        self.DEBUG_DRAW_IMAGE = True
         self.DEBUG_PRINT = True
         self.is_TRFilter = True         
         self.is_dummy_points = True

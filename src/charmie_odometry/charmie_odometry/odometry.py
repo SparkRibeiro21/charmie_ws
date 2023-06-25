@@ -21,7 +21,7 @@ class RobotOdometry():
         self.wheel_diameter = 203  # mm
         self.robot_radius = 265  # this value is yet to be confimed by the 3D modulation of the robot !!!!!!!!!!
         
-        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.scale = 0.12*1000
         
         self.xc = 400
@@ -233,7 +233,7 @@ class RobotOdometry():
             self.all_pos_x_val.append(self.coord_rel_x_)
             self.all_pos_y_val.append(self.coord_rel_y_)
             for i in range(len(self.all_pos_x_val)):
-                cv2.circle(self.test_image, (int(self.xc + self.scale*self.all_pos_x_val[i]), int(self.yc - self.scale * self.all_pos_y_val[i])), 1, (0, 0, 255), -1)
+                cv2.circle(self.test_image, (int(self.xc + self.scale*self.all_pos_x_val[i]), int(self.yc - self.scale * self.all_pos_y_val[i])), 1, (255, 255, 0), -1)
 
 
             cv2.circle(self.test_image, (int(self.xc + self.scale*self.coord_rel_x_), int(self.yc - self.scale * self.coord_rel_y_)), (int)(self.scale*self.robot_radius_d), (0, 255, 255), 1)
