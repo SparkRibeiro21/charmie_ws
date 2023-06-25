@@ -8,8 +8,11 @@ from charmie_interfaces.msg import TarNavSDNL
 class NavigationSDNLClass:
 
     def __init__(self):
-        print("Executing Main Code")
 
+        self.lambda_target = 10
+        self.beta1 = 300
+        self.beta2 = 400
+        
 
 class NavSDNLNode(Node):
 

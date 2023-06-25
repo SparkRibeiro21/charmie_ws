@@ -31,7 +31,7 @@ class ObstaclesLIDAR:
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
         self.test_image2 = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
 
-        self.DEBUG_DRAW_IMAGE = False
+        self.DEBUG_DRAW_IMAGE = True
         self.DEBUG_PRINT = False
         self.is_TRFilter = True         
         self.is_dummy_points = True
@@ -79,7 +79,7 @@ class ObstaclesLIDAR:
                 # corpo robo
                 cv2.circle(self.test_image, (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale)), (int)(self.robot_radius*self.scale), (255, 255, 255), 1)
                 
-                cv2.imshow("LIDAR Linear", self.test_image2)
+                # cv2.imshow("LIDAR Linear", self.test_image2)
                 cv2.imshow("LIDAR Circular", self.test_image)
                 
                 k = cv2.waitKey(1)
@@ -347,40 +347,6 @@ class ObstaclesLIDAR:
             obstacle['length_deg'] = - (obs['alfa_i'] - obs['alfa_f'])
             # print(obs, obstacle)
 
-            if self.DEBUG_DRAW_IMAGE:
-                if self.is_obs:
-                    cv2.circle(self.test_image, (int(self.xc - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90))),
-                                            int(self.yc - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)))),
-                               (int)(2), (0, 255, 0), 1)
-                    cv2.circle(self.test_image, (int(self.xc - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90)) + self.scale * (obstacle['length_cm']/2) * math.cos(math.radians(-(90 - obstacle['alfa']) + 90))),
-                                            int(self.yc - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)) - self.scale * (obstacle['length_cm']/2) * math.sin(math.radians(-(90 - obstacle['alfa']) + 90)))),
-                               (int)(2), (0, 255, 0), 1)
-                    cv2.circle(self.test_image, (int(self.xc - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90)) - self.scale * (obstacle['length_cm']/2) * math.cos(math.radians(-(90 - obstacle['alfa']) + 90))),
-                                            int(self.yc - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)) + self.scale * (obstacle['length_cm']/2) * math.sin(math.radians(-(90 - obstacle['alfa']) + 90)))),
-                               (int)(2), (0, 255, 0), 1)
-                    
-                    ### this green line is outdated from obstacle, should be switched to obstacle_
-                    cv2.line(self.test_image, (int(self.xc - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90)) + self.scale * (obstacle['length_cm']/2) * math.cos(math.radians(-(90 - obstacle['alfa']) + 90))),
-                                          int(self.yc - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)) - self.scale * (obstacle['length_cm']/2) * math.sin(math.radians(-(90 - obstacle['alfa']) + 90)))),
-                                         (int(self.xc - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90)) - self.scale * (obstacle['length_cm']/2) * math.cos(math.radians(-(90 - obstacle['alfa']) + 90))),
-                                          int(self.yc - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)) + self.scale * (obstacle['length_cm']/2) * math.sin(math.radians(-(90 - obstacle['alfa']) + 90)))),
-                              (0, 255, 0))
-                    # line lidar center to obstacle center
-                    # cv2.line(self.test_image, (self.xc, self.yc), (int(self.xc - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90))),
-                    #                                                int(self.yc - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)))),
-                    #           (0, 255, 0))
-                    
-                                    
-                    id_alfa = int((self.valores_id[obs['alfa_i']] + self.valores_id[obs['alfa_f']]) / 2)
-
-                    cv2.circle(self.test_image2, (self.test_image.shape[1] - self.centre_data - id_alfa, int(self.yc + 100 - self.scale * obstacle['dist'])), (int)(2), (0, 255, 0), 1)
-                    cv2.circle(self.test_image2, (self.test_image.shape[1] - self.centre_data - self.valores_id[obs['alfa_i']] + 1, int(self.yc + 100 - self.scale * obstacle['dist'])), (int)(2), (0, 255, 0), 1)
-                    cv2.circle(self.test_image2, (self.test_image.shape[1] - self.centre_data - self.valores_id[obs['alfa_f']] - 1, int(self.yc + 100 - self.scale * obstacle['dist'])), (int)(2), (0, 255, 0), 1)
-                    cv2.line(self.test_image2, (self.test_image.shape[1] - self.centre_data - self.valores_id[obs['alfa_i']] + 1, int(self.yc + 100 - self.scale * obstacle['dist'])),
-                                          (self.test_image.shape[1] - self.centre_data - self.valores_id[obs['alfa_f']] - 1, int(self.yc + 100 - self.scale * obstacle['dist'])),
-                             (0, 255, 0))
-
-
             #                  .(OBS)
             #                //
             #              /A/ 
@@ -443,6 +409,49 @@ class ObstaclesLIDAR:
 
             if self.DEBUG_DRAW_IMAGE:
                 if self.is_obs:
+                    
+                    # OLD CALCULATION GREEN LINES
+                    # cv2.circle(self.test_image, (int(self.xc - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90))),
+                    #                         int(self.yc - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)))),
+                    #            (int)(2), (0, 255, 0), 1)
+                    # cv2.circle(self.test_image, (int(self.xc - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90)) + self.scale * (obstacle['length_cm']/2) * math.cos(math.radians(-(90 - obstacle['alfa']) + 90))),
+                    #                         int(self.yc - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)) - self.scale * (obstacle['length_cm']/2) * math.sin(math.radians(-(90 - obstacle['alfa']) + 90)))),
+                    #            (int)(2), (0, 255, 0), 1)
+                    # cv2.circle(self.test_image, (int(self.xc - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90)) - self.scale * (obstacle['length_cm']/2) * math.cos(math.radians(-(90 - obstacle['alfa']) + 90))),
+                    #                         int(self.yc - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)) + self.scale * (obstacle['length_cm']/2) * math.sin(math.radians(-(90 - obstacle['alfa']) + 90)))),
+                    #           (int)(2), (0, 255, 0), 1)
+                    # line lidar center to obstacle center
+                    # cv2.line(self.test_image, (self.xc, self.yc), (int(self.xc - self.scale * obstacle['dist'] * math.cos(math.radians(-obstacle['alfa'] + 90))),
+                    #                                                int(self.yc - self.scale * obstacle['dist'] * math.sin(math.radians(-obstacle['alfa'] + 90)))),
+                    #           (0, 255, 0))
+                    
+                    
+                    cv2.circle(self.test_image, (int(self.xc - self.scale * obstacle_['dist'] * math.cos(math.radians(-obstacle_['alfa'] + 90))),
+                                                 int(self.yc + self.lidar_to_robot_center*self.scale - self.scale * obstacle_['dist'] * math.sin(math.radians(-obstacle_['alfa'] + 90)))),
+                                                (int)(2), (255, 255, 255), 1)
+                    cv2.circle(self.test_image, (int(self.xc - self.scale * obstacle_['dist'] * math.cos(math.radians(-obstacle_['alfa'] + 90)) + self.scale * (obstacle_['length_cm']/2) * math.cos(math.radians(-(90 - obstacle_['alfa']) + 90))),
+                                                 int(self.yc + self.lidar_to_robot_center*self.scale - self.scale * obstacle_['dist'] * math.sin(math.radians(-obstacle_['alfa'] + 90)) - self.scale * (obstacle_['length_cm']/2) * math.sin(math.radians(-(90 - obstacle_['alfa']) + 90)))),
+                                                (int)(2), (255, 255, 255), 1)
+                    cv2.circle(self.test_image, (int(self.xc - self.scale * obstacle_['dist'] * math.cos(math.radians(-obstacle_['alfa'] + 90)) - self.scale * (obstacle_['length_cm']/2) * math.cos(math.radians(-(90 - obstacle_['alfa']) + 90))),
+                                                 int(self.yc + self.lidar_to_robot_center*self.scale - self.scale * obstacle_['dist'] * math.sin(math.radians(-obstacle_['alfa'] + 90)) + self.scale * (obstacle_['length_cm']/2) * math.sin(math.radians(-(90 - obstacle_['alfa']) + 90)))),
+                                                (int)(2), (255, 255, 255), 1)
+                    cv2.line(self.test_image, (int(self.xc - self.scale * obstacle_['dist'] * math.cos(math.radians(-obstacle_['alfa'] + 90)) + self.scale * (obstacle_['length_cm']/2) * math.cos(math.radians(-(90 - obstacle_['alfa']) + 90))),
+                                               int(self.yc + self.lidar_to_robot_center*self.scale - self.scale * obstacle_['dist'] * math.sin(math.radians(-obstacle_['alfa'] + 90)) - self.scale * (obstacle_['length_cm']/2) * math.sin(math.radians(-(90 - obstacle_['alfa']) + 90)))),
+                                              (int(self.xc - self.scale * obstacle_['dist'] * math.cos(math.radians(-obstacle_['alfa'] + 90)) - self.scale * (obstacle_['length_cm']/2) * math.cos(math.radians(-(90 - obstacle_['alfa']) + 90))),
+                                               int(self.yc + self.lidar_to_robot_center*self.scale - self.scale * obstacle_['dist'] * math.sin(math.radians(-obstacle_['alfa'] + 90)) + self.scale * (obstacle_['length_cm']/2) * math.sin(math.radians(-(90 - obstacle_['alfa']) + 90)))),
+                                              (255, 255, 255))
+                    
+                                    
+                    id_alfa = int((self.valores_id[obs['alfa_i']] + self.valores_id[obs['alfa_f']]) / 2)
+
+                    cv2.circle(self.test_image2, (self.test_image.shape[1] - self.centre_data - id_alfa, int(self.yc + 100 - self.scale * obstacle['dist'])), (int)(2), (0, 255, 0), 1)
+                    cv2.circle(self.test_image2, (self.test_image.shape[1] - self.centre_data - self.valores_id[obs['alfa_i']] + 1, int(self.yc + 100 - self.scale * obstacle['dist'])), (int)(2), (0, 255, 0), 1)
+                    cv2.circle(self.test_image2, (self.test_image.shape[1] - self.centre_data - self.valores_id[obs['alfa_f']] - 1, int(self.yc + 100 - self.scale * obstacle['dist'])), (int)(2), (0, 255, 0), 1)
+                    cv2.line(self.test_image2, (self.test_image.shape[1] - self.centre_data - self.valores_id[obs['alfa_i']] + 1, int(self.yc + 100 - self.scale * obstacle['dist'])),
+                                          (self.test_image.shape[1] - self.centre_data - self.valores_id[obs['alfa_f']] - 1, int(self.yc + 100 - self.scale * obstacle['dist'])),
+                             (0, 255, 0))
+                    
+
                     # y = mx + b
                     (x1, y1) = (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale))
                     (x2, y2) = (int(self.xc - self.scale * obstacle_['dist'] * math.cos(math.radians(-obstacle_['alfa'] + 90))),
@@ -566,15 +575,15 @@ class ObstaclesLIDAR:
                               (0, 255, 0))
 
 
-
-
-
             obstacle['length_deg'] = math.radians(obstacle['length_deg'])
             obstacle['alfa'] = -math.radians(obstacle['alfa'])
             
-            # CORRECOES!
+
+            # CORRECOES (pos impressoes no ambiente grafico)
             obstacle_['dist'] -= self.robot_radius
+            obstacle_['length_deg'] = math.radians(obstacle_['length_deg'])
             obstacle_['alfa'] = -math.radians(obstacle_['alfa'])
+
 
             # print(obstacle_)
 
