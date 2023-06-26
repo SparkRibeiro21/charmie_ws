@@ -186,15 +186,12 @@ class TRNode(Node):
         if self.face_counter > 1:
             self.face_counter = 0
 
-
-
-
         nav = TarNavSDNL()
         nav.flag_not_obs = False
         nav.move_target_coordinates.x = 1.0
         nav.move_target_coordinates.y = 2.0
-        nav.rotate_target_coordinates.x = -2.0
-        nav.rotate_target_coordinates.y = 6.0  + self.nav_ctr
+        nav.rotate_target_coordinates.x = 4.0 
+        nav.rotate_target_coordinates.y = 3.0 
         
         self.target_position_publisher.publish(nav)
 
