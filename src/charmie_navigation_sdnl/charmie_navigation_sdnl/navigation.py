@@ -15,9 +15,9 @@ class NavigationSDNLClass:
 
     def __init__(self):
 
-        self.lambda_target = 10
-        self.beta1 = 30
-        self.beta2 = 40
+        self.lambda_target = 8
+        self.beta1 = 20
+        self.beta2 = 10
 
         self.obstacles = Obstacles()
         self.robot_x = 0.0
@@ -88,11 +88,10 @@ class NavigationSDNLClass:
             self.f_final = -self.v_max
 
 
-
         # print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
         omni_move = Vector3()
-        omni_move.y = 10
-        omni_move.z = 100 - int(self.f_final)
+        omni_move.y = float(10.0)
+        omni_move.z = float(100.0 - self.f_final)
         
         return omni_move
         
@@ -138,11 +137,11 @@ class NavigationSDNLClass:
 
         obstacles = []
         aux_obs = {}
-        phi_ = phi + math.pi/2
+        phi_ =  phi + math.pi/2
 
         for obs in self.obstacles.obstacles:
             # print(obs)
-            aux_obs['psi_obs'] = phi_ + obs.alfa
+            aux_obs['psi_obs'] = phi_ - obs.alfa
             aux_obs['dis_obs'] = obs.dist
             aux_obs['del_tet'] = obs.length_degrees
 
@@ -393,7 +392,7 @@ class NavigationSDNLClass:
 
 
             cv2.imshow("Navigation SDNL", self.test_image)
-            cv2.imshow("SDNL", self.image_plt)
+            # cv2.imshow("SDNL", self.image_plt)
             
             k = cv2.waitKey(1)
             if k == ord('+'):

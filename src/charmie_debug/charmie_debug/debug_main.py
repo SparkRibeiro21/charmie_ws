@@ -188,14 +188,14 @@ class TRNode(Node):
 
         nav = TarNavSDNL()
         nav.flag_not_obs = False
-        nav.move_target_coordinates.x = 1.0
-        nav.move_target_coordinates.y = 2.0
+        nav.move_target_coordinates.x = 0.0
+        nav.move_target_coordinates.y = 4.0
         nav.rotate_target_coordinates.x = 4.0 
         nav.rotate_target_coordinates.y = 3.0 
         
         self.target_position_publisher.publish(nav)
 
-        self.nav_ctr -= 0.5
+        # self.nav_ctr -= 0.5
 
     def timer_callback(self):
         neck = Pose2D()
@@ -356,12 +356,5 @@ class TRNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = TRNode()
-
-    # cmd = Pose2D()
-    # cmd.x = 180.0
-    # cmd.y = 180.0
-    # node.neck_position_publisher.publish(cmd)
-    # print("INITIAL STATE")
-
     rclpy.spin(node)
     rclpy.shutdown()

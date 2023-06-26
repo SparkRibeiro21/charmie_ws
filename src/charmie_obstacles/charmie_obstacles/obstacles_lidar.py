@@ -32,7 +32,7 @@ class ObstaclesLIDAR:
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
         self.test_image2 = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
 
-        self.DEBUG_DRAW_IMAGE = False
+        self.DEBUG_DRAW_IMAGE = True
         self.DEBUG_PRINT = True
         self.is_TRFilter = True         
         self.is_dummy_points = True
@@ -322,7 +322,101 @@ class ObstaclesLIDAR:
         obstacle_ = {}
         # obstacle2 = {}
 
-        for obs in obst_list:
+        print("START OF CODE BEING TESTED:")
+        print(obst_list)
+
+        ########## ORA BEM, ESTÁ NA HORA DE FAZER MILAGRES ANTES DO ROBOCUP 23 ;) DG STYLE
+        # função para dividir obstaculos grande em obstaculos pequenos. A maneira como o SDNL precisa dos dados para reconhecer obstaculos,
+        # faz com que paredes laterais ao robô sejam vistas como 45º para a frente do robô, o que estraga tudo...
+        # ou seja, está na hora de numa direta resolver isto, convém depois do RoboCup ver se realmente isto ficou mesmo direitinho...
+         
+        cut_obst_list = []
+
+        obst_list_aux = obst_list
+
+        cutting_obs_dist_cm = 0.1
+        cutting_obs_dist_deg = 5
+        # idealmente isto teria que ser feito com o len_cm mas é muito mais rapido de implementar com diferencças de graus, para já vou tentar assim...
+
+        for obs in obst_list_aux:
+            x1 = obs['d_i'] * math.cos(math.radians(-obs['alfa_i'] + 90 - self.STEP_DEG))
+            y1 = obs['d_i'] * math.sin(math.radians(-obs['alfa_i'] + 90 - self.STEP_DEG))
+            x2 = obs['d_f'] * math.cos(math.radians(-obs['alfa_f'] + 90 + self.STEP_DEG))
+            y2 = obs['d_f'] * math.sin(math.radians(-obs['alfa_f'] + 90 + self.STEP_DEG))
+            l = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+            aux_length_deg = - (obs['alfa_i'] - obs['alfa_f'])
+            print("len_deg:", aux_length_deg)
+            
+
+            a_i = obs['alfa_i']
+            d_i = obs['d_i']
+            a_f = obs['alfa_f']
+            d_f = obs['d_f']
+            if aux_length_deg > cutting_obs_dist_deg:
+                
+                while a_i !=  obs['alfa_f']:
+
+                    print("INSIDE")
+
+                    # teta_entre_extremos1 = math.atan2(y2-y1, x2-x1)
+                    # teta_entre_extremos2 = math.atan2(y1-y2, x1-x2)
+
+                    teta_novo = a_i + cutting_obs_dist_deg
+
+                    print(teta_novo)
+
+                    # procura o valor no dicionario mais perto e devolve esse valor, esse valor é o novo a_f desta iteração e o a_i da proxima
+
+
+                    aux_erro = 1000
+                    next_key = 0.0
+                    next_val = 0.0
+                    for key, value in self.valores_dict.items():
+                        err = abs(teta_novo - key)
+                        if err < aux_erro:
+                            aux_erro = err
+                            next_key = key
+                            next_val = value
+
+                    if next_key > obs['alfa_f']:
+                        a_f = obs['alfa_f']
+                        d_f = obs['d_f']
+                    else:
+                        a_f = next_key
+                        d_f = next_val
+
+                    # print(next_key, next_val)
+                    # print("OUT")
+
+                    new_obs = {}
+                    new_obs['alfa_i'] = a_i
+                    new_obs['d_i'] = d_i
+                    new_obs['alfa_f'] = a_f
+                    new_obs['d_f'] = d_f
+                    # fiz isto para ser rapido, é possivel que seja fazer melhor!!!
+                    new_obs['d_avg'] = (d_i+d_f)/2
+                    new_obs['d_min'] = d_i
+
+                    cut_obst_list.append(new_obs)
+
+
+                    a_i = a_f
+                    d_i = d_f
+                    # a_f = obs['alfa_f']
+                    # d_f = obs['d_f']
+                    aux_length_deg = - (a_i - a_f)
+
+
+            else:
+                cut_obst_list.append(obs)
+                
+
+        print("CUT_VERSION:", cut_obst_list)
+
+
+        for obs in cut_obst_list:
+        # for obs in obst_list:
             # obstacle2['alfa'] = obs['alfa_i'] + (obs['alfa_f'] - obs['alfa_i']) / 2
 
             # 2*STEP_DEG to guarantee that the blind stop between rays is included in the object width
@@ -349,6 +443,11 @@ class ObstaclesLIDAR:
             obstacle['dist'] = obs['d_avg']  # it can also be used the minimum distance
             obstacle['length_cm'] = l
             obstacle['length_deg'] = - (obs['alfa_i'] - obs['alfa_f'])
+            
+            
+            
+            
+            
             # print(obs, obstacle)
 
             #                  .(OBS)
