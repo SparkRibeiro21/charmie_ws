@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16, String
 from sensor_msgs.msg import LaserScan, Image
-from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType
+from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL
 
 
 from cv_bridge import CvBridge
@@ -60,6 +60,8 @@ class TRNode(Node):
         self.flag_listening_subscriber = self.create_subscription(Bool, "flag_listening", self.flag_listening_callback, 10)
         self.get_speech_subscriber = self.create_subscription(String, "get_speech", self.get_speech_callback, 10)
         
+        # Navigation 
+        self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
         
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
@@ -83,6 +85,7 @@ class TRNode(Node):
         # Extras
         self.face_counter = 0
         self.init = True
+        self.nav_ctr = 0
 
         self.br = CvBridge()
 
@@ -182,6 +185,20 @@ class TRNode(Node):
 
         if self.face_counter > 1:
             self.face_counter = 0
+
+
+
+
+        nav = TarNavSDNL()
+        nav.flag_not_obs = False
+        nav.move_target_coordinates.x = 1.0
+        nav.move_target_coordinates.y = 2.0
+        nav.rotate_target_coordinates.x = -2.0
+        nav.rotate_target_coordinates.y = 6.0  + self.nav_ctr
+        
+        self.target_position_publisher.publish(nav)
+
+        self.nav_ctr -= 0.5
 
     def timer_callback(self):
         neck = Pose2D()

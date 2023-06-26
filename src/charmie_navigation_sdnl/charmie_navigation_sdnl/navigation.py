@@ -20,10 +20,12 @@ class NavigationSDNLClass:
         self.beta2 = 400
 
         self.obstacles = Obstacles()
-        # self.position = Odometry()
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.robot_t = 0.0
+        self.nav_target = TarNavSDNL()
+        self.first_nav_target = False
+
 
         # visual debug
         self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
@@ -60,6 +62,7 @@ class NavigationSDNLClass:
             # obstacles
             self.all_obs_val.append(self.obstacles)
             
+            # past obstacles
             for j in range(len(self.all_obs_val)):
 
                 for i in range(self.all_obs_val[j].no_obstacles):
@@ -78,14 +81,14 @@ class NavigationSDNLClass:
                                               (0, 165, 255), int(1.0 + thickness*self.scale/1000))
              
 
-            
+            thickness = 20
+            # current obstacles
             for i in range(self.obstacles.no_obstacles):
 
                 # aux variables
                 aux_ang = self.obstacles.obstacles[i].alfa
                 aux_dist = self.obstacles.obstacles[i].dist + self.robot_radius
                 aux_len_cm = self.obstacles.obstacles[i].length_cm
-                thickness = 20
 
                 #line robot center to obstacle center
                 # cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)),
@@ -108,6 +111,32 @@ class NavigationSDNLClass:
                                         (0, 0, 255), int(1.0 + thickness*self.scale/1000))
                   
 
+            
+            # targets
+            if self.first_nav_target:
+                cv2.circle(self.test_image, (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x), int(self.yc - self.scale*self.nav_target.move_target_coordinates.y)), 
+                                            (int)(self.scale*self.robot_radius/2), (0, 255, 0), -1)
+                cv2.circle(self.test_image, (int(self.xc + self.scale*self.nav_target.rotate_target_coordinates.x), int(self.yc - self.scale*self.nav_target.rotate_target_coordinates.y)), 
+                                            (int)(self.scale*self.robot_radius/2), (0, 150, 0), -1)  
+
+
+                aux_ang_tar = math.atan2(self.nav_target.move_target_coordinates.y - self.nav_target.rotate_target_coordinates.y, self.nav_target.move_target_coordinates.x - self.nav_target.rotate_target_coordinates.x)
+                cv2.line(self.test_image,   (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x), 
+                                             int(self.yc - self.scale*self.nav_target.move_target_coordinates.y)),
+                                            (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x - self.scale * self.robot_radius * math.cos(aux_ang_tar)),# + math.pi/2)), 
+                                             int(self.yc - self.scale*self.nav_target.move_target_coordinates.y + self.scale * self.robot_radius * math.sin(aux_ang_tar))),# + math.pi/2))),
+                                            (0, 255, 0), int(1.0 + thickness*self.scale/1000))
+                
+
+                
+                # cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)),
+                #                           (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2))),
+                #                            int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)))),
+                #                           (255, 255, 255))
+                             
+                
+            
+            
             # robot
             cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
             cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
@@ -146,11 +175,18 @@ class NavigationSDNLClass:
         # print(yaw, pitch, roll)
 
         self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        print(self.robot_x, self.robot_y, self.robot_t)
+        # print(self.robot_x, self.robot_y, self.robot_t)
 
     def obstacles_msg_to_position(self, obs: Obstacles):
         self.obstacles = obs
-        print(obs)
+        # print(self.obstacles)
+
+    def navigation_msg_to_position(self, nav: TarNavSDNL):
+        self.nav_target = nav
+        # knows when the first targets are sent, for visual debug
+        if not self.first_nav_target:
+            self.first_nav_target = True
+        # print(self.nav_target)
 
         
 class NavSDNLNode(Node):
@@ -183,8 +219,11 @@ class NavSDNLNode(Node):
         self.nav.odometry_msg_to_position(odom)
         self.nav.update_debug_drawings()
 
-    def target_pos_callback(self, flag: TarNavSDNL):
+    def target_pos_callback(self, nav: TarNavSDNL):
         # calculates the velocities and sends them to the motors considering the latest obstacles and odometry position
+        self.nav.navigation_msg_to_position(nav)
+        self.nav.update_debug_drawings()
+        print(nav)
         pass
 
     # def timer_callback(self):
