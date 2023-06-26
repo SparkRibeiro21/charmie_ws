@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, TransformStamped
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import Encoders
 
@@ -11,6 +11,7 @@ import cv2
 import math
 import numpy as np
 import time
+import tf2_ros
 
 class RobotOdometry():
     def __init__(self):
@@ -301,6 +302,8 @@ class OdometryNode(Node):
         self.odometry_publisher = self.create_publisher(Odometry, "odom_robot", 10)
         self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel_robot", 10)
 
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
+
         self.robot_odom = RobotOdometry()
 
         time.sleep(0.100)
@@ -335,6 +338,19 @@ class OdometryNode(Node):
         odom.twist.twist.angular.z = vel_theta
         self.odometry_publisher.publish(odom)
 
+        # creates a connection betweeen odom and base link, broadcast all joints of the tf transform,  
+        transform = TransformStamped()
+        self.get_logger().info('Transform topic')
+        transform.header.stamp = self.get_clock().now().to_msg()
+        transform.header.frame_id = "odom"
+        transform.child_frame_id = "base_link"
+        transform.transform.translation.x = odom.pose.pose.position.x
+        transform.transform.translation.y = odom.pose.pose.position.y
+        transform.transform.translation.z = odom.pose.pose.position.z
+        transform.transform.rotation = odom.pose.pose.orientation
+
+        self.tf_broadcaster.sendTransform(transform)
+        
         twist = Twist()
         twist.angular.z = vel_theta
         twist.linear.x = vel_x
