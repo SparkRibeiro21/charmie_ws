@@ -1,1 +1,1 @@
-/home/utilizador/charmie_ws/build/realsense2_camera/ament_cmake_environment_hooks/library_path.dsv
+prepend-non-duplicate;LD_LIBRARY_PATH;lib

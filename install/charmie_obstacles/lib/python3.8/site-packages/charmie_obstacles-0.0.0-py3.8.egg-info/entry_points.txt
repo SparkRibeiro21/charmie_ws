@@ -1,0 +1,3 @@
+[console_scripts]
+obstacles = charmie_obstacles.obstacles_lidar:main
+

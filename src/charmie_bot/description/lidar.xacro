@@ -3,11 +3,11 @@
 
     <joint name="laser_joint" type="fixed">
         <parent link="chassi_link"/>
-        <child link="laser_frame"/>
+        <child link="lidar_frame"/>
         <origin xyz="0 0.2 0.177" rpy="0 0 ${pi/2}"/>
     </joint>
 
-    <link name="laser_frame">
+    <link name="lidar_frame">
         <visual>
             <origin xyz="0 0 -0.055" rpy="${pi/2} 0 ${pi}"/>
             <geometry>
@@ -27,14 +27,13 @@
     </link>
 
 
-
-    <gazebo reference="laser_frame">
+    <!-- hokuyo -->
+    <gazebo reference="lidar_frame">
         <material>Gazebo/Red</material>
-
-        <sensor name="laser" type="ray">
+        <sensor type="ray" name="head_hokuyo_sensor">
             <pose> 0 0 0.055 0 0 0 </pose>
             <visualize>true</visualize>
-            <update_rate>10</update_rate>
+            <update_rate>40</update_rate>
             <ray>
                 <scan>
                     <horizontal>
@@ -53,7 +52,7 @@
                     <argument>~/out:=scan</argument>
                 </ros>
                 <output_type>sensor_msgs/LaserScan</output_type>
-                <frame_name>laser_frame</frame_name>
+                <frame_name>lidar_frame</frame_name>
             </plugin>
         </sensor>
     </gazebo>

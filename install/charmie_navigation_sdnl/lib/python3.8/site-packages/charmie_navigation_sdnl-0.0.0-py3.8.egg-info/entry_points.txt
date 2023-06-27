@@ -1,0 +1,3 @@
+[console_scripts]
+navigation = charmie_navigation_sdnl.navigation:main
+

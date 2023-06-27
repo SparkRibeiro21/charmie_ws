@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <ros2_control name="lidar_real" type="sensor">
+        <hardware>
+            <plugin>ros2_control_demo_hardware/ForceTorqueSensor1DHardware</plugin>
+            <param name="example_param_read_for_sec">0.43</param>
+        </hardware>
+        <sensor name="lidar_frame">
+            <state_interface name="force"/>
+            <param name="frame_id">lidar_frame</param>
+            <param name="min_force">-100</param>
+            <param name="max_force">100</param>
+        </sensor>
+    </ros2_control>
+
+</robot>

@@ -1,0 +1,78 @@
+[0.062s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /home/utilizador/charmie_ws/src/charmie_bot -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/charmie_bot
+[1.215s] -- The C compiler identification is GNU 9.4.0
+[1.218s] -- The CXX compiler identification is GNU 9.4.0
+[1.218s] -- Check for working C compiler: /usr/bin/cc
+[1.218s] -- Check for working C compiler: /usr/bin/cc -- works
+[1.218s] -- Detecting C compiler ABI info
+[1.218s] -- Detecting C compiler ABI info - done
+[1.218s] -- Detecting C compile features
+[1.219s] -- Detecting C compile features - done
+[1.219s] -- Check for working CXX compiler: /usr/bin/c++
+[1.219s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[1.219s] -- Detecting CXX compiler ABI info
+[1.219s] -- Detecting CXX compiler ABI info - done
+[1.219s] -- Detecting CXX compile features
+[1.220s] -- Detecting CXX compile features - done
+[1.220s] -- Found ament_cmake: 0.9.11 (/opt/ros/foxy/share/ament_cmake/cmake)
+[1.220s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+[1.220s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.220s] -- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)
+[1.220s] -- Added test 'copyright' to check source files copyright and LICENSE
+[1.220s] -- Added test 'flake8' to check Python code syntax and style conventions
+[1.221s] -- Added test 'lint_cmake' to check CMake code style
+[1.221s] -- Added test 'pep257' to check Python code against some of the style conventions in PEP 257
+[1.221s] -- Added test 'xmllint' to check XML markup files
+[1.221s] -- Configuring done
+[1.221s] -- Generating done
+[1.221s] -- Build files have been written to: /home/utilizador/charmie_ws/build/charmie_bot
+[1.222s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /home/utilizador/charmie_ws/src/charmie_bot -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/charmie_bot
+[1.223s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+[1.250s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+[1.299s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_bot
+[1.313s] -- Install configuration: ""
+[1.313s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config
+[1.313s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/twist_mux.yaml
+[1.313s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/joystick.yaml
+[1.314s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/view_bot.rviz
+[1.314s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/mapper_params_online_async.yaml
+[1.314s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/controller_config.yaml
+[1.314s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/empty.yaml
+[1.314s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description
+[1.314s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/depth_camera.xacro
+[1.315s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/robot_wheels.xacro
+[1.315s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/meshes
+[1.315s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/meshes/omni_wheel.stl
+[1.315s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/meshes/lidar.stl
+[1.315s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/inertial_macros.xacro
+[1.315s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/robot_core.xacro
+[1.315s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/ros2_control.xacro
+[1.316s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/gazebo_control.xacro
+[1.316s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/lidar.xacro
+[1.316s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/robot.urdf.xacro
+[1.316s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch
+[1.316s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/joystick.launch.py
+[1.316s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/rsp.launch.py
+[1.316s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/launch_sim.launch.py
+[1.317s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/launch_real.launch.py
+[1.317s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds
+[1.317s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/lar_home.world
+[1.317s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/empty.world
+[1.317s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/robocup_objects.world
+[1.317s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/world_test.world
+[1.318s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/robocup_house.world
+[1.318s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/ament_index/resource_index/package_run_dependencies/charmie_bot
+[1.319s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/ament_index/resource_index/parent_prefix_path/charmie_bot
+[1.319s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/ament_prefix_path.sh
+[1.319s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/ament_prefix_path.dsv
+[1.319s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/path.sh
+[1.319s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/path.dsv
+[1.320s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.bash
+[1.320s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.sh
+[1.320s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.zsh
+[1.320s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.dsv
+[1.320s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.dsv
+[1.321s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/ament_index/resource_index/packages/charmie_bot
+[1.321s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/cmake/charmie_botConfig.cmake
+[1.321s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/cmake/charmie_botConfig-version.cmake
+[1.321s] -- Installing: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.xml
+[1.326s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_bot

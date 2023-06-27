@@ -12,16 +12,16 @@ slam_toolbox:
     # ROS Parameters
     odom_frame: odom
     map_frame: map
-    base_frame: base_footprint
-    scan_topic: /scan
-    mode: localization  #mapping
+    base_frame: base_link
+    scan_topic: /lidar_scan
+    mode: mapping #localization  
 
     # if you'd like to immediately start continuing a map at a given pose
     # or at the dock, but they are mutually exclusive, if pose is given
     # will use pose
-    map_file_name: /home/ruisilva/charmie_sim/src/charmie_bot/maps_rviz/lar_map_serial
+    #map_file_name: /home/charmie/charmie_ws/lar_serial
     # map_start_pose: [0.0, 0.0, 0.0]
-    map_start_at_dock: true
+    #map_start_at_dock: true
 
     debug_logging: false
     throttle_scans: 1

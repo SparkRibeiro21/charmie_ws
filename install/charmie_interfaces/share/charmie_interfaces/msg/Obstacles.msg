@@ -1,1 +1,2 @@
-/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Obstacles.msg
+uint16 no_obstacles
+ObstacleInfo[] obstacles
