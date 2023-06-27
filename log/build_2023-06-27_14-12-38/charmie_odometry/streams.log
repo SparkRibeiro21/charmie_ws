@@ -1,0 +1,21 @@
+[2.029s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_odometry': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_odometry/prefix_override:/home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_odometry build --build-base /home/utilizador/charmie_ws/build/charmie_odometry/build install --record /home/utilizador/charmie_ws/build/charmie_odometry/install.log --install-scripts $base/lib/charmie_odometry --single-version-externally-managed
+[2.316s] running egg_info
+[2.317s] writing ../../build/charmie_odometry/charmie_odometry.egg-info/PKG-INFO
+[2.317s] writing dependency_links to ../../build/charmie_odometry/charmie_odometry.egg-info/dependency_links.txt
+[2.317s] writing entry points to ../../build/charmie_odometry/charmie_odometry.egg-info/entry_points.txt
+[2.317s] writing requirements to ../../build/charmie_odometry/charmie_odometry.egg-info/requires.txt
+[2.318s] writing top-level names to ../../build/charmie_odometry/charmie_odometry.egg-info/top_level.txt
+[2.356s] reading manifest file '../../build/charmie_odometry/charmie_odometry.egg-info/SOURCES.txt'
+[2.357s] writing manifest file '../../build/charmie_odometry/charmie_odometry.egg-info/SOURCES.txt'
+[2.357s] running build
+[2.357s] running build_py
+[2.358s] running install
+[2.359s] running install_lib
+[2.360s] running install_data
+[2.361s] running install_egg_info
+[2.363s] removing '/home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages/charmie_odometry-0.0.0-py3.8.egg-info' (and everything under it)
+[2.363s] Copying ../../build/charmie_odometry/charmie_odometry.egg-info to /home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages/charmie_odometry-0.0.0-py3.8.egg-info
+[2.365s] running install_scripts
+[2.383s] Installing odometry script to /home/utilizador/charmie_ws/install/charmie_odometry/lib/charmie_odometry
+[2.384s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_odometry/install.log'
+[2.413s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_odometry' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_odometry/prefix_override:/home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_odometry build --build-base /home/utilizador/charmie_ws/build/charmie_odometry/build install --record /home/utilizador/charmie_ws/build/charmie_odometry/install.log --install-scripts $base/lib/charmie_odometry --single-version-externally-managed

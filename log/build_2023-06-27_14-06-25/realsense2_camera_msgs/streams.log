@@ -1,0 +1,187 @@
+[0.065s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera_msgs -- -j8 -l8
+[1.115s] [  1%] Built target realsense2_camera_msgs__cpp
+[1.115s] [ 12%] Built target realsense2_camera_msgs__rosidl_generator_c
+[1.116s] [ 23%] Built target realsense2_camera_msgs__rosidl_typesupport_cpp
+[1.118s] [ 34%] Built target realsense2_camera_msgs__rosidl_typesupport_introspection_cpp
+[1.119s] [ 45%] Built target realsense2_camera_msgs__rosidl_typesupport_introspection_c
+[1.119s] [ 56%] Built target realsense2_camera_msgs__rosidl_typesupport_c
+[1.120s] [ 67%] Built target realsense2_camera_msgs__rosidl_typesupport_fastrtps_cpp
+[1.122s] [ 78%] Built target realsense2_camera_msgs__rosidl_typesupport_fastrtps_c
+[1.123s] [ 78%] Built target realsense2_camera_msgs
+[1.123s] [ 80%] Built target realsense2_camera_msgs__py
+[1.123s] [ 89%] Built target realsense2_camera_msgs__python
+[1.126s] [ 92%] Built target realsense2_camera_msgs__rosidl_typesupport_introspection_c__pyext
+[1.127s] [ 96%] Built target realsense2_camera_msgs__rosidl_typesupport_fastrtps_c__pyext
+[1.129s] [100%] Built target realsense2_camera_msgs__rosidl_typesupport_c__pyext
+[1.131s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera_msgs -- -j8 -l8
+[1.247s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera_msgs
+[1.263s] -- Install configuration: ""
+[1.264s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/ament_index/resource_index/rosidl_interfaces/realsense2_camera_msgs
+[1.264s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs
+[1.264s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv
+[1.264s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/device_info.h
+[1.264s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail
+[1.265s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__functions.h
+[1.265s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__functions.c
+[1.265s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__type_support.h
+[1.265s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__struct.h
+[1.265s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg
+[1.265s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/metadata.h
+[1.265s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/extrinsics.h
+[1.265s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/imu_info.h
+[1.266s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_generator_c__visibility_control.h
+[1.266s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail
+[1.266s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__struct.h
+[1.267s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__functions.h
+[1.267s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__struct.h
+[1.267s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__functions.h
+[1.267s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__type_support.h
+[1.268s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__type_support.h
+[1.268s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__type_support.h
+[1.272s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__functions.c
+[1.272s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__functions.c
+[1.272s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__functions.h
+[1.272s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__struct.h
+[1.273s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__functions.c
+[1.273s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/library_path.sh
+[1.273s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/library_path.dsv
+[1.273s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_generator_c.so
+[1.273s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs
+[1.273s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv
+[1.273s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail
+[1.274s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__rosidl_typesupport_fastrtps_c.h
+[1.274s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg
+[1.274s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[1.274s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail
+[1.274s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_fastrtps_c.h
+[1.274s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__rosidl_typesupport_fastrtps_c.h
+[1.274s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__rosidl_typesupport_fastrtps_c.h
+[1.274s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_fastrtps_c.so
+[1.274s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs
+[1.275s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv
+[1.275s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail
+[1.275s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/dds_fastrtps
+[1.275s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__rosidl_typesupport_fastrtps_cpp.hpp
+[1.275s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg
+[1.275s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[1.275s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail
+[1.276s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_fastrtps_cpp.hpp
+[1.276s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/dds_fastrtps
+[1.276s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__rosidl_typesupport_fastrtps_cpp.hpp
+[1.276s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__rosidl_typesupport_fastrtps_cpp.hpp
+[1.276s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_fastrtps_cpp.so
+[1.276s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs
+[1.276s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv
+[1.277s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail
+[1.277s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__rosidl_typesupport_introspection_c.h
+[1.277s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__type_support.c
+[1.277s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg
+[1.277s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[1.277s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail
+[1.277s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_introspection_c.h
+[1.278s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__type_support.c
+[1.278s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__rosidl_typesupport_introspection_c.h
+[1.278s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__type_support.c
+[1.278s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__rosidl_typesupport_introspection_c.h
+[1.278s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__type_support.c
+[1.278s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_introspection_c.so
+[1.278s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_c.so
+[1.279s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs
+[1.279s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv
+[1.279s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/device_info.hpp
+[1.279s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail
+[1.279s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__struct.hpp
+[1.279s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__traits.hpp
+[1.280s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__builder.hpp
+[1.280s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg
+[1.280s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/extrinsics.hpp
+[1.280s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/imu_info.hpp
+[1.280s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/metadata.hpp
+[1.280s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail
+[1.280s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__struct.hpp
+[1.281s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__builder.hpp
+[1.281s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp
+[1.281s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__builder.hpp
+[1.281s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__struct.hpp
+[1.281s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp
+[1.281s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__traits.hpp
+[1.281s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__builder.hpp
+[1.282s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__struct.hpp
+[1.282s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs
+[1.282s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv
+[1.282s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail
+[1.282s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__type_support.cpp
+[1.282s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__rosidl_typesupport_introspection_cpp.hpp
+[1.283s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg
+[1.283s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail
+[1.283s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__rosidl_typesupport_introspection_cpp.hpp
+[1.283s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__type_support.cpp
+[1.283s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__rosidl_typesupport_introspection_cpp.hpp
+[1.283s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_introspection_cpp.hpp
+[1.283s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__type_support.cpp
+[1.284s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__type_support.cpp
+[1.284s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_introspection_cpp.so
+[1.284s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_cpp.so
+[1.284s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/pythonpath.sh
+[1.284s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/pythonpath.dsv
+[1.284s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/__init__.py
+[1.328s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg
+[1.329s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/_extrinsics.py
+[1.329s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/_metadata.py
+[1.329s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/_extrinsics_s.c
+[1.329s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/_imu_info.py
+[1.330s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/_imu_info_s.c
+[1.330s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/__init__.py
+[1.330s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/_metadata_s.c
+[1.330s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/srv
+[1.330s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/srv/_device_info_s.c
+[1.330s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/srv/_device_info.py
+[1.330s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/srv/__init__.py
+[1.339s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/realsense2_camera_msgs_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so
+[1.339s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/realsense2_camera_msgs_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so
+[1.339s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/realsense2_camera_msgs_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so
+[1.339s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__python.so
+[1.340s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/IMUInfo.idl
+[1.340s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/Extrinsics.idl
+[1.340s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/Metadata.idl
+[1.361s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/srv/DeviceInfo.idl
+[1.361s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/IMUInfo.msg
+[1.362s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/Extrinsics.msg
+[1.363s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/Metadata.msg
+[1.366s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/srv/DeviceInfo.srv
+[1.366s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/srv/DeviceInfo_Request.msg
+[1.367s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/srv/DeviceInfo_Response.msg
+[1.367s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/ament_index/resource_index/package_run_dependencies/realsense2_camera_msgs
+[1.368s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/ament_index/resource_index/parent_prefix_path/realsense2_camera_msgs
+[1.369s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/ament_prefix_path.sh
+[1.369s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/ament_prefix_path.dsv
+[1.375s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/path.sh
+[1.380s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/path.dsv
+[1.385s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/local_setup.bash
+[1.387s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/local_setup.sh
+[1.390s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/local_setup.zsh
+[1.391s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/local_setup.dsv
+[1.392s] -- Installing: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.dsv
+[1.392s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/ament_index/resource_index/packages/realsense2_camera_msgs
+[1.392s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_generator_cExport.cmake
+[1.393s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_generator_cExport-noconfig.cmake
+[1.393s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_introspection_cExport.cmake
+[1.393s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[1.395s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_cExport.cmake
+[1.396s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_cExport-noconfig.cmake
+[1.396s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_generator_cppExport.cmake
+[1.396s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_introspection_cppExport.cmake
+[1.396s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[1.397s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_cppExport.cmake
+[1.397s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_cppExport-noconfig.cmake
+[1.397s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/rosidl_cmake-extras.cmake
+[1.397s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/ament_cmake_export_dependencies-extras.cmake
+[1.397s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/ament_cmake_export_libraries-extras.cmake
+[1.397s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/ament_cmake_export_targets-extras.cmake
+[1.398s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/ament_cmake_export_include_directories-extras.cmake
+[1.398s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[1.419s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[1.419s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgsConfig.cmake
+[1.420s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgsConfig-version.cmake
+[1.420s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.xml
+[1.421s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera_msgs

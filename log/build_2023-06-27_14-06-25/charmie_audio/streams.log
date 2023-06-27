@@ -1,0 +1,21 @@
+[1.763s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_audio': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_audio/prefix_override:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_audio build --build-base /home/utilizador/charmie_ws/build/charmie_audio/build install --record /home/utilizador/charmie_ws/build/charmie_audio/install.log --install-scripts $base/lib/charmie_audio --single-version-externally-managed
+[1.998s] running egg_info
+[1.999s] writing ../../build/charmie_audio/charmie_audio.egg-info/PKG-INFO
+[1.999s] writing dependency_links to ../../build/charmie_audio/charmie_audio.egg-info/dependency_links.txt
+[1.999s] writing entry points to ../../build/charmie_audio/charmie_audio.egg-info/entry_points.txt
+[1.999s] writing requirements to ../../build/charmie_audio/charmie_audio.egg-info/requires.txt
+[2.000s] writing top-level names to ../../build/charmie_audio/charmie_audio.egg-info/top_level.txt
+[2.035s] reading manifest file '../../build/charmie_audio/charmie_audio.egg-info/SOURCES.txt'
+[2.036s] writing manifest file '../../build/charmie_audio/charmie_audio.egg-info/SOURCES.txt'
+[2.036s] running build
+[2.036s] running build_py
+[2.036s] running install
+[2.037s] running install_lib
+[2.039s] running install_data
+[2.039s] running install_egg_info
+[2.042s] removing '/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages/charmie_audio-0.0.0-py3.8.egg-info' (and everything under it)
+[2.042s] Copying ../../build/charmie_audio/charmie_audio.egg-info to /home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages/charmie_audio-0.0.0-py3.8.egg-info
+[2.043s] running install_scripts
+[2.061s] Installing audio script to /home/utilizador/charmie_ws/install/charmie_audio/lib/charmie_audio
+[2.061s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_audio/install.log'
+[2.715s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_audio' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_audio/prefix_override:/home/utilizador/charmie_ws/install/charmie_audio/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_audio build --build-base /home/utilizador/charmie_ws/build/charmie_audio/build install --record /home/utilizador/charmie_ws/build/charmie_audio/install.log --install-scripts $base/lib/charmie_audio --single-version-externally-managed

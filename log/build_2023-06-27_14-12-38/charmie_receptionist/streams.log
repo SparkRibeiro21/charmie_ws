@@ -1,0 +1,21 @@
+[1.623s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_receptionist': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_receptionist/prefix_override:/home/utilizador/charmie_ws/install/charmie_receptionist/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_receptionist build --build-base /home/utilizador/charmie_ws/build/charmie_receptionist/build install --record /home/utilizador/charmie_ws/build/charmie_receptionist/install.log --single-version-externally-managed
+[1.859s] running egg_info
+[1.860s] writing ../../build/charmie_receptionist/charmie_receptionist.egg-info/PKG-INFO
+[1.860s] writing dependency_links to ../../build/charmie_receptionist/charmie_receptionist.egg-info/dependency_links.txt
+[1.860s] writing entry points to ../../build/charmie_receptionist/charmie_receptionist.egg-info/entry_points.txt
+[1.860s] writing requirements to ../../build/charmie_receptionist/charmie_receptionist.egg-info/requires.txt
+[1.860s] writing top-level names to ../../build/charmie_receptionist/charmie_receptionist.egg-info/top_level.txt
+[1.897s] reading manifest file '../../build/charmie_receptionist/charmie_receptionist.egg-info/SOURCES.txt'
+[1.898s] writing manifest file '../../build/charmie_receptionist/charmie_receptionist.egg-info/SOURCES.txt'
+[1.898s] running build
+[1.899s] running build_py
+[1.899s] running install
+[1.899s] running install_lib
+[1.901s] running install_data
+[1.901s] running install_egg_info
+[1.903s] removing '/home/utilizador/charmie_ws/install/charmie_receptionist/lib/python3.8/site-packages/charmie_receptionist-0.0.0-py3.8.egg-info' (and everything under it)
+[1.904s] Copying ../../build/charmie_receptionist/charmie_receptionist.egg-info to /home/utilizador/charmie_ws/install/charmie_receptionist/lib/python3.8/site-packages/charmie_receptionist-0.0.0-py3.8.egg-info
+[1.904s] running install_scripts
+[1.925s] Installing receptionist script to /home/utilizador/charmie_ws/install/charmie_receptionist/lib/charmie_receptionist
+[1.926s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_receptionist/install.log'
+[1.953s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_receptionist' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_receptionist/prefix_override:/home/utilizador/charmie_ws/install/charmie_receptionist/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_receptionist build --build-base /home/utilizador/charmie_ws/build/charmie_receptionist/build install --record /home/utilizador/charmie_ws/build/charmie_receptionist/install.log --single-version-externally-managed

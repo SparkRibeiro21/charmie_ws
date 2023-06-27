@@ -1,0 +1,21 @@
+[1.678s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_navigation_sdnl': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_navigation_sdnl/prefix_override:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_navigation_sdnl build --build-base /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/build install --record /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/install.log --install-scripts $base/lib/charmie_navigation_sdnl --single-version-externally-managed
+[2.055s] running egg_info
+[2.056s] writing ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/PKG-INFO
+[2.056s] writing dependency_links to ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/dependency_links.txt
+[2.056s] writing entry points to ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/entry_points.txt
+[2.057s] writing requirements to ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/requires.txt
+[2.057s] writing top-level names to ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/top_level.txt
+[2.128s] reading manifest file '../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/SOURCES.txt'
+[2.128s] writing manifest file '../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/SOURCES.txt'
+[2.128s] running build
+[2.128s] running build_py
+[2.129s] running install
+[2.134s] running install_lib
+[2.137s] running install_data
+[2.137s] running install_egg_info
+[2.138s] removing '/home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie_navigation_sdnl-0.0.0-py3.8.egg-info' (and everything under it)
+[2.138s] Copying ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info to /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie_navigation_sdnl-0.0.0-py3.8.egg-info
+[2.138s] running install_scripts
+[2.155s] Installing navigation script to /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/charmie_navigation_sdnl
+[2.155s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_navigation_sdnl/install.log'
+[2.191s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_navigation_sdnl' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_navigation_sdnl/prefix_override:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_navigation_sdnl build --build-base /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/build install --record /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/install.log --install-scripts $base/lib/charmie_navigation_sdnl --single-version-externally-managed
