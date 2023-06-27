@@ -1,14 +1,1 @@
-// generated from rosidl_adapter/resource/msg.idl.em
-// with input from charmie_interfaces/msg/RobotSpeech.msg
-// generated code does not contain a copyright notice
-
-
-module charmie_interfaces {
-  module msg {
-    struct RobotSpeech {
-      string command;
-
-      string language;
-    };
-  };
-};
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/RobotSpeech.idl

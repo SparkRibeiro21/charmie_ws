@@ -10,7 +10,11 @@ setup.py
 ../../build/charmie_debug/charmie_debug.egg-info/zip-safe
 charmie_debug/__init__.py
 charmie_debug/debug_main.py
+charmie_debug.egg-info/PKG-INFO
+charmie_debug.egg-info/SOURCES.txt
+charmie_debug.egg-info/dependency_links.txt
+charmie_debug.egg-info/entry_points.txt
+charmie_debug.egg-info/requires.txt
+charmie_debug.egg-info/top_level.txt
+charmie_debug.egg-info/zip-safe
 resource/charmie_debug
-test/test_copyright.py
-test/test_flake8.py
-test/test_pep257.py

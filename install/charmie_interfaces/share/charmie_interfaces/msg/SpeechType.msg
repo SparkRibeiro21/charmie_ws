@@ -1,4 +1,1 @@
-bool yes_or_no
-bool receptionist
-bool gpsr
-bool restaurant
+/home/utilizador/charmie_ws/src/charmie_interfaces/msg/SpeechType.msg

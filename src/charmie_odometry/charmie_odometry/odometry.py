@@ -299,7 +299,7 @@ class OdometryNode(Node):
 
         self.encoders_subscriber = self.create_subscription(Encoders, "get_encoders", self.get_encoders_callback, 10)
         self.flag_encoders_publisher = self.create_publisher(Bool, "flag_encoders", 10)
-        self.odometry_publisher = self.create_publisher(Odometry, "odom_robot", 10)
+        self.odometry_publisher = self.create_publisher(Odometry, "odom", 10)
         self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel_robot", 10)
 
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)

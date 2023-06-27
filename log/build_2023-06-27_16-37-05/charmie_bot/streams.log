@@ -1,0 +1,60 @@
+[0.079s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/opt/ros/foxy /usr/bin/cmake /home/utilizador/charmie_ws/src/charmie_bot -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/charmie_bot
+[1.276s] -- Found ament_cmake: 0.9.11 (/opt/ros/foxy/share/ament_cmake/cmake)
+[1.276s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.276s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.276s] -- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)
+[1.276s] -- Added test 'copyright' to check source files copyright and LICENSE
+[1.276s] -- Added test 'flake8' to check Python code syntax and style conventions
+[1.276s] -- Added test 'lint_cmake' to check CMake code style
+[1.276s] -- Added test 'pep257' to check Python code against some of the style conventions in PEP 257
+[1.276s] -- Added test 'xmllint' to check XML markup files
+[1.276s] -- Configuring done
+[1.276s] -- Generating done
+[1.277s] -- Build files have been written to: /home/utilizador/charmie_ws/build/charmie_bot
+[1.278s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/opt/ros/foxy /usr/bin/cmake /home/utilizador/charmie_ws/src/charmie_bot -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/charmie_bot
+[1.280s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+[1.340s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/opt/ros/foxy /usr/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+[1.398s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_bot
+[1.412s] -- Install configuration: ""
+[1.413s] -- Execute custom install script
+[1.413s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/controller_config.yaml
+[1.425s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/empty.yaml
+[1.435s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/joystick.yaml
+[1.445s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/mapper_params_online_async.yaml
+[1.458s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/twist_mux.yaml
+[1.473s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/view_bot.rviz
+[1.490s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/depth_camera.xacro
+[1.503s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/gazebo_control.xacro
+[1.545s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/inertial_macros.xacro
+[1.560s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/lidar.xacro
+[1.580s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/meshes/lidar.stl
+[1.596s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/meshes/omni_wheel.stl
+[1.612s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/robot.urdf.xacro
+[1.628s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/robot_core.xacro
+[1.644s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/robot_wheels.xacro
+[1.661s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/ros2_control.xacro
+[1.678s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/joystick.launch.py
+[1.694s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/launch_real.launch.py
+[1.710s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/launch_sim.launch.py
+[1.725s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/launch/rsp.launch.py
+[1.740s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/empty.world
+[1.756s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/lar_home.world
+[1.768s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/robocup_house.world
+[1.781s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/robocup_objects.world
+[1.791s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/worlds/world_test.world
+[1.802s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/ament_index/resource_index/package_run_dependencies/charmie_bot
+[1.816s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/ament_index/resource_index/parent_prefix_path/charmie_bot
+[1.831s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/ament_prefix_path.sh
+[1.847s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/ament_prefix_path.dsv
+[1.864s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/path.sh
+[1.879s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/environment/path.dsv
+[1.902s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.bash
+[1.918s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.sh
+[1.932s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.zsh
+[1.949s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/local_setup.dsv
+[1.968s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.dsv
+[1.983s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/ament_index/resource_index/packages/charmie_bot
+[1.999s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/cmake/charmie_botConfig.cmake
+[2.015s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/cmake/charmie_botConfig-version.cmake
+[2.032s] -- Symlinking: /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/package.xml
+[2.063s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_bot' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/opt/ros/foxy /usr/bin/cmake --install /home/utilizador/charmie_ws/build/charmie_bot

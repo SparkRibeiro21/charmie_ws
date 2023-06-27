@@ -1,11 +1,1 @@
-<?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="robot">
-
-    <xacro:include filename='robot_core.xacro'/>
-    <xacro:include filename='robot_wheels.xacro'/>
-    
-    <xacro:include filename='lidar.xacro'/> 
-
-    <xacro:include filename='gazebo_control.xacro'/> 
-    
-</robot>
+/home/utilizador/charmie_ws/src/charmie_bot/description/robot.urdf.xacro

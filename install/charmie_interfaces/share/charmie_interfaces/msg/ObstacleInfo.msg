@@ -1,4 +1,1 @@
-float32 alfa
-float32 dist
-float32 length_cm
-float32 length_degrees
+/home/utilizador/charmie_ws/src/charmie_interfaces/msg/ObstacleInfo.msg
