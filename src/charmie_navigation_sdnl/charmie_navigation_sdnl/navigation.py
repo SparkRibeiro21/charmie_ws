@@ -15,9 +15,20 @@ class NavigationSDNLClass:
 
     def __init__(self):
 
-        self.lambda_target = 8
-        self.beta1 = 20
-        self.beta2 = 10
+        # configurable SDNL parameters
+        self.lambda_target_mov = 7
+        self.lambda_target_rot = 12
+        self.beta1 = 4
+        self.beta2 = 4
+
+        # configurable other parameters
+        self.nav_threshold_dist = 0.2 # in meters
+        self.nav_threshold_ang = 10 # degrees
+        self.max_lin_speed = 10.0 # speed
+        self.max_ang_speed = 30.0 # speed
+        self.tar_dist_decrease_lin_speed = 0.5 # meters
+        self.obs_dist_decrease_lin_speed = 0.5 # meters
+        self.min_speed_obs = 5.0 # speed
 
         self.obstacles = Obstacles()
         self.robot_x = 0.0
@@ -25,6 +36,9 @@ class NavigationSDNLClass:
         self.robot_t = 0.0
         self.nav_target = TarNavSDNL()
         self.first_nav_target = False
+        self.dist_to_target = 0.0
+        self.ang_to_target = 0.0 
+        self.min_dist_obs = 0.0
 
         self.f_target = 0.0
         self.y_atrator = []
@@ -38,7 +52,6 @@ class NavigationSDNLClass:
         self.yfff = []
         self.f_final = 0.0
         self.y_final = []
-        self.v_max = 30
 
 
         # visual debug
@@ -59,10 +72,13 @@ class NavigationSDNLClass:
         self.all_pos_t_val = []
         self.all_obs_val = []
 
-    def sdnl_main(self):
+    def sdnl_main(self, mov_or_rot):
 
-        self.f_target, self.y_atrator = self.atrator()
-        
+        if mov_or_rot == "rot":
+            self.nav_target.flag_not_obs = True
+
+
+        self.f_target, self.y_atrator = self.atrator(mov_or_rot)
 
         #### PROXIMAS DUAS FUNCOES DEVIAM ESTAR DENTRO DO IF POR UMA QUESTAO DE EFICIENCIA
         #### POREM POR DEBUG PODEM ESTAR CA FORA
@@ -80,27 +96,56 @@ class NavigationSDNLClass:
             self.y_final = self.y_atrator
             print("SÓ ATRATOR")
 
-        print(self.f_final)
+        # print(self.f_final)
 
-        if self.f_final > self.v_max:
-            self.f_final = self.v_max
-        if self.f_final < -self.v_max:
-            self.f_final = -self.v_max
+        self.dist_to_target = self.upload_move_dist_to_target()
+        self.ang_to_target = self.upload_rot_ang_to_target()
 
+        if self.f_final > self.max_ang_speed:
+            self.f_final = self.max_ang_speed
+        if self.f_final < -self.max_ang_speed:
+            self.f_final = -self.max_ang_speed
 
         # print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
         omni_move = Vector3()
-        omni_move.y = float(10.0)
+
+        if mov_or_rot == "rot":
+            omni_move.y = float(0.0)
+        elif mov_or_rot == "mov":
+            omni_move.y = float(self.max_lin_speed)
+            speed_t = self.max_lin_speed
+            speed_o = self.max_lin_speed
+
+            if self.dist_to_target < self.tar_dist_decrease_lin_speed:  
+                lin_speed_variation = self.max_lin_speed / self.tar_dist_decrease_lin_speed
+                speed_t = self.max_lin_speed - lin_speed_variation*(self.tar_dist_decrease_lin_speed - self.dist_to_target)
+            
+            elif self.min_dist_obs < self.obs_dist_decrease_lin_speed:
+                lin_speed_variation = (self.max_lin_speed - self.min_speed_obs) / self.obs_dist_decrease_lin_speed
+                speed_o = self.max_lin_speed - lin_speed_variation*(self.obs_dist_decrease_lin_speed - self.min_dist_obs)
+
+            
+            omni_move.y = min(speed_t, speed_o)
+            ### DEPOIS TENHO QUE ARRANJAR MANIERA DE JUNTAR AS DUAS EQUACOES, ASSIM NAO HA SALTOS
+            print("speed_t:", speed_t, "speed_o:", speed_o, "omni_move.y:", omni_move.y)
+            print(omni_move.y)
+
         omni_move.z = float(100.0 - self.f_final)
         
         return omni_move
         
 
 
-    def atrator(self):
+    def atrator(self, mov_or_rot):
 
         # variables necessary to calculate the atrator
-        target = (self.nav_target.move_target_coordinates.x, self.nav_target.move_target_coordinates.y)
+        if mov_or_rot == "mov":
+            target = (self.nav_target.move_target_coordinates.x, self.nav_target.move_target_coordinates.y)
+            lambda_target = self.lambda_target_mov
+        elif mov_or_rot == "rot":
+            target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
+            lambda_target = self.lambda_target_rot
+
         current_pos = (self.robot_x, self.robot_y)
         phi = self.robot_t
 
@@ -110,7 +155,7 @@ class NavigationSDNLClass:
 
         psi_target = math.atan2(target[1]-current_pos[1], target[0]-current_pos[0])
 
-        f_target = -self.lambda_target*math.sin(phi_ - psi_target)
+        f_target = -lambda_target*math.sin(phi_ - psi_target)
 
         # print(math.degrees(psi_target), phi)
         # print(f_target)
@@ -119,7 +164,7 @@ class NavigationSDNLClass:
         y = [0] * 360*2
 
         for half_degree in range(360*2):
-            y[half_degree] = -self.lambda_target*math.sin(x[half_degree] - psi_target)
+            y[half_degree] = -lambda_target*math.sin(x[half_degree] - psi_target)
             # print(math.degrees(phi_), half_degree, x[half_degree], y[half_degree])
             # print(math.degrees(x[half_degree]), end=",")
 
@@ -139,7 +184,10 @@ class NavigationSDNLClass:
         aux_obs = {}
         phi_ =  phi + math.pi/2
 
+        min_d = 1.5
         for obs in self.obstacles.obstacles:
+            if obs.dist < min_d:
+                min_d = obs.dist
             # print(obs)
             aux_obs['psi_obs'] = phi_ - obs.alfa
             aux_obs['dis_obs'] = obs.dist
@@ -147,6 +195,7 @@ class NavigationSDNLClass:
 
             obstacles.append(aux_obs.copy())
 
+        self.min_dist_obs = min_d
         # print()
         return obstacles
 
@@ -271,6 +320,53 @@ class NavigationSDNLClass:
         return ffinal, y_final
 
 
+    def upload_move_dist_to_target(self):
+        
+        x1 = self.robot_x
+        y1 = self.robot_y
+
+        x2 = self.nav_target.move_target_coordinates.x
+        y2 = self.nav_target.move_target_coordinates.y
+
+        dist = math.sqrt((x2-x1)**2 + (y2-y1)**2)
+
+        return dist
+
+    def upload_rot_ang_to_target(self):
+
+        target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
+        current_pos = (self.robot_x, self.robot_y)
+
+        # theta1 = math.degrees(self.robot_t + math.pi/2)
+        # theta2 = math.degrees(math.atan2(target[1]-current_pos[1], target[0]-current_pos[0]))
+        theta1 = (self.robot_t + math.pi/2)
+        theta2 = (math.atan2(target[1]-current_pos[1], target[0]-current_pos[0]))
+
+        # normalize_angles()
+        
+        # print("THETA2", theta2)
+        # ang = abs(theta1 - theta2)
+        # print("ang1:", ang)
+
+        # ang = abs(math.degrees(theta1 - theta2))
+        # print("ang2:", ang)
+
+        ang = abs(self.normalize_angles(math.degrees(theta1 - theta2)))
+        # print("ang3:", ang)
+        
+        return ang
+
+
+    def normalize_angles(self, ang):
+
+        while ang < -180:
+            ang += 360
+        while ang >= 180:
+            ang -= 360
+
+        return ang
+
+
     def update_debug_drawings(self):
             
         if self.DEBUG_DRAW_IMAGE:
@@ -392,7 +488,7 @@ class NavigationSDNLClass:
 
 
             cv2.imshow("Navigation SDNL", self.test_image)
-            # cv2.imshow("SDNL", self.image_plt)
+            cv2.imshow("SDNL", self.image_plt)
             
             k = cv2.waitKey(1)
             if k == ord('+'):
@@ -524,28 +620,73 @@ class NavSDNLNode(Node):
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
-        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_start_button", 10)
+        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
 
+        self.create_timer(0.1, self.timer_callback)
+
+        self.navigation_state = 0
 
     def obs_lidar_callback(self, obs: Obstacles):
         # updates the obstacles variable
         self.nav.obstacles_msg_to_position(obs)
-        self.nav.sdnl_main()
-        self.nav.update_debug_drawings()
+        # self.nav.sdnl_main()
+        # self.nav.update_debug_drawings()
 
     def odom_robot_callback(self, odom: Odometry):
         # updates the position variable
         self.nav.odometry_msg_to_position(odom)
-        self.nav.sdnl_main()
-        self.nav.update_debug_drawings()
+        # self.nav.sdnl_main()
+        # self.nav.update_debug_drawings()
 
     def target_pos_callback(self, nav: TarNavSDNL):
         # calculates the velocities and sends them to the motors considering the latest obstacles and odometry position
         self.nav.navigation_msg_to_position(nav)
-        omni_move = self.nav.sdnl_main()
-        self.omni_move_publisher.publish(omni_move)
-        self.nav.update_debug_drawings()
-        print(nav)
+        self.nav.dist_to_target = self.nav.upload_move_dist_to_target()
+        self.nav.ang_to_target = self.nav.upload_rot_ang_to_target()
+        self.navigation_state = 0
+
+
+        # print(nav)
+    
+    def timer_callback(self):
+
+        if self.nav.first_nav_target:
+
+            # print("estado:", self.navigation_state)
+            
+            if self.navigation_state == 0:
+                omni_move = self.nav.sdnl_main("mov")
+                self.omni_move_publisher.publish(omni_move)
+                
+                if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
+                    self.navigation_state = 1
+
+            if self.navigation_state == 1:
+                omni_move = self.nav.sdnl_main("rot")
+                self.omni_move_publisher.publish(omni_move)
+                
+
+                if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
+                    self.navigation_state = 2
+
+
+            self.nav.update_debug_drawings() # this way it still draws the targets on the final frame
+
+            if self.navigation_state == 2:
+                # publica no topico a dizer que acabou
+                finish_flag = Bool()
+                finish_flag.data = True
+                self.nav.first_nav_target = False
+                omni_move = Vector3()
+                omni_move.x = float(0.0)
+                omni_move.y = float(0.0)
+                omni_move.z = float(100.0)
+                self.omni_move_publisher.publish(omni_move)
+                self.flag_pos_reached_publisher.publish(finish_flag) 
+
+            print("DIST_ERR:", self.nav.dist_to_target)
+            print("ANG_ERR:", self.nav.ang_to_target) 
+
 
 
 def main(args=None):

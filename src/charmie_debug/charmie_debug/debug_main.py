@@ -10,8 +10,7 @@ from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechT
 
 from cv_bridge import CvBridge
 import cv2 
-
-# import time
+import time
 
 class TRNode(Node):
 
@@ -62,6 +61,7 @@ class TRNode(Node):
         
         # Navigation 
         self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_pos_reached_callback, 10)
         
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
@@ -86,8 +86,10 @@ class TRNode(Node):
         self.face_counter = 0
         self.init = True
         self.nav_ctr = 0
+        self.flag_init_nav = True
 
         self.br = CvBridge()
+
 
 
     def get_neck_position_callback(self, pos: Pose2D):
@@ -159,6 +161,18 @@ class TRNode(Node):
             speech_str.language = 'en'
             self.speaker_publisher.publish(speech_str)
 
+    def flag_pos_reached_callback(self, flag: Bool):
+
+        time.sleep(5.0)
+        nav = TarNavSDNL()
+        nav.flag_not_obs = False
+        nav.move_target_coordinates.x = 2.0
+        nav.move_target_coordinates.y = 3.0
+        nav.rotate_target_coordinates.x = -3.0 
+        nav.rotate_target_coordinates.y = 3.0 
+        
+        self.target_position_publisher.publish(nav)
+
 
     def start_audio(self):
         # print(snet)
@@ -186,14 +200,18 @@ class TRNode(Node):
         if self.face_counter > 1:
             self.face_counter = 0
 
-        nav = TarNavSDNL()
-        nav.flag_not_obs = False
-        nav.move_target_coordinates.x = 0.0
-        nav.move_target_coordinates.y = 4.0
-        nav.rotate_target_coordinates.x = 4.0 
-        nav.rotate_target_coordinates.y = 3.0 
-        
-        self.target_position_publisher.publish(nav)
+        if self.flag_init_nav:
+
+            nav = TarNavSDNL()
+            nav.flag_not_obs = False
+            nav.move_target_coordinates.x = 0.0
+            nav.move_target_coordinates.y = 3.0
+            nav.rotate_target_coordinates.x = 2.0 
+            nav.rotate_target_coordinates.y = 3.0 
+            
+            self.target_position_publisher.publish(nav)
+
+            self.flag_init_nav = False
 
         # self.nav_ctr -= 0.5
 
