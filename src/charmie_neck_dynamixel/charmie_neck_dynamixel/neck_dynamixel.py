@@ -21,18 +21,21 @@ if os.name == 'nt':
 else:
     import sys, tty, termios
 
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-
-
     def getch():
         try:
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+
             tty.setraw(sys.stdin.fileno())
             ch = sys.stdin.read(1)
+        except termios.error as e:
+            if e.args[0] == 25:
+                ch = input("Fallback input: ")
+            else:  
+                raise
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
-
 
 from dynamixel_sdk import *  # Uses Dynamixel SDK library
 
