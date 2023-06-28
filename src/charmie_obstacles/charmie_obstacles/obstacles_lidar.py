@@ -766,7 +766,7 @@ class ObstaclesNode(Node):
 
         # Create PUBs/SUBs
         self.obstacles_publisher = self.create_publisher(Obstacles, "obs_lidar", 10)
-        self.lidar_subscriber = self.create_subscription(LaserScan, "lidar_scan", self.lidar_callback , 10)
+        self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.lidar_callback , 10)
 
         # Create Timers
         # self.create_timer(1, self.timer_callback)

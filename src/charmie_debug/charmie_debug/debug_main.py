@@ -43,7 +43,7 @@ class TRNode(Node):
         self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.get_controller_callback, 10)
 
         # LIDAR Hokuyo
-        self.lidar_subscriber = self.create_subscription(LaserScan, "lidar_scan", self.get_lidar_callback, 10)
+        self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.get_lidar_callback, 10)
 
         # Speaker
         self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)

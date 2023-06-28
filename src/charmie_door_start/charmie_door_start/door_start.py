@@ -12,7 +12,7 @@ class DoorNode(Node):
         self.get_logger().info("Initiliased Door Start Node")
 
         #LIDAR SUB
-        self.lidar_sub = self.create_subscription(LaserScan, 'lidar_scan', self.lidar_callback, 10)
+        self.lidar_sub = self.create_subscription(LaserScan, 'scan', self.lidar_callback, 10)
         self.start_door_subscriber = self.create_subscription(Bool, 'start_door', self.start_door_callback, 10) 
         self.done_start_door_publisher = self.create_publisher(Bool, 'done_start_door', 10) 
 
