@@ -21,7 +21,7 @@ drinks_dict = {
     "7up": ["seven", "up", "7", "simon", "nope", "devanab", "savannah", "sabona"],
 	"IceTea": ["ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
-               "an i.c."]
+               "an i.c.", "anasti"]
 }
 
 yes_no_dict = {
