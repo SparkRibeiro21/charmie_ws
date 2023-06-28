@@ -23,6 +23,8 @@ class TRNode(Node):
         self.neck_error_publisher = self.create_publisher(Pose2D, "neck_error", 10)
         self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
         self.flag_neck_position_publisher = self.create_publisher(Bool, "flag_neck_pos", 10)
+        self.neck_error_publisher = self.create_publisher(Pose2D, "neck_error", 10)
+        self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
         
         # Low Level Topics
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
@@ -66,7 +68,7 @@ class TRNode(Node):
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
         self.create_timer(0.05, self.timer_callback)
-        self.create_timer(1, self.timer_callback2)
+        self.create_timer(5, self.timer_callback2)
         self.create_timer(2, self.timer_callback3)
 
 
@@ -87,6 +89,7 @@ class TRNode(Node):
         self.init = True
         self.nav_ctr = 0
         self.flag_init_nav = True
+        self.neck_ctr = 0
 
         self.br = CvBridge()
 
@@ -183,10 +186,43 @@ class TRNode(Node):
         print(aud)
 
     def timer_callback2(self):
+
+        p = Pose2D()
+        if self.neck_ctr == 0:
+            p.x = float(3)
+            p.y = float(2)
+            p.theta = float(180)
+        if self.neck_ctr == 1:
+            p.x = float(2)
+            p.y = float(2)
+            p.theta = float(180)
+        if self.neck_ctr == 2:
+            p.x = float(1)
+            p.y = float(2)
+            p.theta = float(180)
+        if self.neck_ctr == 3:
+            p.x = float(0)
+            p.y = float(2)
+            p.theta = float(180)
+        if self.neck_ctr == 4:
+            p.x = float(-1)
+            p.y = float(2)
+            p.theta = float(180)
+        if self.neck_ctr == 5:
+            p.x = float(-2)
+            p.y = float(2)
+            p.theta = float(180)
+
+        self.neck_to_coords_publisher.publish(p)
         
-        if self.init == True:
-            self.start_audio()
-            self.init = False
+        self.neck_ctr += 1
+        if self.neck_ctr == 6:
+            self.neck_ctr = 0
+
+
+        # if self.init == True:
+        #     self.start_audio()
+        #     self.init = False
         
 
     def timer_callback3(self):

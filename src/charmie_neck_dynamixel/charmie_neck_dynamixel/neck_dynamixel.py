@@ -53,13 +53,13 @@ ADDR_MX_P_GAIN = 28  # Control table address is different in Dynamixel model
 
 # Different PID gains for each axis
 PAN_D_GAIN = 0
-PAN_I_GAIN = 1
-PAN_P_GAIN = 2
+PAN_I_GAIN = 2
+PAN_P_GAIN = 4
 
 # Different PID gains for each axis
 TILT_D_GAIN = 2
-TILT_I_GAIN = 4
-TILT_P_GAIN = 3
+TILT_I_GAIN = 5
+TILT_P_GAIN = 4
 
 # Protocol version
 PROTOCOL_VERSION = 1.0  # See which protocol version is used in the Dynamixel
@@ -172,7 +172,32 @@ class NeckNode(Node):
 
     def nect_to_coords_callback(self, pose: Pose2D):
         # calculate the angle according to last received odometry
-        pass
+        neck_target_x = pose.x
+        neck_target_y = pose.y
+        neck_target_other_axis = pose.theta
+
+        print(math.degrees(self.robot_t))
+        
+        ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
+        print("ang_rad:", ang)
+        ang = math.degrees(ang)
+        print("ang_deg:", ang)
+        move_neck(180 - math.degrees(self.robot_t) + ang, neck_target_other_axis)
+
+        # get last
+        # pass
+
+        # aux_ang_tar = math.atan2(self.nav_target.move_target_coordinates.y - self.nav_target.rotate_target_coordinates.y, self.nav_target.move_target_coordinates.x - self.nav_target.rotate_target_coordinates.x)
+        
+        
+        # a = math.atan2(self.robot_y - pose.y)
+        
+        # cv2.line(self.test_image,   (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x), 
+        #                                 int(self.yc - self.scale*self.nav_target.move_target_coordinates.y)),
+        #                             (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x - self.scale * self.robot_radius * math.cos(aux_ang_tar)),# + math.pi/2)), 
+        #                                 int(self.yc - self.scale*self.nav_target.move_target_coordinates.y + self.scale * self.robot_radius * math.sin(aux_ang_tar))),# + math.pi/2))),
+        #                             (0, 255, 0), int(1.0 + thickness*self.scale/1000))
+                    
 
     def odom_callback(self, odom: Odometry):
         # update the last odom value

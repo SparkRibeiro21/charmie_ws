@@ -450,7 +450,6 @@ class NavigationSDNLClass:
                                         int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
                                         (0, 0, 255), int(1.0 + thickness*self.scale/1000))
                   
-
             
             # targets
             if self.first_nav_target:
