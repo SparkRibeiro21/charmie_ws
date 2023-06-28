@@ -64,6 +64,7 @@ charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/ch
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_obstacle_info.py
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_obstacles.py
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl.py
+charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_multi_objects.py
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/__init__.py
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_example_tr_s.c
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_encoders_s.c
@@ -73,6 +74,7 @@ charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/ch
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_obstacle_info_s.c
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_obstacles_s.c
 charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl_s.c
+charmie_interfaces__py/CMakeFiles/charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_multi_objects_s.c
 
 
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: /opt/ros/foxy/lib/rosidl_generator_py/rosidl_generator_py
@@ -96,6 +98,7 @@ rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesuppo
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: rosidl_adapter/charmie_interfaces/msg/ObstacleInfo.idl
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: rosidl_adapter/charmie_interfaces/msg/Obstacles.idl
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: rosidl_adapter/charmie_interfaces/msg/TarNavSDNL.idl
+rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: rosidl_adapter/charmie_interfaces/msg/MultiObjects.idl
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: /opt/ros/foxy/share/std_msgs/msg/Byte.idl
 rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c: /opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl
@@ -190,6 +193,9 @@ rosidl_generator_py/charmie_interfaces/msg/_obstacles.py: rosidl_generator_py/ch
 rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl.py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl.py
 
+rosidl_generator_py/charmie_interfaces/msg/_multi_objects.py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_py/charmie_interfaces/msg/_multi_objects.py
+
 rosidl_generator_py/charmie_interfaces/msg/__init__.py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_py/charmie_interfaces/msg/__init__.py
 
@@ -217,6 +223,9 @@ rosidl_generator_py/charmie_interfaces/msg/_obstacles_s.c: rosidl_generator_py/c
 rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl_s.c: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl_s.c
 
+rosidl_generator_py/charmie_interfaces/msg/_multi_objects_s.c: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_py/charmie_interfaces/msg/_multi_objects_s.c
+
 charmie_interfaces__py: charmie_interfaces__py/CMakeFiles/charmie_interfaces__py
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/_charmie_interfaces_s.ep.rosidl_typesupport_introspection_c.c
@@ -229,6 +238,7 @@ charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_speech_type.
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_obstacle_info.py
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_obstacles.py
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl.py
+charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_multi_objects.py
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/__init__.py
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_example_tr_s.c
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_encoders_s.c
@@ -238,6 +248,7 @@ charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_speech_type_
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_obstacle_info_s.c
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_obstacles_s.c
 charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_tar_nav_sdnl_s.c
+charmie_interfaces__py: rosidl_generator_py/charmie_interfaces/msg/_multi_objects_s.c
 charmie_interfaces__py: charmie_interfaces__py/CMakeFiles/charmie_interfaces__py.dir/build.make
 
 .PHONY : charmie_interfaces__py

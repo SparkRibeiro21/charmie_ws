@@ -11,7 +11,7 @@ import speech_recognition as sr
 import tempfile
 import os 
 # import click
-
+    
 import whisper
 import time
 import torch

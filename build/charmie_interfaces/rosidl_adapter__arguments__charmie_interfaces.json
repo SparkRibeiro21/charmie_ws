@@ -8,6 +8,7 @@
     "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/SpeechType.msg",
     "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/ObstacleInfo.msg",
     "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/Obstacles.msg",
-    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/TarNavSDNL.msg"
+    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/TarNavSDNL.msg",
+    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/MultiObjects.msg"
   ]
 }

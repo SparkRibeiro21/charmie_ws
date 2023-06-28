@@ -6,3 +6,4 @@
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/ObstacleInfo.idl
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/Obstacles.idl
 /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/TarNavSDNL.idl
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/MultiObjects.idl

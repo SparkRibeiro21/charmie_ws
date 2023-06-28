@@ -7,6 +7,8 @@ file(REMOVE_RECURSE
   "../rosidl_generator_py/charmie_interfaces/msg/_encoders_s.c"
   "../rosidl_generator_py/charmie_interfaces/msg/_example_tr.py"
   "../rosidl_generator_py/charmie_interfaces/msg/_example_tr_s.c"
+  "../rosidl_generator_py/charmie_interfaces/msg/_multi_objects.py"
+  "../rosidl_generator_py/charmie_interfaces/msg/_multi_objects_s.c"
   "../rosidl_generator_py/charmie_interfaces/msg/_obstacle_info.py"
   "../rosidl_generator_py/charmie_interfaces/msg/_obstacle_info_s.c"
   "../rosidl_generator_py/charmie_interfaces/msg/_obstacles.py"

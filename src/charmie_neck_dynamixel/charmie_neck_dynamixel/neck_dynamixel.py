@@ -4,7 +4,9 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D 
 from std_msgs.msg import Bool
+from nav_msgs.msg import Odometry
 
+import math
 import tty
 import termios
 import os
@@ -112,6 +114,13 @@ class NeckNode(Node):
         self.neck_get_position_publisher = self.create_publisher(Pose2D, "get_neck_pos", 10)
         self.flag_neck_position_subscriber = self.create_subscription(Bool, "flag_neck_pos", self.flag_neck_position_callback , 10)
 
+        self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.nect_to_coords_callback, 10)
+        self.odom_subscriber = self.create_subscription(Odometry, "odom", self.odom_callback, 10)
+
+        self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_t = 0.0
+
         self.create_timer(0.1, self.timer_callback)
         self.flag_get_neck_position = False
         self.k_e = 0.5
@@ -157,6 +166,25 @@ class NeckNode(Node):
         else:
             self.get_logger().info("Received Reading Neck Position State False")
         self.flag_get_neck_position = flag.data
+
+    def nect_to_coords_callback(self, pose: Pose2D):
+        # calculate the angle according to last received odometry
+        pass
+
+    def odom_callback(self, odom: Odometry):
+        # update the last odom value
+                
+        self.robot_x = odom.pose.pose.position.x
+        self.robot_y = odom.pose.pose.position.y
+
+        qx = odom.pose.pose.orientation.x
+        qy = odom.pose.pose.orientation.y
+        qz = odom.pose.pose.orientation.z
+        qw = odom.pose.pose.orientation.w
+
+        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        
+        # print(self.robot_x, self.robot_y, self.robot_t)
         
 
 def move_neck(p, t):

@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/encoders__type_support.cpp.o"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/example_tr__type_support.cpp.o"
+  "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/multi_objects__type_support.cpp.o"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/obstacle_info__type_support.cpp.o"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/obstacles__type_support.cpp.o"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/ps4_controller__type_support.cpp.o"
@@ -13,6 +14,8 @@ file(REMOVE_RECURSE
   "rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/encoders__type_support.cpp"
   "rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_cpp.hpp"
   "rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/example_tr__type_support.cpp"
+  "rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/multi_objects__rosidl_typesupport_introspection_cpp.hpp"
+  "rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/multi_objects__type_support.cpp"
   "rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/obstacle_info__rosidl_typesupport_introspection_cpp.hpp"
   "rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/obstacle_info__type_support.cpp"
   "rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/obstacles__rosidl_typesupport_introspection_cpp.hpp"

@@ -105,6 +105,9 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c__pyext.dir/ros
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.h
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__struct.h
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__type_support.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__type_support.h
  rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__functions.h
  rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__struct.h
  rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__type_support.h
