@@ -29,6 +29,8 @@ class NavigationSDNLClass:
         self.tar_dist_decrease_lin_speed = 0.5 # meters
         self.obs_dist_decrease_lin_speed = 0.5 # meters
         self.min_speed_obs = 5.0 # speed
+        self.decay_rate_initial_speed_ramp = 1.0 # seconds # time took by the initial ramp  
+        self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
 
         self.obstacles = Obstacles()
         self.robot_x = 0.0
@@ -39,6 +41,8 @@ class NavigationSDNLClass:
         self.dist_to_target = 0.0
         self.ang_to_target = 0.0 
         self.min_dist_obs = 0.0
+        self.aux_initial_speed_ramp = 0.0
+
 
         self.f_target = 0.0
         self.y_atrator = []
@@ -115,19 +119,29 @@ class NavigationSDNLClass:
             omni_move.y = float(self.max_lin_speed)
             speed_t = self.max_lin_speed
             speed_o = self.max_lin_speed
+            speed_i = self.max_lin_speed
 
+            # decrescimo de velocidade perto do target 
             if self.dist_to_target < self.tar_dist_decrease_lin_speed:  
                 lin_speed_variation = self.max_lin_speed / self.tar_dist_decrease_lin_speed
                 speed_t = self.max_lin_speed - lin_speed_variation*(self.tar_dist_decrease_lin_speed - self.dist_to_target)
             
-            elif self.min_dist_obs < self.obs_dist_decrease_lin_speed:
+            # decrescimo de velocidade perto do obstaculo 
+            if self.min_dist_obs < self.obs_dist_decrease_lin_speed:
                 lin_speed_variation = (self.max_lin_speed - self.min_speed_obs) / self.obs_dist_decrease_lin_speed
                 speed_o = self.max_lin_speed - lin_speed_variation*(self.obs_dist_decrease_lin_speed - self.min_dist_obs)
 
+            # decrescimo de velocidade rampa de aceleração inicial 
+            if self.aux_initial_speed_ramp <= self.max_lin_speed:
+                if self.min_dist_obs < self.obs_dist_decrease_lin_speed:
+                    lin_speed_variation = self.max_lin_speed / (self.decay_rate_initial_speed_ramp)
+                    self.aux_initial_speed_ramp += lin_speed_variation
+                    speed_i = self.aux_initial_speed_ramp                    
+
             
-            omni_move.y = min(speed_t, speed_o)
+            omni_move.y = min(speed_t, speed_o, speed_i)
             ### DEPOIS TENHO QUE ARRANJAR MANIERA DE JUNTAR AS DUAS EQUACOES, ASSIM NAO HA SALTOS
-            print("speed_t:", speed_t, "speed_o:", speed_o, "omni_move.y:", omni_move.y)
+            print("speed_t:", speed_t, "speed_o:", speed_o, "speed_i:", speed_i, "omni_move.y:", omni_move.y)
             print(omni_move.y)
 
         omni_move.z = float(100.0 - self.f_final)
@@ -436,7 +450,6 @@ class NavigationSDNLClass:
                                         int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
                                         (0, 0, 255), int(1.0 + thickness*self.scale/1000))
                   
-
             
             # targets
             if self.first_nav_target:
@@ -616,7 +629,7 @@ class NavSDNLNode(Node):
 
         # Create PUBs/SUBs
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
-        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom_robot", self.odom_robot_callback, 10)
+        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom", self.odom_robot_callback, 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)

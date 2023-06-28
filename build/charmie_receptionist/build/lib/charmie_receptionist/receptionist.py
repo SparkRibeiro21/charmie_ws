@@ -70,7 +70,7 @@ class ReceptionistNode(Node):
         self.face_publisher = self.create_publisher(Int16, "face_command", 10)
 
         # Odometry
-        self.odometry_subscriber = self.create_subscription(Odometry, "odom_robot",self.get_odometry_robot_callback, 10)
+        self.odometry_subscriber = self.create_subscription(Odometry, "odom",self.get_odometry_robot_callback, 10)
 
         # Timer
         self.create_timer(0.05, self.timer_callback)

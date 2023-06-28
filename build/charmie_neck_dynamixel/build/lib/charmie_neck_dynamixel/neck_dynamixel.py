@@ -4,7 +4,9 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D 
 from std_msgs.msg import Bool
+from nav_msgs.msg import Odometry
 
+import math
 import tty
 import termios
 import os
@@ -19,18 +21,21 @@ if os.name == 'nt':
 else:
     import sys, tty, termios
 
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-
-
     def getch():
         try:
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+
             tty.setraw(sys.stdin.fileno())
             ch = sys.stdin.read(1)
+        except termios.error as e:
+            if e.args[0] == 25:
+                ch = input("Fallback input: ")
+            else:  
+                raise
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
-
 
 from dynamixel_sdk import *  # Uses Dynamixel SDK library
 
@@ -48,13 +53,13 @@ ADDR_MX_P_GAIN = 28  # Control table address is different in Dynamixel model
 
 # Different PID gains for each axis
 PAN_D_GAIN = 0
-PAN_I_GAIN = 1
-PAN_P_GAIN = 2
+PAN_I_GAIN = 2
+PAN_P_GAIN = 4
 
 # Different PID gains for each axis
 TILT_D_GAIN = 2
-TILT_I_GAIN = 4
-TILT_P_GAIN = 3
+TILT_I_GAIN = 5
+TILT_P_GAIN = 4
 
 # Protocol version
 PROTOCOL_VERSION = 1.0  # See which protocol version is used in the Dynamixel
@@ -112,6 +117,13 @@ class NeckNode(Node):
         self.neck_get_position_publisher = self.create_publisher(Pose2D, "get_neck_pos", 10)
         self.flag_neck_position_subscriber = self.create_subscription(Bool, "flag_neck_pos", self.flag_neck_position_callback , 10)
 
+        self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.nect_to_coords_callback, 10)
+        self.odom_subscriber = self.create_subscription(Odometry, "odom", self.odom_callback, 10)
+
+        self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_t = 0.0
+
         self.create_timer(0.1, self.timer_callback)
         self.flag_get_neck_position = False
         self.k_e = 0.5
@@ -157,6 +169,50 @@ class NeckNode(Node):
         else:
             self.get_logger().info("Received Reading Neck Position State False")
         self.flag_get_neck_position = flag.data
+
+    def nect_to_coords_callback(self, pose: Pose2D):
+        # calculate the angle according to last received odometry
+        neck_target_x = pose.x
+        neck_target_y = pose.y
+        neck_target_other_axis = pose.theta
+
+        print(math.degrees(self.robot_t))
+        
+        ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
+        print("ang_rad:", ang)
+        ang = math.degrees(ang)
+        print("ang_deg:", ang)
+        move_neck(180 - math.degrees(self.robot_t) + ang, neck_target_other_axis)
+
+        # get last
+        # pass
+
+        # aux_ang_tar = math.atan2(self.nav_target.move_target_coordinates.y - self.nav_target.rotate_target_coordinates.y, self.nav_target.move_target_coordinates.x - self.nav_target.rotate_target_coordinates.x)
+        
+        
+        # a = math.atan2(self.robot_y - pose.y)
+        
+        # cv2.line(self.test_image,   (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x), 
+        #                                 int(self.yc - self.scale*self.nav_target.move_target_coordinates.y)),
+        #                             (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x - self.scale * self.robot_radius * math.cos(aux_ang_tar)),# + math.pi/2)), 
+        #                                 int(self.yc - self.scale*self.nav_target.move_target_coordinates.y + self.scale * self.robot_radius * math.sin(aux_ang_tar))),# + math.pi/2))),
+        #                             (0, 255, 0), int(1.0 + thickness*self.scale/1000))
+                    
+
+    def odom_callback(self, odom: Odometry):
+        # update the last odom value
+                
+        self.robot_x = odom.pose.pose.position.x
+        self.robot_y = odom.pose.pose.position.y
+
+        qx = odom.pose.pose.orientation.x
+        qy = odom.pose.pose.orientation.y
+        qz = odom.pose.pose.orientation.z
+        qw = odom.pose.pose.orientation.w
+
+        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        
+        # print(self.robot_x, self.robot_y, self.robot_t)
         
 
 def move_neck(p, t):

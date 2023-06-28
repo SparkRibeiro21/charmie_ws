@@ -1,0 +1,26 @@
+running develop
+Removing /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie-navigation-sdnl.egg-link (link to .)
+running egg_info
+writing ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/PKG-INFO
+writing dependency_links to ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/dependency_links.txt
+writing entry points to ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/entry_points.txt
+writing requirements to ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/requires.txt
+writing top-level names to ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/top_level.txt
+reading manifest file '../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/SOURCES.txt'
+writing manifest file '../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/SOURCES.txt'
+running build
+running build_py
+copying charmie_navigation_sdnl/navigation.py -> /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/build/lib/charmie_navigation_sdnl
+running install
+running install_lib
+creating /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie_navigation_sdnl
+copying /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/build/lib/charmie_navigation_sdnl/navigation.py -> /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie_navigation_sdnl
+copying /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/build/lib/charmie_navigation_sdnl/__init__.py -> /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie_navigation_sdnl
+byte-compiling /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie_navigation_sdnl/navigation.py to navigation.cpython-38.pyc
+byte-compiling /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie_navigation_sdnl/__init__.py to __init__.cpython-38.pyc
+running install_data
+running install_egg_info
+Copying ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info to /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie_navigation_sdnl-0.0.0-py3.8.egg-info
+running install_scripts
+Installing navigation script to /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/charmie_navigation_sdnl
+writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_navigation_sdnl/install.log'

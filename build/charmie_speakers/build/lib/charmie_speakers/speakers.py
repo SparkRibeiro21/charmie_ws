@@ -50,11 +50,13 @@ class SpeakerNode(Node):
     def speaker_command_callback(self, speech: RobotSpeech):
 
         print("\nReceived String:", speech.command)
+        self.get_logger().info("Received Speech String")
         self.charmie_speech.speak(speech)
         flag = Bool()
         flag.data = True
         self.flag_speech_done_publisher.publish(flag)
         print("Finished Speaking.")
+        self.get_logger().info("Finished Speaking")
 
 
 def main(args=None):

@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import Bool, String
-from charmie_interfaces.msg import SpeechType
+from charmie_interfaces.msg import SpeechType, RobotSpeech
 
 import io
 from pydub import AudioSegment
@@ -11,7 +11,7 @@ import speech_recognition as sr
 import tempfile
 import os 
 # import click
-
+    
 import whisper
 import time
 import torch
@@ -224,38 +224,69 @@ class AudioNode(Node):
         super().__init__("Audio")
         self.get_logger().info("Initialised CHARMIE Audio v2 Node")
 
+        # I publish and subscribe in the same topic so I can request new hearings when errors are received 
         self.audio_command_subscriber = self.create_subscription(SpeechType, "audio_command", self.audio_command_callback, 10)
+        self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
+
         self.flag_listening_publisher = self.create_publisher(Bool, "flag_listening", 10)
         self.get_speech_publisher = self.create_publisher(String, "get_speech", 10)
+
+        self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
+        self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
         
         self.charmie_audio = WhisperAudio()
+
+        self.speech_str = RobotSpeech()
+        self.flag_speech_done = False
+        self.audio_error = False
+        self.latest_command = SpeechType()
+
+    def get_speech_done_callback(self, state: Bool):
+        print("Received Speech Flag:", state.data)
+        self.get_logger().info("Received Speech Flag")
+        self.flag_speech_done = True
+        if self.audio_error:
+            self.audio_error = False
+            print("Stopped Waiting until CHARMIE speaking is over")
+            self.audio_command_publisher.publish(self.latest_command)
 
 
     def audio_command_callback(self, comm: SpeechType):
         print(comm)
-        
+
+        self.latest_command = comm
+        self.get_logger().info("Received Audio Command")
         # publish rgb estou a ouvir
         self.charmie_audio.hear_speech()
         flag = Bool()
         flag.data = True
         self.flag_listening_publisher.publish(flag)
+        self.get_logger().info("Finished Hearing, Start Processing")
         
         # publish rgb estou a criar o speech
         speech_heard = self.charmie_audio.check_speech()
         print("\tYou said: " + speech_heard)
+        self.get_logger().info("Finished Processing")
         
         # publish rgb estou a calcular as keywords
         keywords = self.charmie_audio.check_keywords(speech_heard, comm)
         # print("Keywords:", keywords)
 
-        speech = String()
-        if keywords is None:
-            speech.data = "ERROR"
+        if keywords == "ERROR" or keywords == None:
+            self.get_logger().info("Got error, gonna retry the hearing")
+            self.speech_str.command = "I did not understand what you said. Could you please repeat?"
+            self.flag_speech_done = False # to prevent that flag may be true from other speak moments that have nothing to do with this node 
+            self.speaker_publisher.publish(self.speech_str)
+            
+            # activates the flag that puts everything on hold waiting for the end of sentece said
+            self.audio_error = True
+            
         else:
+            self.get_logger().info("Success Hearing")
+            speech = String()
             speech.data = keywords
+            self.get_speech_publisher.publish(speech)
 
-        self.get_speech_publisher.publish(speech)
-        
     
 def main(args=None):
     rclpy.init(args=args)
