@@ -16,20 +16,20 @@ class NavigationSDNLClass:
     def __init__(self):
 
         # configurable SDNL parameters
-        self.lambda_target_mov = 7
-        self.lambda_target_rot = 12
-        self.beta1 = 4
-        self.beta2 = 4
+        self.lambda_target_mov = 10
+        self.lambda_target_rot = 14
+        self.beta1 = 7
+        self.beta2 = 5
 
         # configurable other parameters
-        self.nav_threshold_dist = 0.2 # in meters
+        self.nav_threshold_dist = 0.3 # in meters
         self.nav_threshold_ang = 10 # degrees
-        self.max_lin_speed = 10.0 # speed
+        self.max_lin_speed = 25.0 # speed
         self.max_ang_speed = 30.0 # speed
         self.tar_dist_decrease_lin_speed = 0.5 # meters
         self.obs_dist_decrease_lin_speed = 0.5 # meters
         self.min_speed_obs = 5.0 # speed
-        self.decay_rate_initial_speed_ramp = 1.0 # seconds # time took by the initial ramp  
+        self.decay_rate_initial_speed_ramp = 1.5 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
 
         self.obstacles = Obstacles()
