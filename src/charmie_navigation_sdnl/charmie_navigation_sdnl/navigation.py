@@ -59,7 +59,7 @@ class NavigationSDNLClass:
 
 
         # visual debug
-        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
@@ -476,32 +476,19 @@ class NavigationSDNLClass:
 
 
             # SDNL equations
+            """
             if self.first_nav_target:
                 self.plot1.plot(self.image_plt, self.scale_plotter, self.y_atrator, self.robot_t)
-            
-            # self.plot2.plot(self.image_plt, self.scale_plotter, self.y_repulsor1, self.robot_t, (255, 200, 200))
-            # self.plot2.plot(self.image_plt, self.scale_plotter, self.y_repulsor2, self.robot_t, (255, 100, 100))
-            # self.plot2.plot(self.image_plt, self.scale_plotter, self.y_repulsor3, self.robot_t, (255, 0, 0))
-
-            # self.plot3.plot(self.image_plt, self.scale_plotter, self.y_repulsor2, self.robot_t, (255, 100, 100))
-
-
             for y_plt_ff in self.yff:
                 self.plot3.plot(self.image_plt, self.scale_plotter, y_plt_ff, self.robot_t, (255, 100, 100))
             self.plot2.plot(self.image_plt, self.scale_plotter, self.yfff, self.robot_t, (0, 140, 255))
             self.plot2.plot(self.image_plt, self.scale_plotter, self.y_final, self.robot_t, (255, 255, 0))
-        
-
-                # if FLAG_MODULE_LIDAR:
-                #    for y_plt_ff in yff:
-                #         plot3.plot(self.image_plt, scale_plotter, y_plt_ff, coord_rel_t, (255, 100, 100))
-                #     plot2.plot(self.image_plt, scale_plotter, yfff, coord_rel_t, (0, 140, 255))
-                #     plot2.plot(self.image_plt, scale_plotter, y_final, coord_rel_t, (255, 255, 0))
+            """
 
 
 
             cv2.imshow("Navigation SDNL", self.test_image)
-            cv2.imshow("SDNL", self.image_plt)
+            # cv2.imshow("SDNL", self.image_plt)
             
             k = cv2.waitKey(1)
             if k == ord('+'):

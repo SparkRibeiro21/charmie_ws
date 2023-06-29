@@ -73,7 +73,7 @@ class TRNode(Node):
         self.counter = 1 # starts at 1 to avoid initial 
         self.create_timer(0.05, self.timer_callback)
         self.create_timer(5, self.timer_callback2)
-        self.create_timer(10, self.timer_callback3)
+        self.create_timer(20, self.timer_callback3)
 
 
         # Get Flags
@@ -100,6 +100,13 @@ class TRNode(Node):
 
 
 
+        aux_start_door = Bool()
+        aux_start_door.data = True
+        self.start_door_publisher.publish(aux_start_door)
+        print("Fiz pedido da Door")
+
+
+        
     def get_neck_position_callback(self, pos: Pose2D):
         print("Received Neck Position: pan =", int(pos.x), " tilt = ", int(pos.y))
 
@@ -190,7 +197,7 @@ class TRNode(Node):
         self.audio_command_publisher.publish(aud)
         print(aud)
 
-    def done_start_door_callback(self):
+    def done_start_door_callback(self, flag: Bool):
         print("Recebi Fim do Start Door")
 
     def timer_callback2(self):
