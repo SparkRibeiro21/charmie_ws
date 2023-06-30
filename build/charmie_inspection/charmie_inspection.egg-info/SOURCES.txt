@@ -9,7 +9,6 @@ setup.py
 ../../build/charmie_inspection/charmie_inspection.egg-info/top_level.txt
 ../../build/charmie_inspection/charmie_inspection.egg-info/zip-safe
 charmie_inspection/__init__.py
-charmie_inspection/charmie_inspection.py
 charmie_inspection/inspection.py
 charmie_inspection.egg-info/PKG-INFO
 charmie_inspection.egg-info/SOURCES.txt

@@ -16,20 +16,20 @@ class NavigationSDNLClass:
     def __init__(self):
 
         # configurable SDNL parameters
-        self.lambda_target_mov = 10
+        self.lambda_target_mov = 8
         self.lambda_target_rot = 14
-        self.beta1 = 7
-        self.beta2 = 5
+        self.beta1 = 5
+        self.beta2 = 4
 
         # configurable other parameters
         self.nav_threshold_dist = 0.3 # in meters
         self.nav_threshold_ang = 10 # degrees
-        self.max_lin_speed = 25.0 # speed
-        self.max_ang_speed = 30.0 # speed
+        self.max_lin_speed = 20.0 # speed
+        self.max_ang_speed = 20.0 # speed
         self.tar_dist_decrease_lin_speed = 0.5 # meters
-        self.obs_dist_decrease_lin_speed = 0.5 # meters
+        self.obs_dist_decrease_lin_speed = 1.0 # meters
         self.min_speed_obs = 5.0 # speed
-        self.decay_rate_initial_speed_ramp = 1.5 # seconds # time took by the initial ramp  
+        self.decay_rate_initial_speed_ramp = 2.0 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
 
         self.obstacles = Obstacles()
@@ -616,7 +616,7 @@ class NavSDNLNode(Node):
 
         # Create PUBs/SUBs
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
-        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom", self.odom_robot_callback, 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)

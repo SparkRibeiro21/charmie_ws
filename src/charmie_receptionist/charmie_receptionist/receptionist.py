@@ -519,6 +519,7 @@ class ReceptionistMain():
             pass
         self.node.flag_audio_done = False
         self.node.flag_speech_done = False  
+        
         # Since audio also uses speaker for errors
 
     """         if self.node.keywords == 'ERROR':

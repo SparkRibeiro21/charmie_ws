@@ -40,7 +40,7 @@ class ObstaclesLIDAR:
         self.error_lidar_reading = False
         
         #dists
-        self.OBS_THRESH = 1.5
+        self.OBS_THRESH = 1.0
         self.min_dist_error = 0.1
         self.max_dist_error = 5.0
         self.tr_aux = 0.01
