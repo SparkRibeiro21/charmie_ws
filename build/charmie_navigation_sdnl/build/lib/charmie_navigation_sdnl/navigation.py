@@ -16,20 +16,20 @@ class NavigationSDNLClass:
     def __init__(self):
 
         # configurable SDNL parameters
-        self.lambda_target_mov = 7
-        self.lambda_target_rot = 12
-        self.beta1 = 4
-        self.beta2 = 4
+        self.lambda_target_mov = 10
+        self.lambda_target_rot = 14
+        self.beta1 = 7
+        self.beta2 = 5
 
         # configurable other parameters
-        self.nav_threshold_dist = 0.2 # in meters
+        self.nav_threshold_dist = 0.3 # in meters
         self.nav_threshold_ang = 10 # degrees
-        self.max_lin_speed = 10.0 # speed
+        self.max_lin_speed = 25.0 # speed
         self.max_ang_speed = 30.0 # speed
         self.tar_dist_decrease_lin_speed = 0.5 # meters
         self.obs_dist_decrease_lin_speed = 0.5 # meters
         self.min_speed_obs = 5.0 # speed
-        self.decay_rate_initial_speed_ramp = 1.0 # seconds # time took by the initial ramp  
+        self.decay_rate_initial_speed_ramp = 1.5 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
 
         self.obstacles = Obstacles()
@@ -386,7 +386,7 @@ class NavigationSDNLClass:
         if self.DEBUG_DRAW_IMAGE:
 
             # 1 meter lines horizontal and vertical
-            for i in range(10):
+            for i in range(20):
                 cv2.line(self.test_image, (int(self.xc + self.scale*i), 0), (int(self.xc + self.scale*i), self.xc*2), (255, 255, 255), 1)
                 cv2.line(self.test_image, (int(self.xc - self.scale*i), 0), (int(self.xc - self.scale*i), self.xc*2), (255, 255, 255), 1)
                 cv2.line(self.test_image, (0, int(self.yc - self.scale*i)), (self.yc*2, int(self.yc - self.scale*i)), (255, 255, 255), 1)
@@ -476,32 +476,19 @@ class NavigationSDNLClass:
 
 
             # SDNL equations
+            """
             if self.first_nav_target:
                 self.plot1.plot(self.image_plt, self.scale_plotter, self.y_atrator, self.robot_t)
-            
-            # self.plot2.plot(self.image_plt, self.scale_plotter, self.y_repulsor1, self.robot_t, (255, 200, 200))
-            # self.plot2.plot(self.image_plt, self.scale_plotter, self.y_repulsor2, self.robot_t, (255, 100, 100))
-            # self.plot2.plot(self.image_plt, self.scale_plotter, self.y_repulsor3, self.robot_t, (255, 0, 0))
-
-            # self.plot3.plot(self.image_plt, self.scale_plotter, self.y_repulsor2, self.robot_t, (255, 100, 100))
-
-
             for y_plt_ff in self.yff:
                 self.plot3.plot(self.image_plt, self.scale_plotter, y_plt_ff, self.robot_t, (255, 100, 100))
             self.plot2.plot(self.image_plt, self.scale_plotter, self.yfff, self.robot_t, (0, 140, 255))
             self.plot2.plot(self.image_plt, self.scale_plotter, self.y_final, self.robot_t, (255, 255, 0))
-        
-
-                # if FLAG_MODULE_LIDAR:
-                #    for y_plt_ff in yff:
-                #         plot3.plot(self.image_plt, scale_plotter, y_plt_ff, coord_rel_t, (255, 100, 100))
-                #     plot2.plot(self.image_plt, scale_plotter, yfff, coord_rel_t, (0, 140, 255))
-                #     plot2.plot(self.image_plt, scale_plotter, y_final, coord_rel_t, (255, 255, 0))
+            """
 
 
 
             cv2.imshow("Navigation SDNL", self.test_image)
-            cv2.imshow("SDNL", self.image_plt)
+            # cv2.imshow("SDNL", self.image_plt)
             
             k = cv2.waitKey(1)
             if k == ord('+'):
@@ -629,7 +616,7 @@ class NavSDNLNode(Node):
 
         # Create PUBs/SUBs
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
-        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom", self.odom_robot_callback, 10)
+        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
@@ -643,13 +630,15 @@ class NavSDNLNode(Node):
         # updates the obstacles variable
         self.nav.obstacles_msg_to_position(obs)
         # self.nav.sdnl_main()
-        # self.nav.update_debug_drawings()
+        self.nav.update_debug_drawings()
+        print("here")
 
     def odom_robot_callback(self, odom: Odometry):
         # updates the position variable
         self.nav.odometry_msg_to_position(odom)
         # self.nav.sdnl_main()
-        # self.nav.update_debug_drawings()
+        self.nav.update_debug_drawings()
+        print("here2")
 
     def target_pos_callback(self, nav: TarNavSDNL):
         # calculates the velocities and sends them to the motors considering the latest obstacles and odometry position

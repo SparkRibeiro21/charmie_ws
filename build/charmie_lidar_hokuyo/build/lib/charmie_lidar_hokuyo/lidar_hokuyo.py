@@ -451,7 +451,7 @@ class LidarNode(Node):
         super().__init__("Lidar")
         self.get_logger().info("Initialised CHARMIE LIDAR Node")
         
-        self.lidar_publisher = self.create_publisher(LaserScan, "lidar_scan", 10)
+        self.lidar_publisher = self.create_publisher(LaserScan, "scan", 10)
         
         laser_serial = serial.Serial(port=uart_port, baudrate=uart_speed, timeout=0.5)
         port = SerialPort(laser_serial)

@@ -317,3 +317,18 @@ get_service_type_support_handle<realsense2_camera_msgs::srv::DeviceInfo>()
 }
 
 }  // namespace rosidl_typesupport_cpp
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+ROSIDL_TYPESUPPORT_CPP_PUBLIC
+const rosidl_service_type_support_t *
+ROSIDL_TYPESUPPORT_INTERFACE__SERVICE_SYMBOL_NAME(rosidl_typesupport_cpp, realsense2_camera_msgs, srv, DeviceInfo)() {
+  return ::rosidl_typesupport_cpp::get_service_type_support_handle<realsense2_camera_msgs::srv::DeviceInfo>();
+}
+
+#ifdef __cplusplus
+}
+#endif

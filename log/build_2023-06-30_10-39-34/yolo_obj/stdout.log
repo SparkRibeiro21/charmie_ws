@@ -1,0 +1,19 @@
+running egg_info
+writing ../../build/yolo_obj/yolo_obj.egg-info/PKG-INFO
+writing dependency_links to ../../build/yolo_obj/yolo_obj.egg-info/dependency_links.txt
+writing entry points to ../../build/yolo_obj/yolo_obj.egg-info/entry_points.txt
+writing requirements to ../../build/yolo_obj/yolo_obj.egg-info/requires.txt
+writing top-level names to ../../build/yolo_obj/yolo_obj.egg-info/top_level.txt
+reading manifest file '../../build/yolo_obj/yolo_obj.egg-info/SOURCES.txt'
+writing manifest file '../../build/yolo_obj/yolo_obj.egg-info/SOURCES.txt'
+running build
+running build_py
+running install
+running install_lib
+running install_data
+running install_egg_info
+removing '/home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj-0.0.0-py3.8.egg-info' (and everything under it)
+Copying ../../build/yolo_obj/yolo_obj.egg-info to /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj-0.0.0-py3.8.egg-info
+running install_scripts
+Installing yolo_obj script to /home/utilizador/charmie_ws/install/yolo_obj/lib/yolo_obj
+writing list of installed files to '/home/utilizador/charmie_ws/build/yolo_obj/install.log'

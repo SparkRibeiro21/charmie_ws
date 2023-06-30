@@ -2,68 +2,59 @@
 
 import rclpy
 from rclpy.node import Node
+import threading
 
 from geometry_msgs.msg import Vector3, Pose2D
-from std_msgs.msg import Int16, Bool, Int8MultiArray, Float32MultiArray, Int8, Float32, String
+from std_msgs.msg import Int16, Bool, String
 import cv2
-from sensor_msgs.msg import Image as Img
+from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from cv_bridge import CvBridge, CvBridgeError
-import time
-from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType
+from cv_bridge import CvBridge,  CvBridgeError
+from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL
 #from charmie_debug.debug_main import get_color_image_callback
-import cv2
+
 import numpy as np
 import face_recognition
+import time
 import os
 import tensorflow as tf
 from datetime import datetime
-from deepface import DeepFace
-import shutil
-import PIL
-from PIL import Image
+
 import mediapipe as mp
-import math
-import threading
-import socket
+
 import argparse
 from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordinates
-import random
 
 class ReceptionistNode(Node):
 
-    def _init_(self):
-        super()._init_("Receptionist")
+    def __init__(self):
+        super().__init__("ReceptionistNode")
         self.get_logger().info("Initiliased Receptionist Node")
 
         # Neck Topics
         self.neck_position_publisher = self.create_publisher(Pose2D, "neck_pos", 10)
         self.neck_error_publisher = self.create_publisher(Pose2D, "neck_error", 10)
-        self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
+        #self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
         self.flag_neck_position_publisher = self.create_publisher(Bool, "flag_neck_pos", 10)
 
         # Low Level Topics
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-            #self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
-            #self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
-            #self.vccs_subscriber = self.create_subscription(Pose2D, "get_vccs", self.get_vccs_callback, 10)
-            #self.flag_vccs_publisher = self.create_publisher(Bool, "flag_vccs", 10)
+        #self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
+        #self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
+        #self.vccs_subscriber = self.create_subscription(Pose2D, "get_vccs", self.get_vccs_callback, 10)
+        #self.flag_vccs_publisher = self.create_publisher(Bool, "flag_vccs", 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
-            #self.get_encoders_subscriber = self.create_subscription(Encoders, "get_encoders", self.get_encoders_callback, 10)
-            #self.flag_encoders_publisher = self.create_publisher(Bool, "flag_encoders", 10)
+        #self.get_encoders_subscriber = self.create_subscription(Encoders, "get_encoders", self.get_encoders_callback, 10)
+        #self.flag_encoders_publisher = self.create_publisher(Bool, "flag_encoders", 10)
         
-        # Intel Realsense
-        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
-            #self.depth_image_subscriber = self.create_subscription(Image, "/depth/image_rect_raw", self.get_depth_image_callback, 10)
-
+    
         # Speaker
         self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
         self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
-        self.flag_speaker_publisher = self.create_publisher(Bool, "flag_speech_done", 10)
 
         # Audio
         self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
-        self.flag_listening_subscriber = self.create_subscription(Bool, "flag_listening", self.flag_listening_callback, 10)
+        #self.flag_listening_subscriber = self.create_subscription(Bool, "flag_listening", self.flag_listening_callback, 10)
         self.get_speech_subscriber = self.create_subscription(String, "get_speech", self.get_speech_callback, 10)
 
         # Face Shining RGB
@@ -72,59 +63,159 @@ class ReceptionistNode(Node):
         # Odometry
         self.odometry_subscriber = self.create_subscription(Odometry, "odom",self.get_odometry_robot_callback, 10)
 
+        # Navigation 
+        self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_pos_reached_callback, 10)
+
+        # Intel Realsense
+        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
+        #self.depth_image_subscriber = self.create_subscription(Image, "/depth/image_rect_raw", self.get_depth_image_callback, 10)
+
+        
         # Timer
-        self.create_timer(0.05, self.timer_callback)
+        # self.create_timer(0.1, self.timer_callback)
 
         # Changing Variables
         self.state = 0
-        self.door_coordinates = Vector3()
-        self.door_coordinates.x = 0.0
-        self.door_coordinates.y = 0.0
-        self.door_coordinates.z = 0.0 #orientation
         
-        self.place_to_sit = Vector3()
+        #self.state_aux = 0
+        #self.state_ant = 0
+        #self.first_time_speech_state = True
+        #self.prox_state = 0
+
+        #Coordenadas onde o robô começa
+        self.begin_coordinates = Pose2D()
+        self.begin_coordinates.x = 0.0
+        self.begin_coordinates.y = 0.0
+
+
+        self.begin_coordinates_orientation = Pose2D()
+        self.begin_coordinates_orientation.x = 0.0
+        self.begin_coordinates_orientation.y = 0.0
+
+
+        #Coordenadas da porta 
+        self.door_coordinates = Pose2D()
+        self.door_coordinates.x = 0.0
+        self.door_coordinates.y = 1.95
+
+        self.door_coordinates_orientation = Pose2D()
+        self.door_coordinates_orientation.x = 1.8
+        self.door_coordinates_orientation.y = 1.95
+
+        self.door_second_coordinates = Pose2D()
+        self.door_second_coordinates.x = 0.0
+        self.door_second_coordinates.y = 1.75
+        
+        #Coordenadas do sitio onde se vai sentar. Variavel apenas para guardar as coordenadas certas  
+        self.place_to_sit = Pose2D()
         self.place_to_sit.x = 0.0
         self.place_to_sit.y = 0.0
-        self.place_to_sit.z = 0.0
 
-        self.sofa_coordinates = Vector3()
-        self.sofa_coordinates.x = 0.0
-        self.sofa_coordinates.y = 0.0
-        self.sofa_coordinates.z = 0.0 #orientation
+        self.place_to_sit_orientation = Pose2D()
+        self.place_to_sit_orientation.x = 0.0
+        self.place_to_sit_orientation.y = 0.0
 
-        self.chair1_coordinates = Vector3()
-        self.chair1_coordinates.x = 0.0
-        self.chair1_coordinates.y = 0.0
-        self.chair1_coordinates.z = 0.0 #orientation
 
-        self.chair2_coordinates = Vector3()
-        self.chair2_coordinates.x = 0.0
-        self.chair2_coordinates.y = 0.0
-        self.chair2_coordinates.z = 0.0 #orientation
+        #Coordenadas de onde vai para olhar para todos os locais sentados
+        self.find_coordinates = Pose2D()
+        self.find_coordinates.x = 1.0
+        self.find_coordinates.y = -4.0
+
+        #Coordenadas para estar no centro e ver para o todo o lado
+        self.find_coordinates_orientation = Pose2D()
+        self.find_coordinates_orientation.x = -1.00
+        self.find_coordinates_orientation.y = -5.80
+
+        #Coordenadas para o target intermédio de quando o robô tem de retornar à porta
+        self.return_door_coordinates = Pose2D()
+        self.return_door_coordinates.x = 0.0
+        self.return_door_coordinates.y = -3.0
+
+        #Coordenadas do sofá
+        self.sofa_coordinates = Pose2D()
+        self.sofa_coordinates.x = -3.00
+        self.sofa_coordinates.y = -4.50
+
+        #Coordenadas para orientar para o sofá
+        #self.sofa_coordinates_orientation = Pose2D()
+        #self.sofa_coordinates_orientation.x = -2.60
+        #self.sofa_coordinates_orientation.y = -4.20
+
+        #Coordenadas da cadeira 1
+        self.chair1_coordinates = Pose2D()
+        self.chair1_coordinates.x = -3.00
+        self.chair1_coordinates.y = -6.10
+
+        #Coordenadas para orientar para a cadeira 1
+        #self.chair1_coordinates_orientation = Pose2D()
+        #self.chair1_coordinates_orientation.x = 7.7
+        #self.chair1_coordinates_orientation.y = -3.36
+
+        #Coordenadas da cadeira 2
+        self.chair2_coordinates = Pose2D()
+        self.chair2_coordinates.x = 0.5
+        self.chair2_coordinates.y = -6.10
+
+        #Coordenadas para orientar para a cadeira 2
+        #self.chair2_coordinates_orientation = Pose2D()
+        #self.chair2_coordinates_orientation.x = 6.47
+        #self.chair2_coordinates_orientation.y = 0.0
+
 
         #Temos de pedir para ficar sempre no mesmo sítio
-        self.guest_coordinates = Vector3()
-        self.guest_coordinates.x = 0.0
-        self.guest_coordinates.y = 0.0
-        self.guest_coordinates.z = 0.0 #orientation
+        #Coordenadas do guest de forma a nos conseguirmos orientar para ele
+        #self.guest_coordinates = Pose2D()
+        #self.guest_coordinates.x = 6.17
+        #self.guest_coordinates.y = -1.06
 
+
+        self.coordinates = TarNavSDNL()
         #Código para ele olhar para a cara da pessoa e centrar a cara da pessoa na imagem
         self.door_neck_coordinates = Pose2D()
         self.door_neck_coordinates.x = 180.0
-        self.door_neck_coordinates.y = 180.0
+        self.door_neck_coordinates.y = 200.0
+        
         #Definir como se estivesse a olhar ligeiramente para baixo - Perceber o que precisamos que olhe para baixo para detetarmos tudo direito
         self.place_to_sit_neck = Pose2D()
         self.place_to_sit_neck.x = 180.0
-        self.place_to_sit_neck.y = 180.0
+        self.place_to_sit_neck.y = 160.0
+
+        self.chair1_neck = Pose2D()
+        self.chair1_neck.x = 200.0
+        self.chair1_neck.y = 180.0
+
+        self.chair2_neck = Pose2D()
+        self.chair2_neck.x = 90.0
+        self.chair2_neck.y = 180.0
+
+        self.sofa_neck = Pose2D()
+        self.sofa_neck.x = 230.0
+        self.sofa_neck.y = 180.0
+
+        self.guest_neck = Pose2D()
+        self.guest_neck.x = 90.0
+        self.guest_neck.y = 180.0
+
 
         self.navigation_neck = Pose2D()
         self.navigation_neck.x = 180.0
-        self.navigation_neck.y = 180.0
+        self.navigation_neck.y = 150.0
+
+        self.talk_neck = Pose2D()
+        self.talk_neck.x = 180.0
+        self.talk_neck.y = 180.0
+
 
         self.neck_pos = Pose2D()
 
+        self.br = CvBridge()
 
 
+        self.flag_speech_done = False
+        self.flag_navigation_done = False
+        self.flag_audio_done = False
+        # self.keyword_list = []
         self.count_guest = 0
         self.flag_Host = Bool()
         self.flag_Guest1 = Bool()
@@ -157,11 +248,11 @@ class ReceptionistNode(Node):
         #Pastas relativas às funções das características como por exemplo, características, reconhecimento, etc.
         #CAMINHOS QUE É PRECISO MUDAR NOME
 
-        self.drinks = ["Seven up"]
+        self.drinks = ["7up"]
         self.names = ["Jack"]
         
         self.get_caract = 0
-        self.caracteristics_ = []
+        self.caracteristics = []
         self.filename = String()
 
 
@@ -172,1284 +263,25 @@ class ReceptionistNode(Node):
         self.genderList = ['Male', 'Female']
 
 
-        self.folder_path = {"/home/renata/charmie_ws/src/charmie_receptionist/charmie_receptionist/FolderTest"} 
+        self.pasta_imagens_conhecidas = "/home/charmie/charmie_ws/build/charmie_receptionist/charmie_receptionist/images"
+        
+        self.imagens_conhecidas = os.listdir(self.pasta_imagens_conhecidas)
+
+        self.codificacoes_conhecidas = []
+        self.nomes_conhecidos = []
+        
 
         self.images = []
         self.classNames = []
         
-        self.model_loaded = tf.keras.models.load_model('/home/renata/charmie_ws/src/charmie_receptionist/charmie_receptionist/modelo_raca.h5')
-
-        self.faceProto = "/home/renata/charmie_ws/src/charmie_receptionist/charmie_receptionist/opencv_face_detector_uint8.pb"
-        self.faceModel = "/home/renata/charmie_ws/src/charmie_receptionist/charmie_receptionist/opencv_face_detector.pbtxt"
-        self.ageProto = "/home/renata/charmie_ws/src/charmie_receptionist/charmie_receptionist/deploy_age.prototxt"
-        self.ageModel = "/home/renata/charmie_ws/src/charmie_receptionist/charmie_receptionist/age_net.caffemodel"
-        self.genderProto = "/home/renata/charmie_ws/src/charmie_receptionist/charmie_receptionist/deploy_gender.prototxt"
-        self.genderModel = "/home/renata/charmie_ws/src/charmie_receptionist/charmie_receptionist/gender_net.caffemodel"
-
-
-    def timer_callback(self):
-        #Estado comum aos dois Guests
-        if self.state == 0:
-            #Informa que está pronto para começar a tarefa
-
-            self.neck_position_publisher.publish(self.navigation_neck)
-            self.speech_str.command = "Hello! I am ready to start the receptionist task! Here I go"
-            self.speech_str.language = 'en'
-            self.audio_command_publisher.publish(self.speech_str)
-            self.state = 1
-            
-            
-
-
-        #Estado para verificar se está alguém na porta e ficar a repetir de 5 em 5 segundos enquanto não estiver lá ninguém
-        #Estado para o Guest 1
-        elif self.state == 1:    
-
-            #vai para a porta
-
-            self.neck_position_publisher.publish(self.navigation_neck)
-            #CORRIGIR CÓDIGO PARA SE MOVER PARA A PORTA E FICAR A OLHAR PARA A PORTA
-
-            self.neck_position_publisher.publish(self.door_neck_coordinates)
-
-            #Informa que está pronto para receber convidado
-            self.speech_str.command = "I am ready to receive a new guest"
-            self.speech_str.language = 'en'
-            self.audio_command_publisher.publish(self.speech_str)
-
-            #Começar a contar o tempo
-            self.init_time = time.time()
-            
-
-            #Verificar se existe uma pessoa na porta
-            cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-            #Função de deteção facial 
-            num_faces = self.detect_face(cv2_img)
-            if num_faces != 0 :
-                
-                #Se detetar alguém o CHARMIE apresenta se e pede nome e bebida
-                self.speech_str.command = "Hello! My name is Charmie. What's your name and favourite drink?"
-                self.speech_str.language = 'en'
-                self.audio_command_publisher.publish(self.speech_str)
-
-                #Informo o Charmie que acabei de falar e posso começar a ouvir
-                self.flag_speaker_publisher.publish(True)
-                
-                #Isto vai acontecer 2x. Para o guest 1 e 2. Mas tem de ir para estados diferentes porque para o guest 2 não é 
-                #necessário extrair as características
-                self.count_guest+=1
-                if self.count_guest==1:
-                    self.state = 2
-                if self.count_guest==2:
-                    self.state = 3
-            else:
-                if time.time()-self.init_time>5.0:
-                    # Repete a ação anterior
-                    self.speech_str.command = "I am ready to receive a new guest"
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                    #Dá reset ao tempo
-                    self.init_time = time.time()
-        
-
-        #Estado apenas para o Guest1
-        elif self.state == 2:
-            
-            #CORRIGIR PARA CÓDIGO QUE AJUSTA A POSIÇÃO DA CARA PARA O CENTRO DA FACE DA PESSOA
-
-            #Falar para pedir para olhar para camara
-            self.speech_str.command = "I will take you a picture. Please look at me"
-            self.speech_str.language = 'en'
-            self.audio_command_publisher.publish(self.speech_str)
-
-            #Obter e guardar a Imagem            
-            cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-            self.filename = self.names[1]
-            file_path = os.path.join(self.folder_path, self.filename)
-            cv2.imwrite(file_path, cv2_img)
-
-            # Apend ao nome e imagem guardada acima
-            myList = os.listdir(self.folder_path)
-            for cl in myList:
-                curImg = cv2.imread(f'{self.folder_path}/{cl}')
-                self.images.append(curImg)
-                self.classNames.append(os.path.splitext(cl)[0])
-
-            #Recolho as características das imagens
-            age,gender,error_agegender = self.detectGenderAge(cv2_img)
-            resultrace, error_race = self.detectrace(cv2_img)
-
-            #Para prevenir que o código empanque, garanto que retorno sempre alguma coisa, seja as características ou erro
-            if error_race == 0 and error_agegender == 0:
-                self.get_caract = 3
-                self.caracteristics.append(gender)
-                self.caracteristics.append(age)
-                self.caracteristics.append(resultrace)
-                
-            elif error_race == 0 and error_agegender == 1:
-                self.get_caract = 1
-                self.caracteristics.append(resultrace)
-                
-            elif error_race == 1 and error_agegender == 0:
-                self.get_caract=2
-                self.caracteristics.append(gender)
-                self.caracteristics.append(age)
-                
-            else:
-                self.caracteristics = "error"
-                
-            self.state=3
-
-        #Estado comum aos 2 guests
-        elif self.state == 3:
-            #Agradece e pede para o seguir até à zona dos sofás
-            self.speech_str.command = "Thank you. Please follow me."
-            self.speech_str.language = 'en'
-            self.audio_command_publisher.publish(self.speech_str)
-
-            #vai para o sofá
-
-            self.neck_position_publisher.publish(self.navigation_neck)
-
-            #CORRIGIR PARA SE MOVER PARA O SOFÁ E O PESCOÇO FICAR ORIENTADO PARA BAIXO NA DIREÇÃO DAS PESSOAS SENTADAS
-
-            self.neck_position_publisher.publish(self.place_to_sit_neck)
-            #Diz ao guest para ficar na mesma posição até lhe indicar onde se sentar
-            self.speech_str.command = "Please stay here until I give you instructions on where to sit."
-            self.speech_str.language = 'en'
-            self.audio_command_publisher.publish(self.speech_str)
-            if self.count_guest == 1:
-                self.state = 4
-            elif self.count_guest == 2:
-                self.state = 7
-            
-
-        #Estado relativo ao Guest1 no SOFÁ
-        elif self.state == 4:
-            #Guardar Imagem            
-            cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-            num_faces=self.detect_face(cv2_img)
-            #Código para ver se encontro faces
-            if num_faces != 0:
-                if num_faces == 1:
-                    #Guarda as coordenadas do sofá como local para sentar e ativa a flag a indicar que já tem um local para sentar
-                    self.place_to_sit = self.sofa_coordinates
-                    self.flag_place_to_sit=True
-                    #Função para reconhecer pessoas. Retorna uma variavel pessoa que tem um centro associado a um nome
-                    pessoas_detetadas=self.recognizeGuest(cv2_img)
-                    for pessoa in pessoas_detetadas:
-                        self.contador_conhecidos = 0
-                        if pessoa != 'unknown' and pessoa in self.names:
-                            self.contador_conhecidos += 1
-                    #Se não for ninguém conhecido avança para o estado seguinte 
-                    if self.contador_conhecidos == 0:
-                        self.state = 5
-                    #Se conheceu alguém é porque reconheceu o Host.
-                    elif self.contador_conhecidos == 1:
-                        #OLHAR PARA A POSIÇÃO DO GUEST
-                        self.neck_position_publisher.publish(self.navigation_neck)
-
-
-
-                        #Apresentação do guest e do host
-                        self.speech_str.command = f"On the couch is host {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Host==True
-
-                        #CORRIGIR PARA FICAR A OLHAR PARA O SOFÁ ENQUANTO FALA, PODE SER RODAR PESCOÇO OU BASE
-
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-
-                        self.speech_str.command = f"And the guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                        #CORRIGIR PARA FICAR A OLHAR PARA O SOFÁ, PODE SER RODAR PESCOÇO OU BASE
-                        
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-
-                        #Sentou a o convidado
-                        self.speech_str.command = f"Please take a sit on the sofa that i'm looking for."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_already_sit = True
-                        #Não sei o numero do estado, tou a assumir que é o último
-                        self.state = 1
-                    
-                elif num_faces >=2:
-                    #Código para reconhecer as pessoas
-                    # Contagem das pessoas conhecidas na imagem
-                    
-                    pessoas_detetadas=self.recognizeGuest(cv2_img)
-                    
-                    for pessoa in pessoas_detetadas:
-                        if pessoa != 'unknown' and pessoa in self.names:
-                            self.contador_conhecidos += 1
-
-                    if self.contador_conhecidos == 0:
-                        self.state = 5
-                    elif self.contador_conhecidos == 1:
-                        #Apresentação do guest e do host
-                        #CORRIGIR PARA SE VIRAR PARA A PORTA
-                        self.neck_position_publisher.publish(self.navigation_neck)
-                        self.speech_str.command = f"On the couch is host {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                        #CORRIGIR PARA FICAR A OLHAR PARA O SOFÁ
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-
-                        self.speech_str.command = f"And the guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Host==True
-                        self.contador_conhecidos = 0
-                        self.state = 5
-
-            else: 
-                self.place_to_sit = self.sofa_coordinates
-                self.flag_place_to_sit=True
-                #Guardar a coordenada do sofá
-                self.state=5
-       
-       #Estado da fase do GUEST1 de olhar para a cadeira: ramo da esquerda
-        elif self.state == 5:
-            if self.flag_Host==True:
-
-                self.neck_position_publisher.publish(self.navigation_neck)
-
-                #CORRIGIR PARA IR PARA A ZONA DA CADEIRA 1
-                
-                self.neck_position_publisher.publish(self.place_to_sit_neck)
-                cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-
-                num_faces = self.detect_face(cv2_img)
-                if num_faces !=0:
-
-                    self.neck_position_publisher.publish(self.navigation_neck)  
-                    #CORRIGIR PARA IR PARA A ZONA DA CADEIRA 2
-
-                    self.neck_position_publisher.publish(self.place_to_sit_neck)
-
-                    cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-                    num_faces = self.detect_face(cv2_img)
-                    if num_faces !=0:
-                        self.speech_str.command = "Please stand. I couldn't find an empty seat."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_place_to_sit=True
-                        self.flag_already_sit=True
-                        self.state = 1
-                        
-                    else:
-                        self.place_to_sit = self.chair2_coordinates
-                        self.flag_place_to_sit=True
-                        
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-                        self.speech_str.command = f"Please take a sit on the Chair in front of me."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.state = 1
-                        self.flag_already_sit=True
-
-                else:
-                    self.place_to_sit = self.chair1_coordinates
-                    self.flag_place_to_sit=True
-
-                    self.neck_position_publisher.publish(self.place_to_sit_neck)
-                    self.speech_str.command = f"Please take a sit on the Chair in front of me."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                    self.state = 1
-                    self.flag_already_sit=True
-                            
-            else:
-
-                self.neck_position_publisher.publish(self.navigation_neck)
-                #CORRIGIR PARA IR PARA A CADEIRA 1
-
-                self.neck_position_publisher.publish(self.place_to_sit_neck)
-
-                if self.flag_place_to_sit == True:
-                    cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-                    num_faces = self.detect_face(cv2_img)
-
-                    if num_faces !=0:
-
-                        pessoas_detetadas=self.recognizeGuest(cv2_img)  
-                        for pessoa in pessoas_detetadas:
-                            if pessoa != 'unknown' and pessoa in self.names:
-                                self.contador_conhecidos += 1
-
-                        if self.contador_conhecidos == 0:
-                            self.state = 6
-                        elif self.contador_conhecidos == 1:
-                            self.neck_position_publisher.publish(self.sofa_coordinates)
-                            self.speech_str.command = f"On the chair is host {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-
-                            self.neck_position_publisher.publish(self.guest_coordinates)
-                            self.speech_str.command = f"And the guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_Host = True
-                            
-                            #CORRIGIR PARA SE ORIENTAR PARA O LOCAL QUE FOI ANTERIORMENTE GUARDADO COMO LOCAL
-                            #PARA SENTAR
-
-                            self.neck_position_publisher.publish(self.place_to_sit)
-
-                            self.speech_str.command = f"Please take a sit on the spot I'm looking at."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_already_sit = True
-                            self.contador_conhecidos = 0
-                            self.state = 1
-
-                    else:
-                        self.state=6
-
-                else:
-                    
-                    cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-                    num_faces = self.detect_face(cv2_img)
-                    if num_faces !=0:
-
-                        pessoas_detetadas=self.recognizeGuest(cv2_img)
-                        for pessoa in pessoas_detetadas:
-                            if pessoa != 'unknown' and pessoa in self.names:
-                                self.contador_conhecidos += 1
-
-                        if self.contador_conhecidos == 0:
-                            self.state = 6
-                        elif self.contador_conhecidos == 1:
-                            self.neck_position_publisher.publish(self.sofa_coordinates)
-                            self.speech_str.command = f"On the chair is host {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-
-                            self.neck_position_publisher.publish(self.guest_coordinates)
-                            self.speech_str.command = f"And the guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_Host=True
-
-                            self.contador_conhecidos = 0
-                            self.state = 6
-
-                    else:
-                        self.place_to_sit = self.chair1_coordinates
-                        self.flag_place_to_sit = True
-                        self.state = 6
-
-                    
-        elif self.state == 6:
-            self.neck_position_publisher.publish(self.navigation_neck)
-            #CORRIGIR PARA ANDAR PARA A CADEIRA 2
-            
-            self.neck_position_publisher.publish(self.place_to_sit_neck)
-
-            cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-            num_faces = self.detect_face(cv2_img)
-            if num_faces !=0:
-                if self.flag_Host == True:
-                    self.speech_str.command = "Please stand. I couldn't find an empty seat."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                    self.flag_place_to_sit=True
-                    self.flag_already_sit=True
-                    self.state = 1
-                else:
-
-                    pessoas_detetadas=self.recognizeGuest(cv2_img)
-                    for pessoa in pessoas_detetadas:
-                        if pessoa != 'unknown' and pessoa in self.names:
-                            self.contador_conhecidos += 1
-
-                    if self.contador_conhecidos == 0:
-
-                        #Apresentação do guest e do host para o ar
-                        #CORRIGIR PARA OLHAR PARA O GUEST
-                        self.neck_position_publisher.publish(self.navigation_neck)
-
-                        self.speech_str.command = f"The host name is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-
-                        self.speech_str.command = f"And the guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Host==True
-
-                        self.speech_str.command = "Please stand. I couldn't find an empty seat."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_place_to_sit=True
-                        self.flag_already_sit=True
-                        self.state = 1
-
-                    elif self.contador_conhecidos == 1:
-                        #CORRIGIR PARA SE ORIENTAR PARA O GUEST
-                        self.neck_position_publisher.publish(self.navigation_neck)
-                        self.speech_str.command = f"On the chair is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                        #CORRIGIR PARA OLHAR PARA O HOST
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-                        self.speech_str.command = f"And the guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Host==True
-
-                        
-                        if self.flag_place_to_sit == True:
-                            #CORRIGIR PARA OLHAR PARA O LOCAL A SENTAR
-
-                            self.neck_position_publisher.publish(self.place_to_sit_neck)
-                            self.speech_str.command = f"Please take a sit on the spot I'm looking at."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_already_sit=True
-                            self.state = 1
-                        else:
-                            #CORRIGIR PARA FICAR A OLHAR PARA ONDE O GUEST ESTÁ
-                            self.neck_position_publisher.publish(self.navigation_neck)
-                            self.speech_str.command = "Please stand. I couldn't find an empty seat."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_place_to_sit=True
-                            self.flag_already_sit=True
-                            self.state = 1
-                        self.contador_conhecidos=0    
-            else:
-                if self.flag_place_to_sit == True:
-                   if self.flag_Host == True:
-                        #CORRIGIR PARA FICAR A OLHAR PARA O LUGAR ONDE SE VAI SENTAR A PESSOA
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-                        self.speech_str.command = f"Please take a sit on the spot I'm looking at."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_already_sit=True
-                        self.state = 1
-                   else:
-                        #CORRIGIR PARA FICAR A OLHAR PARA O GUEST QUE ESTÁ EM PÉ AINDA 
-                        #Apresentação do guest e do host para o ar
-
-                        self.neck_position_publisher.publish(self.navigation_neck)
-                        self.speech_str.command = f"The host name is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                        self.speech_str.command = f"And the guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Host==True
-                        
-                        #CORRIGIR PARA FICAR A OLHAR PARA O LUGAR ONDE SE VAI SENTAR
-
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-                        self.speech_str.command = f"Please take a sit on the spot I'm looking at."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_already_sit=True
-                        self.state = 1
-                    
-                else:
-                    self.place_to_sit = self.chair2_coordinates
-                    self.flag_place_to_sit = True
-                    if self.flag_Host == True:
-                        self.neck_position_publisher.publish(self.place_to_sit)
-                        self.speech_str.command = f"Please take a sit on the spot I'm looking at."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_already_sit=True
-                        self.state = 1
-                    else:
-                        #CORRIGIR PARA FICAR A OLHAR PARA ONDE O GUEST ESTÁ
-                        #Apresentação do guest e do host para o ar
-
-                        self.neck_position_publisher.publish(self.navigation_neck)
-                        self.speech_str.command = f"The host name is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                        self.speech_str.command = f"And the guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Host==True
-
-                        #CORRIGIR PARA FICAR A OLHAR PARA O LOCAL ONDE SE VAI SENTAR QUE FOI GUARDADO ACIMA
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-                        self.speech_str.command = f"Please take a sit on the spot I'm looking at."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_already_sit=True
-                        self.state = 1
-
-########################## FIM DO CÓDIGO PARA RECEÇÃO, APRESENTAÇÃO E PROCURA DE LUGAR PARA O GUEST 1 ###########################
-
-        #CÓDIGO RELATIVO AO GUEST 2
-        elif self.state ==7:
-            cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-            num_faces=self.detect_face(cv2_img)
-            self.contador_conhecidos = 0
-            #Código para ver se encontro faces
-            if num_faces != None:
-                if num_faces == 1:
-                    #Guarda as coordenadas do sofá uma vez que como só tem uma pessoa é um local onde se pode sentar
-                    self.place_to_sit = self.sofa_coordinates
-                    self.flag_place_to_sit=True
-                    pessoas_detetadas=self.recognizeGuest(cv2_img)
-                    for pessoa in pessoas_detetadas:
-                        self.contador_conhecidos = 0
-                        if pessoa != 'unknown' and pessoa in self.names:
-                            self.contador_conhecidos += 1
-
-                    if self.contador_conhecidos == 0:
-                        self.state = 8
-                    elif self.contador_conhecidos == 1:
-                        if pessoa in self.names == self.names[0]:
-                            #CORRIGIR PARA OLHAR O GUEST NOVO
-
-                            self.neck_position_publisher.publish(self.navigation_neck)
-                            self.speech_str.command = f"On the couch is host {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_Host==True
-
-                            #CORRIGIR PARA OLHAR PARA O SOFÁ NOVAMENTE
-
-                            self.neck_position_publisher.publish(self.place_to_sit_neck)
-                            self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-
-                            self.state = 8
-
-                        elif pessoa in self.names == self.names[1]:
-                            #CORRIGIR PARA OLHAR O CONVIDADO 2
-
-                            self.neck_position_publisher.publish(self.navigation_neck)
-                            self.speech_str.command = f"On the couch is guest {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            if self.get_caract==3:
-                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                            elif self.get_caract==2:
-                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                            elif self.get_caract==1:
-                                self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-
-
-                            #CORRIGIR PARA OLHAR PARA O SOFÁ 
-                            self.neck_position_publisher.publish(self.guest_coordinates)
-                            self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_Guest1 = True
-
-                            self.state = 8
-                        
-
-                elif num_faces >=2:
-                    #Código para reconhecer as pessoas
-                    # Contagem das pessoas conhecidas na imagem
-                    
-
-                    for pessoa in pessoas_detetadas:
-                        self.contador_conhecidos = 0
-                        if pessoa != 'unknown' and pessoa in self.names:
-                            self.contador_conhecidos += 1
-
-                    if self.contador_conhecidos == 0:
-                        self.state = 8
-                    elif self.contador_conhecidos == 1:
-                        if pessoa in self.names == self.names[0]:
-                            #CORRIGIR PARA OLHAR PARA O GUEST 2
-
-                            self.neck_position_publisher.publish(self.navigation_neck)
-                            self.speech_str.command = f"On the couch is host {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-
-                            #CORRIGIR PARA OLHAR PARA O SOFÁ 
-                            self.neck_position_publisher.publish(self.place_to_sit_neck)
-                            self.speech_str.command = f"And the new guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_Host==True
-                            self.state = 8
-                        elif pessoa in self.names == self.names[1]:
-                            #CORRIGIR PARA OLHAR PARA O GUEST 2
-                            self.neck_position_publisher.publish(self.sofa_coordinates)
-                            self.speech_str.command = f"On the couch is guest {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            if self.get_caract==3:
-                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                            elif self.get_caract==2:
-                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                            elif self.get_caract==1:
-                                self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-
-                            #CORRIGIR PARA OLHAR PARA O SOFA
-                            self.neck_position_publisher.publish(self.guest_coordinates)
-                            self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_Guest1 = True
-                            self.contador_conhecidos=0
-                            self.state = 8
-
-                    elif self.contador_conhecidos == 2:
-                        #CORRIGIR PARA OLHAR PARA O GUEST2
-                        self.neck_position_publisher.publish(self.navigation_neck)
-                        self.speech_str.command = f"On the couch are host {self.names[0]} and his favorite drink is {self.drinks[0]} and the guest {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                        #CORRIGIR PARA OLHAR PARA O SOFÁ
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-                        self.speech_str.command = f"And the new guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Host==True
-                        self.flag_Guest1 = True
-                        self.contador_conhecidos=0
-                        self.state = 8
-            else:
-                self.place_to_sit=self.sofa_coordinates
-                self.flag_place_to_sit = True
-                self.state = 8
-
-        elif self.state == 8:
-            #CORRIGIR PARA MOVER PARA A CADEIRA 1
-
-            self.neck_position_publisher.publish(self.place_to_sit_neck)
-            if self.flag_Host == True:
-                if self.flag_Guest1 == True:
-                    cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-                    num_faces=self.detect_face(cv2_img)
-                    if self.num_faces != 0 :
-                        self.state = 9
-                    else:
-                        self.place_to_sit = self.chair1_coordinates
-                        self.flag_place_to_sit = True
-
-
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-                        self.speech_str.command = f"Please take a sit on the chair that I'm looking for."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_already_sit=True
-                        self.state = 11
-
-                else:
-                    cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-                    num_faces=self.detect_face(cv2_img)
-                    if self.num_faces != 0 :
-                        for pessoa in pessoas_detetadas:
-                            self.contador_conhecidos = 0
-                            if pessoa != 'unknown' and pessoa in self.names:
-                                self.contador_conhecidos += 1
-
-                        if self.contador_conhecidos == 0:
-                            self.state = 9
-                        elif self.contador_conhecidos != 0:
-                            if pessoa in self.names == self.names[2]:
-                                #CORRIGIR PARA OLHAR PARA O GUEST2
-
-                                self.neck_position_publisher.publish(self.navigation_neck)
-                                self.speech_str.command = f"On the chair is guest {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                if self.get_caract==3:
-                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                elif self.get_caract==2:
-                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                elif self.get_caract==1:
-                                    self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-
-                                #CORRIGIR PARA OLHAR PARA O GUEST 1
-                                self.neck_position_publisher.publish(self.place_to_sit_neck)
-                                self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[1]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                self.flag_Guest1==True
-                                self.contador_conhecidos=0
-                                self.state = 9
-                    else:
-                        if self.flag_place_to_sit == True:
-                            self.state = 9
-
-                        else:
-                            self.place_to_sit = self.chair1_coordinates
-                            self.flag_place_to_sit = True
-                            self.state = 9
-                            
-
-
-            else:
-                if self.flag_Guest1 == True:
-                    cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-                    num_faces=self.detect_face(cv2_img)
-                    if self.num_faces != 0 :
-                        pessoas_detetadas=self.recognizeGuest(cv2_img)
-                        for pessoa in pessoas_detetadas:
-                            self.contador_conhecidos = 0
-                            if pessoa != 'unknown' and pessoa in self.names:
-                                self.contador_conhecidos += 1
-
-                        if self.contador_conhecidos == 0:
-                            self.state = 9
-                        elif self.contador_conhecidos == 1:
-                            #CORRIGIR PARA OLHAR PARA O GUEST2
-
-                            self.neck_position_publisher.publish(self.navigation_neck)
-                            self.speech_str.command = f"On the couch is host {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_Host==True
-
-                            #CORRIGIR PARA OLHAR PARA O HOST QUE ESTÁ NA CADEIRA 1
-
-                            self.neck_position_publisher.publish(self.place_to_sit_neck)
-                            self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.contador_conhecidos=0
-                        
-                            self.state = 9
-                    else:
-                        if self.flag_place_to_sit == True:
-                            self.state = 9
-                        else:
-                            self.place_to_sit = self.chair1_coordinates
-                            self.flag_place_to_sit = True
-                            self.state = 9
-                    
-                else:         
-                    cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-                    num_faces=self.detect_face(cv2_img)
-                    if self.num_faces != 0 :
-                        pessoas_detetadas=self.recognizeGuest(cv2_img)
-                        for pessoa in pessoas_detetadas:
-                            self.contador_conhecidos = 0
-                            if pessoa != 'unknown' and pessoa in self.names:
-                                self.contador_conhecidos += 1
-
-                        if self.contador_conhecidos == 0:
-                            self.state = 9
-                        elif self.contador_conhecidos == 1:
-                            if pessoa in self.names == self.names[0]:
-                                #CORRIGIR PARA OLHAR PARA O GUEST 2
-                            
-                                self.neck_position_publisher.publish(self.navigation_neck)
-                                self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-
-                                #CORRIGIR PARA OLHAR PARA A CADEIRA 1 ONDE ESTÁ O HOST
-
-                                self.neck_position_publisher.publish(self.place_to_sit_neck)
-                                self.speech_str.command = f"The new guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                self.flag_Host==True
-                                self.contador_conhecidos=0
-                                self.state = 9
-
-                            elif pessoa in self.names == self.names[1]:
-                                #CORRIGIR PARA OLHAR PARA O GUEST 2
-                                self.neck_position_publisher.publish(self.navigation_neck)
-                                self.speech_str.command = f"On the couch is guest {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                if self.get_caract==3:
-                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                elif self.get_caract==2:
-                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                elif self.get_caract==1:
-                                    self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-
-                                #CORRIGIR PARA OLHAR PARA O GUEST 1 QUE ESTÁ SENTADO
-                                self.neck_position_publisher.publish(self.place_to_sit_neck)
-                                self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                self.flag_Guest1 = True
-                                self.contador_conhecidos=0
-                                self.state = 9   
-
-                    else:
-                        if self.flag_place_to_sit == True:
-                            self.state = 9
-                        else:
-                            self.place_to_sit = self.chair1_coordinates
-                            self.flag_place_to_sit = True
-                            self.state = 9
-
-        elif self.state == 9:     
-
-            if self.flag_Guest1 and self.flag_Host and self.place_to_sit:
-                self.state == 11
-            else:
-                #CORRIGIR PARA OLHAR PARA A CADEIRA 2
-
-                self.neck_position_publisher.publish(self.place_to_sit_neck)
-
-                cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
-                num_faces=self.detect_face(cv2_img)
-                pessoas_detetadas=self.recognizeGuest(cv2_img)
-                if self.num_faces == 0 :
-                    self.state = 10
-                else:
-                    if self.flag_Host == True:
-                        if self.flag_Guest1 == True:
-                            self.speech_str.command = "Please stand. I couldn't find an empty seat."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                            self.flag_already_sit=True
-                            self.state = 11
-                        else:
-                            
-                            for pessoa in pessoas_detetadas:
-                                self.contador_conhecidos = 0
-                                if pessoa != 'unknown' and pessoa in self.names:
-                                    self.contador_conhecidos += 1
-
-                            if self.contador_conhecidos == 0:
-                                #CORRIGIR PARA OLHAR PARA O GUEST 2
-                                self.neck_position_publisher.publish(self.navigation_neck)
-                                self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                if self.get_caract==3:
-                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                elif self.get_caract==2:
-                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                elif self.get_caract==1:
-                                    self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-
-                                self.neck_position_publisher.publish(self.navigation_neck)
-                                self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                self.flag_Guest1==True
-                                self.state=11
-                            elif self.contador_conhecidos == 1:
-                                if pessoa in self.names == self.names[1]:
-                                    #CORRIGIR PARA OLHAR PARA O GUEST 2
-                                    self.neck_position_publisher.publish(self.navigation_neck)
-                                    self.speech_str.command = f"On the chair is guest {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                    if self.get_caract==3:
-                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                        self.speech_str.language = 'en'
-                                        self.audio_command_publisher.publish(self.speech_str)
-                                    elif self.get_caract==2:
-                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                                        self.speech_str.language = 'en'
-                                        self.audio_command_publisher.publish(self.speech_str)
-                                    elif self.get_caract==1:
-                                        self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                        self.speech_str.language = 'en'
-                                        self.audio_command_publisher.publish(self.speech_str)
-
-                                    #CORRIGIR PARA OLHAR PARA O GUEST 1 NA CADEIRA 2
-                                    self.neck_position_publisher.publish(self.place_to_sit_neck)
-                                    self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                    self.flag_Guest1==True
-                                    self.contador_conhecidos=0
-                                    self.state = 11
-                         
-                    else:
-                        for pessoa in pessoas_detetadas:
-                            self.contador_conhecidos = 0
-                            if pessoa != 'unknown' and pessoa in self.names:
-                                self.contador_conhecidos += 1
-
-                        if self.contador_conhecidos == 0:
-                            if self.flag_Guest1 == True:
-                                #CORRIGIR PARA OLHAR PARA O GUEST 2
-                                self.neck_position_publisher.publish(self.navigation_neck)
-                                self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-
-                                self.neck_position_publisher.publish(self.guest_coordinates)
-                                self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                self.flag_Host==True
-                                self.state=11
-                            else:
-                                #CORRIGIR PARA OLHAR PARA O GUEST 2
-                                self.neck_position_publisher.publish(self.navigation_neck)
-                                self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-
-                                self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                if self.get_caract==3:
-                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                elif self.get_caract==2:
-                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                elif self.get_caract==1:
-                                    self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)    
-                                
-                                self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                self.flag_Guest1==True
-                                self.state=11
-
-                        elif self.contador_conhecidos == 1:
-                            if pessoa in self.names == self.names[0]:
-                                #CORRIGIR PARA OLHAR PARA O GUEST 2
-                                self.neck_position_publisher.publish(self.navigation_neck)
-                                self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-
-                                #CORRIGIR PARA OLHAR PARA O HOST
-
-                                self.neck_position_publisher.publish(self.place_to_sit_neck)
-                                self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                self.flag_Host==True
-                                self.state=11
-
-                            elif pessoa in self.names == self.names[1]:
-                                #CORRIGIR PARA OLHAR PARA O GUEST 2
-                                self.neck_position_publisher.publish(self.navigation_neck)
-                                self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                if self.get_caract==3:
-                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                elif self.get_caract==2:
-                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-                                elif self.get_caract==1:
-                                    self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                                    self.speech_str.language = 'en'
-                                    self.audio_command_publisher.publish(self.speech_str)
-
-                                #CORRIGIR PARA OLHAR PARA O LOCAL ONDE ESTÁ O GUEST 1
-                                self.neck_position_publisher.publish(self.place_to_sit_neck)
-                                self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                                self.speech_str.language = 'en'
-                                self.audio_command_publisher.publish(self.speech_str)
-                                self.flag_Guest1= True
-                                self.state=11
-
-               
-
-        elif self.state == 10:
-            if self.flag_place_to_sit == True:
-                if self.flag_Guest1 == True:
-                    #CORRIGIR PARA OLHAR PARA O GUEST 2
-                    self.neck_position_publisher.publish(self.navigation_neck)
-                    self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-
-                    self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                    self.flag_Host=True
-                    self.flag_Guest1= True
-
-                    self.state=11
-                else:
-                    if self.flag_Host == True:
-                        #CORRIGIR PARA OLHAR PARA O GUEST 2
-
-                        self.neck_position_publisher.publish(self.navigation_neck)
-                        self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        if self.get_caract==3:
-                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                        elif self.get_caract==2:
-                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                        elif self.get_caract==1:
-                            self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-
-                        self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Guest1= True
-                        self.state=11
-                    else:
-                        #CORRIGIR PARA OLHAR PARA O GUEST 2
-                        self.neck_position_publisher.publish(self.navigation_neck)
-                        self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                        self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        if self.get_caract==3:
-                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                        elif self.get_caract==2:
-                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                        elif self.get_caract==1:
-                            self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-
-                        self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Host=True
-                        self.flag_Guest1= True
-                        self.state=11
-            else:
-                self.place_to_sit = self.chair2_coordinates
-                self.flag_place_to_sit = True
-                if self.flag_Guest1 == True:
-                    if self.flag_Host == True:
-                        #CORRIGIR PARA OLHAR PARA O LOCAL ONDE SE VAI SENTAR
-
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-                        self.speech_str.command = f"Please take a sit on the chair that I'm looking for."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_already_sit=True
-                        self.state=11
-                    else:
-                        #CORRIGIR PARA OLHAR PARA O LOCAL ONDE ESTÁ O GUEST 2
-                        self.neck_position_publisher.publish(self.navigation_neck)
-                        self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                        self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Host=True
-                        self.state=11
-                else:
-                    if self.flag_Host == True:
-                        #CORRIGIR PARA OLHAR PARA O GUEST 2
-                        self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        if self.get_caract==3:
-                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                        elif self.get_caract==2:
-                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                        elif self.get_caract==1:
-                            self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-
-                        self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        
-                        self.flag_Guest1= True
-                        self.state=11
-                    else:
-                        #CORRIGIR PARA OLHAR PARA O GUEST 2
-                        self.neck_position_publisher.publish(self.navigation_neck)
-                        self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                        self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        if self.get_caract==3:
-                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                        elif self.get_caract==2:
-                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-                        elif self.get_caract==1:
-                            self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                            self.speech_str.language = 'en'
-                            self.audio_command_publisher.publish(self.speech_str)
-
-                        self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                        #CORRIGIR PARA OLHAR PARA O LOCAL ONDE SE VAI SENTAR
-                        self.neck_position_publisher.publish(self.place_to_sit_neck)
-                        self.speech_str.command = f"Please take a sit on the chair that I'm looking for."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                        self.flag_Guest1=True
-                        self.flag_Host=True
-                        self.flag_already_sit=True
-                        self.state=11
-
-        elif self.state == 11:
-            if self.flag_Host == True:
-                if self.flag_Guest1 == True:
-                    self.state=12
-                else:
-                    #CORRIGIR PARA OLHAR PARA UMA POSIÇÃO
-                    self.neck_position_publisher.publish(self.navigation_neck)
-
-                    self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                    if self.get_caract==3:
-                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                    elif self.get_caract==2:
-                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                    elif self.get_caract==1:
-                        self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                    self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                    self.flag_Guest1=True
-                    self.state=12
-            else:
-                if self.flag_Guest1 == True:
-                    #CORRIGIR PARA OLHAR PARA UMA POSIÇÃO
-                    self.neck_position_publisher.publish(self.navigation_neck)
-
-                    self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-
-                    self.speech_str.command = f"The new guest is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                    self.flag_Host=True
-                    self.state=12
-
-                else:
-                    self.neck_position_publisher.publish(self.navigation_neck)
-                    self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-
-                    self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                    if self.get_caract==3:
-                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                    elif self.get_caract==2:
-                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-                    elif self.get_caract==1:
-                        self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
-                        self.speech_str.language = 'en'
-                        self.audio_command_publisher.publish(self.speech_str)
-
-                    self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                    self.flag_Host=True
-                    self.flag_Guest1=True
-                    self.state=12
-
-        elif self.state == 12:
-            if self.flag_place_to_sit == True:
-                if self.flag_already_sit == True:
-                    self.speech_str.command = f"Thank you. I finished my receptionist task."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                else:
-                    #CORRIGIR PARA SE ORIENTAR PARA A ZONA DO LUGAR DE SENTAR
-
-                    self.neck_position_publisher.publish(self.place_to_sit_neck)
-                    self.speech_str.command = f"Please sit down on the place that I'm looking for."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-                    self.speech_str.command = f"Thank you. I finished my receptionist task."
-                    self.speech_str.language = 'en'
-                    self.audio_command_publisher.publish(self.speech_str)
-            else:
-                self.speech_str.command = "Please stand. I couldn't find an empty seat."
-                self.speech_str.language = 'en'
-                self.audio_command_publisher.publish(self.speech_str)
-                self.speech_str.command = f"Thank you. I finished my receptionist task."
-                self.speech_str.language = 'en'
-                self.audio_command_publisher.publish(self.speech_str)
-
+        self.model_loaded = tf.keras.models.load_model('/home/charmie/charmie_ws/src/charmie_receptionist/charmie_receptionist/modelo_raca.h5')
+
+        self.faceProto = "~/charmie_ws/src/charmie_receptionist/charmie_receptionist/opencv_face_detector_uint8.pb"
+        self.faceModel = "~/charmie_ws/src/charmie_receptionist/charmie_receptionist/opencv_face_detector.pbtxt"
+        self.ageProto = "~/charmie_ws/src/charmie_receptionist/charmie_receptionist/deploy_age.prototxt"
+        self.ageModel = "~/charmie_ws/src/charmie_receptionist/charmie_receptionist/age_net.caffemodel"
+        self.genderProto = "~/charmie_ws/src/charmie_receptionist/charmie_receptionist/deploy_gender.prototxt"
+        self.genderModel = "~/charmie_ws/src/charmie_receptionist/charmie_receptionist/gender_net.caffemodel"
 
 
     def detect_face(self, image):
@@ -1459,22 +291,25 @@ class ReceptionistNode(Node):
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         # Detecta rostos na imagem
-        results = mp_face_detection.process(image_rgb)
+        try:
+            results = mp_face_detection.process(image_rgb)
 
-        num_faces= len(results.detections)
-        # Verifica se foram encontrados rostos
-        if not results.detections:
-            return None
+            num_faces= len(results.detections)
+            # Verifica se foram encontrados rostos
+            if not results.detections:
+                return None
 
-        # Desenha um retângulo em torno do rosto detectado
-        for detection in results.detections:
-            bbox = detection.location_data.relative_bounding_box
-            height, width, _ = image.shape
-            start_x = int(bbox.xmin * width)
-            start_y = int(bbox.ymin * height)
-            end_x = int((bbox.xmin + bbox.width) * width)
-            end_y = int((bbox.ymin + bbox.height) * height)
-            cv2.rectangle(image, (start_x, start_y), (end_x, end_y), (0, 255, 0), 2)
+            # Desenha um retângulo em torno do rosto detectado
+            for detection in results.detections:
+                bbox = detection.location_data.relative_bounding_box
+                height, width, _ = image.shape
+                start_x = int(bbox.xmin * width)
+                start_y = int(bbox.ymin * height)
+                end_x = int((bbox.xmin + bbox.width) * width)
+                end_y = int((bbox.ymin + bbox.height) * height)
+                cv2.rectangle(image, (start_x, start_y), (end_x, end_y), (0, 255, 0), 2)
+        except:
+            num_faces = 0
 
         return num_faces
     
@@ -1514,15 +349,10 @@ class ReceptionistNode(Node):
         flag_age_gender = True
         while flag_age_gender:
             flag_age_gender = False
-            # hasFrame, frame = video.read()
-            # frame = cv2.imread(image)
-            # if not hasFrame:
-            #   cv2.waitKey()
-            #  break
 
             resultImg, faceBoxes = self.highlightFace(self.faceNet, image)
             if not faceBoxes:
-                print("No face detected")
+                #print("No face detected")
                 age = ''
                 gender = ''
                 error = 1
@@ -1550,104 +380,74 @@ class ReceptionistNode(Node):
 
     def detectrace(self, image):
             
-            color_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            img=cv2.resize(color_img,(224,224))
-            normalized_img = img / 255.0
-            expanded_img = np.expand_dims(normalized_img, axis=0)
-            # Realizar a previsão usando o modelo carregado
-            predictions = self.model_loaded.predict(expanded_img)  # Substitua ... pelos dados da imagem pré-processada
-            
-            # Obter a previsão da raça
-            raça_predominante_index = np.argmax(predictions, axis=1)
-            raça_predominante = ['Asian', 'Indian', 'Black or African Descendent', 'White', 'Middle Eastern', 'Latino Hispanic'][raça_predominante_index[0]]
-            
-            # Verificar se a previsão está disponível
-            if raça_predominante is not None:
-                raça_dominante = raça_predominante
-                error = 0
-            else:
-                raça_dominante = None
-                error = 1
-            
-            return raça_dominante, error
+        color_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        img=cv2.resize(color_img,(224,224))
+        normalized_img = img / 255.0
+        expanded_img = np.expand_dims(normalized_img, axis=0)
+        # Realizar a previsão usando o modelo carregado
+        predictions = self.model_loaded.predict(expanded_img)  # Substitua ... pelos dados da imagem pré-processada
+        
+        # Obter a previsão da raça
+        raça_predominante_index = np.argmax(predictions, axis=1)
+        raça_predominante = ['Asian', 'Indian', 'Black or African Descendent', 'White', 'Middle Eastern', 'Latino Hispanic'][raça_predominante_index[0]]
+        
+        # Verificar se a previsão está disponível
+        if raça_predominante is not None:
+            raça_dominante = raça_predominante
+            error = 0
+        else:
+            raça_dominante = None
+            error = 1
+        
+        return raça_dominante, error
   
 
-    def findEncodings(self,images):
-        encodeList = []
-        for img in images:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            encode = face_recognition.face_encodings(img)[0]
-            encodeList.append(encode)
-        return encodeList
+    def reconhecimento_facial(self, imagem, imagens_conhecidas):
+        # Carregar a imagem de entrada
+        imagem_entrada = face_recognition.load_image_file(imagem)
+
+        # Codificar a imagem de entrada
+        codificacao_entrada = face_recognition.face_encodings(imagem_entrada)[0]
+
+        # Carregar as imagens conhecidas
+        
+        for imagem_conhecida in imagens_conhecidas:
+            imagem = face_recognition.load_image_file(imagem_conhecida)
+            codificacao = face_recognition.face_encodings(imagem)[0]
+            self.codificacoes_conhecidas.append(codificacao)
+            nome_conhecido = os.path.basename(imagem_conhecida).split('.')[0]
+            self.nomes_conhecidos.append(nome_conhecido)
 
 
-    def markAttendance(self,name):
-        with open('Attendance.csv', 'r+') as f:
-            myDataList = f.readlines()
-            nameList = []
-            for line in myDataList:
-                entry = line.split(',')
-                nameList.append(entry[0])
-                if name not in nameList:
-                    now = datetime.now()
-                    dtString = now.strftime('%H:%M:%S')
-                    f.writelines(f'n{name},{dtString}')
+        # Comparar a codificação da imagem de entrada com as codificações conhecidas
+        resultados = face_recognition.compare_faces(self.codificacoes_conhecidas, codificacao_entrada)
 
+        # Encontrar os índices das correspondências verdadeiras
+        indices_correspondencias = [i for i, resultado in enumerate(resultados) if resultado]
 
-    
-    
-    def recognizeGuest(self,image):
-        encodeListKnown = self.findEncodings(self.images)
-        pessoas = []
-        imgS = cv2.resize(image, (0, 0), None, 0.25, 0.25)
-        imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
+        # Obter os nomes correspondentes aos índices
+        nomes_correspondentes = [self.nomes_conhecidos[i] for i in indices_correspondencias]
 
-        facesCurFrame = face_recognition.face_locations(imgS)
-        num_faces = len(facesCurFrame)
-        encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
-
-        for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
-
-            matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
-            faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
-            matchIndex = np.argmin(faceDis)
-            name = self.classNames[matchIndex].upper()
-
-            y1, x2, y2, x1 = faceLoc
-            center = (x1 + x2) // 2
-
-            if matches[matchIndex]:
-                self.markAttendance(name)
-                pessoas.append([name])
-                #pessoas.append([center, name])
-            else:
-                self.markAttendance(name)
-                pessoas.append(['Unknown'])
-                #pessoas.append([center, 'Unknown'])
-        return pessoas
+        return nomes_correspondentes
         
         
-
 
     def get_color_image_callback(self, img: Image):
-            self.colour_img = img
-            # print(img)
-            print("---")
-            self.get_logger().info('Receiving color video frame')
-            current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
-            cv2.imshow("c_camera", current_frame)   
-            cv2.waitKey(1)
+        # self.colour_img = img
+        # print(img)
+        # print("---")
+        # self.get_logger().info('Receiving color video frame')
+        # current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
+        # cv2.imshow("c_camera", current_frame)   
+        # cv2.waitKey(1)
+        pass
 
-    def get_speech_callback(self, keywords : String):
-        if keywords == 'ERROR':
-            self.speech_str.command = "I did not understand what you said. What's your name and favourite drink?"
-            self.speech_str.language = 'en'
-            self.audio_command_publisher.publish(self.speech_str)
 
-            #Informo o Charmie que acabei de falar e posso começar a ouvir
-            self.flag_speaker_publisher.publish(True)
-        else:
-            self.keywords = keywords
+    #Erro
+
+
+    """
+
             #pegar na string e dividir em nomes e bebidas e depois dar append para guardar o host guest1 e guest2
             self.keyword_list = keywords.split(" ")
             if len(self.keyword_list) > 0:
@@ -1659,31 +459,21 @@ class ReceptionistNode(Node):
                 #print("Array 1:", array1)
                 #print("Array 2:", array2)
 
-
-
-    def get_speech_callback(self, speech: String):
-        speech_str = RobotSpeech()
-
-        self.get_speech = speech
-
-        if speech.data == "ERROR":
-            speech_str.command = "I could not understand what you said, can you repeat please?"
-            speech_str.language = 'en'
-            self.speaker_publisher.publish(speech_str)
-        else:
-            # speech_str.command = "Hello my name is Tiago."
-            # speech_str.language = 'en'
-            # speech_str.command = "Bom dia, o meu nome é Tiago e gosto de Robôs. Já agora, qual é a comida na cantina hoje?"
-            # speech_str.command = "Qual é a comida na cantina hoje?"
-            speech_str.command = speech.data
-            speech_str.language = 'en'
-            self.speaker_publisher.publish(speech_str)
+    """
+        
+    def get_speech_callback(self, keywords : String):
+        print("Received Audio:", keywords.data)
+        self.keywords = keywords
+        self.flag_audio_done = True
 
     def get_speech_done_callback(self, state: Bool):
-        print("Received Speech Flag: ", state.data)
-        self.start_audio()
-
-
+        print("Received Speech Flag:", state.data)
+        self.flag_speech_done = True
+    
+    def flag_pos_reached_callback(self, state: Bool):
+        print("Received Navigation Flag:", state.data)
+        self.flag_navigation_done = True
+    
     def start_audio(self):
         self.audio_command_publisher.publish(self.speech_type)
 
@@ -1692,8 +482,1931 @@ class ReceptionistNode(Node):
         self.robot_current_position = odom
 
 
+
 def main(args=None):
     rclpy.init(args=args)
     node = ReceptionistNode()
+    th_main = threading.Thread(target=thread_main_receptionist, args=(node,), daemon=True)
+    th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
+
+
+def thread_main_receptionist(node: ReceptionistNode):
+    main = ReceptionistMain(node)
+    main.main()
+
+
+class ReceptionistMain():
+    
+    def __init__(self, node: ReceptionistNode):
+        self.node = node
+        
+    def wait_for_end_of_speaking(self):
+        while not self.node.flag_speech_done:
+            pass
+        self.node.flag_speech_done = False
+
+    
+    def wait_for_end_of_navigation(self):
+        while not self.node.flag_navigation_done:
+            pass
+        self.node.flag_navigation_done = False
+
+
+    def wait_for_end_of_audio(self):
+        while not self.node.flag_audio_done:
+            pass
+        self.node.flag_audio_done = False
+        self.node.flag_speech_done = False  
+        # Since audio also uses speaker for errors
+
+    """         if self.node.keywords == 'ERROR':
+
+            print("deu erro", self.node.keywords)
+
+            self.node.speech_str.command = "I did not understand what you said. Could you please repeat?"
+            self.node.speaker_publisher.publish(self.speech_str)
+            self.wait_for_end_of_speaking()
+
+            #Informo o Charmie que acabei de falar e posso começar a ouvir
+            self.node.audio_command_publisher.publish(self.node.speech_type)
+            # aqui temos recursividade, será o ideal para este caso???
+            self.wait_for_end_of_audio()        
+        else:
+            print(self.node.keywords) 
+    """
+
+
+    def main(self):
+        print("IN NEW MAIN")
+
+        while True:
+
+            
+            """if self.node.state == 0:
+                self.node.get_logger().info("estado 0")
+                #self.node.neck_position_publisher.publish(self.node.navigation_neck)
+                #vai para a porta
+
+                #self.node.coordinates.move_target_coordinates = self.node.door_coordinates
+                #self.node.coordinates.rotate_target_coordinates = self.node.door_coordinates_orientation
+                #self.node.coordinates.flag_not_obs = False
+                #self.node.target_position_publisher.publish(self.node.coordinates)
+                #self.wait_for_end_of_navigation()
+
+                #CORRIGIR CÓDIGO PARA SE MOVER PARA A PORTA E FICAR A OLHAR PARA A PORTA
+                self.node.neck_position_publisher.publish(self.node.door_neck_coordinates)
+
+                #Informa que está pronto para receber convidado
+                self.node.speech_str.command = "I am ready to receive a new guest. Please stand in front of me."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                
+                 #Começar a contar o tempo
+                # self.init_time = time.time()
+                
+
+                #Verificar se existe uma pessoa na porta
+                cv2_img = self.node.br.imgmsg_to_cv2(self.node.colour_img, "bgr8")
+                #Função de deteção facial 
+                num_faces = self.node.detect_face(cv2_img)
+                if num_faces != 0 :
+                    
+                    #Se detetar alguém o CHARMIE apresenta se e pede nome e bebida
+                    self.node.speech_str.command = "Hello! My name is Charmie. What's your name and favourite drink?"
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+                    
+                    #Informo o Charmie que acabei de falar e posso começar a ouvir
+                    #flag_spk_publisher = Bool()
+                    #flag_spk_publisher.data = True
+                    #self.flag_speaker_publisher.publish(flag_spk_publisher)
+                    self.node.audio_command_publisher.publish(self.node.speech_type)
+                    self.wait_for_end_of_audio()
+                    
+
+                    #pegar na string e dividir em nomes e bebidas e depois dar append para guardar o host guest1 e guest2
+                    keyword_list= self.node.keywords.data.split(" ")
+                    print(keyword_list)
+                    # if len(self.node.keyword_list) > 0:
+                    self.node.names.append(keyword_list[0])
+                    # if len(self.node.keyword_list) > 1:
+                    self.node.drinks.append(keyword_list[1])
+
+                    print(self.node.names, self.node.drinks)
+                    self.node.state=1
+                #Isto vai acontecer 2x. Para o guest 1 e 2. Mas tem de ir para estados diferentes porque para o guest 2 não é 
+                #necessário extrair as características
+                    #self.node.count_guest+=1
+                    #if self.node.count_guest==1:
+                    #    self.node.state = 2
+                    #if self.node.count_guest==2:
+                    #    self.node.state = 3
+
+            
+
+            #elif self.node.state == 2:
+            #    print("CHEGUEI ESTADO 2")
+
+
+            #elif self.node.state == 3:
+            #    print("CHEGUEI ESTADO 3") 
+
+            elif self.node.state == 1:
+                self.node.speech_str.command = "I will take you a picture. Please look at me"
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                #Obter e guardar a Imagem            
+                cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                self.filename = self.names[1]
+                file_path = os.path.join(self.pasta_imagens_conhecidas, self.filename)
+                cv2.imwrite(file_path, cv2_img) 
+
+                # Apend ao nome e imagem guardada acima
+                myList = os.listdir(self.node.pasta_imagens_conhecidas)
+                for cl in myList:
+                    curImg = cv2.imread(f'{self.node.pasta_imagens_conhecidas}/{cl}')
+                    self.node.images.append(curImg)
+                    self.node.classNames.append(os.path.splitext(cl)[0])
+
+                #Recolho as características das imagens
+                #age,gender,error_agegender = self.detectGenderAge(cv2_img)
+                #resultrace, error_race = self.detectrace(cv2_img)
+
+                #Para prevenir que o código empanque, garanto que retorno sempre alguma coisa, seja as características ou erro
+                #if error_race == 0 and error_agegender == 0:
+                #   self.get_caract = 3
+                #    self.caracteristics.append(gender)
+                #    self.caracteristics.append(age)
+                #   self.caracteristics.append(resultrace)
+                    
+                #elif error_race == 0 and error_agegender == 1:
+                #    self.get_caract = 1
+                #    self.caracteristics.append(resultrace)
+                    
+                #elif error_race == 1 and error_agegender == 0:
+                #    self.get_caract=2
+                #    self.caracteristics.append(gender)
+                #    self.caracteristics.append(age)
+                    
+                #else:
+                #    self.caracteristics = "error" 
+                    
+                self.node.state=3
+                self.node.get_logger().info("Fim do estado 2")
+                #Se detetar alguém o CHARMIE apresenta se e pede nome e bebida
+                #self.node.speech_str.command = "Hello! My name is Charmie. What's your name and favourite drink?"
+                #self.node.speaker_publisher.publish(self.node.speech_str)
+                #self.wait_for_end_of_speaking()
+                
+                #Informo o Charmie que acabei de falar e posso começar a ouvir
+                #flag_spk_publisher = Bool()
+                #flag_spk_publisher.data = True
+                #print("mandei audio comm")
+                #self.node.audio_command_publisher.publish(self.node.speech_type)
+                #self.wait_for_end_of_audio()
+                
+
+                #pegar na string e dividir em nomes e bebidas e depois dar append para guardar o host guest1 e guest2
+                #keyword_list= self.node.keywords.data.split(" ")
+                #print(keyword_list)
+                #self.node.names.append(keyword_list[0])
+                #self.node.drinks.append(keyword_list[1])
+            
+            elif self.node.state == 3:
+                print("CHEGUEI ESTADO 3") 
+            """
+            #Estado comum aos dois Guests
+            if self.node.state == 0:
+                #Informa que está pronto para começar a tarefa
+                self.node.get_logger().info("estado 0")
+
+                self.node.neck_position_publisher.publish(self.node.talk_neck)
+
+                self.node.speech_str.command = "Hello! I am ready to start the receptionist task! Here I go"
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                self.node.state = 1
+
+
+            #Estado para verificar se está alguém na porta e ficar a repetir de 5 em 5 segundos enquanto não estiver lá ninguém
+            #Estado para o Guest 1
+            elif self.node.state == 1:    
+                self.node.get_logger().info("estado 1")
+                self.node.neck_position_publisher.publish(self.node.navigation_neck)
+                #vai para a porta
+
+                self.node.coordinates.move_target_coordinates = self.node.door_coordinates
+                self.node.coordinates.rotate_target_coordinates = self.node.door_coordinates_orientation
+                self.node.coordinates.flag_not_obs = False
+                self.node.target_position_publisher.publish(self.node.coordinates)
+                self.wait_for_end_of_navigation()
+
+                #CORRIGIR CÓDIGO PARA SE MOVER PARA A PORTA E FICAR A OLHAR PARA A PORTA
+                self.node.neck_position_publisher.publish(self.node.door_neck_coordinates)
+
+                #Informa que está pronto para receber convidado
+                self.node.speech_str.command = "I am ready to receive a new guest. Please stand in front of me."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                
+                 #Começar a contar o tempo
+                # self.init_time = time.time()
+                
+
+                #Verificar se existe uma pessoa na porta
+                # cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                #Função de deteção facial 
+                # num_faces = self.detect_face(cv2_img)
+                # if num_faces != 0 :
+                    
+                #Se detetar alguém o CHARMIE apresenta se e pede nome e bebida
+                self.node.speech_str.command = "Hello! My name is Charmie. What's your name and favourite drink?"
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+                
+                #Informo o Charmie que acabei de falar e posso começar a ouvir
+                #flag_spk_publisher = Bool()
+                #flag_spk_publisher.data = True
+                #self.flag_speaker_publisher.publish(flag_spk_publisher)
+                self.node.audio_command_publisher.publish(self.node.speech_type)
+                self.wait_for_end_of_audio()
+                
+
+                #pegar na string e dividir em nomes e bebidas e depois dar append para guardar o host guest1 e guest2
+                keyword_list= self.node.keywords.data.split(" ")
+                print(keyword_list)
+                # if len(self.node.keyword_list) > 0:
+                self.node.names.append(keyword_list[0])
+                # if len(self.node.keyword_list) > 1:
+                self.node.drinks.append(keyword_list[1])
+
+                print(self.node.names, self.node.drinks)
+
+                #Isto vai acontecer 2x. Para o guest 1 e 2. Mas tem de ir para estados diferentes porque para o guest 2 não é 
+                #necessário extrair as características
+                self.node.count_guest+=1
+                if self.node.count_guest==1:
+                    self.node.state = 2
+                if self.node.count_guest==2:
+                    self.node.state = 3
+
+            
+
+                #elif self.node.state == 2:
+                #    print("CHEGUEI ESTADO 2")
+
+
+                #elif self.node.state == 3:
+                #    print("CHEGUEI ESTADO 3") 
+               
+
+
+                #  else:
+                #     if time.time()-self.init_time>5.0:
+                #         # Repete a ação anterior
+                #         self.speech_str.command = "I am ready to receive a new guest"
+                #         
+                #         self.speaker_publisher.publish(self.speech_str)
+                #         #Dá reset ao tempo
+                #         self.init_time = time.time()    
+                #         self.get_logger().info("Fim do estado 1")  
+                
+            
+
+            #Estado apenas para o Guest1
+            elif self.node.state == 2:
+                self.node.get_logger().info("estado 2")
+                #CORRIGIR PARA CÓDIGO QUE AJUSTA A POSIÇÃO DA CARA PARA O CENTRO DA FACE DA PESSOA
+
+                #Falar para pedir para olhar para camara
+                self.node.speech_str.command = "I will take you a picture. Please look at me"
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                #Obter e guardar a Imagem            
+                #cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                #self.filename = self.names[1]
+                #file_path = os.path.join(self.pasta_imagens_conhecidas, self.filename)
+                #cv2.imwrite(file_path, cv2_img) 
+
+                # Apend ao nome e imagem guardada acima
+                #myList = os.listdir(self.node.pasta_imagens_conhecidas)
+                #for cl in myList:
+                #    curImg = cv2.imread(f'{self.node.pasta_imagens_conhecidas}/{cl}')
+                #    self.node.images.append(curImg)
+                #    self.node.classNames.append(os.path.splitext(cl)[0])
+
+                #Recolho as características das imagens
+                #age,gender,error_agegender = self.detectGenderAge(cv2_img)
+                #resultrace, error_race = self.detectrace(cv2_img)
+
+                #Para prevenir que o código empanque, garanto que retorno sempre alguma coisa, seja as características ou erro
+                #if error_race == 0 and error_agegender == 0:
+                #   self.get_caract = 3
+                #    self.caracteristics.append(gender)
+                #    self.caracteristics.append(age)
+                #   self.caracteristics.append(resultrace)
+                    
+                #elif error_race == 0 and error_agegender == 1:
+                #    self.get_caract = 1
+                #    self.caracteristics.append(resultrace)
+                    
+                #elif error_race == 1 and error_agegender == 0:
+                #    self.get_caract=2
+                #    self.caracteristics.append(gender)
+                #    self.caracteristics.append(age)
+                    
+                #else:
+                #    self.caracteristics = "error" 
+                    
+                self.node.state=3
+                self.node.get_logger().info("Fim do estado 2")
+
+            #Estado comum aos 2 guests
+            elif self.node.state == 3:
+                self.node.get_logger().info("estado 3")
+                #Agradece e pede para o seguir até à zona dos sofás
+                self.node.speech_str.command = "Thank you. Please follow me."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                self.node.neck_position_publisher.publish(self.node.navigation_neck)
+
+                self.node.coordinates.move_target_coordinates = self.node.door_coordinates
+                self.node.coordinates.rotate_target_coordinates = self.node.find_coordinates_orientation
+                self.node.coordinates.flag_not_obs = False
+                self.node.target_position_publisher.publish(self.node.coordinates)
+                self.wait_for_end_of_navigation()
+
+
+                #vai para o sofá
+                self.node.coordinates.move_target_coordinates = self.node.find_coordinates
+                self.node.coordinates.rotate_target_coordinates = self.node.find_coordinates_orientation
+                self.node.coordinates.flag_not_obs = False
+                self.node.target_position_publisher.publish(self.node.coordinates)
+                self.wait_for_end_of_navigation()
+
+                #CORRIGIR PARA SE MOVER PARA O SOFÁ E O PESCOÇO FICAR ORIENTADO PARA BAIXO NA DIREÇÃO DAS PESSOAS SENTADAS
+
+                self.node.neck_position_publisher.publish(self.node.talk_neck)
+                #Diz ao guest para ficar na mesma posição até lhe indicar onde se sentar
+                self.node.speech_str.command = "Please stay on my left until I give you instructions on where to sit."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                if self.node.count_guest == 1:
+                    self.node.state = 4
+                elif self.node.count_guest == 2:
+                    self.node.state = 7
+
+                self.node.get_logger().info("Fim do estado 3")
+                
+            #elif self.node.state == 4:
+            #    print("CHEGUEI ESTADO 4")
+
+            elif self.node.state == 7:
+                print("CHEGUEI ESTADO 7") 
+
+
+            #Estado relativo ao Guest1 no SOFÁ
+            elif self.node.state == 4:
+                self.node.get_logger().info("estado 4")
+                #Guardar Imagem            
+                #cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                #num_faces=self.detect_face(cv2_img)
+                #Código para ver se encontro faces
+                num_faces =1
+                if num_faces != 0:
+                    if num_faces == 1:
+                        #Guarda as coordenadas do sofá como local para sentar e ativa a flag a indicar que já tem um local para sentar
+                        self.node.place_to_sit_neck = self.node.sofa_coordinates
+                        #self.node.place_to_sit_orientation=self.node.sofa_coordinates_orientation
+                        self.node.flag_place_to_sit=True
+                        #Função para reconhecer pessoas. Retorna uma variavel pessoa que tem um centro associado a um nome
+                        #nomes=self.reconhecimento_facial(cv2_img)
+                        self.node.flag_Host=True
+                        
+                        #Se conheceu alguém é porque reconheceu o Host.
+                        #if self.node.names[0] in nomes:
+                        if self.node.flag_Host :
+                            #OLHAR PARA A POSIÇÃO DO GUEST
+
+                            self.node.neck_position_publisher.publish(self.node.talk_neck)
+
+                            #self.node.coordinates.move_target_coordinates = self.node.sofa_coordinates
+                            #self.node.coordinates.rotate_target_coordinates = self.node.guest_coordinates
+                            #self.node.coordinates.flag_not_obs = False
+                            #self.node.target_position_publisher.publish(self.node.coordinates)
+                            #self.wait_for_end_of_navigation()
+
+
+                            self.node.neck_position_publisher.publish(self.node.guest_neck)
+
+
+
+                            #Apresentação do guest e do host
+                            self.node.speech_str.command = f"The host is {self.node.names[0]} and his favorite drink is {self.node.drinks[0]}."
+                            self.node.speaker_publisher.publish(self.node.speech_str)
+                            self.wait_for_end_of_speaking()
+                            self.node.flag_Host==True
+
+                            #CORRIGIR PARA FICAR A OLHAR PARA O SOFÁ ENQUANTO FALA, PODE SER RODAR PESCOÇO OU BASE
+
+                            #self.node.coordinates.move_target_coordinates = self.node.sofa_coordinates
+                            #self.node.coordinates.rotate_target_coordinates = self.node.sofa_coordinates_orientation
+                            #self.node.coordinates.flag_not_obs = False
+                            #self.node.target_position_publisher.publish(self.node.coordinates)
+                            #self.wait_for_end_of_navigation()
+
+                            self.node.neck_position_publisher.publish(self.node.sofa_coordinates)
+
+                            self.node.speech_str.command = f"The guest is {self.node.names[1]} and his favorite drink is {self.node.drinks[1]}."
+                            self.node.speaker_publisher.publish(self.node.speech_str)
+                            self.wait_for_end_of_speaking()
+
+                            
+                            self.node.neck_position_publisher.publish(self.node.sofa_coordinates)
+
+                            #Sentou a o convidado
+                            self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
+                            self.node.speaker_publisher.publish(self.node.speech_str)
+                            self.flag_already_sit = True
+                            self.wait_for_end_of_speaking()
+                            #Não sei o numero do estado, tou a assumir que é o último
+
+                            self.node.neck_position_publisher.publish(self.node.navigation_neck)
+
+                            self.node.coordinates.move_target_coordinates = self.node.find_coordinates
+                            self.node.coordinates.rotate_target_coordinates = self.node.return_door_coordinates
+                            self.node.coordinates.flag_not_obs = False
+                            self.node.target_position_publisher.publish(self.node.coordinates)
+                            self.wait_for_end_of_navigation()
+
+                            #PONHO O A PASSAR PELAS COORDENADAS DE INICIO PORQUE NÃO CHEGA AO LOCAL DESEJADO
+                            #self.node.coordinates.move_target_coordinates = self.node.door_second_coordinates
+                            #self.node.coordinates.rotate_target_coordinates = self.node.door_coordinates_orientation
+                            #self.node.coordinates.flag_not_obs = False
+                            #self.node.target_position_publisher.publish(self.node.coordinates)
+                            #self.wait_for_end_of_navigation()
+
+
+                            self.node.state = 1
+
+                        else:
+                            self.node.state = 5
+
+                        
+                    #elif num_faces >=2:
+                        #Código para reconhecer as pessoas
+                        # Contagem das pessoas conhecidas na imagem
+                        
+                        #nomes=self.reconhecimento_facial(cv2_img)
+                        
+                        
+                        
+                    #    if self.names[0] in nomes:
+                            #Apresentação do guest e do host
+                            #CORRIGIR PARA SE VIRAR PARA O GUEST
+
+                    #        self.neck_position_publisher.publish(self.navigation_neck)
+
+                    #        self.coordinates.move_target_coordinates = self.sofa_coordinates
+                    #        self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                    #        self.coordinates.flag_not_obs = False
+
+                    #        self.target_position_publisher.publish(self.coordinates)
+
+                    #        self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                            
+                    #        self.speaker_publisher.publish(self.speech_str)
+
+                            #CORRIGIR PARA FICAR A OLHAR PARA O SOFÁ
+                    #        self.coordinates.move_target_coordinates = self.sofa_coordinates
+                    #        self.coordinates.rotate_target_coordinates = self.sofa_coordinates_orientation
+                    #        self.coordinates.flag_not_obs = False
+
+                    #        self.target_position_publisher.publish(self.coordinates)
+
+                    #        self.neck_position_publisher.publish(self.place_to_sit_neck)
+
+                    #        self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                    #        self.speaker_publisher.publish(self.speech_str)
+                    #        self.flag_Host==True
+                    #        self.contador_conhecidos = 0
+                    #        self.state = 5
+                    #    else:
+                    #        self.state = 5
+            
+                else: 
+                    self.node.place_to_sit = self.node.sofa_coordinates
+                    #self.node.place_to_sit_orientation = self.node.sofa_coordinates_orientation
+                    self.node.flag_place_to_sit=True
+                    #Guardar a coordenada do sofá
+                    self.node.state=5
+                self.node.get_logger().info("Fim do estado 4")
+        
+            elif self.node.state == 5:
+                print("cheguei ao estado 5")
+            
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        #Estado da fase do GUEST1 de olhar para a cadeira: ramo da esquerda
+            """elif self.state == 5:
+                self.get_logger().info("estado 5")
+                if self.flag_Host==True:
+
+                    self.neck_position_publisher.publish(self.navigation_neck)
+
+                    #CORRIGIR PARA IR PARA A ZONA DA CADEIRA 1
+
+                    self.coordinates.move_target_coordinates = self.chair1_coordinates
+                    self.coordinates.rotate_target_coordinates = self.chair1_coordinates_orientation
+                    self.coordinates.flag_not_obs = False
+
+                    self.target_position_publisher.publish(self.coordinates)
+            
+                    self.neck_position_publisher.publish(self.place_to_sit_neck)
+                    cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+
+                    num_faces = self.detect_face(cv2_img)
+                    if num_faces !=0:
+
+                        self.neck_position_publisher.publish(self.navigation_neck)  
+                        #CORRIGIR PARA IR PARA A ZONA DA CADEIRA 2
+                        self.coordinates.move_target_coordinates = self.chair2_coordinates
+                        self.coordinates.rotate_target_coordinates = self.chair2_coordinates_orientation
+                        self.coordinates.flag_not_obs = False
+
+                        self.target_position_publisher.publish(self.coordinates)
+
+                        self.neck_position_publisher.publish(self.place_to_sit_neck)
+
+                        cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                        num_faces = self.detect_face(cv2_img)
+                        if num_faces !=0:
+                            self.speech_str.command = "Please stand. I couldn't find an empty seat."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_place_to_sit=True
+                            self.flag_already_sit=True
+                            self.state = 1
+                            
+                        else:
+                            self.place_to_sit = self.chair2_coordinates
+                            self.place_to_sit_orientation = self.chair2_coordinates_orientation
+                            self.flag_place_to_sit=True
+                            
+                            self.neck_position_publisher.publish(self.place_to_sit_neck)
+                            self.speech_str.command = f"Please take a sit on the sit in front of me."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.state = 1
+                            self.flag_already_sit=True
+
+                    else:
+                        self.place_to_sit = self.chair1_coordinates
+                        self.place_to_sit_orientation = self.chair1_coordinates_orientation
+                        self.flag_place_to_sit=True
+
+
+                        self.neck_position_publisher.publish(self.place_to_sit_neck)
+                        self.speech_str.command = f"Please take a sit on the Chair in front of me."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                        self.state = 1
+                        self.flag_already_sit=True
+                                
+                else:
+
+                    self.neck_position_publisher.publish(self.navigation_neck)
+                    #CORRIGIR PARA IR PARA A CADEIRA 1
+                    self.coordinates.move_target_coordinates = self.chair1_coordinates
+                    self.coordinates.rotate_target_coordinates = self.chair1_coordinates_orientation
+                    self.coordinates.flag_not_obs = False
+
+                    self.target_position_publisher.publish(self.coordinates)
+
+                    self.neck_position_publisher.publish(self.place_to_sit_neck)
+
+                    if self.flag_place_to_sit == True:
+                        cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                        num_faces = self.detect_face(cv2_img)
+
+                        if num_faces !=0:
+
+                            nomes=self.reconhecimento_facial(cv2_img)  
+                            '''for pessoa in pessoas_detetadas:
+                                if pessoa != 'unknown' and pessoa in self.names:
+                                    self.contador_conhecidos += 1'''
+
+                            
+                            if self.names[0] in nomes:
+                                self.neck_position_publisher.publish(self.sofa_coordinates)
+                                self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+
+                                self.neck_position_publisher.publish(self.guest_coordinates)
+                                self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_Host = True
+                                
+                                #CORRIGIR PARA SE ORIENTAR PARA O LOCAL QUE FOI ANTERIORMENTE GUARDADO COMO LOCAL
+                                #PARA SENTAR
+
+                                self.coordinates.move_target_coordinates = self.place_to_sit
+                                self.coordinates.rotate_target_coordinates = self.place_to_sit_orientation
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.place_to_sit_neck)
+
+                                self.speech_str.command = f"Please take a sit on the spot I'm looking at."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_already_sit = True
+                                self.contador_conhecidos = 0
+                                self.state = 1
+                            else:
+                                self.state = 6
+
+                        else:
+                            self.state=6
+
+                    else:
+                        
+                        cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                        num_faces = self.detect_face(cv2_img)
+                        if num_faces !=0:
+
+                            nomes=self.reconhecimento_facial(cv2_img)
+                            '''for pessoa in pessoas_detetadas:
+                                if pessoa != 'unknown' and pessoa in self.names:
+                                    self.contador_conhecidos += 1'''
+
+                            
+                            if self.names[0] in nomes:
+                                self.neck_position_publisher.publish(self.sofa_coordinates)
+                                self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+
+                                self.neck_position_publisher.publish(self.guest_coordinates)
+                                self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_Host=True
+
+                                
+                                self.state = 6
+                            else:
+                                self.state = 6
+
+                        else:
+                            self.place_to_sit = self.chair1_coordinates
+                            self.place_to_sit_orientation = self.chair1_coordinates_orientation
+                            self.flag_place_to_sit = True
+                            self.state = 6
+                self.get_logger().info("Fim do estado 5")
+
+                        
+            elif self.state == 6:
+                self.get_logger().info("estado 6")
+                self.neck_position_publisher.publish(self.navigation_neck)
+                #CORRIGIR PARA ANDAR PARA A CADEIRA 2
+                self.coordinates.move_target_coordinates = self.chair2_coordinates
+                self.coordinates.rotate_target_coordinates = self.chair2_coordinates_orientation
+                self.coordinates.flag_not_obs = False
+
+                self.target_position_publisher.publish(self.coordinates)
+
+                self.neck_position_publisher.publish(self.place_to_sit_neck)
+
+                cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                num_faces = self.detect_face(cv2_img)
+                if num_faces !=0:
+                    if self.flag_Host == True:
+                        self.speech_str.command = "Please stand. I couldn't find an empty seat."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                        self.flag_place_to_sit=True
+                        self.flag_already_sit=True
+                        self.state = 1
+                    else:
+
+                        nomes=self.reconhecimento_facial(cv2_img)
+                        '''for pessoa in pessoas_detetadas:
+                            if pessoa != 'unknown' and pessoa in self.names:
+                                self.contador_conhecidos += 1'''
+
+                        
+
+                        if self.names[0] in nomes:
+                            #CORRIGIR PARA SE ORIENTAR PARA O GUEST
+
+                            self.neck_position_publisher.publish(self.navigation_neck)
+
+                            self.coordinates.move_target_coordinates = self.chair2_coordinates
+                            self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+                        
+                            self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+                            #CORRIGIR PARA OLHAR PARA O HOST
+                            self.coordinates.move_target_coordinates = self.chair2_coordinates
+                            self.coordinates.rotate_target_coordinates = self.chair2_coordinates_orientation
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+
+                            self.neck_position_publisher.publish(self.place_to_sit_neck)
+                            self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_Host==True
+
+                            
+                            if self.flag_place_to_sit == True:
+                                #CORRIGIR PARA OLHAR PARA O LOCAL A SENTAR
+                                self.coordinates.move_target_coordinates = self.place_to_sit
+                                self.coordinates.rotate_target_coordinates = self.place_to_sit_orientation
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                self.speech_str.command = f"Please take a sit on the spot I'm looking at."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_already_sit=True
+                                self.state = 1
+                            else:
+
+                                #CORRIGIR PARA FICAR A OLHAR PARA ONDE O GUEST ESTÁ
+                                self.neck_position_publisher.publish(self.navigation_neck)
+
+                                self.coordinates.move_target_coordinates = self.chair2_coordinates
+                                self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.speech_str.command = "Please stand. I couldn't find an empty seat."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_place_to_sit=True
+                                self.flag_already_sit=True
+                                self.state = 1
+                            self.contador_conhecidos=0 
+                        else:
+
+                            #Apresentação do guest e do host para o ar
+                            #CORRIGIR PARA OLHAR PARA O GUEST
+                            self.coordinates.move_target_coordinates = self.chair2_coordinates
+                            self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+
+                            self.neck_position_publisher.publish(self.navigation_neck)
+
+                            self.speech_str.command = f"The host name is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+
+                            self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_Host==True
+
+                            self.speech_str.command = "Please stand. I couldn't find an empty seat."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_place_to_sit=True
+                            self.flag_already_sit=True
+                            self.state = 1   
+                else:
+                    if self.flag_place_to_sit == True:
+                    if self.flag_Host == True:
+                            #CORRIGIR PARA FICAR A OLHAR PARA O LUGAR ONDE SE VAI SENTAR A PESSOA
+                            self.coordinates.move_target_coordinates = self.place_to_sit
+                            self.coordinates.rotate_target_coordinates = self.place_to_sit_orientation
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+
+                            self.neck_position_publisher.publish(self.place_to_sit_neck)
+                            self.speech_str.command = f"Please take a sit on the spot I'm looking at."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_already_sit=True
+                            self.state = 1
+                    else:
+                            #CORRIGIR PARA FICAR A OLHAR PARA O GUEST QUE ESTÁ EM PÉ AINDA 
+                            #Apresentação do guest e do host para o ar
+
+                            self.coordinates.move_target_coordinates = self.chair2_coordinates
+                            self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+
+                            self.neck_position_publisher.publish(self.navigation_neck)
+                            self.speech_str.command = f"The host name is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+                            self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_Host==True
+                            
+                            #CORRIGIR PARA FICAR A OLHAR PARA O LUGAR ONDE SE VAI SENTAR
+                            self.coordinates.move_target_coordinates = self.place_to_sit
+                            self.coordinates.rotate_target_coordinates = self.place_to_sit_orientation
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+
+                            self.neck_position_publisher.publish(self.place_to_sit_neck)
+                            self.speech_str.command = f"Please take a sit on the spot I'm looking at."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_already_sit=True
+                            self.state = 1
+                        
+                    else:
+                        self.place_to_sit = self.chair2_coordinates
+                        self.place_to_sit_orientation = self.chair2_coordinates_orientation
+                        self.flag_place_to_sit = True
+                        if self.flag_Host == True:
+                            self.neck_position_publisher.publish(self.place_to_sit)
+                            self.speech_str.command = f"Please take a sit on the spot I'm looking at."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_already_sit=True
+                            self.state = 1
+                        else:
+                            #CORRIGIR PARA FICAR A OLHAR PARA ONDE O GUEST ESTÁ
+                            #Apresentação do guest e do host para o ar
+                            self.coordinates.move_target_coordinates = self.chair2_coordinates
+                            self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+
+                            self.neck_position_publisher.publish(self.navigation_neck)
+                            self.speech_str.command = f"The host name is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+                            self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_Host==True
+
+                            #CORRIGIR PARA FICAR A OLHAR PARA O LOCAL ONDE SE VAI SENTAR QUE FOI GUARDADO ACIMA
+                            self.coordinates.move_target_coordinates = self.place_to_sit
+                            self.coordinates.rotate_target_coordinates = self.place_to_sit_orientation
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+
+
+                            self.neck_position_publisher.publish(self.place_to_sit_neck)
+                            self.speech_str.command = f"Please take a sit on the spot I'm looking at."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_already_sit=True
+                            self.state = 1 """
+
+    ########################## FIM DO CÓDIGO PARA RECEÇÃO, APRESENTAÇÃO E PROCURA DE LUGAR PARA O GUEST 1 ###########################
+
+            #CÓDIGO RELATIVO AO GUEST 2
+            """ elif self.state ==7:
+                cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                num_faces=self.detect_face(cv2_img)
+                self.contador_conhecidos = 0
+                #Código para ver se encontro faces
+                if num_faces != None:
+                    if num_faces == 1:
+                        #Guarda as coordenadas do sofá uma vez que como só tem uma pessoa é um local onde se pode sentar
+                        self.place_to_sit = self.sofa_coordinates
+                        self.place_to_sit_orientation = self.sofa_coordinates_orientation
+                        self.flag_place_to_sit=True
+                        nomes=self.reconhecimento_facial(cv2_img)
+                        '''for pessoa in pessoas_detetadas:
+                            self.contador_conhecidos = 0
+                            if pessoa != 'unknown' and pessoa in self.names:
+                                self.contador_conhecidos += 1'''
+
+                        
+                        if self.names in nomes:
+                            if nomes == self.names[0]:
+                                #CORRIGIR PARA OLHAR O GUEST NOVO
+                                self.coordinates.move_target_coordinates = self.sofa_coordinates
+                                self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.navigation_neck)
+                                self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_Host==True
+
+                                #CORRIGIR PARA OLHAR PARA O SOFÁ NOVAMENTE
+                                self.coordinates.move_target_coordinates = self.sofa_coordinates
+                                self.coordinates.rotate_target_coordinates = self.sofa_coordinates_orientation
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+
+                                self.state = 8
+
+                            elif nomes == self.names[1]:
+                                #CORRIGIR PARA OLHAR O CONVIDADO 2
+                                self.coordinates.move_target_coordinates = self.sofa_coordinates
+                                self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.navigation_neck)
+                                self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                if self.get_caract==3:
+                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                elif self.get_caract==2:
+                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                elif self.get_caract==1:
+                                    self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+
+
+                                #CORRIGIR PARA OLHAR PARA O SOFÁ 
+                                self.coordinates.move_target_coordinates = self.sofa_coordinates
+                                self.coordinates.rotate_target_coordinates = self.sofa_coordinates_orientation
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_Guest1 = True
+
+                                self.state = 8
+                        else:
+                            self.state = 8        
+                            
+
+                    elif num_faces >=2:
+                        #Código para reconhecer as pessoas
+                        # Contagem das pessoas conhecidas na imagem
+                        
+
+                        '''for pessoa in pessoas_detetadas:
+                            self.contador_conhecidos = 0
+                            if pessoa != 'unknown' and pessoa in self.names:
+                                self.contador_conhecidos += 1'''
+
+                        
+                        if self.names in nomes:
+                            if nomes == self.names[0]:
+                                #CORRIGIR PARA OLHAR PARA O GUEST 2
+                                self.coordinates.move_target_coordinates = self.sofa_coordinates
+                                self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.navigation_neck)
+                                self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+
+                                #CORRIGIR PARA OLHAR PARA O SOFÁ 
+                                self.coordinates.move_target_coordinates = self.sofa_coordinates
+                                self.coordinates.rotate_target_coordinates = self.sofa_coordinates_orientation
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                self.speech_str.command = f"And the new guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_Host==True
+                                self.state = 8
+                            elif nomes == self.names[1]:
+                                #CORRIGIR PARA OLHAR PARA O GUEST 2
+                                self.coordinates.move_target_coordinates = self.sofa_coordinates
+                                self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.sofa_coordinates)
+                                self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                if self.get_caract==3:
+                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                elif self.get_caract==2:
+                                    self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                elif self.get_caract==1:
+                                    self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+
+
+                                #CORRIGIR PARA OLHAR PARA O SOFA
+                                self.coordinates.move_target_coordinates = self.sofa_coordinates
+                                self.coordinates.rotate_target_coordinates = self.sofa_coordinates_orientation
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.navigation_neck)
+                                self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_Guest1 = True
+                                self.contador_conhecidos=0
+                                self.state = 8
+
+                        elif self.contador_conhecidos == 2:
+                            #CORRIGIR PARA OLHAR PARA O GUEST2
+                            self.neck_position_publisher.publish(self.navigation_neck)
+                            self.coordinates.move_target_coordinates = self.sofa_coordinates
+                            self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+                            self.speech_str.command = f"On the couch are host {self.names[0]} and his favorite drink is {self.drinks[0]} and the guest {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+                            #CORRIGIR PARA OLHAR PARA O SOFÁ
+                            self.coordinates.move_target_coordinates = self.sofa_coordinates
+                            self.coordinates.rotate_target_coordinates = self.sofa_coordinates_orientation
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+                            
+                            self.neck_position_publisher.publish(self.place_to_sit_neck)
+                            self.speech_str.command = f"And the new guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_Host==True
+                            self.flag_Guest1 = True
+                            self.contador_conhecidos=0
+                            self.state = 8
+                        else:
+                            self.state = 8
+                else:
+                    self.place_to_sit=self.sofa_coordinates
+                    self.place_to_sit_orientation=self.sofa_coordinates_orientation
+                    self.flag_place_to_sit = True
+                    self.state = 8
+
+            elif self.state == 8:
+                #CORRIGIR PARA MOVER PARA A CADEIRA 1
+                self.coordinates.move_target_coordinates = self.chair1_coordinates
+                self.coordinates.rotate_target_coordinates = self.chair1_coordinates_orientation
+                self.coordinates.flag_not_obs = False
+
+                self.target_position_publisher.publish(self.coordinates)
+
+                self.neck_position_publisher.publish(self.place_to_sit_neck)
+                if self.flag_Host == True:
+                    if self.flag_Guest1 == True:
+                        cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                        num_faces=self.detect_face(cv2_img)
+                        if self.num_faces != 0 :
+                            self.state = 9
+                        else:
+                            self.place_to_sit = self.chair1_coordinates
+                            self.place_to_sit_orientation = self.chair1_coordinates_orientation
+                            self.flag_place_to_sit = True
+
+
+                            self.neck_position_publisher.publish(self.place_to_sit_neck)
+                            self.speech_str.command = f"Please take a sit on the chair that I'm looking for."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_already_sit=True
+                            self.state = 11
+
+                    else:
+                        cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                        num_faces=self.detect_face(cv2_img)
+                        if self.num_faces != 0 :
+                            '''for pessoa in pessoas_detetadas:
+                                self.contador_conhecidos = 0
+                                if pessoa != 'unknown' and pessoa in self.names:
+                                    self.contador_conhecidos += 1'''
+
+                            
+                            if self.names in nomes:
+                                if nomes == self.names[2]:
+                                    #CORRIGIR PARA OLHAR PARA O GUEST2
+                                    self.coordinates.move_target_coordinates = self.chair1_coordinates_orientation
+                                    self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+
+                                    self.neck_position_publisher.publish(self.navigation_neck)
+                                    self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    if self.get_caract==3:
+                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                    elif self.get_caract==2:
+                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                    elif self.get_caract==1:
+                                        self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+
+                                    #CORRIGIR PARA OLHAR PARA O GUEST 1
+                                    self.coordinates.move_target_coordinates = self.chair1_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.chair1_coordinates_orientation
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+                                    self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                    self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[1]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    self.flag_Guest1==True
+                                    self.contador_conhecidos=0
+                                    self.state = 9
+                            else:
+                                self.state = 9
+                        else:
+                            if self.flag_place_to_sit == True:
+                                self.state = 9
+
+                            else:
+                                self.place_to_sit = self.chair1_coordinates
+                                self.place_to_sit_orientation = self.chair1_coordinates_orientation
+                                self.flag_place_to_sit = True
+                                self.state = 9
+                                
+
+
+                else:
+                    if self.flag_Guest1 == True:
+                        cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                        num_faces=self.detect_face(cv2_img)
+                        if self.num_faces != 0 :
+                            nomes =self.reconhecimento_facial(cv2_img)
+                            '''for pessoa in pessoas_detetadas:
+                                self.contador_conhecidos = 0
+                                if pessoa != 'unknown' and pessoa in self.names:
+                                    self.contador_conhecidos += 1'''
+
+                            
+                            if self.names[0] == nomes:
+                                #CORRIGIR PARA OLHAR PARA O GUEST2
+                                self.coordinates.move_target_coordinates = self.chair1_coordinates
+                                self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+                                self.neck_position_publisher.publish(self.navigation_neck)
+                                self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_Host==True
+
+                                #CORRIGIR PARA OLHAR PARA O HOST QUE ESTÁ NA CADEIRA 1
+                                self.coordinates.move_target_coordinates = self.chair1_coordinates
+                                self.coordinates.rotate_target_coordinates = self.chair1_coordinates_orientation
+                                self.coordinates.flag_not_obs = False
+
+                                self.target_position_publisher.publish(self.coordinates)
+
+                                self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.contador_conhecidos=0
+                            
+                                self.state = 9
+                            else:
+                                self.state = 9
+                        else:
+                            if self.flag_place_to_sit == True:
+                                self.state = 9
+                            else:
+                                self.place_to_sit = self.chair1_coordinates
+                                self.place_to_sit_orientation = self.chair1_coordinates_orientation
+                                self.flag_place_to_sit = True
+                                self.state = 9
+                        
+                    else:         
+                        cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                        num_faces=self.detect_face(cv2_img)
+                        if self.num_faces != 0 :
+                            nomes=self.reconhecimento_facial(cv2_img)
+                            '''for pessoa in pessoas_detetadas:
+                                self.contador_conhecidos = 0
+                                if pessoa != 'unknown' and pessoa in self.names:
+                                    self.contador_conhecidos += 1'''
+
+                            
+                            if self.names in nomes:
+                                if nomes == self.names[0]:
+                                    #CORRIGIR PARA OLHAR PARA O GUEST 2
+                                    self.coordinates.move_target_coordinates = self.chair1_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+                                
+                                    self.neck_position_publisher.publish(self.navigation_neck)
+                                    self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+
+                                    #CORRIGIR PARA OLHAR PARA A CADEIRA 1 ONDE ESTÁ O HOST
+                                    self.coordinates.move_target_coordinates = self.chair1_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.chair1_coordinates_orientation
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+
+                                    self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                    self.speech_str.command = f"The new guest's name is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    self.flag_Host==True
+                                    self.contador_conhecidos=0
+                                    self.state = 9
+
+                                elif nomes == self.names[1]:
+
+                                    #CORRIGIR PARA OLHAR PARA O GUEST 2
+                                    self.coordinates.move_target_coordinates = self.chair1_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.guest_coordinates 
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+
+                                    self.neck_position_publisher.publish(self.navigation_neck)
+                                    self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    if self.get_caract==3:
+                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                    elif self.get_caract==2:
+                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                    elif self.get_caract==1:
+                                        self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+
+                                    #CORRIGIR PARA OLHAR PARA O GUEST 1 QUE ESTÁ SENTADO
+                                    self.coordinates.move_target_coordinates = self.chair1_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.chair1_coordinates_orientation
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+
+                                    self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                    self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    self.flag_Guest1 = True
+                                    self.contador_conhecidos=0
+                                    self.state = 9   
+
+                            else:   
+                                self.state = 9
+
+                        else:
+                            if self.flag_place_to_sit == True:
+                                self.state = 9
+                            else:
+                                self.place_to_sit = self.chair1_coordinates
+                                self.place_to_sit_orientation = self.chair1_coordinates_orientation
+                                self.flag_place_to_sit = True
+                                self.state = 9
+
+            elif self.state == 9:     
+
+                if self.flag_Guest1 and self.flag_Host and self.place_to_sit:
+                    self.state == 11
+                else:
+                    #CORRIGIR PARA OLHAR PARA A CADEIRA 2
+                    self.coordinates.move_target_coordinates = self.chair2_coordinates
+                    self.coordinates.rotate_target_coordinates = self.chair2_coordinates_orientation
+                    self.coordinates.flag_not_obs = False
+
+                    self.target_position_publisher.publish(self.coordinates)
+
+                    self.neck_position_publisher.publish(self.place_to_sit_neck)
+
+                    cv2_img = self.br.imgmsg_to_cv2(self.colour_img, "bgr8")
+                    num_faces=self.detect_face(cv2_img)
+                    nomes=self.reconhecimento_facial(cv2_img)
+                    if self.num_faces == 0 :
+                        self.state = 10
+                    else:
+                        if self.flag_Host == True:
+                            if self.flag_Guest1 == True:
+                                self.speech_str.command = "Please stand. I couldn't find an empty seat."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                                self.flag_already_sit=True
+                                self.state = 11
+                            else:
+                                
+                                '''for pessoa in pessoas_detetadas:
+                                    self.contador_conhecidos = 0
+                                    if pessoa != 'unknown' and pessoa in self.names:
+                                        self.contador_conhecidos += 1'''
+
+                                
+                                if self.names in nomes:
+                                    if nomes == self.names[1]:
+
+                                        #CORRIGIR PARA OLHAR PARA O GUEST 2
+                                        self.coordinates.move_target_coordinates = self.chair2_coordinates
+                                        self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                        self.coordinates.flag_not_obs = False
+
+                                        self.target_position_publisher.publish(self.coordinates)
+
+                                        self.neck_position_publisher.publish(self.navigation_neck)
+                                        self.speech_str.command = f"The guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                        if self.get_caract==3:
+                                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                            
+                                            self.speaker_publisher.publish(self.speech_str)
+                                        elif self.get_caract==2:
+                                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                            
+                                            self.speaker_publisher.publish(self.speech_str)
+                                        elif self.get_caract==1:
+                                            self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                            
+                                            self.speaker_publisher.publish(self.speech_str)
+
+                                        #CORRIGIR PARA OLHAR PARA O GUEST 1 NA CADEIRA 2
+                                        self.coordinates.move_target_coordinates = self.chair2_coordinates
+                                        self.coordinates.rotate_target_coordinates = self.chair2_coordinates_orientation
+                                        self.coordinates.flag_not_obs = False
+
+                                        self.target_position_publisher.publish(self.coordinates)
+
+                                        self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                        self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                        self.flag_Guest1==True
+                                        self.contador_conhecidos=0
+                                        self.state = 11
+                                else:
+                                    #CORRIGIR PARA OLHAR PARA O GUEST 2
+                                    self.coordinates.move_target_coordinates = self.chair2_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+
+                                    self.neck_position_publisher.publish(self.navigation_neck)
+                                    self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    if self.get_caract==3:
+                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                    elif self.get_caract==2:
+                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                    elif self.get_caract==1:
+                                        self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+
+                                    self.neck_position_publisher.publish(self.navigation_neck)
+                                    self.speech_str.command = f"The new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    self.flag_Guest1==True
+                                    self.state=11
+                            
+                        else:
+                            '''for pessoa in pessoas_detetadas:
+                                self.contador_conhecidos = 0
+                                if pessoa != 'unknown' and pessoa in self.names:
+                                    self.contador_conhecidos += 1'''
+
+                            
+
+                            if self.names in nomes:
+                                if nomes == self.names[0]:
+                                    #CORRIGIR PARA OLHAR PARA O GUEST 2
+                                    self.coordinates.move_target_coordinates = self.chair2_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+                                    self.neck_position_publisher.publish(self.navigation_neck)
+                                    self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+
+                                    #CORRIGIR PARA OLHAR PARA O HOST
+                                    self.coordinates.move_target_coordinates = self.chair2_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.chair2_coordinates_orientation
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+                                    self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                    self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    self.flag_Host==True
+                                    self.state=11
+
+                                elif nomes == self.names[1]:
+                                    #CORRIGIR PARA OLHAR PARA O GUEST 2
+                                    self.coordinates.move_target_coordinates = self.chair2_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+                                    
+                                    self.neck_position_publisher.publish(self.navigation_neck)
+                                    self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    if self.get_caract==3:
+                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                    elif self.get_caract==2:
+                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                    elif self.get_caract==1:
+                                        self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+
+                                    #CORRIGIR PARA OLHAR PARA O LOCAL ONDE ESTÁ O GUEST 1
+                                    self.coordinates.move_target_coordinates = self.chair2_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.chair2_coordinates_orientation
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+
+                                    self.neck_position_publisher.publish(self.place_to_sit_neck)
+                                    self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    self.flag_Guest1= True
+                                    self.state=11
+                            else:
+                                if self.flag_Guest1 == True:
+                                    #CORRIGIR PARA OLHAR PARA O GUEST 2
+                                    self.coordinates.move_target_coordinates = self.chair2_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+
+                                    self.neck_position_publisher.publish(self.navigation_neck)
+                                    self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+
+                                    self.neck_position_publisher.publish(self.guest_coordinates)
+                                    self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    self.flag_Host==True
+                                    self.state=11
+                                else:
+                                    #CORRIGIR PARA OLHAR PARA O GUEST 2
+                                    self.coordinates.move_target_coordinates = self.chair2_coordinates
+                                    self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                                    self.coordinates.flag_not_obs = False
+
+                                    self.target_position_publisher.publish(self.coordinates)
+                                    self.neck_position_publisher.publish(self.navigation_neck)
+                                    self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+
+                                    self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    if self.get_caract==3:
+                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                    elif self.get_caract==2:
+                                        self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)
+                                    elif self.get_caract==1:
+                                        self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                        
+                                        self.speaker_publisher.publish(self.speech_str)    
+                                    
+                                    self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                                    
+                                    self.speaker_publisher.publish(self.speech_str)
+                                    self.flag_Guest1==True
+                                    self.state=11
+
+                
+
+            elif self.state == 10:
+                if self.flag_place_to_sit == True:
+                    if self.flag_Guest1 == True:
+                        #CORRIGIR PARA OLHAR PARA O GUEST 2
+                        self.coordinates.move_target_coordinates = self.chair2_coordinates
+                        self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                        self.coordinates.flag_not_obs = False
+
+                        self.target_position_publisher.publish(self.coordinates)
+                        
+                        self.neck_position_publisher.publish(self.navigation_neck)
+                        self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+
+                        self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                        self.flag_Host=True
+                        self.flag_Guest1= True
+
+                        self.state=11
+                    else:
+                        if self.flag_Host == True:
+                            #CORRIGIR PARA OLHAR PARA O GUEST 2
+                            self.coordinates.move_target_coordinates = self.chair2_coordinates
+                            self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+
+                            self.neck_position_publisher.publish(self.navigation_neck)
+                            self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            if self.get_caract==3:
+                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                            elif self.get_caract==2:
+                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                            elif self.get_caract==1:
+                                self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+
+                            self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_Guest1= True
+                            self.state=11
+                        else:
+                            #CORRIGIR PARA OLHAR PARA O GUEST 2
+                            self.coordinates.move_target_coordinates = self.chair2_coordinates
+                            self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+                            
+                            self.neck_position_publisher.publish(self.navigation_neck)
+                            self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+                            self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            if self.get_caract==3:
+                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                            elif self.get_caract==2:
+                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                            elif self.get_caract==1:
+                                self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+
+                            self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_Host=True
+                            self.flag_Guest1= True
+                            self.state=11
+                else:
+                    self.place_to_sit = self.chair2_coordinates
+                    self.flag_place_to_sit = True
+                    if self.flag_Guest1 == True:
+                        if self.flag_Host == True:
+                            #CORRIGIR PARA OLHAR PARA O LOCAL ONDE SE VAI SENTAR
+                            self.coordinates.move_target_coordinates = self.place_to_sit
+                            self.coordinates.rotate_target_coordinates = self.place_to_sit_orientation
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+
+                            self.neck_position_publisher.publish(self.place_to_sit_neck)
+                            self.speech_str.command = f"Please take a sit on the chair that I'm looking for."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_already_sit=True
+                            self.state=11
+                        else:
+                            #CORRIGIR PARA OLHAR PARA O LOCAL ONDE ESTÁ O GUEST 2
+                            self.coordinates.move_target_coordinates = self.chair2_coordinates
+                            self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+                            self.neck_position_publisher.publish(self.navigation_neck)
+                            self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+                            self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_Host=True
+                            self.state=11
+                    else:
+                        if self.flag_Host == True:
+                            #CORRIGIR PARA OLHAR PARA O GUEST 2
+                            self.coordinates.move_target_coordinates = self.chair2_coordinates
+                            self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+                            
+                            self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            if self.get_caract==3:
+                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                            elif self.get_caract==2:
+                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                            elif self.get_caract==1:
+                                self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+
+                            self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            
+                            self.flag_Guest1= True
+                            self.state=11
+                        else:
+                            #CORRIGIR PARA OLHAR PARA O GUEST 2
+                            self.coordinates.move_target_coordinates = self.chair2_coordinates
+                            self.coordinates.rotate_target_coordinates = self.guest_coordinates
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+                            self.neck_position_publisher.publish(self.navigation_neck)
+                            self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+                            self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            if self.get_caract==3:
+                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                            elif self.get_caract==2:
+                                self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+                            elif self.get_caract==1:
+                                self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                                
+                                self.speaker_publisher.publish(self.speech_str)
+
+                            self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+                            #CORRIGIR PARA OLHAR PARA O LOCAL ONDE SE VAI SENTAR
+                            self.coordinates.move_target_coordinates = self.place_to_sit
+                            self.coordinates.rotate_target_coordinates = self.place_to_sit_orientation
+                            self.coordinates.flag_not_obs = False
+
+                            self.target_position_publisher.publish(self.coordinates)
+                            self.neck_position_publisher.publish(self.place_to_sit_neck)
+                            self.speech_str.command = f"Please take a sit on the chair that I'm looking for."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                            self.flag_Guest1=True
+                            self.flag_Host=True
+                            self.flag_already_sit=True
+                            self.state=11
+
+            elif self.state == 11:
+                if self.flag_Host == True:
+                    if self.flag_Guest1 == True:
+                        self.state=12
+                    else:
+                        #CORRIGIR PARA OLHAR PARA UMA POSIÇÃO
+                        self.coordinates.move_target_coordinates = self.chair2_coordinates
+                        self.coordinates.rotate_target_coordinates = self.sofa_coordinates
+                        self.coordinates.flag_not_obs = False
+
+                        self.target_position_publisher.publish(self.coordinates)
+
+                        self.neck_position_publisher.publish(self.navigation_neck)
+
+                        self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                        if self.get_caract==3:
+                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                        elif self.get_caract==2:
+                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                        elif self.get_caract==1:
+                            self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+                        self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                        self.flag_Guest1=True
+                        self.state=12
+                else:
+                    if self.flag_Guest1 == True:
+                        #CORRIGIR PARA OLHAR PARA UMA POSIÇÃO
+                        self.coordinates.move_target_coordinates = self.chair2_coordinates
+                        self.coordinates.rotate_target_coordinates = self.sofa_coordinates
+                        self.coordinates.flag_not_obs = False
+
+                        self.target_position_publisher.publish(self.coordinates)
+                        
+                        self.neck_position_publisher.publish(self.navigation_neck)
+
+                        self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+
+                        self.speech_str.command = f"The new guest is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                        self.flag_Host=True
+                        self.state=12
+
+                    else:
+                        self.neck_position_publisher.publish(self.navigation_neck)
+                        self.speech_str.command = f"The host is {self.names[0]} and his favorite drink is {self.drinks[0]}."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+
+                        self.speech_str.command = f"The first guest is {self.names[1]} and his favorite drink is {self.drinks[1]}."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                        if self.get_caract==3:
+                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                        elif self.get_caract==2:
+                            self.speech_str.command = f"The first guest is gender {self.caracteristics[0]}, is in age group {self.caracteristics[1]}. He is taller than me."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+                        elif self.get_caract==1:
+                            self.speech_str.command = f"The first guest is taller than me and with respect to ethnicity is {self.caracteristics[2]}."
+                            
+                            self.speaker_publisher.publish(self.speech_str)
+
+                        self.speech_str.command = f"And the new guest's name is {self.names[2]} and his favorite drink is {self.drinks[2]}."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                        self.flag_Host=True
+                        self.flag_Guest1=True
+                        self.state=12
+
+            elif self.state == 12:
+                if self.flag_place_to_sit == True:
+                    if self.flag_already_sit == True:
+                        self.speech_str.command = f"Thank you. I finished my receptionist task."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                    else:
+                        #CORRIGIR PARA SE ORIENTAR PARA A ZONA DO LUGAR DE SENTAR
+                        self.coordinates.move_target_coordinates = self.place_to_sit
+                        self.coordinates.rotate_target_coordinates = self.place_to_sit_orientation
+                        self.coordinates.flag_not_obs = False
+
+                        self.target_position_publisher.publish(self.coordinates)
+                        
+                        self.neck_position_publisher.publish(self.place_to_sit_neck)
+                        self.speech_str.command = f"Please sit down on the place that I'm looking for."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                        self.speech_str.command = f"Thank you. I finished my receptionist task."
+                        
+                        self.speaker_publisher.publish(self.speech_str)
+                else:
+                    self.speech_str.command = "Please stand. I couldn't find an empty seat."
+                    
+                    self.speaker_publisher.publish(self.speech_str)
+                    self.speech_str.command = f"Thank you. I finished my receptionist task."
+                    
+                    self.speaker_publisher.publish(self.speech_str)  """
+    
