@@ -2,7 +2,7 @@ names_dict = {
     "Amelia":    ["amelia", "emilia"],
     "Angel":     ["angel"],
     "Ava":       ["ava", "eva", "abba"],
-    "Charlie":   ["charlie", "shire lee", "charl", "sean"],
+    "Charlie":   ["charlie", "shire lee", "sean"],
     "Charlotte": ["charlotte", "char law", "sharhr law", "shah law"],
     "Hunter":    ["hunter", "anther", "aunsel", "antard", "ulthur", "ontoad", "untired", "ansel", "andrew", "aunt", "anto"],
     "Max":       ["max"],
@@ -21,7 +21,7 @@ drinks_dict = {
     "7up": ["seven", "up", "7", "simon", "nope", "devanab", "savannah", "sabona"],
 	"IceTea": ["ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
-               "an i.c.", "anasti"]
+               "an i.c.", "anasti", "aussie", "aesti", "esti"]
 }
 
 yes_no_dict = {
