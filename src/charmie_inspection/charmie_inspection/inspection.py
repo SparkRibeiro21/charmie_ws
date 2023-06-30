@@ -12,11 +12,11 @@ from charmie_interfaces.msg import Obstacles, RobotSpeech, TarNavSDNL
 
 after_door_point = (0.0, 1.7)
 # aux1_point = (2.2, 1.7)
-inspection_point = (1.40, 5.80)
-sofas = (3.0, 5.8)
+inspection_point = (1.0, 5.80 + 1.7)
+sofas = (3.0, 5.8 + 1.7)
 
-exit_first_point = (2.80, 5.85)
-
+exit_first_point = (1.0, 5.80 + 1.7 + 1.0)
+exit_point = (1.00, 5.80 + 1.7 + 2.0)
 
 
 class InspectionNode(Node):
@@ -43,12 +43,16 @@ class InspectionNode(Node):
         self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_pos_reached_callback, 10)
 
+        # Low Level: Start Button
+        self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
+        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
 
 
         ###         Vars
         self.done_start_door = False
         self.flag_speech_done = False
         self.flag_navigation_done = False
+        self.start_button_state = False
         self.speech_str = RobotSpeech()
         self.talk_neck = Pose2D()
         self.talk_neck.x = 180.0
@@ -64,9 +68,12 @@ class InspectionNode(Node):
         print("Received Speech Flag:", state.data)
 
     def flag_pos_reached_callback(self, state: Bool):
+        self.flag_navigation_done = state.data
         print("Received Navigation Flag:", state.data)
-        self.flag_navigation_done = True
 
+    def get_start_button_callback(self, state: Bool):
+        self.start_button_state = state.data
+        print("Received Start Button:", state.data)
 
 
 
@@ -117,6 +124,13 @@ class ReceptionistMain():
             pass
         self.node.flag_navigation_done = False
         print("Finished Navigation")
+
+    def wait_for_start_button(self):
+        while not self.node.start_button_state:
+            pass
+        f = Bool()
+        f.data = False 
+        self.node.flag_start_button_publisher.publish(f)
 
 
     def coordinates_to_navigation(self, p1, p2, bool):
@@ -173,7 +187,8 @@ class ReceptionistMain():
                 # self.wait_for_end_of_navigation()
 
 
-                self.node.speech_str.command = "Hello, my name is CHARMIE."
+                self.node.speech_str.command = "Hello my name is charmie and I am very happy to make my debut on robocup at home. Hoppefully I am able to show some of my skills on the upcoming days. \
+                I am ready to move on to the exit, when you are ready just stand in front of me and say Yes. Meanwhile I will wait here."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
 
@@ -182,7 +197,18 @@ class ReceptionistMain():
                 # self.node.speech_str.command = "I am ready to receive a new guest. Please stand in front of me."
                 # self.node.speaker_publisher.publish(self.node.speech_str)
                 # self.wait_for_end_of_speaking()
+                t = Bool()
+                t.data = True
+                self.node.flag_start_button_publisher.publish(t)
+                self.wait_for_start_button()
 
+
+                self.coordinates_to_navigation(inspection_point, exit_first_point, True)
+                self.wait_for_end_of_navigation()
+                self.coordinates_to_navigation(exit_first_point, exit_point, False)
+                self.wait_for_end_of_navigation()
+
+                self.state = 1
 
                 # wait pela audição
                 # self.node.audio_command_publisher.publish(self.node.speech_type)

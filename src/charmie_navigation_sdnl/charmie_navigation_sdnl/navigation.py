@@ -16,15 +16,15 @@ class NavigationSDNLClass:
     def __init__(self):
 
         # configurable SDNL parameters
-        self.lambda_target_mov = 8
+        self.lambda_target_mov = 9
         self.lambda_target_rot = 14
-        self.beta1 = 5
-        self.beta2 = 4
+        self.beta1 = 7
+        self.beta2 = 5
 
         # configurable other parameters
-        self.nav_threshold_dist = 0.3 # in meters
+        self.nav_threshold_dist = 0.35 # in meters
         self.nav_threshold_ang = 10 # degrees
-        self.max_lin_speed = 20.0 # speed
+        self.max_lin_speed = 25.0 # speed
         self.max_ang_speed = 20.0 # speed
         self.tar_dist_decrease_lin_speed = 0.5 # meters
         self.obs_dist_decrease_lin_speed = 1.0 # meters
