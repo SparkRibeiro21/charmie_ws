@@ -373,26 +373,20 @@ ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_inter
 # install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Encoders.idl" "DESTINATION" "share/charmie_interfaces/msg")
 ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Encoders.idl" "DESTINATION" "share/charmie_interfaces/msg")
 
+# install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Keypoints.idl" "DESTINATION" "share/charmie_interfaces/msg")
+ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Keypoints.idl" "DESTINATION" "share/charmie_interfaces/msg")
+
+# install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Yolov8Pose.idl" "DESTINATION" "share/charmie_interfaces/msg")
+ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Yolov8Pose.idl" "DESTINATION" "share/charmie_interfaces/msg")
+
 # install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/PS4Controller.idl" "DESTINATION" "share/charmie_interfaces/msg")
 ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/PS4Controller.idl" "DESTINATION" "share/charmie_interfaces/msg")
 
 # install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/RobotSpeech.idl" "DESTINATION" "share/charmie_interfaces/msg")
 ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/RobotSpeech.idl" "DESTINATION" "share/charmie_interfaces/msg")
 
-# install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/SpeechType.idl" "DESTINATION" "share/charmie_interfaces/msg")
-ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/SpeechType.idl" "DESTINATION" "share/charmie_interfaces/msg")
-
-# install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/ObstacleInfo.idl" "DESTINATION" "share/charmie_interfaces/msg")
-ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/ObstacleInfo.idl" "DESTINATION" "share/charmie_interfaces/msg")
-
-# install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Obstacles.idl" "DESTINATION" "share/charmie_interfaces/msg")
-ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Obstacles.idl" "DESTINATION" "share/charmie_interfaces/msg")
-
-# install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/TarNavSDNL.idl" "DESTINATION" "share/charmie_interfaces/msg")
-ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/TarNavSDNL.idl" "DESTINATION" "share/charmie_interfaces/msg")
-
-# install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/MultiObjects.idl" "DESTINATION" "share/charmie_interfaces/msg")
-ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/MultiObjects.idl" "DESTINATION" "share/charmie_interfaces/msg")
+# install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Yolov8PoseArray.idl" "DESTINATION" "share/charmie_interfaces/msg")
+ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Yolov8PoseArray.idl" "DESTINATION" "share/charmie_interfaces/msg")
 
 # install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/ExampleTR.msg" "DESTINATION" "share/charmie_interfaces/msg")
 ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/ExampleTR.msg" "DESTINATION" "share/charmie_interfaces/msg")
@@ -400,26 +394,20 @@ ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_inter
 # install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Encoders.msg" "DESTINATION" "share/charmie_interfaces/msg")
 ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Encoders.msg" "DESTINATION" "share/charmie_interfaces/msg")
 
+# install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Keypoints.msg" "DESTINATION" "share/charmie_interfaces/msg")
+ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Keypoints.msg" "DESTINATION" "share/charmie_interfaces/msg")
+
+# install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Yolov8Pose.msg" "DESTINATION" "share/charmie_interfaces/msg")
+ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Yolov8Pose.msg" "DESTINATION" "share/charmie_interfaces/msg")
+
 # install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/PS4Controller.msg" "DESTINATION" "share/charmie_interfaces/msg")
 ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/PS4Controller.msg" "DESTINATION" "share/charmie_interfaces/msg")
 
 # install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/RobotSpeech.msg" "DESTINATION" "share/charmie_interfaces/msg")
 ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/RobotSpeech.msg" "DESTINATION" "share/charmie_interfaces/msg")
 
-# install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/SpeechType.msg" "DESTINATION" "share/charmie_interfaces/msg")
-ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/SpeechType.msg" "DESTINATION" "share/charmie_interfaces/msg")
-
-# install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/ObstacleInfo.msg" "DESTINATION" "share/charmie_interfaces/msg")
-ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/ObstacleInfo.msg" "DESTINATION" "share/charmie_interfaces/msg")
-
-# install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Obstacles.msg" "DESTINATION" "share/charmie_interfaces/msg")
-ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Obstacles.msg" "DESTINATION" "share/charmie_interfaces/msg")
-
-# install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/TarNavSDNL.msg" "DESTINATION" "share/charmie_interfaces/msg")
-ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/TarNavSDNL.msg" "DESTINATION" "share/charmie_interfaces/msg")
-
-# install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/MultiObjects.msg" "DESTINATION" "share/charmie_interfaces/msg")
-ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/MultiObjects.msg" "DESTINATION" "share/charmie_interfaces/msg")
+# install(FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Yolov8PoseArray.msg" "DESTINATION" "share/charmie_interfaces/msg")
+ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Yolov8PoseArray.msg" "DESTINATION" "share/charmie_interfaces/msg")
 
 # install(FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/charmie_interfaces" "DESTINATION" "share/ament_index/resource_index/package_run_dependencies")
 ament_cmake_symlink_install_files("/home/utilizador/charmie_ws/src/charmie_interfaces" FILES "/home/utilizador/charmie_ws/build/charmie_interfaces/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/charmie_interfaces" "DESTINATION" "share/ament_index/resource_index/package_run_dependencies")

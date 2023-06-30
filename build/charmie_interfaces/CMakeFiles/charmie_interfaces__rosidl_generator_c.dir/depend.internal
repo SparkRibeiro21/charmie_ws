@@ -31,24 +31,8 @@ CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.h
  rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__struct.h
  rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
-CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__functions.c.o
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__functions.c
- /opt/ros/foxy/include/rcutils/allocator.h
- /opt/ros/foxy/include/rcutils/macros.h
- /opt/ros/foxy/include/rcutils/testing/fault_injection.h
- /opt/ros/foxy/include/rcutils/types/rcutils_ret.h
- /opt/ros/foxy/include/rcutils/visibility_control.h
- /opt/ros/foxy/include/rcutils/visibility_control_macros.h
- /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence.h
- /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence_functions.h
- /opt/ros/foxy/include/rosidl_runtime_c/string.h
- /opt/ros/foxy/include/rosidl_runtime_c/string_functions.h
- /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
- rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__functions.h
- rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__struct.h
- rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
-CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__functions.c.o
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__functions.c
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__functions.c.o
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__functions.c
  /opt/ros/foxy/include/rcutils/allocator.h
  /opt/ros/foxy/include/rcutils/macros.h
  /opt/ros/foxy/include/rcutils/testing/fault_injection.h
@@ -56,22 +40,8 @@ CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie
  /opt/ros/foxy/include/rcutils/visibility_control.h
  /opt/ros/foxy/include/rcutils/visibility_control_macros.h
  /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
- rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__functions.h
- rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__struct.h
- rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
-CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/obstacles__functions.c.o
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/obstacles__functions.c
- /opt/ros/foxy/include/rcutils/allocator.h
- /opt/ros/foxy/include/rcutils/macros.h
- /opt/ros/foxy/include/rcutils/testing/fault_injection.h
- /opt/ros/foxy/include/rcutils/types/rcutils_ret.h
- /opt/ros/foxy/include/rcutils/visibility_control.h
- /opt/ros/foxy/include/rcutils/visibility_control_macros.h
- /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
- rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__functions.h
- rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__struct.h
- rosidl_generator_c/charmie_interfaces/msg/detail/obstacles__functions.h
- rosidl_generator_c/charmie_interfaces/msg/detail/obstacles__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__struct.h
  rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
 CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.c.o
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/ps4_controller__functions.c
@@ -100,8 +70,8 @@ CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie
  rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__functions.h
  rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__struct.h
  rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
-CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c.o
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.c
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__functions.c.o
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__functions.c
  /opt/ros/foxy/include/rcutils/allocator.h
  /opt/ros/foxy/include/rcutils/macros.h
  /opt/ros/foxy/include/rcutils/testing/fault_injection.h
@@ -109,14 +79,13 @@ CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie
  /opt/ros/foxy/include/rcutils/visibility_control.h
  /opt/ros/foxy/include/rcutils/visibility_control_macros.h
  /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
- rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h
- rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__struct.h
  rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
-CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.c.o
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.c
- /opt/ros/foxy/include/geometry_msgs/msg/detail/pose2_d__functions.h
- /opt/ros/foxy/include/geometry_msgs/msg/detail/pose2_d__struct.h
- /opt/ros/foxy/include/geometry_msgs/msg/rosidl_generator_c__visibility_control.h
+CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose_array__functions.c.o
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose_array__functions.c
  /opt/ros/foxy/include/rcutils/allocator.h
  /opt/ros/foxy/include/rcutils/macros.h
  /opt/ros/foxy/include/rcutils/testing/fault_injection.h
@@ -124,6 +93,9 @@ CMakeFiles/charmie_interfaces__rosidl_generator_c.dir/rosidl_generator_c/charmie
  /opt/ros/foxy/include/rcutils/visibility_control.h
  /opt/ros/foxy/include/rcutils/visibility_control_macros.h
  /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
- rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.h
- rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose_array__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose_array__struct.h
  rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h

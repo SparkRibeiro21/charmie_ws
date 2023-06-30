@@ -302,6 +302,284 @@ _register_msg_type__msg__encoders(PyObject * pymodule)
 // #include "rosidl_runtime_c/service_type_support_struct.h"
 // already included above
 // #include "rosidl_runtime_c/action_type_support_struct.h"
+#include "charmie_interfaces/msg/detail/keypoints__type_support.h"
+#include "charmie_interfaces/msg/detail/keypoints__struct.h"
+#include "charmie_interfaces/msg/detail/keypoints__functions.h"
+
+static void * charmie_interfaces__msg__keypoints__create_ros_message(void)
+{
+  return charmie_interfaces__msg__Keypoints__create();
+}
+
+static void charmie_interfaces__msg__keypoints__destroy_ros_message(void * raw_ros_message)
+{
+  charmie_interfaces__msg__Keypoints * ros_message = (charmie_interfaces__msg__Keypoints *)raw_ros_message;
+  charmie_interfaces__msg__Keypoints__destroy(ros_message);
+}
+
+ROSIDL_GENERATOR_C_IMPORT
+bool charmie_interfaces__msg__keypoints__convert_from_py(PyObject * _pymsg, void * ros_message);
+ROSIDL_GENERATOR_C_IMPORT
+PyObject * charmie_interfaces__msg__keypoints__convert_to_py(void * raw_ros_message);
+
+
+ROSIDL_GENERATOR_C_IMPORT
+const rosidl_message_type_support_t *
+ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, Keypoints);
+
+int8_t
+_register_msg_type__msg__keypoints(PyObject * pymodule)
+{
+  int8_t err;
+
+  PyObject * pyobject_create_ros_message = NULL;
+  pyobject_create_ros_message = PyCapsule_New(
+    (void *)&charmie_interfaces__msg__keypoints__create_ros_message,
+    NULL, NULL);
+  if (!pyobject_create_ros_message) {
+    // previously added objects will be removed when the module is destroyed
+    return -1;
+  }
+  err = PyModule_AddObject(
+    pymodule,
+    "create_ros_message_msg__msg__keypoints",
+    pyobject_create_ros_message);
+  if (err) {
+    // the created capsule needs to be decremented
+    Py_XDECREF(pyobject_create_ros_message);
+    // previously added objects will be removed when the module is destroyed
+    return err;
+  }
+
+  PyObject * pyobject_destroy_ros_message = NULL;
+  pyobject_destroy_ros_message = PyCapsule_New(
+    (void *)&charmie_interfaces__msg__keypoints__destroy_ros_message,
+    NULL, NULL);
+  if (!pyobject_destroy_ros_message) {
+    // previously added objects will be removed when the module is destroyed
+    return -1;
+  }
+  err = PyModule_AddObject(
+    pymodule,
+    "destroy_ros_message_msg__msg__keypoints",
+    pyobject_destroy_ros_message);
+  if (err) {
+    // the created capsule needs to be decremented
+    Py_XDECREF(pyobject_destroy_ros_message);
+    // previously added objects will be removed when the module is destroyed
+    return err;
+  }
+
+  PyObject * pyobject_convert_from_py = NULL;
+  pyobject_convert_from_py = PyCapsule_New(
+    (void *)&charmie_interfaces__msg__keypoints__convert_from_py,
+    NULL, NULL);
+  if (!pyobject_convert_from_py) {
+    // previously added objects will be removed when the module is destroyed
+    return -1;
+  }
+  err = PyModule_AddObject(
+    pymodule,
+    "convert_from_py_msg__msg__keypoints",
+    pyobject_convert_from_py);
+  if (err) {
+    // the created capsule needs to be decremented
+    Py_XDECREF(pyobject_convert_from_py);
+    // previously added objects will be removed when the module is destroyed
+    return err;
+  }
+
+  PyObject * pyobject_convert_to_py = NULL;
+  pyobject_convert_to_py = PyCapsule_New(
+    (void *)&charmie_interfaces__msg__keypoints__convert_to_py,
+    NULL, NULL);
+  if (!pyobject_convert_to_py) {
+    // previously added objects will be removed when the module is destroyed
+    return -1;
+  }
+  err = PyModule_AddObject(
+    pymodule,
+    "convert_to_py_msg__msg__keypoints",
+    pyobject_convert_to_py);
+  if (err) {
+    // the created capsule needs to be decremented
+    Py_XDECREF(pyobject_convert_to_py);
+    // previously added objects will be removed when the module is destroyed
+    return err;
+  }
+
+  PyObject * pyobject_type_support = NULL;
+  pyobject_type_support = PyCapsule_New(
+    (void *)ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, Keypoints),
+    NULL, NULL);
+  if (!pyobject_type_support) {
+    // previously added objects will be removed when the module is destroyed
+    return -1;
+  }
+  err = PyModule_AddObject(
+    pymodule,
+    "type_support_msg__msg__keypoints",
+    pyobject_type_support);
+  if (err) {
+    // the created capsule needs to be decremented
+    Py_XDECREF(pyobject_type_support);
+    // previously added objects will be removed when the module is destroyed
+    return err;
+  }
+  return 0;
+}
+
+// already included above
+// #include <stdbool.h>
+// already included above
+// #include <stdint.h>
+// already included above
+// #include "rosidl_runtime_c/visibility_control.h"
+// already included above
+// #include "rosidl_runtime_c/message_type_support_struct.h"
+// already included above
+// #include "rosidl_runtime_c/service_type_support_struct.h"
+// already included above
+// #include "rosidl_runtime_c/action_type_support_struct.h"
+#include "charmie_interfaces/msg/detail/yolov8_pose__type_support.h"
+#include "charmie_interfaces/msg/detail/yolov8_pose__struct.h"
+#include "charmie_interfaces/msg/detail/yolov8_pose__functions.h"
+
+static void * charmie_interfaces__msg__yolov8_pose__create_ros_message(void)
+{
+  return charmie_interfaces__msg__Yolov8Pose__create();
+}
+
+static void charmie_interfaces__msg__yolov8_pose__destroy_ros_message(void * raw_ros_message)
+{
+  charmie_interfaces__msg__Yolov8Pose * ros_message = (charmie_interfaces__msg__Yolov8Pose *)raw_ros_message;
+  charmie_interfaces__msg__Yolov8Pose__destroy(ros_message);
+}
+
+ROSIDL_GENERATOR_C_IMPORT
+bool charmie_interfaces__msg__yolov8_pose__convert_from_py(PyObject * _pymsg, void * ros_message);
+ROSIDL_GENERATOR_C_IMPORT
+PyObject * charmie_interfaces__msg__yolov8_pose__convert_to_py(void * raw_ros_message);
+
+
+ROSIDL_GENERATOR_C_IMPORT
+const rosidl_message_type_support_t *
+ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, Yolov8Pose);
+
+int8_t
+_register_msg_type__msg__yolov8_pose(PyObject * pymodule)
+{
+  int8_t err;
+
+  PyObject * pyobject_create_ros_message = NULL;
+  pyobject_create_ros_message = PyCapsule_New(
+    (void *)&charmie_interfaces__msg__yolov8_pose__create_ros_message,
+    NULL, NULL);
+  if (!pyobject_create_ros_message) {
+    // previously added objects will be removed when the module is destroyed
+    return -1;
+  }
+  err = PyModule_AddObject(
+    pymodule,
+    "create_ros_message_msg__msg__yolov8_pose",
+    pyobject_create_ros_message);
+  if (err) {
+    // the created capsule needs to be decremented
+    Py_XDECREF(pyobject_create_ros_message);
+    // previously added objects will be removed when the module is destroyed
+    return err;
+  }
+
+  PyObject * pyobject_destroy_ros_message = NULL;
+  pyobject_destroy_ros_message = PyCapsule_New(
+    (void *)&charmie_interfaces__msg__yolov8_pose__destroy_ros_message,
+    NULL, NULL);
+  if (!pyobject_destroy_ros_message) {
+    // previously added objects will be removed when the module is destroyed
+    return -1;
+  }
+  err = PyModule_AddObject(
+    pymodule,
+    "destroy_ros_message_msg__msg__yolov8_pose",
+    pyobject_destroy_ros_message);
+  if (err) {
+    // the created capsule needs to be decremented
+    Py_XDECREF(pyobject_destroy_ros_message);
+    // previously added objects will be removed when the module is destroyed
+    return err;
+  }
+
+  PyObject * pyobject_convert_from_py = NULL;
+  pyobject_convert_from_py = PyCapsule_New(
+    (void *)&charmie_interfaces__msg__yolov8_pose__convert_from_py,
+    NULL, NULL);
+  if (!pyobject_convert_from_py) {
+    // previously added objects will be removed when the module is destroyed
+    return -1;
+  }
+  err = PyModule_AddObject(
+    pymodule,
+    "convert_from_py_msg__msg__yolov8_pose",
+    pyobject_convert_from_py);
+  if (err) {
+    // the created capsule needs to be decremented
+    Py_XDECREF(pyobject_convert_from_py);
+    // previously added objects will be removed when the module is destroyed
+    return err;
+  }
+
+  PyObject * pyobject_convert_to_py = NULL;
+  pyobject_convert_to_py = PyCapsule_New(
+    (void *)&charmie_interfaces__msg__yolov8_pose__convert_to_py,
+    NULL, NULL);
+  if (!pyobject_convert_to_py) {
+    // previously added objects will be removed when the module is destroyed
+    return -1;
+  }
+  err = PyModule_AddObject(
+    pymodule,
+    "convert_to_py_msg__msg__yolov8_pose",
+    pyobject_convert_to_py);
+  if (err) {
+    // the created capsule needs to be decremented
+    Py_XDECREF(pyobject_convert_to_py);
+    // previously added objects will be removed when the module is destroyed
+    return err;
+  }
+
+  PyObject * pyobject_type_support = NULL;
+  pyobject_type_support = PyCapsule_New(
+    (void *)ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, Yolov8Pose),
+    NULL, NULL);
+  if (!pyobject_type_support) {
+    // previously added objects will be removed when the module is destroyed
+    return -1;
+  }
+  err = PyModule_AddObject(
+    pymodule,
+    "type_support_msg__msg__yolov8_pose",
+    pyobject_type_support);
+  if (err) {
+    // the created capsule needs to be decremented
+    Py_XDECREF(pyobject_type_support);
+    // previously added objects will be removed when the module is destroyed
+    return err;
+  }
+  return 0;
+}
+
+// already included above
+// #include <stdbool.h>
+// already included above
+// #include <stdint.h>
+// already included above
+// #include "rosidl_runtime_c/visibility_control.h"
+// already included above
+// #include "rosidl_runtime_c/message_type_support_struct.h"
+// already included above
+// #include "rosidl_runtime_c/service_type_support_struct.h"
+// already included above
+// #include "rosidl_runtime_c/action_type_support_struct.h"
 #include "charmie_interfaces/msg/detail/ps4_controller__type_support.h"
 #include "charmie_interfaces/msg/detail/ps4_controller__struct.h"
 #include "charmie_interfaces/msg/detail/ps4_controller__functions.h"
@@ -580,39 +858,39 @@ _register_msg_type__msg__robot_speech(PyObject * pymodule)
 // #include "rosidl_runtime_c/service_type_support_struct.h"
 // already included above
 // #include "rosidl_runtime_c/action_type_support_struct.h"
-#include "charmie_interfaces/msg/detail/speech_type__type_support.h"
-#include "charmie_interfaces/msg/detail/speech_type__struct.h"
-#include "charmie_interfaces/msg/detail/speech_type__functions.h"
+#include "charmie_interfaces/msg/detail/yolov8_pose_array__type_support.h"
+#include "charmie_interfaces/msg/detail/yolov8_pose_array__struct.h"
+#include "charmie_interfaces/msg/detail/yolov8_pose_array__functions.h"
 
-static void * charmie_interfaces__msg__speech_type__create_ros_message(void)
+static void * charmie_interfaces__msg__yolov8_pose_array__create_ros_message(void)
 {
-  return charmie_interfaces__msg__SpeechType__create();
+  return charmie_interfaces__msg__Yolov8PoseArray__create();
 }
 
-static void charmie_interfaces__msg__speech_type__destroy_ros_message(void * raw_ros_message)
+static void charmie_interfaces__msg__yolov8_pose_array__destroy_ros_message(void * raw_ros_message)
 {
-  charmie_interfaces__msg__SpeechType * ros_message = (charmie_interfaces__msg__SpeechType *)raw_ros_message;
-  charmie_interfaces__msg__SpeechType__destroy(ros_message);
+  charmie_interfaces__msg__Yolov8PoseArray * ros_message = (charmie_interfaces__msg__Yolov8PoseArray *)raw_ros_message;
+  charmie_interfaces__msg__Yolov8PoseArray__destroy(ros_message);
 }
 
 ROSIDL_GENERATOR_C_IMPORT
-bool charmie_interfaces__msg__speech_type__convert_from_py(PyObject * _pymsg, void * ros_message);
+bool charmie_interfaces__msg__yolov8_pose_array__convert_from_py(PyObject * _pymsg, void * ros_message);
 ROSIDL_GENERATOR_C_IMPORT
-PyObject * charmie_interfaces__msg__speech_type__convert_to_py(void * raw_ros_message);
+PyObject * charmie_interfaces__msg__yolov8_pose_array__convert_to_py(void * raw_ros_message);
 
 
 ROSIDL_GENERATOR_C_IMPORT
 const rosidl_message_type_support_t *
-ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, SpeechType);
+ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, Yolov8PoseArray);
 
 int8_t
-_register_msg_type__msg__speech_type(PyObject * pymodule)
+_register_msg_type__msg__yolov8_pose_array(PyObject * pymodule)
 {
   int8_t err;
 
   PyObject * pyobject_create_ros_message = NULL;
   pyobject_create_ros_message = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__speech_type__create_ros_message,
+    (void *)&charmie_interfaces__msg__yolov8_pose_array__create_ros_message,
     NULL, NULL);
   if (!pyobject_create_ros_message) {
     // previously added objects will be removed when the module is destroyed
@@ -620,7 +898,7 @@ _register_msg_type__msg__speech_type(PyObject * pymodule)
   }
   err = PyModule_AddObject(
     pymodule,
-    "create_ros_message_msg__msg__speech_type",
+    "create_ros_message_msg__msg__yolov8_pose_array",
     pyobject_create_ros_message);
   if (err) {
     // the created capsule needs to be decremented
@@ -631,7 +909,7 @@ _register_msg_type__msg__speech_type(PyObject * pymodule)
 
   PyObject * pyobject_destroy_ros_message = NULL;
   pyobject_destroy_ros_message = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__speech_type__destroy_ros_message,
+    (void *)&charmie_interfaces__msg__yolov8_pose_array__destroy_ros_message,
     NULL, NULL);
   if (!pyobject_destroy_ros_message) {
     // previously added objects will be removed when the module is destroyed
@@ -639,7 +917,7 @@ _register_msg_type__msg__speech_type(PyObject * pymodule)
   }
   err = PyModule_AddObject(
     pymodule,
-    "destroy_ros_message_msg__msg__speech_type",
+    "destroy_ros_message_msg__msg__yolov8_pose_array",
     pyobject_destroy_ros_message);
   if (err) {
     // the created capsule needs to be decremented
@@ -650,7 +928,7 @@ _register_msg_type__msg__speech_type(PyObject * pymodule)
 
   PyObject * pyobject_convert_from_py = NULL;
   pyobject_convert_from_py = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__speech_type__convert_from_py,
+    (void *)&charmie_interfaces__msg__yolov8_pose_array__convert_from_py,
     NULL, NULL);
   if (!pyobject_convert_from_py) {
     // previously added objects will be removed when the module is destroyed
@@ -658,7 +936,7 @@ _register_msg_type__msg__speech_type(PyObject * pymodule)
   }
   err = PyModule_AddObject(
     pymodule,
-    "convert_from_py_msg__msg__speech_type",
+    "convert_from_py_msg__msg__yolov8_pose_array",
     pyobject_convert_from_py);
   if (err) {
     // the created capsule needs to be decremented
@@ -669,7 +947,7 @@ _register_msg_type__msg__speech_type(PyObject * pymodule)
 
   PyObject * pyobject_convert_to_py = NULL;
   pyobject_convert_to_py = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__speech_type__convert_to_py,
+    (void *)&charmie_interfaces__msg__yolov8_pose_array__convert_to_py,
     NULL, NULL);
   if (!pyobject_convert_to_py) {
     // previously added objects will be removed when the module is destroyed
@@ -677,7 +955,7 @@ _register_msg_type__msg__speech_type(PyObject * pymodule)
   }
   err = PyModule_AddObject(
     pymodule,
-    "convert_to_py_msg__msg__speech_type",
+    "convert_to_py_msg__msg__yolov8_pose_array",
     pyobject_convert_to_py);
   if (err) {
     // the created capsule needs to be decremented
@@ -688,7 +966,7 @@ _register_msg_type__msg__speech_type(PyObject * pymodule)
 
   PyObject * pyobject_type_support = NULL;
   pyobject_type_support = PyCapsule_New(
-    (void *)ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, SpeechType),
+    (void *)ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, Yolov8PoseArray),
     NULL, NULL);
   if (!pyobject_type_support) {
     // previously added objects will be removed when the module is destroyed
@@ -696,563 +974,7 @@ _register_msg_type__msg__speech_type(PyObject * pymodule)
   }
   err = PyModule_AddObject(
     pymodule,
-    "type_support_msg__msg__speech_type",
-    pyobject_type_support);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_type_support);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-  return 0;
-}
-
-// already included above
-// #include <stdbool.h>
-// already included above
-// #include <stdint.h>
-// already included above
-// #include "rosidl_runtime_c/visibility_control.h"
-// already included above
-// #include "rosidl_runtime_c/message_type_support_struct.h"
-// already included above
-// #include "rosidl_runtime_c/service_type_support_struct.h"
-// already included above
-// #include "rosidl_runtime_c/action_type_support_struct.h"
-#include "charmie_interfaces/msg/detail/obstacle_info__type_support.h"
-#include "charmie_interfaces/msg/detail/obstacle_info__struct.h"
-#include "charmie_interfaces/msg/detail/obstacle_info__functions.h"
-
-static void * charmie_interfaces__msg__obstacle_info__create_ros_message(void)
-{
-  return charmie_interfaces__msg__ObstacleInfo__create();
-}
-
-static void charmie_interfaces__msg__obstacle_info__destroy_ros_message(void * raw_ros_message)
-{
-  charmie_interfaces__msg__ObstacleInfo * ros_message = (charmie_interfaces__msg__ObstacleInfo *)raw_ros_message;
-  charmie_interfaces__msg__ObstacleInfo__destroy(ros_message);
-}
-
-ROSIDL_GENERATOR_C_IMPORT
-bool charmie_interfaces__msg__obstacle_info__convert_from_py(PyObject * _pymsg, void * ros_message);
-ROSIDL_GENERATOR_C_IMPORT
-PyObject * charmie_interfaces__msg__obstacle_info__convert_to_py(void * raw_ros_message);
-
-
-ROSIDL_GENERATOR_C_IMPORT
-const rosidl_message_type_support_t *
-ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, ObstacleInfo);
-
-int8_t
-_register_msg_type__msg__obstacle_info(PyObject * pymodule)
-{
-  int8_t err;
-
-  PyObject * pyobject_create_ros_message = NULL;
-  pyobject_create_ros_message = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__obstacle_info__create_ros_message,
-    NULL, NULL);
-  if (!pyobject_create_ros_message) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "create_ros_message_msg__msg__obstacle_info",
-    pyobject_create_ros_message);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_create_ros_message);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_destroy_ros_message = NULL;
-  pyobject_destroy_ros_message = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__obstacle_info__destroy_ros_message,
-    NULL, NULL);
-  if (!pyobject_destroy_ros_message) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "destroy_ros_message_msg__msg__obstacle_info",
-    pyobject_destroy_ros_message);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_destroy_ros_message);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_convert_from_py = NULL;
-  pyobject_convert_from_py = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__obstacle_info__convert_from_py,
-    NULL, NULL);
-  if (!pyobject_convert_from_py) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "convert_from_py_msg__msg__obstacle_info",
-    pyobject_convert_from_py);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_convert_from_py);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_convert_to_py = NULL;
-  pyobject_convert_to_py = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__obstacle_info__convert_to_py,
-    NULL, NULL);
-  if (!pyobject_convert_to_py) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "convert_to_py_msg__msg__obstacle_info",
-    pyobject_convert_to_py);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_convert_to_py);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_type_support = NULL;
-  pyobject_type_support = PyCapsule_New(
-    (void *)ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, ObstacleInfo),
-    NULL, NULL);
-  if (!pyobject_type_support) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "type_support_msg__msg__obstacle_info",
-    pyobject_type_support);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_type_support);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-  return 0;
-}
-
-// already included above
-// #include <stdbool.h>
-// already included above
-// #include <stdint.h>
-// already included above
-// #include "rosidl_runtime_c/visibility_control.h"
-// already included above
-// #include "rosidl_runtime_c/message_type_support_struct.h"
-// already included above
-// #include "rosidl_runtime_c/service_type_support_struct.h"
-// already included above
-// #include "rosidl_runtime_c/action_type_support_struct.h"
-#include "charmie_interfaces/msg/detail/obstacles__type_support.h"
-#include "charmie_interfaces/msg/detail/obstacles__struct.h"
-#include "charmie_interfaces/msg/detail/obstacles__functions.h"
-
-static void * charmie_interfaces__msg__obstacles__create_ros_message(void)
-{
-  return charmie_interfaces__msg__Obstacles__create();
-}
-
-static void charmie_interfaces__msg__obstacles__destroy_ros_message(void * raw_ros_message)
-{
-  charmie_interfaces__msg__Obstacles * ros_message = (charmie_interfaces__msg__Obstacles *)raw_ros_message;
-  charmie_interfaces__msg__Obstacles__destroy(ros_message);
-}
-
-ROSIDL_GENERATOR_C_IMPORT
-bool charmie_interfaces__msg__obstacles__convert_from_py(PyObject * _pymsg, void * ros_message);
-ROSIDL_GENERATOR_C_IMPORT
-PyObject * charmie_interfaces__msg__obstacles__convert_to_py(void * raw_ros_message);
-
-
-ROSIDL_GENERATOR_C_IMPORT
-const rosidl_message_type_support_t *
-ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, Obstacles);
-
-int8_t
-_register_msg_type__msg__obstacles(PyObject * pymodule)
-{
-  int8_t err;
-
-  PyObject * pyobject_create_ros_message = NULL;
-  pyobject_create_ros_message = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__obstacles__create_ros_message,
-    NULL, NULL);
-  if (!pyobject_create_ros_message) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "create_ros_message_msg__msg__obstacles",
-    pyobject_create_ros_message);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_create_ros_message);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_destroy_ros_message = NULL;
-  pyobject_destroy_ros_message = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__obstacles__destroy_ros_message,
-    NULL, NULL);
-  if (!pyobject_destroy_ros_message) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "destroy_ros_message_msg__msg__obstacles",
-    pyobject_destroy_ros_message);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_destroy_ros_message);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_convert_from_py = NULL;
-  pyobject_convert_from_py = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__obstacles__convert_from_py,
-    NULL, NULL);
-  if (!pyobject_convert_from_py) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "convert_from_py_msg__msg__obstacles",
-    pyobject_convert_from_py);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_convert_from_py);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_convert_to_py = NULL;
-  pyobject_convert_to_py = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__obstacles__convert_to_py,
-    NULL, NULL);
-  if (!pyobject_convert_to_py) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "convert_to_py_msg__msg__obstacles",
-    pyobject_convert_to_py);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_convert_to_py);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_type_support = NULL;
-  pyobject_type_support = PyCapsule_New(
-    (void *)ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, Obstacles),
-    NULL, NULL);
-  if (!pyobject_type_support) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "type_support_msg__msg__obstacles",
-    pyobject_type_support);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_type_support);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-  return 0;
-}
-
-// already included above
-// #include <stdbool.h>
-// already included above
-// #include <stdint.h>
-// already included above
-// #include "rosidl_runtime_c/visibility_control.h"
-// already included above
-// #include "rosidl_runtime_c/message_type_support_struct.h"
-// already included above
-// #include "rosidl_runtime_c/service_type_support_struct.h"
-// already included above
-// #include "rosidl_runtime_c/action_type_support_struct.h"
-#include "charmie_interfaces/msg/detail/tar_nav_sdnl__type_support.h"
-#include "charmie_interfaces/msg/detail/tar_nav_sdnl__struct.h"
-#include "charmie_interfaces/msg/detail/tar_nav_sdnl__functions.h"
-
-static void * charmie_interfaces__msg__tar_nav_sdnl__create_ros_message(void)
-{
-  return charmie_interfaces__msg__TarNavSDNL__create();
-}
-
-static void charmie_interfaces__msg__tar_nav_sdnl__destroy_ros_message(void * raw_ros_message)
-{
-  charmie_interfaces__msg__TarNavSDNL * ros_message = (charmie_interfaces__msg__TarNavSDNL *)raw_ros_message;
-  charmie_interfaces__msg__TarNavSDNL__destroy(ros_message);
-}
-
-ROSIDL_GENERATOR_C_IMPORT
-bool charmie_interfaces__msg__tar_nav_sdnl__convert_from_py(PyObject * _pymsg, void * ros_message);
-ROSIDL_GENERATOR_C_IMPORT
-PyObject * charmie_interfaces__msg__tar_nav_sdnl__convert_to_py(void * raw_ros_message);
-
-
-ROSIDL_GENERATOR_C_IMPORT
-const rosidl_message_type_support_t *
-ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, TarNavSDNL);
-
-int8_t
-_register_msg_type__msg__tar_nav_sdnl(PyObject * pymodule)
-{
-  int8_t err;
-
-  PyObject * pyobject_create_ros_message = NULL;
-  pyobject_create_ros_message = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__tar_nav_sdnl__create_ros_message,
-    NULL, NULL);
-  if (!pyobject_create_ros_message) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "create_ros_message_msg__msg__tar_nav_sdnl",
-    pyobject_create_ros_message);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_create_ros_message);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_destroy_ros_message = NULL;
-  pyobject_destroy_ros_message = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__tar_nav_sdnl__destroy_ros_message,
-    NULL, NULL);
-  if (!pyobject_destroy_ros_message) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "destroy_ros_message_msg__msg__tar_nav_sdnl",
-    pyobject_destroy_ros_message);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_destroy_ros_message);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_convert_from_py = NULL;
-  pyobject_convert_from_py = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__tar_nav_sdnl__convert_from_py,
-    NULL, NULL);
-  if (!pyobject_convert_from_py) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "convert_from_py_msg__msg__tar_nav_sdnl",
-    pyobject_convert_from_py);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_convert_from_py);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_convert_to_py = NULL;
-  pyobject_convert_to_py = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__tar_nav_sdnl__convert_to_py,
-    NULL, NULL);
-  if (!pyobject_convert_to_py) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "convert_to_py_msg__msg__tar_nav_sdnl",
-    pyobject_convert_to_py);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_convert_to_py);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_type_support = NULL;
-  pyobject_type_support = PyCapsule_New(
-    (void *)ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, TarNavSDNL),
-    NULL, NULL);
-  if (!pyobject_type_support) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "type_support_msg__msg__tar_nav_sdnl",
-    pyobject_type_support);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_type_support);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-  return 0;
-}
-
-// already included above
-// #include <stdbool.h>
-// already included above
-// #include <stdint.h>
-// already included above
-// #include "rosidl_runtime_c/visibility_control.h"
-// already included above
-// #include "rosidl_runtime_c/message_type_support_struct.h"
-// already included above
-// #include "rosidl_runtime_c/service_type_support_struct.h"
-// already included above
-// #include "rosidl_runtime_c/action_type_support_struct.h"
-#include "charmie_interfaces/msg/detail/multi_objects__type_support.h"
-#include "charmie_interfaces/msg/detail/multi_objects__struct.h"
-#include "charmie_interfaces/msg/detail/multi_objects__functions.h"
-
-static void * charmie_interfaces__msg__multi_objects__create_ros_message(void)
-{
-  return charmie_interfaces__msg__MultiObjects__create();
-}
-
-static void charmie_interfaces__msg__multi_objects__destroy_ros_message(void * raw_ros_message)
-{
-  charmie_interfaces__msg__MultiObjects * ros_message = (charmie_interfaces__msg__MultiObjects *)raw_ros_message;
-  charmie_interfaces__msg__MultiObjects__destroy(ros_message);
-}
-
-ROSIDL_GENERATOR_C_IMPORT
-bool charmie_interfaces__msg__multi_objects__convert_from_py(PyObject * _pymsg, void * ros_message);
-ROSIDL_GENERATOR_C_IMPORT
-PyObject * charmie_interfaces__msg__multi_objects__convert_to_py(void * raw_ros_message);
-
-
-ROSIDL_GENERATOR_C_IMPORT
-const rosidl_message_type_support_t *
-ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, MultiObjects);
-
-int8_t
-_register_msg_type__msg__multi_objects(PyObject * pymodule)
-{
-  int8_t err;
-
-  PyObject * pyobject_create_ros_message = NULL;
-  pyobject_create_ros_message = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__multi_objects__create_ros_message,
-    NULL, NULL);
-  if (!pyobject_create_ros_message) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "create_ros_message_msg__msg__multi_objects",
-    pyobject_create_ros_message);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_create_ros_message);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_destroy_ros_message = NULL;
-  pyobject_destroy_ros_message = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__multi_objects__destroy_ros_message,
-    NULL, NULL);
-  if (!pyobject_destroy_ros_message) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "destroy_ros_message_msg__msg__multi_objects",
-    pyobject_destroy_ros_message);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_destroy_ros_message);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_convert_from_py = NULL;
-  pyobject_convert_from_py = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__multi_objects__convert_from_py,
-    NULL, NULL);
-  if (!pyobject_convert_from_py) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "convert_from_py_msg__msg__multi_objects",
-    pyobject_convert_from_py);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_convert_from_py);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_convert_to_py = NULL;
-  pyobject_convert_to_py = PyCapsule_New(
-    (void *)&charmie_interfaces__msg__multi_objects__convert_to_py,
-    NULL, NULL);
-  if (!pyobject_convert_to_py) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "convert_to_py_msg__msg__multi_objects",
-    pyobject_convert_to_py);
-  if (err) {
-    // the created capsule needs to be decremented
-    Py_XDECREF(pyobject_convert_to_py);
-    // previously added objects will be removed when the module is destroyed
-    return err;
-  }
-
-  PyObject * pyobject_type_support = NULL;
-  pyobject_type_support = PyCapsule_New(
-    (void *)ROSIDL_GET_MSG_TYPE_SUPPORT(charmie_interfaces, msg, MultiObjects),
-    NULL, NULL);
-  if (!pyobject_type_support) {
-    // previously added objects will be removed when the module is destroyed
-    return -1;
-  }
-  err = PyModule_AddObject(
-    pymodule,
-    "type_support_msg__msg__multi_objects",
+    "type_support_msg__msg__yolov8_pose_array",
     pyobject_type_support);
   if (err) {
     // the created capsule needs to be decremented
@@ -1285,6 +1007,18 @@ PyInit_charmie_interfaces_s__rosidl_typesupport_introspection_c(void)
     return NULL;
   }
 
+  err = _register_msg_type__msg__keypoints(pymodule);
+  if (err) {
+    Py_XDECREF(pymodule);
+    return NULL;
+  }
+
+  err = _register_msg_type__msg__yolov8_pose(pymodule);
+  if (err) {
+    Py_XDECREF(pymodule);
+    return NULL;
+  }
+
   err = _register_msg_type__msg__ps4_controller(pymodule);
   if (err) {
     Py_XDECREF(pymodule);
@@ -1297,31 +1031,7 @@ PyInit_charmie_interfaces_s__rosidl_typesupport_introspection_c(void)
     return NULL;
   }
 
-  err = _register_msg_type__msg__speech_type(pymodule);
-  if (err) {
-    Py_XDECREF(pymodule);
-    return NULL;
-  }
-
-  err = _register_msg_type__msg__obstacle_info(pymodule);
-  if (err) {
-    Py_XDECREF(pymodule);
-    return NULL;
-  }
-
-  err = _register_msg_type__msg__obstacles(pymodule);
-  if (err) {
-    Py_XDECREF(pymodule);
-    return NULL;
-  }
-
-  err = _register_msg_type__msg__tar_nav_sdnl(pymodule);
-  if (err) {
-    Py_XDECREF(pymodule);
-    return NULL;
-  }
-
-  err = _register_msg_type__msg__multi_objects(pymodule);
+  err = _register_msg_type__msg__yolov8_pose_array(pymodule);
   if (err) {
     Py_XDECREF(pymodule);
     return NULL;

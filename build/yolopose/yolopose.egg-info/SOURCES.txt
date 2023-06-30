@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+resource/yolopose
+yolopose/__init__.py
+yolopose/yolopose_node.py
+yolopose.egg-info/PKG-INFO
+yolopose.egg-info/SOURCES.txt
+yolopose.egg-info/dependency_links.txt
+yolopose.egg-info/entry_points.txt
+yolopose.egg-info/requires.txt
+yolopose.egg-info/top_level.txt
+yolopose.egg-info/zip-safe

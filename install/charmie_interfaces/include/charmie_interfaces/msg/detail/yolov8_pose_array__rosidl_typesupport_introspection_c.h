@@ -1,0 +1,1 @@
+/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_c/charmie_interfaces/msg/detail/yolov8_pose_array__rosidl_typesupport_introspection_c.h
