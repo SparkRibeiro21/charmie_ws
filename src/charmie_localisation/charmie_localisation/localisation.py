@@ -60,16 +60,19 @@ class LocalisationNode(Node):
         self.previous_odom_t = 0.0
 
         self.received_init_pos = False
+        self.updated_amcl_loc = False
 
         self.last_fixed_location_x = 0.0
         self.last_fixed_location_y = 0.0
         self.last_fixed_location_t = 0.0
 
-        self.fixed_odometry_orientation = 0.0
+        # self.fixed_odometry_orientation = 0.0
 
 
         # temp
         self.init_pose_test = True
+        self.stop = False
+        self.amcl_correction_ctr = 0
 
 
         self.a = 0
@@ -83,14 +86,21 @@ class LocalisationNode(Node):
 
         # print(self.odom_robot)
         new_orientation = self.quat_to_rad(self.odom_robot.pose.pose.orientation)
-        self.fixed_odometry_orientation = new_orientation
+        # self.fixed_odometry_orientation = new_orientation # ???
 
+        # if not self.updated_amcl_loc:
         curr_x = self.odom_robot.pose.pose.position.x - self.previous_odom_x
         curr_y = self.odom_robot.pose.pose.position.y - self.previous_odom_y
         curr_t = new_orientation - self.previous_odom_t
-        # curr_x = self.previous_odom_x -self.odom_robot.pose.pose.position.x 
+        # else:
+        # curr_x = 0.0
+        # curr_y = 0.0
+        # curr_t = 0.0
+          #   self.updated_amcl_loc = False
 
-        print("CURR:", curr_x, curr_y, curr_t)
+
+
+        # print("CURR:", curr_x, curr_y, curr_t)
         
         # self.odom_robot.pose.pose.position.x 
         # self.odom_robot.pose.pose.position.y 
@@ -109,7 +119,7 @@ class LocalisationNode(Node):
         # self.robot_t_fused += curr_t
         # self.robot_x_fused += (curr_x*math.cos(math.pi/2+self.robot_t_fused))
         # self.robot_y_fused += (curr_y*math.sin(math.pi/2+self.robot_t_fused))
-        print("FUSED:", self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
+        # print("FUSED:", self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
 
 
         # curr_x = 0
@@ -118,23 +128,39 @@ class LocalisationNode(Node):
         # self.robot_x_fused += (curr_x*math.cos(math.pi/2+self.robot_t_fused) - curr_y*math.sin(math.pi/2+self.robot_t_fused))
         # self.robot_y_fused -= (curr_x*math.sin(math.pi/2+self.robot_t_fused) + curr_y*math.cos(math.pi/2+self.robot_t_fused))
 
+
+        odom_to_p = Odometry()
+        if self.updated_amcl_loc:
+            self.updated_amcl_loc = False
+            amcl_temp = self.PoseWithCovarianceStamped_to_Odometry(self.amcl_loc)
+
+
+            self.robot_x_fused = amcl_temp.pose.pose.position.x
+            self.robot_y_fused = amcl_temp.pose.pose.position.y
+            aux= self.quat_to_rad(amcl_temp.pose.pose.orientation) # + self.fixed_odometry_orientation
+            
+            
+            print("POS_FIN_AMCL", self.robot_x_fused, self.robot_y_fused, aux)
+
+
+            # print(self.last_fixed_location_t)
+            # print(aux)
+
+            # self.amcl_alone_localisation_publisher.publish(amcl_temp)
+
+
+            # print(self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
+
+
         self.a += curr_t
-        # theta = - math.pi/2 - self.robot_t_fused #self.robot_t_fused# math.pi/2-self.robot_t_fused
-        
         theta = self.last_fixed_location_t
         self.robot_x_fused += (curr_x*math.cos(theta) - curr_y*math.sin(theta))
         self.robot_y_fused += (curr_x*math.sin(theta) + curr_y*math.cos(theta))
-
-        
-
-        # print(self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
-
-
-        odom_to_p = Odometry()
-        
+            
         odom_to_p.pose.pose.position.x = self.robot_x_fused # x corrdinates
         odom_to_p.pose.pose.position.y = self.robot_y_fused # y corrdinates 
         
+        # quaternion = self.rad_to_quat(self.last_fixed_location_t+self.a)
         quaternion = self.rad_to_quat(self.last_fixed_location_t+self.a)
         odom_to_p.pose.pose.orientation.x = quaternion[0]
         odom_to_p.pose.pose.orientation.y = quaternion[1]
@@ -142,10 +168,20 @@ class LocalisationNode(Node):
         odom_to_p.pose.pose.orientation.w = quaternion[3]
 
 
-        
-        # if self.received_init_pos:
-        #     pass
-        # self.amcl_alone_localisation_publisher.publish(odom_to_p)
+
+        # print("POS_FIN_ENC", self.robot_x_fused, self.robot_y_fused, self.last_fixed_location_t+self.a)
+
+
+            
+            # if self.received_init_pos:
+            #     pass
+            
+            # if self.amcl_correction_ctr >= 20:
+            #     pass
+            # else:
+        self.amcl_alone_localisation_publisher.publish(odom_to_p)
+
+
 
 
         self.previous_odom_x = self.odom_robot.pose.pose.position.x 
@@ -162,9 +198,33 @@ class LocalisationNode(Node):
         # print(std_deviations)
         # print(rmse)
 
-        if rmse < 0.5:
-            self.conv_amcl = self.PoseWithCovarianceStamped_to_Odometry(amcl_p)
-            self.amcl_alone_localisation_publisher.publish(self.conv_amcl)
+
+
+        if rmse < 0.8: # 1.0: # 0.6:
+            # self.conv_amcl = self.PoseWithCovarianceStamped_to_Odometry(amcl_p)
+            # self.amcl_alone_localisation_publisher.publish(self.conv_amcl)
+                      
+            self.amcl_correction_ctr += 1 
+            self.updated_amcl_loc = True
+            print(rmse)
+            
+            # print("UPDATED AMCL", self.amcl_correction_ctr)
+            
+            # self.last_fixed_location_x = -amcl_p.pose.pose.position.y
+            # self.last_fixed_location_y = amcl_p.pose.pose.position.x
+            # self.last_fixed_location_t = 
+            # aux = self.quat_to_rad(amcl_p.pose.pose.orientation) # + self.fixed_odometry_orientation
+
+            # self.robot_x_fused = self.last_fixed_location_x
+            # self.robot_y_fused = self.last_fixed_location_y
+            # self.robot_t_fused = self.last_fixed_location_t
+        else:
+
+            print("REJECTED AMCL:",rmse)
+
+
+            
+            
 
     def init_loc_pose_callback(self, p:PoseWithCovarianceStamped):
         pass
@@ -176,7 +236,7 @@ class LocalisationNode(Node):
         if self.init_pose_test:
             self.init_pose_test = False
             # self.received_init_pos = True
-            print(init)
+            # print(init)
             self.last_fixed_location_x = -init.pose.pose.position.y
             self.last_fixed_location_y = init.pose.pose.position.x
             self.last_fixed_location_t = self.quat_to_rad(init.pose.pose.orientation)#  + self.fixed_odometry_orientation
@@ -184,10 +244,14 @@ class LocalisationNode(Node):
             self.robot_x_fused = self.last_fixed_location_x
             self.robot_y_fused = self.last_fixed_location_y
             self.robot_t_fused = self.last_fixed_location_t
+            
+            # self.updated_amcl_loc = True
+            # print("UPDATED INIT")
 
+            print("POS_INIT", self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
             
         
-            print(self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
+            # print(self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
         
 
 
