@@ -22,7 +22,7 @@ class DoorNode(Node):
         self.is_door_opened = False
         self.flag_detection = False
         self.obstacles = Obstacles()
-        self.max_angle_for_door = math.radians(18) # degrees
+        self.max_angle_for_door = math.radians(15) # degrees
         self.max_dist_for_door = 1.5 # meters
 
         

@@ -5,7 +5,7 @@ from rclpy.node import Node
 from std_msgs.msg import Bool
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3
-from charmie_interfaces.msg import TarNavSDNL, Obstacles
+from charmie_interfaces.msg import TarNavSDNL, Obstacles, ObstacleInfo
 
 import cv2
 import numpy as np
@@ -33,6 +33,7 @@ class NavigationSDNLClass:
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
 
         self.obstacles = Obstacles()
+        self.obstacles_max_dist = Obstacles()
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.robot_t = 0.0
@@ -60,6 +61,7 @@ class NavigationSDNLClass:
 
         # visual debug
         self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.MAX_DIST_FOR_OBS = 0.8
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
@@ -200,14 +202,15 @@ class NavigationSDNLClass:
 
         min_d = 1.5
         for obs in self.obstacles.obstacles:
-            if obs.dist < min_d:
-                min_d = obs.dist
-            # print(obs)
-            aux_obs['psi_obs'] = phi_ - obs.alfa
-            aux_obs['dis_obs'] = obs.dist
-            aux_obs['del_tet'] = obs.length_degrees
+            if obs.dist < self.MAX_DIST_FOR_OBS:
+                if obs.dist < min_d:
+                    min_d = obs.dist
+                # print(obs)
+                aux_obs['psi_obs'] = phi_ - obs.alfa
+                aux_obs['dis_obs'] = obs.dist
+                aux_obs['del_tet'] = obs.length_degrees
 
-            obstacles.append(aux_obs.copy())
+                obstacles.append(aux_obs.copy())
 
         self.min_dist_obs = min_d
         # print()
@@ -522,7 +525,32 @@ class NavigationSDNLClass:
         # print(self.robot_x, self.robot_y, self.robot_t)
 
     def obstacles_msg_to_position(self, obs: Obstacles):
-        self.obstacles = obs
+        # self.obstacles = obs
+        
+        obs_max_dist = Obstacles()
+        
+        # self.obstacles_max_dist.
+        for i in range(obs.no_obstacles):
+            # print(i)
+            # print(self.obstacles.obstacles[i].dist)
+            if obs.obstacles[i].dist < self.MAX_DIST_FOR_OBS:
+                obs_max_dist.obstacles.append(obs.obstacles[i])
+        
+        obs_max_dist.no_obstacles = len(obs_max_dist.obstacles)
+        # self.obstacles_max_dist = obs_max_dist
+        self.obstacles = obs_max_dist
+
+        # print("###")
+        # print(self.obstacles)
+        # print()
+        # print(self.obstacles_max_dist)
+        # print()
+        # print()
+
+
+
+
+            
         # print(self.obstacles)
 
     def navigation_msg_to_position(self, nav: TarNavSDNL):
@@ -616,7 +644,7 @@ class NavSDNLNode(Node):
 
         # Create PUBs/SUBs
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
-        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom", self.odom_robot_callback, 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
@@ -632,12 +660,13 @@ class NavSDNLNode(Node):
         # self.nav.sdnl_main()
         # self.nav.update_debug_drawings()
         # print("here")
+        self.nav.update_debug_drawings()
 
     def odom_robot_callback(self, odom: Odometry):
         # updates the position variable
         self.nav.odometry_msg_to_position(odom)
         # self.nav.sdnl_main()
-        self.nav.update_debug_drawings()
+        # self.nav.update_debug_drawings()
         # print("here2")
 
     def target_pos_callback(self, nav: TarNavSDNL):

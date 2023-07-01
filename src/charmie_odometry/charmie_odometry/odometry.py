@@ -22,7 +22,7 @@ class RobotOdometry():
         self.wheel_diameter = 203  # mm
         self.robot_radius = 265  # this value is yet to be confimed by the 3D modulation of the robot !!!!!!!!!!
         
-        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
         self.scale = 0.12*1000
         
         self.xc = 400

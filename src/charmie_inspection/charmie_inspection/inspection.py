@@ -182,6 +182,10 @@ class ReceptionistMain():
                 print("0")
 
                 self.node.publish_initial_pose(x=0.0, y=0.0)
+                
+                self.coordinates_to_navigation((0.0,4.0), (1.0, 5.0), False)
+                self.wait_for_end_of_navigation()
+                
 
                 # Says it is ready to start its Inspection
                 self.node.speech_str.command = "I am ready to start my Inspection."
