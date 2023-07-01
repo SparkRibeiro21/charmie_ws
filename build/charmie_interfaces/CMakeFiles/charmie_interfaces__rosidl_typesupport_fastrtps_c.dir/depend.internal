@@ -75,6 +75,80 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupp
  rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
  rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__rosidl_typesupport_fastrtps_c.h
  rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__type_support_c.cpp.o
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__type_support_c.cpp
+ /opt/ros/foxy/include/fastcdr/Cdr.h
+ /opt/ros/foxy/include/fastcdr/FastBuffer.h
+ /opt/ros/foxy/include/fastcdr/config.h
+ /opt/ros/foxy/include/fastcdr/eProsima_auto_link.h
+ /opt/ros/foxy/include/fastcdr/exceptions/Exception.h
+ /opt/ros/foxy/include/fastcdr/exceptions/NotEnoughMemoryException.h
+ /opt/ros/foxy/include/fastcdr/fastcdr_dll.h
+ /opt/ros/foxy/include/rosidl_runtime_c/message_type_support_struct.h
+ /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence.h
+ /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence_functions.h
+ /opt/ros/foxy/include/rosidl_runtime_c/string.h
+ /opt/ros/foxy/include/rosidl_runtime_c/string_functions.h
+ /opt/ros/foxy/include/rosidl_runtime_c/u16string.h
+ /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/identifier.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/wstring_conversion.hpp
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_cpp/message_type_support.h
+ /opt/ros/foxy/include/rosidl_typesupport_interface/macros.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__rosidl_typesupport_fastrtps_c.h
+ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacle_info__type_support_c.cpp.o
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacle_info__type_support_c.cpp
+ /opt/ros/foxy/include/fastcdr/Cdr.h
+ /opt/ros/foxy/include/fastcdr/FastBuffer.h
+ /opt/ros/foxy/include/fastcdr/config.h
+ /opt/ros/foxy/include/fastcdr/eProsima_auto_link.h
+ /opt/ros/foxy/include/fastcdr/exceptions/Exception.h
+ /opt/ros/foxy/include/fastcdr/exceptions/NotEnoughMemoryException.h
+ /opt/ros/foxy/include/fastcdr/fastcdr_dll.h
+ /opt/ros/foxy/include/rosidl_runtime_c/message_type_support_struct.h
+ /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence.h
+ /opt/ros/foxy/include/rosidl_runtime_c/u16string.h
+ /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/identifier.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/wstring_conversion.hpp
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_cpp/message_type_support.h
+ /opt/ros/foxy/include/rosidl_typesupport_interface/macros.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacle_info__rosidl_typesupport_fastrtps_c.h
+ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacles__type_support_c.cpp.o
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacles__type_support_c.cpp
+ /opt/ros/foxy/include/fastcdr/Cdr.h
+ /opt/ros/foxy/include/fastcdr/FastBuffer.h
+ /opt/ros/foxy/include/fastcdr/config.h
+ /opt/ros/foxy/include/fastcdr/eProsima_auto_link.h
+ /opt/ros/foxy/include/fastcdr/exceptions/Exception.h
+ /opt/ros/foxy/include/fastcdr/exceptions/NotEnoughMemoryException.h
+ /opt/ros/foxy/include/fastcdr/fastcdr_dll.h
+ /opt/ros/foxy/include/rosidl_runtime_c/message_type_support_struct.h
+ /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence.h
+ /opt/ros/foxy/include/rosidl_runtime_c/u16string.h
+ /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/identifier.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/wstring_conversion.hpp
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_cpp/message_type_support.h
+ /opt/ros/foxy/include/rosidl_typesupport_interface/macros.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacle_info__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacles__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/obstacles__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacles__rosidl_typesupport_fastrtps_c.h
+ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/ps4_controller__type_support_c.cpp.o
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/ps4_controller__type_support_c.cpp
  /opt/ros/foxy/include/fastcdr/Cdr.h
@@ -122,6 +196,55 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupp
  rosidl_generator_c/charmie_interfaces/msg/detail/robot_speech__struct.h
  rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
  rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/robot_speech__rosidl_typesupport_fastrtps_c.h
+ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/speech_type__type_support_c.cpp.o
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/speech_type__type_support_c.cpp
+ /opt/ros/foxy/include/fastcdr/Cdr.h
+ /opt/ros/foxy/include/fastcdr/FastBuffer.h
+ /opt/ros/foxy/include/fastcdr/config.h
+ /opt/ros/foxy/include/fastcdr/eProsima_auto_link.h
+ /opt/ros/foxy/include/fastcdr/exceptions/Exception.h
+ /opt/ros/foxy/include/fastcdr/exceptions/NotEnoughMemoryException.h
+ /opt/ros/foxy/include/fastcdr/fastcdr_dll.h
+ /opt/ros/foxy/include/rosidl_runtime_c/message_type_support_struct.h
+ /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence.h
+ /opt/ros/foxy/include/rosidl_runtime_c/u16string.h
+ /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/identifier.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/wstring_conversion.hpp
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_cpp/message_type_support.h
+ /opt/ros/foxy/include/rosidl_typesupport_interface/macros.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/speech_type__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/speech_type__rosidl_typesupport_fastrtps_c.h
+ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support_c.cpp.o
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support_c.cpp
+ /opt/ros/foxy/include/fastcdr/Cdr.h
+ /opt/ros/foxy/include/fastcdr/FastBuffer.h
+ /opt/ros/foxy/include/fastcdr/config.h
+ /opt/ros/foxy/include/fastcdr/eProsima_auto_link.h
+ /opt/ros/foxy/include/fastcdr/exceptions/Exception.h
+ /opt/ros/foxy/include/fastcdr/exceptions/NotEnoughMemoryException.h
+ /opt/ros/foxy/include/fastcdr/fastcdr_dll.h
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/pose2_d__functions.h
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/pose2_d__struct.h
+ /opt/ros/foxy/include/geometry_msgs/msg/rosidl_generator_c__visibility_control.h
+ /opt/ros/foxy/include/rosidl_runtime_c/message_type_support_struct.h
+ /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence.h
+ /opt/ros/foxy/include/rosidl_runtime_c/u16string.h
+ /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/identifier.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/visibility_control.h
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_c/wstring_conversion.hpp
+ /opt/ros/foxy/include/rosidl_typesupport_fastrtps_cpp/message_type_support.h
+ /opt/ros/foxy/include/rosidl_typesupport_interface/macros.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.h
+ rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__struct.h
+ rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h
+ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/tar_nav_sdnl__rosidl_typesupport_fastrtps_c.h
  rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp.o
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp

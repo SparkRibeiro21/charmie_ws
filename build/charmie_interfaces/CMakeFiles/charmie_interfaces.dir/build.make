@@ -53,12 +53,17 @@ CMAKE_BINARY_DIR = /home/utilizador/charmie_ws/build/charmie_interfaces
 # Include the progress variables for this target.
 include CMakeFiles/charmie_interfaces.dir/progress.make
 
-CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/ExampleTR.msg
 CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/Encoders.msg
+CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/ExampleTR.msg
 CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/Keypoints.msg
-CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/Yolov8Pose.msg
+CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/MultiObjects.msg
+CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/ObstacleInfo.msg
+CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/Obstacles.msg
 CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/PS4Controller.msg
 CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/RobotSpeech.msg
+CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/SpeechType.msg
+CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/TarNavSDNL.msg
+CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/Yolov8Pose.msg
 CMakeFiles/charmie_interfaces: /home/utilizador/charmie_ws/src/charmie_interfaces/msg/Yolov8PoseArray.msg
 CMakeFiles/charmie_interfaces: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 CMakeFiles/charmie_interfaces: /opt/ros/foxy/share/std_msgs/msg/Byte.idl

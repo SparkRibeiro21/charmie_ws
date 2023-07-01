@@ -1,12 +1,17 @@
 {
   "package_name": "charmie_interfaces",
   "non_idl_tuples": [
-    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/ExampleTR.msg",
     "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/Encoders.msg",
+    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/ExampleTR.msg",
     "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/Keypoints.msg",
-    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/Yolov8Pose.msg",
+    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/MultiObjects.msg",
+    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/ObstacleInfo.msg",
+    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/Obstacles.msg",
     "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/PS4Controller.msg",
     "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/RobotSpeech.msg",
+    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/SpeechType.msg",
+    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/TarNavSDNL.msg",
+    "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/Yolov8Pose.msg",
     "/home/utilizador/charmie_ws/src/charmie_interfaces:msg/Yolov8PoseArray.msg"
   ]
 }

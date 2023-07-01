@@ -73,8 +73,9 @@ class TRNode(Node):
         self.counter = 1 # starts at 1 to avoid initial 
         self.create_timer(0.05, self.timer_callback)
         self.create_timer(5, self.timer_callback2)
-        self.create_timer(20, self.timer_callback3)
-
+        # self.create_timer(20, self.timer_callback3)
+        self.create_timer(4, self.timer_callback4)
+        
 
         # Get Flags
         self.flag_get_neck_position = False 
@@ -95,6 +96,7 @@ class TRNode(Node):
         self.flag_init_nav = True
         self.neck_ctr = 0
         self.init_start_door = False
+        self.rgb_ctr = 1
 
         self.br = CvBridge()
 
@@ -199,6 +201,19 @@ class TRNode(Node):
 
     def done_start_door_callback(self, flag: Bool):
         print("Recebi Fim do Start Door")
+
+    def timer_callback4(self):
+        rgb = Int16()
+
+        rgb.data = self.rgb_ctr
+        self.rgb_mode_publisher.publish(rgb)
+        print("Enviei RGB", self.rgb_ctr)
+
+
+        self.rgb_ctr +=10
+
+        if self.rgb_ctr > 91:
+            self.rgb_ctr = 2
 
     def timer_callback2(self):
 

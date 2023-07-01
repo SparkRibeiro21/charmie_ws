@@ -22,12 +22,17 @@ find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/ExampleTR.msg"
   "msg/Encoders.msg"
+  "msg/ExampleTR.msg"
   "msg/Keypoints.msg"
-  "msg/Yolov8Pose.msg"
+  "msg/MultiObjects.msg"
+  "msg/ObstacleInfo.msg"
+  "msg/Obstacles.msg"
   "msg/PS4Controller.msg"
   "msg/RobotSpeech.msg"
+  "msg/SpeechType.msg"
+  "msg/TarNavSDNL.msg"
+  "msg/Yolov8Pose.msg"
   "msg/Yolov8PoseArray.msg"
   DEPENDENCIES std_msgs geometry_msgs
 )

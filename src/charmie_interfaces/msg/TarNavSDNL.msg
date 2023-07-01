@@ -1,0 +1,3 @@
+geometry_msgs/Pose2D move_target_coordinates
+geometry_msgs/Pose2D rotate_target_coordinates
+bool flag_not_obs
