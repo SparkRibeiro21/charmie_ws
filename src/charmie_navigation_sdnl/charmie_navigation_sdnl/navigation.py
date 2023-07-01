@@ -644,7 +644,7 @@ class NavSDNLNode(Node):
 
         # Create PUBs/SUBs
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
-        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom", self.odom_robot_callback, 10)
+        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
@@ -660,13 +660,13 @@ class NavSDNLNode(Node):
         # self.nav.sdnl_main()
         # self.nav.update_debug_drawings()
         # print("here")
-        self.nav.update_debug_drawings()
+        # self.nav.update_debug_drawings()
 
     def odom_robot_callback(self, odom: Odometry):
         # updates the position variable
         self.nav.odometry_msg_to_position(odom)
         # self.nav.sdnl_main()
-        # self.nav.update_debug_drawings()
+        self.nav.update_debug_drawings()
         # print("here2")
 
     def target_pos_callback(self, nav: TarNavSDNL):
