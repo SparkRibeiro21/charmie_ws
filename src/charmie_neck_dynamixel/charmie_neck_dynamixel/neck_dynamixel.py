@@ -218,6 +218,8 @@ class NeckNode(Node):
 def move_neck(p, t):
     # print(p,t)
 
+    p += 13
+
     if p > MAX_PAN_ANGLE:
         p = MAX_PAN_ANGLE
     if p < MIN_PAN_ANGLE:
