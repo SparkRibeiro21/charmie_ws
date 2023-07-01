@@ -22,7 +22,7 @@ class RobotOdometry():
         self.wheel_diameter = 203  # mm
         self.robot_radius = 265  # this value is yet to be confimed by the 3D modulation of the robot !!!!!!!!!!
         
-        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.scale = 0.12*1000
         
         self.xc = 400
@@ -302,7 +302,7 @@ class OdometryNode(Node):
         self.odometry_publisher = self.create_publisher(Odometry, "odom", 10)
         self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel_robot", 10)
 
-        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
+        self.tf_broadcaster_odom_base_link = tf2_ros.TransformBroadcaster(self)
 
         self.robot_odom = RobotOdometry()
 
@@ -340,7 +340,7 @@ class OdometryNode(Node):
 
         # creates a connection betweeen odom and base link, broadcast all joints of the tf transform,  
         transform = TransformStamped()
-        self.get_logger().info('Transform topic')
+        # self.get_logger().info('Transform topic')
         transform.header.stamp = self.get_clock().now().to_msg()
         transform.header.frame_id = "odom"
         transform.child_frame_id = "base_link"
@@ -349,7 +349,7 @@ class OdometryNode(Node):
         transform.transform.translation.z = odom.pose.pose.position.z
         transform.transform.rotation = odom.pose.pose.orientation
 
-        self.tf_broadcaster.sendTransform(transform)
+        self.tf_broadcaster_odom_base_link.sendTransform(transform)
         
         twist = Twist()
         twist.angular.z = vel_theta
