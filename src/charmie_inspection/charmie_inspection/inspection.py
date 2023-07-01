@@ -5,9 +5,9 @@ from rclpy.node import Node
 
 import threading
 
-from geometry_msgs.msg import Pose2D
+from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
 from std_msgs.msg import Bool
-from nav_msgs.msg import Odometry
+# from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import Obstacles, RobotSpeech, TarNavSDNL
 
 after_door_point = (0.0, 1.7)
@@ -18,6 +18,7 @@ sofas = (3.0, 5.8 + 1.7)
 exit_first_point = (1.0, 5.80 + 1.7 + 1.0)
 exit_point = (1.00, 5.80 + 1.7 + 2.0)
 
+import time
 
 class InspectionNode(Node):
 
@@ -47,6 +48,9 @@ class InspectionNode(Node):
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
 
+        # Initial Pose for Localisation
+        self.initial_pose_amcl_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10) # aux temp
+
 
         ###         Vars
         self.done_start_door = False
@@ -74,6 +78,27 @@ class InspectionNode(Node):
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
         print("Received Start Button:", state.data)
+
+
+    def publish_initial_pose(self, x:float, y:float):
+
+        pose = PoseWithCovarianceStamped()
+
+        pose.header.stamp = self.get_clock().now().to_msg()
+        pose.header.frame_id = "map"
+
+        pose.pose.pose.position.x = y
+        pose.pose.pose.position.y = -x
+
+        # it must start always facing the map axis (facing inside the house from the outise of the entrance door)
+        pose.pose.pose.orientation.x = 0.0
+        pose.pose.pose.orientation.y = 0.0
+        pose.pose.pose.orientation.z = 0.0
+        pose.pose.pose.orientation.w = 1.0
+
+        print("SENT INITIAL POSE")
+
+        self.initial_pose_amcl_publisher.publish(pose)
 
 
 
@@ -146,13 +171,17 @@ class ReceptionistMain():
     
     def main(self):
         print("IN NEW MAIN")
+        time.sleep(1)
 
         while True:
 
             # State Machine
+
             if self.state == 0:
                 
                 print("0")
+
+                self.node.publish_initial_pose(x=0.0, y=0.0)
 
                 # Says it is ready to start its Inspection
                 self.node.speech_str.command = "I am ready to start my Inspection."

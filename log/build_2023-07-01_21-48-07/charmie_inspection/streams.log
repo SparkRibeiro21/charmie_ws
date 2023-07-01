@@ -1,0 +1,27 @@
+[7.541s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_inspection': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_inspection/prefix_override:/home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_inspection/build --no-deps install_data
+[8.693s] running develop
+[9.497s] running egg_info
+[9.498s] creating charmie_inspection.egg-info
+[9.498s] writing charmie_inspection.egg-info/PKG-INFO
+[9.499s] writing dependency_links to charmie_inspection.egg-info/dependency_links.txt
+[9.500s] writing entry points to charmie_inspection.egg-info/entry_points.txt
+[9.500s] writing requirements to charmie_inspection.egg-info/requires.txt
+[9.501s] writing top-level names to charmie_inspection.egg-info/top_level.txt
+[9.505s] writing manifest file 'charmie_inspection.egg-info/SOURCES.txt'
+[9.669s] reading manifest file 'charmie_inspection.egg-info/SOURCES.txt'
+[9.671s] writing manifest file 'charmie_inspection.egg-info/SOURCES.txt'
+[9.862s] running build_ext
+[9.874s] Creating /home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages/site.py
+[9.878s] Creating /home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages/charmie-inspection.egg-link (link to .)
+[9.880s] Installing inspection script to /home/utilizador/charmie_ws/install/charmie_inspection/lib/charmie_inspection
+[9.881s] 
+[9.881s] Installed /home/utilizador/charmie_ws/build/charmie_inspection
+[9.881s] running install_data
+[9.882s] creating /home/utilizador/charmie_ws/install/charmie_inspection/share/ament_index
+[9.893s] creating /home/utilizador/charmie_ws/install/charmie_inspection/share/ament_index/resource_index
+[9.894s] creating /home/utilizador/charmie_ws/install/charmie_inspection/share/ament_index/resource_index/packages
+[9.894s] copying resource/charmie_inspection -> /home/utilizador/charmie_ws/install/charmie_inspection/share/ament_index/resource_index/packages
+[9.894s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_inspection/share/charmie_inspection
+[9.894s] creating /home/utilizador/charmie_ws/install/charmie_inspection/share/charmie_inspection/launch
+[9.895s] copying launch/inspection_launch.launch.py -> /home/utilizador/charmie_ws/install/charmie_inspection/share/charmie_inspection/launch
+[10.729s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_inspection' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_inspection/prefix_override:/home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_inspection/build --no-deps install_data

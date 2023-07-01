@@ -11,13 +11,13 @@ import numpy as np
 import math
 
 
-class EKFLocalisation:
-
-    def __init__(self):
-        print("Executing Main Code")
-        # Initialize the EKF state and covariance matrices
-        self.state = None  # EKF state
-        self.covariance = None  # Covariance matrix
+# class EKFLocalisation:
+# 
+#     def __init__(self):
+#         print("Executing Main Code")
+#         # Initialize the EKF state and covariance matrices
+#         self.state = None  # EKF state
+#         self.covariance = None  # Covariance matrix
 
 
 class LocalisationNode(Node):
@@ -27,7 +27,7 @@ class LocalisationNode(Node):
         self.get_logger().info("Initialised CHARMIE Localisation Node")
 
         # Create Code Class Instance
-        self.ekf = EKFLocalisation() 
+        # self.ekf = EKFLocalisation() 
 
         self.odom_robot_subscriber = self.create_subscription(Odometry, "odom", self.odom_robot_callback, 10)
         self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
@@ -111,8 +111,8 @@ class LocalisationNode(Node):
 
 
         self.odom_robot = odom
-        print("ini_t_enc:", self.quat_to_rad(self.odom_robot.pose.pose.orientation))
-        print("erro_ini_t:", self.erro_ini_t)
+        # print("ini_t_enc:", self.quat_to_rad(self.odom_robot.pose.pose.orientation))
+        # print("erro_ini_t:", self.erro_ini_t)
 
 
        
@@ -140,7 +140,7 @@ class LocalisationNode(Node):
 
                 self.robot_x_fused = amcl_temp.pose.pose.position.x
                 self.robot_y_fused = amcl_temp.pose.pose.position.y
-                self.rot_inc= self.quat_to_rad(amcl_temp.pose.pose.orientation) # + self.fixed_odometry_orientation
+                self.rot_inc = self.quat_to_rad(amcl_temp.pose.pose.orientation) # + self.fixed_odometry_orientation
                 
                 
                 # print("POS_FIN_AMCL", self.robot_x_fused, self.robot_y_fused, aux)
@@ -377,37 +377,37 @@ class LocalisationNode(Node):
 
     def initial_pose_amcl_callbak(self, init: PoseWithCovarianceStamped):
         # receive initial pose from rviz, this is just temporary code, must be commented and changed to publisher
-        pass
-        if self.init_pose_test:
-            self.init_pose_test = False
-            # self.received_init_pos = True
-            # print(init)
-            self.last_fixed_location_x = -init.pose.pose.position.y
-            self.last_fixed_location_y = init.pose.pose.position.x
-            self.last_fixed_location_t = self.quat_to_rad(init.pose.pose.orientation)#  + self.fixed_odometry_orientation
-            
-            
-            # self.last_fixed_location_x = 1 # -init.pose.pose.position.y
-            # self.last_fixed_location_y = 1 # init.pose.pose.position.x
-            # self.last_fixed_location_t = 0
-
-            self.robot_x_fused = self.last_fixed_location_x
-            self.robot_y_fused = self.last_fixed_location_y
-            self.robot_t_fused = self.last_fixed_location_t
-
-            # self.xxx = self.last_fixed_location_x
-            # self.yyy = self.last_fixed_location_y
-            
-            self.rot_inc = 0
-            
-            # self.updated_amcl_loc = True
-            # print("UPDATED INIT")
-
-            print("POS_INIT", self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
-            
+        # pass
+        # if self.init_pose_test:
+        #     self.init_pose_test = False
+        # self.received_init_pos = True
+        # print(init)
+        self.last_fixed_location_x = -init.pose.pose.position.y
+        self.last_fixed_location_y = init.pose.pose.position.x
+        self.last_fixed_location_t = self.quat_to_rad(init.pose.pose.orientation)#  + self.fixed_odometry_orientation
         
-            # print(self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
         
+        # self.last_fixed_location_x = 1 # -init.pose.pose.position.y
+        # self.last_fixed_location_y = 1 # init.pose.pose.position.x
+        # self.last_fixed_location_t = 0
+
+        self.robot_x_fused = self.last_fixed_location_x
+        self.robot_y_fused = self.last_fixed_location_y
+        self.robot_t_fused = self.last_fixed_location_t
+
+        # self.xxx = self.last_fixed_location_x
+        # self.yyy = self.last_fixed_location_y
+        
+        # self.rot_inc = 0
+        
+        # self.updated_amcl_loc = True
+        # print("UPDATED INIT")
+
+        print("POS_INIT", self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
+        
+    
+        # print(self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
+    
 
 
 

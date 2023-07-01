@@ -1,0 +1,25 @@
+[7.546s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_obstacles': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_obstacles/prefix_override:/home/utilizador/charmie_ws/install/charmie_obstacles/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_obstacles/build --no-deps install_data
+[10.255s] running develop
+[10.265s] running egg_info
+[10.266s] creating charmie_obstacles.egg-info
+[10.266s] writing charmie_obstacles.egg-info/PKG-INFO
+[10.266s] writing dependency_links to charmie_obstacles.egg-info/dependency_links.txt
+[10.266s] writing entry points to charmie_obstacles.egg-info/entry_points.txt
+[10.266s] writing requirements to charmie_obstacles.egg-info/requires.txt
+[10.266s] writing top-level names to charmie_obstacles.egg-info/top_level.txt
+[10.267s] writing manifest file 'charmie_obstacles.egg-info/SOURCES.txt'
+[10.267s] reading manifest file 'charmie_obstacles.egg-info/SOURCES.txt'
+[10.267s] writing manifest file 'charmie_obstacles.egg-info/SOURCES.txt'
+[10.267s] running build_ext
+[10.267s] Creating /home/utilizador/charmie_ws/install/charmie_obstacles/lib/python3.8/site-packages/site.py
+[10.267s] Creating /home/utilizador/charmie_ws/install/charmie_obstacles/lib/python3.8/site-packages/charmie-obstacles.egg-link (link to .)
+[10.268s] Installing obstacles script to /home/utilizador/charmie_ws/install/charmie_obstacles/lib/charmie_obstacles
+[10.268s] 
+[10.268s] Installed /home/utilizador/charmie_ws/build/charmie_obstacles
+[10.268s] running install_data
+[10.268s] creating /home/utilizador/charmie_ws/install/charmie_obstacles/share/ament_index
+[10.268s] creating /home/utilizador/charmie_ws/install/charmie_obstacles/share/ament_index/resource_index
+[10.271s] creating /home/utilizador/charmie_ws/install/charmie_obstacles/share/ament_index/resource_index/packages
+[10.272s] copying resource/charmie_obstacles -> /home/utilizador/charmie_ws/install/charmie_obstacles/share/ament_index/resource_index/packages
+[10.272s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_obstacles/share/charmie_obstacles
+[10.520s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_obstacles' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_obstacles/prefix_override:/home/utilizador/charmie_ws/install/charmie_obstacles/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_obstacles/build --no-deps install_data

@@ -638,7 +638,7 @@ class NavSDNLNode(Node):
         self.nav.odometry_msg_to_position(odom)
         # self.nav.sdnl_main()
         self.nav.update_debug_drawings()
-        print("here2")
+        # print("here2")
 
     def target_pos_callback(self, nav: TarNavSDNL):
         # calculates the velocities and sends them to the motors considering the latest obstacles and odometry position

@@ -344,8 +344,8 @@ class OdometryNode(Node):
         transform.header.stamp = self.get_clock().now().to_msg()
         transform.header.frame_id = "odom"
         transform.child_frame_id = "base_link"
-        transform.transform.translation.x = odom.pose.pose.position.x
-        transform.transform.translation.y = odom.pose.pose.position.y
+        transform.transform.translation.x = odom.pose.pose.position.y
+        transform.transform.translation.y = -odom.pose.pose.position.x
         transform.transform.translation.z = odom.pose.pose.position.z
         transform.transform.rotation = odom.pose.pose.orientation
 

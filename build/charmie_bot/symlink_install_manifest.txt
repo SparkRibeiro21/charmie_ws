@@ -1,3 +1,4 @@
+/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/amcl_config.yaml
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/controller_config.yaml
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/empty.yaml
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/joystick.yaml
