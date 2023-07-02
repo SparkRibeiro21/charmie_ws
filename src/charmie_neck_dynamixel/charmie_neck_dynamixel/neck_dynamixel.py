@@ -52,14 +52,14 @@ ADDR_MX_I_GAIN = 27  # Control table address is different in Dynamixel model
 ADDR_MX_P_GAIN = 28  # Control table address is different in Dynamixel model
 
 # Different PID gains for each axis
-PAN_D_GAIN = 0
+PAN_D_GAIN = 1
 PAN_I_GAIN = 2
-PAN_P_GAIN = 4
+PAN_P_GAIN = 6
 
 # Different PID gains for each axis
 TILT_D_GAIN = 2
 TILT_I_GAIN = 5
-TILT_P_GAIN = 4
+TILT_P_GAIN = 6
 
 # Protocol version
 PROTOCOL_VERSION = 1.0  # See which protocol version is used in the Dynamixel
@@ -91,6 +91,10 @@ tilt = 2048
 
 pan_corr = pan
 tilt_corr = tilt
+
+
+pan_aux = 0.0
+tilt_aux = 0.0  
 
 index = 0
 dxl_goal_position = [DXL_MINIMUM_POSITION_VALUE, DXL_MAXIMUM_POSITION_VALUE]  # Goal position
@@ -126,8 +130,9 @@ class NeckNode(Node):
 
         self.create_timer(0.1, self.timer_callback)
         self.flag_get_neck_position = False
-        self.k_e = 0.05
-        self.max_error = 40
+        self.k_e_x = 0.01
+        self.k_e_y = 0.005
+        self.max_error = 40.0
 
 
     def timer_callback(self):
@@ -161,23 +166,37 @@ class NeckNode(Node):
 
     def neck_error_callback(self, error: Pose2D):
 
-        print("neck_error:", error.x, error.y)
+        #print("neck_error:", error.x, error.y)
+        global pan_aux, tilt_aux
 
         if error.x > self.max_error:
-            error.x = self.max_error
+            error.x = float(self.max_error)
         elif error.x < -self.max_error:
-            error.x = - self.max_error
+            error.x = - float(self.max_error)
 
         if error.y > self.max_error:
-            error.y = self.max_error
+            error.y = float(self.max_error)
         elif error.y < -self.max_error:
-            error.y = - self.max_error 
+            error.y = - float(self.max_error) 
 
-        print("neck_error_corr:", error.x, error.y)
+
+            
+        # dist =  math.sqrt(erro_x**2 + erro_y**2)
+
+        # if dist < 100:
+
+
+        #print("neck_error_corr:", error.x, error.y)
 
         self.get_logger().info("Received Neck Position (by Pixel Errors), Adjusting the Neck Position")
-        move_neck((pan_corr * SERVO_TICKS_TO_DEGREES_CONST) - (error.x*self.k_e), (tilt_corr * SERVO_TICKS_TO_DEGREES_CONST) - (error.y*self.k_e))
-        
+        move_neck((pan_aux * SERVO_TICKS_TO_DEGREES_CONST) - (error.x*self.k_e_x), (tilt_aux * SERVO_TICKS_TO_DEGREES_CONST) - (error.y*self.k_e_y))
+
+        print('Erro_x :', (pan_aux * SERVO_TICKS_TO_DEGREES_CONST) )
+        print('Erro y :', (tilt_aux * SERVO_TICKS_TO_DEGREES_CONST) )
+
+
+
+
     def flag_neck_position_callback(self, flag: Bool):
         # print("Flag Neck Position Set To: ", flag.data)
         if flag.data:
@@ -233,7 +252,9 @@ class NeckNode(Node):
 
 def move_neck(p, t):
     # print(p,t)
-    
+
+    global pan_aux, tilt_aux
+
     if p > MAX_PAN_ANGLE:
         p = MAX_PAN_ANGLE
     if p < MIN_PAN_ANGLE:
@@ -246,6 +267,11 @@ def move_neck(p, t):
 
     p = int(p * DEGREES_TO_SERVO_TICKS_CONST + 0.5)
     t = int(t * DEGREES_TO_SERVO_TICKS_CONST + 0.5)
+
+    
+
+    pan_aux = p
+    tilt_aux = t  
     
     dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_GOAL_POSITION, p)
     if dxl_comm_result != COMM_SUCCESS:
