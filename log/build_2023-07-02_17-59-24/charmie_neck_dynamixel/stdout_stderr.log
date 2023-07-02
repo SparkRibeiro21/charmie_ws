@@ -1,0 +1,17 @@
+running develop
+running egg_info
+writing charmie_neck_dynamixel.egg-info/PKG-INFO
+writing dependency_links to charmie_neck_dynamixel.egg-info/dependency_links.txt
+writing entry points to charmie_neck_dynamixel.egg-info/entry_points.txt
+writing requirements to charmie_neck_dynamixel.egg-info/requires.txt
+writing top-level names to charmie_neck_dynamixel.egg-info/top_level.txt
+reading manifest file 'charmie_neck_dynamixel.egg-info/SOURCES.txt'
+writing manifest file 'charmie_neck_dynamixel.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/python3.8/site-packages/charmie-neck-dynamixel.egg-link (link to .)
+Installing neck_dynamixel script to /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/lib/charmie_neck_dynamixel
+
+Installed /home/utilizador/charmie_ws/build/charmie_neck_dynamixel
+running install_data
+copying resource/charmie_neck_dynamixel -> /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/ament_index/resource_index/packages
+copying package.xml -> /home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel

@@ -3,6 +3,7 @@ setup.cfg
 setup.py
 charmie_receptionist/__init__.py
 charmie_receptionist/receptionist.py
+charmie_receptionist/testes.py
 charmie_receptionist.egg-info/PKG-INFO
 charmie_receptionist.egg-info/SOURCES.txt
 charmie_receptionist.egg-info/dependency_links.txt

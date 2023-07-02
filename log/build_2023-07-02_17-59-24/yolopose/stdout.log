@@ -1,0 +1,15 @@
+running develop
+running egg_info
+writing yolopose.egg-info/PKG-INFO
+writing dependency_links to yolopose.egg-info/dependency_links.txt
+writing entry points to yolopose.egg-info/entry_points.txt
+writing requirements to yolopose.egg-info/requires.txt
+writing top-level names to yolopose.egg-info/top_level.txt
+reading manifest file 'yolopose.egg-info/SOURCES.txt'
+writing manifest file 'yolopose.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose.egg-link (link to .)
+Installing yolo_posev8 script to /home/utilizador/charmie_ws/install/yolopose/lib/yolopose
+
+Installed /home/utilizador/charmie_ws/build/yolopose
+running install_data
