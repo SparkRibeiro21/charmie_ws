@@ -33,7 +33,7 @@ class ObstaclesLIDAR:
         self.test_image2 = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
 
         self.DEBUG_DRAW_IMAGE = False
-        self.DEBUG_PRINT = True\\
+        self.DEBUG_PRINT = True
         self.is_TRFilter = True         
         self.is_dummy_points = True
         self.is_obs = True
@@ -206,8 +206,11 @@ class ObstaclesLIDAR:
                                 cv2.circle(self.test_image2, (self.test_image.shape[1] - self.centre_data - self.valores_id[key], int(self.yc + 100 - self.scale * self.valores_dict[key])), (int)(2), (255, 255, 0), 1)
                             # print("Middle Obstacle: (", key, "-", valores_dict[key], ")")
                         obst_dict['alfa_f'] = key_ant
-                        obst_dict['d_f'] = self.valores_dict[key_ant]
-                        obst_dict['d_avg'] = dist_sum/dist_counter
+                        obst_dict['d_f'] = self.valores_dict[key_ant] 
+                        if dist_counter == 0:
+                            obst_dict['d_avg'] = dist_min # BUG on 02/07/2023, must solve later
+                        else:
+                            obst_dict['d_avg'] = dist_sum/dist_counter
                         obst_dict['d_min'] = dist_min
                         obst_list.append(obst_dict.copy())  # for some reason it needs the copy to work
                         obst_dict.clear()
@@ -226,7 +229,10 @@ class ObstaclesLIDAR:
                             # print("Middle Obstacle: (", key, "-", valores_dict[key], ")")
                         obst_dict['alfa_f'] = key_ant
                         obst_dict['d_f'] = self.valores_dict[key_ant]
-                        obst_dict['d_avg'] = dist_sum/dist_counter
+                        if dist_counter == 0:
+                            obst_dict['d_avg'] = dist_min # BUG on 02/07/2023, must solve later
+                        else:
+                            obst_dict['d_avg'] = dist_sum/dist_counter
                         obst_dict['d_min'] = dist_min
                         obst_list.append(obst_dict.copy())  # for some reason it needs the copy to work
                         obst_dict.clear()
@@ -246,7 +252,10 @@ class ObstaclesLIDAR:
                         # print("End Obstacle: (", key_ant, "-", valores_dict[key_ant], ")")
                     obst_dict['alfa_f'] = key_ant
                     obst_dict['d_f'] = self.valores_dict[key_ant]
-                    obst_dict['d_avg'] = dist_sum/dist_counter
+                    if dist_counter == 0:
+                        obst_dict['d_avg'] = dist_min # BUG on 02/07/2023, must solve later
+                    else:
+                        obst_dict['d_avg'] = dist_sum/dist_counter
                     obst_dict['d_min'] = dist_min
                     obst_list.append(obst_dict.copy())  # for some reason it needs the copy to work
                     obst_dict.clear()
