@@ -60,17 +60,20 @@ class TarNavSDNL(metaclass=Metaclass_TarNavSDNL):
         '_move_target_coordinates',
         '_rotate_target_coordinates',
         '_flag_not_obs',
+        '_follow_me',
     ]
 
     _fields_and_field_types = {
         'move_target_coordinates': 'geometry_msgs/Pose2D',
         'rotate_target_coordinates': 'geometry_msgs/Pose2D',
         'flag_not_obs': 'boolean',
+        'follow_me': 'boolean',
     }
 
     SLOT_TYPES = (
         rosidl_parser.definition.NamespacedType(['geometry_msgs', 'msg'], 'Pose2D'),  # noqa: E501
         rosidl_parser.definition.NamespacedType(['geometry_msgs', 'msg'], 'Pose2D'),  # noqa: E501
+        rosidl_parser.definition.BasicType('boolean'),  # noqa: E501
         rosidl_parser.definition.BasicType('boolean'),  # noqa: E501
     )
 
@@ -83,6 +86,7 @@ class TarNavSDNL(metaclass=Metaclass_TarNavSDNL):
         from geometry_msgs.msg import Pose2D
         self.rotate_target_coordinates = kwargs.get('rotate_target_coordinates', Pose2D())
         self.flag_not_obs = kwargs.get('flag_not_obs', bool())
+        self.follow_me = kwargs.get('follow_me', bool())
 
     def __repr__(self):
         typename = self.__class__.__module__.split('.')
@@ -118,6 +122,8 @@ class TarNavSDNL(metaclass=Metaclass_TarNavSDNL):
         if self.rotate_target_coordinates != other.rotate_target_coordinates:
             return False
         if self.flag_not_obs != other.flag_not_obs:
+            return False
+        if self.follow_me != other.follow_me:
             return False
         return True
 
@@ -166,3 +172,16 @@ class TarNavSDNL(metaclass=Metaclass_TarNavSDNL):
                 isinstance(value, bool), \
                 "The 'flag_not_obs' field must be of type 'bool'"
         self._flag_not_obs = value
+
+    @property
+    def follow_me(self):
+        """Message field 'follow_me'."""
+        return self._follow_me
+
+    @follow_me.setter
+    def follow_me(self, value):
+        if __debug__:
+            assert \
+                isinstance(value, bool), \
+                "The 'follow_me' field must be of type 'bool'"
+        self._follow_me = value

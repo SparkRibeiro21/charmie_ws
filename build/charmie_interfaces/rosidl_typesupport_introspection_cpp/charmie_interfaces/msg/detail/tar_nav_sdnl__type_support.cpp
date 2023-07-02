@@ -37,7 +37,7 @@ void TarNavSDNL_fini_function(void * message_memory)
   typed_message->~TarNavSDNL();
 }
 
-static const ::rosidl_typesupport_introspection_cpp::MessageMember TarNavSDNL_message_member_array[3] = {
+static const ::rosidl_typesupport_introspection_cpp::MessageMember TarNavSDNL_message_member_array[4] = {
   {
     "move_target_coordinates",  // name
     ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE,  // type
@@ -82,13 +82,28 @@ static const ::rosidl_typesupport_introspection_cpp::MessageMember TarNavSDNL_me
     nullptr,  // get_const(index) function pointer
     nullptr,  // get(index) function pointer
     nullptr  // resize(index) function pointer
+  },
+  {
+    "follow_me",  // name
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOLEAN,  // type
+    0,  // upper bound of string
+    nullptr,  // members of sub message
+    false,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces::msg::TarNavSDNL, follow_me),  // bytes offset in struct
+    nullptr,  // default value
+    nullptr,  // size() function pointer
+    nullptr,  // get_const(index) function pointer
+    nullptr,  // get(index) function pointer
+    nullptr  // resize(index) function pointer
   }
 };
 
 static const ::rosidl_typesupport_introspection_cpp::MessageMembers TarNavSDNL_message_members = {
   "charmie_interfaces::msg",  // message namespace
   "TarNavSDNL",  // message name
-  3,  // number of fields
+  4,  // number of fields
   sizeof(charmie_interfaces::msg::TarNavSDNL),
   TarNavSDNL_message_member_array,  // message members
   TarNavSDNL_init_function,  // function to initialize message memory (memory has to be allocated)

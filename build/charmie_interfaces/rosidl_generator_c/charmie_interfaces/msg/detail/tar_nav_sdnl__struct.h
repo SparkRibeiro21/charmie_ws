@@ -28,6 +28,7 @@ typedef struct charmie_interfaces__msg__TarNavSDNL
   geometry_msgs__msg__Pose2D move_target_coordinates;
   geometry_msgs__msg__Pose2D rotate_target_coordinates;
   bool flag_not_obs;
+  bool follow_me;
 } charmie_interfaces__msg__TarNavSDNL;
 
 // Struct for a sequence of charmie_interfaces__msg__TarNavSDNL.

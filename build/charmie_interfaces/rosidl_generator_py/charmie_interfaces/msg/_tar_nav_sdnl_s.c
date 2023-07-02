@@ -89,6 +89,15 @@ bool charmie_interfaces__msg__tar_nav_sdnl__convert_from_py(PyObject * _pymsg, v
     ros_message->flag_not_obs = (Py_True == field);
     Py_DECREF(field);
   }
+  {  // follow_me
+    PyObject * field = PyObject_GetAttrString(_pymsg, "follow_me");
+    if (!field) {
+      return false;
+    }
+    assert(PyBool_Check(field));
+    ros_message->follow_me = (Py_True == field);
+    Py_DECREF(field);
+  }
 
   return true;
 }
@@ -144,6 +153,17 @@ PyObject * charmie_interfaces__msg__tar_nav_sdnl__convert_to_py(void * raw_ros_m
     field = PyBool_FromLong(ros_message->flag_not_obs ? 1 : 0);
     {
       int rc = PyObject_SetAttrString(_pymessage, "flag_not_obs", field);
+      Py_DECREF(field);
+      if (rc) {
+        return NULL;
+      }
+    }
+  }
+  {  // follow_me
+    PyObject * field = NULL;
+    field = PyBool_FromLong(ros_message->follow_me ? 1 : 0);
+    {
+      int rc = PyObject_SetAttrString(_pymessage, "follow_me", field);
       Py_DECREF(field);
       if (rc) {
         return NULL;

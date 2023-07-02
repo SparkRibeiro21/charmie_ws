@@ -126,7 +126,8 @@ class NeckNode(Node):
 
         self.create_timer(0.1, self.timer_callback)
         self.flag_get_neck_position = False
-        self.k_e = 0.5
+        self.k_e = 0.05
+        self.max_error = 40
 
 
     def timer_callback(self):
@@ -159,6 +160,21 @@ class NeckNode(Node):
 
 
     def neck_error_callback(self, error: Pose2D):
+
+        print("neck_error:", error.x, error.y)
+
+        if error.x > self.max_error:
+            error.x = self.max_error
+        elif error.x < -self.max_error:
+            error.x = - self.max_error
+
+        if error.y > self.max_error:
+            error.y = self.max_error
+        elif error.y < -self.max_error:
+            error.y = - self.max_error 
+
+        print("neck_error_corr:", error.x, error.y)
+
         self.get_logger().info("Received Neck Position (by Pixel Errors), Adjusting the Neck Position")
         move_neck((pan_corr * SERVO_TICKS_TO_DEGREES_CONST) - (error.x*self.k_e), (tilt_corr * SERVO_TICKS_TO_DEGREES_CONST) - (error.y*self.k_e))
         

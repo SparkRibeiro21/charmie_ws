@@ -33,6 +33,7 @@ charmie_interfaces__msg__TarNavSDNL__init(charmie_interfaces__msg__TarNavSDNL * 
     return false;
   }
   // flag_not_obs
+  // follow_me
   return true;
 }
 
@@ -47,6 +48,7 @@ charmie_interfaces__msg__TarNavSDNL__fini(charmie_interfaces__msg__TarNavSDNL * 
   // rotate_target_coordinates
   geometry_msgs__msg__Pose2D__fini(&msg->rotate_target_coordinates);
   // flag_not_obs
+  // follow_me
 }
 
 bool
@@ -69,6 +71,10 @@ charmie_interfaces__msg__TarNavSDNL__are_equal(const charmie_interfaces__msg__Ta
   }
   // flag_not_obs
   if (lhs->flag_not_obs != rhs->flag_not_obs) {
+    return false;
+  }
+  // follow_me
+  if (lhs->follow_me != rhs->follow_me) {
     return false;
   }
   return true;
@@ -96,6 +102,8 @@ charmie_interfaces__msg__TarNavSDNL__copy(
   }
   // flag_not_obs
   output->flag_not_obs = input->flag_not_obs;
+  // follow_me
+  output->follow_me = input->follow_me;
   return true;
 }
 

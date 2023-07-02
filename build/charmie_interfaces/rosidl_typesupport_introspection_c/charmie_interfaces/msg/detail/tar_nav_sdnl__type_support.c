@@ -39,7 +39,7 @@ void TarNavSDNL__rosidl_typesupport_introspection_c__TarNavSDNL_fini_function(vo
   charmie_interfaces__msg__TarNavSDNL__fini(message_memory);
 }
 
-static rosidl_typesupport_introspection_c__MessageMember TarNavSDNL__rosidl_typesupport_introspection_c__TarNavSDNL_message_member_array[3] = {
+static rosidl_typesupport_introspection_c__MessageMember TarNavSDNL__rosidl_typesupport_introspection_c__TarNavSDNL_message_member_array[4] = {
   {
     "move_target_coordinates",  // name
     rosidl_typesupport_introspection_c__ROS_TYPE_MESSAGE,  // type
@@ -84,13 +84,28 @@ static rosidl_typesupport_introspection_c__MessageMember TarNavSDNL__rosidl_type
     NULL,  // get_const(index) function pointer
     NULL,  // get(index) function pointer
     NULL  // resize(index) function pointer
+  },
+  {
+    "follow_me",  // name
+    rosidl_typesupport_introspection_c__ROS_TYPE_BOOLEAN,  // type
+    0,  // upper bound of string
+    NULL,  // members of sub message
+    false,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces__msg__TarNavSDNL, follow_me),  // bytes offset in struct
+    NULL,  // default value
+    NULL,  // size() function pointer
+    NULL,  // get_const(index) function pointer
+    NULL,  // get(index) function pointer
+    NULL  // resize(index) function pointer
   }
 };
 
 static const rosidl_typesupport_introspection_c__MessageMembers TarNavSDNL__rosidl_typesupport_introspection_c__TarNavSDNL_message_members = {
   "charmie_interfaces__msg",  // message namespace
   "TarNavSDNL",  // message name
-  3,  // number of fields
+  4,  // number of fields
   sizeof(charmie_interfaces__msg__TarNavSDNL),
   TarNavSDNL__rosidl_typesupport_introspection_c__TarNavSDNL_message_member_array,  // message members
   TarNavSDNL__rosidl_typesupport_introspection_c__TarNavSDNL_init_function,  // function to initialize message memory (memory has to be allocated)

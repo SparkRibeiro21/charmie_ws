@@ -20,16 +20,32 @@ namespace msg
 namespace builder
 {
 
+class Init_TarNavSDNL_follow_me
+{
+public:
+  explicit Init_TarNavSDNL_follow_me(::charmie_interfaces::msg::TarNavSDNL & msg)
+  : msg_(msg)
+  {}
+  ::charmie_interfaces::msg::TarNavSDNL follow_me(::charmie_interfaces::msg::TarNavSDNL::_follow_me_type arg)
+  {
+    msg_.follow_me = std::move(arg);
+    return std::move(msg_);
+  }
+
+private:
+  ::charmie_interfaces::msg::TarNavSDNL msg_;
+};
+
 class Init_TarNavSDNL_flag_not_obs
 {
 public:
   explicit Init_TarNavSDNL_flag_not_obs(::charmie_interfaces::msg::TarNavSDNL & msg)
   : msg_(msg)
   {}
-  ::charmie_interfaces::msg::TarNavSDNL flag_not_obs(::charmie_interfaces::msg::TarNavSDNL::_flag_not_obs_type arg)
+  Init_TarNavSDNL_follow_me flag_not_obs(::charmie_interfaces::msg::TarNavSDNL::_flag_not_obs_type arg)
   {
     msg_.flag_not_obs = std::move(arg);
-    return std::move(msg_);
+    return Init_TarNavSDNL_follow_me(msg_);
   }
 
 private:

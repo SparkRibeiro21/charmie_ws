@@ -45,6 +45,7 @@ struct TarNavSDNL_
       rosidl_runtime_cpp::MessageInitialization::ZERO == _init)
     {
       this->flag_not_obs = false;
+      this->follow_me = false;
     }
   }
 
@@ -56,6 +57,7 @@ struct TarNavSDNL_
       rosidl_runtime_cpp::MessageInitialization::ZERO == _init)
     {
       this->flag_not_obs = false;
+      this->follow_me = false;
     }
   }
 
@@ -69,6 +71,9 @@ struct TarNavSDNL_
   using _flag_not_obs_type =
     bool;
   _flag_not_obs_type flag_not_obs;
+  using _follow_me_type =
+    bool;
+  _follow_me_type follow_me;
 
   // setters for named parameter idiom
   Type & set__move_target_coordinates(
@@ -87,6 +92,12 @@ struct TarNavSDNL_
     const bool & _arg)
   {
     this->flag_not_obs = _arg;
+    return *this;
+  }
+  Type & set__follow_me(
+    const bool & _arg)
+  {
+    this->follow_me = _arg;
     return *this;
   }
 
@@ -139,6 +150,9 @@ struct TarNavSDNL_
       return false;
     }
     if (this->flag_not_obs != other.flag_not_obs) {
+      return false;
+    }
+    if (this->follow_me != other.follow_me) {
       return false;
     }
     return true;

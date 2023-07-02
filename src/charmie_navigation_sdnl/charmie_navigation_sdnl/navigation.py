@@ -23,6 +23,7 @@ class NavigationSDNLClass:
 
         # configurable other parameters
         self.nav_threshold_dist = 0.35 # in meters
+        self.nav_threshold_dist_follow_me = 1.0 # in meters
         self.nav_threshold_ang = 10 # degrees
         self.max_lin_speed = 25.0 # speed
         self.max_ang_speed = 20.0 # speed
@@ -689,8 +690,12 @@ class NavSDNLNode(Node):
                 omni_move = self.nav.sdnl_main("mov")
                 self.omni_move_publisher.publish(omni_move)
                 
-                if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
-                    self.navigation_state = 1
+                if self.nav.nav_target.follow_me: 
+                    if self.nav.nav_threshold_dist_follow_me <= self.nav.nav_threshold_dist:
+                        self.navigation_state = 1
+                else:
+                    if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
+                        self.navigation_state = 1
 
             if self.navigation_state == 1:
                 omni_move = self.nav.sdnl_main("rot")

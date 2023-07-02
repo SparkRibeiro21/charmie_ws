@@ -12,6 +12,8 @@ module charmie_interfaces {
       geometry_msgs::msg::Pose2D rotate_target_coordinates;
 
       boolean flag_not_obs;
+
+      boolean follow_me;
     };
   };
 };

@@ -88,6 +88,8 @@ cdr_serialize(
     cdr);
   // Member: flag_not_obs
   cdr << (ros_message.flag_not_obs ? true : false);
+  // Member: follow_me
+  cdr << (ros_message.follow_me ? true : false);
   return true;
 }
 
@@ -110,6 +112,13 @@ cdr_deserialize(
     uint8_t tmp;
     cdr >> tmp;
     ros_message.flag_not_obs = tmp ? true : false;
+  }
+
+  // Member: follow_me
+  {
+    uint8_t tmp;
+    cdr >> tmp;
+    ros_message.follow_me = tmp ? true : false;
   }
 
   return true;
@@ -141,6 +150,12 @@ get_serialized_size(
   // Member: flag_not_obs
   {
     size_t item_size = sizeof(ros_message.flag_not_obs);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // Member: follow_me
+  {
+    size_t item_size = sizeof(ros_message.follow_me);
     current_alignment += item_size +
       eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
   }
@@ -188,6 +203,13 @@ max_serialized_size_TarNavSDNL(
   }
 
   // Member: flag_not_obs
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint8_t);
+  }
+
+  // Member: follow_me
   {
     size_t array_size = 1;
 
