@@ -54,7 +54,7 @@ class CarryLuggageNode(Node):
         self.get_speech_subscriber = self.create_subscription(String, "get_speech", self.get_speech_callback, 10)
 
         # Odometry
-        self.odometry_subscriber = self.create_subscription(Odometry, "odom",self.get_odometry_robot_callback, 10)
+        self.odometry_subscriber = self.create_subscription(Odometry, "odom", self.get_odometry_robot_callback, 10)
 
         # Navigation 
         self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
@@ -414,7 +414,7 @@ class CarryLuggageMain():
                         stop_orientation_y = h_target_inter*2 * math.cos(-self.node.robot_t) + self.node.robot_y
 
 
-
+                        ### for stability reasons dist_person must be replaced by person_y
                         if dist_person > h_target_inter:
                             self.node.coordinates_to_navigation((target_x, target_y), (stop_orientation_x, stop_orientation_y), False, True)
                             print('ESTADO 1')
