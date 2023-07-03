@@ -74,7 +74,7 @@ class TRNode(Node):
         self.create_timer(0.05, self.timer_callback)
         self.create_timer(5, self.timer_callback2)
         # self.create_timer(20, self.timer_callback3)
-        self.create_timer(4, self.timer_callback4)
+        self.create_timer(5, self.timer_callback4)
         
 
         # Get Flags
@@ -203,6 +203,12 @@ class TRNode(Node):
         print("Recebi Fim do Start Door")
 
     def timer_callback4(self):
+        speech_str = RobotSpeech()
+        speech_str.command = "Please Wait for me"
+        speech_str.language = 'en'
+        self.speaker_publisher.publish(speech_str)
+
+
         rgb = Int16()
 
         rgb.data = self.rgb_ctr
