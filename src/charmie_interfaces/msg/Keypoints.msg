@@ -1,4 +1,5 @@
 int32 index_person
+float32 x_person_relative
 float32 average_distance
 float32 standard_deviation
 int32 key_p0_x
