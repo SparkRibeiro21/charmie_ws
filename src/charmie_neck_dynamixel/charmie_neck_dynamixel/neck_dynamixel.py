@@ -338,7 +338,7 @@ def main(args=None):
     dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_I_GAIN, TILT_I_GAIN)
     dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_P_GAIN, TILT_P_GAIN)
 
-    move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+    move_neck(180, 193) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
     node.get_logger().info("Set Neck to Initial Position, Looking Forward")
 
     rclpy.spin(node)
