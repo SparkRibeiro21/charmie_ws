@@ -5,7 +5,7 @@ from rclpy.node import Node
 from std_msgs.msg import Bool
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3
-from charmie_interfaces.msg import TarNavSDNL, Obstacles, ObstacleInfo
+from charmie_interfaces.msg import TarNavSDNL, Obstacles
 
 import cv2
 import numpy as np
@@ -16,25 +16,26 @@ class NavigationSDNLClass:
     def __init__(self):
 
         # configurable SDNL parameters
-        self.lambda_target_mov = 9
-        self.lambda_target_rot = 14
-        self.beta1 = 7
-        self.beta2 = 5
+        self.lambda_target_mov = 12
+        self.lambda_target_rot = 12
+        self.beta1 = 9
+        self.beta2 = 7
 
         # configurable other parameters
-        self.nav_threshold_dist = 0.35 # in meters
-        self.nav_threshold_dist_follow_me = 1.0 # in meters
-        self.nav_threshold_ang = 10 # degrees
-        self.max_lin_speed = 25.0 # speed
+        self.nav_threshold_dist = 0.6 # in meters
+        self.nav_threshold_dist_follow_me = 1.2 # in meters
+        self.nav_threshold_ang = 15 # degrees
+        self.nav_threshold_ang_follow_me = 20 # degrees
+        self.max_lin_speed = 30.0 # speed
         self.max_ang_speed = 20.0 # speed
-        self.tar_dist_decrease_lin_speed = 0.5 # meters
+        self.tar_dist_decrease_lin_speed = 0.8 # meters
         self.obs_dist_decrease_lin_speed = 1.0 # meters
         self.min_speed_obs = 5.0 # speed
         self.decay_rate_initial_speed_ramp = 2.0 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
 
         self.obstacles = Obstacles()
-        self.obstacles_max_dist = Obstacles()
+        self.aux_obstacles_l = Obstacles()
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.robot_t = 0.0
@@ -96,12 +97,12 @@ class NavigationSDNLClass:
         
         if not self.nav_target.flag_not_obs:
             self.f_final, self.y_final = self.combine_atrator_repulsor()
-            print("ATRATOR + REPULSORES")
+            # print("ATRATOR + REPULSORES")
         else:
             # in case it is intended to not consider obstacles
             self.f_final = self.f_target
             self.y_final = self.y_atrator
-            print("SÓ ATRATOR")
+            # print("SÓ ATRATOR")
 
         # print(self.f_final)
 
@@ -144,8 +145,8 @@ class NavigationSDNLClass:
             
             omni_move.y = min(speed_t, speed_o, speed_i)
             ### DEPOIS TENHO QUE ARRANJAR MANIERA DE JUNTAR AS DUAS EQUACOES, ASSIM NAO HA SALTOS
-            print("speed_t:", speed_t, "speed_o:", speed_o, "speed_i:", speed_i, "omni_move.y:", omni_move.y)
-            print(omni_move.y)
+            # print("speed_t:", speed_t, "speed_o:", speed_o, "speed_i:", speed_i, "omni_move.y:", omni_move.y)
+            # print(omni_move.y)
 
         omni_move.z = float(100.0 - self.f_final)
         
@@ -404,7 +405,7 @@ class NavigationSDNLClass:
                 cv2.circle(self.test_image, (int(self.xc + self.scale*self.all_pos_x_val[i]), int(self.yc - self.scale * self.all_pos_y_val[i])), 1, (255, 255, 0), -1)
 
             # obstacles
-            self.all_obs_val.append(self.obstacles)
+            self.all_obs_val.append(self.aux_obstacles_l)
             
             # past obstacles
             for j in range(len(self.all_obs_val)):
@@ -427,12 +428,12 @@ class NavigationSDNLClass:
 
             thickness = 20
             # current obstacles
-            for i in range(self.obstacles.no_obstacles):
+            for i in range(self.aux_obstacles_l.no_obstacles):
 
                 # aux variables
-                aux_ang = self.obstacles.obstacles[i].alfa
-                aux_dist = self.obstacles.obstacles[i].dist + self.robot_radius
-                aux_len_cm = self.obstacles.obstacles[i].length_cm
+                aux_ang = self.aux_obstacles_l.obstacles[i].alfa
+                aux_dist = self.aux_obstacles_l.obstacles[i].dist + self.robot_radius
+                aux_len_cm = self.aux_obstacles_l.obstacles[i].length_cm
 
                 #line robot center to obstacle center
                 # cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)),
@@ -526,32 +527,40 @@ class NavigationSDNLClass:
         # print(self.robot_x, self.robot_y, self.robot_t)
 
     def obstacles_msg_to_position(self, obs: Obstacles):
-        # self.obstacles = obs
-        
-        obs_max_dist = Obstacles()
-        
-        # self.obstacles_max_dist.
-        for i in range(obs.no_obstacles):
-            # print(i)
-            # print(self.obstacles.obstacles[i].dist)
-            if obs.obstacles[i].dist < self.MAX_DIST_FOR_OBS:
-                obs_max_dist.obstacles.append(obs.obstacles[i])
-        
-        obs_max_dist.no_obstacles = len(obs_max_dist.obstacles)
-        # self.obstacles_max_dist = obs_max_dist
-        self.obstacles = obs_max_dist
+        self.obstacles = obs
+        # self.aux_obstacles_l = obs
 
+        aux_index = []
+        aux_obs_l = Obstacles()
+        """
+        for i in range(len(self.aux_obstacles_l.obstacles)):
+            if self.aux_obstacles_l.obstacles[i].dist > self.MAX_DIST_FOR_OBS:
+                print(self.aux_obstacles_l.obstacles[i].dist)
+                # print(type(self.aux_obstacles_l.obstacles))
+                print(i)
+                aux_index.append(i)
+                
+        
+        for j in aux_index[::-1]:
+            print(j)
+
+            self.aux_obstacles_l.obstacles.remove(j)
+
+        """
+
+        for obs_ in self.obstacles.obstacles:
+            if obs_.dist < self.MAX_DIST_FOR_OBS:
+                aux_obs_l.obstacles.append(obs_)
+
+        aux_obs_l.no_obstacles = len(aux_obs_l.obstacles)
+
+        self.aux_obstacles_l = aux_obs_l
+
+        # print(self.aux_obstacles_l)
         # print("###")
-        # print(self.obstacles)
-        # print()
-        # print(self.obstacles_max_dist)
-        # print()
-        # print()
 
 
 
-
-            
         # print(self.obstacles)
 
     def navigation_msg_to_position(self, nav: TarNavSDNL):
@@ -649,11 +658,17 @@ class NavSDNLNode(Node):
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
-        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
+        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) 
 
         self.create_timer(0.1, self.timer_callback)
 
         self.navigation_state = 0
+
+        self.navigation_diagnostic_publisher = self.create_publisher(Bool, "navigation_diagnostic", 10)
+
+        flag_diagn = Bool()
+        flag_diagn.data = True
+        self.navigation_diagnostic_publisher.publish(flag_diagn)
 
     def obs_lidar_callback(self, obs: Obstacles):
         # updates the obstacles variable
@@ -661,17 +676,17 @@ class NavSDNLNode(Node):
         # self.nav.sdnl_main()
         # self.nav.update_debug_drawings()
         # print("here")
-        # self.nav.update_debug_drawings()
 
     def odom_robot_callback(self, odom: Odometry):
         # updates the position variable
         self.nav.odometry_msg_to_position(odom)
         # self.nav.sdnl_main()
         self.nav.update_debug_drawings()
-        # print("here2")
+        #print("here2")
 
     def target_pos_callback(self, nav: TarNavSDNL):
         # calculates the velocities and sends them to the motors considering the latest obstacles and odometry position
+        # print(nav)
         self.nav.navigation_msg_to_position(nav)
         self.nav.dist_to_target = self.nav.upload_move_dist_to_target()
         self.nav.ang_to_target = self.nav.upload_rot_ang_to_target()
@@ -689,10 +704,15 @@ class NavSDNLNode(Node):
             if self.navigation_state == 0:
                 omni_move = self.nav.sdnl_main("mov")
                 self.omni_move_publisher.publish(omni_move)
-                
-                if self.nav.nav_target.follow_me: 
-                    if self.nav.nav_threshold_dist_follow_me <= self.nav.nav_threshold_dist:
-                        self.navigation_state = 1
+
+                print(self.nav.nav_target.follow_me)
+
+                if self.nav.nav_target.follow_me:
+                    if self.nav.dist_to_target <= self.nav.nav_threshold_dist_follow_me:
+                        self.navigation_state = 1                        
+                        print("INSIDE1")
+                    else:
+                        print("OUTSIDE1")
                 else:
                     if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
                         self.navigation_state = 1
@@ -700,10 +720,18 @@ class NavSDNLNode(Node):
             if self.navigation_state == 1:
                 omni_move = self.nav.sdnl_main("rot")
                 self.omni_move_publisher.publish(omni_move)
-                
 
-                if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
-                    self.navigation_state = 2
+                if self.nav.nav_target.follow_me:
+                    if self.nav.ang_to_target <= self.nav.nav_threshold_ang_follow_me:
+                        self.navigation_state = 2
+                        print("INSIDE2")
+                    else:
+                        print("OUTSIDE2")
+                else:
+                    if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
+                        self.navigation_state = 2
+                    
+
 
 
             self.nav.update_debug_drawings() # this way it still draws the targets on the final frame

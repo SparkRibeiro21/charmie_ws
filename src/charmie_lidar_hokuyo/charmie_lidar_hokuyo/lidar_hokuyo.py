@@ -3,6 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import Bool
 
 import threading
 import traceback
@@ -462,6 +463,13 @@ class LidarNode(Node):
 
         self.create_timer(0.1, self.timer_callback)
 
+        self.lidar_base_diagnostic_publisher = self.create_publisher(Bool, "lidar_base_diagnostic", 10)
+        
+        self.flag_diagn = Bool()
+        
+
+        
+
     def timer_callback(self):
         laser_scan = LaserScan()
 
@@ -482,6 +490,9 @@ class LidarNode(Node):
         laser_scan.range_max = 5.6
         laser_scan.ranges = ranges
         self.lidar_publisher.publish(laser_scan)
+
+        self.flag_diagn.data = True
+        self.lidar_base_diagnostic_publisher.publish(self.flag_diagn)
         # print(laser_scan)
         
 

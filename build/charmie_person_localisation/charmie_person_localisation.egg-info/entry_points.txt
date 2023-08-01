@@ -1,0 +1,3 @@
+[console_scripts]
+person_localisation = charmie_person_localisation.person_localisation:main
+

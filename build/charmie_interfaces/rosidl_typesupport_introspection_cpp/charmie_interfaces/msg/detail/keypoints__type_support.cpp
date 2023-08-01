@@ -37,7 +37,7 @@ void Keypoints_fini_function(void * message_memory)
   typed_message->~Keypoints();
 }
 
-static const ::rosidl_typesupport_introspection_cpp::MessageMember Keypoints_message_member_array[37] = {
+static const ::rosidl_typesupport_introspection_cpp::MessageMember Keypoints_message_member_array[42] = {
   {
     "index_person",  // name
     ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32,  // type
@@ -47,6 +47,21 @@ static const ::rosidl_typesupport_introspection_cpp::MessageMember Keypoints_mes
     0,  // array size
     false,  // is upper bound
     offsetof(charmie_interfaces::msg::Keypoints, index_person),  // bytes offset in struct
+    nullptr,  // default value
+    nullptr,  // size() function pointer
+    nullptr,  // get_const(index) function pointer
+    nullptr,  // get(index) function pointer
+    nullptr  // resize(index) function pointer
+  },
+  {
+    "x_person_relative",  // name
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT,  // type
+    0,  // upper bound of string
+    nullptr,  // members of sub message
+    false,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces::msg::Keypoints, x_person_relative),  // bytes offset in struct
     nullptr,  // default value
     nullptr,  // size() function pointer
     nullptr,  // get_const(index) function pointer
@@ -77,6 +92,66 @@ static const ::rosidl_typesupport_introspection_cpp::MessageMember Keypoints_mes
     0,  // array size
     false,  // is upper bound
     offsetof(charmie_interfaces::msg::Keypoints, standard_deviation),  // bytes offset in struct
+    nullptr,  // default value
+    nullptr,  // size() function pointer
+    nullptr,  // get_const(index) function pointer
+    nullptr,  // get(index) function pointer
+    nullptr  // resize(index) function pointer
+  },
+  {
+    "box_topx_left",  // name
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32,  // type
+    0,  // upper bound of string
+    nullptr,  // members of sub message
+    false,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces::msg::Keypoints, box_topx_left),  // bytes offset in struct
+    nullptr,  // default value
+    nullptr,  // size() function pointer
+    nullptr,  // get_const(index) function pointer
+    nullptr,  // get(index) function pointer
+    nullptr  // resize(index) function pointer
+  },
+  {
+    "box_topy_left",  // name
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32,  // type
+    0,  // upper bound of string
+    nullptr,  // members of sub message
+    false,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces::msg::Keypoints, box_topy_left),  // bytes offset in struct
+    nullptr,  // default value
+    nullptr,  // size() function pointer
+    nullptr,  // get_const(index) function pointer
+    nullptr,  // get(index) function pointer
+    nullptr  // resize(index) function pointer
+  },
+  {
+    "box_width",  // name
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32,  // type
+    0,  // upper bound of string
+    nullptr,  // members of sub message
+    false,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces::msg::Keypoints, box_width),  // bytes offset in struct
+    nullptr,  // default value
+    nullptr,  // size() function pointer
+    nullptr,  // get_const(index) function pointer
+    nullptr,  // get(index) function pointer
+    nullptr  // resize(index) function pointer
+  },
+  {
+    "box_height",  // name
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32,  // type
+    0,  // upper bound of string
+    nullptr,  // members of sub message
+    false,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces::msg::Keypoints, box_height),  // bytes offset in struct
     nullptr,  // default value
     nullptr,  // size() function pointer
     nullptr,  // get_const(index) function pointer
@@ -598,7 +673,7 @@ static const ::rosidl_typesupport_introspection_cpp::MessageMember Keypoints_mes
 static const ::rosidl_typesupport_introspection_cpp::MessageMembers Keypoints_message_members = {
   "charmie_interfaces::msg",  // message namespace
   "Keypoints",  // message name
-  37,  // number of fields
+  42,  // number of fields
   sizeof(charmie_interfaces::msg::Keypoints),
   Keypoints_message_member_array,  // message members
   Keypoints_init_function,  // function to initialize message memory (memory has to be allocated)

@@ -18,7 +18,7 @@ import time
 class RobotControl:
 
     def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB1', baudrate=9600)  # open serial port
+        self.ser = serial.Serial('/dev/ttyUSB0', baudrate=9600)  # open serial port
         print("Connected to Motor Board via:", self.ser.name)  # check which port was really used
 
         # FLAGS
@@ -251,6 +251,11 @@ class LowLevelNode(Node):
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
 
+        self.low_level_diagnostic_publisher = self.create_publisher(Bool, "low_level_diagnostic", 10)
+
+        flag_diagn = Bool()
+        flag_diagn.data = False
+
         self.create_timer(0.05, self.timer_callback)
 
         self.robot = RobotControl()
@@ -259,12 +264,22 @@ class LowLevelNode(Node):
         self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
         self.robot.set_omni_flags(self.robot.TIMEOUT, False)
         print(self.robot.get_omni_variables(self.robot.ACCELERATION))
+        print(type(self.robot.get_omni_variables(self.robot.ACCELERATION)))
+        if self.robot.get_omni_variables(self.robot.ACCELERATION) == [1, 1]:
+            flag_diagn.data = True
+        else:
+            flag_diagn.data = False
+        
+        self.low_level_diagnostic_publisher.publish(flag_diagn)
+
 
         self.flag_get_start_button = False
         self.flag_get_vccs = False
         self.flag_get_torso_pos = False
         self.flag_get_encoders = False
 
+        
+        
     def timer_callback(self):
 
         if  self.flag_get_start_button:

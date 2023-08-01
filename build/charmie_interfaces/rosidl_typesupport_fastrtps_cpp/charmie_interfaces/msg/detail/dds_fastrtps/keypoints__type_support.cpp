@@ -34,10 +34,20 @@ cdr_serialize(
 {
   // Member: index_person
   cdr << ros_message.index_person;
+  // Member: x_person_relative
+  cdr << ros_message.x_person_relative;
   // Member: average_distance
   cdr << ros_message.average_distance;
   // Member: standard_deviation
   cdr << ros_message.standard_deviation;
+  // Member: box_topx_left
+  cdr << ros_message.box_topx_left;
+  // Member: box_topy_left
+  cdr << ros_message.box_topy_left;
+  // Member: box_width
+  cdr << ros_message.box_width;
+  // Member: box_height
+  cdr << ros_message.box_height;
   // Member: key_p0_x
   cdr << ros_message.key_p0_x;
   // Member: key_p0_y
@@ -118,11 +128,26 @@ cdr_deserialize(
   // Member: index_person
   cdr >> ros_message.index_person;
 
+  // Member: x_person_relative
+  cdr >> ros_message.x_person_relative;
+
   // Member: average_distance
   cdr >> ros_message.average_distance;
 
   // Member: standard_deviation
   cdr >> ros_message.standard_deviation;
+
+  // Member: box_topx_left
+  cdr >> ros_message.box_topx_left;
+
+  // Member: box_topy_left
+  cdr >> ros_message.box_topy_left;
+
+  // Member: box_width
+  cdr >> ros_message.box_width;
+
+  // Member: box_height
+  cdr >> ros_message.box_height;
 
   // Member: key_p0_x
   cdr >> ros_message.key_p0_x;
@@ -248,6 +273,12 @@ get_serialized_size(
     current_alignment += item_size +
       eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
   }
+  // Member: x_person_relative
+  {
+    size_t item_size = sizeof(ros_message.x_person_relative);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
   // Member: average_distance
   {
     size_t item_size = sizeof(ros_message.average_distance);
@@ -257,6 +288,30 @@ get_serialized_size(
   // Member: standard_deviation
   {
     size_t item_size = sizeof(ros_message.standard_deviation);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // Member: box_topx_left
+  {
+    size_t item_size = sizeof(ros_message.box_topx_left);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // Member: box_topy_left
+  {
+    size_t item_size = sizeof(ros_message.box_topy_left);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // Member: box_width
+  {
+    size_t item_size = sizeof(ros_message.box_width);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // Member: box_height
+  {
+    size_t item_size = sizeof(ros_message.box_height);
     current_alignment += item_size +
       eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
   }
@@ -491,6 +546,14 @@ max_serialized_size_Keypoints(
       eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
   }
 
+  // Member: x_person_relative
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+
   // Member: average_distance
   {
     size_t array_size = 1;
@@ -500,6 +563,38 @@ max_serialized_size_Keypoints(
   }
 
   // Member: standard_deviation
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+
+  // Member: box_topx_left
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+
+  // Member: box_topy_left
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+
+  // Member: box_width
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+
+  // Member: box_height
   {
     size_t array_size = 1;
 

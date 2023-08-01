@@ -19,6 +19,7 @@ class Yolo_obj(Node):
     def __init__(self):
         super().__init__("Yolo_obj")
         self.get_logger().info("Initialised Yolo Object Node")
+
         #self.debug_draw = Bool()
         self.debug_draw = False
 
@@ -41,6 +42,12 @@ class Yolo_obj(Node):
         self.obj = MultiObjects()
         self.obj.objects = []
         self.obj.confidence = []
+
+        self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
+
+        flag_diagn = Bool()
+        flag_diagn.data = True
+        self.yolo_object_diagnostic_publisher.publish(flag_diagn)
 
 
 

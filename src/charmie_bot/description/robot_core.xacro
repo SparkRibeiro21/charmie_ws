@@ -68,7 +68,7 @@
     <joint name="lower_body_joint" type="fixed">
         <parent link="base_link"/>
         <child link="lower_body_link"/>
-        <origin xyz="0 0 0.2" rpy="0 0 ${pi/2}"/>
+        <origin xyz="0 0 0.2" rpy="0 0 0"/>
         <!-- <axis xyz="0 0 1"/>
         <limit lower="0" upper="0.14" velocity="100" effort="100"/> -->
     </joint>

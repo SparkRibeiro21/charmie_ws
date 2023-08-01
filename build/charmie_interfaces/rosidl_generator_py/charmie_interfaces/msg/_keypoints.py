@@ -54,8 +54,13 @@ class Keypoints(metaclass=Metaclass_Keypoints):
 
     __slots__ = [
         '_index_person',
+        '_x_person_relative',
         '_average_distance',
         '_standard_deviation',
+        '_box_topx_left',
+        '_box_topy_left',
+        '_box_width',
+        '_box_height',
         '_key_p0_x',
         '_key_p0_y',
         '_key_p1_x',
@@ -94,8 +99,13 @@ class Keypoints(metaclass=Metaclass_Keypoints):
 
     _fields_and_field_types = {
         'index_person': 'int32',
+        'x_person_relative': 'float',
         'average_distance': 'float',
         'standard_deviation': 'float',
+        'box_topx_left': 'int32',
+        'box_topy_left': 'int32',
+        'box_width': 'int32',
+        'box_height': 'int32',
         'key_p0_x': 'int32',
         'key_p0_y': 'int32',
         'key_p1_x': 'int32',
@@ -136,6 +146,11 @@ class Keypoints(metaclass=Metaclass_Keypoints):
         rosidl_parser.definition.BasicType('int32'),  # noqa: E501
         rosidl_parser.definition.BasicType('float'),  # noqa: E501
         rosidl_parser.definition.BasicType('float'),  # noqa: E501
+        rosidl_parser.definition.BasicType('float'),  # noqa: E501
+        rosidl_parser.definition.BasicType('int32'),  # noqa: E501
+        rosidl_parser.definition.BasicType('int32'),  # noqa: E501
+        rosidl_parser.definition.BasicType('int32'),  # noqa: E501
+        rosidl_parser.definition.BasicType('int32'),  # noqa: E501
         rosidl_parser.definition.BasicType('int32'),  # noqa: E501
         rosidl_parser.definition.BasicType('int32'),  # noqa: E501
         rosidl_parser.definition.BasicType('int32'),  # noqa: E501
@@ -177,8 +192,13 @@ class Keypoints(metaclass=Metaclass_Keypoints):
             'Invalid arguments passed to constructor: %s' % \
             ', '.join(sorted(k for k in kwargs.keys() if '_' + k not in self.__slots__))
         self.index_person = kwargs.get('index_person', int())
+        self.x_person_relative = kwargs.get('x_person_relative', float())
         self.average_distance = kwargs.get('average_distance', float())
         self.standard_deviation = kwargs.get('standard_deviation', float())
+        self.box_topx_left = kwargs.get('box_topx_left', int())
+        self.box_topy_left = kwargs.get('box_topy_left', int())
+        self.box_width = kwargs.get('box_width', int())
+        self.box_height = kwargs.get('box_height', int())
         self.key_p0_x = kwargs.get('key_p0_x', int())
         self.key_p0_y = kwargs.get('key_p0_y', int())
         self.key_p1_x = kwargs.get('key_p1_x', int())
@@ -245,9 +265,19 @@ class Keypoints(metaclass=Metaclass_Keypoints):
             return False
         if self.index_person != other.index_person:
             return False
+        if self.x_person_relative != other.x_person_relative:
+            return False
         if self.average_distance != other.average_distance:
             return False
         if self.standard_deviation != other.standard_deviation:
+            return False
+        if self.box_topx_left != other.box_topx_left:
+            return False
+        if self.box_topy_left != other.box_topy_left:
+            return False
+        if self.box_width != other.box_width:
+            return False
+        if self.box_height != other.box_height:
             return False
         if self.key_p0_x != other.key_p0_x:
             return False
@@ -340,6 +370,19 @@ class Keypoints(metaclass=Metaclass_Keypoints):
         self._index_person = value
 
     @property
+    def x_person_relative(self):
+        """Message field 'x_person_relative'."""
+        return self._x_person_relative
+
+    @x_person_relative.setter
+    def x_person_relative(self, value):
+        if __debug__:
+            assert \
+                isinstance(value, float), \
+                "The 'x_person_relative' field must be of type 'float'"
+        self._x_person_relative = value
+
+    @property
     def average_distance(self):
         """Message field 'average_distance'."""
         return self._average_distance
@@ -364,6 +407,66 @@ class Keypoints(metaclass=Metaclass_Keypoints):
                 isinstance(value, float), \
                 "The 'standard_deviation' field must be of type 'float'"
         self._standard_deviation = value
+
+    @property
+    def box_topx_left(self):
+        """Message field 'box_topx_left'."""
+        return self._box_topx_left
+
+    @box_topx_left.setter
+    def box_topx_left(self, value):
+        if __debug__:
+            assert \
+                isinstance(value, int), \
+                "The 'box_topx_left' field must be of type 'int'"
+            assert value >= -2147483648 and value < 2147483648, \
+                "The 'box_topx_left' field must be an integer in [-2147483648, 2147483647]"
+        self._box_topx_left = value
+
+    @property
+    def box_topy_left(self):
+        """Message field 'box_topy_left'."""
+        return self._box_topy_left
+
+    @box_topy_left.setter
+    def box_topy_left(self, value):
+        if __debug__:
+            assert \
+                isinstance(value, int), \
+                "The 'box_topy_left' field must be of type 'int'"
+            assert value >= -2147483648 and value < 2147483648, \
+                "The 'box_topy_left' field must be an integer in [-2147483648, 2147483647]"
+        self._box_topy_left = value
+
+    @property
+    def box_width(self):
+        """Message field 'box_width'."""
+        return self._box_width
+
+    @box_width.setter
+    def box_width(self, value):
+        if __debug__:
+            assert \
+                isinstance(value, int), \
+                "The 'box_width' field must be of type 'int'"
+            assert value >= -2147483648 and value < 2147483648, \
+                "The 'box_width' field must be an integer in [-2147483648, 2147483647]"
+        self._box_width = value
+
+    @property
+    def box_height(self):
+        """Message field 'box_height'."""
+        return self._box_height
+
+    @box_height.setter
+    def box_height(self, value):
+        if __debug__:
+            assert \
+                isinstance(value, int), \
+                "The 'box_height' field must be of type 'int'"
+            assert value >= -2147483648 and value < 2147483648, \
+                "The 'box_height' field must be an integer in [-2147483648, 2147483647]"
+        self._box_height = value
 
     @property
     def key_p0_x(self):

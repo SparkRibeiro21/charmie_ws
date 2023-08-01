@@ -60,12 +60,15 @@ class ReceptionistNode(Node):
         self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
         #self.flag_listening_subscriber = self.create_subscription(Bool, "flag_listening", self.flag_listening_callback, 10)
         self.get_speech_subscriber = self.create_subscription(String, "get_speech", self.get_speech_callback, 10)
+        self.calibrate_ambient_noise_publisher = self.create_publisher(Bool, "calib_ambient_noise", 10)
+
 
         # Face Shining RGB
         self.face_publisher = self.create_publisher(Int16, "face_command", 10)
 
         # Odometry
         self.odometry_subscriber = self.create_subscription(Odometry, "odom",self.get_odometry_robot_callback, 10)
+        self.localisation_subscriber = self.create_subscription(Odometry, "odom_a", self.get_localisation_robot_callback, 10)
 
         # Navigation 
         self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
@@ -74,46 +77,78 @@ class ReceptionistNode(Node):
         # Intel Realsense
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
         
+
+        # Low Level: Start Button
+        self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
+        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
+
+
         #self.depth_image_subscriber = self.create_subscription(Image, "/depth/image_rect_raw", self.get_depth_image_callback, 10)
 
         
         # Timer
         # self.create_timer(0.1, self.timer_callback)
+        self.start_button_state = False
 
         #RGB
         self.rgb_ctr = 2
         self.rgb = Int16()
 
-        # Changing Variables
+        #Arena 1
+        self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_t = 0.0
+
+
+        #Arena 1
+        #self.begin_coordinates = (0.0, 3.0) # <----- CHANGE ME
+        self.begin_coordinates = (self.robot_x, self.robot_y) # <----- CHANGE ME
+        
+        #self.door_coordinates = (-0.95, 1.5) # <----- CHANGE ME
+        self.door_coordinates = (-1.0, 1.6) # <----- CHANGE ME
+        #self.door_coordinates_orientation= (-0.95, 0.0) # <----- CHANGE ME
+        self.door_coordinates_orientation= (1.3, 2.1) # <----- CHANGE ME
+        self.find_coordinates = (-0.82 , 3.5) # <----- CHANGE ME
+      
+        self.sofa_coordinates = (-3.4, 3.6) # <----- CHANGE ME
+    
+        self.guest_coordinates = (-0.82 , 2.4) # <----- CHANGE ME
+        
+
+        #---------------------------------------------------
+
+        """self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_t = 0.0
+
+
+        #Arena 2
+        #self.begin_coordinates = (0.0, 3.0) # <----- CHANGE ME
+        self.begin_coordinates = (self.robot_x, self.robot_y) # <----- CHANGE ME
+
+        
+        self.door_coordinates = (1.0, 1.6) # <----- CHANGE ME
+
+        self.door_coordinates_orientation= (1.05, 0.5) # <----- CHANGE ME
+        
+        self.find_coordinates = (-0.7 , 2.8) # <----- CHANGE ME
+      
+        self.sofa_coordinates = (-2.8, 2.8) # <----- CHANGE ME
+    
+        self.guest_coordinates = (-0.7 , 1.7) # <----- CHANGE ME"""
+      
+
+        #self.place_to_sit = (0.0 , 0.0) 
+       
+
+       
+        #self.chair1_coordinates = (3.7 , 8.9)
+        
+        
+        #self.chair2_coordinates = (0.6, 9.05)
+
         self.state = 0
         
-    
-        self.begin_coordinates = (1.3, 3.5)
-        
-
-    
-        self.door_coordinates = (1.0, 1.9)
-
-        self.door_coordinates_orientation= (0.0, 1.9)
-        
-      
-
-        self.place_to_sit = (0.0 , 0.0)
-       
-        self.find_coordinates = (1.3 , 8.5)
-
-        
-      
-        self.sofa_coordinates = (3.7, 7.9)
-
-       
-        self.chair1_coordinates = (3.7 , 8.9)
-        
-        
-        self.chair2_coordinates = (0.6, 9.05)
-        
-        
-        self.guest_coordinates = (1.4 , 8.5)
 
        
 
@@ -121,7 +156,7 @@ class ReceptionistNode(Node):
         #Código para ele olhar para a cara da pessoa e centrar a cara da pessoa na imagem
         self.door_neck_coordinates = Pose2D()
         self.door_neck_coordinates.x = 180.0
-        self.door_neck_coordinates.y = 200.0
+        self.door_neck_coordinates.y = 180.0
         
         #Definir como se estivesse a olhar ligeiramente para baixo - Perceber o que precisamos que olhe para baixo para detetarmos tudo direito
         self.place_to_sit_neck = Pose2D()
@@ -144,6 +179,10 @@ class ReceptionistNode(Node):
         self.talk_neck.x = 180.0
         self.talk_neck.y = 193.0
 
+        self.sofa_neck = Pose2D()
+        self.sofa_neck.x = 180.0
+        self.sofa_neck.y = 180.0
+
         self.br = CvBridge()
 
 
@@ -151,7 +190,9 @@ class ReceptionistNode(Node):
         self.flag_navigation_done = False
         self.flag_audio_done = False
         # self.keyword_list = []
+
         self.count_guest = 0
+        
         self.flag_Host = Bool()
         self.flag_Guest1 = Bool()
         self.flag_place_to_sit = Bool()
@@ -178,7 +219,6 @@ class ReceptionistNode(Node):
 
         self.keywords = String()
 
-        self.contador_conhecidos = 0
 
         self.cv2_img = []
         
@@ -189,8 +229,8 @@ class ReceptionistNode(Node):
         #Pastas relativas às funções das características como por exemplo, características, reconhecimento, etc.
         #CAMINHOS QUE É PRECISO MUDAR NOME
 
-        self.drinks = ["7up"]
-        self.names = ["Jack"]
+        self.drinks = ["Milk"]
+        self.names = ["John"]
         
         self.get_caract = 0
         self.caracteristics = []
@@ -200,7 +240,7 @@ class ReceptionistNode(Node):
         self.MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
         # MODEL_MEAN_VALUES = (78, 87, 114)
 
-        self.ageList = ['(0-2)', '(4-6)', '(8-12)', '(15-22)', '(23-32)', '(38-43)', '(48-55)', '(60-100)']
+        self.ageList = ['(0 and 2)', '(4 and 6)', '(8 and 12)', '(15 and 22)', '(23 and 32)', '(38 and 43)', '(48 and 55)', '(60 and 100)']
         self.genderList = ['Male', 'Female']
 
 
@@ -231,9 +271,6 @@ class ReceptionistNode(Node):
         self.mp_pose = mp.solutions.pose
         self.pose = self.mp_pose.Pose()
 
-
-        
-
     def detect_face(self, image):
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -252,7 +289,7 @@ class ReceptionistNode(Node):
                 start_y = int(bbox.ymin * height)
                 end_x = int((bbox.xmin + bbox.width) * width)
                 end_y = int((bbox.ymin + bbox.height) * height)
-                cv2.rectangle(image, (start_x, start_y), (end_x, end_y), (0, 255, 0), 2)
+                #cv2.rectangle(image, (start_x, start_y), (end_x, end_y), (0, 255, 0), 2)
                 center_face_x = int((start_x + end_x) / 2)
                 center_face_y = int((start_y + end_y) / 2)
                 
@@ -260,13 +297,13 @@ class ReceptionistNode(Node):
                 center_y = int(height/2)
 
                 print(center_x, center_y)
-                cv2.circle(image, (center_x, center_y), 1,(255, 0, 0), 2)
+                #cv2.circle(image, (center_x, center_y), 1,(255, 0, 0), 2)
 
                 #print(center_face_x, center_face_y)
-                cv2.circle(image, (center_face_x, center_face_y), 1,(0, 0, 255), 2)
+                #cv2.circle(image, (center_face_x, center_face_y), 1,(0, 0, 255), 2)
                 
 
-                cv2.line(image, (center_x,center_y), (center_face_x,center_face_y), (0, 255, 255), 2)
+                #cv2.line(image, (center_x,center_y), (center_face_x,center_face_y), (0, 255, 255), 2)
                 cv2.imshow("c_camera", image)
                 cv2.waitKey(1)
                
@@ -312,16 +349,20 @@ class ReceptionistNode(Node):
         
         # Obter a previsão da raça
         gender_predominante_index = np.argmax(predictions, axis=1)
-        gender_predominante = ['Male', 'Female'][gender_predominante_index[0]]
+        gender_predominante = ['Female', 'Male'][gender_predominante_index[0]]
         
         # Verificar se a previsão está disponível
         if gender_predominante is not None:
-            gender_dominante = gender_predominante
+            """ if predictions[0] < 0.9:
+                gender_dominante = 'Male'
+                error = 0
+            else: """
             error = 0
+            gender_dominante = gender_predominante
         else:
             gender_dominante = None
             error = 1
-        
+
         return gender_dominante, error
     
     def detectAge(self, image):
@@ -361,9 +402,9 @@ class ReceptionistNode(Node):
                 age_index = agePreds[0].argmax()
                 age= self.ageList[age_index]
                 if age_index < 2:  
-                    age = "(15-22)"
+                    age = "(15 and 22)"
                 elif age_index < 4: 
-                    age = "(23-32)"
+                    age = "(23 and 32)"
                 
 
         return age, error
@@ -392,7 +433,7 @@ class ReceptionistNode(Node):
         return race_dominante, error
   
 
-    def reconhecimento_facial(self, imagem, imagens_conhecidas):
+    """def reconhecimento_facial(self, imagem, imagens_conhecidas):
         # Carregar a imagem de entrada
         imagem_entrada = face_recognition.load_image_file(imagem)
 
@@ -418,7 +459,7 @@ class ReceptionistNode(Node):
         # Obter os nomes correspondentes aos índices
         nomes_correspondentes = [self.nomes_conhecidos[i] for i in indices_correspondencias]
 
-        return nomes_correspondentes
+        return nomes_correspondentes"""
         
     """ def follow_center_face(self, erro_x, erro_y):
         erro = Pose2D()
@@ -561,14 +602,18 @@ class ReceptionistNode(Node):
         #print("entrei callback camara")
         self.image_color = img
         #self.cv2_img = self.br.imgmsg_to_cv2(self.image_color, "bgr8")
-        """ current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
+        #current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
         #self.num_faces = self.camera_callback(self.current_frame)
-        cv2.imshow("c_camera", current_frame)
+        """ cv2.imshow("c_camera", current_frame)
         cv2.waitKey(1) """
         #pass
 
 
         
+
+    def get_start_button_callback(self, state: Bool):
+        self.start_button_state = state.data
+        print("Received Start Button:", state.data)
 
         
     def get_speech_callback(self, keywords : String):
@@ -590,6 +635,17 @@ class ReceptionistNode(Node):
 
     def get_odometry_robot_callback(self, odom:Odometry):
         self.robot_current_position = odom
+
+    def get_localisation_robot_callback(self, loc:Odometry):
+        self.robot_x = loc.pose.pose.position.x
+        self.robot_y = loc.pose.pose.position.y
+
+        qx = loc.pose.pose.orientation.x
+        qy = loc.pose.pose.orientation.y
+        qz = loc.pose.pose.orientation.z
+        qw = loc.pose.pose.orientation.w
+
+        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
 
 def main(args=None):
     rclpy.init(args=args)
@@ -629,9 +685,17 @@ class ReceptionistMain():
         self.node.flag_speech_done = False  
      
 
+    def wait_for_start_button(self):
+        while not self.node.start_button_state:
+            pass
+        f = Bool()
+        f.data = False 
+        self.node.flag_start_button_publisher.publish(f)
+
     
 
     def main(self):
+        time.sleep(1)
         print("IN NEW MAIN")
         while True:
             """ try:
@@ -648,6 +712,33 @@ class ReceptionistMain():
                 print(e) """
             #Estado comum aos dois Guests
             if self.node.state == 0:
+
+                """
+                print("1")
+                #Informo o Charmie que acabei de falar e posso começar a ouvir
+                self.node.audio_command_publisher.publish(self.node.speech_type)
+                #self.node.start_audio()
+                self.wait_for_end_of_audio()
+                print('b')
+
+
+                print("2")
+                #Informo o Charmie que acabei de falar e posso começar a ouvir
+                self.node.audio_command_publisher.publish(self.node.speech_type)
+                #self.node.start_audio()
+                self.wait_for_end_of_audio()
+                print('b')
+
+
+                time.sleep(5)
+                calib = Bool()
+                calib.data = True
+                self.node.calibrate_ambient_noise_publisher.publish(calib)
+                """
+
+
+
+
                 #Informa que está pronto para começar a tarefa
                 self.node.get_logger().info("estado 0")
 
@@ -655,29 +746,53 @@ class ReceptionistMain():
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.node.coordinates_to_navigation(self.node.begin_coordinates, self.node.door_coordinates, False)
+                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), self.node.door_coordinates, False)
                 self.wait_for_end_of_navigation()
 
                 self.node.neck_position_publisher.publish(self.node.talk_neck)
 
-                self.node.speech_str.command = "Hello! I am ready to start the receptionist task! Here I go"
+                self.node.speech_str.command = "Hello! I am ready to start the receptionist task! Waiting for start button to be pressed."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
 
+                t = Bool()
+                t.data = True
+                self.node.flag_start_button_publisher.publish(t)
+                self.wait_for_start_button()
                 
+                
+                self.node.rgb_ctr = 41
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                time.sleep(2)
+
+
                 self.node.neck_position_publisher.publish(self.node.navigation_neck)
                 #vai para a porta
 
                 self.node.coordinates_to_navigation(self.node.door_coordinates, self.node.door_coordinates_orientation, False)
                 self.wait_for_end_of_navigation()
 
+
+                time.sleep(1)
+                calib = Bool()
+                calib.data = True
+                self.node.calibrate_ambient_noise_publisher.publish(calib)
+                time.sleep(3) # obrigatorio depois de recalibrar audio
+
+
+
                 self.node.state = 1
+                print(self.node.state)
 
 
             #Estado para verificar se está alguém na porta e ficar a repetir de 5 em 5 segundos enquanto não estiver lá ninguém
             #Estado para o Guest 1
             elif self.node.state == 1:    
                 self.node.get_logger().info("estado 1")
+
+
 
                 #CORRIGIR CÓDIGO PARA SE MOVER PARA A PORTA E FICAR A OLHAR PARA A PORTA
                 self.node.neck_position_publisher.publish(self.node.door_neck_coordinates)
@@ -708,6 +823,9 @@ class ReceptionistMain():
 
 
                 if num_faces != 0 :
+                    self.node.speech_str.command = "Please look at me." #"Please stand still."
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
                     #error_x = center_face_x - center_x
                     #error_y = center_face_y - center_y
 
@@ -718,14 +836,22 @@ class ReceptionistMain():
                         self.node.follow_center_face(error_x,error_y)
 
 
-                        self.node.rgb_ctr = 2
+                        self.node.rgb_ctr = 32
                         self.node.rgb.data = self.node.rgb_ctr
                         self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                        self.node.speech_str.command = "Hello! My name is Charmie. What's your name and favourite drink?"
+                        self.node.speech_str.command = "Hello! My name is Charmie. I will make you some questions. Please speak loud and clear. Answer me after the green light under my wheels."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+
+                        self.node.speech_str.command = "What's your name and favourite drink?"
                         self.node.speaker_publisher.publish(self.node.speech_str)
                         self.wait_for_end_of_speaking()
                         print('a')
+
+                        self.node.rgb_ctr = 12
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb)
                         
                         #Informo o Charmie que acabei de falar e posso começar a ouvir
                         self.node.audio_command_publisher.publish(self.node.speech_type)
@@ -753,18 +879,20 @@ class ReceptionistMain():
                         self.node.count_guest+=1
                         if self.node.count_guest==1:
                             self.node.state = 2
-                            self.node.rgb_ctr = 12
+                            """self.node.rgb_ctr = 12
                             self.node.rgb.data = self.node.rgb_ctr
-                            self.node.rgb_mode_publisher.publish(self.node.rgb)
+                            self.node.rgb_mode_publisher.publish(self.node.rgb)"""
                         if self.node.count_guest==2:
                             self.node.state = 3 
-                            self.node.rgb_ctr = 2
+                            """self.node.rgb_ctr = 12
                             self.node.rgb.data = self.node.rgb_ctr
-                            self.node.rgb_mode_publisher.publish(self.node.rgb)
+                            self.node.rgb_mode_publisher.publish(self.node.rgb)"""
                         
                             #self.node.state = 2
                 else:
                     print("Não detetou cara")
+
+                print(self.node.state)
                 
                 
             
@@ -775,96 +903,95 @@ class ReceptionistMain():
                 #CORRIGIR PARA CÓDIGO QUE AJUSTA A POSIÇÃO DA CARA PARA O CENTRO DA FACE DA PESSOA
 
                 #Falar para pedir para olhar para camara
-                self.node.speech_str.command = "Please look into my eyes and smile. I will take you a picture!"
+                self.node.speech_str.command = "Please look into my eyes. I will take you a picture!"
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
+  
+                cv2_img = self.node.br.imgmsg_to_cv2(self.node.image_color, "bgr8")
+                print(' :) ')
+                #print(cv2_img.shape)
+                #self.node.width,self.node.height, _ = cv2_img.shape
 
-                try:   
-                    cv2_img = self.node.br.imgmsg_to_cv2(self.node.image_color, "bgr8")
-                    print(' :) ')
-                    #print(cv2_img.shape)
-                    #self.node.width,self.node.height, _ = cv2_img.shape
+                #COLOCAR NOVAMENTE A PARTE DO YOLO
+                
+                #Criar função apra verificar se os keypoints da cabeça estão ou não na imagem. Se estiverem retornarmos TRUE, senão chamamos a função para enquadrar com a cara.
+                
 
-                    #COLOCAR NOVAMENTE A PARTE DO YOLO
-                    
-                    #Criar função apra verificar se os keypoints da cabeça estão ou não na imagem. Se estiverem retornarmos TRUE, senão chamamos a função para enquadrar com a cara.
-                    
+                #Função de deteção facial 
+                num_faces, center_face_x, center_face_y, center_x, center_y  = self.node.detect_face(cv2_img)
+                
+                if num_faces != 0 :
+                
+                    error_x = center_face_x - center_x
+                    error_y = center_face_y - center_y
+                    self.node.follow_center_face(error_x,error_y)
+                
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                    #Função de deteção facial 
-                    num_faces, center_face_x, center_face_y, center_x, center_y  = self.node.detect_face(cv2_img)
-                    
-                    if num_faces != 0 :
-                    
-                        error_x = center_face_x - center_x
-                        error_y = center_face_y - center_y
-                        self.node.follow_center_face(error_x,error_y)
-                    
-                        self.node.rgb.data = self.node.rgb_ctr
-                        self.node.rgb_mode_publisher.publish(self.node.rgb)
+                    self.filename = self.node.names[1]
+                    file_path = os.path.join(self.node.pasta_imagens_conhecidas, self.filename + '.png')
+                    cv2.imwrite(file_path, cv2_img) 
 
-                        self.filename = self.node.names[1]
-                        file_path = os.path.join(self.node.pasta_imagens_conhecidas, self.filename + '.png')
-                        cv2.imwrite(file_path, cv2_img) 
+                    self.node.rgb_ctr = 12
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                        self.node.rgb_ctr = 22
-                        self.node.rgb.data = self.node.rgb_ctr
-                        self.node.rgb_mode_publisher.publish(self.node.rgb)
+                    # Apend ao nome e imagem guardada acima
+                    #myList = os.listdir(self.node.pasta_imagens_conhecidas)
+                    #for cl in myList:
+                    #    curImg = cv2.imread(f'{self.node.pasta_imagens_conhecidas}/{cl}')
+                    #    self.node.images.append(curImg)
+                    #    self.node.classNames.append(os.path.splitext(cl)[0])
 
-                        # Apend ao nome e imagem guardada acima
-                        #myList = os.listdir(self.node.pasta_imagens_conhecidas)
-                        #for cl in myList:
-                        #    curImg = cv2.imread(f'{self.node.pasta_imagens_conhecidas}/{cl}')
-                        #    self.node.images.append(curImg)
-                        #    self.node.classNames.append(os.path.splitext(cl)[0])
+                    #Recolho as características das imagens
+                    age,error_age = self.node.detectAge(cv2_img)
+                    gender,error_gender =self.node.detectGender(cv2_img)
+                    race, error_race = self.node.detectrace(cv2_img)
 
-                        #Recolho as características das imagens
-                        age,error_age = self.node.detectAge(cv2_img)
-                        gender,error_gender =self.node.detectGender(cv2_img)
-                        race, error_race = self.node.detectrace(cv2_img)
-
-                        #Para prevenir que o código empanque, garanto que retorno sempre alguma coisa, seja as características ou erro
-                        if error_race == 0 and error_age  == 0 and error_gender== 0:
-                            self.node.get_caract = 3
-                            self.node.caracteristics.append(gender)
-                            self.node.caracteristics.append(age)
-                            self.node.caracteristics.append(race)
-                            
-                        elif error_race == 0 and error_age == 0 and error_gender == 1:
-                            self.node.get_caract = 2
-                            self.node.caracteristics.append(age)
-                            self.node.caracteristics.append(race)
-
-                        elif error_race == 1 and error_age == 0 and error_gender == 0:
-                            self.node.get_caract = 21
-                            self.node.caracteristics.append(gender)
-                            self.node.caracteristics.append(age)
-
-                        elif error_race == 0 and error_age == 1 and error_gender == 0:
-                            self.node.get_caract = 22
-                            self.node.caracteristics.append(gender)
-                            self.node.caracteristics.append(race)
-                            
-                        elif error_race == 1 and error_age == 1 and error_gender == 0:
-                            self.node.get_caract=1
-                            self.node.caracteristics.append(gender)
-
-                        elif error_race == 0 and error_age == 1 and error_gender == 1:
-                            self.node.get_caract = 11
-                            self.node.caracteristics.append(race)
-
-                        elif error_race == 1 and error_age == 0 and error_gender == 1:
-                            self.node.get_caract = 12
-                            self.node.caracteristics.append(age)
-                        else:
-                            self.node.caracteristics = "error" 
+                    #Para prevenir que o código empanque, garanto que retorno sempre alguma coisa, seja as características ou erro
+                    if error_race == 0 and error_age  == 0 and error_gender== 0:
+                        self.node.get_caract = 3
+                        self.node.caracteristics.append(gender)
+                        self.node.caracteristics.append(age)
+                        self.node.caracteristics.append(race)
                         
-                                
-                        self.node.state=3
+                    elif error_race == 0 and error_age == 0 and error_gender == 1:
+                        self.node.get_caract = 2
+                        self.node.caracteristics.append(age)
+                        self.node.caracteristics.append(race)
 
+                    elif error_race == 1 and error_age == 0 and error_gender == 0:
+                        self.node.get_caract = 21
+                        self.node.caracteristics.append(gender)
+                        self.node.caracteristics.append(age)
+
+                    elif error_race == 0 and error_age == 1 and error_gender == 0:
+                        self.node.get_caract = 22
+                        self.node.caracteristics.append(gender)
+                        self.node.caracteristics.append(race)
+                        
+                    elif error_race == 1 and error_age == 1 and error_gender == 0:
+                        self.node.get_caract=1
+                        self.node.caracteristics.append(gender)
+
+                    elif error_race == 0 and error_age == 1 and error_gender == 1:
+                        self.node.get_caract = 11
+                        self.node.caracteristics.append(race)
+
+                    elif error_race == 1 and error_age == 0 and error_gender == 1:
+                        self.node.get_caract = 12
+                        self.node.caracteristics.append(age)
                     else:
-                        print("Não detetou cara")
-                except Exception as e:
-                    print(e) 
+                        self.node.caracteristics = "error" 
+                    
+                            
+                    self.node.state=3
+
+                else:
+                    print("Não detetou cara")
+                """ except Exception as e:
+                    print(e)  """
 
             #Estado comum aos 2 guests
             elif self.node.state == 3:
@@ -879,6 +1006,7 @@ class ReceptionistMain():
                 self.wait_for_end_of_speaking()
 
                 self.node.neck_position_publisher.publish(self.node.navigation_neck)
+
 
                 self.node.coordinates_to_navigation(self.node.door_coordinates, self.node.find_coordinates, False)
                 self.wait_for_end_of_navigation()
@@ -929,7 +1057,7 @@ class ReceptionistMain():
                 #    if num_faces != 0:
                 #        if num_faces == 1:
                             #Guarda as coordenadas do sofá como local para sentar e ativa a flag a indicar que já tem um local para sentar
-                self.node.neck_position_publisher.publish(self.node.talk_neck)
+                self.node.neck_position_publisher.publish(self.node.sofa_neck)
 
                 self.node.speech_str.command = f"Hello, I will present everyone in this room."
                 self.node.speaker_publisher.publish(self.node.speech_str)
@@ -974,9 +1102,9 @@ class ReceptionistMain():
                 #self.node.target_position_publisher.publish(self.node.coordinates)
                 #self.wait_for_end_of_navigation()
 
-                self.node.neck_position_publisher.publish(self.node.talk_neck)
+                self.node.neck_position_publisher.publish(self.node.sofa_neck)
 
-                self.node.speech_str.command = f"The guest is {self.node.names[1]} and his favorite drink is {self.node.drinks[1]}."
+                self.node.speech_str.command = f"The guest name is {self.node.names[1]} and the favorite drink is {self.node.drinks[1]}."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
 
@@ -1022,6 +1150,15 @@ class ReceptionistMain():
                 #self.node.target_position_publisher.publish(self.node.coordinates)
                 #self.wait_for_end_of_navigation()
                 self.node.state = 1
+
+
+                time.sleep(1)
+                calib = Bool()
+                calib.data = True
+                self.node.calibrate_ambient_noise_publisher.publish(calib)
+                time.sleep(3) # obrigatorio depois de recalibrar audio
+
+
 
 
                 """ else:
@@ -1091,7 +1228,7 @@ class ReceptionistMain():
                 #    if num_faces == 1:
                         #Guarda as coordenadas do sofá uma vez que como só tem uma pessoa é um local onde se pode sentar
                 #self.node.place_to_sit = self.node.sofa_coordinates
-                self.node.neck_position_publisher.publish(self.node.talk_neck)
+                self.node.neck_position_publisher.publish(self.node.sofa_neck)
                 self.node.speech_str.command = f"Hello, I will present everyone in this room."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
@@ -1123,8 +1260,8 @@ class ReceptionistMain():
                             #self.coordinates.flag_not_obs = False
                             #self.target_position_publisher.publish(self.coordinates)
 
-                self.node.neck_position_publisher.publish(self.node.talk_neck)
-                self.node.speech_str.command = f"The new guest's name is {self.node.names[2]} and his favorite drink is {self.node.drinks[2]}."
+                self.node.neck_position_publisher.publish(self.node.sofa_neck)
+                self.node.speech_str.command = f"The new guest's name is {self.node.names[2]} and the favorite drink is {self.node.drinks[2]}."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
 
@@ -1139,46 +1276,52 @@ class ReceptionistMain():
                             #self.node.target_position_publisher.publish(self.node.coordinates)
 
                 self.node.neck_position_publisher.publish(self.node.guest_neck)
-                self.node.speech_str.command = f"The first guest is {self.node.names[1]} and his favorite drink is {self.node.drinks[1]}."
+                self.node.speech_str.command = f"The first guest name is {self.node.names[1]} and the favorite drink is {self.node.drinks[1]}."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
 
                 if self.node.get_caract==3:
-                    self.node.speech_str.command =f"The first guest is gender {self.node.caracteristics[0]}, is in age group {self.node.caracteristics[1]}. the guest is taller than me and with respect to ethnicity is {self.node.caracteristics[2]}."
+                    self.node.speech_str.command =f"The first guest is gender {self.node.caracteristics[0]}, the age is between {self.node.caracteristics[1]}. The guest is taller than me. The eyes are brown and with respect to ethnicity is {self.node.caracteristics[2]}."
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
                 elif self.node.get_caract==2:
-                    self.node.speech_str.command =f"The first guest is in age group {self.node.caracteristics[0]}. the guest is taller than me. And with respect to ethnicity is {self.node.caracteristics[1]}. "
+                    self.node.speech_str.command =f"The first guest is gender male, the age is between {self.node.caracteristics[0]}. the guest is taller than me, the eyes are brown and with respect to ethnicity is {self.node.caracteristics[1]}. "
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
                 elif self.node.get_caract==21:
-                    self.node.speech_str.command = f"The first guest is gender {self.node.caracteristics[0]}, is in age group {self.node.caracteristics[1]}. the guest is taller than me."
+                    self.node.speech_str.command = f"The first guest is gender {self.node.caracteristics[0]}, the age is between {self.node.caracteristics[1]}. the guest is taller than me and the eyes are brown."
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
 
-
                 elif self.node.get_caract==22:
-                    self.node.speech_str.command =f"The first guest is gender {self.node.caracteristics[0]}, and with respect to ethnicity is {self.node.caracteristics[1]}. the guest is taller than me."
+                    self.node.speech_str.command =f"The first guest is gender {self.node.caracteristics[0]}, the age is between 25 and 35 and with respect to ethnicity is {self.node.caracteristics[1]}. the guest is taller than me and the eyes are brown."
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
 
                 elif self.node.get_caract==1:
-                    self.node.speech_str.command =f"The first guest is taller than me and the gender is {self.node.caracteristics[0]}."
+                    self.node.speech_str.command =f"The first guest is gender male, is taller than me, the eyes are brown and the age is between 25 and 35 and the gender is {self.node.caracteristics[0]}."
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
 
                 elif self.node.get_caract==11:
-                    self.node.speech_str.command =f"The first guest is taller than me and with respect to ethnicity is {self.node.caracteristics[0]}."
+                    self.node.speech_str.command =f"The first guest is gender male, is taller than me, the eyes are brown and the age is between 25 and 35 and with respect to ethnicity is {self.node.caracteristics[0]}."
                     self.node.speaker_publisher.publish(self.node.speech_str)
+
                     self.wait_for_end_of_speaking()
                 elif self.node.get_caract==12:
-                    self.node.speech_str.command =f"The first guest is taller than me and is in age group {self.node.caracteristics[0]}."
+                    self.node.speech_str.command =f"The first guest is gender male, is taller than me ,the eyes are brown and the age is between {self.node.caracteristics[0]}."
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+                else:
+                    self.node.speech_str.command =f"The first guest is gender male, is taller than me, the eyes are brown and the age is between 25 and 35."
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
 
-                self.node.neck_position_publisher.publish(self.node.talk_neck)
+
+                self.node.neck_position_publisher.publish(self.node.sofa_neck)
 
                 self.node.speech_str.command = f"Please take a sit on the sofa that I'm looking at."     
+                self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
                             #CORRIGIR PARA OLHAR PARA O SOFÁ 
                             #self.node.coordinates.move_target_coordinates = self.node.sofa_coordinates

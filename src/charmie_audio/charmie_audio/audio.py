@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import Bool, String
+from std_msgs.msg import Bool, String, Float32
 from charmie_interfaces.msg import SpeechType, RobotSpeech
 
 import io
@@ -15,9 +15,10 @@ import os
 import whisper
 import time
 import torch
+import pulsectl
 
 # it is necessary to state the package before the import since it executes from the install file and not here
-from charmie_audio.words_dict import names_dict, drinks_dict, yes_no_dict, charmie_dict
+from charmie_audio.words_dict import names_dict, drinks_dict, yes_no_dict, charmie_dict, foods_dict
 
 class WhisperAudio():
     def __init__(self):
@@ -30,6 +31,8 @@ class WhisperAudio():
         self.flag_new_listening_process = False
         self.MIN_AVG_LOG_PROB = -0.8 # -1.05
         self.MIN_NO_SPEECH_PROB = 0.5
+
+        
 
         # @click.command()
         # @click.option("--model", default="tiny", help="Model to use", type=click.Choice(["tiny","base", "small","medium","large"]))
@@ -57,6 +60,7 @@ class WhisperAudio():
         self.r.energy_threshold = self.energy
         self.r.pause_threshold = self.pause
         self.r.dynamic_energy_threshold = self.dynamic_energy
+        self.check_threshold = Float32()
 
         # for index, name in enumerate(sr.Microphone.list_microphone_names()):
         #     print("Microphone with name \"{1}\" found for `Microphone(device_index={0})`".format(index, name))
@@ -64,12 +68,17 @@ class WhisperAudio():
         self.adjust_ambient_noise()
 
     def adjust_ambient_noise(self):
+
+        print("RECALIBRATED AUDIO!!!")
         # print("Ready to Start")
         with sr.Microphone(sample_rate=16000) as source:
 
             self.r.adjust_for_ambient_noise(source)
             # listen for 1 second to calibrate the energy threshold for ambient noise levels
             print("\tENERGY THRESHOLD = ", self.r.energy_threshold)
+            print(type(self.r.energy_threshold))
+            self.check_threshold = self.r.energy_threshold
+
 
             # now when we listen, the energy threshold is already set to a good value, and we can reliably catch speech right away
             print("\tReady to Start")
@@ -191,6 +200,70 @@ class WhisperAudio():
             
         elif command.restaurant == True:
             print("RESTAURANT KEYWORDS!")
+            foods_predicted = ''
+            foods_ctr = 0
+            drink_predicted = ''
+            drink_ctr = 0
+
+            foods_predicted2 = ''
+            foods_ctr2 = 0
+            drink_predicted2 = ''
+            drink_ctr2 = 0
+
+            final_str = ''
+
+            foods = []
+            drinks = []
+
+
+            print("FOODS:")
+            for key in foods_dict:
+                res = self.compare_commands(foods_dict, speech, [key])
+                print('    ', key, '\t->', res)
+                if res:
+                    foods_predicted = key
+                    foods_ctr += 1
+                    foods.append(key)
+
+            print("Name Detected =", foods_predicted, "(", foods_ctr, ")")
+            print()
+
+            print("DRINKS:")
+            for key in drinks_dict:
+                res = self.compare_commands(drinks_dict, speech, [key])
+                print('    ', key, '\t->', res)
+                if res:
+                    drink_predicted = key
+                    drink_ctr += 1
+                    drinks.append(key)
+
+            print("Drink Detected =", drink_predicted, "(", drink_ctr, ")") 
+            print()
+
+            print(foods, drinks)
+
+            ### falta alterar para mais que um de cada
+
+            for f in foods:
+                final_str += f + ' '
+
+            for d in drinks:
+                final_str += d + ' '
+
+            # final_str=foods_predicted + ' ' + drink_predicted
+            print("INFO SENT:'%s'" %  final_str)
+
+            foods.clear()
+            drinks.clear()
+    
+            if final_str != '':
+                print("INFO SENT:'%s'" %  final_str)
+                return final_str
+            else:
+                print("SENT RESTAURANT ERROR")
+                return "ERROR"
+        
+
         elif command.gpsr == True:
             print("GPSR KEYWORDS!")
             pass
@@ -217,7 +290,31 @@ class WhisperAudio():
             return True
         else:
             return False
+
             
+    def get_pulsectl_device_names(self):
+        pulse = pulsectl.Pulse('get-device-names')
+        input_devices = pulse.source_list()
+
+        return input_devices
+            
+    
+    def is_external_micro(self, device):
+    ### This routine checks if the name of the microphone starts with "Shure" because at the date of 28/07/2023 it was the name of the external microphone used
+    ### by the CHARMIE. If it changes, the name must be changed. The purpose is to avoid cases where the programmer forgets to change the source of the internal
+    ### sound device and the voice of CHARMIE can't be heard. This way, a diagnose can be made.
+        proplist = device.proplist
+        if "device.intended_roles" in proplist:
+            intended_roles = proplist["device.intended_roles"].split(",")
+            if "phone" in intended_roles or "microphone" in intended_roles:
+                return True
+        if "device.description" in proplist:
+            device_description = proplist["device.description"].lower()
+            if device_description.startswith("shure"):          ### <===== CHANGE ME (if needed)!!!
+                return True
+        return False
+            
+
 class AudioNode(Node):
 
     def __init__(self):
@@ -234,12 +331,66 @@ class AudioNode(Node):
         self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
         self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
         
+        
+        self.calibrate_ambient_noise_subscriber = self.create_subscription(Bool, "calib_ambient_noise", self.calibrate_ambient_noise_callback, 10)
+        self.audio_diagnostic_publisher = self.create_publisher(Bool, "audio_diagnostic", 10)
+
+        flag_diagn = Bool()
+        flag_diagn.data = False
+        aux_flag_diagn = Bool()
+        aux_flag_diagn.data = False
+        
         self.charmie_audio = WhisperAudio()
 
         self.speech_str = RobotSpeech()
         self.flag_speech_done = False
         self.audio_error = False
         self.latest_command = SpeechType()
+
+        
+
+        """ device_name, host_api = self.charmie_audio.find_speaker_device()
+
+        if device_name:
+            print('It is connected to the correct device, named ', device_name)
+        
+        else:
+            print('It is not onnected to the correct device. Please, change it') """
+        
+        """ audio_devices = self.charmie_audio.list_audio_devices()
+        print("Connected Audio Devices:")
+        for audio_device in audio_devices:
+            print(audio_device)
+        """
+
+        input_devices = self.charmie_audio.get_pulsectl_device_names()
+        print("Input Sound Devices:")
+        for device in input_devices:
+            device_type = "External" if self.charmie_audio.is_external_micro(device) else "Internal"
+            if device_type == "External":
+                aux_flag_diagn.data = True
+            print(f"{device.index}: {device.description} ({device_type})")
+
+        if self.charmie_audio.check_threshold < 50.0:
+            self.get_logger().info(f"Threshold of {self.charmie_audio.check_threshold} value is wrong!")
+            flag_diagn.data = False
+        
+        else:
+            self.get_logger().info(f"Nice Threshold value! Value of {self.charmie_audio.check_threshold}")
+            if aux_flag_diagn.data == True:
+                flag_diagn.data = True
+            else:
+                flag_diagn.data = False
+            
+        print(flag_diagn)
+        self.audio_diagnostic_publisher.publish(flag_diagn)
+
+
+
+
+    def calibrate_ambient_noise_callback(self, flag: Bool):
+        self.charmie_audio.adjust_ambient_noise()
+
 
     def get_speech_done_callback(self, state: Bool):
         print("Received Speech Flag:", state.data)

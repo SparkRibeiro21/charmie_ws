@@ -1,8 +1,10 @@
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/amcl_config.yaml
+/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/config_2.rviz
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/controller_config.yaml
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/empty.yaml
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/joystick.yaml
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/mapper_params_online_async.yaml
+/home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/tiago_rviz.rviz
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/twist_mux.yaml
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/config/view_bot.rviz
 /home/utilizador/charmie_ws/install/charmie_bot/share/charmie_bot/description/depth_camera.xacro

@@ -2,6 +2,10 @@ int32 index_person
 float32 x_person_relative
 float32 average_distance
 float32 standard_deviation
+int32 box_topx_left
+int32 box_topy_left
+int32 box_width
+int32 box_height
 int32 key_p0_x
 int32 key_p0_y
 int32 key_p1_x

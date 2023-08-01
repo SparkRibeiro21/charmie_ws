@@ -14,11 +14,12 @@ import cv2
 import mediapipe as mp
 import math
 import numpy as np
+import time
 
 door_out = (0.0, 0.0)
-door_in = (0.5, 1.9)
+door_in = (0.0, 1.0)
 aux_1 = (1.4, 1.9)
-task_pos = (1.25, 7.9)
+task_pos = (-2.0, 1.0)
 ref_pos = (0.6, 9.05)
 #--------------------------------
 
@@ -35,6 +36,7 @@ class CarryLuggageNode(Node):
         self.flag_neck_position_publisher = self.create_publisher(Bool, "flag_neck_pos", 10)
 
         # Low Level Topics
+        # Low Level: RGB
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         #self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         #self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
@@ -63,12 +65,20 @@ class CarryLuggageNode(Node):
         # Intel Realsense
         self.camera_subscriber = self.create_subscription(Image, "/color/image_raw", self.color_img_callbcak, 10)
         self.depth_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_depth_callback, 10)
+
+                # Low Level: Start Button
+        self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
+        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
+
         
         # Timer
         # self.create_timer(0.1, self.timer_callback)
 
         # Changing Variables
-        self.state = -1
+        self.state = 0
+
+        self.start_button_state = False
+
 
         """ self.person_points = Yolov8Pose()
         self.person_position = Pose2D() """
@@ -88,6 +98,7 @@ class CarryLuggageNode(Node):
         self.bridge = CvBridge()
         self.image_color = Image()
         self.depth_img = Image()
+        
         #NECK
         self.neck_pose = Pose2D()
         self.neck_pose.x = 180.0
@@ -98,6 +109,8 @@ class CarryLuggageNode(Node):
         self.robot_x = 0.0
         self.robot_y = 0.0
 
+        #RGB
+        self.color = Int16()
         #NAV COORD DECLARATION
         self.coordinates = TarNavSDNL()
         self.point_arena = Pose2D()
@@ -109,6 +122,10 @@ class CarryLuggageNode(Node):
         self.inter_orientation = Pose2D()
         #target = (pixel, dist)
         self.person_target = Pose2D()
+
+        #audio
+        self.keywords = String()
+        self.left_right = []
         #--------------------------------  
 
         self.mp_drawing = mp.solutions.drawing_utils
@@ -138,6 +155,10 @@ class CarryLuggageNode(Node):
     
     def start_audio(self):
         self.audio_command_publisher.publish(self.speech_type)
+
+    def get_start_button_callback(self, state: Bool):
+        self.start_button_state = state.data
+        print("Received Start Button:", state.data)
 
     def get_odometry_robot_callback(self, odom:Odometry):
         self.robot_current_position = odom
@@ -195,13 +216,15 @@ class CarryLuggageNode(Node):
             if (theta_1 > 15 and theta_1 > theta_2) or point_15[0] < point_23[0]:
                 #print("Pointing to My Left")
                 #print('-------------------')
-                cv2.putText(image, "RIGHT", (15,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-                #self.state = 3
+                #cv2.putText(image, "RIGHT", (15,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+                self.left_right.append('right')
+                self.state = 2
             elif (theta_2 > 15 and theta_1 < theta_2) or point_16[0] > point_24[0]:
                 #print("Pointing to My Right")
                 #print('--------------------')
-                cv2.putText(image, "LEFT", (15,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-                #self.state = 2
+                #cv2.putText(image, "LEFT", (15,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+                self.left_right.append('left')
+                self.state = 2
 
         cv2.imshow("CHOOSE BAG", image)
         cv2.waitKey(1)
@@ -244,7 +267,7 @@ class CarryLuggageNode(Node):
 
     def follow_function(self):
         #NAVIGATION TO TARGET (PERSON)
-        self.get_logger().info('FUNCTION FOLLOW')
+        #self.get_logger().info('FUNCTION FOLLOW')
         img = self.bridge.imgmsg_to_cv2(self.image_color, "bgr8")
         depth_img = self.bridge.imgmsg_to_cv2(self.depth_img, "32FC1")
         height, witdh, _ = img.shape
@@ -312,6 +335,7 @@ class CarryLuggageNode(Node):
         nav = TarNavSDNL()
         nav.flag_not_obs = bool_obs
         nav.follow_me = bool_follow_me
+        print(nav.follow_me)
         nav.move_target_coordinates.x = p1[0]
         nav.move_target_coordinates.y = p1[1]
         nav.rotate_target_coordinates.x = p2[0]
@@ -349,10 +373,13 @@ class CarryLuggageMain():
     def __init__(self, node: CarryLuggageNode):
         self.node = node
         self.first_time_without_person = False
+        self.first_time_person_close = False
         self.target_x = 0.0 
         self.target_y = 0.0 
         stop_orientation_x = 0.0
         stop_orientation_y = 0.0
+        self.first_time_slow_down = True
+        
         # self.detected_person_first_time = True
         
     def wait_for_end_of_speaking(self):
@@ -372,24 +399,130 @@ class CarryLuggageMain():
         self.node.flag_speech_done = False  
         # Since audio also uses speaker for errors
 
+    def wait_for_start_button(self):
+        while not self.node.start_button_state:
+            pass
+        f = Bool()
+        f.data = False 
+        self.node.flag_start_button_publisher.publish(f)
+
+
     def main(self):
         self.node.get_logger().info('NEW MAIN')
 
-        while True:
-            #DEFINE NECK POSE FOR ALL THE TASK
-            self.node.neck_position_publisher.publish(self.node.neck_pose)
+        #DEFINE NECK POSE FOR ALL THE TASK
+        self.node.neck_position_publisher.publish(self.node.neck_pose)
 
-            if self.node.state == -1:
+        while True:
+
+            #STATE 0 - NAV + READY
+            if self.node.state == 0:
+                self.node.get_logger().info('State 0')
+                #READY FOR TASK
+                self.node.speech_str.command = 'I am ready to start the Carry My Luggage Task.'
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+                
+                # t = Bool()
+                # t.data = True
+                # self.node.flag_start_button_publisher.publish(t)
+                # self.wait_for_start_button()
+                # time.sleep(5)
+
+                # self.node.color.data = 41
+                # self.node.rgb_mode_publisher.publish(self.node.color.data) 
+                
+                self.node.state = 1
+
+                
+            #STATE 1 - CHOOSE BAG
+            if self.node.state == 1:
+                self.node.speech_str.command = 'Please point to the bag.'
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+                self.node.get_logger().info('State 1')
+                try:
+                    self.node.choose_bag()
+                    #self.node.arm_raise()
+                    #self.node.follow_function()
+                except CvBridgeError:
+                    pass #print('Erro')
+            
+            #STATE 2 - CHECK LEFT + ASK TO PUT
+            if self.node.state == 2:
+                self.node.get_logger().info('State 2')
+                #CONFIRM BAG
+                self.node.speech_str.command = f"Please answer me after the green light under my wheels." #RIGHT ROBOT
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+
+                self.node.speech_str.command = f"Did you choose the bag on your {self.node.left_right[0]}. Please say yes or no and then say robot" #RIGHT ROBOT
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                self.node.color.data = 12
+                self.node.rgb_mode_publisher.publish(self.node.color)
+                
+
+                #YES OR NO ANSWER
+                self.node.audio_command_publisher.publish(self.node.speech_type)
+                self.wait_for_end_of_audio()
+                print(self.node.keywords.data)
+                #IF YES - PLACE BAG
+                if self.node.keywords.data == 'yes':    
+                    self.node.speech_str.command = 'ok, please put the bag on the black hook on my left shoulder.'
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+                    self.node.state = 4
+                elif self.node.keywords.data == 'no':
+                    self.node.speech_str.command = 'ah ok, sorry, pick up the other bag and put it on my hook.'
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+                    self.node.state = 4
+
+            #STATE 4 - CHECK BAG PLACE
+            if self.node.state == 4:
+                self.node.get_logger().info('State 4')
+                #CONFIRM PLACE BAG
+                time.sleep(3)
+                self.node.speech_str.command = 'Did you place the bag on my hook? Please say yes or no and then say robot'
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+                #YES OR NO ANSWER
+                self.node.audio_command_publisher.publish(self.node.speech_type)
+                self.wait_for_end_of_audio()
+                #IF YES - PLACE BAG
+                if self.node.keywords.data == 'yes':    
+                    self.node.flag_bag_put = True
+                    self.node.state = 5
+                
+
+            #STATE 5 - READY TO FOLLOW + STOP SIGNAL
+            if self.node.state == 5 and self.node.flag_bag_put:
+                self.node.get_logger().info('State 5')
+                self.node.speech_str.command = 'I am ready to follow you. When we arrive at our destination, please raise your arm. '
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+                #self.node.speech_str.command = 'Second, I have RGB leds unders my wheels, if they are red you are too close and may move on, if they are green, I am able to follow you, If they are magenta you are too far away. Please look at me while you are walking and consider my RGB lights. '
+                # self.node.speaker_publisher.publish(self.node.speech_str)
+                # self.wait_for_end_of_speaking()
+                self.node.state = 6
+
+            
+
+            #STATE 6 - FOLLOW ME
+            if self.node.state == 6:
                 try:
                     #self.node.choose_bag()
-                #self.node.arm_raise()
+                    #self.node.arm_raise()
                     person_x, person_y = self.node.follow_function()
                     if person_y > 0:
-                        print(person_x)
-                        print(person_y)
+                        #print(person_x)
+                        #print(person_y)
                         angle_person = math.atan2(person_x, person_y)
                         dist_person = math.sqrt(person_x**2 + person_y**2)
-                        print(self.node.robot_t, angle_person, angle_person - self.node.robot_t)
+                        #print(self.node.robot_t, angle_person, angle_person - self.node.robot_t)
                         theta_aux = math.pi/2 - (angle_person - self.node.robot_t)
 
                         target_x = dist_person * math.cos(theta_aux) + self.node.robot_x
@@ -398,7 +531,8 @@ class CarryLuggageMain():
                         # target_x = person_x + self.node.robot_x
                         # target_y = person_y + self.node.robot_y
 
-                        h_target_inter = 1.0
+                        h_target_inter = 1.5
+                        dist_max_person = 4.5
                         # target_inter_x = (dist_person - h_target_inter) * math.sin(angle_person)
                         # target_inter_y = (dist_person - h_target_inter) * math.cos(angle_person)
 
@@ -415,12 +549,59 @@ class CarryLuggageMain():
 
 
                         ### for stability reasons dist_person must be replaced by person_y
-                        if dist_person > h_target_inter:
+                        #COLOCAR CORES NOS ESTADOS S1(green) S2(blue) S3(red)
+                        #NORMAL
+                        if person_y > h_target_inter and person_y < dist_max_person: 
+                            self.node.color.data = 11 #Fix Green
+                            self.node.rgb_mode_publisher.publish(self.node.color)
                             self.node.coordinates_to_navigation((target_x, target_y), (stop_orientation_x, stop_orientation_y), False, True)
                             print('ESTADO 1')
-                        else:    
-                            self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (stop_orientation_x, stop_orientation_y), False, True)
+                            self.first_time_person_close = False
+                            self.first_time_slow_down = True
+
+                        #PERSON TOO FAR - ASK TO GET CLOSER
+                        elif person_y > dist_max_person: 
+                            self.node.color.data = 41 #Fix Kinda Pink
+                            self.node.rgb_mode_publisher.publish(self.node.color)
                             print('ESTADO 2')
+                            self.first_time_person_close = False
+
+                            print(self.first_time_slow_down)
+
+                            if self.first_time_slow_down:
+                                self.node.speech_str.command = 'Please come back and stand in front of me.'
+                                self.node.speaker_publisher.publish(self.node.speech_str)
+                                # time.sleep(1)
+                                self.first_time_slow_down = False
+
+                            self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (target_x, target_y), False, True)
+                            # self.node.coordinates_to_navigation((target_x, target_y), (stop_orientation_x, stop_orientation_y), False, True)
+
+
+                            # self.wait_for_end_of_speaking()
+                            
+                            # self.node.coordinates_to_navigation((target_x, target_y), (stop_orientation_x, stop_orientation_y), False, True)
+                            # self.wait_for_end_of_navigation()
+
+                            # self.node.speech_str.command = 'Place yourself in front of me less than a meter away.'
+                            # self.node.speaker_publisher.publish(self.node.speech_str)
+                            # self.wait_for_end_of_speaking()
+
+                            # time.sleep(5)
+                            
+
+                        #PERSON TOO CLOSE - dist < h_target    
+                        else:   
+                            self.node.color.data = 1 #Fix Red
+                            self.node.rgb_mode_publisher.publish(self.node.color)
+                            stop_signal = self.node.arm_raise()
+                            if stop_signal == True:
+                                self.node.state = 7
+
+                            print('ESTADO 3')
+                            if not self.first_time_person_close:
+                                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (target_x, target_y), False, True)
+                                self.first_time_person_close = True
 
 
                         
@@ -435,107 +616,16 @@ class CarryLuggageMain():
                         #self.wait_for_end_of_navigation()
                         self.first_time_without_person = True
 
+                    #NO PERSON
                     else:    
                         if self.first_time_without_person:
                             # self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), task_pos, False, False)
                             self.node.coordinates_to_navigation((target_x, target_y), (stop_orientation_x, stop_orientation_y), False, False)
-                            print('ESTADO 3')
-
+                            print('ESTADO 4')
 
                         self.first_time_without_person = False
 
 
-                except CvBridgeError:
-                    pass #print('Erro')
-
-            #STATE 0 - NAV + READY
-            if self.node.state == 0:
-                self.node.get_logger().info('State 0')
-                #MOVE TO TARGET
-                self.node.coordinates_to_navigation(door_in, task_pos, False)
-                self.wait_for_end_of_navigation()
-                """ self.node.coordinates_to_navigation(aux_1, task_pos, False)
-                self.wait_for_end_of_navigation() """
-                self.node.coordinates_to_navigation(task_pos, ref_pos, False)
-                self.wait_for_end_of_navigation()
-                #READY FOR TASK
-                """ self.node.speech_str.command = 'I am ready to start the Carry My Luggage Task. Please point to the bag that you want me to pick.'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking() """
-                self.node.state = 1
-                
-            #STATE 1 - CHOOSE BAG
-            if self.node.state == 1:
-                self.node.get_logger().info('State 1')
-                try:
-                    self.node.choose_bag()
-                    #self.node.arm_raise()
-                    #self.node.follow_function()
-                except CvBridgeError:
-                    pass #print('Erro')
-            
-            #STATE 2 - CHECK LEFT + ASK TO PUT
-            if self.node.state == 2:
-                self.node.get_logger().info('State 2')
-                #CONFIRM BAG
-                self.node.speech_str.command = 'Did you choose the bag on your left?' #RIGHT ROBOT
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                #YES OR NO ANSWER
-                self.node.audio_command_publisher.publish(self.node.speech_type)
-                self.wait_for_end_of_audio()
-                #IF YES - PLACE BAG
-                self.node.speech_str.command = 'Please put the bag on my board.'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                self.node.state = 4 
-            
-            #STATE 3 - CHECK RIGHT + ASK TO PUT
-            if self.node.state == 3:
-                self.node.get_logger().info('State 3')
-                #CONFIRM BAG
-                self.node.speech_str.command = 'Did you choose the bag on your right?' #LEFT ROBOT
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                #YES OR NO ANSWER
-                self.node.audio_command_publisher.publish(self.node.speech_type)
-                self.wait_for_end_of_audio()
-                #IF YES - PLACE BAG
-                self.node.speech_str.command = 'Please put the bag on my board'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                self.node.state = 4
-
-            #STATE 4 - CHECK BAG PLACE
-            if self.node.state == 4:
-                self.node.get_logger().info('State 4')
-                #CONFIRM PLACE BAG
-                self.node.speech_str.command = 'Did you place the bag on my board?'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                #YES OR NO ANSWER
-                self.node.audio_command_publisher.publish(self.node.speech_type)
-                self.wait_for_end_of_audio()
-                #IF YES RECEIVED
-                self.node.flag_bag_put = True
-                self.node.state = 5
-
-            #STATE 5 - READY TO FOLLOW + STOP SIGNAL
-            if self.node.state == 5 and self.node.flag_bag_put:
-                self.node.get_logger().info('State 5')
-                self.node.speech_str.command = 'I am ready to follow you. Please raise your right arm when you arrived at your destination.'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                self.node.state = 6
-
-            #STATE 6 - FOLLOW FUNCTIO
-            if self.node.state == 6:
-                self.node.get_logger().info('State 6')
-                #FOLLOW FUNCTION + STOP SIGNAL
-                try:
-                    th_stop = threading.Thread(target=self.node.follow_function)
-                    th_stop.start()
-                    self.node.arm_raise()
                 except CvBridgeError:
                     pass #print('Erro')
                 
@@ -543,16 +633,17 @@ class CarryLuggageMain():
             if self.node.state == 7 and self.node.flag_stop_signal:
                 self.node.get_logger().info('State 7')
                 #CONFIRM ARRIVED
-                self.node.speech_str.command = 'Have we arrived yet?'
+                self.node.speech_str.command = 'Have we arrived yet? Please say yes or no and then say robot'
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
                 #YES OR NO ANSWER
                 self.node.audio_command_publisher.publish(self.node.speech_type)
                 self.wait_for_end_of_audio()
                 #IF YES RECEIVED
-                self.node.flag_arrived = True
-                self.node.state = 8
-    
+                if self.node.keywords.data == 'yes':    
+                    self.node.flag_arrived = True
+                    self.node.state = 8
+                
             #STATE 8 - ASK TO TAKE BAG OUT
             if self.node.state == 8 and self.node.flag_arrived:
                 self.node.get_logger().info('State 6')
@@ -566,15 +657,16 @@ class CarryLuggageMain():
             if self.node.state == 9:
                 self.node.get_logger().info('State 9')
                 #CONFIRM BAG OUT
-                self.node.speech_str.command = 'Did you take out the bag of my board?'
+                self.node.speech_str.command = 'Did you take out the bag of my board? Please say yes or no and then say robot'
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
                 #YES OR NO ANSWER
                 self.node.audio_command_publisher.publish(self.node.speech_type)
                 self.wait_for_end_of_audio()
                 #IF YES RECEIVED
-                self.node.flag_bag_put = False
-                self.node.state = 10
+                if self.node.keywords.data == 'yes':   
+                    self.node.flag_bag_put = False
+                    self.node.state = 10
 
             #STATE 10 - GO BACK ARENA
             if self.node.state == 10 and not self.node.flag_bag_put:
@@ -582,9 +674,11 @@ class CarryLuggageMain():
                 self.node.speech_str.command = 'Now I will go back to the arena.'
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
-                self.node.coordinates_to_navigation(door_out, door_in, False)
+
+                self.node.coordinates_to_navigation((0.0, 2.0), (0.0, 0.0), False)
                 self.wait_for_end_of_navigation()
-                self.node.coordinates_to_navigation(door_in, task_pos, False)
+
+                self.node.coordinates_to_navigation((0.0, 0.0), (0.0, 1.0), False)
                 self.wait_for_end_of_navigation()
                 #WHEN INSIDE - take position from odom
                 self.node.state = 11
@@ -596,5 +690,6 @@ class CarryLuggageMain():
                 self.node.speech_str.command = 'I arrived at the arena. My task is over.'
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
+                self.node.color.data = 2 #Fix Blue
+                self.node.rgb_mode_publisher.publish(self.node.color)
                 #FINISH TASK
-            

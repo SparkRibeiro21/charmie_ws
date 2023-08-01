@@ -564,16 +564,80 @@ private:
   ::charmie_interfaces::msg::Keypoints msg_;
 };
 
+class Init_Keypoints_box_height
+{
+public:
+  explicit Init_Keypoints_box_height(::charmie_interfaces::msg::Keypoints & msg)
+  : msg_(msg)
+  {}
+  Init_Keypoints_key_p0_x box_height(::charmie_interfaces::msg::Keypoints::_box_height_type arg)
+  {
+    msg_.box_height = std::move(arg);
+    return Init_Keypoints_key_p0_x(msg_);
+  }
+
+private:
+  ::charmie_interfaces::msg::Keypoints msg_;
+};
+
+class Init_Keypoints_box_width
+{
+public:
+  explicit Init_Keypoints_box_width(::charmie_interfaces::msg::Keypoints & msg)
+  : msg_(msg)
+  {}
+  Init_Keypoints_box_height box_width(::charmie_interfaces::msg::Keypoints::_box_width_type arg)
+  {
+    msg_.box_width = std::move(arg);
+    return Init_Keypoints_box_height(msg_);
+  }
+
+private:
+  ::charmie_interfaces::msg::Keypoints msg_;
+};
+
+class Init_Keypoints_box_topy_left
+{
+public:
+  explicit Init_Keypoints_box_topy_left(::charmie_interfaces::msg::Keypoints & msg)
+  : msg_(msg)
+  {}
+  Init_Keypoints_box_width box_topy_left(::charmie_interfaces::msg::Keypoints::_box_topy_left_type arg)
+  {
+    msg_.box_topy_left = std::move(arg);
+    return Init_Keypoints_box_width(msg_);
+  }
+
+private:
+  ::charmie_interfaces::msg::Keypoints msg_;
+};
+
+class Init_Keypoints_box_topx_left
+{
+public:
+  explicit Init_Keypoints_box_topx_left(::charmie_interfaces::msg::Keypoints & msg)
+  : msg_(msg)
+  {}
+  Init_Keypoints_box_topy_left box_topx_left(::charmie_interfaces::msg::Keypoints::_box_topx_left_type arg)
+  {
+    msg_.box_topx_left = std::move(arg);
+    return Init_Keypoints_box_topy_left(msg_);
+  }
+
+private:
+  ::charmie_interfaces::msg::Keypoints msg_;
+};
+
 class Init_Keypoints_standard_deviation
 {
 public:
   explicit Init_Keypoints_standard_deviation(::charmie_interfaces::msg::Keypoints & msg)
   : msg_(msg)
   {}
-  Init_Keypoints_key_p0_x standard_deviation(::charmie_interfaces::msg::Keypoints::_standard_deviation_type arg)
+  Init_Keypoints_box_topx_left standard_deviation(::charmie_interfaces::msg::Keypoints::_standard_deviation_type arg)
   {
     msg_.standard_deviation = std::move(arg);
-    return Init_Keypoints_key_p0_x(msg_);
+    return Init_Keypoints_box_topx_left(msg_);
   }
 
 private:
@@ -596,16 +660,32 @@ private:
   ::charmie_interfaces::msg::Keypoints msg_;
 };
 
+class Init_Keypoints_x_person_relative
+{
+public:
+  explicit Init_Keypoints_x_person_relative(::charmie_interfaces::msg::Keypoints & msg)
+  : msg_(msg)
+  {}
+  Init_Keypoints_average_distance x_person_relative(::charmie_interfaces::msg::Keypoints::_x_person_relative_type arg)
+  {
+    msg_.x_person_relative = std::move(arg);
+    return Init_Keypoints_average_distance(msg_);
+  }
+
+private:
+  ::charmie_interfaces::msg::Keypoints msg_;
+};
+
 class Init_Keypoints_index_person
 {
 public:
   Init_Keypoints_index_person()
   : msg_(::rosidl_runtime_cpp::MessageInitialization::SKIP)
   {}
-  Init_Keypoints_average_distance index_person(::charmie_interfaces::msg::Keypoints::_index_person_type arg)
+  Init_Keypoints_x_person_relative index_person(::charmie_interfaces::msg::Keypoints::_index_person_type arg)
   {
     msg_.index_person = std::move(arg);
-    return Init_Keypoints_average_distance(msg_);
+    return Init_Keypoints_x_person_relative(msg_);
   }
 
 private:

@@ -4,6 +4,7 @@ setup.py
 resource/yolopose
 yolopose/__init__.py
 yolopose/yolopose_node.py
+yolopose/yolopose_node_sem_keypoints.py
 yolopose.egg-info/PKG-INFO
 yolopose.egg-info/SOURCES.txt
 yolopose.egg-info/dependency_links.txt

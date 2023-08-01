@@ -300,7 +300,7 @@ class OdometryNode(Node):
         self.encoders_subscriber = self.create_subscription(Encoders, "get_encoders", self.get_encoders_callback, 10)
         self.flag_encoders_publisher = self.create_publisher(Bool, "flag_encoders", 10)
         self.odometry_publisher = self.create_publisher(Odometry, "odom", 10)
-        self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel_robot", 10)
+        self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 10)
 
         self.tf_broadcaster_odom_base_link = tf2_ros.TransformBroadcaster(self)
 
@@ -313,6 +313,12 @@ class OdometryNode(Node):
         self.flag_encoders_publisher.publish(self.flag_enc)
     
         # self.create_timer(1.0, self.timer_callback)
+
+        self.odometry_diagnostic_publisher = self.create_publisher(Bool, "odometry_diagnostic", 10)
+
+        flag_diagn = Bool()
+        flag_diagn.data = True
+        self.odometry_diagnostic_publisher.publish(flag_diagn)
 
     # def timer_callback(self):
         # quaternion = self.robot_odom.get_quaternion_from_euler(0,0,1.57079633)

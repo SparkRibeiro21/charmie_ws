@@ -54,6 +54,11 @@ static bool _Keypoints__cdr_serialize(
     cdr << ros_message->index_person;
   }
 
+  // Field name: x_person_relative
+  {
+    cdr << ros_message->x_person_relative;
+  }
+
   // Field name: average_distance
   {
     cdr << ros_message->average_distance;
@@ -62,6 +67,26 @@ static bool _Keypoints__cdr_serialize(
   // Field name: standard_deviation
   {
     cdr << ros_message->standard_deviation;
+  }
+
+  // Field name: box_topx_left
+  {
+    cdr << ros_message->box_topx_left;
+  }
+
+  // Field name: box_topy_left
+  {
+    cdr << ros_message->box_topy_left;
+  }
+
+  // Field name: box_width
+  {
+    cdr << ros_message->box_width;
+  }
+
+  // Field name: box_height
+  {
+    cdr << ros_message->box_height;
   }
 
   // Field name: key_p0_x
@@ -251,6 +276,11 @@ static bool _Keypoints__cdr_deserialize(
     cdr >> ros_message->index_person;
   }
 
+  // Field name: x_person_relative
+  {
+    cdr >> ros_message->x_person_relative;
+  }
+
   // Field name: average_distance
   {
     cdr >> ros_message->average_distance;
@@ -259,6 +289,26 @@ static bool _Keypoints__cdr_deserialize(
   // Field name: standard_deviation
   {
     cdr >> ros_message->standard_deviation;
+  }
+
+  // Field name: box_topx_left
+  {
+    cdr >> ros_message->box_topx_left;
+  }
+
+  // Field name: box_topy_left
+  {
+    cdr >> ros_message->box_topy_left;
+  }
+
+  // Field name: box_width
+  {
+    cdr >> ros_message->box_width;
+  }
+
+  // Field name: box_height
+  {
+    cdr >> ros_message->box_height;
   }
 
   // Field name: key_p0_x
@@ -454,6 +504,12 @@ size_t get_serialized_size_charmie_interfaces__msg__Keypoints(
     current_alignment += item_size +
       eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
   }
+  // field.name x_person_relative
+  {
+    size_t item_size = sizeof(ros_message->x_person_relative);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
   // field.name average_distance
   {
     size_t item_size = sizeof(ros_message->average_distance);
@@ -463,6 +519,30 @@ size_t get_serialized_size_charmie_interfaces__msg__Keypoints(
   // field.name standard_deviation
   {
     size_t item_size = sizeof(ros_message->standard_deviation);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // field.name box_topx_left
+  {
+    size_t item_size = sizeof(ros_message->box_topx_left);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // field.name box_topy_left
+  {
+    size_t item_size = sizeof(ros_message->box_topy_left);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // field.name box_width
+  {
+    size_t item_size = sizeof(ros_message->box_width);
+    current_alignment += item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // field.name box_height
+  {
+    size_t item_size = sizeof(ros_message->box_height);
     current_alignment += item_size +
       eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
   }
@@ -701,6 +781,13 @@ size_t max_serialized_size_charmie_interfaces__msg__Keypoints(
     current_alignment += array_size * sizeof(uint32_t) +
       eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
   }
+  // member: x_person_relative
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
   // member: average_distance
   {
     size_t array_size = 1;
@@ -709,6 +796,34 @@ size_t max_serialized_size_charmie_interfaces__msg__Keypoints(
       eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
   }
   // member: standard_deviation
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+  // member: box_topx_left
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+  // member: box_topy_left
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+  // member: box_width
+  {
+    size_t array_size = 1;
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+  // member: box_height
   {
     size_t array_size = 1;
 

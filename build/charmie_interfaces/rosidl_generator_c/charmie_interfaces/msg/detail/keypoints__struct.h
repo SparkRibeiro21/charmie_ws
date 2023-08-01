@@ -21,8 +21,13 @@ extern "C"
 typedef struct charmie_interfaces__msg__Keypoints
 {
   int32_t index_person;
+  float x_person_relative;
   float average_distance;
   float standard_deviation;
+  int32_t box_topx_left;
+  int32_t box_topy_left;
+  int32_t box_width;
+  int32_t box_height;
   int32_t key_p0_x;
   int32_t key_p0_y;
   int32_t key_p1_x;

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int16
+from std_msgs.msg import Int16, Bool
 
 import time
 import socket
@@ -99,20 +99,27 @@ class FaceNode(Node):
         
         self.face_command_subscriber = self.create_subscription(Int16, "face_command", self.face_command_callback, 10)
 
+
         self.charmie_face.init_face()
 
-    """
-        # self.create_timer(2, self.timer_callback)
-        # self.counter = 0
+        """
+            # self.create_timer(2, self.timer_callback)
+            # self.counter = 0
 
-    # def timer_callback(self):
-        face = Int16()
-        face.data = self.counter
-        self.charmie_face.send_command(face)
-        self.counter += 1
-        if self.counter > 1:
-            self.counter = 0
-    """
+        # def timer_callback(self):
+            face = Int16()
+            face.data = self.counter
+            self.charmie_face.send_command(face)
+            self.counter += 1
+            if self.counter > 1:
+                self.counter = 0
+        """
+
+        self.face_diagnostic_publisher = self.create_publisher(Bool, "face_diagnostic", 10)
+
+        flag_diagn = Bool()
+        flag_diagn.data = True
+        self.face_diagnostic_publisher.publish(flag_diagn)
 
         
     def face_command_callback(self, command: Int16):

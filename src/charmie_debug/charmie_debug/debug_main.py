@@ -12,6 +12,9 @@ from cv_bridge import CvBridge
 import cv2 
 import time
 
+
+import mediapipe as mp
+
 class TRNode(Node):
 
     def __init__(self):
@@ -72,7 +75,8 @@ class TRNode(Node):
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
         self.create_timer(0.05, self.timer_callback)
-        self.create_timer(5, self.timer_callback2)
+        # self.create_timer(2, self.timer_callback_audio)
+        # self.create_timer(10, self.timer_callback2)
         # self.create_timer(20, self.timer_callback3)
         self.create_timer(5, self.timer_callback4)
         
@@ -99,6 +103,12 @@ class TRNode(Node):
         self.rgb_ctr = 1
 
         self.br = CvBridge()
+
+        self.mp_face_detection = mp.solutions.face_detection
+        self.mp_drawing = mp.solutions.drawing_utils
+        self.mp_face_detection = self.mp_face_detection.FaceDetection()
+        self.mp_pose = mp.solutions.pose
+        self.pose = self.mp_pose.Pose()
 
 
 
@@ -148,24 +158,62 @@ class TRNode(Node):
         print("---")
         self.get_logger().info('Receiving color video frame')
         current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
-        cv2.imshow("c_camera", current_frame)   
-        cv2.waitKey(1)
+
+        
+        """ image = cv2.cvtColor(current_frame, cv2.COLOR_RGB2BGR)
+        height, width, _ = image.shape
+        results = self.pose.process(image)
+        #print("RESULTS")
+
+        print('A')
+
+        if results.pose_landmarks:
+            print('found landmarks')
+            self.mp_drawing.draw_landmarks(image, results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS, self.mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2), self.mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=2))
+            #LEFT_SIDE_IMG
+            
+            point_face_x = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.NOSE].x*width,2))
+            point_face_y = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.NOSE].y*height,2))
+            
+            print(point_face_x, point_face_y)
+
+            hip = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_HIP ].y*height,2))
+            
+            print(hip)
+            
+            shoulder = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_SHOULDER].y*height,2))
+            
+            print(shoulder)
+            
+            #cv2.line(image, (center_x,center_y), (point_face[0],point_face[1]), (0, 255, 255), 2)
+
+            num_person = 1
+            
+            cv2.imshow("Landmarks", image)
+            cv2.waitKey(1)
+        else: """
+        print('didnt found landmarks')
+        #cv2.imshow("c_camera", current_frame)   
+        #cv2.waitKey(1)
+            
+        
 
     def get_depth_image_callback(self, img: Image):
         # print(img)
         print("---")
         self.get_logger().info('Receiving depth video frame')
         current_frame = self.br.imgmsg_to_cv2(img)
-        cv2.imshow("d_camera", current_frame)   
-        cv2.waitKey(1)
+        #cv2.imshow("d_camera", current_frame)   
+        #cv2.waitKey(1)
 
     def flag_listening_callback(self, flag: Bool):
         print("Finished Listening, now analising...")
 
     def get_speech_callback(self, speech: String):
-        speech_str = RobotSpeech()
+        # speech_str = RobotSpeech()
+        self.start_audio()
 
-        if speech.data == "ERROR":
+        """ if speech.data == "ERROR":
             speech_str.command = "I could not understand what you said, can you repeat please?"
             speech_str.language = 'en'
             self.speaker_publisher.publish(speech_str)
@@ -176,7 +224,7 @@ class TRNode(Node):
             # speech_str.command = "Qual é a comida na cantina hoje?"
             speech_str.command = speech.data
             speech_str.language = 'en'
-            self.speaker_publisher.publish(speech_str)
+            self.speaker_publisher.publish(speech_str) """
 
     def flag_pos_reached_callback(self, flag: Bool):
 
@@ -194,8 +242,9 @@ class TRNode(Node):
     def start_audio(self):
         # print(snet)
         aud = SpeechType()
-        aud.yes_or_no = True
+        aud.yes_or_no = False
         aud.receptionist = False
+        aud.restaurant = True
         self.audio_command_publisher.publish(aud)
         print(aud)
 
@@ -203,25 +252,45 @@ class TRNode(Node):
         print("Recebi Fim do Start Door")
 
     def timer_callback4(self):
-        speech_str = RobotSpeech()
-        speech_str.command = "Please Wait for me"
-        speech_str.language = 'en'
-        self.speaker_publisher.publish(speech_str)
+        
+        # if self.init == True:
+        #     self.start_audio()
+        #     self.init = False 
+        
+        speak = RobotSpeech()
+        #speak.command = "Red Wine"
+        # speak.language = 'en'
 
 
-        rgb = Int16()
+        #self.speaker_publisher.publish(speak)
+        
+        
+        
+        # speak = RobotSpeech()
+        
+        """ speak.command = "RedWine"
 
-        rgb.data = self.rgb_ctr
-        self.rgb_mode_publisher.publish(rgb)
-        print("Enviei RGB", self.rgb_ctr)
+
+        self.speaker_publisher.publish(speak) """
+        
 
 
-        self.rgb_ctr +=10
+        # rgb = Int16()
 
-        if self.rgb_ctr > 91:
-            self.rgb_ctr = 2
+        # rgb.data = 100
+        # self.rgb_mode_publisher.publish(rgb)
+        # print("Enviei RGB", self.rgb_ctr)
 
-    def timer_callback2(self):
+
+
+
+
+        # self.rgb_ctr +=10
+
+        # if self.rgb_ctr > 91:
+        #     self.rgb_ctr = 2
+
+    """ def timer_callback2(self):
 
         p = Pose2D()
         if self.neck_ctr == 0:
@@ -255,11 +324,13 @@ class TRNode(Node):
         if self.neck_ctr == 6:
             self.neck_ctr = 0
 
-
-        # if self.init == True:
-        #     self.start_audio()
-        #     self.init = False
+        """
         
+    def timer_callback_audio(self):
+        if self.init == True:
+            self.start_audio()
+            self.init = False 
+
 
     def timer_callback3(self):
         # if self.init_start_door:

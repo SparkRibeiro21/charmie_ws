@@ -59,6 +59,15 @@ bool charmie_interfaces__msg__keypoints__convert_from_py(PyObject * _pymsg, void
     ros_message->index_person = (int32_t)PyLong_AsLong(field);
     Py_DECREF(field);
   }
+  {  // x_person_relative
+    PyObject * field = PyObject_GetAttrString(_pymsg, "x_person_relative");
+    if (!field) {
+      return false;
+    }
+    assert(PyFloat_Check(field));
+    ros_message->x_person_relative = (float)PyFloat_AS_DOUBLE(field);
+    Py_DECREF(field);
+  }
   {  // average_distance
     PyObject * field = PyObject_GetAttrString(_pymsg, "average_distance");
     if (!field) {
@@ -75,6 +84,42 @@ bool charmie_interfaces__msg__keypoints__convert_from_py(PyObject * _pymsg, void
     }
     assert(PyFloat_Check(field));
     ros_message->standard_deviation = (float)PyFloat_AS_DOUBLE(field);
+    Py_DECREF(field);
+  }
+  {  // box_topx_left
+    PyObject * field = PyObject_GetAttrString(_pymsg, "box_topx_left");
+    if (!field) {
+      return false;
+    }
+    assert(PyLong_Check(field));
+    ros_message->box_topx_left = (int32_t)PyLong_AsLong(field);
+    Py_DECREF(field);
+  }
+  {  // box_topy_left
+    PyObject * field = PyObject_GetAttrString(_pymsg, "box_topy_left");
+    if (!field) {
+      return false;
+    }
+    assert(PyLong_Check(field));
+    ros_message->box_topy_left = (int32_t)PyLong_AsLong(field);
+    Py_DECREF(field);
+  }
+  {  // box_width
+    PyObject * field = PyObject_GetAttrString(_pymsg, "box_width");
+    if (!field) {
+      return false;
+    }
+    assert(PyLong_Check(field));
+    ros_message->box_width = (int32_t)PyLong_AsLong(field);
+    Py_DECREF(field);
+  }
+  {  // box_height
+    PyObject * field = PyObject_GetAttrString(_pymsg, "box_height");
+    if (!field) {
+      return false;
+    }
+    assert(PyLong_Check(field));
+    ros_message->box_height = (int32_t)PyLong_AsLong(field);
     Py_DECREF(field);
   }
   {  // key_p0_x
@@ -416,6 +461,17 @@ PyObject * charmie_interfaces__msg__keypoints__convert_to_py(void * raw_ros_mess
       }
     }
   }
+  {  // x_person_relative
+    PyObject * field = NULL;
+    field = PyFloat_FromDouble(ros_message->x_person_relative);
+    {
+      int rc = PyObject_SetAttrString(_pymessage, "x_person_relative", field);
+      Py_DECREF(field);
+      if (rc) {
+        return NULL;
+      }
+    }
+  }
   {  // average_distance
     PyObject * field = NULL;
     field = PyFloat_FromDouble(ros_message->average_distance);
@@ -432,6 +488,50 @@ PyObject * charmie_interfaces__msg__keypoints__convert_to_py(void * raw_ros_mess
     field = PyFloat_FromDouble(ros_message->standard_deviation);
     {
       int rc = PyObject_SetAttrString(_pymessage, "standard_deviation", field);
+      Py_DECREF(field);
+      if (rc) {
+        return NULL;
+      }
+    }
+  }
+  {  // box_topx_left
+    PyObject * field = NULL;
+    field = PyLong_FromLong(ros_message->box_topx_left);
+    {
+      int rc = PyObject_SetAttrString(_pymessage, "box_topx_left", field);
+      Py_DECREF(field);
+      if (rc) {
+        return NULL;
+      }
+    }
+  }
+  {  // box_topy_left
+    PyObject * field = NULL;
+    field = PyLong_FromLong(ros_message->box_topy_left);
+    {
+      int rc = PyObject_SetAttrString(_pymessage, "box_topy_left", field);
+      Py_DECREF(field);
+      if (rc) {
+        return NULL;
+      }
+    }
+  }
+  {  // box_width
+    PyObject * field = NULL;
+    field = PyLong_FromLong(ros_message->box_width);
+    {
+      int rc = PyObject_SetAttrString(_pymessage, "box_width", field);
+      Py_DECREF(field);
+      if (rc) {
+        return NULL;
+      }
+    }
+  }
+  {  // box_height
+    PyObject * field = NULL;
+    field = PyLong_FromLong(ros_message->box_height);
+    {
+      int rc = PyObject_SetAttrString(_pymessage, "box_height", field);
       Py_DECREF(field);
       if (rc) {
         return NULL;

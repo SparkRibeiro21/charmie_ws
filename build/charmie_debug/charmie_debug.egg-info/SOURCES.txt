@@ -10,4 +10,5 @@ charmie_debug.egg-info/entry_points.txt
 charmie_debug.egg-info/requires.txt
 charmie_debug.egg-info/top_level.txt
 charmie_debug.egg-info/zip-safe
+launch/example.launch.py
 resource/charmie_debug

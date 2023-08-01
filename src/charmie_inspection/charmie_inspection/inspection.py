@@ -6,10 +6,10 @@ from rclpy.node import Node
 import threading
 
 from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Int16, Float32
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import Obstacles, RobotSpeech, TarNavSDNL
+from charmie_interfaces.msg import Obstacles, RobotSpeech, TarNavSDNL, Yolov8Pose, Keypoints
 
 import mediapipe as mp
 import numpy as np
@@ -17,13 +17,21 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import math
 
-after_door_point = (0.0, 1.7)
-# aux1_point = (2.2, 1.7)
-inspection_point = (1.0, 5.80 + 1.7)
-sofas = (3.0, 5.8 + 1.7)
+after_door_point = (0.0, 1.0)
+inspection_point = (1.9, 3.1)
+# exit_door_orientation = (2.0, 2.0)
+exit_door = (1.9, 2.0)
+final_point = (2.0, 6.9)
+final_point_orientation = (4.0, 6.9)
 
-exit_first_point = (1.0, 5.80 + 1.7 + 1.0)
-exit_point = (1.00, 5.80 + 1.7 + 2.0)
+
+
+
+f_point_loc = (2.55, 0.0)
+f_point_rot = (2.55, -1.0)
+
+# exit_first_point = (1.0, 5.80 + 1.7 + 1.0)
+# exit_point = (1.00, 5.80 + 1.7 + 2.0)
 
 import time
 
@@ -54,6 +62,8 @@ class InspectionNode(Node):
         # Low Level: Start Button
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
+        # Low Level: RGB
+        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
 
         # Initial Pose for Localisation
         self.initial_pose_amcl_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10) # aux temp
@@ -63,8 +73,10 @@ class InspectionNode(Node):
         self.depth_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_depth_callback, 10)
         
         # Odometry
-        self.odometry_subscriber = self.create_subscription(Odometry, "odom", self.get_odometry_robot_callback, 10)
+        self.odometry_subscriber = self.create_subscription(Odometry, "odom_a", self.get_odometry_robot_callback, 10)
 
+        #YOLOv8Pose
+        self.yolo_pose_subscriber = self.create_subscription(Yolov8Pose, "yolov8_pose", self.yolo_pose_callback, 10)
 
         ###         Vars
         self.done_start_door = False
@@ -84,6 +96,24 @@ class InspectionNode(Node):
         self.robot_x = 0.0
         self.robot_y = 0.0
 
+        self.color = Int16()
+
+        self.yolo_poses = Yolov8Pose()
+
+        """ self.distance_x = Float32()
+        self.distance_y = Float32() """
+
+    def yolo_pose_callback(self, yolo: Yolov8Pose):
+        #self.index_person = points.index_person
+        # print('--------------------')
+        self.yolo_poses = yolo
+        
+        # for i in range(len(yolo.keypoints)):
+        #     print(yolo.keypoints[i].x_person_relative, yolo.keypoints[i].average_distance)
+                
+        """ self.distance_x = yolo.keypoints[1]
+        self.distance_y = yolo.keypoints[2] """
+        
     def done_start_door_callback(self, state:Bool):
         self.done_start_door = state.data
         print("Finished Door Start")
@@ -124,7 +154,6 @@ class InspectionNode(Node):
         # print(yaw, pitch, roll)
 
         self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-
 
     def publish_initial_pose(self, x:float, y:float):
 
@@ -221,29 +250,47 @@ class ReceptionistMain():
 
         dist_to_target = math.sqrt((move_t[0] - self.node.robot_x)**2 + (move_t[1] - self.node.robot_y)**2)
 
+        print('AQUI')
+        # self.check_for_human_obstacle_multiperson()
+        s_ant = 0
+        s = 0
+        
         while dist_to_target > max_dist_to_target:
-            person_x, person_y = self.check_for_human_obstacles()
-            
-            if person_x == 0 and person_y == 0: # nao esta ninguem na imagem
-                # anda normal
-                self.coordinates_to_navigation(move_t, rotate_t, False) 
-            
-            if person_y > max_dist_to_person: # deteta pessoa mas está acima do threshold
-                # anda normal
-                self.coordinates_to_navigation(move_t, rotate_t, False) 
+            s_ant = s
 
-            if person_y <= max_dist_to_person: # deteta pessoa abaixo do threshold
+            # time.sleep(0.05)
+
+            dist_to_target = math.sqrt((move_t[0] - self.node.robot_x)**2 + (move_t[1] - self.node.robot_y)**2)
+            min_y = self.check_for_human_obstacle_multiperson()
+            print(min_y)
+
+            if min_y > max_dist_to_person: # deteta pessoa mas está acima do threshold
+                # anda normal
+                self.coordinates_to_navigation(move_t, rotate_t, False) 
+                s = 0
+                print('S = 0')
+
+            else:  # deteta pessoa abaixo do threshold
                 # tem que parar
-
+                print('S=1')
+                
                 # variavel para o robo ficar a olhar para onde já está virado por defeito
                 stop_orientation_x = max_dist_to_person*2 * math.sin(-self.node.robot_t) + self.node.robot_x
                 stop_orientation_y = max_dist_to_person*2 * math.cos(-self.node.robot_t) + self.node.robot_y
 
                 self.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (stop_orientation_x, stop_orientation_y), False)
+                s = 1
+
+            if s_ant == 0 and s == 1: # starts seeing obstacle person
+                self.node.color.data = 1
+                self.node.rgb_mode_publisher.publish(self.node.color)
+            elif s_ant == 1 and s == 0:
+                self.node.color.data = 0
+                self.node.rgb_mode_publisher.publish(self.node.color)
             
             self.node.flag_navigation_done = False
 
-        self.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), rotate_t, False, True)
+        self.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), rotate_t, False)
         self.wait_for_end_of_navigation()
 
 
@@ -255,9 +302,19 @@ class ReceptionistMain():
         nav.rotate_target_coordinates.x = p2[0]
         nav.rotate_target_coordinates.y = p2[1]
         self.node.target_position_publisher.publish(nav)
-        print("Published Navigation")
+        # print("Published Navigation")
         
-    
+    def check_for_human_obstacle_multiperson(self):
+        yolo = self.node.yolo_poses
+        min_y = 10.0
+        if len(yolo.keypoints) > 0:    
+            for i in range(len(yolo.keypoints)):
+                if yolo.keypoints[i].average_distance < min_y:
+                    min_y = yolo.keypoints[i].average_distance
+        print(min_y)
+        print('**************')
+        return min_y
+
     def check_for_human_obstacles(self):
         #NAVIGATION TO TARGET (PERSON)
         # self.get_logger().info('FUNCTION FOLLOW')
@@ -270,6 +327,7 @@ class ReceptionistMain():
         #print("RESULTS")
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         dist_x = 0
+        self.distance = 0
 
         if results.pose_landmarks:
             self.mp_drawing.draw_landmarks(image, results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS, self.mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2), self.mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=2))
@@ -317,14 +375,18 @@ class ReceptionistMain():
             dist_x = 0
             self.distance = 0
 
-        cv2.imshow("FOLLOW TARGET", image)
+        # cv2.imshow("FOLLOW TARGET", image)
         #cv2.imshow("Depth", depth_img)
-        cv2.waitKey(1)
+        # cv2.waitKey(1)
+
+        # print(dist_x, self.distance)
 
         return dist_x, self.distance # x, y
 
 
     def main(self):
+        # self.node.color.data = 100
+        # self.node.rgb_mode_publisher.publish(self.node.color)
         print("IN NEW MAIN")
         time.sleep(1)
 
@@ -333,8 +395,13 @@ class ReceptionistMain():
             # State Machine
 
             if self.state == 0:
+                self.node.get_logger().info("STATE 0")
                 
-                print("0")
+                # print("0")
+                # self.coordinates_to_navigation(inspection_point, sofas, False)
+                # self.coordinates_to_navigation((1.0, 5.0), sofas, False)
+                # self.wait_for_end_of_navigation_but_check_for_people_obstacles(inspection_point, sofas)
+                # print("OUT")
 
                 self.node.publish_initial_pose(x=0.0, y=0.0)
                 
@@ -343,17 +410,24 @@ class ReceptionistMain():
             
                 self.node.neck_position_publisher.publish(self.neck_pose)
 
+                self.node.get_logger().info("Ready to inspection")
+
                 # Says it is ready to start its Inspection
-                self.node.speech_str.command = "I am ready to start my Inspection."
+                self.node.speech_str.command = "I am ready to start my Inspection. Waiting for door to be opened."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
                 
-                print("1")
+                # print("1")
                 # wait for door
                 door_start = Bool()
                 door_start.data = True
                 self.node.start_door_publisher.publish(door_start)
+                time.sleep(0.1)
+                self.node.start_door_publisher.publish(door_start)
                 self.wait_for_end_of_start_door()
+
+                self.node.color.data = 12
+                self.node.rgb_mode_publisher.publish(self.node.color)
                 
                 
                 # Says: Oh thanks for opening the door. On my way to the Inspection Point
@@ -364,24 +438,30 @@ class ReceptionistMain():
                 # self.state = 1
 
                 #OLHAR PARA A POSIÇÃO DO GUEST
-                self.node.neck_position_publisher.publish(self.node.talk_neck)
+                # self.node.neck_position_publisher.publish(self.node.talk_neck)
+
+
+
+                aux_point = (0.0, 3.0)
 
 
                 #Navegação para o Ponto de Inspeção
-                self.coordinates_to_navigation(after_door_point, inspection_point, True)
+                self.coordinates_to_navigation(after_door_point, aux_point, True)
                 self.wait_for_end_of_navigation()
 
-
+                self.coordinates_to_navigation(aux_point, inspection_point, False)
+                self.wait_for_end_of_navigation_but_check_for_people_obstacles(aux_point, inspection_point)
+                
 
                 #### CODIGO PARA DETECAO DE PESSOAS TEM QUE SER NOS PROXIMOS WAITS NAVIGATION
-                self.coordinates_to_navigation(inspection_point, sofas, False)
-                self.wait_for_end_of_navigation_but_check_for_people_obstacles((inspection_point, sofas))
+                self.coordinates_to_navigation(inspection_point, exit_door, False)
+                self.wait_for_end_of_navigation_but_check_for_people_obstacles(inspection_point, exit_door)
                 # self.coordinates_to_navigation(inspection_point, exit_first_point, False)
                 # self.wait_for_end_of_navigation()
 
 
                 self.node.speech_str.command = "Hello my name is charmie and I am very happy to make my debut on robocup at home. Hoppefully I am able to show some of my skills on the upcoming days. \
-                I am ready to move on to the exit, when you are ready just stand in front of me and say Yes. Meanwhile I will wait here."
+                I am ready to move on to the exit, when you are ready just press my start button. Meanwhile I will wait here."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
 
@@ -395,11 +475,26 @@ class ReceptionistMain():
                 self.node.flag_start_button_publisher.publish(t)
                 self.wait_for_start_button()
 
+                self.node.color.data = 12
+                self.node.rgb_mode_publisher.publish(self.node.color)
+                
 
-                self.coordinates_to_navigation(inspection_point, exit_first_point, True)
-                self.wait_for_end_of_navigation()
-                self.coordinates_to_navigation(exit_first_point, exit_point, False)
-                self.wait_for_end_of_navigation()
+
+                self.node.speech_str.command = "Thank you. I will head to the exit."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+
+                # exit_door_orientation = (2.0, 2.0)ão
+                # self.coordinates_to_navigation(after_door_point, inspection_point, True)
+                # self.wait_for_end_of_navigation()
+
+
+# f_point_loc = (2.55, 0.0)
+# f_point_rot = (2.55, -1.0)
+
+                self.coordinates_to_navigation(f_point_loc, f_point_rot, False)
+                self.wait_for_end_of_navigation_but_check_for_people_obstacles(f_point_loc, f_point_rot)
 
                 self.state = 1
 

@@ -1,0 +1,25 @@
+[2.012s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build --no-deps install_data
+[2.611s] running develop
+[2.943s] running egg_info
+[2.944s] creating charmie_stickler_for_the_rules.egg-info
+[2.944s] writing charmie_stickler_for_the_rules.egg-info/PKG-INFO
+[2.944s] writing dependency_links to charmie_stickler_for_the_rules.egg-info/dependency_links.txt
+[2.945s] writing entry points to charmie_stickler_for_the_rules.egg-info/entry_points.txt
+[2.945s] writing requirements to charmie_stickler_for_the_rules.egg-info/requires.txt
+[2.945s] writing top-level names to charmie_stickler_for_the_rules.egg-info/top_level.txt
+[2.948s] writing manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[3.017s] reading manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[3.019s] writing manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[3.115s] running build_ext
+[3.116s] Creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/site.py
+[3.120s] Creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie-stickler-for-the-rules.egg-link (link to .)
+[3.122s] Installing stickler_for_the_rules script to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/charmie_stickler_for_the_rules
+[3.123s] 
+[3.123s] Installed /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules
+[3.124s] running install_data
+[3.124s] creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index
+[3.124s] creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index/resource_index
+[3.125s] creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index/resource_index/packages
+[3.125s] copying resource/charmie_stickler_for_the_rules -> /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index/resource_index/packages
+[3.126s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/charmie_stickler_for_the_rules
+[3.197s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build --no-deps install_data

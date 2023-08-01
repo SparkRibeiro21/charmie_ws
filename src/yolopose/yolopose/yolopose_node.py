@@ -4,7 +4,7 @@ from ultralytics.yolo.engine.results import Results
 from ultralytics.yolo.utils import DEFAULT_CFG, ROOT, ops
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int16
+from std_msgs.msg import Int16, Bool
 from geometry_msgs.msg import Pose2D
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import Keypoints, Yolov8Pose, Yolov8PoseArray
@@ -58,6 +58,9 @@ class YoloPoseNode(Node):
         self.img_height_angle_degrees = 65.0    #Intel RealSense D455 Standart Value in Degrees
         self.img_width_angle_radius = 0.0
         self.img_height_angle_radius = 0.0
+        self.cv_image = []
+        self.cv_image_array = []
+
 
         # COCO Keypoints YOLOv8 FRONT VIEW
         self.keyp0_coordinate_x = 0 # Nose
@@ -103,6 +106,12 @@ class YoloPoseNode(Node):
 
         self.create_timer(0.1, self.timer_callback_trans)
 
+        self.yolo_pose_diagnostic_publisher = self.create_publisher(Bool, "yolo_pose_diagnostic", 10)
+
+        flag_diagn = Bool()
+        flag_diagn.data = True
+        self.yolo_pose_diagnostic_publisher.publish(flag_diagn)
+
     def get_color_image_callback(self, img: Image):
         print("---")
         self.get_logger().info('Receiving color video frame')
@@ -120,17 +129,16 @@ class YoloPoseNode(Node):
         results = self.model(current_frame)
         annotated_frame = results[0].plot()
 
+        self.yolov8_pose.keypoints = []
+
+        # Calculate the number of persons detected
+        num_persons = len(results[0].keypoints)
+        print('Persons Nr:', num_persons)  # Print the number of persons detected
         try:
-            self.yolov8_pose.keypoints = []
-
-            # Calculate the number of persons detected
-            num_persons = len(results[0].keypoints)
-            print('Persons Nr:', num_persons)  # Print the number of persons detected
-
             for person_idx, per in enumerate(results[0].keypoints):
                 print(f"Person index: {person_idx}")
 
-                current_frame = cv2.putText(
+                """ current_frame = cv2.putText(
                     current_frame,
                     f"{self.average_distance}",
                     (self.keyp0_coordinate_x + 25, self.keyp0_coordinate_y + 25),
@@ -139,14 +147,15 @@ class YoloPoseNode(Node):
                     (0, 0, 255),
                     1,
                     cv2.LINE_AA
-                )
+                ) """
 
                 person_keypoints = Keypoints()  # Create a new instance of the Keypoints class for each person
 
                 # Keypoints index number and x,y coordinates
                 for keypoint_idx, kpt in enumerate(per):
+
                     # Display the keypoints info in the image
-                    annotated_frame = cv2.putText(
+                    """ annotated_frame = cv2.putText(
                         annotated_frame,
                         f"{keypoint_idx}:({int(kpt[0])}, {int(kpt[1])})",
                         (int(kpt[0]), int(kpt[1])),
@@ -155,115 +164,207 @@ class YoloPoseNode(Node):
                         (255, 0, 0),
                         1,
                         cv2.LINE_AA
-                    )
+                    ) """
 
                     # Get the x,y of Keypoints
                     # Update the specific keypoint coordinates for each person
                     keypoint_coordinate_x = int(kpt[0])
                     keypoint_coordinate_y = int(kpt[1])
 
+                    print(keypoint_coordinate_x)
+                    print(keypoint_coordinate_y)
+
+                    person_keypoints.box_topx_left = int(results[0].boxes.data[person_idx][0])
+                    person_keypoints.box_topy_left = int(results[0].boxes.data[person_idx][1])
+                    person_keypoints.box_width = int(results[0].boxes.data[person_idx][2])
+                    person_keypoints.box_height = int(results[0].boxes.data[person_idx][3])
+
                     if keypoint_idx == 0:
                         self.keyp0_coordinate_x = keypoint_coordinate_x
                         self.keyp0_coordinate_y = keypoint_coordinate_y
-                        print("keypoint 0", self.keyp0_coordinate_x, self.keyp0_coordinate_y)
+                        #print("keypoint 0", self.keyp0_coordinate_x, self.keyp0_coordinate_y)
                         setattr(person_keypoints, "key_p0_x", self.keyp0_coordinate_x)
                         setattr(person_keypoints, "key_p0_y", self.keyp0_coordinate_y)
 
                     elif keypoint_idx == 1:
                         self.keyp1_coordinate_x = keypoint_coordinate_x
                         self.keyp1_coordinate_y = keypoint_coordinate_y
-                        print("keypoint 1", self.keyp1_coordinate_x, self.keyp1_coordinate_y)
+                        #print("keypoint 1", self.keyp1_coordinate_x, self.keyp1_coordinate_y)
                         setattr(person_keypoints, "key_p1_x", self.keyp1_coordinate_x)
                         setattr(person_keypoints, "key_p1_y", self.keyp1_coordinate_y)
 
                     elif keypoint_idx == 2:
                         self.keyp2_coordinate_x = keypoint_coordinate_x
                         self.keyp2_coordinate_y = keypoint_coordinate_y
-                        print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
                         setattr(person_keypoints, "key_p2_x", self.keyp2_coordinate_x)
                         setattr(person_keypoints, "key_p2_y", self.keyp2_coordinate_y)
+
+                    elif keypoint_idx == 3:
+                        self.keyp3_coordinate_x = keypoint_coordinate_x
+                        self.keyp3_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 3", self.keyp3_coordinate_x, self.keyp3_coordinate_y)
+                        setattr(person_keypoints, "key_p3_x", self.keyp3_coordinate_x)
+                        setattr(person_keypoints, "key_p3_y", self.keyp3_coordinate_y)
+
+                    elif keypoint_idx == 4:
+                        self.keyp4_coordinate_x = keypoint_coordinate_x
+                        self.keyp4_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p4_x", self.keyp4_coordinate_x)
+                        setattr(person_keypoints, "key_p4_y", self.keyp4_coordinate_y)
 
                     elif keypoint_idx == 5:
                         self.keyp5_coordinate_x = keypoint_coordinate_x
                         self.keyp5_coordinate_y = keypoint_coordinate_y
-                        print("keypoint 5", self.keyp5_coordinate_x, self.keyp5_coordinate_y)
+                        #print("keypoint 5", self.keyp5_coordinate_x, self.keyp5_coordinate_y)
                         setattr(person_keypoints, "key_p5_x", self.keyp5_coordinate_x)
                         setattr(person_keypoints, "key_p5_y", self.keyp5_coordinate_y)
 
                     elif keypoint_idx == 6:
                         self.keyp6_coordinate_x = keypoint_coordinate_x
                         self.keyp6_coordinate_y = keypoint_coordinate_y
-                        print("keypoint 6", self.keyp0_coordinate_x, self.keyp0_coordinate_y)
+                        #print("keypoint 6", self.keyp0_coordinate_x, self.keyp0_coordinate_y)
                         setattr(person_keypoints, "key_p6_x", self.keyp6_coordinate_x)
                         setattr(person_keypoints, "key_p6_y", self.keyp6_coordinate_y)
 
-                    elif 2 < keypoint_idx < 5 or 6 < keypoint_idx < 17:
-                        setattr(person_keypoints, f"key_p{keypoint_idx}_x", keypoint_coordinate_x)
-                        setattr(person_keypoints, f"key_p{keypoint_idx}_y", keypoint_coordinate_y)
+                    elif keypoint_idx == 7:
+                        self.keyp7_coordinate_x = keypoint_coordinate_x
+                        self.keyp7_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p7_x", self.keyp7_coordinate_x)
+                        setattr(person_keypoints, "key_p7_y", self.keyp7_coordinate_y)
 
-                        print(f"keypoint {keypoint_idx}", keypoint_coordinate_x, keypoint_coordinate_y)
+                    elif keypoint_idx == 8:
+                        self.keyp8_coordinate_x = keypoint_coordinate_x
+                        self.keyp8_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p8_x", self.keyp8_coordinate_x)
+                        setattr(person_keypoints, "key_p8_y", self.keyp8_coordinate_y)
+
+                    elif keypoint_idx == 9:
+                        self.keyp9_coordinate_x = keypoint_coordinate_x
+                        self.keyp9_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p9_x", self.keyp9_coordinate_x)
+                        setattr(person_keypoints, "key_p9_y", self.keyp9_coordinate_y)
+
+                    elif keypoint_idx == 10:
+                        self.keyp10_coordinate_x = keypoint_coordinate_x
+                        self.keyp10_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p10_x", self.keyp10_coordinate_x)
+                        setattr(person_keypoints, "key_p10_y", self.keyp10_coordinate_y)
+
+                    elif keypoint_idx == 11:
+                        self.keyp11_coordinate_x = keypoint_coordinate_x
+                        self.keyp11_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p11_x", self.keyp11_coordinate_x)
+                        setattr(person_keypoints, "key_p11_y", self.keyp11_coordinate_y)
+
+                    elif keypoint_idx == 12:
+                        self.keyp12_coordinate_x = keypoint_coordinate_x
+                        self.keyp12_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p12_x", self.keyp12_coordinate_x)
+                        setattr(person_keypoints, "key_p12_y", self.keyp12_coordinate_y)
+
+                    elif keypoint_idx == 13:
+                        self.keyp13_coordinate_x = keypoint_coordinate_x
+                        self.keyp13_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p13_x", self.keyp13_coordinate_x)
+                        setattr(person_keypoints, "key_p13_y", self.keyp13_coordinate_y)
+
+                    elif keypoint_idx == 14:
+                        self.keyp14_coordinate_x = keypoint_coordinate_x
+                        self.keyp14_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p14_x", self.keyp14_coordinate_x)
+                        setattr(person_keypoints, "key_p14_y", self.keyp14_coordinate_y)
+
+                    elif keypoint_idx == 15:
+                        self.keyp15_coordinate_x = keypoint_coordinate_x
+                        self.keyp15_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p15_x", self.keyp15_coordinate_x)
+                        setattr(person_keypoints, "key_p15_y", self.keyp15_coordinate_y)
+
+                    elif keypoint_idx == 16:
+                        self.keyp16_coordinate_x = keypoint_coordinate_x
+                        self.keyp16_coordinate_y = keypoint_coordinate_y
+                        #print("keypoint 2", self.keyp2_coordinate_x, self.keyp2_coordinate_y)
+                        setattr(person_keypoints, "key_p16_x", self.keyp16_coordinate_x)
+                        setattr(person_keypoints, "key_p16_y", self.keyp16_coordinate_y)
+
 
                 person_keypoints.index_person = person_idx
 
-                desired_range = 0.5  # Desired range for good confidence (in meters)
                 keypoints = [(self.keyp0_coordinate_x, self.keyp0_coordinate_y),
                             (self.keyp1_coordinate_x, self.keyp1_coordinate_y),
                             (self.keyp2_coordinate_x, self.keyp2_coordinate_y),
+                            (self.keyp3_coordinate_x, self.keyp3_coordinate_y),
+                            (self.keyp4_coordinate_x, self.keyp4_coordinate_y),
                             (self.keyp5_coordinate_x, self.keyp5_coordinate_y),
-                            (self.keyp6_coordinate_x, self.keyp6_coordinate_y)]
+                            (self.keyp6_coordinate_x, self.keyp6_coordinate_y),
+                            (self.keyp7_coordinate_x, self.keyp7_coordinate_y),
+                            (self.keyp8_coordinate_x, self.keyp8_coordinate_y),
+                            (self.keyp9_coordinate_x, self.keyp9_coordinate_y),
+                            (self.keyp10_coordinate_x, self.keyp10_coordinate_y),
+                            (self.keyp11_coordinate_x, self.keyp11_coordinate_y),
+                            (self.keyp12_coordinate_x, self.keyp12_coordinate_y),
+                            (self.keyp13_coordinate_x, self.keyp13_coordinate_y),
+                            (self.keyp14_coordinate_x, self.keyp14_coordinate_y),
+                            (self.keyp15_coordinate_x, self.keyp15_coordinate_y),
+                            (self.keyp16_coordinate_x, self.keyp16_coordinate_y)]
 
-                confidence_flag = True  # Initialize confidence flag as True
-                reference_distance = None
                 keypoints_distances = []
 
                 for keypoint_idx, keypoint in enumerate(keypoints):
                     x, y = keypoint
+                    #print(x)
+                    #print(y)
+                    #print(self.cv_image_array.shape)
 
-                    if x < 0 or x >= self.cv_image_array.shape[1] or y < 0 or y >= self.cv_image_array.shape[0]:
-                        confidence_flag = False
-                        break
+                    if 0 <= x <= 1279 and 0 <= y <= 719:
+                        distance = self.cv_image_array[int(y)][int(x)] / 1000
+                        #distance = self.cv_image_array(int(y), int(x)) / 1000  
+                        if distance > 0.01 and distance < 10.0:
+                            keypoints_distances.append(distance)
 
-                    distance = (self.cv_image_array[y, x]) / 1000  # Note the change in indexing order (y, x)
-                    keypoints_distances.append(distance)
+                if len(keypoints_distances) > 0:
+                    person_keypoints.average_distance = (sum(keypoints_distances) / len(keypoints_distances))
+                    print(keypoints_distances)
+                    #self.average_distance = (sum(keypoints_distances) / len(keypoints_distances))
+                    self.center_x = self.keyp0_coordinate_x - (self.img_width // 2)
+                    self.img_width_angle_radius = self.img_width_angle_degrees * (math.pi / 180)
+                    self.relative_x_angle_radius = (self.center_x * self.img_width_angle_radius) / self.img_width
+                    person_keypoints.x_person_relative = math.tan(self.relative_x_angle_radius) * person_keypoints.average_distance
 
-                    if reference_distance is None:
-                        reference_distance = distance
-                    elif abs(distance - reference_distance) > desired_range:
-                        confidence_flag = False
-                        break
-                
-                self.average_distance = (sum(keypoints_distances) / len(keypoints_distances))
-                self.center_x = self.keyp0_coordinate_x - (self.img_width // 2)
-                self.img_width_angle_radius = self.img_width_angle_degrees * (math.pi / 180)
-                self.relative_x_angle_radius = (self.center_x * self.img_width_angle_radius) / self.img_width
-                self.relative_x = math.tan(self.relative_x_angle_radius) * self.average_distance
-
-                person_keypoints.x_person_relative = self.relative_x
-                person_keypoints.average_distance = (sum(keypoints_distances) / len(keypoints_distances))
-                person_keypoints.standard_deviation = np.std(keypoints_distances)
-                print(f"Person {person_idx}: X Relative {person_keypoints.x_person_relative}")
-                print(f"Person {person_idx}: Average distance (y relative) {person_keypoints.average_distance}")
-                print(f"Person {person_idx}: Standard deviation {person_keypoints.standard_deviation}")
-                
-                if confidence_flag:
-                    print("Good confidence distance")
-                else:
-                    print("Bad confidence distance")
-
-                self.yolov8_pose.keypoints.append(person_keypoints)
-
-            self.yolov8_pose.num_person = num_persons
-            self.yolov8_pose_publisher.publish(self.yolov8_pose)
+                    #person_keypoints.x_person_relative = self.relative_x
+                    #person_keypoints.average_distance = (sum(keypoints_distances) / len(keypoints_distances))
+                    """ person_keypoints.standard_deviation = np.std(keypoints_distances)
+                    if person_keypoints.average_distance > 6.0:
+                        print(keypoints_distances)
+                    if person_keypoints.average_distance == 0.0:
+                        print(keypoints_distances) """
+                    
+                    print(f"Person {person_idx}: Average distance (Y relative) {person_keypoints.average_distance}")
+                    self.yolov8_pose.keypoints.append(person_keypoints)
 
         except Exception as e:
             print(e)
-            print('ERROR: No Persons detected!')
 
+        self.yolov8_pose.num_person = num_persons
+        self.yolov8_pose_publisher.publish(self.yolov8_pose)
+
+       
         cv2.imshow("Pose Detection", annotated_frame)
         cv2.waitKey(1)
 
-        cv2.imshow("c_camera", current_frame)
-        cv2.waitKey(1)
+        """ cv2.imshow("c_camera", current_frame)
+        cv2.waitKey(1) """
 
     def get_aligned_depth_image_callback(self, img: Image):
         print("---")
@@ -272,8 +373,10 @@ class YoloPoseNode(Node):
         cv_image = self.br.imgmsg_to_cv2(img, "32FC1")
         self.cv_image_array = np.array(cv_image, dtype=np.dtype('f8'))
 
-        cv2.imshow("aligned_depth_camera", self.cv_image_array)
-        cv2.waitKey(1)
+        #self.cv_image_array = np.array(self.cv_image, dtype=np.float32)
+
+        # cv2.imshow("aligned_depth_camera", self.cv_image_array)
+        # cv2.waitKey(1)
 
     def get_neck_position_callback(self, pos: Pose2D):
         print("Received Neck Position: pan =", int(pos.x), " tilt = ", int(pos.y))

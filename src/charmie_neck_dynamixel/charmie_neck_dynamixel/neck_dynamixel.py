@@ -69,7 +69,7 @@ DXL_ID_PAN = 1  # Dynamixel ID : 1
 DXL_ID_TILT = 2  # Dynamixel ID : 2
 BAUDRATE = 57600  # Dynamixel default baudrate : 57600sssssss
 # MAC GIL # DEVICENAME = '/dev/tty.usbserial-AI0282RX'  # Check which port is being used on your controller
-DEVICENAME = '/dev/ttyUSB0'  # Check which port is being used on your controller
+DEVICENAME = '/dev/ttyUSB1'  # Check which port is being used on your controller
 # ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
 
 TORQUE_ENABLE = 1  # Value for enabling the torque
@@ -116,6 +116,7 @@ class NeckNode(Node):
         super().__init__("Neck")
         self.get_logger().info("Initialised CHARMIE Neck Node")
         print("Connected to Neck Board via:", DEVICENAME)  # check which port was really used
+
         self.neck_position_subscriber = self.create_subscription(Pose2D, "neck_pos", self.neck_position_callback ,10)
         self.neck_error_subscriber = self.create_subscription(Pose2D, "neck_error", self.neck_error_callback , 10)
         self.neck_get_position_publisher = self.create_publisher(Pose2D, "get_neck_pos", 10)
@@ -123,6 +124,8 @@ class NeckNode(Node):
 
         self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.nect_to_coords_callback, 10)
         self.odom_subscriber = self.create_subscription(Odometry, "odom", self.odom_callback, 10)
+
+        self.neck_diagnostic_publisher = self.create_publisher(Bool, "neck_diagnostic", 10)
 
         self.robot_x = 0.0
         self.robot_y = 0.0
@@ -327,8 +330,8 @@ def main(args=None):
         print("Dynamixel PAN has been successfully connected")
     node.get_logger().info("Set Torque Mode")
 
-    orig_settings = termios.tcgetattr(sys.stdin)
-    tty.setcbreak(sys.stdin)
+    #orig_settings = termios.tcgetattr(sys.stdin)
+    #tty.setcbreak(sys.stdin)
 
     dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_D_GAIN, PAN_D_GAIN)
     dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_I_GAIN, PAN_I_GAIN)
@@ -340,6 +343,12 @@ def main(args=None):
 
     move_neck(180, 193) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
     node.get_logger().info("Set Neck to Initial Position, Looking Forward")
+
+    
+
+    flag_diagn = Bool()
+    flag_diagn.data = True
+    node.neck_diagnostic_publisher.publish(flag_diagn)
 
     rclpy.spin(node)
     rclpy.shutdown()

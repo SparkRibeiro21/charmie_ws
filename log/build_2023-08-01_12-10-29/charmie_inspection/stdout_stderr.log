@@ -1,0 +1,16 @@
+running develop
+running egg_info
+writing charmie_inspection.egg-info/PKG-INFO
+writing dependency_links to charmie_inspection.egg-info/dependency_links.txt
+writing entry points to charmie_inspection.egg-info/entry_points.txt
+writing requirements to charmie_inspection.egg-info/requires.txt
+writing top-level names to charmie_inspection.egg-info/top_level.txt
+reading manifest file 'charmie_inspection.egg-info/SOURCES.txt'
+writing manifest file 'charmie_inspection.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages/charmie-inspection.egg-link (link to .)
+Installing inspection script to /home/utilizador/charmie_ws/install/charmie_inspection/lib/charmie_inspection
+
+Installed /home/utilizador/charmie_ws/build/charmie_inspection
+running install_data
+copying launch/inspection_launch.launch.py -> /home/utilizador/charmie_ws/install/charmie_inspection/share/charmie_inspection/launch

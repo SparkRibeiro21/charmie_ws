@@ -38,8 +38,13 @@ struct Keypoints_
       rosidl_runtime_cpp::MessageInitialization::ZERO == _init)
     {
       this->index_person = 0l;
+      this->x_person_relative = 0.0f;
       this->average_distance = 0.0f;
       this->standard_deviation = 0.0f;
+      this->box_topx_left = 0l;
+      this->box_topy_left = 0l;
+      this->box_width = 0l;
+      this->box_height = 0l;
       this->key_p0_x = 0l;
       this->key_p0_y = 0l;
       this->key_p1_x = 0l;
@@ -84,8 +89,13 @@ struct Keypoints_
       rosidl_runtime_cpp::MessageInitialization::ZERO == _init)
     {
       this->index_person = 0l;
+      this->x_person_relative = 0.0f;
       this->average_distance = 0.0f;
       this->standard_deviation = 0.0f;
+      this->box_topx_left = 0l;
+      this->box_topy_left = 0l;
+      this->box_width = 0l;
+      this->box_height = 0l;
       this->key_p0_x = 0l;
       this->key_p0_y = 0l;
       this->key_p1_x = 0l;
@@ -127,12 +137,27 @@ struct Keypoints_
   using _index_person_type =
     int32_t;
   _index_person_type index_person;
+  using _x_person_relative_type =
+    float;
+  _x_person_relative_type x_person_relative;
   using _average_distance_type =
     float;
   _average_distance_type average_distance;
   using _standard_deviation_type =
     float;
   _standard_deviation_type standard_deviation;
+  using _box_topx_left_type =
+    int32_t;
+  _box_topx_left_type box_topx_left;
+  using _box_topy_left_type =
+    int32_t;
+  _box_topy_left_type box_topy_left;
+  using _box_width_type =
+    int32_t;
+  _box_width_type box_width;
+  using _box_height_type =
+    int32_t;
+  _box_height_type box_height;
   using _key_p0_x_type =
     int32_t;
   _key_p0_x_type key_p0_x;
@@ -243,6 +268,12 @@ struct Keypoints_
     this->index_person = _arg;
     return *this;
   }
+  Type & set__x_person_relative(
+    const float & _arg)
+  {
+    this->x_person_relative = _arg;
+    return *this;
+  }
   Type & set__average_distance(
     const float & _arg)
   {
@@ -253,6 +284,30 @@ struct Keypoints_
     const float & _arg)
   {
     this->standard_deviation = _arg;
+    return *this;
+  }
+  Type & set__box_topx_left(
+    const int32_t & _arg)
+  {
+    this->box_topx_left = _arg;
+    return *this;
+  }
+  Type & set__box_topy_left(
+    const int32_t & _arg)
+  {
+    this->box_topy_left = _arg;
+    return *this;
+  }
+  Type & set__box_width(
+    const int32_t & _arg)
+  {
+    this->box_width = _arg;
+    return *this;
+  }
+  Type & set__box_height(
+    const int32_t & _arg)
+  {
+    this->box_height = _arg;
     return *this;
   }
   Type & set__key_p0_x(
@@ -505,10 +560,25 @@ struct Keypoints_
     if (this->index_person != other.index_person) {
       return false;
     }
+    if (this->x_person_relative != other.x_person_relative) {
+      return false;
+    }
     if (this->average_distance != other.average_distance) {
       return false;
     }
     if (this->standard_deviation != other.standard_deviation) {
+      return false;
+    }
+    if (this->box_topx_left != other.box_topx_left) {
+      return false;
+    }
+    if (this->box_topy_left != other.box_topy_left) {
+      return false;
+    }
+    if (this->box_width != other.box_width) {
+      return false;
+    }
+    if (this->box_height != other.box_height) {
       return false;
     }
     if (this->key_p0_x != other.key_p0_x) {

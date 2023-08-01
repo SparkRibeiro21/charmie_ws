@@ -1,0 +1,17 @@
+running develop
+running egg_info
+writing charmie_door_start.egg-info/PKG-INFO
+writing dependency_links to charmie_door_start.egg-info/dependency_links.txt
+writing entry points to charmie_door_start.egg-info/entry_points.txt
+writing requirements to charmie_door_start.egg-info/requires.txt
+writing top-level names to charmie_door_start.egg-info/top_level.txt
+reading manifest file 'charmie_door_start.egg-info/SOURCES.txt'
+writing manifest file 'charmie_door_start.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_door_start/lib/python3.8/site-packages/charmie-door-start.egg-link (link to .)
+Installing door_start script to /home/utilizador/charmie_ws/install/charmie_door_start/lib/charmie_door_start
+
+Installed /home/utilizador/charmie_ws/build/charmie_door_start
+running install_data
+copying resource/charmie_door_start -> /home/utilizador/charmie_ws/install/charmie_door_start/share/ament_index/resource_index/packages
+copying package.xml -> /home/utilizador/charmie_ws/install/charmie_door_start/share/charmie_door_start

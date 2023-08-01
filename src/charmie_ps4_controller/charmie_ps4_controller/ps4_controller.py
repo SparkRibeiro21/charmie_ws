@@ -3,6 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from charmie_interfaces.msg import PS4Controller
+from std_msgs.msg import Bool
 
 import math
 import numpy as np
@@ -477,6 +478,12 @@ class ControllerNode(Node):
         self.controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
 
         self.create_timer(0.05, self.timer_callback)
+
+        self.ps4_diagnostic_publisher = self.create_publisher(Bool, "ps4_diagnostic", 10)
+
+        flag_diagn = Bool()
+        flag_diagn.data = True
+        self.ps4_diagnostic_publisher.publish(flag_diagn)
 
         
     def timer_callback(self):

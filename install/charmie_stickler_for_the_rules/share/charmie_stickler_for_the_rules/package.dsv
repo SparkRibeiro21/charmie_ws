@@ -1,0 +1,9 @@
+source;share/charmie_stickler_for_the_rules/hook/pythonpath.ps1
+source;share/charmie_stickler_for_the_rules/hook/pythonpath.dsv
+source;share/charmie_stickler_for_the_rules/hook/pythonpath.sh
+source;share/charmie_stickler_for_the_rules/hook/ament_prefix_path.ps1
+source;share/charmie_stickler_for_the_rules/hook/ament_prefix_path.dsv
+source;share/charmie_stickler_for_the_rules/hook/ament_prefix_path.sh
+source;../../build/charmie_stickler_for_the_rules/share/charmie_stickler_for_the_rules/hook/pythonpath_develop.ps1
+source;../../build/charmie_stickler_for_the_rules/share/charmie_stickler_for_the_rules/hook/pythonpath_develop.dsv
+source;../../build/charmie_stickler_for_the_rules/share/charmie_stickler_for_the_rules/hook/pythonpath_develop.sh

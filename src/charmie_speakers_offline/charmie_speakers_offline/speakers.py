@@ -9,6 +9,8 @@ from charmie_interfaces.msg import RobotSpeech
 # from pathlib import Path
 import pyttsx3
 
+import subprocess
+import re
 
 class RobotSpeak():
     def __init__(self):
@@ -47,6 +49,29 @@ class RobotSpeak():
         # while pygame.mixer.music.get_busy():
         #     pass
         
+    
+    def get_active_speaker_info(self):
+        try:
+            output = subprocess.check_output(["pacmd", "list-sinks"]).decode()
+
+            active_port_match = re.search(r'active port:.*?<(.*?)>', output)
+            if active_port_match:
+                active_port = active_port_match.group(1).strip().lower()
+
+                print(f"Active Port: {active_port}")
+
+                if "headphones" in active_port:
+                    return "External"
+                elif "speaker" in active_port:
+                    return "Internal"
+
+            return "Unknown"
+
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return "Unknown"
+
+
+
 
 class SpeakerNode(Node):
 
@@ -57,6 +82,31 @@ class SpeakerNode(Node):
 
         self.speaker_command_subscriber = self.create_subscription(RobotSpeech, "speech_command", self.speaker_command_callback, 10)
         self.flag_speech_done_publisher = self.create_publisher(Bool, "flag_speech_done", 10)
+
+        self.speakers_offline_diagnostic_publisher = self.create_publisher(Bool, "speakers_offline_diagnostic", 10)
+        flag_diagn = Bool()
+        flag_diagn.data = True
+
+        
+        
+        print("\nOutput Sound Devices:")
+
+        active_speaker_type = self.charmie_speech.get_active_speaker_info()
+
+        if active_speaker_type != "Unknown":
+            print(f"The active speaker is: {active_speaker_type}")
+            self.get_logger().info(f"The active speaker is: {active_speaker_type}")
+            flag_diagn.data = True
+        else:
+            print("Unable to determine the active speaker.")
+            self.get_logger().info(f"The active speaker is: {active_speaker_type}")
+            flag_diagn.data = False
+
+        self.speakers_offline_diagnostic_publisher.publish(flag_diagn)
+
+        #self.print_speaker_names()
+
+        
         
     def speaker_command_callback(self, speech: RobotSpeech):
 
@@ -68,6 +118,18 @@ class SpeakerNode(Node):
         self.flag_speech_done_publisher.publish(flag)
         print("Finished Speaking.")
         self.get_logger().info("Finished Speaking")
+
+    """ def print_speaker_names(self):
+        devices = sd.query_devices()
+        speakers = [device['name'] for device in devices if 'output' in device['name'].lower()]
+
+        if not speakers:
+            print("No speakers found.")
+        else:
+            print("Available speakers:")
+            for idx, speaker in enumerate(speakers):
+                print(f"{idx + 1}. {speaker}") """
+
 
 
 def main(args=None):

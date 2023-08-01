@@ -18,8 +18,13 @@ charmie_interfaces__msg__Keypoints__init(charmie_interfaces__msg__Keypoints * ms
     return false;
   }
   // index_person
+  // x_person_relative
   // average_distance
   // standard_deviation
+  // box_topx_left
+  // box_topy_left
+  // box_width
+  // box_height
   // key_p0_x
   // key_p0_y
   // key_p1_x
@@ -64,8 +69,13 @@ charmie_interfaces__msg__Keypoints__fini(charmie_interfaces__msg__Keypoints * ms
     return;
   }
   // index_person
+  // x_person_relative
   // average_distance
   // standard_deviation
+  // box_topx_left
+  // box_topy_left
+  // box_width
+  // box_height
   // key_p0_x
   // key_p0_y
   // key_p1_x
@@ -112,12 +122,32 @@ charmie_interfaces__msg__Keypoints__are_equal(const charmie_interfaces__msg__Key
   if (lhs->index_person != rhs->index_person) {
     return false;
   }
+  // x_person_relative
+  if (lhs->x_person_relative != rhs->x_person_relative) {
+    return false;
+  }
   // average_distance
   if (lhs->average_distance != rhs->average_distance) {
     return false;
   }
   // standard_deviation
   if (lhs->standard_deviation != rhs->standard_deviation) {
+    return false;
+  }
+  // box_topx_left
+  if (lhs->box_topx_left != rhs->box_topx_left) {
+    return false;
+  }
+  // box_topy_left
+  if (lhs->box_topy_left != rhs->box_topy_left) {
+    return false;
+  }
+  // box_width
+  if (lhs->box_width != rhs->box_width) {
+    return false;
+  }
+  // box_height
+  if (lhs->box_height != rhs->box_height) {
     return false;
   }
   // key_p0_x
@@ -269,10 +299,20 @@ charmie_interfaces__msg__Keypoints__copy(
   }
   // index_person
   output->index_person = input->index_person;
+  // x_person_relative
+  output->x_person_relative = input->x_person_relative;
   // average_distance
   output->average_distance = input->average_distance;
   // standard_deviation
   output->standard_deviation = input->standard_deviation;
+  // box_topx_left
+  output->box_topx_left = input->box_topx_left;
+  // box_topy_left
+  output->box_topy_left = input->box_topy_left;
+  // box_width
+  output->box_width = input->box_width;
+  // box_height
+  output->box_height = input->box_height;
   // key_p0_x
   output->key_p0_x = input->key_p0_x;
   // key_p0_y
