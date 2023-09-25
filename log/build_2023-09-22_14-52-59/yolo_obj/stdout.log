@@ -1,0 +1,35 @@
+running egg_info
+creating ../../build/yolo_obj/yolo_obj.egg-info
+writing ../../build/yolo_obj/yolo_obj.egg-info/PKG-INFO
+writing dependency_links to ../../build/yolo_obj/yolo_obj.egg-info/dependency_links.txt
+writing entry points to ../../build/yolo_obj/yolo_obj.egg-info/entry_points.txt
+writing requirements to ../../build/yolo_obj/yolo_obj.egg-info/requires.txt
+writing top-level names to ../../build/yolo_obj/yolo_obj.egg-info/top_level.txt
+writing manifest file '../../build/yolo_obj/yolo_obj.egg-info/SOURCES.txt'
+reading manifest file '../../build/yolo_obj/yolo_obj.egg-info/SOURCES.txt'
+writing manifest file '../../build/yolo_obj/yolo_obj.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/utilizador/charmie_ws/build/yolo_obj/build
+creating /home/utilizador/charmie_ws/build/yolo_obj/build/lib
+creating /home/utilizador/charmie_ws/build/yolo_obj/build/lib/yolo_obj
+copying yolo_obj/__init__.py -> /home/utilizador/charmie_ws/build/yolo_obj/build/lib/yolo_obj
+copying yolo_obj/yolo_obj_node.py -> /home/utilizador/charmie_ws/build/yolo_obj/build/lib/yolo_obj
+running install
+running install_lib
+creating /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj
+copying /home/utilizador/charmie_ws/build/yolo_obj/build/lib/yolo_obj/__init__.py -> /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj
+copying /home/utilizador/charmie_ws/build/yolo_obj/build/lib/yolo_obj/yolo_obj_node.py -> /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj
+byte-compiling /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj/__init__.py to __init__.cpython-38.pyc
+byte-compiling /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj/yolo_obj_node.py to yolo_obj_node.cpython-38.pyc
+running install_data
+creating /home/utilizador/charmie_ws/install/yolo_obj/share/ament_index
+creating /home/utilizador/charmie_ws/install/yolo_obj/share/ament_index/resource_index
+creating /home/utilizador/charmie_ws/install/yolo_obj/share/ament_index/resource_index/packages
+copying resource/yolo_obj -> /home/utilizador/charmie_ws/install/yolo_obj/share/ament_index/resource_index/packages
+copying package.xml -> /home/utilizador/charmie_ws/install/yolo_obj/share/yolo_obj
+running install_egg_info
+Copying ../../build/yolo_obj/yolo_obj.egg-info to /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj-0.0.0-py3.8.egg-info
+running install_scripts
+Installing yolo_obj script to /home/utilizador/charmie_ws/install/yolo_obj/lib/yolo_obj
+writing list of installed files to '/home/utilizador/charmie_ws/build/yolo_obj/install.log'

@@ -7,5 +7,6 @@
 #include "realsense2_camera_msgs/srv/detail/device_info__struct.hpp"
 #include "realsense2_camera_msgs/srv/detail/device_info__builder.hpp"
 #include "realsense2_camera_msgs/srv/detail/device_info__traits.hpp"
+#include "realsense2_camera_msgs/srv/detail/device_info__type_support.hpp"
 
 #endif  // REALSENSE2_CAMERA_MSGS__SRV__DEVICE_INFO_HPP_

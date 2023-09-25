@@ -434,7 +434,7 @@ rcpputils_DIR:PATH=/opt/ros/foxy/share/rcpputils/cmake
 rcutils_DIR:PATH=/opt/ros/foxy/share/rcutils/cmake
 
 //The directory containing a CMake configuration file for realsense2.
-realsense2_DIR:PATH=/opt/ros/foxy/lib/x86_64-linux-gnu/cmake/realsense2
+realsense2_DIR:PATH=/usr/local/lib/cmake/realsense2
 
 //Value Computed by CMake
 realsense2_camera_BINARY_DIR:STATIC=/home/utilizador/charmie_ws/build/realsense2_camera

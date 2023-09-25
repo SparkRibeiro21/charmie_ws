@@ -1,6 +1,13 @@
 package.xml
 setup.cfg
 setup.py
+../../build/charmie_diagnostics/charmie_diagnostics.egg-info/PKG-INFO
+../../build/charmie_diagnostics/charmie_diagnostics.egg-info/SOURCES.txt
+../../build/charmie_diagnostics/charmie_diagnostics.egg-info/dependency_links.txt
+../../build/charmie_diagnostics/charmie_diagnostics.egg-info/entry_points.txt
+../../build/charmie_diagnostics/charmie_diagnostics.egg-info/requires.txt
+../../build/charmie_diagnostics/charmie_diagnostics.egg-info/top_level.txt
+../../build/charmie_diagnostics/charmie_diagnostics.egg-info/zip-safe
 charmie_diagnostics/__init__.py
 charmie_diagnostics/diagnostics.py
 charmie_diagnostics.egg-info/PKG-INFO

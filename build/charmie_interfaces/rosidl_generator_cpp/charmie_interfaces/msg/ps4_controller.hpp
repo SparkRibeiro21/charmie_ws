@@ -7,5 +7,6 @@
 #include "charmie_interfaces/msg/detail/ps4_controller__struct.hpp"
 #include "charmie_interfaces/msg/detail/ps4_controller__builder.hpp"
 #include "charmie_interfaces/msg/detail/ps4_controller__traits.hpp"
+#include "charmie_interfaces/msg/detail/ps4_controller__type_support.hpp"
 
 #endif  // CHARMIE_INTERFACES__MSG__PS4_CONTROLLER_HPP_

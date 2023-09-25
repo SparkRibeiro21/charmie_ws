@@ -1,0 +1,37 @@
+[2.430s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_localisation': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_localisation/prefix_override:/home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_localisation build --build-base /home/utilizador/charmie_ws/build/charmie_localisation/build install --record /home/utilizador/charmie_ws/build/charmie_localisation/install.log --single-version-externally-managed
+[2.818s] running egg_info
+[2.819s] creating ../../build/charmie_localisation/charmie_localisation.egg-info
+[2.819s] writing ../../build/charmie_localisation/charmie_localisation.egg-info/PKG-INFO
+[2.819s] writing dependency_links to ../../build/charmie_localisation/charmie_localisation.egg-info/dependency_links.txt
+[2.820s] writing entry points to ../../build/charmie_localisation/charmie_localisation.egg-info/entry_points.txt
+[2.820s] writing requirements to ../../build/charmie_localisation/charmie_localisation.egg-info/requires.txt
+[2.821s] writing top-level names to ../../build/charmie_localisation/charmie_localisation.egg-info/top_level.txt
+[2.822s] writing manifest file '../../build/charmie_localisation/charmie_localisation.egg-info/SOURCES.txt'
+[2.887s] reading manifest file '../../build/charmie_localisation/charmie_localisation.egg-info/SOURCES.txt'
+[2.888s] writing manifest file '../../build/charmie_localisation/charmie_localisation.egg-info/SOURCES.txt'
+[2.888s] running build
+[2.888s] running build_py
+[2.889s] creating /home/utilizador/charmie_ws/build/charmie_localisation/build
+[2.889s] creating /home/utilizador/charmie_ws/build/charmie_localisation/build/lib
+[2.890s] creating /home/utilizador/charmie_ws/build/charmie_localisation/build/lib/charmie_localisation
+[2.890s] copying charmie_localisation/__init__.py -> /home/utilizador/charmie_ws/build/charmie_localisation/build/lib/charmie_localisation
+[2.893s] copying charmie_localisation/localisation.py -> /home/utilizador/charmie_ws/build/charmie_localisation/build/lib/charmie_localisation
+[2.893s] running install
+[2.894s] running install_lib
+[2.895s] creating /home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages/charmie_localisation
+[2.895s] copying /home/utilizador/charmie_ws/build/charmie_localisation/build/lib/charmie_localisation/__init__.py -> /home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages/charmie_localisation
+[2.896s] copying /home/utilizador/charmie_ws/build/charmie_localisation/build/lib/charmie_localisation/localisation.py -> /home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages/charmie_localisation
+[2.896s] byte-compiling /home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages/charmie_localisation/__init__.py to __init__.cpython-38.pyc
+[2.902s] byte-compiling /home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages/charmie_localisation/localisation.py to localisation.cpython-38.pyc
+[2.903s] running install_data
+[2.903s] creating /home/utilizador/charmie_ws/install/charmie_localisation/share/ament_index
+[2.903s] creating /home/utilizador/charmie_ws/install/charmie_localisation/share/ament_index/resource_index
+[2.910s] creating /home/utilizador/charmie_ws/install/charmie_localisation/share/ament_index/resource_index/packages
+[2.910s] copying resource/charmie_localisation -> /home/utilizador/charmie_ws/install/charmie_localisation/share/ament_index/resource_index/packages
+[2.910s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_localisation/share/charmie_localisation
+[2.910s] running install_egg_info
+[2.913s] Copying ../../build/charmie_localisation/charmie_localisation.egg-info to /home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages/charmie_localisation-0.0.0-py3.8.egg-info
+[2.914s] running install_scripts
+[2.953s] Installing localisation script to /home/utilizador/charmie_ws/install/charmie_localisation/lib/charmie_localisation
+[2.955s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_localisation/install.log'
+[3.113s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_localisation' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_localisation/prefix_override:/home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_localisation build --build-base /home/utilizador/charmie_ws/build/charmie_localisation/build install --record /home/utilizador/charmie_ws/build/charmie_localisation/install.log --single-version-externally-managed

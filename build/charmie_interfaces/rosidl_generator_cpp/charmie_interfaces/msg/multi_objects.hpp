@@ -7,5 +7,6 @@
 #include "charmie_interfaces/msg/detail/multi_objects__struct.hpp"
 #include "charmie_interfaces/msg/detail/multi_objects__builder.hpp"
 #include "charmie_interfaces/msg/detail/multi_objects__traits.hpp"
+#include "charmie_interfaces/msg/detail/multi_objects__type_support.hpp"
 
 #endif  // CHARMIE_INTERFACES__MSG__MULTI_OBJECTS_HPP_

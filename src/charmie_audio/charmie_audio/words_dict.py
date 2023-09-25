@@ -1,34 +1,94 @@
-""" from FNR23 Tomar, Portugal
+# this variable is just to help to better visualise for debug purposes
+max_number_of_chars_of_keys = 16
+
+
 names_dict = {
-    "Amelia":    ["amelia", "emilia"],
-    "Angel":     ["angel"],
-    "Ava":       ["ava", "eva", "abba"],
-    "Charlie":   ["charlie", "shire lee", "sean"],
-    "Charlotte": ["charlotte", "char law", "sharhr law", "shah law"],
-    "Hunter":    ["hunter", "anther", "aunsel", "antard", "ulthur", "ontoad", "untired", "ansel", "andrew", "aunt", "anto"],
-    "Max":       ["max"],
-    "Mia":       ["mia"],
-    "Olivia":    ["olivia", "ali via", "olivea"],
-    "Parker":    ["parker", "parkel", "parko", "bart", "park"],
-    "Sam":       ["sam", "same", "some"],
-    "Jack":      ["jack", "jake", "zack", "zick", "zac"],
-    "Noah":      ["noah", "nore", "no", "noa"],
-    "Oliver":    ["oliver", "olive her"],
-    "Thomas":    ["thomas", "two miles"],
-    "William":   ["william"]
+    "Adel":     ["adel", "adele", "adam", "avel"],
+    "Angel":    ["angel", "anjo", "hell", "ahil", "anjou", "anjal", "hong kong", "zangal", "enzo" ],
+    "Axel":     ["axel", "oxford", "aksal", "hotel", "axo", "oxel, oxyl", "axil", "unhail", "oxo"],
+    "Charlie":  ["charlie", "shire lee", "sean", "shoutily", "chorley", "cherry"],
+    "Jane":     ["jane", "jan", "jain", "jame", "jani", "jainie"],
+    "John":     ["john", "jhong", "joe", "jopne", "joan"],
+    "Jules":    ["jules", "jews", "drews", "jewels", "julie"],
+    "Morgan":   ["morgan", "modern", "mardigan", "morgana", "mokkan", "maud", "modogan"],
+    "Paris":    ["paris", "berries", "ferries", "parish", "pari", "hari", "barry", "patrice", "paix"],
+    "Robin":    ["robin", "harbin", "robyn", "hobby", "hobean", "hohvin", "robon", "corbin", "haubin", "horven"],
+    "Simone":   ["simone", "simon", "simo", "siman"]
 }
-"""
 
-
-""" from FNR Tomar, Portugal
 drinks_dict = {
-    "7up": ["seven", "up", "7", "simon", "nope", "devanab", "savannah", "sabona"],
-	"IceTea": ["ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
-               "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
-               "an i.c.", "anasti", "aussie", "aesti", "esti"]
+    "Cola":          [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog"],
+    "OrangeJuice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order"],
+    "Milk":          ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok"],
+	"IceTea":        [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
+                    "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
+                    "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict"],
+    "JuicePack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
+                      "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank"],
+    "RedWine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
+    "TropicalJuice": ["tropical", "e-copic", "trophy dungeons", "tropi"]
 }
-"""
 
+foods_dict = {
+    "Tuna":            ["tuna"],
+    "TomatoSoup":      ["tomato"],
+    "Spam":            ["spam"],
+    "Mustard":         ["mustard"],    
+    "StrawberryJello": ["strawberry"],
+    "ChocolateJello":  ["chocolat", "jello"],
+    "CofeeGrounds":    ["coffee", "grounds"],
+
+    "Pear":            ["pear", "pair"],
+    "Plum":            ["plum"],
+    "Peach":           ["peach"],
+    "Lemon":           ["lemon"],
+    "Orange":          ["orange"],
+    "Banana":          ["banana"],
+    "Apple":           ["apple"],
+    "Strawberry":      ["strawberr"],
+
+    "Pringles":        ["pringles"],
+    "Cornflakes":      ["cornflakes"],
+    "Cheezit":         ["cheese", "cheezit"]
+}
+
+numbers_dict = {
+    "Zero":  ["0", "zero"],
+    "One":   ["1", "one"],
+    "Two":   ["2", "two"],
+    "Three": ["3", "three"],
+    "Four":  ["4", "four"],    
+    "Five":  ["5", "five"],
+    "Six":   ["6", "six"],
+    "Seven": ["7", "seven"],
+    "Eight": ["8", "eight"],
+    "Nine":  ["9", "nine"]   
+}
+
+stop_dict = {
+	"stop": ["stop", "arrive", "done"]
+}
+
+yes_no_dict = {
+	"yes": ["yes", "affirmative", "yup", "ok"],
+	"no":  ["no", "negative", "incorrect"]
+}
+# no already includes nope and not, since both these have 'no' in their words
+
+charmie_dict = {
+	"CHARMIE": ["robot", "sharmie", "sharmy", "sharami", "sharpie", "charlie", "tommy", "shahirmi", "sho",\
+                "charmy", "sharmic", "shirely", "shardomie", "sharmik", "charmic", "xiaomi", "sharme",\
+                "sharmi", "shower me", "shire me", "shatami", "chardon me", "shard me", "share me", "show me",\
+                "sharm", "charm", "shower me", "charlotte", "shout me", "shanna me", "shawnee", "charmida",\
+                "sure me", "ernie", "shar me", "sharp knee", "sharp me", "sharpening", "shireby", "jeremy",\
+                "army", "sharp", "army", "mean", "shot me", "shahdami", "shai to me", "shot of me", "shimey"\
+                "chardomie", "sir me", "shah mee", "sir", "shut up", "shahamid", "sha",  "shot", "shod", "shu"],
+	"SPARK":   ["spark", "park",  "parth", "tiago", "diego"]
+}
+
+
+
+"""   ---   from RoboCup23 Bordeaux, France   ---
 
 names_dict = {
     "Adel":     ["adel", "adele", "adam", "avel"],
@@ -42,7 +102,7 @@ names_dict = {
     "Paris":    ["paris", "berries", "ferries", "parish", "pari", "hari", "barry", "patrice", "paix"],
     "Robin":    ["robin", "harbin", "robyn", "hobby", "hobean", "hohvin", "robon", "corbin", "haubin", "horven"],
     "Simone":   ["simone", "simon", "simo", "siman"]
-    }
+}
 
 drinks_dict = {
     "Cola":          [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog"],
@@ -71,7 +131,6 @@ foods_dict = {
     "Peach": ["peach"],
     "Lemon": ["lemon"],
     # "Orange": ["orange"],
-    "Plum": ["plum"],
     "Banana": ["banana"],
     "Apple": ["apple"],
     "Strawberry": ["strawberr"],
@@ -81,22 +140,34 @@ foods_dict = {
     "Cheezit": ["cheese", "cheezit"]
 
 }
+"""
 
 
+"""   ---   from FNR23 Tomar, Portugal   ---
 
-yes_no_dict = {
-	"yes": ["yes", "affirmative", "yup"],
-	"no":  ["no", "negative", "incorrect"]
+names_dict = {
+    "Amelia":    ["amelia", "emilia"],
+    "Angel":     ["angel"],
+    "Ava":       ["ava", "eva", "abba"],
+    "Charlie":   ["charlie", "shire lee", "sean"],
+    "Charlotte": ["charlotte", "char law", "sharhr law", "shah law"],
+    "Hunter":    ["hunter", "anther", "aunsel", "antard", "ulthur", "ontoad", "untired", "ansel", "andrew", "aunt", "anto"],
+    "Max":       ["max"],
+    "Mia":       ["mia"],
+    "Olivia":    ["olivia", "ali via", "olivea"],
+    "Parker":    ["parker", "parkel", "parko", "bart", "park"],
+    "Sam":       ["sam", "same", "some"],
+    "Jack":      ["jack", "jake", "zack", "zick", "zac"],
+    "Noah":      ["noah", "nore", "no", "noa"],
+    "Oliver":    ["oliver", "olive her"],
+    "Thomas":    ["thomas", "two miles"],
+    "William":   ["william"]
 }
-# no already includes nope and not, since both these have 'no' in their words
 
-charmie_dict = {
-	"CHARMIE": ["robot", "sharmie", "sharmy", "sharami", "sharpie", "charlie", "tommy", "shahirmi", "sho",\
-                "charmy", "sharmic", "shirely", "shardomie", "sharmik", "charmic", "xiaomi", "sharme",\
-                "sharmi", "shower me", "shire me", "shatami", "chardon me", "shard me", "share me", "show me",\
-                "sharm", "charm", "shower me", "charlotte", "shout me", "shanna me", "shawnee", "charmida",\
-                "sure me", "ernie", "shar me", "sharp knee", "sharp me", "sharpening", "shireby", "jeremy",\
-                "army", "sharp", "army", "mean", "shot me", "shahdami", "shai to me", "shot of me", "shimey"\
-                "chardomie", "sir me", "shah mee", "sir", "shut up", "shahamid", "sha",  "shot", "shod", "shu"],
-	"SPARK":   ["spark", "park",  "parth", "tiago", "diego"]
+drinks_dict = {
+    "7up": ["seven", "up", "7", "simon", "nope", "devanab", "savannah", "sabona"],
+	"IceTea": ["ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
+               "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
+               "an i.c.", "anasti", "aussie", "aesti", "esti"]
 }
+"""

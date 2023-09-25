@@ -1,0 +1,37 @@
+[1.329s] Invoking command in '/home/utilizador/charmie_ws/src/yolo_obj': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/yolo_obj/prefix_override:/home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/yolo_obj build --build-base /home/utilizador/charmie_ws/build/yolo_obj/build install --record /home/utilizador/charmie_ws/build/yolo_obj/install.log --single-version-externally-managed
+[1.547s] running egg_info
+[1.547s] creating ../../build/yolo_obj/yolo_obj.egg-info
+[1.548s] writing ../../build/yolo_obj/yolo_obj.egg-info/PKG-INFO
+[1.548s] writing dependency_links to ../../build/yolo_obj/yolo_obj.egg-info/dependency_links.txt
+[1.548s] writing entry points to ../../build/yolo_obj/yolo_obj.egg-info/entry_points.txt
+[1.548s] writing requirements to ../../build/yolo_obj/yolo_obj.egg-info/requires.txt
+[1.548s] writing top-level names to ../../build/yolo_obj/yolo_obj.egg-info/top_level.txt
+[1.549s] writing manifest file '../../build/yolo_obj/yolo_obj.egg-info/SOURCES.txt'
+[1.583s] reading manifest file '../../build/yolo_obj/yolo_obj.egg-info/SOURCES.txt'
+[1.584s] writing manifest file '../../build/yolo_obj/yolo_obj.egg-info/SOURCES.txt'
+[1.584s] running build
+[1.584s] running build_py
+[1.584s] creating /home/utilizador/charmie_ws/build/yolo_obj/build
+[1.585s] creating /home/utilizador/charmie_ws/build/yolo_obj/build/lib
+[1.585s] creating /home/utilizador/charmie_ws/build/yolo_obj/build/lib/yolo_obj
+[1.585s] copying yolo_obj/__init__.py -> /home/utilizador/charmie_ws/build/yolo_obj/build/lib/yolo_obj
+[1.585s] copying yolo_obj/yolo_obj_node.py -> /home/utilizador/charmie_ws/build/yolo_obj/build/lib/yolo_obj
+[1.585s] running install
+[1.585s] running install_lib
+[1.586s] creating /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj
+[1.587s] copying /home/utilizador/charmie_ws/build/yolo_obj/build/lib/yolo_obj/__init__.py -> /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj
+[1.587s] copying /home/utilizador/charmie_ws/build/yolo_obj/build/lib/yolo_obj/yolo_obj_node.py -> /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj
+[1.587s] byte-compiling /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj/__init__.py to __init__.cpython-38.pyc
+[1.588s] byte-compiling /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj/yolo_obj_node.py to yolo_obj_node.cpython-38.pyc
+[1.589s] running install_data
+[1.590s] creating /home/utilizador/charmie_ws/install/yolo_obj/share/ament_index
+[1.590s] creating /home/utilizador/charmie_ws/install/yolo_obj/share/ament_index/resource_index
+[1.590s] creating /home/utilizador/charmie_ws/install/yolo_obj/share/ament_index/resource_index/packages
+[1.590s] copying resource/yolo_obj -> /home/utilizador/charmie_ws/install/yolo_obj/share/ament_index/resource_index/packages
+[1.590s] copying package.xml -> /home/utilizador/charmie_ws/install/yolo_obj/share/yolo_obj
+[1.590s] running install_egg_info
+[1.592s] Copying ../../build/yolo_obj/yolo_obj.egg-info to /home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages/yolo_obj-0.0.0-py3.8.egg-info
+[1.593s] running install_scripts
+[1.610s] Installing yolo_obj script to /home/utilizador/charmie_ws/install/yolo_obj/lib/yolo_obj
+[1.611s] writing list of installed files to '/home/utilizador/charmie_ws/build/yolo_obj/install.log'
+[1.646s] Invoked command in '/home/utilizador/charmie_ws/src/yolo_obj' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/yolo_obj/prefix_override:/home/utilizador/charmie_ws/install/yolo_obj/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/yolo_obj build --build-base /home/utilizador/charmie_ws/build/yolo_obj/build install --record /home/utilizador/charmie_ws/build/yolo_obj/install.log --single-version-externally-managed

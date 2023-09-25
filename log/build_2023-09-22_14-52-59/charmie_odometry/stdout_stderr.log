@@ -1,0 +1,35 @@
+running egg_info
+creating ../../build/charmie_odometry/charmie_odometry.egg-info
+writing ../../build/charmie_odometry/charmie_odometry.egg-info/PKG-INFO
+writing dependency_links to ../../build/charmie_odometry/charmie_odometry.egg-info/dependency_links.txt
+writing entry points to ../../build/charmie_odometry/charmie_odometry.egg-info/entry_points.txt
+writing requirements to ../../build/charmie_odometry/charmie_odometry.egg-info/requires.txt
+writing top-level names to ../../build/charmie_odometry/charmie_odometry.egg-info/top_level.txt
+writing manifest file '../../build/charmie_odometry/charmie_odometry.egg-info/SOURCES.txt'
+reading manifest file '../../build/charmie_odometry/charmie_odometry.egg-info/SOURCES.txt'
+writing manifest file '../../build/charmie_odometry/charmie_odometry.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/utilizador/charmie_ws/build/charmie_odometry/build
+creating /home/utilizador/charmie_ws/build/charmie_odometry/build/lib
+creating /home/utilizador/charmie_ws/build/charmie_odometry/build/lib/charmie_odometry
+copying charmie_odometry/__init__.py -> /home/utilizador/charmie_ws/build/charmie_odometry/build/lib/charmie_odometry
+copying charmie_odometry/odometry.py -> /home/utilizador/charmie_ws/build/charmie_odometry/build/lib/charmie_odometry
+running install
+running install_lib
+creating /home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages/charmie_odometry
+copying /home/utilizador/charmie_ws/build/charmie_odometry/build/lib/charmie_odometry/__init__.py -> /home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages/charmie_odometry
+copying /home/utilizador/charmie_ws/build/charmie_odometry/build/lib/charmie_odometry/odometry.py -> /home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages/charmie_odometry
+byte-compiling /home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages/charmie_odometry/__init__.py to __init__.cpython-38.pyc
+byte-compiling /home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages/charmie_odometry/odometry.py to odometry.cpython-38.pyc
+running install_data
+creating /home/utilizador/charmie_ws/install/charmie_odometry/share/ament_index
+creating /home/utilizador/charmie_ws/install/charmie_odometry/share/ament_index/resource_index
+creating /home/utilizador/charmie_ws/install/charmie_odometry/share/ament_index/resource_index/packages
+copying resource/charmie_odometry -> /home/utilizador/charmie_ws/install/charmie_odometry/share/ament_index/resource_index/packages
+copying package.xml -> /home/utilizador/charmie_ws/install/charmie_odometry/share/charmie_odometry
+running install_egg_info
+Copying ../../build/charmie_odometry/charmie_odometry.egg-info to /home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages/charmie_odometry-0.0.0-py3.8.egg-info
+running install_scripts
+Installing odometry script to /home/utilizador/charmie_ws/install/charmie_odometry/lib/charmie_odometry
+writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_odometry/install.log'

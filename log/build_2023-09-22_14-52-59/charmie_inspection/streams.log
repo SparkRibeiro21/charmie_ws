@@ -1,0 +1,39 @@
+[2.436s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_inspection': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_inspection/prefix_override:/home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_inspection build --build-base /home/utilizador/charmie_ws/build/charmie_inspection/build install --record /home/utilizador/charmie_ws/build/charmie_inspection/install.log --single-version-externally-managed
+[2.821s] running egg_info
+[2.827s] creating ../../build/charmie_inspection/charmie_inspection.egg-info
+[2.827s] writing ../../build/charmie_inspection/charmie_inspection.egg-info/PKG-INFO
+[2.827s] writing dependency_links to ../../build/charmie_inspection/charmie_inspection.egg-info/dependency_links.txt
+[2.827s] writing entry points to ../../build/charmie_inspection/charmie_inspection.egg-info/entry_points.txt
+[2.827s] writing requirements to ../../build/charmie_inspection/charmie_inspection.egg-info/requires.txt
+[2.828s] writing top-level names to ../../build/charmie_inspection/charmie_inspection.egg-info/top_level.txt
+[2.828s] writing manifest file '../../build/charmie_inspection/charmie_inspection.egg-info/SOURCES.txt'
+[2.889s] reading manifest file '../../build/charmie_inspection/charmie_inspection.egg-info/SOURCES.txt'
+[2.891s] writing manifest file '../../build/charmie_inspection/charmie_inspection.egg-info/SOURCES.txt'
+[2.892s] running build
+[2.892s] running build_py
+[2.893s] creating /home/utilizador/charmie_ws/build/charmie_inspection/build
+[2.893s] creating /home/utilizador/charmie_ws/build/charmie_inspection/build/lib
+[2.893s] creating /home/utilizador/charmie_ws/build/charmie_inspection/build/lib/charmie_inspection
+[2.893s] copying charmie_inspection/__init__.py -> /home/utilizador/charmie_ws/build/charmie_inspection/build/lib/charmie_inspection
+[2.894s] copying charmie_inspection/inspection.py -> /home/utilizador/charmie_ws/build/charmie_inspection/build/lib/charmie_inspection
+[2.894s] running install
+[2.894s] running install_lib
+[2.896s] creating /home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages/charmie_inspection
+[2.896s] copying /home/utilizador/charmie_ws/build/charmie_inspection/build/lib/charmie_inspection/__init__.py -> /home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages/charmie_inspection
+[2.897s] copying /home/utilizador/charmie_ws/build/charmie_inspection/build/lib/charmie_inspection/inspection.py -> /home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages/charmie_inspection
+[2.898s] byte-compiling /home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages/charmie_inspection/__init__.py to __init__.cpython-38.pyc
+[2.900s] byte-compiling /home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages/charmie_inspection/inspection.py to inspection.cpython-38.pyc
+[2.908s] running install_data
+[2.908s] creating /home/utilizador/charmie_ws/install/charmie_inspection/share/ament_index
+[2.908s] creating /home/utilizador/charmie_ws/install/charmie_inspection/share/ament_index/resource_index
+[2.908s] creating /home/utilizador/charmie_ws/install/charmie_inspection/share/ament_index/resource_index/packages
+[2.908s] copying resource/charmie_inspection -> /home/utilizador/charmie_ws/install/charmie_inspection/share/ament_index/resource_index/packages
+[2.908s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_inspection/share/charmie_inspection
+[2.909s] creating /home/utilizador/charmie_ws/install/charmie_inspection/share/charmie_inspection/launch
+[2.909s] copying launch/inspection_launch.launch.py -> /home/utilizador/charmie_ws/install/charmie_inspection/share/charmie_inspection/launch
+[2.909s] running install_egg_info
+[2.915s] Copying ../../build/charmie_inspection/charmie_inspection.egg-info to /home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages/charmie_inspection-0.0.0-py3.8.egg-info
+[2.915s] running install_scripts
+[2.943s] Installing inspection script to /home/utilizador/charmie_ws/install/charmie_inspection/lib/charmie_inspection
+[2.943s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_inspection/install.log'
+[3.061s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_inspection' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_inspection/prefix_override:/home/utilizador/charmie_ws/install/charmie_inspection/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_inspection build --build-base /home/utilizador/charmie_ws/build/charmie_inspection/build install --record /home/utilizador/charmie_ws/build/charmie_inspection/install.log --single-version-externally-managed

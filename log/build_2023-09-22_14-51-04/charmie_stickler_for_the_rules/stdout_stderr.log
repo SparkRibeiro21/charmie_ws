@@ -1,0 +1,35 @@
+running egg_info
+creating ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info
+writing ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/PKG-INFO
+writing dependency_links to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/dependency_links.txt
+writing entry points to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/entry_points.txt
+writing requirements to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/requires.txt
+writing top-level names to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/top_level.txt
+writing manifest file '../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+reading manifest file '../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+writing manifest file '../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build
+creating /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build/lib
+creating /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build/lib/charmie_stickler_for_the_rules
+copying charmie_stickler_for_the_rules/stickler_for_the_rules.py -> /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build/lib/charmie_stickler_for_the_rules
+copying charmie_stickler_for_the_rules/__init__.py -> /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build/lib/charmie_stickler_for_the_rules
+running install
+running install_lib
+creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules
+copying /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build/lib/charmie_stickler_for_the_rules/stickler_for_the_rules.py -> /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules
+copying /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build/lib/charmie_stickler_for_the_rules/__init__.py -> /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules
+byte-compiling /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules/stickler_for_the_rules.py to stickler_for_the_rules.cpython-38.pyc
+byte-compiling /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules/__init__.py to __init__.cpython-38.pyc
+running install_data
+creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index
+creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index/resource_index
+creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index/resource_index/packages
+copying resource/charmie_stickler_for_the_rules -> /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index/resource_index/packages
+copying package.xml -> /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/charmie_stickler_for_the_rules
+running install_egg_info
+Copying ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules-0.0.0-py3.8.egg-info
+running install_scripts
+Installing stickler_for_the_rules script to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/charmie_stickler_for_the_rules
+writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/install.log'

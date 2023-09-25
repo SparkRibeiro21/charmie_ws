@@ -1,0 +1,18 @@
+[0.983s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build --no-deps install_data
+[1.345s] running develop
+[1.527s] running egg_info
+[1.527s] writing charmie_stickler_for_the_rules.egg-info/PKG-INFO
+[1.527s] writing dependency_links to charmie_stickler_for_the_rules.egg-info/dependency_links.txt
+[1.527s] writing entry points to charmie_stickler_for_the_rules.egg-info/entry_points.txt
+[1.528s] writing requirements to charmie_stickler_for_the_rules.egg-info/requires.txt
+[1.528s] writing top-level names to charmie_stickler_for_the_rules.egg-info/top_level.txt
+[1.571s] reading manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[1.572s] writing manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[1.617s] running build_ext
+[1.617s] Creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/site.py
+[1.620s] Creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie-stickler-for-the-rules.egg-link (link to .)
+[1.620s] Installing stickler_for_the_rules script to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/charmie_stickler_for_the_rules
+[1.621s] 
+[1.621s] Installed /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules
+[1.621s] running install_data
+[1.670s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build --no-deps install_data

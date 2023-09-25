@@ -7,5 +7,6 @@
 #include "charmie_interfaces/msg/detail/keypoints__struct.hpp"
 #include "charmie_interfaces/msg/detail/keypoints__builder.hpp"
 #include "charmie_interfaces/msg/detail/keypoints__traits.hpp"
+#include "charmie_interfaces/msg/detail/keypoints__type_support.hpp"
 
 #endif  // CHARMIE_INTERFACES__MSG__KEYPOINTS_HPP_

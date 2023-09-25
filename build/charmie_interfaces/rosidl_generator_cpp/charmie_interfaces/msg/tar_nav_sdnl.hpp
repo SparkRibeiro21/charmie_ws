@@ -7,5 +7,6 @@
 #include "charmie_interfaces/msg/detail/tar_nav_sdnl__struct.hpp"
 #include "charmie_interfaces/msg/detail/tar_nav_sdnl__builder.hpp"
 #include "charmie_interfaces/msg/detail/tar_nav_sdnl__traits.hpp"
+#include "charmie_interfaces/msg/detail/tar_nav_sdnl__type_support.hpp"
 
 #endif  // CHARMIE_INTERFACES__MSG__TAR_NAV_SDNL_HPP_

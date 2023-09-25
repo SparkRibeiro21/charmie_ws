@@ -1,0 +1,16 @@
+running develop
+running egg_info
+writing charmie_stickler_for_the_rules.egg-info/PKG-INFO
+writing dependency_links to charmie_stickler_for_the_rules.egg-info/dependency_links.txt
+writing entry points to charmie_stickler_for_the_rules.egg-info/entry_points.txt
+writing requirements to charmie_stickler_for_the_rules.egg-info/requires.txt
+writing top-level names to charmie_stickler_for_the_rules.egg-info/top_level.txt
+reading manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+writing manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/site.py
+Creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie-stickler-for-the-rules.egg-link (link to .)
+Installing stickler_for_the_rules script to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/charmie_stickler_for_the_rules
+
+Installed /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules
+running install_data

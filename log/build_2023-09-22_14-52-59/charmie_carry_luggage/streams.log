@@ -1,0 +1,39 @@
+[2.475s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_carry_luggage': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_carry_luggage/prefix_override:/home/utilizador/charmie_ws/install/charmie_carry_luggage/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_carry_luggage build --build-base /home/utilizador/charmie_ws/build/charmie_carry_luggage/build install --record /home/utilizador/charmie_ws/build/charmie_carry_luggage/install.log --single-version-externally-managed
+[2.856s] running egg_info
+[2.857s] creating ../../build/charmie_carry_luggage/charmie_carry_luggage.egg-info
+[2.858s] writing ../../build/charmie_carry_luggage/charmie_carry_luggage.egg-info/PKG-INFO
+[2.858s] writing dependency_links to ../../build/charmie_carry_luggage/charmie_carry_luggage.egg-info/dependency_links.txt
+[2.858s] writing entry points to ../../build/charmie_carry_luggage/charmie_carry_luggage.egg-info/entry_points.txt
+[2.859s] writing requirements to ../../build/charmie_carry_luggage/charmie_carry_luggage.egg-info/requires.txt
+[2.859s] writing top-level names to ../../build/charmie_carry_luggage/charmie_carry_luggage.egg-info/top_level.txt
+[2.861s] writing manifest file '../../build/charmie_carry_luggage/charmie_carry_luggage.egg-info/SOURCES.txt'
+[2.922s] reading manifest file '../../build/charmie_carry_luggage/charmie_carry_luggage.egg-info/SOURCES.txt'
+[2.925s] writing manifest file '../../build/charmie_carry_luggage/charmie_carry_luggage.egg-info/SOURCES.txt'
+[2.925s] running build
+[2.925s] running build_py
+[2.925s] creating /home/utilizador/charmie_ws/build/charmie_carry_luggage/build
+[2.925s] creating /home/utilizador/charmie_ws/build/charmie_carry_luggage/build/lib
+[2.925s] creating /home/utilizador/charmie_ws/build/charmie_carry_luggage/build/lib/charmie_carry_luggage
+[2.926s] copying charmie_carry_luggage/__init__.py -> /home/utilizador/charmie_ws/build/charmie_carry_luggage/build/lib/charmie_carry_luggage
+[2.926s] copying charmie_carry_luggage/carry_my_luggage.py -> /home/utilizador/charmie_ws/build/charmie_carry_luggage/build/lib/charmie_carry_luggage
+[2.926s] running install
+[2.928s] running install_lib
+[2.933s] creating /home/utilizador/charmie_ws/install/charmie_carry_luggage/lib/python3.8/site-packages/charmie_carry_luggage
+[2.933s] copying /home/utilizador/charmie_ws/build/charmie_carry_luggage/build/lib/charmie_carry_luggage/__init__.py -> /home/utilizador/charmie_ws/install/charmie_carry_luggage/lib/python3.8/site-packages/charmie_carry_luggage
+[2.933s] copying /home/utilizador/charmie_ws/build/charmie_carry_luggage/build/lib/charmie_carry_luggage/carry_my_luggage.py -> /home/utilizador/charmie_ws/install/charmie_carry_luggage/lib/python3.8/site-packages/charmie_carry_luggage
+[2.933s] byte-compiling /home/utilizador/charmie_ws/install/charmie_carry_luggage/lib/python3.8/site-packages/charmie_carry_luggage/__init__.py to __init__.cpython-38.pyc
+[2.935s] byte-compiling /home/utilizador/charmie_ws/install/charmie_carry_luggage/lib/python3.8/site-packages/charmie_carry_luggage/carry_my_luggage.py to carry_my_luggage.cpython-38.pyc
+[2.948s] running install_data
+[2.950s] creating /home/utilizador/charmie_ws/install/charmie_carry_luggage/share/ament_index
+[2.950s] creating /home/utilizador/charmie_ws/install/charmie_carry_luggage/share/ament_index/resource_index
+[2.950s] creating /home/utilizador/charmie_ws/install/charmie_carry_luggage/share/ament_index/resource_index/packages
+[2.950s] copying resource/charmie_carry_luggage -> /home/utilizador/charmie_ws/install/charmie_carry_luggage/share/ament_index/resource_index/packages
+[2.950s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_carry_luggage/share/charmie_carry_luggage
+[2.950s] creating /home/utilizador/charmie_ws/install/charmie_carry_luggage/share/charmie_carry_luggage/launch
+[2.950s] copying launch/carry_luggage_launch.launch.py -> /home/utilizador/charmie_ws/install/charmie_carry_luggage/share/charmie_carry_luggage/launch
+[2.951s] running install_egg_info
+[2.952s] Copying ../../build/charmie_carry_luggage/charmie_carry_luggage.egg-info to /home/utilizador/charmie_ws/install/charmie_carry_luggage/lib/python3.8/site-packages/charmie_carry_luggage-0.0.0-py3.8.egg-info
+[2.952s] running install_scripts
+[2.977s] Installing carry_my_luggage script to /home/utilizador/charmie_ws/install/charmie_carry_luggage/lib/charmie_carry_luggage
+[2.977s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_carry_luggage/install.log'
+[3.100s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_carry_luggage' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_carry_luggage/prefix_override:/home/utilizador/charmie_ws/install/charmie_carry_luggage/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_carry_luggage build --build-base /home/utilizador/charmie_ws/build/charmie_carry_luggage/build install --record /home/utilizador/charmie_ws/build/charmie_carry_luggage/install.log --single-version-externally-managed

@@ -7,5 +7,6 @@
 #include "charmie_interfaces/msg/detail/speech_type__struct.hpp"
 #include "charmie_interfaces/msg/detail/speech_type__builder.hpp"
 #include "charmie_interfaces/msg/detail/speech_type__traits.hpp"
+#include "charmie_interfaces/msg/detail/speech_type__type_support.hpp"
 
 #endif  // CHARMIE_INTERFACES__MSG__SPEECH_TYPE_HPP_

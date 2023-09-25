@@ -7,5 +7,6 @@
 #include "charmie_interfaces/msg/detail/yolov8_pose__struct.hpp"
 #include "charmie_interfaces/msg/detail/yolov8_pose__builder.hpp"
 #include "charmie_interfaces/msg/detail/yolov8_pose__traits.hpp"
+#include "charmie_interfaces/msg/detail/yolov8_pose__type_support.hpp"
 
 #endif  // CHARMIE_INTERFACES__MSG__YOLOV8_POSE_HPP_

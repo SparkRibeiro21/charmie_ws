@@ -1,0 +1,21 @@
+[2.366s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_speakers': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_speakers/prefix_override:/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_speakers build --build-base /home/utilizador/charmie_ws/build/charmie_speakers/build install --record /home/utilizador/charmie_ws/build/charmie_speakers/install.log --single-version-externally-managed
+[2.765s] running egg_info
+[2.766s] writing ../../build/charmie_speakers/charmie_speakers.egg-info/PKG-INFO
+[2.767s] writing dependency_links to ../../build/charmie_speakers/charmie_speakers.egg-info/dependency_links.txt
+[2.767s] writing entry points to ../../build/charmie_speakers/charmie_speakers.egg-info/entry_points.txt
+[2.768s] writing requirements to ../../build/charmie_speakers/charmie_speakers.egg-info/requires.txt
+[2.768s] writing top-level names to ../../build/charmie_speakers/charmie_speakers.egg-info/top_level.txt
+[2.836s] reading manifest file '../../build/charmie_speakers/charmie_speakers.egg-info/SOURCES.txt'
+[2.838s] writing manifest file '../../build/charmie_speakers/charmie_speakers.egg-info/SOURCES.txt'
+[2.838s] running build
+[2.838s] running build_py
+[2.838s] running install
+[2.840s] running install_lib
+[2.843s] running install_data
+[2.843s] running install_egg_info
+[2.846s] removing '/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages/charmie_speakers-0.0.0-py3.8.egg-info' (and everything under it)
+[2.846s] Copying ../../build/charmie_speakers/charmie_speakers.egg-info to /home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages/charmie_speakers-0.0.0-py3.8.egg-info
+[2.848s] running install_scripts
+[2.877s] Installing speakers script to /home/utilizador/charmie_ws/install/charmie_speakers/lib/charmie_speakers
+[2.890s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_speakers/install.log'
+[2.967s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_speakers' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_speakers/prefix_override:/home/utilizador/charmie_ws/install/charmie_speakers/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_speakers build --build-base /home/utilizador/charmie_ws/build/charmie_speakers/build install --record /home/utilizador/charmie_ws/build/charmie_speakers/install.log --single-version-externally-managed

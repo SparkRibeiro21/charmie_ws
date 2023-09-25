@@ -1,6 +1,13 @@
 package.xml
 setup.cfg
 setup.py
+../../build/charmie_door_start/charmie_door_start.egg-info/PKG-INFO
+../../build/charmie_door_start/charmie_door_start.egg-info/SOURCES.txt
+../../build/charmie_door_start/charmie_door_start.egg-info/dependency_links.txt
+../../build/charmie_door_start/charmie_door_start.egg-info/entry_points.txt
+../../build/charmie_door_start/charmie_door_start.egg-info/requires.txt
+../../build/charmie_door_start/charmie_door_start.egg-info/top_level.txt
+../../build/charmie_door_start/charmie_door_start.egg-info/zip-safe
 charmie_door_start/__init__.py
 charmie_door_start/door_start.py
 charmie_door_start.egg-info/PKG-INFO

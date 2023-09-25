@@ -259,7 +259,7 @@ librealsense2_camera.so: CMakeFiles/realsense2_camera.dir/src/image_publisher.cp
 librealsense2_camera.so: CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o
 librealsense2_camera.so: CMakeFiles/realsense2_camera.dir/src/ros_param_backend_foxy.cpp.o
 librealsense2_camera.so: CMakeFiles/realsense2_camera.dir/build.make
-librealsense2_camera.so: /opt/ros/foxy/lib/x86_64-linux-gnu/librealsense2.so.2.51.1
+librealsense2_camera.so: /usr/local/lib/librealsense2.so.2.54.1
 librealsense2_camera.so: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_introspection_c.so
 librealsense2_camera.so: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_c.so
 librealsense2_camera.so: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_introspection_cpp.so
@@ -349,6 +349,7 @@ librealsense2_camera.so: /opt/ros/foxy/lib/libclass_loader.so
 librealsense2_camera.so: /opt/ros/foxy/lib/librcutils.so
 librealsense2_camera.so: /opt/ros/foxy/lib/librcpputils.so
 librealsense2_camera.so: /usr/lib/x86_64-linux-gnu/libtinyxml2.so
+librealsense2_camera.so: /usr/local/lib/librsutils.a
 librealsense2_camera.so: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_generator_c.so
 librealsense2_camera.so: /opt/ros/foxy/lib/libnav_msgs__rosidl_generator_c.so
 librealsense2_camera.so: /opt/ros/foxy/lib/libcomponent_manager.so

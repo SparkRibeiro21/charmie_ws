@@ -7,5 +7,6 @@
 #include "charmie_interfaces/msg/detail/example_tr__struct.hpp"
 #include "charmie_interfaces/msg/detail/example_tr__builder.hpp"
 #include "charmie_interfaces/msg/detail/example_tr__traits.hpp"
+#include "charmie_interfaces/msg/detail/example_tr__type_support.hpp"
 
 #endif  // CHARMIE_INTERFACES__MSG__EXAMPLE_TR_HPP_

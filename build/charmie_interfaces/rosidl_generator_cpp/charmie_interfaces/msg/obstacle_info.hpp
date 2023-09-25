@@ -7,5 +7,6 @@
 #include "charmie_interfaces/msg/detail/obstacle_info__struct.hpp"
 #include "charmie_interfaces/msg/detail/obstacle_info__builder.hpp"
 #include "charmie_interfaces/msg/detail/obstacle_info__traits.hpp"
+#include "charmie_interfaces/msg/detail/obstacle_info__type_support.hpp"
 
 #endif  // CHARMIE_INTERFACES__MSG__OBSTACLE_INFO_HPP_

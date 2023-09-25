@@ -7,5 +7,6 @@
 #include "charmie_interfaces/msg/detail/robot_speech__struct.hpp"
 #include "charmie_interfaces/msg/detail/robot_speech__builder.hpp"
 #include "charmie_interfaces/msg/detail/robot_speech__traits.hpp"
+#include "charmie_interfaces/msg/detail/robot_speech__type_support.hpp"
 
 #endif  // CHARMIE_INTERFACES__MSG__ROBOT_SPEECH_HPP_

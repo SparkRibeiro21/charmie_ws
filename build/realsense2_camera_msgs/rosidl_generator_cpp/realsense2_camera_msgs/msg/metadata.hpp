@@ -7,5 +7,6 @@
 #include "realsense2_camera_msgs/msg/detail/metadata__struct.hpp"
 #include "realsense2_camera_msgs/msg/detail/metadata__builder.hpp"
 #include "realsense2_camera_msgs/msg/detail/metadata__traits.hpp"
+#include "realsense2_camera_msgs/msg/detail/metadata__type_support.hpp"
 
 #endif  // REALSENSE2_CAMERA_MSGS__MSG__METADATA_HPP_

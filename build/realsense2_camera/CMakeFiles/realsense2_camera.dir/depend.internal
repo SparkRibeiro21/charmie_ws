@@ -5,18 +5,23 @@ CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/extrinsics.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/imu_info.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/metadata.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/device_info.hpp
  /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include/base_realsense_node.h
  /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include/constants.h
@@ -32,22 +37,28 @@ CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
  /opt/ros/foxy/include/cv_bridge/cv_bridge.h
  /opt/ros/foxy/include/cv_bridge/cv_bridge_export.h
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/key_value__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_array.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_status.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_status_wrapper.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_updater.hpp
  /opt/ros/foxy/include/diagnostic_updater/publisher.hpp
@@ -59,6 +70,7 @@ CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_with_covariance__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_with_covariance__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/quaternion__struct.hpp
@@ -68,6 +80,7 @@ CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist_with_covariance__struct.hpp
@@ -75,6 +88,7 @@ CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/pose_stamped.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/transform_stamped.hpp
  /opt/ros/foxy/include/image_transport/camera_publisher.hpp
  /opt/ros/foxy/include/image_transport/camera_subscriber.hpp
@@ -87,32 +101,6 @@ CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o
  /opt/ros/foxy/include/image_transport/subscriber.hpp
  /opt/ros/foxy/include/image_transport/transport_hints.hpp
  /opt/ros/foxy/include/image_transport/visibility_control.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_advanced_mode_command.h
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_serializable_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rs_advanced_mode.h
- /opt/ros/foxy/include/librealsense2/rs_advanced_mode.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -126,7 +114,9 @@ CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__builder.hpp
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__struct.hpp
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__traits.hpp
+ /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__type_support.hpp
  /opt/ros/foxy/include/nav_msgs/msg/odometry.hpp
+ /opt/ros/foxy/include/nav_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl/allocator.h
  /opt/ros/foxy/include/rcl/arguments.h
  /opt/ros/foxy/include/rcl/client.h
@@ -155,50 +145,64 @@ CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -381,29 +385,37 @@ CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_field__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__traits.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/image.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/imu.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/point_cloud2.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__struct.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__traits.hpp
  /opt/ros/foxy/include/tf2/LinearMath/MinMax.h
@@ -415,6 +427,8 @@ CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__builder.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__struct.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__traits.hpp
+ /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__type_support.hpp
+ /opt/ros/foxy/include/tf2_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/tf_message.hpp
  /opt/ros/foxy/include/tf2_ros/qos.hpp
  /opt/ros/foxy/include/tf2_ros/static_transform_broadcaster.h
@@ -566,33 +580,14 @@ CMakeFiles/realsense2_camera.dir/src/dynamic_params.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -631,50 +626,64 @@ CMakeFiles/realsense2_camera.dir/src/dynamic_params.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -854,8 +863,10 @@ CMakeFiles/realsense2_camera.dir/src/dynamic_params.cpp.o
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/tracetools/config.h
  /opt/ros/foxy/include/tracetools/tracetools.h
  /opt/ros/foxy/include/tracetools/utils.hpp
@@ -866,10 +877,13 @@ CMakeFiles/realsense2_camera.dir/src/image_publisher.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
  /opt/ros/foxy/include/image_transport/camera_publisher.hpp
  /opt/ros/foxy/include/image_transport/camera_subscriber.hpp
@@ -920,50 +934,64 @@ CMakeFiles/realsense2_camera.dir/src/image_publisher.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -1144,17 +1172,22 @@ CMakeFiles/realsense2_camera.dir/src/image_publisher.cpp.o
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__traits.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/image.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__struct.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__traits.hpp
  /opt/ros/foxy/include/tracetools/config.h
@@ -1174,45 +1207,29 @@ CMakeFiles/realsense2_camera.dir/src/named_filter.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/key_value__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_array.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_status.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_status_wrapper.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_updater.hpp
  /opt/ros/foxy/include/diagnostic_updater/update_functions.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -1251,50 +1268,64 @@ CMakeFiles/realsense2_camera.dir/src/named_filter.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -1475,14 +1506,18 @@ CMakeFiles/realsense2_camera.dir/src/named_filter.cpp.o
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_field__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/point_cloud2.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/sensor_msgs/point_cloud2_iterator.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__struct.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__traits.hpp
  /opt/ros/foxy/include/tracetools/config.h
@@ -1493,18 +1528,23 @@ CMakeFiles/realsense2_camera.dir/src/parameters.cpp.o
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/extrinsics.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/imu_info.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/metadata.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/device_info.hpp
  /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include/base_realsense_node.h
  /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include/constants.h
@@ -1519,22 +1559,28 @@ CMakeFiles/realsense2_camera.dir/src/parameters.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
  /opt/ros/foxy/include/cv_bridge/cv_bridge.h
  /opt/ros/foxy/include/cv_bridge/cv_bridge_export.h
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/key_value__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_array.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_status.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_status_wrapper.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_updater.hpp
  /opt/ros/foxy/include/diagnostic_updater/publisher.hpp
@@ -1546,6 +1592,7 @@ CMakeFiles/realsense2_camera.dir/src/parameters.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_with_covariance__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_with_covariance__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/quaternion__struct.hpp
@@ -1555,6 +1602,7 @@ CMakeFiles/realsense2_camera.dir/src/parameters.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist_with_covariance__struct.hpp
@@ -1562,33 +1610,8 @@ CMakeFiles/realsense2_camera.dir/src/parameters.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/pose_stamped.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/transform_stamped.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_advanced_mode_command.h
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_serializable_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rs_advanced_mode.h
- /opt/ros/foxy/include/librealsense2/rs_advanced_mode.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -1602,7 +1625,9 @@ CMakeFiles/realsense2_camera.dir/src/parameters.cpp.o
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__builder.hpp
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__struct.hpp
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__traits.hpp
+ /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__type_support.hpp
  /opt/ros/foxy/include/nav_msgs/msg/odometry.hpp
+ /opt/ros/foxy/include/nav_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl/allocator.h
  /opt/ros/foxy/include/rcl/arguments.h
  /opt/ros/foxy/include/rcl/client.h
@@ -1631,50 +1656,64 @@ CMakeFiles/realsense2_camera.dir/src/parameters.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -1857,29 +1896,37 @@ CMakeFiles/realsense2_camera.dir/src/parameters.cpp.o
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_field__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__traits.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/image.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/imu.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/point_cloud2.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__struct.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__traits.hpp
  /opt/ros/foxy/include/tf2/LinearMath/MinMax.h
@@ -1891,6 +1938,8 @@ CMakeFiles/realsense2_camera.dir/src/parameters.cpp.o
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__builder.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__struct.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__traits.hpp
+ /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__type_support.hpp
+ /opt/ros/foxy/include/tf2_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/tf_message.hpp
  /opt/ros/foxy/include/tf2_ros/qos.hpp
  /opt/ros/foxy/include/tf2_ros/static_transform_broadcaster.h
@@ -2044,33 +2093,14 @@ CMakeFiles/realsense2_camera.dir/src/profile_manager.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -2109,50 +2139,64 @@ CMakeFiles/realsense2_camera.dir/src/profile_manager.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -2332,8 +2376,10 @@ CMakeFiles/realsense2_camera.dir/src/profile_manager.cpp.o
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/tracetools/config.h
  /opt/ros/foxy/include/tracetools/tracetools.h
  /opt/ros/foxy/include/tracetools/utils.hpp
@@ -2342,18 +2388,23 @@ CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/extrinsics.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/imu_info.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/metadata.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/device_info.hpp
  /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include/base_realsense_node.h
  /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include/constants.h
@@ -2369,10 +2420,13 @@ CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
  /opt/ros/foxy/include/class_loader/class_loader.hpp
  /opt/ros/foxy/include/class_loader/class_loader_core.hpp
@@ -2387,12 +2441,15 @@ CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/key_value__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_array.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_status.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_status_wrapper.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_updater.hpp
  /opt/ros/foxy/include/diagnostic_updater/publisher.hpp
@@ -2404,6 +2461,7 @@ CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_with_covariance__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_with_covariance__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/quaternion__struct.hpp
@@ -2413,6 +2471,7 @@ CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist_with_covariance__struct.hpp
@@ -2420,33 +2479,8 @@ CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/pose_stamped.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/transform_stamped.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_advanced_mode_command.h
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_serializable_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rs_advanced_mode.h
- /opt/ros/foxy/include/librealsense2/rs_advanced_mode.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -2460,7 +2494,9 @@ CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__builder.hpp
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__struct.hpp
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__traits.hpp
+ /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__type_support.hpp
  /opt/ros/foxy/include/nav_msgs/msg/odometry.hpp
+ /opt/ros/foxy/include/nav_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl/allocator.h
  /opt/ros/foxy/include/rcl/arguments.h
  /opt/ros/foxy/include/rcl/client.h
@@ -2489,50 +2525,64 @@ CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -2722,29 +2772,37 @@ CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_field__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__traits.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/image.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/imu.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/point_cloud2.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__struct.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__traits.hpp
  /opt/ros/foxy/include/tf2/LinearMath/MinMax.h
@@ -2756,6 +2814,8 @@ CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__builder.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__struct.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__traits.hpp
+ /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__type_support.hpp
+ /opt/ros/foxy/include/tf2_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/tf_message.hpp
  /opt/ros/foxy/include/tf2_ros/qos.hpp
  /opt/ros/foxy/include/tf2_ros/static_transform_broadcaster.h
@@ -2904,10 +2964,13 @@ CMakeFiles/realsense2_camera.dir/src/ros_param_backend_foxy.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
@@ -2947,50 +3010,64 @@ CMakeFiles/realsense2_camera.dir/src/ros_param_backend_foxy.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -3170,8 +3247,10 @@ CMakeFiles/realsense2_camera.dir/src/ros_param_backend_foxy.cpp.o
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/tracetools/config.h
  /opt/ros/foxy/include/tracetools/tracetools.h
  /opt/ros/foxy/include/tracetools/utils.hpp
@@ -3188,45 +3267,29 @@ CMakeFiles/realsense2_camera.dir/src/ros_sensor.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/key_value__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_array.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_status.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_status_wrapper.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_updater.hpp
  /opt/ros/foxy/include/diagnostic_updater/update_functions.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -3265,50 +3328,64 @@ CMakeFiles/realsense2_camera.dir/src/ros_sensor.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -3488,8 +3565,10 @@ CMakeFiles/realsense2_camera.dir/src/ros_sensor.cpp.o
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__struct.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__traits.hpp
  /opt/ros/foxy/include/tracetools/config.h
@@ -3502,33 +3581,14 @@ CMakeFiles/realsense2_camera.dir/src/ros_utils.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -3567,50 +3627,64 @@ CMakeFiles/realsense2_camera.dir/src/ros_utils.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -3790,8 +3864,10 @@ CMakeFiles/realsense2_camera.dir/src/ros_utils.cpp.o
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/tracetools/config.h
  /opt/ros/foxy/include/tracetools/tracetools.h
  /opt/ros/foxy/include/tracetools/utils.hpp
@@ -3800,18 +3876,23 @@ CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/extrinsics.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/imu_info.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/metadata.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/device_info.hpp
  /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include/base_realsense_node.h
  /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include/constants.h
@@ -3827,22 +3908,28 @@ CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
  /opt/ros/foxy/include/cv_bridge/cv_bridge.h
  /opt/ros/foxy/include/cv_bridge/cv_bridge_export.h
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/key_value__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_array.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_status.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_status_wrapper.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_updater.hpp
  /opt/ros/foxy/include/diagnostic_updater/publisher.hpp
@@ -3854,6 +3941,7 @@ CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_with_covariance__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_with_covariance__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/quaternion__struct.hpp
@@ -3863,6 +3951,7 @@ CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist_with_covariance__struct.hpp
@@ -3870,6 +3959,7 @@ CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/pose_stamped.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/transform_stamped.hpp
  /opt/ros/foxy/include/image_transport/camera_publisher.hpp
  /opt/ros/foxy/include/image_transport/camera_subscriber.hpp
@@ -3882,32 +3972,6 @@ CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o
  /opt/ros/foxy/include/image_transport/subscriber.hpp
  /opt/ros/foxy/include/image_transport/transport_hints.hpp
  /opt/ros/foxy/include/image_transport/visibility_control.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_advanced_mode_command.h
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_serializable_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rs_advanced_mode.h
- /opt/ros/foxy/include/librealsense2/rs_advanced_mode.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -3921,7 +3985,9 @@ CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__builder.hpp
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__struct.hpp
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__traits.hpp
+ /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__type_support.hpp
  /opt/ros/foxy/include/nav_msgs/msg/odometry.hpp
+ /opt/ros/foxy/include/nav_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl/allocator.h
  /opt/ros/foxy/include/rcl/arguments.h
  /opt/ros/foxy/include/rcl/client.h
@@ -3950,50 +4016,64 @@ CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -4176,29 +4256,37 @@ CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_field__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__traits.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/image.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/imu.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/point_cloud2.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__struct.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__traits.hpp
  /opt/ros/foxy/include/tf2/LinearMath/MinMax.h
@@ -4210,6 +4298,8 @@ CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__builder.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__struct.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__traits.hpp
+ /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__type_support.hpp
+ /opt/ros/foxy/include/tf2_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/tf_message.hpp
  /opt/ros/foxy/include/tf2_ros/qos.hpp
  /opt/ros/foxy/include/tf2_ros/static_transform_broadcaster.h
@@ -4362,33 +4452,14 @@ CMakeFiles/realsense2_camera.dir/src/sensor_params.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -4427,50 +4498,64 @@ CMakeFiles/realsense2_camera.dir/src/sensor_params.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -4650,8 +4735,10 @@ CMakeFiles/realsense2_camera.dir/src/sensor_params.cpp.o
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/tracetools/config.h
  /opt/ros/foxy/include/tracetools/tracetools.h
  /opt/ros/foxy/include/tracetools/utils.hpp
@@ -4660,18 +4747,23 @@ CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/extrinsics.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/imu_info.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/metadata.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__builder.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__struct.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__traits.hpp
+ /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__type_support.hpp
  /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/device_info.hpp
  /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include/base_realsense_node.h
  /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include/constants.h
@@ -4686,22 +4778,28 @@ CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/duration__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__builder.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__struct.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__traits.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/detail/time__type_support.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/duration.hpp
+ /opt/ros/foxy/include/builtin_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/builtin_interfaces/msg/time.hpp
  /opt/ros/foxy/include/cv_bridge/cv_bridge.h
  /opt/ros/foxy/include/cv_bridge/cv_bridge_export.h
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_array__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__builder.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__traits.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/detail/diagnostic_status__type_support.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/detail/key_value__struct.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_array.hpp
  /opt/ros/foxy/include/diagnostic_msgs/msg/diagnostic_status.hpp
+ /opt/ros/foxy/include/diagnostic_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_status_wrapper.hpp
  /opt/ros/foxy/include/diagnostic_updater/diagnostic_updater.hpp
  /opt/ros/foxy/include/diagnostic_updater/publisher.hpp
@@ -4713,6 +4811,7 @@ CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_with_covariance__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/pose_with_covariance__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/quaternion__struct.hpp
@@ -4722,6 +4821,7 @@ CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/transform_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist__traits.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/twist_with_covariance__struct.hpp
@@ -4731,35 +4831,11 @@ CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3_stamped__builder.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3_stamped__struct.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3_stamped__traits.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/detail/vector3_stamped__type_support.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/pose_stamped.hpp
+ /opt/ros/foxy/include/geometry_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/transform_stamped.hpp
  /opt/ros/foxy/include/geometry_msgs/msg/vector3_stamped.hpp
- /opt/ros/foxy/include/librealsense2/h/rs_advanced_mode_command.h
- /opt/ros/foxy/include/librealsense2/h/rs_config.h
- /opt/ros/foxy/include/librealsense2/h/rs_context.h
- /opt/ros/foxy/include/librealsense2/h/rs_device.h
- /opt/ros/foxy/include/librealsense2/h/rs_frame.h
- /opt/ros/foxy/include/librealsense2/h/rs_option.h
- /opt/ros/foxy/include/librealsense2/h/rs_pipeline.h
- /opt/ros/foxy/include/librealsense2/h/rs_processing.h
- /opt/ros/foxy/include/librealsense2/h/rs_record_playback.h
- /opt/ros/foxy/include/librealsense2/h/rs_sensor.h
- /opt/ros/foxy/include/librealsense2/h/rs_types.h
- /opt/ros/foxy/include/librealsense2/hpp/rs_context.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_frame.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_options.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_pipeline.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_processing.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_record_playback.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_sensor.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_serializable_device.hpp
- /opt/ros/foxy/include/librealsense2/hpp/rs_types.hpp
- /opt/ros/foxy/include/librealsense2/rs.h
- /opt/ros/foxy/include/librealsense2/rs.hpp
- /opt/ros/foxy/include/librealsense2/rs_advanced_mode.h
- /opt/ros/foxy/include/librealsense2/rs_advanced_mode.hpp
- /opt/ros/foxy/include/librealsense2/rsutil.h
  /opt/ros/foxy/include/libstatistics_collector/collector/collector.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/generate_statistics_message.hpp
  /opt/ros/foxy/include/libstatistics_collector/collector/metric_details_interface.hpp
@@ -4773,7 +4849,9 @@ CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__builder.hpp
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__struct.hpp
  /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__traits.hpp
+ /opt/ros/foxy/include/nav_msgs/msg/detail/odometry__type_support.hpp
  /opt/ros/foxy/include/nav_msgs/msg/odometry.hpp
+ /opt/ros/foxy/include/nav_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl/allocator.h
  /opt/ros/foxy/include/rcl/arguments.h
  /opt/ros/foxy/include/rcl/client.h
@@ -4802,50 +4880,64 @@ CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/list_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_descriptor__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_event__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_type__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/parameter_value__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/detail/set_parameters_result__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/list_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_descriptor.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_event.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_type.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/parameter_value.hpp
+ /opt/ros/foxy/include/rcl_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/rcl_interfaces/msg/set_parameters_result.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/describe_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/describe_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameter_types__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/get_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/list_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__builder.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__struct.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__traits.hpp
+ /opt/ros/foxy/include/rcl_interfaces/srv/detail/set_parameters_atomically__type_support.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameter_types.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/get_parameters.hpp
  /opt/ros/foxy/include/rcl_interfaces/srv/list_parameters.hpp
@@ -5028,29 +5120,37 @@ CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/camera_info__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/compressed_image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/image__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/image__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/imu__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__builder.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__traits.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/detail/point_cloud2__type_support.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/point_field__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__struct.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/detail/region_of_interest__traits.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/image.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/imu.hpp
  /opt/ros/foxy/include/sensor_msgs/msg/point_cloud2.hpp
+ /opt/ros/foxy/include/sensor_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__builder.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__traits.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/detail/metrics_message__type_support.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/detail/statistic_data_point__struct.hpp
  /opt/ros/foxy/include/statistics_msgs/msg/metrics_message.hpp
+ /opt/ros/foxy/include/statistics_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__struct.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__traits.hpp
  /opt/ros/foxy/include/tf2/LinearMath/MinMax.h
@@ -5062,6 +5162,8 @@ CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__builder.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__struct.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__traits.hpp
+ /opt/ros/foxy/include/tf2_msgs/msg/detail/tf_message__type_support.hpp
+ /opt/ros/foxy/include/tf2_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
  /opt/ros/foxy/include/tf2_msgs/msg/tf_message.hpp
  /opt/ros/foxy/include/tf2_ros/qos.hpp
  /opt/ros/foxy/include/tf2_ros/static_transform_broadcaster.h

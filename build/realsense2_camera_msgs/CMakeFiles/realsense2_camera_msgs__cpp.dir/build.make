@@ -57,18 +57,23 @@ CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_m
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__builder.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__struct.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp
+CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__type_support.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/extrinsics.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__builder.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__struct.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp
+CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__type_support.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/metadata.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__builder.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__struct.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__traits.hpp
+CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__type_support.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/srv/device_info.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__builder.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__struct.hpp
 CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__traits.hpp
+CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__type_support.hpp
+CMakeFiles/realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
 
 
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/lib/rosidl_generator_cpp/rosidl_generator_cpp
@@ -76,16 +81,20 @@ rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/lib/
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/action__builder.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/action__struct.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/action__traits.hpp.em
+rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/action__type_support.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/idl.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/idl__builder.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/idl__struct.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/idl__traits.hpp.em
+rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/idl__type_support.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/msg__builder.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/msg__struct.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/msg__traits.hpp.em
+rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/msg__type_support.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/srv__builder.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/srv__struct.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/srv__traits.hpp.em
+rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/srv__type_support.hpp.em
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: rosidl_adapter/realsense2_camera_msgs/msg/IMUInfo.idl
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: rosidl_adapter/realsense2_camera_msgs/msg/Extrinsics.idl
 rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp: rosidl_adapter/realsense2_camera_msgs/msg/Metadata.idl
@@ -134,6 +143,9 @@ rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__struct.hpp: ros
 rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp
 
+rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__type_support.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__type_support.hpp
+
 rosidl_generator_cpp/realsense2_camera_msgs/msg/extrinsics.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/msg/extrinsics.hpp
 
@@ -145,6 +157,9 @@ rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__struct.hpp: r
 
 rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp
+
+rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__type_support.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__type_support.hpp
 
 rosidl_generator_cpp/realsense2_camera_msgs/msg/metadata.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/msg/metadata.hpp
@@ -158,6 +173,9 @@ rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__struct.hpp: ros
 rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__traits.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__traits.hpp
 
+rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__type_support.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__type_support.hpp
+
 rosidl_generator_cpp/realsense2_camera_msgs/srv/device_info.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/srv/device_info.hpp
 
@@ -170,23 +188,30 @@ rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__struct.hpp: 
 rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__traits.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__traits.hpp
 
+rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__type_support.hpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__type_support.hpp
+
 realsense2_camera_msgs__cpp: CMakeFiles/realsense2_camera_msgs__cpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__builder.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__struct.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp
+realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/imu_info__type_support.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/extrinsics.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__builder.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__struct.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp
+realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/extrinsics__type_support.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/metadata.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__builder.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__struct.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__traits.hpp
+realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/msg/detail/metadata__type_support.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/srv/device_info.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__builder.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__struct.hpp
 realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__traits.hpp
+realsense2_camera_msgs__cpp: rosidl_generator_cpp/realsense2_camera_msgs/srv/detail/device_info__type_support.hpp
 realsense2_camera_msgs__cpp: CMakeFiles/realsense2_camera_msgs__cpp.dir/build.make
 
 .PHONY : realsense2_camera_msgs__cpp

@@ -23,6 +23,7 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 # Preprocessor definitions for this target.
 set(CMAKE_TARGET_DEFINITIONS_CXX
   "DEFAULT_RMW_IMPLEMENTATION=rmw_fastrtps_cpp"
+  "ELPP_NO_DEFAULT_LOG_FILE"
   "RCUTILS_ENABLE_FAULT_INJECTION"
   "SPDLOG_COMPILED_LIB"
   "realsense2_camera_EXPORTS"

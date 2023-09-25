@@ -1,0 +1,51 @@
+[0.037s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_description': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_description -- -j8 -l8
+[0.114s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_description' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_description -- -j8 -l8
+[0.154s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_description': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_description
+[0.173s] -- Install configuration: ""
+[0.173s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/launch
+[0.174s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/launch/view_model.launch.py
+[0.174s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/launch/launch_utils.py
+[0.174s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes
+[0.174s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/l515.dae
+[0.175s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/plug.stl
+[0.175s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/d435.dae
+[0.175s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/d415.stl
+[0.175s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/d455.stl
+[0.175s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/plug_collision.stl
+[0.175s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/rviz
+[0.176s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/rviz/urdf.rviz
+[0.176s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf
+[0.176s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_d435i_camera.urdf.xacro
+[0.176s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_l515_camera.urdf.xacro
+[0.176s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_d435.urdf.xacro
+[0.176s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_l515.urdf.xacro
+[0.176s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_d455_camera.urdf.xacro
+[0.177s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_materials.urdf.xacro
+[0.177s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_d435i.urdf.xacro
+[0.177s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_d435i_imu_modules.urdf.xacro
+[0.177s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_d415.urdf.xacro
+[0.177s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_usb_plug.urdf.xacro
+[0.177s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_d435_multiple_cameras.urdf.xacro
+[0.177s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_r430_camera.urdf.xacro
+[0.194s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_r410.urdf.xacro
+[0.194s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_d435_camera.urdf.xacro
+[0.194s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_d415_camera.urdf.xacro
+[0.195s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_d455.urdf.xacro
+[0.195s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_r430.urdf.xacro
+[0.195s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_r410_camera.urdf.xacro
+[0.195s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/ament_index/resource_index/package_run_dependencies/realsense2_description
+[0.195s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/ament_index/resource_index/parent_prefix_path/realsense2_description
+[0.195s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/environment/ament_prefix_path.sh
+[0.195s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/environment/ament_prefix_path.dsv
+[0.196s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/environment/path.sh
+[0.196s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/environment/path.dsv
+[0.196s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/local_setup.bash
+[0.196s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/local_setup.sh
+[0.196s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/local_setup.zsh
+[0.196s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/local_setup.dsv
+[0.196s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.dsv
+[0.197s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/ament_index/resource_index/packages/realsense2_description
+[0.197s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/cmake/realsense2_descriptionConfig.cmake
+[0.197s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/cmake/realsense2_descriptionConfig-version.cmake
+[0.197s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.xml
+[0.197s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_description' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_description

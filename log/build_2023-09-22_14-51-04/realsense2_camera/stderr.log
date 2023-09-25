@@ -1,0 +1,17 @@
+CMake Error at CMakeLists.txt:117 (find_package):
+  By not providing "Finddiagnostic_updater.cmake" in CMAKE_MODULE_PATH this
+  project has asked CMake to find a package configuration file provided by
+  "diagnostic_updater", but CMake did not find one.
+
+  Could not find a package configuration file provided by
+  "diagnostic_updater" with any of the following names:
+
+    diagnostic_updaterConfig.cmake
+    diagnostic_updater-config.cmake
+
+  Add the installation prefix of "diagnostic_updater" to CMAKE_PREFIX_PATH or
+  set "diagnostic_updater_DIR" to a directory containing one of the above
+  files.  If "diagnostic_updater" provides a separate development package or
+  SDK, be sure it has been installed.
+
+

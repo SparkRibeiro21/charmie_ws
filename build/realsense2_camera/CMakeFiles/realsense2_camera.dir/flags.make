@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_FLAGS = -O2  -fPIE -fstack-protector-strong -fPIC -fno-operator-names -Wformat -Wformat-security -Wall -DFOXY -O3 -DNDEBUG -D_FORTIFY_SOURCE=2 -fPIC   -Wall -Wextra -Wpedantic -std=gnu++14
 
-CXX_DEFINES = -DDEFAULT_RMW_IMPLEMENTATION=rmw_fastrtps_cpp -DRCUTILS_ENABLE_FAULT_INJECTION -DSPDLOG_COMPILED_LIB -Drealsense2_camera_EXPORTS
+CXX_DEFINES = -DDEFAULT_RMW_IMPLEMENTATION=rmw_fastrtps_cpp -DELPP_NO_DEFAULT_LOG_FILE -DRCUTILS_ENABLE_FAULT_INJECTION -DSPDLOG_COMPILED_LIB -Drealsense2_camera_EXPORTS
 
 CXX_INCLUDES = -I/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera/include -isystem /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include -isystem /opt/ros/foxy/include -isystem /usr/include/opencv4 
 

@@ -1,0 +1,40 @@
+[1.007s] Invoking command in '/home/utilizador/charmie_ws/src/yolopose': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/yolopose/prefix_override:/home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/yolopose build --build-base /home/utilizador/charmie_ws/build/yolopose/build install --record /home/utilizador/charmie_ws/build/yolopose/install.log --install-scripts $base/lib/yolopose --single-version-externally-managed
+[1.221s] running egg_info
+[1.221s] creating ../../build/yolopose/yolopose.egg-info
+[1.221s] writing ../../build/yolopose/yolopose.egg-info/PKG-INFO
+[1.222s] writing dependency_links to ../../build/yolopose/yolopose.egg-info/dependency_links.txt
+[1.222s] writing entry points to ../../build/yolopose/yolopose.egg-info/entry_points.txt
+[1.222s] writing requirements to ../../build/yolopose/yolopose.egg-info/requires.txt
+[1.222s] writing top-level names to ../../build/yolopose/yolopose.egg-info/top_level.txt
+[1.223s] writing manifest file '../../build/yolopose/yolopose.egg-info/SOURCES.txt'
+[1.257s] reading manifest file '../../build/yolopose/yolopose.egg-info/SOURCES.txt'
+[1.257s] writing manifest file '../../build/yolopose/yolopose.egg-info/SOURCES.txt'
+[1.257s] running build
+[1.257s] running build_py
+[1.258s] creating /home/utilizador/charmie_ws/build/yolopose/build
+[1.258s] creating /home/utilizador/charmie_ws/build/yolopose/build/lib
+[1.258s] creating /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose
+[1.258s] copying yolopose/__init__.py -> /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose
+[1.258s] copying yolopose/yolopose_node.py -> /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose
+[1.258s] copying yolopose/yolopose_node_sem_keypoints.py -> /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose
+[1.258s] running install
+[1.259s] running install_lib
+[1.260s] creating /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose
+[1.260s] copying /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose/__init__.py -> /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose
+[1.260s] copying /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose/yolopose_node.py -> /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose
+[1.260s] copying /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose/yolopose_node_sem_keypoints.py -> /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose
+[1.260s] byte-compiling /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose/__init__.py to __init__.cpython-38.pyc
+[1.262s] byte-compiling /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose/yolopose_node.py to yolopose_node.cpython-38.pyc
+[1.264s] byte-compiling /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose/yolopose_node_sem_keypoints.py to yolopose_node_sem_keypoints.cpython-38.pyc
+[1.266s] running install_data
+[1.266s] creating /home/utilizador/charmie_ws/install/yolopose/share/ament_index
+[1.267s] creating /home/utilizador/charmie_ws/install/yolopose/share/ament_index/resource_index
+[1.267s] creating /home/utilizador/charmie_ws/install/yolopose/share/ament_index/resource_index/packages
+[1.267s] copying resource/yolopose -> /home/utilizador/charmie_ws/install/yolopose/share/ament_index/resource_index/packages
+[1.267s] copying package.xml -> /home/utilizador/charmie_ws/install/yolopose/share/yolopose
+[1.267s] running install_egg_info
+[1.268s] Copying ../../build/yolopose/yolopose.egg-info to /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose-0.0.0-py3.8.egg-info
+[1.269s] running install_scripts
+[1.289s] Installing yolo_posev8 script to /home/utilizador/charmie_ws/install/yolopose/lib/yolopose
+[1.289s] writing list of installed files to '/home/utilizador/charmie_ws/build/yolopose/install.log'
+[1.318s] Invoked command in '/home/utilizador/charmie_ws/src/yolopose' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/yolopose/prefix_override:/home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/yolopose build --build-base /home/utilizador/charmie_ws/build/yolopose/build install --record /home/utilizador/charmie_ws/build/yolopose/install.log --install-scripts $base/lib/yolopose --single-version-externally-managed
