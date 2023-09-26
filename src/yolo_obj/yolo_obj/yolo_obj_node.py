@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from ultralytics import YOLO
-from ultralytics.yolo.engine.results import Results
-from ultralytics.yolo.utils import DEFAULT_CFG, ROOT, ops
+# from ultralytics.yolo.engine.results import Results
+# from ultralytics.yolo.utils import DEFAULT_CFG, ROOT, ops
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
@@ -21,9 +21,9 @@ class Yolo_obj(Node):
         self.get_logger().info("Initialised Yolo Object Node")
 
         #self.debug_draw = Bool()
-        self.debug_draw = False
+        self.debug_draw = True
 
-        self.model = YOLO('best.pt')
+        self.model = YOLO('/home/utilizador/charmie_ws/src/yolo_obj/yolo_obj/best.pt')
         
         self.objects_publisher = self.create_publisher(MultiObjects, 'objects_detected', 10)
         # Intel Realsense

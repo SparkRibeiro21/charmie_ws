@@ -13,10 +13,10 @@ from cv_bridge import CvBridge,  CvBridgeError
 from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL
 
 import numpy as np
-import face_recognition
+# import face_recognition
 import time
 import os
-import tensorflow as tf
+# import tensorflow as tf
 from datetime import datetime
 
 import math

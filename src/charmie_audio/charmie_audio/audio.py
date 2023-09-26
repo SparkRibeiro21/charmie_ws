@@ -25,8 +25,8 @@ import torch
 import pulsectl
 import signal
 import threading # for double audio detection
-import pyaudio
 import sounddevice as sd # for some reason when i added this import all the ALSA lib writtings on the terminal stopped. Heck yeah!
+import pyaudio
 import numpy as np
 import wave
 
@@ -48,7 +48,10 @@ DICT_CALIBRATION = True
 # - ligação direta aos rgb
 # - ligacao direta à fala
 # - definir keywords com antecedência (deixar tudo pronto para os objetos do dataset ycb)
-#
+# - define all the error, diferent from each other
+# - recalibrar audios quando der erro x vezes?
+# 
+# 
 # ---/---
 #
 # already done post robocup 23 tasks for audio 
@@ -181,10 +184,8 @@ class WhisperAudio():
             pass
         """
 
-
     
     def adjust_ambient_noise(self):
-
         
         print("\tCalibrating energy for ambient noise levels...", end='', flush=True)
         # ||||| add rgb protocol
@@ -197,7 +198,6 @@ class WhisperAudio():
             print(" ENERGY THRESHOLD =", self.check_threshold)
             
             
-            
             # print(type(self.check_threshold))
             # print(type(self.r.energy_threshold))
             # temp_threshold = "{:.2f}".format(self.charmie_audio.check_threshold)
@@ -205,6 +205,7 @@ class WhisperAudio():
             # print("\tReady to Start")
 
         # ||||| add rgb protocol
+
 
     """
     def hear_speech(self):
@@ -326,50 +327,50 @@ class WhisperAudio():
         # proc.terminate()  # sends a SIGTERM
 
 
-        self.record_thread_active = True
+        # self.record_thread_active = True
         # Start background audio recording thread using sounddevice
-        record_thread = threading.Thread(target=self.record_audio_timeout)
-        record_thread.start()
+        # record_thread = threading.Thread(target=self.record_audio_timeout)
+        # record_thread.start()
             
         print("TEST SOUNDDEVICE")
-        # with sr.Microphone(sample_rate=16000) as source:
-        #     print("\tListening for speech...", end='')
+        with sr.Microphone(sample_rate=16000) as source:
+            print("\tListening for speech...", end='')
             # print("\t(ENERGY THRESHOLD =", self.check_threshold, end=')', flush=True)
-        #     print("\t(", self.check_threshold, end=' )', flush=True)
-        """
-        try:
-            self.audio = self.r.listen(source, timeout=self.hearing_timeout, phrase_time_limit=self.hearing_timeout)
-            # rec_thread.terminate()
-            # self.audio_rec = None
-            print(" MESSAGE HEARD :)")
-            self.record_thread_active = False
-            # sd.stop()
-            # ||||| add rgb protocol
+            print("\t(", self.check_threshold, end=' )', flush=True)
             
-        except sr.WaitTimeoutError as e:
-            print(" LISTENING TIMEOUT ERROR - (", e, ")")
-            self.record_thread_active = False
-            record_thread.join()
-            # self.audio = self.audio_rec
-            
-        """     
+            try:
+                self.audio = self.r.listen(source, timeout=self.hearing_timeout, phrase_time_limit=self.hearing_timeout)
+                # rec_thread.terminate()
+                # self.audio_rec = None
+                print(" MESSAGE HEARD :)")
+                # self.record_thread_active = False
+                # sd.stop()
+                # ||||| add rgb protocol
+                
+            except sr.WaitTimeoutError as e:
+                print(" LISTENING TIMEOUT ERROR - (", e, ")")
+                # self.record_thread_active = False
+                # record_thread.join()
+                # self.audio = self.audio_rec
+                
+             
 
-        time.sleep(10)
-        self.record_thread_active = False
-        record_thread.join()
+        # time.sleep(10)
+        # self.record_thread_active = False
+        # record_thread.join()
 
 
-        audio_data_as_audiodata = sr.AudioData(
-            self.audio_data.tobytes(),
-            sample_rate=16000,  # Adjust the sample rate if needed
-            sample_width=2  # Adjust the sample width if needed
-        ) 
+        # audio_data_as_audiodata = sr.AudioData(
+        #     self.audio_data.tobytes(),
+        #     sample_rate=16000,  # Adjust the sample rate if needed
+        #     sample_width=2  # Adjust the sample width if needed
+        # ) 
                 
                 
             
             
             
-        self.audio = audio_data_as_audiodata
+        # self.audio = audio_data_as_audiodata
         print("\tReady for the next task!!!")
 
             # por uma flag no hear rec quando termina para ter a certea e não ficar om um valor anterior???
