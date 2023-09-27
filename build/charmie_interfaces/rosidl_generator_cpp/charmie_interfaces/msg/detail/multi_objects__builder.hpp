@@ -20,16 +20,48 @@ namespace msg
 namespace builder
 {
 
+class Init_MultiObjects_position
+{
+public:
+  explicit Init_MultiObjects_position(::charmie_interfaces::msg::MultiObjects & msg)
+  : msg_(msg)
+  {}
+  ::charmie_interfaces::msg::MultiObjects position(::charmie_interfaces::msg::MultiObjects::_position_type arg)
+  {
+    msg_.position = std::move(arg);
+    return std::move(msg_);
+  }
+
+private:
+  ::charmie_interfaces::msg::MultiObjects msg_;
+};
+
+class Init_MultiObjects_distance
+{
+public:
+  explicit Init_MultiObjects_distance(::charmie_interfaces::msg::MultiObjects & msg)
+  : msg_(msg)
+  {}
+  Init_MultiObjects_position distance(::charmie_interfaces::msg::MultiObjects::_distance_type arg)
+  {
+    msg_.distance = std::move(arg);
+    return Init_MultiObjects_position(msg_);
+  }
+
+private:
+  ::charmie_interfaces::msg::MultiObjects msg_;
+};
+
 class Init_MultiObjects_confidence
 {
 public:
   explicit Init_MultiObjects_confidence(::charmie_interfaces::msg::MultiObjects & msg)
   : msg_(msg)
   {}
-  ::charmie_interfaces::msg::MultiObjects confidence(::charmie_interfaces::msg::MultiObjects::_confidence_type arg)
+  Init_MultiObjects_distance confidence(::charmie_interfaces::msg::MultiObjects::_confidence_type arg)
   {
     msg_.confidence = std::move(arg);
-    return std::move(msg_);
+    return Init_MultiObjects_distance(msg_);
   }
 
 private:

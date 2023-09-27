@@ -10,7 +10,11 @@ setup.py
 ../../build/charmie_neck_dynamixel/charmie_neck_dynamixel.egg-info/zip-safe
 charmie_neck_dynamixel/__init__.py
 charmie_neck_dynamixel/neck_dynamixel.py
+charmie_neck_dynamixel.egg-info/PKG-INFO
+charmie_neck_dynamixel.egg-info/SOURCES.txt
+charmie_neck_dynamixel.egg-info/dependency_links.txt
+charmie_neck_dynamixel.egg-info/entry_points.txt
+charmie_neck_dynamixel.egg-info/requires.txt
+charmie_neck_dynamixel.egg-info/top_level.txt
+charmie_neck_dynamixel.egg-info/zip-safe
 resource/charmie_neck_dynamixel
-test/test_copyright.py
-test/test_flake8.py
-test/test_pep257.py

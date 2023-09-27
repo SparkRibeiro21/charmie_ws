@@ -1,0 +1,15 @@
+running develop
+running egg_info
+writing charmie_diagnostics.egg-info/PKG-INFO
+writing dependency_links to charmie_diagnostics.egg-info/dependency_links.txt
+writing entry points to charmie_diagnostics.egg-info/entry_points.txt
+writing requirements to charmie_diagnostics.egg-info/requires.txt
+writing top-level names to charmie_diagnostics.egg-info/top_level.txt
+reading manifest file 'charmie_diagnostics.egg-info/SOURCES.txt'
+writing manifest file 'charmie_diagnostics.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_diagnostics/lib/python3.8/site-packages/charmie-diagnostics.egg-link (link to .)
+Installing diagnostics script to /home/utilizador/charmie_ws/install/charmie_diagnostics/lib/charmie_diagnostics
+
+Installed /home/utilizador/charmie_ws/build/charmie_diagnostics
+running install_data

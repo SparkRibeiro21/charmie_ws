@@ -21,6 +21,8 @@ extern "C"
 // Member 'objects'
 #include "rosidl_runtime_c/string.h"
 // Member 'confidence'
+// Member 'distance'
+// Member 'position'
 #include "rosidl_runtime_c/primitives_sequence.h"
 
 // Struct defined in msg/MultiObjects in the package charmie_interfaces.
@@ -28,6 +30,8 @@ typedef struct charmie_interfaces__msg__MultiObjects
 {
   rosidl_runtime_c__String__Sequence objects;
   rosidl_runtime_c__float__Sequence confidence;
+  rosidl_runtime_c__float__Sequence distance;
+  rosidl_runtime_c__float__Sequence position;
 } charmie_interfaces__msg__MultiObjects;
 
 // Struct for a sequence of charmie_interfaces__msg__MultiObjects.

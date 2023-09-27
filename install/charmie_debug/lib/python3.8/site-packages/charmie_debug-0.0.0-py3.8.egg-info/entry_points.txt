@@ -1,3 +1,0 @@
-[console_scripts]
-debug_main = charmie_debug.debug_main:main
-

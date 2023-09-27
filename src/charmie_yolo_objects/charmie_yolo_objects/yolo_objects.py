@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 from ultralytics import YOLO
-# from ultralytics.yolo.engine.results import Results
-# from ultralytics.yolo.utils import DEFAULT_CFG, ROOT, ops
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
@@ -14,16 +12,34 @@ import cvzone
 import numpy as np
 
 import math
+import time
+
+filename = "doors.pt"
+
+
+### --------------------------------------------- CODE EXPLANATION --------------------------------------------- ### 
+
+# This code aims to identify objects known previously when the camera is on. It receives an image from the camera (IntelRS)
+# and publishes the name of the object, the confidence, the distance of the object to the camera and the position of the object 
+# in relation to the robot. To do so, it runs a pre trained yolov8 model of a neural network.
+
+### --------------------------------------------- /////////////// --------------------------------------------- ###
 
 class Yolo_obj(Node):
     def __init__(self):
         super().__init__("Yolo_obj")
         self.get_logger().info("Initialised Yolo Object Node")
 
-        #self.debug_draw = Bool()
+        # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.debug_draw = True
 
-        self.model = YOLO('/home/utilizador/charmie_ws/src/yolo_obj/yolo_obj/best.pt')
+        # used to record the time when we processed last frame
+        self.prev_frame_time = 0
+        
+        # used to record the time at which we processed current frame
+        self.new_frame_time = 0
+
+        self.model = YOLO('/home/utilizador/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + filename)
         
         self.objects_publisher = self.create_publisher(MultiObjects, 'objects_detected', 10)
         # Intel Realsense
@@ -32,16 +48,32 @@ class Yolo_obj(Node):
         # Variables
         self.br = CvBridge()
 
-        self.classNames = ["Apple", "Bag", "Banana", "Bottle", "Bowl", "Chair",
+        Rui_className = ["Apple", "Bag", "Banana", "Bottle", "Bowl", "Chair",
               "Cup", "Fork", "Knife", "Manga", "Mug", "Pear", "Person",
               "Plastic-bag", "Plate", "Pringles", "Shelf", "Spoon",
               "Table", "Tin-can", "Trash-can"]
+        
 
-        self.crockery = ["Bowl", "Cup", "Fork", "Knife", "Mug", "Plate", "Spoon"]
+        door_classname = ['BallHandler', 'Door', 'Drawer', 
+              'Fridge_Door', 'Hidden Handler', 'LevelHandler', 'PullHandler', 
+              'WardrobeHandler', 'Wardrobe_Door']
+        
+        # depending on the filename selected, the class names change
+        if filename=='doors.pt':
+            self.classNames = door_classname
+        elif filename=='Rui.pt':
+            self.classNames = Rui_className
+        else:
+            print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
+            
+
+        #self.crockery = ["Bowl", "Cup", "Fork", "Knife", "Mug", "Plate", "Spoon"]
 
         self.obj = MultiObjects()
         self.obj.objects = []
         self.obj.confidence = []
+        self.obj.distance = []
+        self.obj.position = []
 
         self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
 
@@ -49,7 +81,13 @@ class Yolo_obj(Node):
         flag_diagn.data = True
         self.yolo_object_diagnostic_publisher.publish(flag_diagn)
 
+### --------------------------------------------- ROUTINE EXPLANATION --------------------------------------------- ### 
 
+# The following callback runs the NN model each time the camera publishes an image. After running it, the model 
+# analyzes the image to identify any objects. It then publishes this information on the topic 'objects_detected' 
+# and displays it on the screen. Any object detected with less than 50% of confidence is ignored.
+
+### --------------------------------------------- /////////////// --------------------------------------------- ###
 
     def get_color_image_callback(self, img: Image):
         self.get_logger().info('Receiving color video frame')
@@ -57,44 +95,56 @@ class Yolo_obj(Node):
         
         self.obj.objects = []
         self.obj.confidence = []
+        self.obj.distance = []
+        self.obj.position = []
+
+        # minimum value of confidence for object to be accepted as true and sent via topic
+        self.threshold = 0.5
 
         results = self.model(current_frame, stream = True)
 
+        #print(results)
+
+        #if results:
         for r in results:
-            boxes = r.boxes
+                boxes = r.boxes
 
-            for box in boxes:
-                cls = int(box.cls[0])
-                conf = math.ceil(box.conf[0] * 100) / 100
-                
-                if self.debug_draw:
-                    x1, y1, x2, y2 = box.xyxy[0]
-                    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-                    center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
-
-                    w, h = x2 - x1, y2 - y1
+                for box in boxes:
+                    cls = int(box.cls[0])
+                    conf = math.ceil(box.conf[0] * 100) / 100
                     
-                    cvzone.cornerRect(current_frame, (x1, y1, w, h), l=15)
-                    cvzone.putTextRect(current_frame, f"{self.classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
+                    if self.debug_draw:
+                        x1, y1, x2, y2 = box.xyxy[0]
+                        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                        #center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
+
+                        w, h = x2 - x1, y2 - y1
+                        if conf > self.threshold:
+                            cvzone.cornerRect(current_frame, (x1, y1, w, h), l=15)    
+                            cvzone.putTextRect(current_frame, f"{self.classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
+                        
+                            print(self.classNames[cls], 'confidence = ' + str(conf))
                     
-                    print('BBB')
-                    print(self.classNames[cls])
-                    print(type(self.classNames[cls]))
-
-                    cv2.imshow('Output', current_frame) # Exibir a imagem capturada
-
-                    if cv2.waitKey(1) == ord('q'): # Se a tecla 'q' for pressionada, saia
-                        break
+                    else:
+                        pass
+                    
+                    if conf > self.threshold:
+                        self.obj.objects.append(str(self.classNames[cls]))
+                        self.obj.confidence.append(conf)
                 
-                else:
-                    pass
+                self.objects_publisher.publish(self.obj)
 
-                self.obj.objects.append(str(self.classNames[cls]))
-                self.obj.confidence.append(conf)
-            
-            self.objects_publisher.publish(self.obj)
+                self.new_frame_time = time.time()
+                self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
+                self.prev_frame_time = self.new_frame_time
 
-            
+                self.fps = str(self.fps)
+  
+                # putting the FPS count on the frame
+                cv2.putText(current_frame, 'fps = ' + self.fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+
+                cv2.imshow('Output', current_frame) # Exibir a imagem capturada
+                cv2.waitKey(1)
 
         
 def main(args=None):

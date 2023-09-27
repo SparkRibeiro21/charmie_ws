@@ -10,7 +10,11 @@ setup.py
 ../../build/charmie_localisation/charmie_localisation.egg-info/zip-safe
 charmie_localisation/__init__.py
 charmie_localisation/localisation.py
+charmie_localisation.egg-info/PKG-INFO
+charmie_localisation.egg-info/SOURCES.txt
+charmie_localisation.egg-info/dependency_links.txt
+charmie_localisation.egg-info/entry_points.txt
+charmie_localisation.egg-info/requires.txt
+charmie_localisation.egg-info/top_level.txt
+charmie_localisation.egg-info/zip-safe
 resource/charmie_localisation
-test/test_copyright.py
-test/test_flake8.py
-test/test_pep257.py

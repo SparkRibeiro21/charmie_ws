@@ -91,7 +91,61 @@ void resize_function__MultiObjects__confidence(void * untyped_member, size_t siz
   member->resize(size);
 }
 
-static const ::rosidl_typesupport_introspection_cpp::MessageMember MultiObjects_message_member_array[2] = {
+size_t size_function__MultiObjects__distance(const void * untyped_member)
+{
+  const auto * member = reinterpret_cast<const std::vector<float> *>(untyped_member);
+  return member->size();
+}
+
+const void * get_const_function__MultiObjects__distance(const void * untyped_member, size_t index)
+{
+  const auto & member =
+    *reinterpret_cast<const std::vector<float> *>(untyped_member);
+  return &member[index];
+}
+
+void * get_function__MultiObjects__distance(void * untyped_member, size_t index)
+{
+  auto & member =
+    *reinterpret_cast<std::vector<float> *>(untyped_member);
+  return &member[index];
+}
+
+void resize_function__MultiObjects__distance(void * untyped_member, size_t size)
+{
+  auto * member =
+    reinterpret_cast<std::vector<float> *>(untyped_member);
+  member->resize(size);
+}
+
+size_t size_function__MultiObjects__position(const void * untyped_member)
+{
+  const auto * member = reinterpret_cast<const std::vector<float> *>(untyped_member);
+  return member->size();
+}
+
+const void * get_const_function__MultiObjects__position(const void * untyped_member, size_t index)
+{
+  const auto & member =
+    *reinterpret_cast<const std::vector<float> *>(untyped_member);
+  return &member[index];
+}
+
+void * get_function__MultiObjects__position(void * untyped_member, size_t index)
+{
+  auto & member =
+    *reinterpret_cast<std::vector<float> *>(untyped_member);
+  return &member[index];
+}
+
+void resize_function__MultiObjects__position(void * untyped_member, size_t size)
+{
+  auto * member =
+    reinterpret_cast<std::vector<float> *>(untyped_member);
+  member->resize(size);
+}
+
+static const ::rosidl_typesupport_introspection_cpp::MessageMember MultiObjects_message_member_array[4] = {
   {
     "objects",  // name
     ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING,  // type
@@ -121,13 +175,43 @@ static const ::rosidl_typesupport_introspection_cpp::MessageMember MultiObjects_
     get_const_function__MultiObjects__confidence,  // get_const(index) function pointer
     get_function__MultiObjects__confidence,  // get(index) function pointer
     resize_function__MultiObjects__confidence  // resize(index) function pointer
+  },
+  {
+    "distance",  // name
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT,  // type
+    0,  // upper bound of string
+    nullptr,  // members of sub message
+    true,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces::msg::MultiObjects, distance),  // bytes offset in struct
+    nullptr,  // default value
+    size_function__MultiObjects__distance,  // size() function pointer
+    get_const_function__MultiObjects__distance,  // get_const(index) function pointer
+    get_function__MultiObjects__distance,  // get(index) function pointer
+    resize_function__MultiObjects__distance  // resize(index) function pointer
+  },
+  {
+    "position",  // name
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT,  // type
+    0,  // upper bound of string
+    nullptr,  // members of sub message
+    true,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces::msg::MultiObjects, position),  // bytes offset in struct
+    nullptr,  // default value
+    size_function__MultiObjects__position,  // size() function pointer
+    get_const_function__MultiObjects__position,  // get_const(index) function pointer
+    get_function__MultiObjects__position,  // get(index) function pointer
+    resize_function__MultiObjects__position  // resize(index) function pointer
   }
 };
 
 static const ::rosidl_typesupport_introspection_cpp::MessageMembers MultiObjects_message_members = {
   "charmie_interfaces::msg",  // message namespace
   "MultiObjects",  // message name
-  2,  // number of fields
+  4,  // number of fields
   sizeof(charmie_interfaces::msg::MultiObjects),
   MultiObjects_message_member_array,  // message members
   MultiObjects_init_function,  // function to initialize message memory (memory has to be allocated)

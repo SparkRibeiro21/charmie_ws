@@ -16,6 +16,8 @@
 // Member `objects`
 #include "rosidl_runtime_c/string_functions.h"
 // Member `confidence`
+// Member `distance`
+// Member `position`
 #include "rosidl_runtime_c/primitives_sequence_functions.h"
 
 #ifdef __cplusplus
@@ -37,7 +39,7 @@ void MultiObjects__rosidl_typesupport_introspection_c__MultiObjects_fini_functio
   charmie_interfaces__msg__MultiObjects__fini(message_memory);
 }
 
-static rosidl_typesupport_introspection_c__MessageMember MultiObjects__rosidl_typesupport_introspection_c__MultiObjects_message_member_array[2] = {
+static rosidl_typesupport_introspection_c__MessageMember MultiObjects__rosidl_typesupport_introspection_c__MultiObjects_message_member_array[4] = {
   {
     "objects",  // name
     rosidl_typesupport_introspection_c__ROS_TYPE_STRING,  // type
@@ -67,13 +69,43 @@ static rosidl_typesupport_introspection_c__MessageMember MultiObjects__rosidl_ty
     NULL,  // get_const(index) function pointer
     NULL,  // get(index) function pointer
     NULL  // resize(index) function pointer
+  },
+  {
+    "distance",  // name
+    rosidl_typesupport_introspection_c__ROS_TYPE_FLOAT,  // type
+    0,  // upper bound of string
+    NULL,  // members of sub message
+    true,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces__msg__MultiObjects, distance),  // bytes offset in struct
+    NULL,  // default value
+    NULL,  // size() function pointer
+    NULL,  // get_const(index) function pointer
+    NULL,  // get(index) function pointer
+    NULL  // resize(index) function pointer
+  },
+  {
+    "position",  // name
+    rosidl_typesupport_introspection_c__ROS_TYPE_FLOAT,  // type
+    0,  // upper bound of string
+    NULL,  // members of sub message
+    true,  // is array
+    0,  // array size
+    false,  // is upper bound
+    offsetof(charmie_interfaces__msg__MultiObjects, position),  // bytes offset in struct
+    NULL,  // default value
+    NULL,  // size() function pointer
+    NULL,  // get_const(index) function pointer
+    NULL,  // get(index) function pointer
+    NULL  // resize(index) function pointer
   }
 };
 
 static const rosidl_typesupport_introspection_c__MessageMembers MultiObjects__rosidl_typesupport_introspection_c__MultiObjects_message_members = {
   "charmie_interfaces__msg",  // message namespace
   "MultiObjects",  // message name
-  2,  // number of fields
+  4,  // number of fields
   sizeof(charmie_interfaces__msg__MultiObjects),
   MultiObjects__rosidl_typesupport_introspection_c__MultiObjects_message_member_array,  // message members
   MultiObjects__rosidl_typesupport_introspection_c__MultiObjects_init_function,  // function to initialize message memory (memory has to be allocated)

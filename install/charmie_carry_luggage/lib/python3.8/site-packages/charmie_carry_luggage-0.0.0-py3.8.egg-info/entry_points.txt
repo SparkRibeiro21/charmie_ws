@@ -1,3 +1,0 @@
-[console_scripts]
-carry_my_luggage = charmie_carry_luggage.carry_my_luggage:main
-

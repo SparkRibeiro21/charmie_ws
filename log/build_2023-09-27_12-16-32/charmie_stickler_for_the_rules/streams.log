@@ -1,0 +1,17 @@
+[3.983s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build --no-deps install_data
+[5.391s] running develop
+[6.160s] running egg_info
+[6.161s] writing charmie_stickler_for_the_rules.egg-info/PKG-INFO
+[6.161s] writing dependency_links to charmie_stickler_for_the_rules.egg-info/dependency_links.txt
+[6.161s] writing entry points to charmie_stickler_for_the_rules.egg-info/entry_points.txt
+[6.162s] writing requirements to charmie_stickler_for_the_rules.egg-info/requires.txt
+[6.162s] writing top-level names to charmie_stickler_for_the_rules.egg-info/top_level.txt
+[6.169s] reading manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[6.171s] writing manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[6.371s] running build_ext
+[6.372s] Creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie-stickler-for-the-rules.egg-link (link to .)
+[6.374s] Installing stickler_for_the_rules script to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/charmie_stickler_for_the_rules
+[6.374s] 
+[6.374s] Installed /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules
+[6.375s] running install_data
+[6.454s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build --no-deps install_data

@@ -34,8 +34,8 @@ extern "C"
 {
 #endif
 
-#include "rosidl_runtime_c/primitives_sequence.h"  // confidence
-#include "rosidl_runtime_c/primitives_sequence_functions.h"  // confidence
+#include "rosidl_runtime_c/primitives_sequence.h"  // confidence, distance, position
+#include "rosidl_runtime_c/primitives_sequence_functions.h"  // confidence, distance, position
 #include "rosidl_runtime_c/string.h"  // objects
 #include "rosidl_runtime_c/string_functions.h"  // objects
 
@@ -76,6 +76,22 @@ static bool _MultiObjects__cdr_serialize(
   {
     size_t size = ros_message->confidence.size;
     auto array_ptr = ros_message->confidence.data;
+    cdr << static_cast<uint32_t>(size);
+    cdr.serializeArray(array_ptr, size);
+  }
+
+  // Field name: distance
+  {
+    size_t size = ros_message->distance.size;
+    auto array_ptr = ros_message->distance.data;
+    cdr << static_cast<uint32_t>(size);
+    cdr.serializeArray(array_ptr, size);
+  }
+
+  // Field name: position
+  {
+    size_t size = ros_message->position.size;
+    auto array_ptr = ros_message->position.data;
     cdr << static_cast<uint32_t>(size);
     cdr.serializeArray(array_ptr, size);
   }
@@ -136,6 +152,36 @@ static bool _MultiObjects__cdr_deserialize(
     cdr.deserializeArray(array_ptr, size);
   }
 
+  // Field name: distance
+  {
+    uint32_t cdrSize;
+    cdr >> cdrSize;
+    size_t size = static_cast<size_t>(cdrSize);
+    if (ros_message->distance.data) {
+      rosidl_runtime_c__float__Sequence__fini(&ros_message->distance);
+    }
+    if (!rosidl_runtime_c__float__Sequence__init(&ros_message->distance, size)) {
+      return "failed to create array for field 'distance'";
+    }
+    auto array_ptr = ros_message->distance.data;
+    cdr.deserializeArray(array_ptr, size);
+  }
+
+  // Field name: position
+  {
+    uint32_t cdrSize;
+    cdr >> cdrSize;
+    size_t size = static_cast<size_t>(cdrSize);
+    if (ros_message->position.data) {
+      rosidl_runtime_c__float__Sequence__fini(&ros_message->position);
+    }
+    if (!rosidl_runtime_c__float__Sequence__init(&ros_message->position, size)) {
+      return "failed to create array for field 'position'";
+    }
+    auto array_ptr = ros_message->position.data;
+    cdr.deserializeArray(array_ptr, size);
+  }
+
   return true;
 }
 
@@ -169,6 +215,28 @@ size_t get_serialized_size_charmie_interfaces__msg__MultiObjects(
   {
     size_t array_size = ros_message->confidence.size;
     auto array_ptr = ros_message->confidence.data;
+    current_alignment += padding +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+    (void)array_ptr;
+    size_t item_size = sizeof(array_ptr[0]);
+    current_alignment += array_size * item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // field.name distance
+  {
+    size_t array_size = ros_message->distance.size;
+    auto array_ptr = ros_message->distance.data;
+    current_alignment += padding +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+    (void)array_ptr;
+    size_t item_size = sizeof(array_ptr[0]);
+    current_alignment += array_size * item_size +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+  }
+  // field.name position
+  {
+    size_t array_size = ros_message->position.size;
+    auto array_ptr = ros_message->position.data;
     current_alignment += padding +
       eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
     (void)array_ptr;
@@ -215,6 +283,26 @@ size_t max_serialized_size_charmie_interfaces__msg__MultiObjects(
     }
   }
   // member: confidence
+  {
+    size_t array_size = 0;
+    full_bounded = false;
+    current_alignment += padding +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+  // member: distance
+  {
+    size_t array_size = 0;
+    full_bounded = false;
+    current_alignment += padding +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+
+    current_alignment += array_size * sizeof(uint32_t) +
+      eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+  }
+  // member: position
   {
     size_t array_size = 0;
     full_bounded = false;

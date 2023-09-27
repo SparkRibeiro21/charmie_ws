@@ -6,6 +6,8 @@
 # Import statements for member types
 
 # Member 'confidence'
+# Member 'distance'
+# Member 'position'
 import array  # noqa: E402, I100
 
 import rosidl_parser.definition  # noqa: E402, I100
@@ -58,15 +60,21 @@ class MultiObjects(metaclass=Metaclass_MultiObjects):
     __slots__ = [
         '_objects',
         '_confidence',
+        '_distance',
+        '_position',
     ]
 
     _fields_and_field_types = {
         'objects': 'sequence<string>',
         'confidence': 'sequence<float>',
+        'distance': 'sequence<float>',
+        'position': 'sequence<float>',
     }
 
     SLOT_TYPES = (
         rosidl_parser.definition.UnboundedSequence(rosidl_parser.definition.UnboundedString()),  # noqa: E501
+        rosidl_parser.definition.UnboundedSequence(rosidl_parser.definition.BasicType('float')),  # noqa: E501
+        rosidl_parser.definition.UnboundedSequence(rosidl_parser.definition.BasicType('float')),  # noqa: E501
         rosidl_parser.definition.UnboundedSequence(rosidl_parser.definition.BasicType('float')),  # noqa: E501
     )
 
@@ -76,6 +84,8 @@ class MultiObjects(metaclass=Metaclass_MultiObjects):
             ', '.join(sorted(k for k in kwargs.keys() if '_' + k not in self.__slots__))
         self.objects = kwargs.get('objects', [])
         self.confidence = array.array('f', kwargs.get('confidence', []))
+        self.distance = array.array('f', kwargs.get('distance', []))
+        self.position = array.array('f', kwargs.get('position', []))
 
     def __repr__(self):
         typename = self.__class__.__module__.split('.')
@@ -109,6 +119,10 @@ class MultiObjects(metaclass=Metaclass_MultiObjects):
         if self.objects != other.objects:
             return False
         if self.confidence != other.confidence:
+            return False
+        if self.distance != other.distance:
+            return False
+        if self.position != other.position:
             return False
         return True
 
@@ -167,3 +181,59 @@ class MultiObjects(metaclass=Metaclass_MultiObjects):
                  True), \
                 "The 'confidence' field must be a set or sequence and each value of type 'float'"
         self._confidence = array.array('f', value)
+
+    @property
+    def distance(self):
+        """Message field 'distance'."""
+        return self._distance
+
+    @distance.setter
+    def distance(self, value):
+        if isinstance(value, array.array):
+            assert value.typecode == 'f', \
+                "The 'distance' array.array() must have the type code of 'f'"
+            self._distance = value
+            return
+        if __debug__:
+            from collections.abc import Sequence
+            from collections.abc import Set
+            from collections import UserList
+            from collections import UserString
+            assert \
+                ((isinstance(value, Sequence) or
+                  isinstance(value, Set) or
+                  isinstance(value, UserList)) and
+                 not isinstance(value, str) and
+                 not isinstance(value, UserString) and
+                 all(isinstance(v, float) for v in value) and
+                 True), \
+                "The 'distance' field must be a set or sequence and each value of type 'float'"
+        self._distance = array.array('f', value)
+
+    @property
+    def position(self):
+        """Message field 'position'."""
+        return self._position
+
+    @position.setter
+    def position(self, value):
+        if isinstance(value, array.array):
+            assert value.typecode == 'f', \
+                "The 'position' array.array() must have the type code of 'f'"
+            self._position = value
+            return
+        if __debug__:
+            from collections.abc import Sequence
+            from collections.abc import Set
+            from collections import UserList
+            from collections import UserString
+            assert \
+                ((isinstance(value, Sequence) or
+                  isinstance(value, Set) or
+                  isinstance(value, UserList)) and
+                 not isinstance(value, str) and
+                 not isinstance(value, UserString) and
+                 all(isinstance(v, float) for v in value) and
+                 True), \
+                "The 'position' field must be a set or sequence and each value of type 'float'"
+        self._position = array.array('f', value)

@@ -4,3 +4,6 @@ source;share/yolopose/hook/pythonpath.sh
 source;share/yolopose/hook/ament_prefix_path.ps1
 source;share/yolopose/hook/ament_prefix_path.dsv
 source;share/yolopose/hook/ament_prefix_path.sh
+source;../../build/yolopose/share/yolopose/hook/pythonpath_develop.ps1
+source;../../build/yolopose/share/yolopose/hook/pythonpath_develop.dsv
+source;../../build/yolopose/share/yolopose/hook/pythonpath_develop.sh

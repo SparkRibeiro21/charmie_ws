@@ -50,6 +50,12 @@ struct MultiObjects_
   using _confidence_type =
     std::vector<float, typename ContainerAllocator::template rebind<float>::other>;
   _confidence_type confidence;
+  using _distance_type =
+    std::vector<float, typename ContainerAllocator::template rebind<float>::other>;
+  _distance_type distance;
+  using _position_type =
+    std::vector<float, typename ContainerAllocator::template rebind<float>::other>;
+  _position_type position;
 
   // setters for named parameter idiom
   Type & set__objects(
@@ -62,6 +68,18 @@ struct MultiObjects_
     const std::vector<float, typename ContainerAllocator::template rebind<float>::other> & _arg)
   {
     this->confidence = _arg;
+    return *this;
+  }
+  Type & set__distance(
+    const std::vector<float, typename ContainerAllocator::template rebind<float>::other> & _arg)
+  {
+    this->distance = _arg;
+    return *this;
+  }
+  Type & set__position(
+    const std::vector<float, typename ContainerAllocator::template rebind<float>::other> & _arg)
+  {
+    this->position = _arg;
     return *this;
   }
 
@@ -111,6 +129,12 @@ struct MultiObjects_
       return false;
     }
     if (this->confidence != other.confidence) {
+      return false;
+    }
+    if (this->distance != other.distance) {
+      return false;
+    }
+    if (this->position != other.position) {
       return false;
     }
     return true;

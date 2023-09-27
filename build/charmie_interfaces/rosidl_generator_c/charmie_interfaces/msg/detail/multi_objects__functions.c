@@ -15,6 +15,8 @@
 // Member `objects`
 #include "rosidl_runtime_c/string_functions.h"
 // Member `confidence`
+// Member `distance`
+// Member `position`
 #include "rosidl_runtime_c/primitives_sequence_functions.h"
 
 bool
@@ -33,6 +35,16 @@ charmie_interfaces__msg__MultiObjects__init(charmie_interfaces__msg__MultiObject
     charmie_interfaces__msg__MultiObjects__fini(msg);
     return false;
   }
+  // distance
+  if (!rosidl_runtime_c__float__Sequence__init(&msg->distance, 0)) {
+    charmie_interfaces__msg__MultiObjects__fini(msg);
+    return false;
+  }
+  // position
+  if (!rosidl_runtime_c__float__Sequence__init(&msg->position, 0)) {
+    charmie_interfaces__msg__MultiObjects__fini(msg);
+    return false;
+  }
   return true;
 }
 
@@ -46,6 +58,10 @@ charmie_interfaces__msg__MultiObjects__fini(charmie_interfaces__msg__MultiObject
   rosidl_runtime_c__String__Sequence__fini(&msg->objects);
   // confidence
   rosidl_runtime_c__float__Sequence__fini(&msg->confidence);
+  // distance
+  rosidl_runtime_c__float__Sequence__fini(&msg->distance);
+  // position
+  rosidl_runtime_c__float__Sequence__fini(&msg->position);
 }
 
 bool
@@ -63,6 +79,18 @@ charmie_interfaces__msg__MultiObjects__are_equal(const charmie_interfaces__msg__
   // confidence
   if (!rosidl_runtime_c__float__Sequence__are_equal(
       &(lhs->confidence), &(rhs->confidence)))
+  {
+    return false;
+  }
+  // distance
+  if (!rosidl_runtime_c__float__Sequence__are_equal(
+      &(lhs->distance), &(rhs->distance)))
+  {
+    return false;
+  }
+  // position
+  if (!rosidl_runtime_c__float__Sequence__are_equal(
+      &(lhs->position), &(rhs->position)))
   {
     return false;
   }
@@ -86,6 +114,18 @@ charmie_interfaces__msg__MultiObjects__copy(
   // confidence
   if (!rosidl_runtime_c__float__Sequence__copy(
       &(input->confidence), &(output->confidence)))
+  {
+    return false;
+  }
+  // distance
+  if (!rosidl_runtime_c__float__Sequence__copy(
+      &(input->distance), &(output->distance)))
+  {
+    return false;
+  }
+  // position
+  if (!rosidl_runtime_c__float__Sequence__copy(
+      &(input->position), &(output->position)))
   {
     return false;
   }
