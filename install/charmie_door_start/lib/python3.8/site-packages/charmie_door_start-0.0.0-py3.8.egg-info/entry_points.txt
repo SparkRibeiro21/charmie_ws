@@ -1,0 +1,3 @@
+[console_scripts]
+door_start = charmie_door_start.door_start:main
+

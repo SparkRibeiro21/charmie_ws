@@ -1,0 +1,143 @@
+[0.127s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/yolopose:/home/utilizador/charmie_ws/install/yolo_obj:/home/utilizador/charmie_ws/install/charmie_yolo_objects:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules:/home/utilizador/charmie_ws/install/charmie_speakers_offline:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_restaurant:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_person_localisation:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_localisation:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_inspection:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_carry_luggage:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/home/utilizador/charmie_ws/install/charmie_door_start:/home/utilizador/charmie_ws/install/charmie_diagnostics:/opt/ros/foxy /home/utilizador/.local/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera_msgs -- -j8 -l8
+[2.118s] [  1%] Built target realsense2_camera_msgs__cpp
+[2.119s] [ 12%] Built target realsense2_camera_msgs__rosidl_generator_c
+[2.119s] [ 34%] Built target realsense2_camera_msgs__rosidl_typesupport_c
+[2.119s] [ 34%] Built target realsense2_camera_msgs__rosidl_typesupport_introspection_c
+[2.120s] [ 45%] Built target realsense2_camera_msgs__rosidl_typesupport_introspection_cpp
+[2.121s] [ 56%] Built target realsense2_camera_msgs__rosidl_typesupport_fastrtps_cpp
+[2.121s] [ 67%] Built target realsense2_camera_msgs__rosidl_typesupport_cpp
+[2.125s] [ 78%] Built target realsense2_camera_msgs__rosidl_typesupport_fastrtps_c
+[2.126s] [ 78%] Built target realsense2_camera_msgs
+[2.126s] [ 80%] Built target realsense2_camera_msgs__py
+[2.127s] [ 89%] Built target realsense2_camera_msgs__python
+[2.129s] [ 92%] Built target realsense2_camera_msgs__rosidl_typesupport_fastrtps_c__pyext
+[2.132s] [ 96%] Built target realsense2_camera_msgs__rosidl_typesupport_c__pyext
+[2.132s] [100%] Built target realsense2_camera_msgs__rosidl_typesupport_introspection_c__pyext
+[2.134s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/yolopose:/home/utilizador/charmie_ws/install/yolo_obj:/home/utilizador/charmie_ws/install/charmie_yolo_objects:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules:/home/utilizador/charmie_ws/install/charmie_speakers_offline:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_restaurant:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_person_localisation:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_localisation:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_inspection:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_carry_luggage:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/home/utilizador/charmie_ws/install/charmie_door_start:/home/utilizador/charmie_ws/install/charmie_diagnostics:/opt/ros/foxy /home/utilizador/.local/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera_msgs -- -j8 -l8
+[2.528s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/yolopose:/home/utilizador/charmie_ws/install/yolo_obj:/home/utilizador/charmie_ws/install/charmie_yolo_objects:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules:/home/utilizador/charmie_ws/install/charmie_speakers_offline:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_restaurant:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_person_localisation:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_localisation:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_inspection:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_carry_luggage:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/home/utilizador/charmie_ws/install/charmie_door_start:/home/utilizador/charmie_ws/install/charmie_diagnostics:/opt/ros/foxy /home/utilizador/.local/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera_msgs
+[2.618s] -- Install configuration: ""
+[2.620s] -- Execute custom install script
+[2.620s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/ament_index/resource_index/rosidl_interfaces/realsense2_camera_msgs
+[2.621s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__functions.h
+[2.621s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__struct.h
+[2.622s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__type_support.h
+[2.622s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__functions.h
+[2.623s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__struct.h
+[2.623s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__type_support.h
+[2.624s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__functions.h
+[2.624s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__struct.h
+[2.624s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__type_support.h
+[2.624s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/extrinsics.h
+[2.625s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/imu_info.h
+[2.625s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/metadata.h
+[2.625s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_generator_c__visibility_control.h
+[2.625s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__functions.h
+[2.625s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__struct.h
+[2.626s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__type_support.h
+[2.626s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/device_info.h
+[2.626s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/library_path.sh
+[2.626s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/library_path.dsv
+[2.628s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_fastrtps_c.h
+[2.628s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__rosidl_typesupport_fastrtps_c.h
+[2.628s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__rosidl_typesupport_fastrtps_c.h
+[2.628s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[2.629s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__rosidl_typesupport_fastrtps_c.h
+[2.629s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_fastrtps_c.so
+[2.630s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_fastrtps_cpp.hpp
+[2.631s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__rosidl_typesupport_fastrtps_cpp.hpp
+[2.631s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__rosidl_typesupport_fastrtps_cpp.hpp
+[2.631s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[2.631s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__rosidl_typesupport_fastrtps_cpp.hpp
+[2.632s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_fastrtps_cpp.so
+[2.633s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_introspection_c.h
+[2.633s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__rosidl_typesupport_introspection_c.h
+[2.633s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__rosidl_typesupport_introspection_c.h
+[2.633s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[2.634s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__rosidl_typesupport_introspection_c.h
+[2.635s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__builder.hpp
+[2.635s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__struct.hpp
+[2.635s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__traits.hpp
+[2.635s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__type_support.hpp
+[2.636s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__builder.hpp
+[2.636s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__struct.hpp
+[2.636s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__traits.hpp
+[2.636s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__type_support.hpp
+[2.637s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__builder.hpp
+[2.637s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__struct.hpp
+[2.637s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__traits.hpp
+[2.638s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__type_support.hpp
+[2.638s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/extrinsics.hpp
+[2.638s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/imu_info.hpp
+[2.638s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/metadata.hpp
+[2.638s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
+[2.639s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__builder.hpp
+[2.639s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__struct.hpp
+[2.639s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__traits.hpp
+[2.639s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__type_support.hpp
+[2.640s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/device_info.hpp
+[2.640s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/extrinsics__rosidl_typesupport_introspection_cpp.hpp
+[2.641s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/imu_info__rosidl_typesupport_introspection_cpp.hpp
+[2.641s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/msg/detail/metadata__rosidl_typesupport_introspection_cpp.hpp
+[2.641s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/include/realsense2_camera_msgs/srv/detail/device_info__rosidl_typesupport_introspection_cpp.hpp
+[2.641s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/pythonpath.sh
+[2.642s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/pythonpath.dsv
+[2.642s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/__init__.py
+[2.643s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/__init__.py
+[2.644s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/_extrinsics.py
+[2.645s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/_imu_info.py
+[2.645s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/msg/_metadata.py
+[2.646s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/srv/__init__.py
+[2.647s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/srv/_device_info.py
+[2.648s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/realsense2_camera_msgs_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so
+[2.649s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/realsense2_camera_msgs_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so
+[2.650s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages/realsense2_camera_msgs/realsense2_camera_msgs_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so
+[2.650s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__python.so
+[2.651s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/IMUInfo.idl
+[2.651s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/Extrinsics.idl
+[2.652s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/Metadata.idl
+[2.652s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/srv/DeviceInfo.idl
+[2.652s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/IMUInfo.msg
+[2.653s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/Extrinsics.msg
+[2.653s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/msg/Metadata.msg
+[2.654s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/srv/DeviceInfo.srv
+[2.655s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/srv/DeviceInfo_Request.msg
+[2.655s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/srv/DeviceInfo_Response.msg
+[2.655s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/ament_index/resource_index/package_run_dependencies/realsense2_camera_msgs
+[2.656s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/ament_index/resource_index/parent_prefix_path/realsense2_camera_msgs
+[2.656s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/ament_prefix_path.sh
+[2.656s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/ament_prefix_path.dsv
+[2.656s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/path.sh
+[2.656s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/environment/path.dsv
+[2.657s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/local_setup.bash
+[2.657s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/local_setup.sh
+[2.657s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/local_setup.zsh
+[2.658s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/local_setup.dsv
+[2.658s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.dsv
+[2.664s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/ament_index/resource_index/packages/realsense2_camera_msgs
+[2.664s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/rosidl_cmake-extras.cmake
+[2.665s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/ament_cmake_export_dependencies-extras.cmake
+[2.665s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/ament_cmake_export_libraries-extras.cmake
+[2.666s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/ament_cmake_export_targets-extras.cmake
+[2.666s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/ament_cmake_export_include_directories-extras.cmake
+[2.667s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[2.667s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[2.669s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgsConfig.cmake
+[2.669s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgsConfig-version.cmake
+[2.670s] -- Up-to-date symlink: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/package.xml
+[2.671s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_generator_c.so
+[2.671s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_introspection_c.so
+[2.672s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_c.so
+[2.672s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_introspection_cpp.so
+[2.673s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/librealsense2_camera_msgs__rosidl_typesupport_cpp.so
+[2.799s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_generator_cExport.cmake
+[2.800s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_generator_cExport-noconfig.cmake
+[2.800s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_introspection_cExport.cmake
+[2.800s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[2.800s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_cExport.cmake
+[2.800s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_cExport-noconfig.cmake
+[2.811s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_generator_cppExport.cmake
+[2.811s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_introspection_cppExport.cmake
+[2.811s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[2.812s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_cppExport.cmake
+[2.812s] -- Up-to-date: /home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake/realsense2_camera_msgs__rosidl_typesupport_cppExport-noconfig.cmake
+[2.875s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/yolopose:/home/utilizador/charmie_ws/install/yolo_obj:/home/utilizador/charmie_ws/install/charmie_yolo_objects:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules:/home/utilizador/charmie_ws/install/charmie_speakers_offline:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_restaurant:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_person_localisation:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_localisation:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_inspection:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_carry_luggage:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/home/utilizador/charmie_ws/install/charmie_door_start:/home/utilizador/charmie_ws/install/charmie_diagnostics:/opt/ros/foxy /home/utilizador/.local/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera_msgs

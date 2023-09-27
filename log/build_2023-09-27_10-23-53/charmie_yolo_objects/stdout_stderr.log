@@ -1,0 +1,34 @@
+/home/utilizador/.local/lib/python3.8/site-packages/setuptools/dist.py:717: UserWarning: Usage of dash-separated 'script-dir' will not be supported in future versions. Please use the underscore name 'script_dir' instead
+  warnings.warn(
+running develop
+Removing /home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/python3.8/site-packages/charmie-yolo-objects.egg-link (link to .)
+/home/utilizador/.local/lib/python3.8/site-packages/setuptools/dist.py:717: UserWarning: Usage of dash-separated 'script-dir' will not be supported in future versions. Please use the underscore name 'script_dir' instead
+  warnings.warn(
+running egg_info
+writing ../../build/charmie_yolo_objects/charmie_yolo_objects.egg-info/PKG-INFO
+writing dependency_links to ../../build/charmie_yolo_objects/charmie_yolo_objects.egg-info/dependency_links.txt
+writing entry points to ../../build/charmie_yolo_objects/charmie_yolo_objects.egg-info/entry_points.txt
+writing requirements to ../../build/charmie_yolo_objects/charmie_yolo_objects.egg-info/requires.txt
+writing top-level names to ../../build/charmie_yolo_objects/charmie_yolo_objects.egg-info/top_level.txt
+reading manifest file '../../build/charmie_yolo_objects/charmie_yolo_objects.egg-info/SOURCES.txt'
+writing manifest file '../../build/charmie_yolo_objects/charmie_yolo_objects.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/utilizador/charmie_ws/build/charmie_yolo_objects/build
+creating /home/utilizador/charmie_ws/build/charmie_yolo_objects/build/lib
+creating /home/utilizador/charmie_ws/build/charmie_yolo_objects/build/lib/charmie_yolo_objects
+copying charmie_yolo_objects/__init__.py -> /home/utilizador/charmie_ws/build/charmie_yolo_objects/build/lib/charmie_yolo_objects
+copying charmie_yolo_objects/yolo_objects.py -> /home/utilizador/charmie_ws/build/charmie_yolo_objects/build/lib/charmie_yolo_objects
+running install
+running install_lib
+creating /home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/python3.8/site-packages/charmie_yolo_objects
+copying /home/utilizador/charmie_ws/build/charmie_yolo_objects/build/lib/charmie_yolo_objects/__init__.py -> /home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/python3.8/site-packages/charmie_yolo_objects
+copying /home/utilizador/charmie_ws/build/charmie_yolo_objects/build/lib/charmie_yolo_objects/yolo_objects.py -> /home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/python3.8/site-packages/charmie_yolo_objects
+byte-compiling /home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/python3.8/site-packages/charmie_yolo_objects/__init__.py to __init__.cpython-38.pyc
+byte-compiling /home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/python3.8/site-packages/charmie_yolo_objects/yolo_objects.py to yolo_objects.cpython-38.pyc
+running install_data
+running install_egg_info
+Copying ../../build/charmie_yolo_objects/charmie_yolo_objects.egg-info to /home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/python3.8/site-packages/charmie_yolo_objects-0.0.0-py3.8.egg-info
+running install_scripts
+Installing yolo_objects script to /home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/charmie_yolo_objects
+writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_yolo_objects/install.log'

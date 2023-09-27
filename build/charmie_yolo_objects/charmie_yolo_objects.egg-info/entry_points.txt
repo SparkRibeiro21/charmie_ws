@@ -1,0 +1,3 @@
+[console_scripts]
+yolo_objects = charmie_yolo_objects.yolo_objects:main
+

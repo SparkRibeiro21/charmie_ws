@@ -1,0 +1,33 @@
+running develop
+Removing /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose.egg-link (link to .)
+running egg_info
+writing ../../build/yolopose/yolopose.egg-info/PKG-INFO
+writing dependency_links to ../../build/yolopose/yolopose.egg-info/dependency_links.txt
+writing entry points to ../../build/yolopose/yolopose.egg-info/entry_points.txt
+writing requirements to ../../build/yolopose/yolopose.egg-info/requires.txt
+writing top-level names to ../../build/yolopose/yolopose.egg-info/top_level.txt
+reading manifest file '../../build/yolopose/yolopose.egg-info/SOURCES.txt'
+writing manifest file '../../build/yolopose/yolopose.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/utilizador/charmie_ws/build/yolopose/build
+creating /home/utilizador/charmie_ws/build/yolopose/build/lib
+creating /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose
+copying yolopose/__init__.py -> /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose
+copying yolopose/yolopose_node.py -> /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose
+copying yolopose/yolopose_node_sem_keypoints.py -> /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose
+running install
+running install_lib
+creating /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose
+copying /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose/__init__.py -> /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose
+copying /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose/yolopose_node.py -> /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose
+copying /home/utilizador/charmie_ws/build/yolopose/build/lib/yolopose/yolopose_node_sem_keypoints.py -> /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose
+byte-compiling /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose/__init__.py to __init__.cpython-38.pyc
+byte-compiling /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose/yolopose_node.py to yolopose_node.cpython-38.pyc
+byte-compiling /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose/yolopose_node_sem_keypoints.py to yolopose_node_sem_keypoints.cpython-38.pyc
+running install_data
+running install_egg_info
+Copying ../../build/yolopose/yolopose.egg-info to /home/utilizador/charmie_ws/install/yolopose/lib/python3.8/site-packages/yolopose-0.0.0-py3.8.egg-info
+running install_scripts
+Installing yolo_posev8 script to /home/utilizador/charmie_ws/install/yolopose/lib/yolopose
+writing list of installed files to '/home/utilizador/charmie_ws/build/yolopose/install.log'

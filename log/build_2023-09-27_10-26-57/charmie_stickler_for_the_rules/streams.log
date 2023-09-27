@@ -1,0 +1,24 @@
+[1.659s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --uninstall --editable --build-directory /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build
+[2.390s] running develop
+[3.318s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --uninstall --editable --build-directory /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build
+[3.323s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_stickler_for_the_rules build --build-base /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build install --record /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/install.log --install-scripts $base/lib/charmie_stickler_for_the_rules --single-version-externally-managed
+[3.763s] running egg_info
+[3.764s] writing ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/PKG-INFO
+[3.765s] writing dependency_links to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/dependency_links.txt
+[3.765s] writing entry points to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/entry_points.txt
+[3.766s] writing requirements to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/requires.txt
+[3.766s] writing top-level names to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/top_level.txt
+[3.769s] reading manifest file '../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[3.770s] writing manifest file '../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[3.770s] running build
+[3.770s] running build_py
+[3.770s] running install
+[3.770s] running install_lib
+[3.770s] running install_data
+[3.771s] running install_egg_info
+[3.771s] removing '/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules-0.0.0-py3.8.egg-info' (and everything under it)
+[3.772s] Copying ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules-0.0.0-py3.8.egg-info
+[3.773s] running install_scripts
+[3.774s] Installing stickler_for_the_rules script to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/charmie_stickler_for_the_rules
+[3.776s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/install.log'
+[4.658s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_stickler_for_the_rules build --build-base /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build install --record /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/install.log --install-scripts $base/lib/charmie_stickler_for_the_rules --single-version-externally-managed

@@ -1,0 +1,3 @@
+[console_scripts]
+yolo_obj = yolo_obj.yolo_obj_node:main
+

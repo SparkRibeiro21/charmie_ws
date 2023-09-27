@@ -1,0 +1,22 @@
+running develop
+running egg_info
+creating charmie_speakers_offline.egg-info
+writing charmie_speakers_offline.egg-info/PKG-INFO
+writing dependency_links to charmie_speakers_offline.egg-info/dependency_links.txt
+writing entry points to charmie_speakers_offline.egg-info/entry_points.txt
+writing requirements to charmie_speakers_offline.egg-info/requires.txt
+writing top-level names to charmie_speakers_offline.egg-info/top_level.txt
+writing manifest file 'charmie_speakers_offline.egg-info/SOURCES.txt'
+reading manifest file 'charmie_speakers_offline.egg-info/SOURCES.txt'
+writing manifest file 'charmie_speakers_offline.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_speakers_offline/lib/python3.8/site-packages/charmie-speakers-offline.egg-link (link to .)
+Installing speakers script to /home/utilizador/charmie_ws/install/charmie_speakers_offline/lib/charmie_speakers_offline
+
+Installed /home/utilizador/charmie_ws/build/charmie_speakers_offline
+running install_data
+creating /home/utilizador/charmie_ws/install/charmie_speakers_offline/share/ament_index
+creating /home/utilizador/charmie_ws/install/charmie_speakers_offline/share/ament_index/resource_index
+creating /home/utilizador/charmie_ws/install/charmie_speakers_offline/share/ament_index/resource_index/packages
+copying resource/charmie_speakers_offline -> /home/utilizador/charmie_ws/install/charmie_speakers_offline/share/ament_index/resource_index/packages
+copying package.xml -> /home/utilizador/charmie_ws/install/charmie_speakers_offline/share/charmie_speakers_offline

@@ -1,0 +1,24 @@
+/home/utilizador/.local/lib/python3.8/site-packages/setuptools/dist.py:717: UserWarning: Usage of dash-separated 'script-dir' will not be supported in future versions. Please use the underscore name 'script_dir' instead
+  warnings.warn(
+running develop
+running egg_info
+creating charmie_stickler_for_the_rules.egg-info
+writing charmie_stickler_for_the_rules.egg-info/PKG-INFO
+writing dependency_links to charmie_stickler_for_the_rules.egg-info/dependency_links.txt
+writing entry points to charmie_stickler_for_the_rules.egg-info/entry_points.txt
+writing requirements to charmie_stickler_for_the_rules.egg-info/requires.txt
+writing top-level names to charmie_stickler_for_the_rules.egg-info/top_level.txt
+writing manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+reading manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+writing manifest file 'charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie-stickler-for-the-rules.egg-link (link to .)
+Installing stickler_for_the_rules script to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/charmie_stickler_for_the_rules
+
+Installed /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules
+running install_data
+creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index
+creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index/resource_index
+creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index/resource_index/packages
+copying resource/charmie_stickler_for_the_rules -> /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/ament_index/resource_index/packages
+copying package.xml -> /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/share/charmie_stickler_for_the_rules

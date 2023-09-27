@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/realsense2_camera_node.dir/rclcpp_components/node_main_realsense2_camera_node.cpp.o"
+  "CMakeFiles/realsense2_camera_node.dir/rclcpp_components/node_main_realsense2_camera_node.cpp.o.d"
   "realsense2_camera_node"
   "realsense2_camera_node.pdb"
 )

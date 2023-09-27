@@ -1,0 +1,24 @@
+[3.319s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/prefix_override:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --uninstall --editable --build-directory /home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/build
+[3.993s] running develop
+[4.681s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/prefix_override:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --uninstall --editable --build-directory /home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/build
+[4.684s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/prefix_override:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_lidar_hokuyo build --build-base /home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/build install --record /home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/install.log --single-version-externally-managed
+[5.369s] running egg_info
+[5.370s] writing ../../build/charmie_lidar_hokuyo/charmie_lidar_hokuyo.egg-info/PKG-INFO
+[5.371s] writing dependency_links to ../../build/charmie_lidar_hokuyo/charmie_lidar_hokuyo.egg-info/dependency_links.txt
+[5.371s] writing entry points to ../../build/charmie_lidar_hokuyo/charmie_lidar_hokuyo.egg-info/entry_points.txt
+[5.372s] writing requirements to ../../build/charmie_lidar_hokuyo/charmie_lidar_hokuyo.egg-info/requires.txt
+[5.372s] writing top-level names to ../../build/charmie_lidar_hokuyo/charmie_lidar_hokuyo.egg-info/top_level.txt
+[5.378s] reading manifest file '../../build/charmie_lidar_hokuyo/charmie_lidar_hokuyo.egg-info/SOURCES.txt'
+[5.381s] writing manifest file '../../build/charmie_lidar_hokuyo/charmie_lidar_hokuyo.egg-info/SOURCES.txt'
+[5.381s] running build
+[5.382s] running build_py
+[5.382s] running install
+[5.384s] running install_lib
+[5.388s] running install_data
+[5.390s] running install_egg_info
+[5.394s] removing '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages/charmie_lidar_hokuyo-0.0.0-py3.8.egg-info' (and everything under it)
+[5.394s] Copying ../../build/charmie_lidar_hokuyo/charmie_lidar_hokuyo.egg-info to /home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages/charmie_lidar_hokuyo-0.0.0-py3.8.egg-info
+[5.395s] running install_scripts
+[5.445s] Installing lidar_hokuyo script to /home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/charmie_lidar_hokuyo
+[5.446s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/install.log'
+[5.536s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/prefix_override:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_lidar_hokuyo build --build-base /home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/build install --record /home/utilizador/charmie_ws/build/charmie_lidar_hokuyo/install.log --single-version-externally-managed
