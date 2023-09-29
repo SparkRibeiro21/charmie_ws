@@ -1,3 +1,0 @@
-[console_scripts]
-yolo_posev8 = yolopose.yolopose_node:main
-

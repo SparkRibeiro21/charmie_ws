@@ -1,0 +1,16 @@
+package.xml
+setup.cfg
+setup.py
+../../build/charmie_yolo_pose/charmie_yolo_pose.egg-info/PKG-INFO
+../../build/charmie_yolo_pose/charmie_yolo_pose.egg-info/SOURCES.txt
+../../build/charmie_yolo_pose/charmie_yolo_pose.egg-info/dependency_links.txt
+../../build/charmie_yolo_pose/charmie_yolo_pose.egg-info/entry_points.txt
+../../build/charmie_yolo_pose/charmie_yolo_pose.egg-info/requires.txt
+../../build/charmie_yolo_pose/charmie_yolo_pose.egg-info/top_level.txt
+../../build/charmie_yolo_pose/charmie_yolo_pose.egg-info/zip-safe
+charmie_yolo_pose/__init__.py
+charmie_yolo_pose/yolo_pose.py
+resource/charmie_yolo_pose
+test/test_copyright.py
+test/test_flake8.py
+test/test_pep257.py

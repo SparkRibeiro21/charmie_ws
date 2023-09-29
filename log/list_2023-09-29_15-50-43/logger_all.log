@@ -1,0 +1,354 @@
+[1.110s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'list', '-p', '--base-paths', '/home/utilizador/charmie_ws']
+[1.110s] DEBUG:colcon:Parsed command line arguments: Namespace(allow_overriding=[], base_paths=['/home/utilizador/charmie_ws'], build_base='build', ignore_user_meta=False, log_base=None, log_level=None, main=<bound method ListVerb.main of <colcon_package_information.verb.list.ListVerb object at 0x7f0f8c0c4d90>>, metas=['./colcon.meta'], names_only=False, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_end=None, packages_ignore=None, packages_ignore_regex=None, packages_select=None, packages_select_build_failed=False, packages_select_by_dep=None, packages_select_regex=None, packages_select_test_failures=False, packages_skip=None, packages_skip_build_finished=False, packages_skip_by_dep=None, packages_skip_regex=None, packages_skip_test_passed=False, packages_skip_up_to=None, packages_start=None, packages_up_to=None, packages_up_to_regex=None, paths=None, paths_only=True, topological_graph=False, topological_graph_density=False, topological_graph_dot=False, topological_graph_dot_cluster=False, topological_graph_dot_include_skipped=False, topological_graph_legend=False, topological_order=False, verb_extension=<colcon_package_information.verb.list.ListVerb object at 0x7f0f8c0c4d90>, verb_name='list', verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x7f0f8c088ca0>)
+[1.216s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[1.216s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[1.216s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[1.216s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[1.216s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[1.217s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/utilizador/charmie_ws'
+[1.217s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extensions ['ignore', 'ignore_ament_install']
+[1.217s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extension 'ignore'
+[1.217s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extension 'ignore_ament_install'
+[1.217s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extensions ['colcon_pkg']
+[1.217s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extension 'colcon_pkg'
+[1.218s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extensions ['colcon_meta']
+[1.218s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extension 'colcon_meta'
+[1.218s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extensions ['ros']
+[1.218s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extension 'ros'
+[1.247s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extensions ['cmake', 'python']
+[1.248s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extension 'cmake'
+[1.248s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extension 'python'
+[1.248s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extensions ['python_setup_py']
+[1.248s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws) by extension 'python_setup_py'
+[1.248s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/build) by extensions ['ignore', 'ignore_ament_install']
+[1.249s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/build) by extension 'ignore'
+[1.249s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/build) ignored
+[1.249s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/install) by extensions ['ignore', 'ignore_ament_install']
+[1.249s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/install) by extension 'ignore'
+[1.249s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/install) ignored
+[1.250s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/log) by extensions ['ignore', 'ignore_ament_install']
+[1.250s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/log) by extension 'ignore'
+[1.250s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/log) ignored
+[1.250s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extensions ['ignore', 'ignore_ament_install']
+[1.250s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extension 'ignore'
+[1.251s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extension 'ignore_ament_install'
+[1.251s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extensions ['colcon_pkg']
+[1.251s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extension 'colcon_pkg'
+[1.251s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extensions ['colcon_meta']
+[1.251s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extension 'colcon_meta'
+[1.251s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extensions ['ros']
+[1.251s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extension 'ros'
+[1.252s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extensions ['cmake', 'python']
+[1.252s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extension 'cmake'
+[1.252s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extension 'python'
+[1.252s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extensions ['python_setup_py']
+[1.252s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src) by extension 'python_setup_py'
+[1.252s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_audio) by extensions ['ignore', 'ignore_ament_install']
+[1.252s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_audio) by extension 'ignore'
+[1.252s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_audio) by extension 'ignore_ament_install'
+[1.253s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_audio) by extensions ['colcon_pkg']
+[1.253s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_audio) by extension 'colcon_pkg'
+[1.253s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_audio) by extensions ['colcon_meta']
+[1.253s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_audio) by extension 'colcon_meta'
+[1.253s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_audio) by extensions ['ros']
+[1.253s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_audio) by extension 'ros'
+[1.259s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_audio' with type 'ros.ament_python' and name 'charmie_audio'
+[1.259s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_bot) by extensions ['ignore', 'ignore_ament_install']
+[1.260s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_bot) by extension 'ignore'
+[1.260s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_bot) by extension 'ignore_ament_install'
+[1.260s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_bot) by extensions ['colcon_pkg']
+[1.260s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_bot) by extension 'colcon_pkg'
+[1.260s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_bot) by extensions ['colcon_meta']
+[1.260s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_bot) by extension 'colcon_meta'
+[1.260s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_bot) by extensions ['ros']
+[1.260s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_bot) by extension 'ros'
+[1.261s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_bot' with type 'ros.ament_cmake' and name 'charmie_bot'
+[1.262s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_carry_luggage) by extensions ['ignore', 'ignore_ament_install']
+[1.262s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_carry_luggage) by extension 'ignore'
+[1.262s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_carry_luggage) by extension 'ignore_ament_install'
+[1.262s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_carry_luggage) by extensions ['colcon_pkg']
+[1.262s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_carry_luggage) by extension 'colcon_pkg'
+[1.262s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_carry_luggage) by extensions ['colcon_meta']
+[1.262s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_carry_luggage) by extension 'colcon_meta'
+[1.263s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_carry_luggage) by extensions ['ros']
+[1.263s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_carry_luggage) by extension 'ros'
+[1.265s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_carry_luggage' with type 'ros.ament_python' and name 'charmie_carry_luggage'
+[1.265s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_debug) by extensions ['ignore', 'ignore_ament_install']
+[1.265s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_debug) by extension 'ignore'
+[1.266s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_debug) by extension 'ignore_ament_install'
+[1.266s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_debug) by extensions ['colcon_pkg']
+[1.266s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_debug) by extension 'colcon_pkg'
+[1.266s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_debug) by extensions ['colcon_meta']
+[1.266s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_debug) by extension 'colcon_meta'
+[1.266s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_debug) by extensions ['ros']
+[1.266s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_debug) by extension 'ros'
+[1.268s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_debug' with type 'ros.ament_python' and name 'charmie_debug'
+[1.268s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_diagnostics) by extensions ['ignore', 'ignore_ament_install']
+[1.269s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_diagnostics) by extension 'ignore'
+[1.269s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_diagnostics) by extension 'ignore_ament_install'
+[1.269s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_diagnostics) by extensions ['colcon_pkg']
+[1.269s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_diagnostics) by extension 'colcon_pkg'
+[1.269s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_diagnostics) by extensions ['colcon_meta']
+[1.269s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_diagnostics) by extension 'colcon_meta'
+[1.269s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_diagnostics) by extensions ['ros']
+[1.269s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_diagnostics) by extension 'ros'
+[1.271s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_diagnostics' with type 'ros.ament_python' and name 'charmie_diagnostics'
+[1.271s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_door_start) by extensions ['ignore', 'ignore_ament_install']
+[1.271s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_door_start) by extension 'ignore'
+[1.271s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_door_start) by extension 'ignore_ament_install'
+[1.272s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_door_start) by extensions ['colcon_pkg']
+[1.272s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_door_start) by extension 'colcon_pkg'
+[1.272s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_door_start) by extensions ['colcon_meta']
+[1.272s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_door_start) by extension 'colcon_meta'
+[1.272s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_door_start) by extensions ['ros']
+[1.272s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_door_start) by extension 'ros'
+[1.274s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_door_start' with type 'ros.ament_python' and name 'charmie_door_start'
+[1.274s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_face_shiningrgb) by extensions ['ignore', 'ignore_ament_install']
+[1.274s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_face_shiningrgb) by extension 'ignore'
+[1.275s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_face_shiningrgb) by extension 'ignore_ament_install'
+[1.275s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_face_shiningrgb) by extensions ['colcon_pkg']
+[1.275s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_face_shiningrgb) by extension 'colcon_pkg'
+[1.275s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_face_shiningrgb) by extensions ['colcon_meta']
+[1.275s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_face_shiningrgb) by extension 'colcon_meta'
+[1.275s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_face_shiningrgb) by extensions ['ros']
+[1.275s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_face_shiningrgb) by extension 'ros'
+[1.277s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_face_shiningrgb' with type 'ros.ament_python' and name 'charmie_face_shiningrgb'
+[1.277s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_inspection) by extensions ['ignore', 'ignore_ament_install']
+[1.277s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_inspection) by extension 'ignore'
+[1.278s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_inspection) by extension 'ignore_ament_install'
+[1.278s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_inspection) by extensions ['colcon_pkg']
+[1.278s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_inspection) by extension 'colcon_pkg'
+[1.278s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_inspection) by extensions ['colcon_meta']
+[1.278s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_inspection) by extension 'colcon_meta'
+[1.278s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_inspection) by extensions ['ros']
+[1.278s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_inspection) by extension 'ros'
+[1.280s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_inspection' with type 'ros.ament_python' and name 'charmie_inspection'
+[1.280s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_interfaces) by extensions ['ignore', 'ignore_ament_install']
+[1.281s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_interfaces) by extension 'ignore'
+[1.281s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_interfaces) by extension 'ignore_ament_install'
+[1.281s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_interfaces) by extensions ['colcon_pkg']
+[1.281s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_interfaces) by extension 'colcon_pkg'
+[1.281s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_interfaces) by extensions ['colcon_meta']
+[1.281s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_interfaces) by extension 'colcon_meta'
+[1.281s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_interfaces) by extensions ['ros']
+[1.281s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_interfaces) by extension 'ros'
+[1.283s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_interfaces' with type 'ros.ament_cmake' and name 'charmie_interfaces'
+[1.283s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo) by extensions ['ignore', 'ignore_ament_install']
+[1.283s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo) by extension 'ignore'
+[1.284s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo) by extension 'ignore_ament_install'
+[1.284s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo) by extensions ['colcon_pkg']
+[1.284s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo) by extension 'colcon_pkg'
+[1.284s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo) by extensions ['colcon_meta']
+[1.284s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo) by extension 'colcon_meta'
+[1.284s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo) by extensions ['ros']
+[1.284s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo) by extension 'ros'
+[1.286s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo' with type 'ros.ament_python' and name 'charmie_lidar_hokuyo'
+[1.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_localisation) by extensions ['ignore', 'ignore_ament_install']
+[1.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_localisation) by extension 'ignore'
+[1.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_localisation) by extension 'ignore_ament_install'
+[1.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_localisation) by extensions ['colcon_pkg']
+[1.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_localisation) by extension 'colcon_pkg'
+[1.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_localisation) by extensions ['colcon_meta']
+[1.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_localisation) by extension 'colcon_meta'
+[1.287s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_localisation) by extensions ['ros']
+[1.287s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_localisation) by extension 'ros'
+[1.289s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_localisation' with type 'ros.ament_python' and name 'charmie_localisation'
+[1.289s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_low_level) by extensions ['ignore', 'ignore_ament_install']
+[1.289s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_low_level) by extension 'ignore'
+[1.289s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_low_level) by extension 'ignore_ament_install'
+[1.289s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_low_level) by extensions ['colcon_pkg']
+[1.290s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_low_level) by extension 'colcon_pkg'
+[1.290s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_low_level) by extensions ['colcon_meta']
+[1.290s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_low_level) by extension 'colcon_meta'
+[1.290s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_low_level) by extensions ['ros']
+[1.290s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_low_level) by extension 'ros'
+[1.292s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_low_level' with type 'ros.ament_python' and name 'charmie_low_level'
+[1.292s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_navigation_sdnl) by extensions ['ignore', 'ignore_ament_install']
+[1.292s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_navigation_sdnl) by extension 'ignore'
+[1.292s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_navigation_sdnl) by extension 'ignore_ament_install'
+[1.292s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_navigation_sdnl) by extensions ['colcon_pkg']
+[1.292s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_navigation_sdnl) by extension 'colcon_pkg'
+[1.292s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_navigation_sdnl) by extensions ['colcon_meta']
+[1.293s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_navigation_sdnl) by extension 'colcon_meta'
+[1.293s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_navigation_sdnl) by extensions ['ros']
+[1.293s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_navigation_sdnl) by extension 'ros'
+[1.295s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_navigation_sdnl' with type 'ros.ament_python' and name 'charmie_navigation_sdnl'
+[1.295s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_neck_dynamixel) by extensions ['ignore', 'ignore_ament_install']
+[1.295s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_neck_dynamixel) by extension 'ignore'
+[1.295s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_neck_dynamixel) by extension 'ignore_ament_install'
+[1.296s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_neck_dynamixel) by extensions ['colcon_pkg']
+[1.296s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_neck_dynamixel) by extension 'colcon_pkg'
+[1.296s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_neck_dynamixel) by extensions ['colcon_meta']
+[1.296s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_neck_dynamixel) by extension 'colcon_meta'
+[1.296s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_neck_dynamixel) by extensions ['ros']
+[1.296s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_neck_dynamixel) by extension 'ros'
+[1.298s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_neck_dynamixel' with type 'ros.ament_python' and name 'charmie_neck_dynamixel'
+[1.298s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_obstacles) by extensions ['ignore', 'ignore_ament_install']
+[1.298s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_obstacles) by extension 'ignore'
+[1.298s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_obstacles) by extension 'ignore_ament_install'
+[1.298s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_obstacles) by extensions ['colcon_pkg']
+[1.298s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_obstacles) by extension 'colcon_pkg'
+[1.298s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_obstacles) by extensions ['colcon_meta']
+[1.299s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_obstacles) by extension 'colcon_meta'
+[1.299s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_obstacles) by extensions ['ros']
+[1.299s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_obstacles) by extension 'ros'
+[1.300s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_obstacles' with type 'ros.ament_python' and name 'charmie_obstacles'
+[1.300s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_odometry) by extensions ['ignore', 'ignore_ament_install']
+[1.300s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_odometry) by extension 'ignore'
+[1.300s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_odometry) by extension 'ignore_ament_install'
+[1.300s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_odometry) by extensions ['colcon_pkg']
+[1.300s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_odometry) by extension 'colcon_pkg'
+[1.300s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_odometry) by extensions ['colcon_meta']
+[1.300s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_odometry) by extension 'colcon_meta'
+[1.300s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_odometry) by extensions ['ros']
+[1.300s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_odometry) by extension 'ros'
+[1.301s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_odometry' with type 'ros.ament_python' and name 'charmie_odometry'
+[1.301s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_person_localisation) by extensions ['ignore', 'ignore_ament_install']
+[1.302s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_person_localisation) by extension 'ignore'
+[1.302s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_person_localisation) by extension 'ignore_ament_install'
+[1.302s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_person_localisation) by extensions ['colcon_pkg']
+[1.302s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_person_localisation) by extension 'colcon_pkg'
+[1.302s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_person_localisation) by extensions ['colcon_meta']
+[1.302s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_person_localisation) by extension 'colcon_meta'
+[1.302s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_person_localisation) by extensions ['ros']
+[1.302s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_person_localisation) by extension 'ros'
+[1.303s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_person_localisation' with type 'ros.ament_python' and name 'charmie_person_localisation'
+[1.303s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_ps4_controller) by extensions ['ignore', 'ignore_ament_install']
+[1.304s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_ps4_controller) by extension 'ignore'
+[1.304s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_ps4_controller) by extension 'ignore_ament_install'
+[1.304s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_ps4_controller) by extensions ['colcon_pkg']
+[1.304s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_ps4_controller) by extension 'colcon_pkg'
+[1.304s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_ps4_controller) by extensions ['colcon_meta']
+[1.304s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_ps4_controller) by extension 'colcon_meta'
+[1.304s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_ps4_controller) by extensions ['ros']
+[1.304s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_ps4_controller) by extension 'ros'
+[1.306s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_ps4_controller' with type 'ros.ament_python' and name 'charmie_ps4_controller'
+[1.306s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_receptionist) by extensions ['ignore', 'ignore_ament_install']
+[1.306s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_receptionist) by extension 'ignore'
+[1.306s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_receptionist) by extension 'ignore_ament_install'
+[1.306s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_receptionist) by extensions ['colcon_pkg']
+[1.307s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_receptionist) by extension 'colcon_pkg'
+[1.307s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_receptionist) by extensions ['colcon_meta']
+[1.307s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_receptionist) by extension 'colcon_meta'
+[1.307s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_receptionist) by extensions ['ros']
+[1.307s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_receptionist) by extension 'ros'
+[1.309s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_receptionist' with type 'ros.ament_python' and name 'charmie_receptionist'
+[1.309s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_restaurant) by extensions ['ignore', 'ignore_ament_install']
+[1.310s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_restaurant) by extension 'ignore'
+[1.310s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_restaurant) by extension 'ignore_ament_install'
+[1.310s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_restaurant) by extensions ['colcon_pkg']
+[1.310s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_restaurant) by extension 'colcon_pkg'
+[1.310s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_restaurant) by extensions ['colcon_meta']
+[1.310s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_restaurant) by extension 'colcon_meta'
+[1.310s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_restaurant) by extensions ['ros']
+[1.311s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_restaurant) by extension 'ros'
+[1.313s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_restaurant' with type 'ros.ament_python' and name 'charmie_restaurant'
+[1.313s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers) by extensions ['ignore', 'ignore_ament_install']
+[1.313s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers) by extension 'ignore'
+[1.313s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers) by extension 'ignore_ament_install'
+[1.314s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers) by extensions ['colcon_pkg']
+[1.314s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers) by extension 'colcon_pkg'
+[1.314s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers) by extensions ['colcon_meta']
+[1.314s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers) by extension 'colcon_meta'
+[1.314s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers) by extensions ['ros']
+[1.314s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers) by extension 'ros'
+[1.316s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_speakers' with type 'ros.ament_python' and name 'charmie_speakers'
+[1.316s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers_offline) by extensions ['ignore', 'ignore_ament_install']
+[1.316s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers_offline) by extension 'ignore'
+[1.316s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers_offline) by extension 'ignore_ament_install'
+[1.316s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers_offline) by extensions ['colcon_pkg']
+[1.316s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers_offline) by extension 'colcon_pkg'
+[1.317s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers_offline) by extensions ['colcon_meta']
+[1.317s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers_offline) by extension 'colcon_meta'
+[1.317s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers_offline) by extensions ['ros']
+[1.317s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_speakers_offline) by extension 'ros'
+[1.318s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_speakers_offline' with type 'ros.ament_python' and name 'charmie_speakers_offline'
+[1.318s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules) by extensions ['ignore', 'ignore_ament_install']
+[1.318s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules) by extension 'ignore'
+[1.318s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules) by extension 'ignore_ament_install'
+[1.318s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules) by extensions ['colcon_pkg']
+[1.318s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules) by extension 'colcon_pkg'
+[1.318s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules) by extensions ['colcon_meta']
+[1.318s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules) by extension 'colcon_meta'
+[1.318s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules) by extensions ['ros']
+[1.318s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules) by extension 'ros'
+[1.319s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules' with type 'ros.ament_python' and name 'charmie_stickler_for_the_rules'
+[1.319s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_objects) by extensions ['ignore', 'ignore_ament_install']
+[1.319s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_objects) by extension 'ignore'
+[1.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_objects) by extension 'ignore_ament_install'
+[1.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_objects) by extensions ['colcon_pkg']
+[1.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_objects) by extension 'colcon_pkg'
+[1.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_objects) by extensions ['colcon_meta']
+[1.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_objects) by extension 'colcon_meta'
+[1.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_objects) by extensions ['ros']
+[1.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_objects) by extension 'ros'
+[1.322s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_yolo_objects' with type 'ros.ament_python' and name 'charmie_yolo_objects'
+[1.322s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_pose) by extensions ['ignore', 'ignore_ament_install']
+[1.322s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_pose) by extension 'ignore'
+[1.322s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_pose) by extension 'ignore_ament_install'
+[1.322s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_pose) by extensions ['colcon_pkg']
+[1.323s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_pose) by extension 'colcon_pkg'
+[1.323s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_pose) by extensions ['colcon_meta']
+[1.323s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_pose) by extension 'colcon_meta'
+[1.323s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_pose) by extensions ['ros']
+[1.323s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/charmie_yolo_pose) by extension 'ros'
+[1.324s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/charmie_yolo_pose' with type 'ros.ament_python' and name 'charmie_yolo_pose'
+[1.324s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extensions ['ignore', 'ignore_ament_install']
+[1.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extension 'ignore'
+[1.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extension 'ignore_ament_install'
+[1.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extensions ['colcon_pkg']
+[1.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extension 'colcon_pkg'
+[1.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extensions ['colcon_meta']
+[1.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extension 'colcon_meta'
+[1.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extensions ['ros']
+[1.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extension 'ros'
+[1.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extensions ['cmake', 'python']
+[1.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extension 'cmake'
+[1.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extension 'python'
+[1.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extensions ['python_setup_py']
+[1.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros) by extension 'python_setup_py'
+[1.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera) by extensions ['ignore', 'ignore_ament_install']
+[1.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera) by extension 'ignore'
+[1.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera) by extension 'ignore_ament_install'
+[1.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera) by extensions ['colcon_pkg']
+[1.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera) by extension 'colcon_pkg'
+[1.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera) by extensions ['colcon_meta']
+[1.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera) by extension 'colcon_meta'
+[1.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera) by extensions ['ros']
+[1.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera) by extension 'ros'
+[1.334s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera' with type 'ros.ament_cmake' and name 'realsense2_camera'
+[1.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs) by extensions ['ignore', 'ignore_ament_install']
+[1.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs) by extension 'ignore'
+[1.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs) by extension 'ignore_ament_install'
+[1.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs) by extensions ['colcon_pkg']
+[1.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs) by extension 'colcon_pkg'
+[1.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs) by extensions ['colcon_meta']
+[1.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs) by extension 'colcon_meta'
+[1.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs) by extensions ['ros']
+[1.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs) by extension 'ros'
+[1.337s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs' with type 'ros.ament_cmake' and name 'realsense2_camera_msgs'
+[1.337s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description) by extensions ['ignore', 'ignore_ament_install']
+[1.337s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description) by extension 'ignore'
+[1.337s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description) by extension 'ignore_ament_install'
+[1.337s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description) by extensions ['colcon_pkg']
+[1.337s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description) by extension 'colcon_pkg'
+[1.338s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description) by extensions ['colcon_meta']
+[1.338s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description) by extension 'colcon_meta'
+[1.338s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description) by extensions ['ros']
+[1.338s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description) by extension 'ros'
+[1.340s] DEBUG:colcon.colcon_core.package_identification:Package '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description' with type 'ros.ament_cmake' and name 'realsense2_description'
+[1.340s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extensions ['ignore', 'ignore_ament_install']
+[1.340s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extension 'ignore'
+[1.340s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extension 'ignore_ament_install'
+[1.340s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extensions ['colcon_pkg']
+[1.340s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extension 'colcon_pkg'
+[1.340s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extensions ['colcon_meta']
+[1.340s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extension 'colcon_meta'
+[1.341s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extensions ['ros']
+[1.341s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extension 'ros'
+[1.341s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extensions ['cmake', 'python']
+[1.341s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extension 'cmake'
+[1.341s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extension 'python'
+[1.341s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extensions ['python_setup_py']
+[1.341s] Level 1:colcon.colcon_core.package_identification:_identify(/home/utilizador/charmie_ws/src/realsense-ros/scripts) by extension 'python_setup_py'
+[1.341s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults

@@ -1,0 +1,3 @@
+[console_scripts]
+yolo_pose = charmie_yolo_pose.yolo_pose:main
+

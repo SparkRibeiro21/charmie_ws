@@ -1,0 +1,22 @@
+running develop
+running egg_info
+creating charmie_person_localisation.egg-info
+writing charmie_person_localisation.egg-info/PKG-INFO
+writing dependency_links to charmie_person_localisation.egg-info/dependency_links.txt
+writing entry points to charmie_person_localisation.egg-info/entry_points.txt
+writing requirements to charmie_person_localisation.egg-info/requires.txt
+writing top-level names to charmie_person_localisation.egg-info/top_level.txt
+writing manifest file 'charmie_person_localisation.egg-info/SOURCES.txt'
+reading manifest file 'charmie_person_localisation.egg-info/SOURCES.txt'
+writing manifest file 'charmie_person_localisation.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_person_localisation/lib/python3.8/site-packages/charmie-person-localisation.egg-link (link to .)
+Installing person_localisation script to /home/utilizador/charmie_ws/install/charmie_person_localisation/lib/charmie_person_localisation
+
+Installed /home/utilizador/charmie_ws/build/charmie_person_localisation
+running install_data
+creating /home/utilizador/charmie_ws/install/charmie_person_localisation/share/ament_index
+creating /home/utilizador/charmie_ws/install/charmie_person_localisation/share/ament_index/resource_index
+creating /home/utilizador/charmie_ws/install/charmie_person_localisation/share/ament_index/resource_index/packages
+copying resource/charmie_person_localisation -> /home/utilizador/charmie_ws/install/charmie_person_localisation/share/ament_index/resource_index/packages
+copying package.xml -> /home/utilizador/charmie_ws/install/charmie_person_localisation/share/charmie_person_localisation

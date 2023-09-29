@@ -1,0 +1,24 @@
+[2.751s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_ps4_controller': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_ps4_controller/prefix_override:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_ps4_controller/build --no-deps install_data
+[3.614s] running develop
+[4.298s] running egg_info
+[4.298s] creating charmie_ps4_controller.egg-info
+[4.298s] writing charmie_ps4_controller.egg-info/PKG-INFO
+[4.299s] writing dependency_links to charmie_ps4_controller.egg-info/dependency_links.txt
+[4.299s] writing entry points to charmie_ps4_controller.egg-info/entry_points.txt
+[4.299s] writing requirements to charmie_ps4_controller.egg-info/requires.txt
+[4.299s] writing top-level names to charmie_ps4_controller.egg-info/top_level.txt
+[4.302s] writing manifest file 'charmie_ps4_controller.egg-info/SOURCES.txt'
+[4.306s] reading manifest file 'charmie_ps4_controller.egg-info/SOURCES.txt'
+[4.308s] writing manifest file 'charmie_ps4_controller.egg-info/SOURCES.txt'
+[4.394s] running build_ext
+[4.394s] Creating /home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages/charmie-ps4-controller.egg-link (link to .)
+[4.396s] Installing ps4_controller script to /home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/charmie_ps4_controller
+[4.397s] 
+[4.397s] Installed /home/utilizador/charmie_ws/build/charmie_ps4_controller
+[4.397s] running install_data
+[4.398s] creating /home/utilizador/charmie_ws/install/charmie_ps4_controller/share/ament_index
+[4.398s] creating /home/utilizador/charmie_ws/install/charmie_ps4_controller/share/ament_index/resource_index
+[4.398s] creating /home/utilizador/charmie_ws/install/charmie_ps4_controller/share/ament_index/resource_index/packages
+[4.398s] copying resource/charmie_ps4_controller -> /home/utilizador/charmie_ws/install/charmie_ps4_controller/share/ament_index/resource_index/packages
+[4.398s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_ps4_controller/share/charmie_ps4_controller
+[4.513s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_ps4_controller' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_ps4_controller/prefix_override:/home/utilizador/charmie_ws/install/charmie_ps4_controller/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_ps4_controller/build --no-deps install_data
