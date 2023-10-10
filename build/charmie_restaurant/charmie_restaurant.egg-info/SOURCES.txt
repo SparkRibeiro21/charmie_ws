@@ -10,7 +10,11 @@ setup.py
 ../../build/charmie_restaurant/charmie_restaurant.egg-info/zip-safe
 charmie_restaurant/__init__.py
 charmie_restaurant/restaurant.py
+charmie_restaurant.egg-info/PKG-INFO
+charmie_restaurant.egg-info/SOURCES.txt
+charmie_restaurant.egg-info/dependency_links.txt
+charmie_restaurant.egg-info/entry_points.txt
+charmie_restaurant.egg-info/requires.txt
+charmie_restaurant.egg-info/top_level.txt
+charmie_restaurant.egg-info/zip-safe
 resource/charmie_restaurant
-test/test_copyright.py
-test/test_flake8.py
-test/test_pep257.py

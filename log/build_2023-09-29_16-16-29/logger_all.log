@@ -1,0 +1,729 @@
+[0.461s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--symlink-install']
+[0.462s] DEBUG:colcon:Parsed command line arguments: Namespace(allow_overriding=[], ament_cmake_args=None, base_paths=['.'], build_base='build', catkin_cmake_args=None, catkin_skip_building_tests=False, cmake_args=None, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, cmake_target=None, cmake_target_skip_unavailable=False, continue_on_error=False, event_handlers=None, executor='parallel', ignore_user_meta=False, install_base='install', log_base=None, log_level=None, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7f2c1b1da0d0>>, merge_install=False, metas=['./colcon.meta'], packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_end=None, packages_ignore=None, packages_ignore_regex=None, packages_select=None, packages_select_build_failed=False, packages_select_by_dep=None, packages_select_regex=None, packages_select_test_failures=False, packages_skip=None, packages_skip_build_finished=False, packages_skip_by_dep=None, packages_skip_regex=None, packages_skip_test_passed=False, packages_skip_up_to=None, packages_start=None, packages_up_to=None, packages_up_to_regex=None, parallel_workers=8, paths=None, symlink_install=True, test_result_base=None, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7f2c1b1da0d0>, verb_name='build', verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x7f2c1b1da610>)
+[0.492s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.492s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.492s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.492s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.492s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.492s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.493s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/utilizador/charmie_ws'
+[0.493s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.493s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.493s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.493s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.493s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.493s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.493s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.493s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.493s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.505s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.505s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.505s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.505s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.505s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.505s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.505s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.505s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.506s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extensions ['ignore', 'ignore_ament_install']
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extension 'ignore'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extension 'ignore_ament_install'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extensions ['colcon_pkg']
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extension 'colcon_pkg'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extensions ['colcon_meta']
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extension 'colcon_meta'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extensions ['ros']
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_audio) by extension 'ros'
+[0.510s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_audio' with type 'ros.ament_python' and name 'charmie_audio'
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extensions ['ignore', 'ignore_ament_install']
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extension 'ignore'
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extension 'ignore_ament_install'
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extensions ['colcon_pkg']
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extension 'colcon_pkg'
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extensions ['colcon_meta']
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extension 'colcon_meta'
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extensions ['ros']
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_bot) by extension 'ros'
+[0.511s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_bot' with type 'ros.ament_cmake' and name 'charmie_bot'
+[0.512s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_carry_luggage) by extensions ['ignore', 'ignore_ament_install']
+[0.512s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_carry_luggage) by extension 'ignore'
+[0.512s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_carry_luggage) by extension 'ignore_ament_install'
+[0.512s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_carry_luggage) by extensions ['colcon_pkg']
+[0.512s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_carry_luggage) by extension 'colcon_pkg'
+[0.512s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_carry_luggage) by extensions ['colcon_meta']
+[0.512s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_carry_luggage) by extension 'colcon_meta'
+[0.512s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_carry_luggage) by extensions ['ros']
+[0.512s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_carry_luggage) by extension 'ros'
+[0.513s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_carry_luggage' with type 'ros.ament_python' and name 'charmie_carry_luggage'
+[0.513s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extensions ['ignore', 'ignore_ament_install']
+[0.513s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extension 'ignore'
+[0.513s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extension 'ignore_ament_install'
+[0.513s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extensions ['colcon_pkg']
+[0.513s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extension 'colcon_pkg'
+[0.514s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extensions ['colcon_meta']
+[0.514s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extension 'colcon_meta'
+[0.514s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extensions ['ros']
+[0.514s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_debug) by extension 'ros'
+[0.514s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_debug' with type 'ros.ament_python' and name 'charmie_debug'
+[0.515s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_diagnostics) by extensions ['ignore', 'ignore_ament_install']
+[0.515s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_diagnostics) by extension 'ignore'
+[0.515s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_diagnostics) by extension 'ignore_ament_install'
+[0.515s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_diagnostics) by extensions ['colcon_pkg']
+[0.515s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_diagnostics) by extension 'colcon_pkg'
+[0.515s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_diagnostics) by extensions ['colcon_meta']
+[0.515s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_diagnostics) by extension 'colcon_meta'
+[0.515s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_diagnostics) by extensions ['ros']
+[0.515s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_diagnostics) by extension 'ros'
+[0.515s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_diagnostics' with type 'ros.ament_python' and name 'charmie_diagnostics'
+[0.516s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_door_start) by extensions ['ignore', 'ignore_ament_install']
+[0.516s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_door_start) by extension 'ignore'
+[0.516s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_door_start) by extension 'ignore_ament_install'
+[0.516s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_door_start) by extensions ['colcon_pkg']
+[0.516s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_door_start) by extension 'colcon_pkg'
+[0.516s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_door_start) by extensions ['colcon_meta']
+[0.516s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_door_start) by extension 'colcon_meta'
+[0.516s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_door_start) by extensions ['ros']
+[0.516s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_door_start) by extension 'ros'
+[0.517s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_door_start' with type 'ros.ament_python' and name 'charmie_door_start'
+[0.517s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extensions ['ignore', 'ignore_ament_install']
+[0.517s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extension 'ignore'
+[0.517s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extension 'ignore_ament_install'
+[0.517s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extensions ['colcon_pkg']
+[0.517s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extension 'colcon_pkg'
+[0.517s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extensions ['colcon_meta']
+[0.517s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extension 'colcon_meta'
+[0.517s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extensions ['ros']
+[0.517s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_face_shiningrgb) by extension 'ros'
+[0.518s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_face_shiningrgb' with type 'ros.ament_python' and name 'charmie_face_shiningrgb'
+[0.518s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_inspection) by extensions ['ignore', 'ignore_ament_install']
+[0.518s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_inspection) by extension 'ignore'
+[0.518s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_inspection) by extension 'ignore_ament_install'
+[0.518s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_inspection) by extensions ['colcon_pkg']
+[0.518s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_inspection) by extension 'colcon_pkg'
+[0.518s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_inspection) by extensions ['colcon_meta']
+[0.518s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_inspection) by extension 'colcon_meta'
+[0.518s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_inspection) by extensions ['ros']
+[0.518s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_inspection) by extension 'ros'
+[0.519s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_inspection' with type 'ros.ament_python' and name 'charmie_inspection'
+[0.519s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extensions ['ignore', 'ignore_ament_install']
+[0.520s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extension 'ignore'
+[0.520s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extension 'ignore_ament_install'
+[0.520s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extensions ['colcon_pkg']
+[0.520s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extension 'colcon_pkg'
+[0.520s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extensions ['colcon_meta']
+[0.520s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extension 'colcon_meta'
+[0.520s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extensions ['ros']
+[0.520s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_interfaces) by extension 'ros'
+[0.521s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_interfaces' with type 'ros.ament_cmake' and name 'charmie_interfaces'
+[0.521s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extensions ['ignore', 'ignore_ament_install']
+[0.521s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extension 'ignore'
+[0.521s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extension 'ignore_ament_install'
+[0.521s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extensions ['colcon_pkg']
+[0.521s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extension 'colcon_pkg'
+[0.521s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extensions ['colcon_meta']
+[0.521s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extension 'colcon_meta'
+[0.521s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extensions ['ros']
+[0.521s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_lidar_hokuyo) by extension 'ros'
+[0.522s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_lidar_hokuyo' with type 'ros.ament_python' and name 'charmie_lidar_hokuyo'
+[0.522s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_localisation) by extensions ['ignore', 'ignore_ament_install']
+[0.522s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_localisation) by extension 'ignore'
+[0.522s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_localisation) by extension 'ignore_ament_install'
+[0.522s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_localisation) by extensions ['colcon_pkg']
+[0.522s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_localisation) by extension 'colcon_pkg'
+[0.522s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_localisation) by extensions ['colcon_meta']
+[0.522s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_localisation) by extension 'colcon_meta'
+[0.522s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_localisation) by extensions ['ros']
+[0.522s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_localisation) by extension 'ros'
+[0.523s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_localisation' with type 'ros.ament_python' and name 'charmie_localisation'
+[0.523s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extensions ['ignore', 'ignore_ament_install']
+[0.523s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extension 'ignore'
+[0.523s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extension 'ignore_ament_install'
+[0.523s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extensions ['colcon_pkg']
+[0.523s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extension 'colcon_pkg'
+[0.524s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extensions ['colcon_meta']
+[0.524s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extension 'colcon_meta'
+[0.524s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extensions ['ros']
+[0.524s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_low_level) by extension 'ros'
+[0.525s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_low_level' with type 'ros.ament_python' and name 'charmie_low_level'
+[0.525s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_navigation_sdnl) by extensions ['ignore', 'ignore_ament_install']
+[0.525s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_navigation_sdnl) by extension 'ignore'
+[0.526s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_navigation_sdnl) by extension 'ignore_ament_install'
+[0.526s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_navigation_sdnl) by extensions ['colcon_pkg']
+[0.526s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_navigation_sdnl) by extension 'colcon_pkg'
+[0.526s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_navigation_sdnl) by extensions ['colcon_meta']
+[0.526s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_navigation_sdnl) by extension 'colcon_meta'
+[0.526s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_navigation_sdnl) by extensions ['ros']
+[0.526s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_navigation_sdnl) by extension 'ros'
+[0.527s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_navigation_sdnl' with type 'ros.ament_python' and name 'charmie_navigation_sdnl'
+[0.527s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extensions ['ignore', 'ignore_ament_install']
+[0.527s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extension 'ignore'
+[0.527s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extension 'ignore_ament_install'
+[0.527s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extensions ['colcon_pkg']
+[0.527s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extension 'colcon_pkg'
+[0.527s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extensions ['colcon_meta']
+[0.527s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extension 'colcon_meta'
+[0.527s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extensions ['ros']
+[0.527s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_neck_dynamixel) by extension 'ros'
+[0.528s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_neck_dynamixel' with type 'ros.ament_python' and name 'charmie_neck_dynamixel'
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_obstacles) by extensions ['ignore', 'ignore_ament_install']
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_obstacles) by extension 'ignore'
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_obstacles) by extension 'ignore_ament_install'
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_obstacles) by extensions ['colcon_pkg']
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_obstacles) by extension 'colcon_pkg'
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_obstacles) by extensions ['colcon_meta']
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_obstacles) by extension 'colcon_meta'
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_obstacles) by extensions ['ros']
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_obstacles) by extension 'ros'
+[0.529s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_obstacles' with type 'ros.ament_python' and name 'charmie_obstacles'
+[0.529s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_odometry) by extensions ['ignore', 'ignore_ament_install']
+[0.529s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_odometry) by extension 'ignore'
+[0.529s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_odometry) by extension 'ignore_ament_install'
+[0.529s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_odometry) by extensions ['colcon_pkg']
+[0.529s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_odometry) by extension 'colcon_pkg'
+[0.530s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_odometry) by extensions ['colcon_meta']
+[0.530s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_odometry) by extension 'colcon_meta'
+[0.530s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_odometry) by extensions ['ros']
+[0.530s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_odometry) by extension 'ros'
+[0.531s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_odometry' with type 'ros.ament_python' and name 'charmie_odometry'
+[0.531s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_person_localisation) by extensions ['ignore', 'ignore_ament_install']
+[0.531s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_person_localisation) by extension 'ignore'
+[0.531s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_person_localisation) by extension 'ignore_ament_install'
+[0.531s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_person_localisation) by extensions ['colcon_pkg']
+[0.531s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_person_localisation) by extension 'colcon_pkg'
+[0.531s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_person_localisation) by extensions ['colcon_meta']
+[0.531s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_person_localisation) by extension 'colcon_meta'
+[0.531s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_person_localisation) by extensions ['ros']
+[0.531s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_person_localisation) by extension 'ros'
+[0.532s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_person_localisation' with type 'ros.ament_python' and name 'charmie_person_localisation'
+[0.532s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extensions ['ignore', 'ignore_ament_install']
+[0.532s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extension 'ignore'
+[0.532s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extension 'ignore_ament_install'
+[0.532s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extensions ['colcon_pkg']
+[0.532s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extension 'colcon_pkg'
+[0.532s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extensions ['colcon_meta']
+[0.532s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extension 'colcon_meta'
+[0.532s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extensions ['ros']
+[0.532s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_ps4_controller) by extension 'ros'
+[0.533s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_ps4_controller' with type 'ros.ament_python' and name 'charmie_ps4_controller'
+[0.533s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_receptionist) by extensions ['ignore', 'ignore_ament_install']
+[0.533s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_receptionist) by extension 'ignore'
+[0.533s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_receptionist) by extension 'ignore_ament_install'
+[0.533s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_receptionist) by extensions ['colcon_pkg']
+[0.533s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_receptionist) by extension 'colcon_pkg'
+[0.533s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_receptionist) by extensions ['colcon_meta']
+[0.533s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_receptionist) by extension 'colcon_meta'
+[0.534s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_receptionist) by extensions ['ros']
+[0.534s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_receptionist) by extension 'ros'
+[0.534s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_receptionist' with type 'ros.ament_python' and name 'charmie_receptionist'
+[0.534s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_restaurant) by extensions ['ignore', 'ignore_ament_install']
+[0.535s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_restaurant) by extension 'ignore'
+[0.535s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_restaurant) by extension 'ignore_ament_install'
+[0.535s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_restaurant) by extensions ['colcon_pkg']
+[0.535s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_restaurant) by extension 'colcon_pkg'
+[0.535s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_restaurant) by extensions ['colcon_meta']
+[0.535s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_restaurant) by extension 'colcon_meta'
+[0.535s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_restaurant) by extensions ['ros']
+[0.535s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_restaurant) by extension 'ros'
+[0.536s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_restaurant' with type 'ros.ament_python' and name 'charmie_restaurant'
+[0.536s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extensions ['ignore', 'ignore_ament_install']
+[0.536s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extension 'ignore'
+[0.536s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extension 'ignore_ament_install'
+[0.536s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extensions ['colcon_pkg']
+[0.536s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extension 'colcon_pkg'
+[0.536s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extensions ['colcon_meta']
+[0.536s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extension 'colcon_meta'
+[0.536s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extensions ['ros']
+[0.536s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers) by extension 'ros'
+[0.537s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_speakers' with type 'ros.ament_python' and name 'charmie_speakers'
+[0.537s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers_offline) by extensions ['ignore', 'ignore_ament_install']
+[0.537s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers_offline) by extension 'ignore'
+[0.537s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers_offline) by extension 'ignore_ament_install'
+[0.537s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers_offline) by extensions ['colcon_pkg']
+[0.537s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers_offline) by extension 'colcon_pkg'
+[0.537s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers_offline) by extensions ['colcon_meta']
+[0.537s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers_offline) by extension 'colcon_meta'
+[0.538s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers_offline) by extensions ['ros']
+[0.538s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_speakers_offline) by extension 'ros'
+[0.538s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_speakers_offline' with type 'ros.ament_python' and name 'charmie_speakers_offline'
+[0.538s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_stickler_for_the_rules) by extensions ['ignore', 'ignore_ament_install']
+[0.538s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_stickler_for_the_rules) by extension 'ignore'
+[0.539s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_stickler_for_the_rules) by extension 'ignore_ament_install'
+[0.539s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_stickler_for_the_rules) by extensions ['colcon_pkg']
+[0.539s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_stickler_for_the_rules) by extension 'colcon_pkg'
+[0.539s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_stickler_for_the_rules) by extensions ['colcon_meta']
+[0.539s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_stickler_for_the_rules) by extension 'colcon_meta'
+[0.539s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_stickler_for_the_rules) by extensions ['ros']
+[0.539s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_stickler_for_the_rules) by extension 'ros'
+[0.539s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_stickler_for_the_rules' with type 'ros.ament_python' and name 'charmie_stickler_for_the_rules'
+[0.539s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_objects) by extensions ['ignore', 'ignore_ament_install']
+[0.540s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_objects) by extension 'ignore'
+[0.540s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_objects) by extension 'ignore_ament_install'
+[0.540s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_objects) by extensions ['colcon_pkg']
+[0.540s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_objects) by extension 'colcon_pkg'
+[0.540s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_objects) by extensions ['colcon_meta']
+[0.540s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_objects) by extension 'colcon_meta'
+[0.540s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_objects) by extensions ['ros']
+[0.540s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_objects) by extension 'ros'
+[0.541s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_yolo_objects' with type 'ros.ament_python' and name 'charmie_yolo_objects'
+[0.541s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_pose) by extensions ['ignore', 'ignore_ament_install']
+[0.541s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_pose) by extension 'ignore'
+[0.541s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_pose) by extension 'ignore_ament_install'
+[0.541s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_pose) by extensions ['colcon_pkg']
+[0.541s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_pose) by extension 'colcon_pkg'
+[0.541s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_pose) by extensions ['colcon_meta']
+[0.541s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_pose) by extension 'colcon_meta'
+[0.541s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_pose) by extensions ['ros']
+[0.541s] Level 1:colcon.colcon_core.package_identification:_identify(src/charmie_yolo_pose) by extension 'ros'
+[0.542s] DEBUG:colcon.colcon_core.package_identification:Package 'src/charmie_yolo_pose' with type 'ros.ament_python' and name 'charmie_yolo_pose'
+[0.542s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['ignore', 'ignore_ament_install']
+[0.542s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'ignore'
+[0.542s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'ignore_ament_install'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['colcon_pkg']
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'colcon_pkg'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['colcon_meta']
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'colcon_meta'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['ros']
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'ros'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['cmake', 'python']
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'cmake'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'python'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extensions ['python_setup_py']
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros) by extension 'python_setup_py'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extensions ['ignore', 'ignore_ament_install']
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extension 'ignore'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extension 'ignore_ament_install'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extensions ['colcon_pkg']
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extension 'colcon_pkg'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extensions ['colcon_meta']
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extension 'colcon_meta'
+[0.544s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extensions ['ros']
+[0.544s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera) by extension 'ros'
+[0.545s] DEBUG:colcon.colcon_core.package_identification:Package 'src/realsense-ros/realsense2_camera' with type 'ros.ament_cmake' and name 'realsense2_camera'
+[0.545s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extensions ['ignore', 'ignore_ament_install']
+[0.545s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extension 'ignore'
+[0.546s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extension 'ignore_ament_install'
+[0.546s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extensions ['colcon_pkg']
+[0.546s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extension 'colcon_pkg'
+[0.546s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extensions ['colcon_meta']
+[0.546s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extension 'colcon_meta'
+[0.546s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extensions ['ros']
+[0.546s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_camera_msgs) by extension 'ros'
+[0.547s] DEBUG:colcon.colcon_core.package_identification:Package 'src/realsense-ros/realsense2_camera_msgs' with type 'ros.ament_cmake' and name 'realsense2_camera_msgs'
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extensions ['ignore', 'ignore_ament_install']
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extension 'ignore'
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extension 'ignore_ament_install'
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extensions ['colcon_pkg']
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extension 'colcon_pkg'
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extensions ['colcon_meta']
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extension 'colcon_meta'
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extensions ['ros']
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/realsense2_description) by extension 'ros'
+[0.548s] DEBUG:colcon.colcon_core.package_identification:Package 'src/realsense-ros/realsense2_description' with type 'ros.ament_cmake' and name 'realsense2_description'
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['ignore', 'ignore_ament_install']
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'ignore'
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'ignore_ament_install'
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['colcon_pkg']
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'colcon_pkg'
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['colcon_meta']
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'colcon_meta'
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['ros']
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'ros'
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['cmake', 'python']
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'cmake'
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'python'
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extensions ['python_setup_py']
+[0.549s] Level 1:colcon.colcon_core.package_identification:_identify(src/realsense-ros/scripts) by extension 'python_setup_py'
+[0.549s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.549s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.549s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.549s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.549s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.581s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.581s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.586s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 28 installed packages in /home/utilizador/charmie_ws/install
+[0.589s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 264 installed packages in /opt/ros/foxy
+[0.591s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_args' from command line to 'None'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_target' from command line to 'None'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_clean_cache' from command line to 'False'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_clean_first' from command line to 'False'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'cmake_force_configure' from command line to 'False'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'ament_cmake_args' from command line to 'None'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'catkin_cmake_args' from command line to 'None'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'charmie_bot' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.674s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_bot' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_bot', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_bot', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_bot', 'symlink_install': True, 'test_result_base': None}
+[0.676s] Level 5:colcon.colcon_core.verb:set package 'charmie_diagnostics' build argument 'cmake_args' from command line to 'None'
+[0.676s] Level 5:colcon.colcon_core.verb:set package 'charmie_diagnostics' build argument 'cmake_target' from command line to 'None'
+[0.676s] Level 5:colcon.colcon_core.verb:set package 'charmie_diagnostics' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.676s] Level 5:colcon.colcon_core.verb:set package 'charmie_diagnostics' build argument 'cmake_clean_cache' from command line to 'False'
+[0.676s] Level 5:colcon.colcon_core.verb:set package 'charmie_diagnostics' build argument 'cmake_clean_first' from command line to 'False'
+[0.676s] Level 5:colcon.colcon_core.verb:set package 'charmie_diagnostics' build argument 'cmake_force_configure' from command line to 'False'
+[0.676s] Level 5:colcon.colcon_core.verb:set package 'charmie_diagnostics' build argument 'ament_cmake_args' from command line to 'None'
+[0.676s] Level 5:colcon.colcon_core.verb:set package 'charmie_diagnostics' build argument 'catkin_cmake_args' from command line to 'None'
+[0.676s] Level 5:colcon.colcon_core.verb:set package 'charmie_diagnostics' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.676s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_diagnostics' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_diagnostics', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_diagnostics', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_diagnostics', 'symlink_install': True, 'test_result_base': None}
+[0.677s] Level 5:colcon.colcon_core.verb:set package 'charmie_door_start' build argument 'cmake_args' from command line to 'None'
+[0.677s] Level 5:colcon.colcon_core.verb:set package 'charmie_door_start' build argument 'cmake_target' from command line to 'None'
+[0.677s] Level 5:colcon.colcon_core.verb:set package 'charmie_door_start' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.677s] Level 5:colcon.colcon_core.verb:set package 'charmie_door_start' build argument 'cmake_clean_cache' from command line to 'False'
+[0.677s] Level 5:colcon.colcon_core.verb:set package 'charmie_door_start' build argument 'cmake_clean_first' from command line to 'False'
+[0.678s] Level 5:colcon.colcon_core.verb:set package 'charmie_door_start' build argument 'cmake_force_configure' from command line to 'False'
+[0.678s] Level 5:colcon.colcon_core.verb:set package 'charmie_door_start' build argument 'ament_cmake_args' from command line to 'None'
+[0.678s] Level 5:colcon.colcon_core.verb:set package 'charmie_door_start' build argument 'catkin_cmake_args' from command line to 'None'
+[0.678s] Level 5:colcon.colcon_core.verb:set package 'charmie_door_start' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.678s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_door_start' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_door_start', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_door_start', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_door_start', 'symlink_install': True, 'test_result_base': None}
+[0.679s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_args' from command line to 'None'
+[0.679s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_target' from command line to 'None'
+[0.679s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.679s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_clean_cache' from command line to 'False'
+[0.679s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_clean_first' from command line to 'False'
+[0.679s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'cmake_force_configure' from command line to 'False'
+[0.679s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'ament_cmake_args' from command line to 'None'
+[0.679s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'catkin_cmake_args' from command line to 'None'
+[0.679s] Level 5:colcon.colcon_core.verb:set package 'charmie_face_shiningrgb' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.679s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_face_shiningrgb' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_face_shiningrgb', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_face_shiningrgb', 'symlink_install': True, 'test_result_base': None}
+[0.680s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_args' from command line to 'None'
+[0.680s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_target' from command line to 'None'
+[0.680s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.681s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_clean_cache' from command line to 'False'
+[0.681s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_clean_first' from command line to 'False'
+[0.681s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'cmake_force_configure' from command line to 'False'
+[0.681s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'ament_cmake_args' from command line to 'None'
+[0.681s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'catkin_cmake_args' from command line to 'None'
+[0.681s] Level 5:colcon.colcon_core.verb:set package 'charmie_interfaces' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.681s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_interfaces' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_interfaces', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_interfaces', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_interfaces', 'symlink_install': True, 'test_result_base': None}
+[0.682s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_args' from command line to 'None'
+[0.682s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_target' from command line to 'None'
+[0.682s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.682s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_clean_cache' from command line to 'False'
+[0.682s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_clean_first' from command line to 'False'
+[0.682s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'cmake_force_configure' from command line to 'False'
+[0.682s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'ament_cmake_args' from command line to 'None'
+[0.682s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'catkin_cmake_args' from command line to 'None'
+[0.682s] Level 5:colcon.colcon_core.verb:set package 'charmie_lidar_hokuyo' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.682s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_lidar_hokuyo' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_lidar_hokuyo', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo', 'symlink_install': True, 'test_result_base': None}
+[0.683s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_args' from command line to 'None'
+[0.683s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_target' from command line to 'None'
+[0.683s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.683s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_clean_cache' from command line to 'False'
+[0.684s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_clean_first' from command line to 'False'
+[0.684s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'cmake_force_configure' from command line to 'False'
+[0.684s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'ament_cmake_args' from command line to 'None'
+[0.684s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'catkin_cmake_args' from command line to 'None'
+[0.684s] Level 5:colcon.colcon_core.verb:set package 'charmie_neck_dynamixel' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.684s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_neck_dynamixel' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_neck_dynamixel', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_neck_dynamixel', 'symlink_install': True, 'test_result_base': None}
+[0.685s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_args' from command line to 'None'
+[0.685s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_target' from command line to 'None'
+[0.685s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.685s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_clean_cache' from command line to 'False'
+[0.685s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_clean_first' from command line to 'False'
+[0.685s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'cmake_force_configure' from command line to 'False'
+[0.685s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'ament_cmake_args' from command line to 'None'
+[0.685s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'catkin_cmake_args' from command line to 'None'
+[0.685s] Level 5:colcon.colcon_core.verb:set package 'charmie_ps4_controller' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.685s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_ps4_controller' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_ps4_controller', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_ps4_controller', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_ps4_controller', 'symlink_install': True, 'test_result_base': None}
+[0.686s] Level 5:colcon.colcon_core.verb:set package 'charmie_stickler_for_the_rules' build argument 'cmake_args' from command line to 'None'
+[0.686s] Level 5:colcon.colcon_core.verb:set package 'charmie_stickler_for_the_rules' build argument 'cmake_target' from command line to 'None'
+[0.686s] Level 5:colcon.colcon_core.verb:set package 'charmie_stickler_for_the_rules' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.686s] Level 5:colcon.colcon_core.verb:set package 'charmie_stickler_for_the_rules' build argument 'cmake_clean_cache' from command line to 'False'
+[0.686s] Level 5:colcon.colcon_core.verb:set package 'charmie_stickler_for_the_rules' build argument 'cmake_clean_first' from command line to 'False'
+[0.687s] Level 5:colcon.colcon_core.verb:set package 'charmie_stickler_for_the_rules' build argument 'cmake_force_configure' from command line to 'False'
+[0.687s] Level 5:colcon.colcon_core.verb:set package 'charmie_stickler_for_the_rules' build argument 'ament_cmake_args' from command line to 'None'
+[0.687s] Level 5:colcon.colcon_core.verb:set package 'charmie_stickler_for_the_rules' build argument 'catkin_cmake_args' from command line to 'None'
+[0.687s] Level 5:colcon.colcon_core.verb:set package 'charmie_stickler_for_the_rules' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.687s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_stickler_for_the_rules' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules', 'symlink_install': True, 'test_result_base': None}
+[0.688s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_args' from command line to 'None'
+[0.688s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_target' from command line to 'None'
+[0.688s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.688s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_clean_cache' from command line to 'False'
+[0.688s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_clean_first' from command line to 'False'
+[0.688s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'cmake_force_configure' from command line to 'False'
+[0.688s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'ament_cmake_args' from command line to 'None'
+[0.688s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'catkin_cmake_args' from command line to 'None'
+[0.688s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera_msgs' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.688s] DEBUG:colcon.colcon_core.verb:Building package 'realsense2_camera_msgs' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/realsense2_camera_msgs', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/realsense2_camera_msgs', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs', 'symlink_install': True, 'test_result_base': None}
+[0.689s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_args' from command line to 'None'
+[0.689s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_target' from command line to 'None'
+[0.690s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.690s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_clean_cache' from command line to 'False'
+[0.690s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_clean_first' from command line to 'False'
+[0.690s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'cmake_force_configure' from command line to 'False'
+[0.690s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'ament_cmake_args' from command line to 'None'
+[0.690s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'catkin_cmake_args' from command line to 'None'
+[0.690s] Level 5:colcon.colcon_core.verb:set package 'charmie_audio' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.690s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_audio' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_audio', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_audio', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_audio', 'symlink_install': True, 'test_result_base': None}
+[0.691s] Level 5:colcon.colcon_core.verb:set package 'charmie_carry_luggage' build argument 'cmake_args' from command line to 'None'
+[0.691s] Level 5:colcon.colcon_core.verb:set package 'charmie_carry_luggage' build argument 'cmake_target' from command line to 'None'
+[0.691s] Level 5:colcon.colcon_core.verb:set package 'charmie_carry_luggage' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.691s] Level 5:colcon.colcon_core.verb:set package 'charmie_carry_luggage' build argument 'cmake_clean_cache' from command line to 'False'
+[0.691s] Level 5:colcon.colcon_core.verb:set package 'charmie_carry_luggage' build argument 'cmake_clean_first' from command line to 'False'
+[0.691s] Level 5:colcon.colcon_core.verb:set package 'charmie_carry_luggage' build argument 'cmake_force_configure' from command line to 'False'
+[0.691s] Level 5:colcon.colcon_core.verb:set package 'charmie_carry_luggage' build argument 'ament_cmake_args' from command line to 'None'
+[0.691s] Level 5:colcon.colcon_core.verb:set package 'charmie_carry_luggage' build argument 'catkin_cmake_args' from command line to 'None'
+[0.691s] Level 5:colcon.colcon_core.verb:set package 'charmie_carry_luggage' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.691s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_carry_luggage' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_carry_luggage', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_carry_luggage', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_carry_luggage', 'symlink_install': True, 'test_result_base': None}
+[0.693s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_args' from command line to 'None'
+[0.693s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_target' from command line to 'None'
+[0.693s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.693s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_clean_cache' from command line to 'False'
+[0.693s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_clean_first' from command line to 'False'
+[0.693s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'cmake_force_configure' from command line to 'False'
+[0.693s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'ament_cmake_args' from command line to 'None'
+[0.693s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'catkin_cmake_args' from command line to 'None'
+[0.693s] Level 5:colcon.colcon_core.verb:set package 'charmie_debug' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.693s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_debug' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_debug', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_debug', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_debug', 'symlink_install': True, 'test_result_base': None}
+[0.694s] Level 5:colcon.colcon_core.verb:set package 'charmie_inspection' build argument 'cmake_args' from command line to 'None'
+[0.694s] Level 5:colcon.colcon_core.verb:set package 'charmie_inspection' build argument 'cmake_target' from command line to 'None'
+[0.694s] Level 5:colcon.colcon_core.verb:set package 'charmie_inspection' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.694s] Level 5:colcon.colcon_core.verb:set package 'charmie_inspection' build argument 'cmake_clean_cache' from command line to 'False'
+[0.694s] Level 5:colcon.colcon_core.verb:set package 'charmie_inspection' build argument 'cmake_clean_first' from command line to 'False'
+[0.694s] Level 5:colcon.colcon_core.verb:set package 'charmie_inspection' build argument 'cmake_force_configure' from command line to 'False'
+[0.694s] Level 5:colcon.colcon_core.verb:set package 'charmie_inspection' build argument 'ament_cmake_args' from command line to 'None'
+[0.694s] Level 5:colcon.colcon_core.verb:set package 'charmie_inspection' build argument 'catkin_cmake_args' from command line to 'None'
+[0.694s] Level 5:colcon.colcon_core.verb:set package 'charmie_inspection' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.695s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_inspection' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_inspection', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_inspection', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_inspection', 'symlink_install': True, 'test_result_base': None}
+[0.696s] Level 5:colcon.colcon_core.verb:set package 'charmie_localisation' build argument 'cmake_args' from command line to 'None'
+[0.696s] Level 5:colcon.colcon_core.verb:set package 'charmie_localisation' build argument 'cmake_target' from command line to 'None'
+[0.696s] Level 5:colcon.colcon_core.verb:set package 'charmie_localisation' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.696s] Level 5:colcon.colcon_core.verb:set package 'charmie_localisation' build argument 'cmake_clean_cache' from command line to 'False'
+[0.696s] Level 5:colcon.colcon_core.verb:set package 'charmie_localisation' build argument 'cmake_clean_first' from command line to 'False'
+[0.696s] Level 5:colcon.colcon_core.verb:set package 'charmie_localisation' build argument 'cmake_force_configure' from command line to 'False'
+[0.696s] Level 5:colcon.colcon_core.verb:set package 'charmie_localisation' build argument 'ament_cmake_args' from command line to 'None'
+[0.696s] Level 5:colcon.colcon_core.verb:set package 'charmie_localisation' build argument 'catkin_cmake_args' from command line to 'None'
+[0.696s] Level 5:colcon.colcon_core.verb:set package 'charmie_localisation' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.696s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_localisation' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_localisation', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_localisation', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_localisation', 'symlink_install': True, 'test_result_base': None}
+[0.697s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_args' from command line to 'None'
+[0.697s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_target' from command line to 'None'
+[0.697s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.697s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_clean_cache' from command line to 'False'
+[0.698s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_clean_first' from command line to 'False'
+[0.698s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'cmake_force_configure' from command line to 'False'
+[0.698s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'ament_cmake_args' from command line to 'None'
+[0.698s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'catkin_cmake_args' from command line to 'None'
+[0.698s] Level 5:colcon.colcon_core.verb:set package 'charmie_low_level' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.698s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_low_level' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_low_level', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_low_level', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_low_level', 'symlink_install': True, 'test_result_base': None}
+[0.699s] Level 5:colcon.colcon_core.verb:set package 'charmie_navigation_sdnl' build argument 'cmake_args' from command line to 'None'
+[0.699s] Level 5:colcon.colcon_core.verb:set package 'charmie_navigation_sdnl' build argument 'cmake_target' from command line to 'None'
+[0.699s] Level 5:colcon.colcon_core.verb:set package 'charmie_navigation_sdnl' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.699s] Level 5:colcon.colcon_core.verb:set package 'charmie_navigation_sdnl' build argument 'cmake_clean_cache' from command line to 'False'
+[0.699s] Level 5:colcon.colcon_core.verb:set package 'charmie_navigation_sdnl' build argument 'cmake_clean_first' from command line to 'False'
+[0.699s] Level 5:colcon.colcon_core.verb:set package 'charmie_navigation_sdnl' build argument 'cmake_force_configure' from command line to 'False'
+[0.699s] Level 5:colcon.colcon_core.verb:set package 'charmie_navigation_sdnl' build argument 'ament_cmake_args' from command line to 'None'
+[0.699s] Level 5:colcon.colcon_core.verb:set package 'charmie_navigation_sdnl' build argument 'catkin_cmake_args' from command line to 'None'
+[0.699s] Level 5:colcon.colcon_core.verb:set package 'charmie_navigation_sdnl' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.699s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_navigation_sdnl' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_navigation_sdnl', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_navigation_sdnl', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_navigation_sdnl', 'symlink_install': True, 'test_result_base': None}
+[0.700s] Level 5:colcon.colcon_core.verb:set package 'charmie_obstacles' build argument 'cmake_args' from command line to 'None'
+[0.700s] Level 5:colcon.colcon_core.verb:set package 'charmie_obstacles' build argument 'cmake_target' from command line to 'None'
+[0.701s] Level 5:colcon.colcon_core.verb:set package 'charmie_obstacles' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.701s] Level 5:colcon.colcon_core.verb:set package 'charmie_obstacles' build argument 'cmake_clean_cache' from command line to 'False'
+[0.701s] Level 5:colcon.colcon_core.verb:set package 'charmie_obstacles' build argument 'cmake_clean_first' from command line to 'False'
+[0.701s] Level 5:colcon.colcon_core.verb:set package 'charmie_obstacles' build argument 'cmake_force_configure' from command line to 'False'
+[0.701s] Level 5:colcon.colcon_core.verb:set package 'charmie_obstacles' build argument 'ament_cmake_args' from command line to 'None'
+[0.701s] Level 5:colcon.colcon_core.verb:set package 'charmie_obstacles' build argument 'catkin_cmake_args' from command line to 'None'
+[0.701s] Level 5:colcon.colcon_core.verb:set package 'charmie_obstacles' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.701s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_obstacles' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_obstacles', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_obstacles', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_obstacles', 'symlink_install': True, 'test_result_base': None}
+[0.702s] Level 5:colcon.colcon_core.verb:set package 'charmie_odometry' build argument 'cmake_args' from command line to 'None'
+[0.702s] Level 5:colcon.colcon_core.verb:set package 'charmie_odometry' build argument 'cmake_target' from command line to 'None'
+[0.702s] Level 5:colcon.colcon_core.verb:set package 'charmie_odometry' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.702s] Level 5:colcon.colcon_core.verb:set package 'charmie_odometry' build argument 'cmake_clean_cache' from command line to 'False'
+[0.702s] Level 5:colcon.colcon_core.verb:set package 'charmie_odometry' build argument 'cmake_clean_first' from command line to 'False'
+[0.702s] Level 5:colcon.colcon_core.verb:set package 'charmie_odometry' build argument 'cmake_force_configure' from command line to 'False'
+[0.702s] Level 5:colcon.colcon_core.verb:set package 'charmie_odometry' build argument 'ament_cmake_args' from command line to 'None'
+[0.702s] Level 5:colcon.colcon_core.verb:set package 'charmie_odometry' build argument 'catkin_cmake_args' from command line to 'None'
+[0.702s] Level 5:colcon.colcon_core.verb:set package 'charmie_odometry' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.702s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_odometry' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_odometry', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_odometry', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_odometry', 'symlink_install': True, 'test_result_base': None}
+[0.703s] Level 5:colcon.colcon_core.verb:set package 'charmie_person_localisation' build argument 'cmake_args' from command line to 'None'
+[0.703s] Level 5:colcon.colcon_core.verb:set package 'charmie_person_localisation' build argument 'cmake_target' from command line to 'None'
+[0.704s] Level 5:colcon.colcon_core.verb:set package 'charmie_person_localisation' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.704s] Level 5:colcon.colcon_core.verb:set package 'charmie_person_localisation' build argument 'cmake_clean_cache' from command line to 'False'
+[0.704s] Level 5:colcon.colcon_core.verb:set package 'charmie_person_localisation' build argument 'cmake_clean_first' from command line to 'False'
+[0.704s] Level 5:colcon.colcon_core.verb:set package 'charmie_person_localisation' build argument 'cmake_force_configure' from command line to 'False'
+[0.704s] Level 5:colcon.colcon_core.verb:set package 'charmie_person_localisation' build argument 'ament_cmake_args' from command line to 'None'
+[0.704s] Level 5:colcon.colcon_core.verb:set package 'charmie_person_localisation' build argument 'catkin_cmake_args' from command line to 'None'
+[0.704s] Level 5:colcon.colcon_core.verb:set package 'charmie_person_localisation' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.704s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_person_localisation' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_person_localisation', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_person_localisation', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_person_localisation', 'symlink_install': True, 'test_result_base': None}
+[0.705s] Level 5:colcon.colcon_core.verb:set package 'charmie_receptionist' build argument 'cmake_args' from command line to 'None'
+[0.705s] Level 5:colcon.colcon_core.verb:set package 'charmie_receptionist' build argument 'cmake_target' from command line to 'None'
+[0.705s] Level 5:colcon.colcon_core.verb:set package 'charmie_receptionist' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.705s] Level 5:colcon.colcon_core.verb:set package 'charmie_receptionist' build argument 'cmake_clean_cache' from command line to 'False'
+[0.705s] Level 5:colcon.colcon_core.verb:set package 'charmie_receptionist' build argument 'cmake_clean_first' from command line to 'False'
+[0.705s] Level 5:colcon.colcon_core.verb:set package 'charmie_receptionist' build argument 'cmake_force_configure' from command line to 'False'
+[0.705s] Level 5:colcon.colcon_core.verb:set package 'charmie_receptionist' build argument 'ament_cmake_args' from command line to 'None'
+[0.705s] Level 5:colcon.colcon_core.verb:set package 'charmie_receptionist' build argument 'catkin_cmake_args' from command line to 'None'
+[0.705s] Level 5:colcon.colcon_core.verb:set package 'charmie_receptionist' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.705s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_receptionist' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_receptionist', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_receptionist', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_receptionist', 'symlink_install': True, 'test_result_base': None}
+[0.706s] Level 5:colcon.colcon_core.verb:set package 'charmie_restaurant' build argument 'cmake_args' from command line to 'None'
+[0.706s] Level 5:colcon.colcon_core.verb:set package 'charmie_restaurant' build argument 'cmake_target' from command line to 'None'
+[0.706s] Level 5:colcon.colcon_core.verb:set package 'charmie_restaurant' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.706s] Level 5:colcon.colcon_core.verb:set package 'charmie_restaurant' build argument 'cmake_clean_cache' from command line to 'False'
+[0.706s] Level 5:colcon.colcon_core.verb:set package 'charmie_restaurant' build argument 'cmake_clean_first' from command line to 'False'
+[0.706s] Level 5:colcon.colcon_core.verb:set package 'charmie_restaurant' build argument 'cmake_force_configure' from command line to 'False'
+[0.707s] Level 5:colcon.colcon_core.verb:set package 'charmie_restaurant' build argument 'ament_cmake_args' from command line to 'None'
+[0.707s] Level 5:colcon.colcon_core.verb:set package 'charmie_restaurant' build argument 'catkin_cmake_args' from command line to 'None'
+[0.707s] Level 5:colcon.colcon_core.verb:set package 'charmie_restaurant' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.707s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_restaurant' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_restaurant', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_restaurant', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_restaurant', 'symlink_install': True, 'test_result_base': None}
+[0.708s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_args' from command line to 'None'
+[0.708s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_target' from command line to 'None'
+[0.708s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.708s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_clean_cache' from command line to 'False'
+[0.708s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_clean_first' from command line to 'False'
+[0.708s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'cmake_force_configure' from command line to 'False'
+[0.708s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'ament_cmake_args' from command line to 'None'
+[0.708s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'catkin_cmake_args' from command line to 'None'
+[0.708s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.708s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_speakers' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_speakers', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_speakers', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_speakers', 'symlink_install': True, 'test_result_base': None}
+[0.709s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers_offline' build argument 'cmake_args' from command line to 'None'
+[0.709s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers_offline' build argument 'cmake_target' from command line to 'None'
+[0.709s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers_offline' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.709s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers_offline' build argument 'cmake_clean_cache' from command line to 'False'
+[0.709s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers_offline' build argument 'cmake_clean_first' from command line to 'False'
+[0.709s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers_offline' build argument 'cmake_force_configure' from command line to 'False'
+[0.709s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers_offline' build argument 'ament_cmake_args' from command line to 'None'
+[0.709s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers_offline' build argument 'catkin_cmake_args' from command line to 'None'
+[0.709s] Level 5:colcon.colcon_core.verb:set package 'charmie_speakers_offline' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.710s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_speakers_offline' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_speakers_offline', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_speakers_offline', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_speakers_offline', 'symlink_install': True, 'test_result_base': None}
+[0.711s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_objects' build argument 'cmake_args' from command line to 'None'
+[0.711s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_objects' build argument 'cmake_target' from command line to 'None'
+[0.711s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_objects' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.711s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_objects' build argument 'cmake_clean_cache' from command line to 'False'
+[0.711s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_objects' build argument 'cmake_clean_first' from command line to 'False'
+[0.711s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_objects' build argument 'cmake_force_configure' from command line to 'False'
+[0.711s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_objects' build argument 'ament_cmake_args' from command line to 'None'
+[0.711s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_objects' build argument 'catkin_cmake_args' from command line to 'None'
+[0.711s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_objects' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.711s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_yolo_objects' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_yolo_objects', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_yolo_objects', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_yolo_objects', 'symlink_install': True, 'test_result_base': None}
+[0.712s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_pose' build argument 'cmake_args' from command line to 'None'
+[0.712s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_pose' build argument 'cmake_target' from command line to 'None'
+[0.712s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_pose' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.712s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_pose' build argument 'cmake_clean_cache' from command line to 'False'
+[0.712s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_pose' build argument 'cmake_clean_first' from command line to 'False'
+[0.712s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_pose' build argument 'cmake_force_configure' from command line to 'False'
+[0.712s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_pose' build argument 'ament_cmake_args' from command line to 'None'
+[0.712s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_pose' build argument 'catkin_cmake_args' from command line to 'None'
+[0.712s] Level 5:colcon.colcon_core.verb:set package 'charmie_yolo_pose' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.712s] DEBUG:colcon.colcon_core.verb:Building package 'charmie_yolo_pose' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/charmie_yolo_pose', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/charmie_yolo_pose', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/charmie_yolo_pose', 'symlink_install': True, 'test_result_base': None}
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_args' from command line to 'None'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_target' from command line to 'None'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_clean_cache' from command line to 'False'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_clean_first' from command line to 'False'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'cmake_force_configure' from command line to 'False'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'ament_cmake_args' from command line to 'None'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'catkin_cmake_args' from command line to 'None'
+[0.714s] Level 5:colcon.colcon_core.verb:set package 'realsense2_camera' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.714s] DEBUG:colcon.colcon_core.verb:Building package 'realsense2_camera' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/realsense2_camera', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/realsense2_camera', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera', 'symlink_install': True, 'test_result_base': None}
+[0.715s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_args' from command line to 'None'
+[0.715s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_target' from command line to 'None'
+[0.718s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.718s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_clean_cache' from command line to 'False'
+[0.718s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_clean_first' from command line to 'False'
+[0.718s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'cmake_force_configure' from command line to 'False'
+[0.718s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'ament_cmake_args' from command line to 'None'
+[0.718s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'catkin_cmake_args' from command line to 'None'
+[0.718s] Level 5:colcon.colcon_core.verb:set package 'realsense2_description' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.718s] DEBUG:colcon.colcon_core.verb:Building package 'realsense2_description' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/utilizador/charmie_ws/build/realsense2_description', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/utilizador/charmie_ws/install/realsense2_description', 'merge_install': False, 'path': '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_description', 'symlink_install': True, 'test_result_base': None}
+[0.719s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.724s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.725s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_interfaces' with build type 'ament_cmake'
+[0.725s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/utilizador/charmie_ws/src/charmie_interfaces'
+[0.732s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.732s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.732s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.741s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs' with build type 'ament_cmake'
+[0.742s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera_msgs'
+[0.744s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.744s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.754s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_bot' with build type 'ament_cmake'
+[0.754s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/utilizador/charmie_ws/src/charmie_bot'
+[0.757s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.757s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.770s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_diagnostics' with build type 'ament_python'
+[0.771s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_diagnostics', 'ament_prefix_path')
+[0.773s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_diagnostics/share/charmie_diagnostics/hook/ament_prefix_path.ps1'
+[0.774s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_diagnostics/share/charmie_diagnostics/hook/ament_prefix_path.dsv'
+[0.775s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_diagnostics/share/charmie_diagnostics/hook/ament_prefix_path.sh'
+[0.777s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.777s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.788s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_door_start' with build type 'ament_python'
+[0.789s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_door_start', 'ament_prefix_path')
+[0.792s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_door_start/share/charmie_door_start/hook/ament_prefix_path.ps1'
+[0.793s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_door_start/share/charmie_door_start/hook/ament_prefix_path.dsv'
+[0.794s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_door_start/share/charmie_door_start/hook/ament_prefix_path.sh'
+[0.796s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.796s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.805s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_face_shiningrgb' with build type 'ament_python'
+[0.805s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_face_shiningrgb', 'ament_prefix_path')
+[0.807s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/ament_prefix_path.ps1'
+[0.809s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/ament_prefix_path.dsv'
+[0.809s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_face_shiningrgb/share/charmie_face_shiningrgb/hook/ament_prefix_path.sh'
+[0.811s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.811s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.822s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo' with build type 'ament_python'
+[0.822s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_lidar_hokuyo', 'ament_prefix_path')
+[0.824s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/ament_prefix_path.ps1'
+[0.825s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/ament_prefix_path.dsv'
+[0.826s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo/share/charmie_lidar_hokuyo/hook/ament_prefix_path.sh'
+[0.828s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.828s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.836s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/utilizador/charmie_ws/src/charmie_neck_dynamixel' with build type 'ament_python'
+[0.837s] Level 1:colcon.colcon_core.shell:create_environment_hook('charmie_neck_dynamixel', 'ament_prefix_path')
+[0.839s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/ament_prefix_path.ps1'
+[0.840s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/ament_prefix_path.dsv'
+[0.841s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/utilizador/charmie_ws/install/charmie_neck_dynamixel/share/charmie_neck_dynamixel/hook/ament_prefix_path.sh'
+[0.843s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.843s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.863s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_yolo_pose:/home/utilizador/charmie_ws/install/charmie_yolo_objects:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules:/home/utilizador/charmie_ws/install/charmie_speakers_offline:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_restaurant:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_person_localisation:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_localisation:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_inspection:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_carry_luggage:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/home/utilizador/charmie_ws/install/charmie_door_start:/home/utilizador/charmie_ws/install/charmie_diagnostics:/opt/ros/foxy /home/utilizador/.local/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_interfaces -- -j8 -l8
+[0.869s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_yolo_pose:/home/utilizador/charmie_ws/install/charmie_yolo_objects:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules:/home/utilizador/charmie_ws/install/charmie_speakers_offline:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_restaurant:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_person_localisation:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_localisation:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_inspection:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_carry_luggage:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/home/utilizador/charmie_ws/install/charmie_door_start:/home/utilizador/charmie_ws/install/charmie_diagnostics:/opt/ros/foxy /home/utilizador/.local/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera_msgs -- -j8 -l8
+[0.876s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/utilizador/charmie_ws/build/charmie_bot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_yolo_pose:/home/utilizador/charmie_ws/install/charmie_yolo_objects:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules:/home/utilizador/charmie_ws/install/charmie_speakers_offline:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_restaurant:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_person_localisation:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_localisation:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_inspection:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_carry_luggage:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/home/utilizador/charmie_ws/install/charmie_door_start:/home/utilizador/charmie_ws/install/charmie_diagnostics:/opt/ros/foxy /home/utilizador/.local/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_bot -- -j8 -l8
+[1.261s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_diagnostics'
+[1.264s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.264s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.487s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete was interrupted
+[1.487s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete again
+[1.837s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_face_shiningrgb'
+[1.839s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.839s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[2.202s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_lidar_hokuyo'
+[2.207s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[2.207s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[2.550s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/utilizador/charmie_ws/src/charmie_neck_dynamixel'
+[2.552s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[2.553s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[2.578s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished
+[2.578s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[2.579s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[2.579s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[2.590s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[2.590s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[2.590s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[2.610s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[2.612s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/utilizador/charmie_ws/install/local_setup.ps1'
+[2.614s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/utilizador/charmie_ws/install/_local_setup_util_ps1.py'
+[2.615s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/utilizador/charmie_ws/install/setup.ps1'
+[2.618s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/utilizador/charmie_ws/install/local_setup.sh'
+[2.621s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/utilizador/charmie_ws/install/_local_setup_util_sh.py'
+[2.623s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/utilizador/charmie_ws/install/setup.sh'
+[2.627s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/utilizador/charmie_ws/install/local_setup.bash'
+[2.628s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/utilizador/charmie_ws/install/setup.bash'
+[2.633s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/utilizador/charmie_ws/install/local_setup.zsh'
+[2.634s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/utilizador/charmie_ws/install/setup.zsh'

@@ -1,3 +1,0 @@
-[console_scripts]
-inspection = charmie_inspection.inspection:main
-

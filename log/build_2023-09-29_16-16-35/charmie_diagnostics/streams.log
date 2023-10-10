@@ -1,0 +1,17 @@
+[2.847s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_diagnostics': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_diagnostics/prefix_override:/home/utilizador/charmie_ws/install/charmie_diagnostics/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_diagnostics/build --no-deps install_data
+[3.468s] running develop
+[3.868s] running egg_info
+[3.869s] writing charmie_diagnostics.egg-info/PKG-INFO
+[3.869s] writing dependency_links to charmie_diagnostics.egg-info/dependency_links.txt
+[3.870s] writing entry points to charmie_diagnostics.egg-info/entry_points.txt
+[3.870s] writing requirements to charmie_diagnostics.egg-info/requires.txt
+[3.870s] writing top-level names to charmie_diagnostics.egg-info/top_level.txt
+[3.876s] reading manifest file 'charmie_diagnostics.egg-info/SOURCES.txt'
+[3.877s] writing manifest file 'charmie_diagnostics.egg-info/SOURCES.txt'
+[3.953s] running build_ext
+[3.954s] Creating /home/utilizador/charmie_ws/install/charmie_diagnostics/lib/python3.8/site-packages/charmie-diagnostics.egg-link (link to .)
+[3.956s] Installing diagnostics script to /home/utilizador/charmie_ws/install/charmie_diagnostics/lib/charmie_diagnostics
+[3.957s] 
+[3.957s] Installed /home/utilizador/charmie_ws/build/charmie_diagnostics
+[3.957s] running install_data
+[4.127s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_diagnostics' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_diagnostics/prefix_override:/home/utilizador/charmie_ws/install/charmie_diagnostics/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_diagnostics/build --no-deps install_data

@@ -1,10 +1,10 @@
 #!/usr/bin/python3
-# EASY-INSTALL-ENTRY-SCRIPT: 'charmie-receptionist==0.0.0','console_scripts','receptionist'
+# EASY-INSTALL-ENTRY-SCRIPT: 'charmie-receptionist','console_scripts','receptionist'
 import re
 import sys
 
 # for compatibility with easy_install; see #2198
-__requires__ = 'charmie-receptionist==0.0.0'
+__requires__ = 'charmie-receptionist'
 
 try:
     from importlib.metadata import distribution
@@ -30,4 +30,4 @@ globals().setdefault('load_entry_point', importlib_load_entry_point)
 
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
-    sys.exit(load_entry_point('charmie-receptionist==0.0.0', 'console_scripts', 'receptionist')())
+    sys.exit(load_entry_point('charmie-receptionist', 'console_scripts', 'receptionist')())

@@ -10,8 +10,12 @@ setup.py
 ../../build/charmie_inspection/charmie_inspection.egg-info/zip-safe
 charmie_inspection/__init__.py
 charmie_inspection/inspection.py
+charmie_inspection.egg-info/PKG-INFO
+charmie_inspection.egg-info/SOURCES.txt
+charmie_inspection.egg-info/dependency_links.txt
+charmie_inspection.egg-info/entry_points.txt
+charmie_inspection.egg-info/requires.txt
+charmie_inspection.egg-info/top_level.txt
+charmie_inspection.egg-info/zip-safe
 launch/inspection_launch.launch.py
 resource/charmie_inspection
-test/test_copyright.py
-test/test_flake8.py
-test/test_pep257.py

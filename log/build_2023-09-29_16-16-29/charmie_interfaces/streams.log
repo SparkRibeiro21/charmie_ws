@@ -1,0 +1,15 @@
+[0.134s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/utilizador/charmie_ws/install/charmie_yolo_pose:/home/utilizador/charmie_ws/install/charmie_yolo_objects:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules:/home/utilizador/charmie_ws/install/charmie_speakers_offline:/home/utilizador/charmie_ws/install/charmie_speakers:/home/utilizador/charmie_ws/install/charmie_restaurant:/home/utilizador/charmie_ws/install/charmie_receptionist:/home/utilizador/charmie_ws/install/charmie_ps4_controller:/home/utilizador/charmie_ws/install/charmie_person_localisation:/home/utilizador/charmie_ws/install/charmie_odometry:/home/utilizador/charmie_ws/install/charmie_obstacles:/home/utilizador/charmie_ws/install/charmie_neck_dynamixel:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl:/home/utilizador/charmie_ws/install/charmie_low_level:/home/utilizador/charmie_ws/install/charmie_localisation:/home/utilizador/charmie_ws/install/charmie_lidar_hokuyo:/home/utilizador/charmie_ws/install/charmie_inspection:/home/utilizador/charmie_ws/install/charmie_debug:/home/utilizador/charmie_ws/install/charmie_carry_luggage:/home/utilizador/charmie_ws/install/charmie_audio:/home/utilizador/charmie_ws/install/charmie_face_shiningrgb:/home/utilizador/charmie_ws/install/charmie_door_start:/home/utilizador/charmie_ws/install/charmie_diagnostics:/opt/ros/foxy /home/utilizador/.local/bin/cmake --build /home/utilizador/charmie_ws/build/charmie_interfaces -- -j8 -l8
+[1.836s] [ 12%] Built target charmie_interfaces__rosidl_generator_c
+[1.838s] [ 12%] Built target charmie_interfaces__cpp
+[1.838s] [ 31%] Built target charmie_interfaces__rosidl_typesupport_introspection_c
+[1.839s] [ 36%] Built target charmie_interfaces__rosidl_typesupport_c
+[1.839s] [ 59%] Built target charmie_interfaces__rosidl_typesupport_introspection_cpp
+[1.840s] [ 60%] Built target charmie_interfaces__rosidl_typesupport_cpp
+[1.840s] [ 71%] Built target charmie_interfaces__rosidl_typesupport_fastrtps_cpp
+[1.840s] [ 83%] Built target charmie_interfaces__rosidl_typesupport_fastrtps_c
+[1.840s] [ 83%] Built target charmie_interfaces
+[1.840s] [ 84%] Built target charmie_interfaces__py
+[1.841s] [ 95%] Built target charmie_interfaces__python
+[1.841s] [ 97%] Built target charmie_interfaces__rosidl_typesupport_introspection_c__pyext
+[1.841s] [ 98%] Built target charmie_interfaces__rosidl_typesupport_c__pyext
+[1.841s] [100%] Built target charmie_interfaces__rosidl_typesupport_fastrtps_c__pyext

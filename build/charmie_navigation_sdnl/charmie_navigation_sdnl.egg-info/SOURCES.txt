@@ -10,7 +10,11 @@ setup.py
 ../../build/charmie_navigation_sdnl/charmie_navigation_sdnl.egg-info/zip-safe
 charmie_navigation_sdnl/__init__.py
 charmie_navigation_sdnl/navigation.py
+charmie_navigation_sdnl.egg-info/PKG-INFO
+charmie_navigation_sdnl.egg-info/SOURCES.txt
+charmie_navigation_sdnl.egg-info/dependency_links.txt
+charmie_navigation_sdnl.egg-info/entry_points.txt
+charmie_navigation_sdnl.egg-info/requires.txt
+charmie_navigation_sdnl.egg-info/top_level.txt
+charmie_navigation_sdnl.egg-info/zip-safe
 resource/charmie_navigation_sdnl
-test/test_copyright.py
-test/test_flake8.py
-test/test_pep257.py
