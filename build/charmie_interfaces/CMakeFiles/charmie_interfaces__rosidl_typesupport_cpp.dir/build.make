@@ -77,7 +77,7 @@ rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: /opt/r
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: /opt/ros/foxy/share/rosidl_typesupport_cpp/resource/srv__type_support.cpp.em
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/Encoders.idl
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/ExampleTR.idl
-rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/Keypoints.idl
+rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/DetectedPerson.idl
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/MultiObjects.idl
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/ObstacleInfo.idl
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/Obstacles.idl
@@ -86,7 +86,6 @@ rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/SpeechType.idl
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/TarNavSDNL.idl
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/Yolov8Pose.idl
-rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: rosidl_adapter/charmie_interfaces/msg/Yolov8PoseArray.idl
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: /opt/ros/foxy/share/std_msgs/msg/Byte.idl
 rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: /opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl
@@ -154,8 +153,8 @@ rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp: /opt/r
 rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp: rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp
 
-rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp: rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp
+rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp: rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp
 
 rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp: rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp
@@ -180,9 +179,6 @@ rosidl_typesupport_cpp/charmie_interfaces/msg/tar_nav_sdnl__type_support.cpp: ro
 
 rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp: rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp
-
-rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp: rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp
 
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/flags.make
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp.o: rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp
@@ -212,19 +208,19 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp -o CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp.s
 
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/flags.make
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o: rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o -MF CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o.d -o CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o -c /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp
+CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/flags.make
+CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o: rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp
+CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o -MF CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o.d -o CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o -c /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp
 
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp > CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.i
+CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp > CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.i
 
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp -o CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.s
+CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp -o CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.s
 
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/flags.make
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp.o: rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp
@@ -338,25 +334,11 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp -o CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp.s
 
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/flags.make
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o: rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o -MF CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o.d -o CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o -c /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp
-
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp > CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.i
-
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp -o CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.s
-
 # Object files for target charmie_interfaces__rosidl_typesupport_cpp
 charmie_interfaces__rosidl_typesupport_cpp_OBJECTS = \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp.o" \
-"CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o" \
+"CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/obstacle_info__type_support.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/obstacles__type_support.cpp.o" \
@@ -364,15 +346,14 @@ charmie_interfaces__rosidl_typesupport_cpp_OBJECTS = \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/robot_speech__type_support.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/speech_type__type_support.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/tar_nav_sdnl__type_support.cpp.o" \
-"CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp.o" \
-"CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o"
+"CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp.o"
 
 # External object files for target charmie_interfaces__rosidl_typesupport_cpp
 charmie_interfaces__rosidl_typesupport_cpp_EXTERNAL_OBJECTS =
 
 libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp.o
 libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp.o
-libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o
+libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o
 libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp.o
 libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/obstacle_info__type_support.cpp.o
 libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/obstacles__type_support.cpp.o
@@ -381,7 +362,6 @@ libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces_
 libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/speech_type__type_support.cpp.o
 libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/tar_nav_sdnl__type_support.cpp.o
 libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp.o
-libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o
 libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/build.make
 libcharmie_interfaces__rosidl_typesupport_cpp.so: /opt/ros/foxy/lib/libgeometry_msgs__rosidl_typesupport_introspection_c.so
 libcharmie_interfaces__rosidl_typesupport_cpp.so: /opt/ros/foxy/lib/libgeometry_msgs__rosidl_typesupport_c.so
@@ -406,7 +386,7 @@ libcharmie_interfaces__rosidl_typesupport_cpp.so: /opt/ros/foxy/lib/librosidl_ru
 libcharmie_interfaces__rosidl_typesupport_cpp.so: /opt/ros/foxy/lib/librcpputils.so
 libcharmie_interfaces__rosidl_typesupport_cpp.so: /opt/ros/foxy/lib/librcutils.so
 libcharmie_interfaces__rosidl_typesupport_cpp.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Linking CXX shared library libcharmie_interfaces__rosidl_typesupport_cpp.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Linking CXX shared library libcharmie_interfaces__rosidl_typesupport_cpp.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -417,9 +397,9 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/clean:
 	$(CMAKE_COMMAND) -P CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/cmake_clean.cmake
 .PHONY : CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/clean
 
+CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/obstacle_info__type_support.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/obstacles__type_support.cpp
@@ -428,7 +408,6 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesup
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/speech_type__type_support.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/tar_nav_sdnl__type_support.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp
-CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend: rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp
 	cd /home/utilizador/charmie_ws/build/charmie_interfaces && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/utilizador/charmie_ws/src/charmie_interfaces /home/utilizador/charmie_ws/src/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/depend
 

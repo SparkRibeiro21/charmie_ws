@@ -5,7 +5,7 @@
   "idl_tuples": [
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/Encoders.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/ExampleTR.idl",
-    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/Keypoints.idl",
+    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/DetectedPerson.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/MultiObjects.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/ObstacleInfo.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/Obstacles.idl",
@@ -13,8 +13,7 @@
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/RobotSpeech.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/SpeechType.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/TarNavSDNL.idl",
-    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/Yolov8Pose.idl",
-    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/Yolov8PoseArray.idl"
+    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces:msg/Yolov8Pose.idl"
   ],
   "ros_interface_dependencies": [
     "std_msgs:/opt/ros/foxy/share/std_msgs/msg/Bool.idl",
@@ -88,7 +87,7 @@
     "/opt/ros/foxy/share/rosidl_typesupport_cpp/resource/srv__type_support.cpp.em",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Encoders.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/ExampleTR.idl",
-    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Keypoints.idl",
+    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/DetectedPerson.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/MultiObjects.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/ObstacleInfo.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Obstacles.idl",
@@ -97,7 +96,6 @@
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/SpeechType.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/TarNavSDNL.idl",
     "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Yolov8Pose.idl",
-    "/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_adapter/charmie_interfaces/msg/Yolov8PoseArray.idl",
     "/opt/ros/foxy/share/std_msgs/msg/Bool.idl",
     "/opt/ros/foxy/share/std_msgs/msg/Byte.idl",
     "/opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl",

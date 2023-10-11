@@ -1,9 +1,9 @@
+msg/DetectedPerson.idl
+msg/DetectedPerson.msg
 msg/Encoders.idl
 msg/Encoders.msg
 msg/ExampleTR.idl
 msg/ExampleTR.msg
-msg/Keypoints.idl
-msg/Keypoints.msg
 msg/MultiObjects.idl
 msg/MultiObjects.msg
 msg/ObstacleInfo.idl
@@ -20,5 +20,3 @@ msg/TarNavSDNL.idl
 msg/TarNavSDNL.msg
 msg/Yolov8Pose.idl
 msg/Yolov8Pose.msg
-msg/Yolov8PoseArray.idl
-msg/Yolov8PoseArray.msg

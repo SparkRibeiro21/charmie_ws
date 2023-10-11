@@ -152,7 +152,7 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesu
  /usr/include/c++/9/bits/stl_bvector.h /usr/include/c++/9/bits/vector.tcc \
  /opt/ros/foxy/include/rosidl_runtime_cpp/message_initialization.hpp \
  /opt/ros/foxy/include/rosidl_runtime_c/message_initialization.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__struct.hpp \
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__struct.hpp \
  /opt/ros/foxy/include/fastcdr/Cdr.h \
  /opt/ros/foxy/include/fastcdr/fastcdr_dll.h \
  /opt/ros/foxy/include/fastcdr/config.h \

@@ -76,11 +76,11 @@ CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__struct.hpp
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__traits.hpp
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__type_support.hpp
-CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/keypoints.hpp
-CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__builder.hpp
-CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__struct.hpp
-CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__traits.hpp
-CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__type_support.hpp
+CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detected_person.hpp
+CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__builder.hpp
+CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__struct.hpp
+CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__traits.hpp
+CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__type_support.hpp
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/multi_objects.hpp
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/multi_objects__builder.hpp
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/multi_objects__struct.hpp
@@ -121,11 +121,6 @@ CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__struct.hpp
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__traits.hpp
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__type_support.hpp
-CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/yolov8_pose_array.hpp
-CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__builder.hpp
-CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__struct.hpp
-CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__traits.hpp
-CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__type_support.hpp
 CMakeFiles/charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
 
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: /opt/ros/foxy/lib/rosidl_generator_cpp/rosidl_generator_cpp
@@ -149,7 +144,7 @@ rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: /opt/ros/foxy/share/ro
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: /opt/ros/foxy/share/rosidl_generator_cpp/resource/srv__type_support.hpp.em
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/Encoders.idl
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/ExampleTR.idl
-rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/Keypoints.idl
+rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/DetectedPerson.idl
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/MultiObjects.idl
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/ObstacleInfo.idl
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/Obstacles.idl
@@ -158,7 +153,6 @@ rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/SpeechType.idl
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/TarNavSDNL.idl
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/Yolov8Pose.idl
-rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: rosidl_adapter/charmie_interfaces/msg/Yolov8PoseArray.idl
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: /opt/ros/foxy/share/std_msgs/msg/Byte.idl
 rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp: /opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl
@@ -250,20 +244,20 @@ rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__traits.hpp: rosid
 rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__type_support.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__type_support.hpp
 
-rosidl_generator_cpp/charmie_interfaces/msg/keypoints.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/keypoints.hpp
+rosidl_generator_cpp/charmie_interfaces/msg/detected_person.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detected_person.hpp
 
-rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__builder.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__builder.hpp
+rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__builder.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__builder.hpp
 
-rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__struct.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__struct.hpp
+rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__struct.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__struct.hpp
 
-rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__traits.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__traits.hpp
+rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__traits.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__traits.hpp
 
-rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__type_support.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__type_support.hpp
+rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__type_support.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__type_support.hpp
 
 rosidl_generator_cpp/charmie_interfaces/msg/multi_objects.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/multi_objects.hpp
@@ -385,22 +379,11 @@ rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__traits.hpp: rosi
 rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__type_support.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__type_support.hpp
 
-rosidl_generator_cpp/charmie_interfaces/msg/yolov8_pose_array.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/yolov8_pose_array.hpp
-
-rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__builder.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__builder.hpp
-
-rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__struct.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__struct.hpp
-
-rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__traits.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__traits.hpp
-
-rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__type_support.hpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__type_support.hpp
-
 charmie_interfaces__cpp: CMakeFiles/charmie_interfaces__cpp
+charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__builder.hpp
+charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__struct.hpp
+charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__traits.hpp
+charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__type_support.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/encoders__builder.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/encoders__struct.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/encoders__traits.hpp
@@ -409,10 +392,6 @@ charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/exam
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__struct.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__traits.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__type_support.hpp
-charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__builder.hpp
-charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__struct.hpp
-charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__traits.hpp
-charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__type_support.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/multi_objects__builder.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/multi_objects__struct.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/multi_objects__traits.hpp
@@ -445,13 +424,9 @@ charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolo
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__struct.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__traits.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__type_support.hpp
-charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__builder.hpp
-charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__struct.hpp
-charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__traits.hpp
-charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__type_support.hpp
+charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/detected_person.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp
-charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/keypoints.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/multi_objects.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/obstacle_info.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/obstacles.hpp
@@ -460,7 +435,6 @@ charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/robot_speec
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/speech_type.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/tar_nav_sdnl.hpp
 charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/yolov8_pose.hpp
-charmie_interfaces__cpp: rosidl_generator_cpp/charmie_interfaces/msg/yolov8_pose_array.hpp
 charmie_interfaces__cpp: CMakeFiles/charmie_interfaces__cpp.dir/build.make
 .PHONY : charmie_interfaces__cpp
 

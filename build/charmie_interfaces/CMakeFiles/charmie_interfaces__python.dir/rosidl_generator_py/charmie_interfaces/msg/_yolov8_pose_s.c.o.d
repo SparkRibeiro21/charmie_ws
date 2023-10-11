@@ -181,9 +181,9 @@ CMakeFiles/charmie_interfaces__python.dir/rosidl_generator_py/charmie_interfaces
  /usr/include/python3.8/numpy/__multiarray_api.h \
  /opt/ros/foxy/include/rosidl_runtime_c/visibility_control.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__struct.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__struct.h \
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/detected_person__struct.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__functions.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h \
  /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence.h \
  /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence_functions.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__functions.h
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/detected_person__functions.h

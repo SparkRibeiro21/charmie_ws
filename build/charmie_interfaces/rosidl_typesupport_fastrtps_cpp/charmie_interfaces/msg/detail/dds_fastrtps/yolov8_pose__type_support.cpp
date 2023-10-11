@@ -23,16 +23,16 @@ namespace msg
 namespace typesupport_fastrtps_cpp
 {
 bool cdr_serialize(
-  const charmie_interfaces::msg::Keypoints &,
+  const charmie_interfaces::msg::DetectedPerson &,
   eprosima::fastcdr::Cdr &);
 bool cdr_deserialize(
   eprosima::fastcdr::Cdr &,
-  charmie_interfaces::msg::Keypoints &);
+  charmie_interfaces::msg::DetectedPerson &);
 size_t get_serialized_size(
-  const charmie_interfaces::msg::Keypoints &,
+  const charmie_interfaces::msg::DetectedPerson &,
   size_t current_alignment);
 size_t
-max_serialized_size_Keypoints(
+max_serialized_size_DetectedPerson(
   bool & full_bounded,
   size_t current_alignment);
 }  // namespace typesupport_fastrtps_cpp
@@ -57,13 +57,13 @@ cdr_serialize(
 {
   // Member: num_person
   cdr << ros_message.num_person;
-  // Member: keypoints
+  // Member: persons
   {
-    size_t size = ros_message.keypoints.size();
+    size_t size = ros_message.persons.size();
     cdr << static_cast<uint32_t>(size);
     for (size_t i = 0; i < size; i++) {
       charmie_interfaces::msg::typesupport_fastrtps_cpp::cdr_serialize(
-        ros_message.keypoints[i],
+        ros_message.persons[i],
         cdr);
     }
   }
@@ -79,15 +79,15 @@ cdr_deserialize(
   // Member: num_person
   cdr >> ros_message.num_person;
 
-  // Member: keypoints
+  // Member: persons
   {
     uint32_t cdrSize;
     cdr >> cdrSize;
     size_t size = static_cast<size_t>(cdrSize);
-    ros_message.keypoints.resize(size);
+    ros_message.persons.resize(size);
     for (size_t i = 0; i < size; i++) {
       charmie_interfaces::msg::typesupport_fastrtps_cpp::cdr_deserialize(
-        cdr, ros_message.keypoints[i]);
+        cdr, ros_message.persons[i]);
     }
   }
 
@@ -113,9 +113,9 @@ get_serialized_size(
     current_alignment += item_size +
       eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
   }
-  // Member: keypoints
+  // Member: persons
   {
-    size_t array_size = ros_message.keypoints.size();
+    size_t array_size = ros_message.persons.size();
 
     current_alignment += padding +
       eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
@@ -123,7 +123,7 @@ get_serialized_size(
     for (size_t index = 0; index < array_size; ++index) {
       current_alignment +=
         charmie_interfaces::msg::typesupport_fastrtps_cpp::get_serialized_size(
-        ros_message.keypoints[index], current_alignment);
+        ros_message.persons[index], current_alignment);
     }
   }
 
@@ -153,7 +153,7 @@ max_serialized_size_Yolov8Pose(
       eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
   }
 
-  // Member: keypoints
+  // Member: persons
   {
     size_t array_size = 0;
     full_bounded = false;
@@ -163,7 +163,7 @@ max_serialized_size_Yolov8Pose(
 
     for (size_t index = 0; index < array_size; ++index) {
       current_alignment +=
-        charmie_interfaces::msg::typesupport_fastrtps_cpp::max_serialized_size_Keypoints(
+        charmie_interfaces::msg::typesupport_fastrtps_cpp::max_serialized_size_DetectedPerson(
         full_bounded, current_alignment);
     }
   }

@@ -20,10 +20,10 @@
 #include "rosidl_runtime_c/primitives_sequence_functions.h"
 
 // Nested array functions includes
-#include "charmie_interfaces/msg/detail/keypoints__functions.h"
+#include "charmie_interfaces/msg/detail/detected_person__functions.h"
 // end nested array functions include
-bool charmie_interfaces__msg__keypoints__convert_from_py(PyObject * _pymsg, void * _ros_message);
-PyObject * charmie_interfaces__msg__keypoints__convert_to_py(void * raw_ros_message);
+bool charmie_interfaces__msg__detected_person__convert_from_py(PyObject * _pymsg, void * _ros_message);
+PyObject * charmie_interfaces__msg__detected_person__convert_to_py(void * raw_ros_message);
 
 ROSIDL_GENERATOR_C_EXPORT
 bool charmie_interfaces__msg__yolov8_pose__convert_from_py(PyObject * _pymsg, void * _ros_message)
@@ -67,12 +67,12 @@ bool charmie_interfaces__msg__yolov8_pose__convert_from_py(PyObject * _pymsg, vo
     ros_message->num_person = (int32_t)PyLong_AsLong(field);
     Py_DECREF(field);
   }
-  {  // keypoints
-    PyObject * field = PyObject_GetAttrString(_pymsg, "keypoints");
+  {  // persons
+    PyObject * field = PyObject_GetAttrString(_pymsg, "persons");
     if (!field) {
       return false;
     }
-    PyObject * seq_field = PySequence_Fast(field, "expected a sequence in 'keypoints'");
+    PyObject * seq_field = PySequence_Fast(field, "expected a sequence in 'persons'");
     if (!seq_field) {
       Py_DECREF(field);
       return false;
@@ -83,15 +83,15 @@ bool charmie_interfaces__msg__yolov8_pose__convert_from_py(PyObject * _pymsg, vo
       Py_DECREF(field);
       return false;
     }
-    if (!charmie_interfaces__msg__Keypoints__Sequence__init(&(ros_message->keypoints), size)) {
-      PyErr_SetString(PyExc_RuntimeError, "unable to create charmie_interfaces__msg__Keypoints__Sequence ros_message");
+    if (!charmie_interfaces__msg__DetectedPerson__Sequence__init(&(ros_message->persons), size)) {
+      PyErr_SetString(PyExc_RuntimeError, "unable to create charmie_interfaces__msg__DetectedPerson__Sequence ros_message");
       Py_DECREF(seq_field);
       Py_DECREF(field);
       return false;
     }
-    charmie_interfaces__msg__Keypoints * dest = ros_message->keypoints.data;
+    charmie_interfaces__msg__DetectedPerson * dest = ros_message->persons.data;
     for (Py_ssize_t i = 0; i < size; ++i) {
-      if (!charmie_interfaces__msg__keypoints__convert_from_py(PySequence_Fast_GET_ITEM(seq_field, i), &dest[i])) {
+      if (!charmie_interfaces__msg__detected_person__convert_from_py(PySequence_Fast_GET_ITEM(seq_field, i), &dest[i])) {
         Py_DECREF(seq_field);
         Py_DECREF(field);
         return false;
@@ -133,17 +133,17 @@ PyObject * charmie_interfaces__msg__yolov8_pose__convert_to_py(void * raw_ros_me
       }
     }
   }
-  {  // keypoints
+  {  // persons
     PyObject * field = NULL;
-    size_t size = ros_message->keypoints.size;
+    size_t size = ros_message->persons.size;
     field = PyList_New(size);
     if (!field) {
       return NULL;
     }
-    charmie_interfaces__msg__Keypoints * item;
+    charmie_interfaces__msg__DetectedPerson * item;
     for (size_t i = 0; i < size; ++i) {
-      item = &(ros_message->keypoints.data[i]);
-      PyObject * pyitem = charmie_interfaces__msg__keypoints__convert_to_py(item);
+      item = &(ros_message->persons.data[i]);
+      PyObject * pyitem = charmie_interfaces__msg__detected_person__convert_to_py(item);
       if (!pyitem) {
         Py_DECREF(field);
         return NULL;
@@ -154,7 +154,7 @@ PyObject * charmie_interfaces__msg__yolov8_pose__convert_to_py(void * raw_ros_me
     }
     assert(PySequence_Check(field));
     {
-      int rc = PyObject_SetAttrString(_pymessage, "keypoints", field);
+      int rc = PyObject_SetAttrString(_pymessage, "persons", field);
       Py_DECREF(field);
       if (rc) {
         return NULL;

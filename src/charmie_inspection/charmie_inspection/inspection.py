@@ -9,7 +9,7 @@ from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
 from std_msgs.msg import Bool, Int16, Float32
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import Obstacles, RobotSpeech, TarNavSDNL, Yolov8Pose, Keypoints
+from charmie_interfaces.msg import Obstacles, RobotSpeech, TarNavSDNL, Yolov8Pose, DetectedPerson
 
 import mediapipe as mp
 import numpy as np
@@ -108,11 +108,11 @@ class InspectionNode(Node):
         # print('--------------------')
         self.yolo_poses = yolo
         
-        # for i in range(len(yolo.keypoints)):
-        #     print(yolo.keypoints[i].x_person_relative, yolo.keypoints[i].average_distance)
+        # for i in range(len(yolo.persons)):
+        #     print(yolo.persons[i].x_rel, yolo.persons[i].y_rel)
                 
-        """ self.distance_x = yolo.keypoints[1]
-        self.distance_y = yolo.keypoints[2] """
+        """ self.distance_x = yolo.persons[1]
+        self.distance_y = yolo.persons[2] """
         
     def done_start_door_callback(self, state:Bool):
         self.done_start_door = state.data
@@ -307,10 +307,10 @@ class ReceptionistMain():
     def check_for_human_obstacle_multiperson(self):
         yolo = self.node.yolo_poses
         min_y = 10.0
-        if len(yolo.keypoints) > 0:    
-            for i in range(len(yolo.keypoints)):
-                if yolo.keypoints[i].average_distance < min_y:
-                    min_y = yolo.keypoints[i].average_distance
+        if len(yolo.person) > 0:    
+            for i in range(len(yolo.persons)):
+                if yolo.persons[i].y_rel < min_y:
+                    min_y = yolo.persons[i].y_rel
         print(min_y)
         print('**************')
         return min_y

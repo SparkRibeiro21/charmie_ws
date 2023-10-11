@@ -2,14 +2,14 @@
 // with input from charmie_interfaces/msg/Yolov8Pose.msg
 // generated code does not contain a copyright notice
 
-#include "charmie_interfaces/msg/Keypoints.idl"
+#include "charmie_interfaces/msg/DetectedPerson.idl"
 
 module charmie_interfaces {
   module msg {
     struct Yolov8Pose {
       int32 num_person;
 
-      sequence<charmie_interfaces::msg::Keypoints> keypoints;
+      sequence<charmie_interfaces::msg::DetectedPerson> persons;
     };
   };
 };

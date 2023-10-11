@@ -79,7 +79,7 @@ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typ
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: /opt/ros/foxy/share/rosidl_typesupport_fastrtps_c/resource/srv__type_support_c.cpp.em
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/Encoders.idl
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/ExampleTR.idl
-rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/Keypoints.idl
+rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/DetectedPerson.idl
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/MultiObjects.idl
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/ObstacleInfo.idl
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/Obstacles.idl
@@ -88,7 +88,6 @@ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typ
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/SpeechType.idl
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/TarNavSDNL.idl
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/Yolov8Pose.idl
-rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: rosidl_adapter/charmie_interfaces/msg/Yolov8PoseArray.idl
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: /opt/ros/foxy/share/std_msgs/msg/Bool.idl
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: /opt/ros/foxy/share/std_msgs/msg/Byte.idl
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h: /opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl
@@ -162,11 +161,11 @@ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__rosidl_t
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp
 
-rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__rosidl_typesupport_fastrtps_c.h: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__rosidl_typesupport_fastrtps_c.h
+rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__rosidl_typesupport_fastrtps_c.h: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__rosidl_typesupport_fastrtps_c.h
 
-rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp
+rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
+	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp
 
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__rosidl_typesupport_fastrtps_c.h: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__rosidl_typesupport_fastrtps_c.h
@@ -216,12 +215,6 @@ rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__rosidl_
 rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp
 
-rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__rosidl_typesupport_fastrtps_c.h: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__rosidl_typesupport_fastrtps_c.h
-
-rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp
-
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/flags.make
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp.o: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/compiler_depend.ts
@@ -250,19 +243,19 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupp
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp -o CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp.s
 
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/flags.make
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.o: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.o -MF CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.o.d -o CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.o -c /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/flags.make
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.o: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.o -MF CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.o.d -o CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.o -c /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp
 
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp > CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.i
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp > CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.i
 
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp -o CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.s
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp -o CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.s
 
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__type_support_c.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/flags.make
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__type_support_c.cpp.o: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__type_support_c.cpp
@@ -376,25 +369,11 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupp
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp -o CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp.s
 
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/flags.make
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.o: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.o: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.o -MF CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.o.d -o CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.o -c /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp
-
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp > CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.i
-
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp -o CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.s
-
 # Object files for target charmie_interfaces__rosidl_typesupport_fastrtps_c
 charmie_interfaces__rosidl_typesupport_fastrtps_c_OBJECTS = \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp.o" \
-"CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.o" \
+"CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__type_support_c.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacle_info__type_support_c.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacles__type_support_c.cpp.o" \
@@ -402,15 +381,14 @@ charmie_interfaces__rosidl_typesupport_fastrtps_c_OBJECTS = \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/robot_speech__type_support_c.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/speech_type__type_support_c.cpp.o" \
 "CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support_c.cpp.o" \
-"CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp.o" \
-"CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.o"
+"CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp.o"
 
 # External object files for target charmie_interfaces__rosidl_typesupport_fastrtps_c
 charmie_interfaces__rosidl_typesupport_fastrtps_c_EXTERNAL_OBJECTS =
 
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp.o
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp.o
-libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp.o
+libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp.o
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__type_support_c.cpp.o
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacle_info__type_support_c.cpp.o
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacles__type_support_c.cpp.o
@@ -419,7 +397,6 @@ libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_inte
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/speech_type__type_support_c.cpp.o
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support_c.cpp.o
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp.o
-libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp.o
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/build.make
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: /opt/ros/foxy/lib/librosidl_typesupport_fastrtps_c.so
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: /opt/ros/foxy/lib/libstd_msgs__rosidl_typesupport_fastrtps_c.so
@@ -462,7 +439,7 @@ libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: /usr/lib/x86_64-linux-g
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: /usr/lib/x86_64-linux-gnu/libcrypto.so
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: /opt/ros/foxy/lib/libfastcdr.so.1.0.13
 libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so: CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Linking CXX shared library libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Linking CXX shared library libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -473,12 +450,12 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/clean:
 	$(CMAKE_COMMAND) -P CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/cmake_clean.cmake
 .PHONY : CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/clean
 
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__rosidl_typesupport_fastrtps_c.h
+CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/detected_person__type_support_c.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/encoders__type_support_c.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_c.h
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/example_tr__type_support_c.cpp
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__rosidl_typesupport_fastrtps_c.h
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/keypoints__type_support_c.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__rosidl_typesupport_fastrtps_c.h
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/multi_objects__type_support_c.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/obstacle_info__rosidl_typesupport_fastrtps_c.h
@@ -495,8 +472,6 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/tar_nav_sdnl__type_support_c.cpp
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__rosidl_typesupport_fastrtps_c.h
 CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose__type_support_c.cpp
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__rosidl_typesupport_fastrtps_c.h
-CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend: rosidl_typesupport_fastrtps_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support_c.cpp
 	cd /home/utilizador/charmie_ws/build/charmie_interfaces && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/utilizador/charmie_ws/src/charmie_interfaces /home/utilizador/charmie_ws/src/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces /home/utilizador/charmie_ws/build/charmie_interfaces/CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/depend
 

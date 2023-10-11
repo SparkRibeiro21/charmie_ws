@@ -15,8 +15,8 @@
 
 
 // Include directives for member types
-// Member 'keypoints'
-#include "charmie_interfaces/msg/detail/keypoints__struct.hpp"
+// Member 'persons'
+#include "charmie_interfaces/msg/detail/detected_person__struct.hpp"
 
 #ifndef _WIN32
 # define DEPRECATED__charmie_interfaces__msg__Yolov8Pose __attribute__((deprecated))
@@ -59,9 +59,9 @@ struct Yolov8Pose_
   using _num_person_type =
     int32_t;
   _num_person_type num_person;
-  using _keypoints_type =
-    std::vector<charmie_interfaces::msg::Keypoints_<ContainerAllocator>, typename ContainerAllocator::template rebind<charmie_interfaces::msg::Keypoints_<ContainerAllocator>>::other>;
-  _keypoints_type keypoints;
+  using _persons_type =
+    std::vector<charmie_interfaces::msg::DetectedPerson_<ContainerAllocator>, typename ContainerAllocator::template rebind<charmie_interfaces::msg::DetectedPerson_<ContainerAllocator>>::other>;
+  _persons_type persons;
 
   // setters for named parameter idiom
   Type & set__num_person(
@@ -70,10 +70,10 @@ struct Yolov8Pose_
     this->num_person = _arg;
     return *this;
   }
-  Type & set__keypoints(
-    const std::vector<charmie_interfaces::msg::Keypoints_<ContainerAllocator>, typename ContainerAllocator::template rebind<charmie_interfaces::msg::Keypoints_<ContainerAllocator>>::other> & _arg)
+  Type & set__persons(
+    const std::vector<charmie_interfaces::msg::DetectedPerson_<ContainerAllocator>, typename ContainerAllocator::template rebind<charmie_interfaces::msg::DetectedPerson_<ContainerAllocator>>::other> & _arg)
   {
-    this->keypoints = _arg;
+    this->persons = _arg;
     return *this;
   }
 
@@ -122,7 +122,7 @@ struct Yolov8Pose_
     if (this->num_person != other.num_person) {
       return false;
     }
-    if (this->keypoints != other.keypoints) {
+    if (this->persons != other.persons) {
       return false;
     }
     return true;

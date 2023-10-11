@@ -1,4 +1,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/rosidl_interfaces/charmie_interfaces
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__functions.h
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__struct.h
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__type_support.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__functions.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__struct.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__type_support.h
@@ -35,6 +38,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/yolov8_pose_array__functions.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/yolov8_pose_array__struct.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/yolov8_pose_array__type_support.h
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detected_person.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/encoders.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/example_tr.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/keypoints.h
@@ -50,6 +54,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/yolov8_pose_array.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/library_path.sh
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/library_path.dsv
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__rosidl_typesupport_fastrtps_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/keypoints__rosidl_typesupport_fastrtps_c.h
@@ -64,6 +69,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/yolov8_pose_array__rosidl_typesupport_fastrtps_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_fastrtps_c.so
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__rosidl_typesupport_fastrtps_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_fastrtps_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_fastrtps_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/keypoints__rosidl_typesupport_fastrtps_cpp.hpp
@@ -78,6 +84,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/yolov8_pose_array__rosidl_typesupport_fastrtps_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__rosidl_typesupport_fastrtps_cpp.so
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__rosidl_typesupport_introspection_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/keypoints__rosidl_typesupport_introspection_c.h
@@ -91,6 +98,10 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/yolov8_pose__rosidl_typesupport_introspection_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/yolov8_pose_array__rosidl_typesupport_introspection_c.h
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__builder.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__struct.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__traits.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__type_support.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__builder.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__struct.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__traits.hpp
@@ -139,6 +150,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/yolov8_pose_array__struct.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/yolov8_pose_array__traits.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/yolov8_pose_array__type_support.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detected_person.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/encoders.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/example_tr.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/keypoints.hpp
@@ -152,6 +164,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/tar_nav_sdnl.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/yolov8_pose.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/yolov8_pose_array.hpp
+/home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/detected_person__rosidl_typesupport_introspection_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/encoders__rosidl_typesupport_introspection_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/example_tr__rosidl_typesupport_introspection_cpp.hpp
 /home/utilizador/charmie_ws/install/charmie_interfaces/include/charmie_interfaces/msg/detail/keypoints__rosidl_typesupport_introspection_cpp.hpp
@@ -168,6 +181,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/pythonpath.dsv
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/__init__.py
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/__init__.py
+/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_detected_person.py
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_encoders.py
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_example_tr.py
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages/charmie_interfaces/msg/_keypoints.py
@@ -186,7 +200,7 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/lib/libcharmie_interfaces__python.so
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Encoders.idl
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ExampleTR.idl
-/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Keypoints.idl
+/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/DetectedPerson.idl
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/MultiObjects.idl
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ObstacleInfo.idl
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Obstacles.idl
@@ -195,10 +209,9 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/SpeechType.idl
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/TarNavSDNL.idl
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Yolov8Pose.idl
-/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Yolov8PoseArray.idl
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Encoders.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ExampleTR.msg
-/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Keypoints.msg
+/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/DetectedPerson.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/MultiObjects.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/ObstacleInfo.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Obstacles.msg
@@ -207,7 +220,6 @@
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/SpeechType.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/TarNavSDNL.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Yolov8Pose.msg
-/home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/msg/Yolov8PoseArray.msg
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/package_run_dependencies/charmie_interfaces
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/ament_index/resource_index/parent_prefix_path/charmie_interfaces
 /home/utilizador/charmie_ws/install/charmie_interfaces/share/charmie_interfaces/environment/ament_prefix_path.sh

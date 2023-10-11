@@ -12,8 +12,8 @@
 
 
 // Include directives for member types
-// Member `keypoints`
-#include "charmie_interfaces/msg/detail/keypoints__functions.h"
+// Member `persons`
+#include "charmie_interfaces/msg/detail/detected_person__functions.h"
 
 bool
 charmie_interfaces__msg__Yolov8Pose__init(charmie_interfaces__msg__Yolov8Pose * msg)
@@ -22,8 +22,8 @@ charmie_interfaces__msg__Yolov8Pose__init(charmie_interfaces__msg__Yolov8Pose * 
     return false;
   }
   // num_person
-  // keypoints
-  if (!charmie_interfaces__msg__Keypoints__Sequence__init(&msg->keypoints, 0)) {
+  // persons
+  if (!charmie_interfaces__msg__DetectedPerson__Sequence__init(&msg->persons, 0)) {
     charmie_interfaces__msg__Yolov8Pose__fini(msg);
     return false;
   }
@@ -37,8 +37,8 @@ charmie_interfaces__msg__Yolov8Pose__fini(charmie_interfaces__msg__Yolov8Pose * 
     return;
   }
   // num_person
-  // keypoints
-  charmie_interfaces__msg__Keypoints__Sequence__fini(&msg->keypoints);
+  // persons
+  charmie_interfaces__msg__DetectedPerson__Sequence__fini(&msg->persons);
 }
 
 bool
@@ -51,9 +51,9 @@ charmie_interfaces__msg__Yolov8Pose__are_equal(const charmie_interfaces__msg__Yo
   if (lhs->num_person != rhs->num_person) {
     return false;
   }
-  // keypoints
-  if (!charmie_interfaces__msg__Keypoints__Sequence__are_equal(
-      &(lhs->keypoints), &(rhs->keypoints)))
+  // persons
+  if (!charmie_interfaces__msg__DetectedPerson__Sequence__are_equal(
+      &(lhs->persons), &(rhs->persons)))
   {
     return false;
   }
@@ -70,9 +70,9 @@ charmie_interfaces__msg__Yolov8Pose__copy(
   }
   // num_person
   output->num_person = input->num_person;
-  // keypoints
-  if (!charmie_interfaces__msg__Keypoints__Sequence__copy(
-      &(input->keypoints), &(output->keypoints)))
+  // persons
+  if (!charmie_interfaces__msg__DetectedPerson__Sequence__copy(
+      &(input->persons), &(output->persons)))
   {
     return false;
   }

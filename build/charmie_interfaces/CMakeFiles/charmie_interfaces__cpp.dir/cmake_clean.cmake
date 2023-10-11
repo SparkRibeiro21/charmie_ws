@@ -1,5 +1,9 @@
 file(REMOVE_RECURSE
   "CMakeFiles/charmie_interfaces__cpp"
+  "rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__builder.hpp"
+  "rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__struct.hpp"
+  "rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__traits.hpp"
+  "rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__type_support.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/encoders__builder.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/encoders__struct.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/encoders__traits.hpp"
@@ -8,10 +12,6 @@ file(REMOVE_RECURSE
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__struct.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__traits.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/example_tr__type_support.hpp"
-  "rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__builder.hpp"
-  "rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__struct.hpp"
-  "rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__traits.hpp"
-  "rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__type_support.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/multi_objects__builder.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/multi_objects__struct.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/multi_objects__traits.hpp"
@@ -44,13 +44,9 @@ file(REMOVE_RECURSE
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__struct.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__traits.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose__type_support.hpp"
-  "rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__builder.hpp"
-  "rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__struct.hpp"
-  "rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__traits.hpp"
-  "rosidl_generator_cpp/charmie_interfaces/msg/detail/yolov8_pose_array__type_support.hpp"
+  "rosidl_generator_cpp/charmie_interfaces/msg/detected_person.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/encoders.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/example_tr.hpp"
-  "rosidl_generator_cpp/charmie_interfaces/msg/keypoints.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/multi_objects.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/obstacle_info.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/obstacles.hpp"
@@ -59,7 +55,6 @@ file(REMOVE_RECURSE
   "rosidl_generator_cpp/charmie_interfaces/msg/speech_type.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/tar_nav_sdnl.hpp"
   "rosidl_generator_cpp/charmie_interfaces/msg/yolov8_pose.hpp"
-  "rosidl_generator_cpp/charmie_interfaces/msg/yolov8_pose_array.hpp"
 )
 
 # Per-language clean rules from dependency scanning.

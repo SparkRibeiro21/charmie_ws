@@ -300,7 +300,7 @@ class ReceptionistNode(Node):
 
     """ def yolo_pose_callback(self, yolo:Yolov8Pose):
         self.yolo_pose=yolo
-        self.yolo_pose.keypoints """
+        self.yolo_pose.persons """
     
 
     def found_landmarks(self, image):

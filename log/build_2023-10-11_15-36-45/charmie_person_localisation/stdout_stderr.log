@@ -1,0 +1,23 @@
+running develop
+running egg_info
+writing ../../build/charmie_person_localisation/charmie_person_localisation.egg-info/PKG-INFO
+writing dependency_links to ../../build/charmie_person_localisation/charmie_person_localisation.egg-info/dependency_links.txt
+writing entry points to ../../build/charmie_person_localisation/charmie_person_localisation.egg-info/entry_points.txt
+writing requirements to ../../build/charmie_person_localisation/charmie_person_localisation.egg-info/requires.txt
+writing top-level names to ../../build/charmie_person_localisation/charmie_person_localisation.egg-info/top_level.txt
+reading manifest file '../../build/charmie_person_localisation/charmie_person_localisation.egg-info/SOURCES.txt'
+writing manifest file '../../build/charmie_person_localisation/charmie_person_localisation.egg-info/SOURCES.txt'
+running build
+running build_py
+copying charmie_person_localisation/person_localisation.py -> /home/utilizador/charmie_ws/build/charmie_person_localisation/build/lib/charmie_person_localisation
+running install
+running install_lib
+copying /home/utilizador/charmie_ws/build/charmie_person_localisation/build/lib/charmie_person_localisation/person_localisation.py -> /home/utilizador/charmie_ws/install/charmie_person_localisation/lib/python3.8/site-packages/charmie_person_localisation
+byte-compiling /home/utilizador/charmie_ws/install/charmie_person_localisation/lib/python3.8/site-packages/charmie_person_localisation/person_localisation.py to person_localisation.cpython-38.pyc
+running install_data
+running install_egg_info
+removing '/home/utilizador/charmie_ws/install/charmie_person_localisation/lib/python3.8/site-packages/charmie_person_localisation-0.0.0-py3.8.egg-info' (and everything under it)
+Copying ../../build/charmie_person_localisation/charmie_person_localisation.egg-info to /home/utilizador/charmie_ws/install/charmie_person_localisation/lib/python3.8/site-packages/charmie_person_localisation-0.0.0-py3.8.egg-info
+running install_scripts
+Installing person_localisation script to /home/utilizador/charmie_ws/install/charmie_person_localisation/lib/charmie_person_localisation
+writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_person_localisation/install.log'

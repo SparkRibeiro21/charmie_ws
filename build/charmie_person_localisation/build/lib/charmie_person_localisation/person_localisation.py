@@ -5,7 +5,7 @@ from rclpy.node import Node
 from std_msgs.msg import Bool
 from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import  Yolov8Pose, Keypoints
+from charmie_interfaces.msg import  Yolov8Pose, DetectedPerson
 
 import cv2
 import numpy as np
@@ -284,11 +284,11 @@ class PersonLocalisationNode(Node):
         # aux_people_in_frame = []
         aux_people_in_frame_ref_robot = []
         aux_people_in_frame_ref_robot_filtered = []
-        # print(pose.keypoints)
+        # print(pose.persons)
 
-        for people in pose.keypoints:
-            x = people.x_person_relative
-            y = people.average_distance
+        for people in pose.persons:
+            x = people.x_rel
+            y = people.y_rel
             h = people.box_height
 
             # a = (x,y,h)

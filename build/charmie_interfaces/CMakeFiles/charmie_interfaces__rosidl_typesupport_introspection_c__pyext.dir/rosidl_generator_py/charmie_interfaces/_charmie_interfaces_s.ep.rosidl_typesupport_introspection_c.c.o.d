@@ -184,9 +184,9 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c__pyext.dir/ros
  /opt/ros/foxy/include/rosidl_runtime_c/primitives_sequence.h \
  /opt/ros/foxy/include/geometry_msgs/msg/detail/point__struct.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__functions.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__type_support.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__struct.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__functions.h \
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/detected_person__type_support.h \
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/detected_person__struct.h \
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/detected_person__functions.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__type_support.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__struct.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/multi_objects__functions.h \
@@ -211,7 +211,4 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_c__pyext.dir/ros
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/tar_nav_sdnl__functions.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__type_support.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__struct.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__functions.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose_array__type_support.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose_array__struct.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose_array__functions.h
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__functions.h

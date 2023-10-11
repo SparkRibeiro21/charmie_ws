@@ -40,9 +40,9 @@ class Metaclass_Yolov8Pose(type):
             cls._TYPE_SUPPORT = module.type_support_msg__msg__yolov8_pose
             cls._DESTROY_ROS_MESSAGE = module.destroy_ros_message_msg__msg__yolov8_pose
 
-            from charmie_interfaces.msg import Keypoints
-            if Keypoints.__class__._TYPE_SUPPORT is None:
-                Keypoints.__class__.__import_type_support__()
+            from charmie_interfaces.msg import DetectedPerson
+            if DetectedPerson.__class__._TYPE_SUPPORT is None:
+                DetectedPerson.__class__.__import_type_support__()
 
     @classmethod
     def __prepare__(cls, name, bases, **kwargs):
@@ -58,17 +58,17 @@ class Yolov8Pose(metaclass=Metaclass_Yolov8Pose):
 
     __slots__ = [
         '_num_person',
-        '_keypoints',
+        '_persons',
     ]
 
     _fields_and_field_types = {
         'num_person': 'int32',
-        'keypoints': 'sequence<charmie_interfaces/Keypoints>',
+        'persons': 'sequence<charmie_interfaces/DetectedPerson>',
     }
 
     SLOT_TYPES = (
         rosidl_parser.definition.BasicType('int32'),  # noqa: E501
-        rosidl_parser.definition.UnboundedSequence(rosidl_parser.definition.NamespacedType(['charmie_interfaces', 'msg'], 'Keypoints')),  # noqa: E501
+        rosidl_parser.definition.UnboundedSequence(rosidl_parser.definition.NamespacedType(['charmie_interfaces', 'msg'], 'DetectedPerson')),  # noqa: E501
     )
 
     def __init__(self, **kwargs):
@@ -76,7 +76,7 @@ class Yolov8Pose(metaclass=Metaclass_Yolov8Pose):
             'Invalid arguments passed to constructor: %s' % \
             ', '.join(sorted(k for k in kwargs.keys() if '_' + k not in self.__slots__))
         self.num_person = kwargs.get('num_person', int())
-        self.keypoints = kwargs.get('keypoints', [])
+        self.persons = kwargs.get('persons', [])
 
     def __repr__(self):
         typename = self.__class__.__module__.split('.')
@@ -109,7 +109,7 @@ class Yolov8Pose(metaclass=Metaclass_Yolov8Pose):
             return False
         if self.num_person != other.num_person:
             return False
-        if self.keypoints != other.keypoints:
+        if self.persons != other.persons:
             return False
         return True
 
@@ -134,14 +134,14 @@ class Yolov8Pose(metaclass=Metaclass_Yolov8Pose):
         self._num_person = value
 
     @property
-    def keypoints(self):
-        """Message field 'keypoints'."""
-        return self._keypoints
+    def persons(self):
+        """Message field 'persons'."""
+        return self._persons
 
-    @keypoints.setter
-    def keypoints(self, value):
+    @persons.setter
+    def persons(self, value):
         if __debug__:
-            from charmie_interfaces.msg import Keypoints
+            from charmie_interfaces.msg import DetectedPerson
             from collections.abc import Sequence
             from collections.abc import Set
             from collections import UserList
@@ -152,7 +152,7 @@ class Yolov8Pose(metaclass=Metaclass_Yolov8Pose):
                   isinstance(value, UserList)) and
                  not isinstance(value, str) and
                  not isinstance(value, UserString) and
-                 all(isinstance(v, Keypoints) for v in value) and
+                 all(isinstance(v, DetectedPerson) for v in value) and
                  True), \
-                "The 'keypoints' field must be a set or sequence and each value of type 'Keypoints'"
-        self._keypoints = value
+                "The 'persons' field must be a set or sequence and each value of type 'DetectedPerson'"
+        self._persons = value

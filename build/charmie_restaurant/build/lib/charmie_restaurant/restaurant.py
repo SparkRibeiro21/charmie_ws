@@ -173,8 +173,8 @@ class RestaurantNode(Node):
     def yolov8_callback(self, yolov8: Yolov8Pose):
 
         #self.get_logger().info('Receiving Yolov8 Pose Info')
-        """ if(yolov8.keypoints[0].key_p0_y != None):
-            self.nose = yolov8.keypoints[0].key_p0_y
+        """ if(yolov8.persons[0].kp_nose_y != None):
+            self.nose = yolov8.persons[0].kp_nose_y
 
         else:
             self.nose = self.int_error """
@@ -357,15 +357,15 @@ class RestaurantMain():
         yolo = self.node.yolo_poses
         if yolo.num_person > 0:
             print('persons detected =', yolo.num_person)
-            for i in range(len(yolo.keypoints)):
-                if yolo.keypoints[i].key_p9_y < yolo.keypoints[i].key_p0_y or yolo.keypoints[i].key_p10_y < yolo.keypoints[i].key_p0_y:
+            for i in range(len(yolo.persons)):
+                if yolo.persons[i].kp_wrist_left_y < yolo.persons[i].kp_nose_y or yolo.persons[i].kp_wrist_right_y < yolo.persons[i].kp_nose_y:
                     print('cumpri requisitos')
                    
                     
                     #print(self.hand_raised)
 
-                    self.node.x_relative = yolo.keypoints[i].x_person_relative
-                    self.node.y_relative = yolo.keypoints[i].average_distance
+                    self.node.x_relative = yolo.persons[i].x_rel
+                    self.node.y_relative = yolo.persons[i].y_rel
                     #self.hand_raised = 1
 
                     self.node.i+=1
@@ -374,8 +374,8 @@ class RestaurantMain():
                     #print('x = ', self.node.x_relative)
                     #print('y = ', self.node.y_relative)
 
-                    #print(yolo.keypoints[i].key_p9_y, yolo.keypoints[i].key_p5_y)
-                    #print(yolo.keypoints[i].key_p10_y, yolo.keypoints[i].key_p6_y)
+                    #print(yolo.persons[i].kp_wrist_left_y, yolo.persons[i].kp_shoulder_left_y)
+                    #print(yolo.persons[i].kp_wrist_right_y, yolo.persons[i].kp_shoulder_right_y)
                     
                     """ current_frame = self.node.br.imgmsg_to_cv2(self.node.image_color, "bgr8")
                     cv2.imshow("c_camera", current_frame)

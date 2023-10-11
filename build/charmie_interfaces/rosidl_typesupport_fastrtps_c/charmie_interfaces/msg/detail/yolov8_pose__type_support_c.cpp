@@ -34,19 +34,19 @@ extern "C"
 {
 #endif
 
-#include "charmie_interfaces/msg/detail/keypoints__functions.h"  // keypoints
+#include "charmie_interfaces/msg/detail/detected_person__functions.h"  // persons
 
 // forward declare type support functions
-size_t get_serialized_size_charmie_interfaces__msg__Keypoints(
+size_t get_serialized_size_charmie_interfaces__msg__DetectedPerson(
   const void * untyped_ros_message,
   size_t current_alignment);
 
-size_t max_serialized_size_charmie_interfaces__msg__Keypoints(
+size_t max_serialized_size_charmie_interfaces__msg__DetectedPerson(
   bool & full_bounded,
   size_t current_alignment);
 
 const rosidl_message_type_support_t *
-  ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_fastrtps_c, charmie_interfaces, msg, Keypoints)();
+  ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_fastrtps_c, charmie_interfaces, msg, DetectedPerson)();
 
 
 using _Yolov8Pose__ros_msg_type = charmie_interfaces__msg__Yolov8Pose;
@@ -65,15 +65,15 @@ static bool _Yolov8Pose__cdr_serialize(
     cdr << ros_message->num_person;
   }
 
-  // Field name: keypoints
+  // Field name: persons
   {
     const message_type_support_callbacks_t * callbacks =
       static_cast<const message_type_support_callbacks_t *>(
       ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(
-        rosidl_typesupport_fastrtps_c, charmie_interfaces, msg, Keypoints
+        rosidl_typesupport_fastrtps_c, charmie_interfaces, msg, DetectedPerson
       )()->data);
-    size_t size = ros_message->keypoints.size;
-    auto array_ptr = ros_message->keypoints.data;
+    size_t size = ros_message->persons.size;
+    auto array_ptr = ros_message->persons.data;
     cdr << static_cast<uint32_t>(size);
     for (size_t i = 0; i < size; ++i) {
       if (!callbacks->cdr_serialize(
@@ -101,23 +101,23 @@ static bool _Yolov8Pose__cdr_deserialize(
     cdr >> ros_message->num_person;
   }
 
-  // Field name: keypoints
+  // Field name: persons
   {
     const message_type_support_callbacks_t * callbacks =
       static_cast<const message_type_support_callbacks_t *>(
       ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(
-        rosidl_typesupport_fastrtps_c, charmie_interfaces, msg, Keypoints
+        rosidl_typesupport_fastrtps_c, charmie_interfaces, msg, DetectedPerson
       )()->data);
     uint32_t cdrSize;
     cdr >> cdrSize;
     size_t size = static_cast<size_t>(cdrSize);
-    if (ros_message->keypoints.data) {
-      charmie_interfaces__msg__Keypoints__Sequence__fini(&ros_message->keypoints);
+    if (ros_message->persons.data) {
+      charmie_interfaces__msg__DetectedPerson__Sequence__fini(&ros_message->persons);
     }
-    if (!charmie_interfaces__msg__Keypoints__Sequence__init(&ros_message->keypoints, size)) {
-      return "failed to create array for field 'keypoints'";
+    if (!charmie_interfaces__msg__DetectedPerson__Sequence__init(&ros_message->persons, size)) {
+      return "failed to create array for field 'persons'";
     }
-    auto array_ptr = ros_message->keypoints.data;
+    auto array_ptr = ros_message->persons.data;
     for (size_t i = 0; i < size; ++i) {
       if (!callbacks->cdr_deserialize(
           cdr, &array_ptr[i]))
@@ -150,15 +150,15 @@ size_t get_serialized_size_charmie_interfaces__msg__Yolov8Pose(
     current_alignment += item_size +
       eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
   }
-  // field.name keypoints
+  // field.name persons
   {
-    size_t array_size = ros_message->keypoints.size;
-    auto array_ptr = ros_message->keypoints.data;
+    size_t array_size = ros_message->persons.size;
+    auto array_ptr = ros_message->persons.data;
     current_alignment += padding +
       eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
 
     for (size_t index = 0; index < array_size; ++index) {
-      current_alignment += get_serialized_size_charmie_interfaces__msg__Keypoints(
+      current_alignment += get_serialized_size_charmie_interfaces__msg__DetectedPerson(
         &array_ptr[index], current_alignment);
     }
   }
@@ -193,7 +193,7 @@ size_t max_serialized_size_charmie_interfaces__msg__Yolov8Pose(
     current_alignment += array_size * sizeof(uint32_t) +
       eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
   }
-  // member: keypoints
+  // member: persons
   {
     size_t array_size = 0;
     full_bounded = false;
@@ -203,7 +203,7 @@ size_t max_serialized_size_charmie_interfaces__msg__Yolov8Pose(
 
     for (size_t index = 0; index < array_size; ++index) {
       current_alignment +=
-        max_serialized_size_charmie_interfaces__msg__Keypoints(
+        max_serialized_size_charmie_interfaces__msg__DetectedPerson(
         full_bounded, current_alignment);
     }
   }

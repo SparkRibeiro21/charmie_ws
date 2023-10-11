@@ -24,7 +24,7 @@ find_package(std_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Encoders.msg"
   "msg/ExampleTR.msg"
-  "msg/Keypoints.msg"
+  "msg/DetectedPerson.msg"
   "msg/MultiObjects.msg"
   "msg/ObstacleInfo.msg"
   "msg/Obstacles.msg"
@@ -33,7 +33,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SpeechType.msg"
   "msg/TarNavSDNL.msg"
   "msg/Yolov8Pose.msg"
-  "msg/Yolov8PoseArray.msg"
   DEPENDENCIES std_msgs geometry_msgs
 )
 

@@ -175,8 +175,8 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupp
  /usr/include/c++/9/bits/ostream.tcc /usr/include/c++/9/istream \
  /usr/include/c++/9/bits/istream.tcc /usr/include/malloc.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__struct.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__struct.h \
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/detected_person__struct.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/yolov8_pose__functions.h \
  /usr/include/c++/9/stdlib.h \
  /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/rosidl_generator_c__visibility_control.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/keypoints__functions.h
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/detected_person__functions.h

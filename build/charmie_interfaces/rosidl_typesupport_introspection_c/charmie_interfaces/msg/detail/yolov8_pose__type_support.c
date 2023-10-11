@@ -13,10 +13,10 @@
 
 
 // Include directives for member types
-// Member `keypoints`
-#include "charmie_interfaces/msg/keypoints.h"
-// Member `keypoints`
-#include "charmie_interfaces/msg/detail/keypoints__rosidl_typesupport_introspection_c.h"
+// Member `persons`
+#include "charmie_interfaces/msg/detected_person.h"
+// Member `persons`
+#include "charmie_interfaces/msg/detail/detected_person__rosidl_typesupport_introspection_c.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -37,37 +37,37 @@ void Yolov8Pose__rosidl_typesupport_introspection_c__Yolov8Pose_fini_function(vo
   charmie_interfaces__msg__Yolov8Pose__fini(message_memory);
 }
 
-size_t Yolov8Pose__rosidl_typesupport_introspection_c__size_function__Keypoints__keypoints(
+size_t Yolov8Pose__rosidl_typesupport_introspection_c__size_function__DetectedPerson__persons(
   const void * untyped_member)
 {
-  const charmie_interfaces__msg__Keypoints__Sequence * member =
-    (const charmie_interfaces__msg__Keypoints__Sequence *)(untyped_member);
+  const charmie_interfaces__msg__DetectedPerson__Sequence * member =
+    (const charmie_interfaces__msg__DetectedPerson__Sequence *)(untyped_member);
   return member->size;
 }
 
-const void * Yolov8Pose__rosidl_typesupport_introspection_c__get_const_function__Keypoints__keypoints(
+const void * Yolov8Pose__rosidl_typesupport_introspection_c__get_const_function__DetectedPerson__persons(
   const void * untyped_member, size_t index)
 {
-  const charmie_interfaces__msg__Keypoints__Sequence * member =
-    (const charmie_interfaces__msg__Keypoints__Sequence *)(untyped_member);
+  const charmie_interfaces__msg__DetectedPerson__Sequence * member =
+    (const charmie_interfaces__msg__DetectedPerson__Sequence *)(untyped_member);
   return &member->data[index];
 }
 
-void * Yolov8Pose__rosidl_typesupport_introspection_c__get_function__Keypoints__keypoints(
+void * Yolov8Pose__rosidl_typesupport_introspection_c__get_function__DetectedPerson__persons(
   void * untyped_member, size_t index)
 {
-  charmie_interfaces__msg__Keypoints__Sequence * member =
-    (charmie_interfaces__msg__Keypoints__Sequence *)(untyped_member);
+  charmie_interfaces__msg__DetectedPerson__Sequence * member =
+    (charmie_interfaces__msg__DetectedPerson__Sequence *)(untyped_member);
   return &member->data[index];
 }
 
-bool Yolov8Pose__rosidl_typesupport_introspection_c__resize_function__Keypoints__keypoints(
+bool Yolov8Pose__rosidl_typesupport_introspection_c__resize_function__DetectedPerson__persons(
   void * untyped_member, size_t size)
 {
-  charmie_interfaces__msg__Keypoints__Sequence * member =
-    (charmie_interfaces__msg__Keypoints__Sequence *)(untyped_member);
-  charmie_interfaces__msg__Keypoints__Sequence__fini(member);
-  return charmie_interfaces__msg__Keypoints__Sequence__init(member, size);
+  charmie_interfaces__msg__DetectedPerson__Sequence * member =
+    (charmie_interfaces__msg__DetectedPerson__Sequence *)(untyped_member);
+  charmie_interfaces__msg__DetectedPerson__Sequence__fini(member);
+  return charmie_interfaces__msg__DetectedPerson__Sequence__init(member, size);
 }
 
 static rosidl_typesupport_introspection_c__MessageMember Yolov8Pose__rosidl_typesupport_introspection_c__Yolov8Pose_message_member_array[2] = {
@@ -87,19 +87,19 @@ static rosidl_typesupport_introspection_c__MessageMember Yolov8Pose__rosidl_type
     NULL  // resize(index) function pointer
   },
   {
-    "keypoints",  // name
+    "persons",  // name
     rosidl_typesupport_introspection_c__ROS_TYPE_MESSAGE,  // type
     0,  // upper bound of string
     NULL,  // members of sub message (initialized later)
     true,  // is array
     0,  // array size
     false,  // is upper bound
-    offsetof(charmie_interfaces__msg__Yolov8Pose, keypoints),  // bytes offset in struct
+    offsetof(charmie_interfaces__msg__Yolov8Pose, persons),  // bytes offset in struct
     NULL,  // default value
-    Yolov8Pose__rosidl_typesupport_introspection_c__size_function__Keypoints__keypoints,  // size() function pointer
-    Yolov8Pose__rosidl_typesupport_introspection_c__get_const_function__Keypoints__keypoints,  // get_const(index) function pointer
-    Yolov8Pose__rosidl_typesupport_introspection_c__get_function__Keypoints__keypoints,  // get(index) function pointer
-    Yolov8Pose__rosidl_typesupport_introspection_c__resize_function__Keypoints__keypoints  // resize(index) function pointer
+    Yolov8Pose__rosidl_typesupport_introspection_c__size_function__DetectedPerson__persons,  // size() function pointer
+    Yolov8Pose__rosidl_typesupport_introspection_c__get_const_function__DetectedPerson__persons,  // get_const(index) function pointer
+    Yolov8Pose__rosidl_typesupport_introspection_c__get_function__DetectedPerson__persons,  // get(index) function pointer
+    Yolov8Pose__rosidl_typesupport_introspection_c__resize_function__DetectedPerson__persons  // resize(index) function pointer
   }
 };
 
@@ -125,7 +125,7 @@ ROSIDL_TYPESUPPORT_INTROSPECTION_C_EXPORT_charmie_interfaces
 const rosidl_message_type_support_t *
 ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_introspection_c, charmie_interfaces, msg, Yolov8Pose)() {
   Yolov8Pose__rosidl_typesupport_introspection_c__Yolov8Pose_message_member_array[1].members_ =
-    ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_introspection_c, charmie_interfaces, msg, Keypoints)();
+    ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_introspection_c, charmie_interfaces, msg, DetectedPerson)();
   if (!Yolov8Pose__rosidl_typesupport_introspection_c__Yolov8Pose_message_type_support_handle.typesupport_identifier) {
     Yolov8Pose__rosidl_typesupport_introspection_c__Yolov8Pose_message_type_support_handle.typesupport_identifier =
       rosidl_typesupport_introspection_c__identifier;

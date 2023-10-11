@@ -153,7 +153,7 @@ CMakeFiles/charmie_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_t
  /usr/include/c++/9/backward/auto_ptr.h \
  /opt/ros/foxy/include/rosidl_runtime_cpp/message_initialization.hpp \
  /opt/ros/foxy/include/rosidl_runtime_c/message_initialization.h \
- /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/keypoints__struct.hpp \
+ /home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_cpp/charmie_interfaces/msg/detail/detected_person__struct.hpp \
  /opt/ros/foxy/include/rosidl_typesupport_introspection_cpp/field_types.hpp \
  /opt/ros/foxy/include/rosidl_typesupport_introspection_c/field_types.h \
  /opt/ros/foxy/include/rosidl_typesupport_introspection_cpp/identifier.hpp \

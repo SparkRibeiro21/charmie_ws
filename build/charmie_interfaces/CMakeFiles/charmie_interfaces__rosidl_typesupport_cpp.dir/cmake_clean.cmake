@@ -1,10 +1,10 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o"
+  "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp.o.d"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp.o"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp.o.d"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp.o"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp.o.d"
-  "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o"
-  "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp.o.d"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp.o"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp.o.d"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/obstacle_info__type_support.cpp.o"
@@ -21,13 +21,11 @@ file(REMOVE_RECURSE
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/tar_nav_sdnl__type_support.cpp.o.d"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp.o"
   "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp.o.d"
-  "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o"
-  "CMakeFiles/charmie_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp.o.d"
   "libcharmie_interfaces__rosidl_typesupport_cpp.pdb"
   "libcharmie_interfaces__rosidl_typesupport_cpp.so"
+  "rosidl_typesupport_cpp/charmie_interfaces/msg/detected_person__type_support.cpp"
   "rosidl_typesupport_cpp/charmie_interfaces/msg/encoders__type_support.cpp"
   "rosidl_typesupport_cpp/charmie_interfaces/msg/example_tr__type_support.cpp"
-  "rosidl_typesupport_cpp/charmie_interfaces/msg/keypoints__type_support.cpp"
   "rosidl_typesupport_cpp/charmie_interfaces/msg/multi_objects__type_support.cpp"
   "rosidl_typesupport_cpp/charmie_interfaces/msg/obstacle_info__type_support.cpp"
   "rosidl_typesupport_cpp/charmie_interfaces/msg/obstacles__type_support.cpp"
@@ -36,7 +34,6 @@ file(REMOVE_RECURSE
   "rosidl_typesupport_cpp/charmie_interfaces/msg/speech_type__type_support.cpp"
   "rosidl_typesupport_cpp/charmie_interfaces/msg/tar_nav_sdnl__type_support.cpp"
   "rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose__type_support.cpp"
-  "rosidl_typesupport_cpp/charmie_interfaces/msg/yolov8_pose_array__type_support.cpp"
 )
 
 # Per-language clean rules from dependency scanning.

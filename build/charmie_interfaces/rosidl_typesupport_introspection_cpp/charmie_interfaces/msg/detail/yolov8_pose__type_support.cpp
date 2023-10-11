@@ -37,30 +37,30 @@ void Yolov8Pose_fini_function(void * message_memory)
   typed_message->~Yolov8Pose();
 }
 
-size_t size_function__Yolov8Pose__keypoints(const void * untyped_member)
+size_t size_function__Yolov8Pose__persons(const void * untyped_member)
 {
-  const auto * member = reinterpret_cast<const std::vector<charmie_interfaces::msg::Keypoints> *>(untyped_member);
+  const auto * member = reinterpret_cast<const std::vector<charmie_interfaces::msg::DetectedPerson> *>(untyped_member);
   return member->size();
 }
 
-const void * get_const_function__Yolov8Pose__keypoints(const void * untyped_member, size_t index)
+const void * get_const_function__Yolov8Pose__persons(const void * untyped_member, size_t index)
 {
   const auto & member =
-    *reinterpret_cast<const std::vector<charmie_interfaces::msg::Keypoints> *>(untyped_member);
+    *reinterpret_cast<const std::vector<charmie_interfaces::msg::DetectedPerson> *>(untyped_member);
   return &member[index];
 }
 
-void * get_function__Yolov8Pose__keypoints(void * untyped_member, size_t index)
+void * get_function__Yolov8Pose__persons(void * untyped_member, size_t index)
 {
   auto & member =
-    *reinterpret_cast<std::vector<charmie_interfaces::msg::Keypoints> *>(untyped_member);
+    *reinterpret_cast<std::vector<charmie_interfaces::msg::DetectedPerson> *>(untyped_member);
   return &member[index];
 }
 
-void resize_function__Yolov8Pose__keypoints(void * untyped_member, size_t size)
+void resize_function__Yolov8Pose__persons(void * untyped_member, size_t size)
 {
   auto * member =
-    reinterpret_cast<std::vector<charmie_interfaces::msg::Keypoints> *>(untyped_member);
+    reinterpret_cast<std::vector<charmie_interfaces::msg::DetectedPerson> *>(untyped_member);
   member->resize(size);
 }
 
@@ -81,19 +81,19 @@ static const ::rosidl_typesupport_introspection_cpp::MessageMember Yolov8Pose_me
     nullptr  // resize(index) function pointer
   },
   {
-    "keypoints",  // name
+    "persons",  // name
     ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE,  // type
     0,  // upper bound of string
-    ::rosidl_typesupport_introspection_cpp::get_message_type_support_handle<charmie_interfaces::msg::Keypoints>(),  // members of sub message
+    ::rosidl_typesupport_introspection_cpp::get_message_type_support_handle<charmie_interfaces::msg::DetectedPerson>(),  // members of sub message
     true,  // is array
     0,  // array size
     false,  // is upper bound
-    offsetof(charmie_interfaces::msg::Yolov8Pose, keypoints),  // bytes offset in struct
+    offsetof(charmie_interfaces::msg::Yolov8Pose, persons),  // bytes offset in struct
     nullptr,  // default value
-    size_function__Yolov8Pose__keypoints,  // size() function pointer
-    get_const_function__Yolov8Pose__keypoints,  // get_const(index) function pointer
-    get_function__Yolov8Pose__keypoints,  // get(index) function pointer
-    resize_function__Yolov8Pose__keypoints  // resize(index) function pointer
+    size_function__Yolov8Pose__persons,  // size() function pointer
+    get_const_function__Yolov8Pose__persons,  // get_const(index) function pointer
+    get_function__Yolov8Pose__persons,  // get(index) function pointer
+    resize_function__Yolov8Pose__persons  // resize(index) function pointer
   }
 };
 

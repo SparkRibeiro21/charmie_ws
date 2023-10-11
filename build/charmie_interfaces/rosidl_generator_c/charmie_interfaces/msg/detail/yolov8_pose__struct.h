@@ -18,14 +18,14 @@ extern "C"
 // Constants defined in the message
 
 // Include directives for member types
-// Member 'keypoints'
-#include "charmie_interfaces/msg/detail/keypoints__struct.h"
+// Member 'persons'
+#include "charmie_interfaces/msg/detail/detected_person__struct.h"
 
 // Struct defined in msg/Yolov8Pose in the package charmie_interfaces.
 typedef struct charmie_interfaces__msg__Yolov8Pose
 {
   int32_t num_person;
-  charmie_interfaces__msg__Keypoints__Sequence keypoints;
+  charmie_interfaces__msg__DetectedPerson__Sequence persons;
 } charmie_interfaces__msg__Yolov8Pose;
 
 // Struct for a sequence of charmie_interfaces__msg__Yolov8Pose.

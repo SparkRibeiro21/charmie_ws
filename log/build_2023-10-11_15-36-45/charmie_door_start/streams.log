@@ -1,0 +1,24 @@
+[4.419s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_door_start': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_door_start/prefix_override:/home/utilizador/charmie_ws/install/charmie_door_start/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --uninstall --editable --build-directory /home/utilizador/charmie_ws/build/charmie_door_start/build
+[6.503s] running develop
+[8.149s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_door_start' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_door_start/prefix_override:/home/utilizador/charmie_ws/install/charmie_door_start/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --uninstall --editable --build-directory /home/utilizador/charmie_ws/build/charmie_door_start/build
+[8.151s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_door_start': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_door_start/prefix_override:/home/utilizador/charmie_ws/install/charmie_door_start/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_door_start build --build-base /home/utilizador/charmie_ws/build/charmie_door_start/build install --record /home/utilizador/charmie_ws/build/charmie_door_start/install.log --single-version-externally-managed
+[9.908s] running egg_info
+[9.908s] writing ../../build/charmie_door_start/charmie_door_start.egg-info/PKG-INFO
+[9.909s] writing dependency_links to ../../build/charmie_door_start/charmie_door_start.egg-info/dependency_links.txt
+[9.909s] writing entry points to ../../build/charmie_door_start/charmie_door_start.egg-info/entry_points.txt
+[9.909s] writing requirements to ../../build/charmie_door_start/charmie_door_start.egg-info/requires.txt
+[9.910s] writing top-level names to ../../build/charmie_door_start/charmie_door_start.egg-info/top_level.txt
+[9.910s] reading manifest file '../../build/charmie_door_start/charmie_door_start.egg-info/SOURCES.txt'
+[9.910s] writing manifest file '../../build/charmie_door_start/charmie_door_start.egg-info/SOURCES.txt'
+[9.910s] running build
+[9.911s] running build_py
+[9.911s] running install
+[9.911s] running install_lib
+[9.911s] running install_data
+[9.911s] running install_egg_info
+[9.911s] removing '/home/utilizador/charmie_ws/install/charmie_door_start/lib/python3.8/site-packages/charmie_door_start-0.0.0-py3.8.egg-info' (and everything under it)
+[9.912s] Copying ../../build/charmie_door_start/charmie_door_start.egg-info to /home/utilizador/charmie_ws/install/charmie_door_start/lib/python3.8/site-packages/charmie_door_start-0.0.0-py3.8.egg-info
+[9.912s] running install_scripts
+[9.912s] Installing door_start script to /home/utilizador/charmie_ws/install/charmie_door_start/lib/charmie_door_start
+[9.912s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_door_start/install.log'
+[10.362s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_door_start' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_door_start/prefix_override:/home/utilizador/charmie_ws/install/charmie_door_start/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_door_start build --build-base /home/utilizador/charmie_ws/build/charmie_door_start/build install --record /home/utilizador/charmie_ws/build/charmie_door_start/install.log --single-version-externally-managed

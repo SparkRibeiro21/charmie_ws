@@ -20,15 +20,15 @@ namespace msg
 namespace builder
 {
 
-class Init_Yolov8Pose_keypoints
+class Init_Yolov8Pose_persons
 {
 public:
-  explicit Init_Yolov8Pose_keypoints(::charmie_interfaces::msg::Yolov8Pose & msg)
+  explicit Init_Yolov8Pose_persons(::charmie_interfaces::msg::Yolov8Pose & msg)
   : msg_(msg)
   {}
-  ::charmie_interfaces::msg::Yolov8Pose keypoints(::charmie_interfaces::msg::Yolov8Pose::_keypoints_type arg)
+  ::charmie_interfaces::msg::Yolov8Pose persons(::charmie_interfaces::msg::Yolov8Pose::_persons_type arg)
   {
-    msg_.keypoints = std::move(arg);
+    msg_.persons = std::move(arg);
     return std::move(msg_);
   }
 
@@ -42,10 +42,10 @@ public:
   Init_Yolov8Pose_num_person()
   : msg_(::rosidl_runtime_cpp::MessageInitialization::SKIP)
   {}
-  Init_Yolov8Pose_keypoints num_person(::charmie_interfaces::msg::Yolov8Pose::_num_person_type arg)
+  Init_Yolov8Pose_persons num_person(::charmie_interfaces::msg::Yolov8Pose::_num_person_type arg)
   {
     msg_.num_person = std::move(arg);
-    return Init_Yolov8Pose_keypoints(msg_);
+    return Init_Yolov8Pose_persons(msg_);
   }
 
 private:
