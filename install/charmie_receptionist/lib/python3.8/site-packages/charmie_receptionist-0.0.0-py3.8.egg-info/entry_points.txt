@@ -1,0 +1,3 @@
+[console_scripts]
+receptionist = charmie_receptionist.receptionist:main
+

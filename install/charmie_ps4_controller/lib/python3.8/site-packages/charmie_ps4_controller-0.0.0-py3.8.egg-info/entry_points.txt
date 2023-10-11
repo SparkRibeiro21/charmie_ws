@@ -1,0 +1,3 @@
+[console_scripts]
+ps4_controller = charmie_ps4_controller.ps4_controller:main
+

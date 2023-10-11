@@ -1,0 +1,3 @@
+[console_scripts]
+face_shiningrgb = charmie_face_shiningrgb.face_shiningrgb:main
+

@@ -1,0 +1,3 @@
+[console_scripts]
+stickler_for_the_rules = charmie_stickler_for_the_rules.stickler_for_the_rules:main
+

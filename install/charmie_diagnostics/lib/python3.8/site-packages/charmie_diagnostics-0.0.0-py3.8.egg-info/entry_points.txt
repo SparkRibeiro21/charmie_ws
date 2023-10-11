@@ -1,0 +1,3 @@
+[console_scripts]
+diagnostics = charmie_diagnostics.diagnostics:main
+

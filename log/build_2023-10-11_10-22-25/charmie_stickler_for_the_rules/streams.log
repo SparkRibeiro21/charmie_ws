@@ -1,0 +1,29 @@
+[2.419s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --uninstall --editable --build-directory /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build
+[2.797s] running develop
+[3.016s] Removing /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie-stickler-for-the-rules.egg-link (link to .)
+[3.256s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --uninstall --editable --build-directory /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build
+[3.256s] Invoking command in '/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_stickler_for_the_rules build --build-base /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build install --record /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/install.log --single-version-externally-managed
+[3.973s] running egg_info
+[3.975s] writing ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/PKG-INFO
+[3.975s] writing dependency_links to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/dependency_links.txt
+[3.976s] writing entry points to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/entry_points.txt
+[3.976s] writing requirements to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/requires.txt
+[3.976s] writing top-level names to ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/top_level.txt
+[3.976s] reading manifest file '../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[3.976s] writing manifest file '../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info/SOURCES.txt'
+[3.976s] running build
+[3.976s] running build_py
+[3.976s] running install
+[3.977s] running install_lib
+[3.977s] creating /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules
+[3.977s] copying /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build/lib/charmie_stickler_for_the_rules/stickler_for_the_rules.py -> /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules
+[3.977s] copying /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build/lib/charmie_stickler_for_the_rules/__init__.py -> /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules
+[3.977s] byte-compiling /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules/stickler_for_the_rules.py to stickler_for_the_rules.cpython-38.pyc
+[3.977s] byte-compiling /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules/__init__.py to __init__.cpython-38.pyc
+[3.977s] running install_data
+[3.977s] running install_egg_info
+[3.977s] Copying ../../build/charmie_stickler_for_the_rules/charmie_stickler_for_the_rules.egg-info to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages/charmie_stickler_for_the_rules-0.0.0-py3.8.egg-info
+[3.977s] running install_scripts
+[3.978s] Installing stickler_for_the_rules script to /home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/charmie_stickler_for_the_rules
+[3.978s] writing list of installed files to '/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/install.log'
+[4.462s] Invoked command in '/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/prefix_override:/home/utilizador/charmie_ws/install/charmie_stickler_for_the_rules/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/charmie_stickler_for_the_rules build --build-base /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/build install --record /home/utilizador/charmie_ws/build/charmie_stickler_for_the_rules/install.log --single-version-externally-managed
