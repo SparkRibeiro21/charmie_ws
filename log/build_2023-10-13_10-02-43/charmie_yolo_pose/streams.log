@@ -1,0 +1,24 @@
+[1.494s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_yolo_pose': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_yolo_pose/prefix_override:/home/utilizador/charmie_ws/install/charmie_yolo_pose/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_yolo_pose/build --no-deps install_data
+[2.013s] running develop
+[2.264s] running egg_info
+[2.264s] creating charmie_yolo_pose.egg-info
+[2.264s] writing charmie_yolo_pose.egg-info/PKG-INFO
+[2.264s] writing dependency_links to charmie_yolo_pose.egg-info/dependency_links.txt
+[2.265s] writing entry points to charmie_yolo_pose.egg-info/entry_points.txt
+[2.265s] writing requirements to charmie_yolo_pose.egg-info/requires.txt
+[2.265s] writing top-level names to charmie_yolo_pose.egg-info/top_level.txt
+[2.266s] writing manifest file 'charmie_yolo_pose.egg-info/SOURCES.txt'
+[2.268s] reading manifest file 'charmie_yolo_pose.egg-info/SOURCES.txt'
+[2.268s] writing manifest file 'charmie_yolo_pose.egg-info/SOURCES.txt'
+[2.308s] running build_ext
+[2.308s] Creating /home/utilizador/charmie_ws/install/charmie_yolo_pose/lib/python3.8/site-packages/charmie-yolo-pose.egg-link (link to .)
+[2.309s] Installing yolo_pose script to /home/utilizador/charmie_ws/install/charmie_yolo_pose/lib/charmie_yolo_pose
+[2.309s] 
+[2.309s] Installed /home/utilizador/charmie_ws/build/charmie_yolo_pose
+[2.309s] running install_data
+[2.310s] creating /home/utilizador/charmie_ws/install/charmie_yolo_pose/share/ament_index
+[2.310s] creating /home/utilizador/charmie_ws/install/charmie_yolo_pose/share/ament_index/resource_index
+[2.310s] creating /home/utilizador/charmie_ws/install/charmie_yolo_pose/share/ament_index/resource_index/packages
+[2.310s] copying resource/charmie_yolo_pose -> /home/utilizador/charmie_ws/install/charmie_yolo_pose/share/ament_index/resource_index/packages
+[2.310s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_yolo_pose/share/charmie_yolo_pose
+[2.353s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_yolo_pose' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_yolo_pose/prefix_override:/home/utilizador/charmie_ws/install/charmie_yolo_pose/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_yolo_pose/build --no-deps install_data

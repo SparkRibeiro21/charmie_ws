@@ -260,7 +260,7 @@ class PersonLocalisationNode(Node):
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
         
         #YOLOv8Pose
-        self.yolo_pose_subscriber = self.create_subscription(Yolov8Pose, "yolov8_pose", self.yolo_pose_callback, 10)
+        self.yolo_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.yolo_pose_callback, 10)
         
         #Comms with Main
         self.get_person_subscriber = self.create_subscription(Bool, "get_person", self.get_person_callback, 10)

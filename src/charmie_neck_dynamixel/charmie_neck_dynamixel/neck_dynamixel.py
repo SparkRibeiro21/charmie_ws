@@ -69,7 +69,7 @@ DXL_ID_PAN = 1  # Dynamixel ID : 1
 DXL_ID_TILT = 2  # Dynamixel ID : 2
 BAUDRATE = 57600  # Dynamixel default baudrate : 57600sssssss
 # MAC GIL # DEVICENAME = '/dev/tty.usbserial-AI0282RX'  # Check which port is being used on your controller
-DEVICENAME = '/dev/ttyUSB1'  # Check which port is being used on your controller
+DEVICENAME = '/dev/ttyUSB0'  # Check which port is being used on your controller
 # ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
 
 TORQUE_ENABLE = 1  # Value for enabling the torque
@@ -341,7 +341,8 @@ def main(args=None):
     dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_I_GAIN, TILT_I_GAIN)
     dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_P_GAIN, TILT_P_GAIN)
 
-    move_neck(180, 193) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+    # move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+    move_neck(180, 145) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
     node.get_logger().info("Set Neck to Initial Position, Looking Forward")
 
     

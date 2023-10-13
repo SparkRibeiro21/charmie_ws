@@ -4,7 +4,7 @@ from ultralytics import YOLO
 # from ultralytics.yolo.utils import DEFAULT_CFG, ROOT, ops
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int16, Bool
+from std_msgs.msg import Bool, Float32
 from geometry_msgs.msg import Pose2D
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, Yolov8Pose
@@ -17,13 +17,14 @@ import numpy as np
 import time
 
 # configurable parameters through ros topics
-DETECT_PERSON_NOT_VISIBLE_LEGS = True
+DETECT_PERSON_LEGS_NOT_VISIBLE = False   # if False only detects people whose legs are visible 
 MIN_PERSON_CONF_VALUE = 0.5
+# ---------- missing filter if person is right in front of the robot to communicate 
 
 
 # must be adjusted if we want just to not detect the feet in cases where the walls are really low and we can see the knees
 # 3 may be used in cases where it just does not detect on of the feet 
-NUMBER_OF_LEG_KP_TO_BE_DETECTED = 0
+NUMBER_OF_LEG_KP_TO_BE_DETECTED = 2
 MIN_KP_CONF_VALUE = 0.5
 
 
@@ -43,30 +44,31 @@ class YoloPoseNode(Node):
 
         # Yolo Model - Yolov8 Pode Nano
         self.model = YOLO('yolov8n-pose.pt')
-        self.counter = 0
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
-        self.debug_draw = True
+        self.debug_draw = False
 
-        # to calculate the FPS
-        # used to record the time when we processed last frame
-        self.prev_frame_time = 0
-        # used to record the time at which we processed current frame
-        self.new_frame_time = 0
+        # Publisher (Pose of People Detected Filtered and Non Filtered)
+        self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10)
+        self.person_pose_filtered_publisher = self.create_publisher(Yolov8Pose, "person_pose_filtered", 10)
 
-        # Publisher
-        self.yolov8_pose_publisher = self.create_publisher(Yolov8Pose, 'yolov8_pose', 10)
+        # Subscriber (Yolov8_Pose TR Parameters)
+        self.detect_person_legs_not_visible_subscriber = self.create_subscription(Bool, "det_per_leg_not_vis", self.get_detected_person_legs_not_visible_callback, 10)
+        self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_per_conf", self.get_minimum_person_confidence_callback, 10)
 
         # Intel Realsense Subscribers
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
         self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+        self.depth_image_subscriber = self.create_subscription(Image, "/depth/image_rect_raw", self.get_depth_image_callback, 10)
 
-        # Neck Subscriber
-        # self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
 
+        # to calculate the FPS
+        self.prev_frame_time = 0 # used to record the time when we processed last frame
+        self.new_frame_time = 0 # used to record the time at which we processed current frame
+        
         self.br = CvBridge()
-        self.yolov8_pose = Yolov8Pose()
-        self.person_coordinate = Pose2D()
+        # self.yolov8_pose = Yolov8Pose()
+        # self.yolov8_pose_filtered = Yolov8Pose()
 
         self.N_KEYPOINTS = 17
         self.NOSE_KP = 0
@@ -86,6 +88,23 @@ class YoloPoseNode(Node):
         self.KNEE_RIGHT_KP = 14
         self.ANKLE_LEFT_KP = 15
         self.ANKLE_RIGHT_KP = 16
+
+
+    def get_detected_person_legs_not_visible_callback(self, state: Bool):
+        DETECT_PERSON_LEGS_NOT_VISIBLE = state.data
+        if DETECT_PERSON_LEGS_NOT_VISIBLE:
+            self.get_logger().info('DETECT_PERSON_LEGS_NOT_VISIBLE = True')
+        else:
+            self.get_logger().info('DETECT_PERSON_LEGS_NOT_VISIBLE = False')        
+
+
+    def get_minimum_person_confidence_callback(self, state: Float32):
+
+        if 1.0 > state.data > 0.0:
+            MIN_PERSON_CONF_VALUE = state.data
+            self.get_logger().info('NEW MIN_PERSON_CONF_VALUE RECEIVED')    
+        else:
+            self.get_logger().info('ERROR SETTING MIN_PERSON_CONF_VALUE')    
 
 
     def get_color_image_callback(self, img: Image):
@@ -172,7 +191,6 @@ class YoloPoseNode(Node):
         # 15        Left Ankle                      |       |
         # 16        Right Ankle                   16|       |15  
 
-        self.yolov8_pose.persons = []
         # Calculate the number of persons detected
         num_persons = len(results[0].keypoints)
         if not results[0].keypoints.has_visible:
@@ -181,12 +199,13 @@ class YoloPoseNode(Node):
 
 
         print("___START___")
+        yolov8_pose = Yolov8Pose()
+        yolov8_pose_filtered = Yolov8Pose()
         ALL_CONDITIONS_MET = 1
-
-        CONDITION_1 = True
-        # CONDITION_2 = True
-        
         num_persons_norm = 0
+
+
+
         for person_idx in range(num_persons):
             keypoints_id = results[0].keypoints[person_idx]
             boxes_id = results[0].boxes[person_idx]
@@ -219,17 +238,30 @@ class YoloPoseNode(Node):
             print("legs_ctr = ", legs_ctr)
             print(boxes_id.id)
 
-
-            # tenho que adicionar a condicao que vem do topico DETECT_PERSON_NOT_VISIBLE_LEGS
-            if not legs_ctr >= NUMBER_OF_LEG_KP_TO_BE_DETECTED:
+            if not legs_ctr >= NUMBER_OF_LEG_KP_TO_BE_DETECTED and not DETECT_PERSON_LEGS_NOT_VISIBLE:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                 pass
             
+
+            # adds people to "person_pose" without any restriction
+            new_person = DetectedPerson()
+            # new_person.index_person = 1.0
+            # new_person.conf_person = 2.0
+            # new_person.x_rel = 3.0
+            # new_person.y_rel = 4.0
+            # new_person.box_top_left_x = 5.0
+            # new_person.box_top_left_y = 6.0
+            # new_person.box_width = 7.0
+            # new_person.box_height = 8.0
+
+
+
             
             if ALL_CONDITIONS_MET:
                 num_persons_norm+=1
 
-
+                # adds people to "person_pose" without any restriction
+                # code here to add to filtered topic
 
 
 
@@ -400,6 +432,11 @@ class YoloPoseNode(Node):
                                     cv2.circle(current_frame_draw, center_p, 5, c, -1)
             print("===")
 
+        # here we have to:
+        # - add the num_person to the Yolov8Pose msg
+        # - publish the final poses into the topics
+
+
         print("____END____")
 
         self.new_frame_time = time.time()
@@ -412,16 +449,83 @@ class YoloPoseNode(Node):
             # putting the FPS count on the frame
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.putText(current_frame_draw, 'np:' + str(num_persons_norm) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-            cv2.imshow("Yolo Pose Detection", annotated_frame)            
+            cv2.imshow("Yolo Pose Detection", annotated_frame)
             # cv2.imshow("Yolo Track", annotated_frame2)
-            # cv2.imshow("Intel RealSense Current Frame", current_frame)
             cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-            cv2.waitKey(1) 
+            cv2.waitKey(1)
+        
+        # cv2.imshow("Intel RealSense Current Frame", current_frame)
+        # cv2.waitKey(1)
+        # with open("image_table.raw", "wb") as f:
+        #     f.write(current_frame.tobytes())
+        # height, width, channels = current_frame.shape
+        # print(height, width, channels)
+        # cv2.imwrite("charmie_dist_calib.jpg", current_frame) 
+        # time.sleep(1)
 
+
+        
 
     def get_aligned_depth_image_callback(self, img: Image):
         pass
 
+        print(img.height, img.width)
+        current_frame = self.br.imgmsg_to_cv2(img, desired_encoding="passthrough")
+        depth_array = np.array(current_frame, dtype=np.float32)
+        # center_idx = np.array(depth_array.shape) // 2
+        # print ('center depth:', depth_array[center_idx[0], center_idx[1]])
+
+        """
+        if img.height == 720:
+            file_name = "_test720_table.txt"
+        
+            # Save the NumPy array to a text file
+            with open(file_name, 'w') as file:
+                np.savetxt(file, depth_array, fmt='%d', delimiter='\t')
+        
+            # np.savetxt(file_name, depth_array, fmt='%d', delimiter='\t', mode='a')
+        
+            # Optional: You can also specify formatting options using 'fmt'.
+            # In this example, '%d' specifies integer formatting and '\t' is used as the delimiter.
+
+            print(f"Array saved to {file_name}")
+            time.sleep(1)
+        
+        
+        cv2.imshow("Intel RealSense Depth Alligned", current_frame)
+        cv2.waitKey(1) 
+        """
+        
+    def get_depth_image_callback(self, img: Image):
+        pass
+
+        # print(img.height, img.width)
+        # current_frame = self.br.imgmsg_to_cv2(img, desired_encoding="passthrough")
+        # depth_array = np.array(current_frame, dtype=np.float32)
+        # center_idx = np.array(depth_array.shape) // 2
+        # print ('center depth:', depth_array[center_idx[0], center_idx[1]])
+
+
+        # if img.height == 720:
+        """
+        file_name = "test_nota.txt"
+    
+        # Save the NumPy array to a text file
+        with open(file_name, 'w') as file:
+            np.savetxt(file, depth_array, fmt='%d', delimiter='\t')
+    
+        # np.savetxt(file_name, depth_array, fmt='%d', delimiter='\t', mode='a')
+    
+        # Optional: You can also specify formatting options using 'fmt'.
+        # In this example, '%d' specifies integer formatting and '\t' is used as the delimiter.
+    
+        print(f"Array saved to {file_name}")
+        time.sleep(1)
+        """
+        
+        # cv2.imshow("Intel RealSense Depth Raw", current_frame)
+        # cv2.waitKey(1)         
+        
 
     def line_between_two_keypoints(self, current_frame_draw, KP_ONE, KP_TWO, xy, conf, colour):
 

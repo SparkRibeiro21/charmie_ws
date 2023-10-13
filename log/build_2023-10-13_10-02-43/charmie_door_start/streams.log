@@ -1,0 +1,24 @@
+[2.573s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_door_start': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_door_start/prefix_override:/home/utilizador/charmie_ws/install/charmie_door_start/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_door_start/build --no-deps install_data
+[3.215s] running develop
+[3.594s] running egg_info
+[3.594s] creating charmie_door_start.egg-info
+[3.594s] writing charmie_door_start.egg-info/PKG-INFO
+[3.595s] writing dependency_links to charmie_door_start.egg-info/dependency_links.txt
+[3.595s] writing entry points to charmie_door_start.egg-info/entry_points.txt
+[3.595s] writing requirements to charmie_door_start.egg-info/requires.txt
+[3.595s] writing top-level names to charmie_door_start.egg-info/top_level.txt
+[3.600s] writing manifest file 'charmie_door_start.egg-info/SOURCES.txt'
+[3.604s] reading manifest file 'charmie_door_start.egg-info/SOURCES.txt'
+[3.605s] writing manifest file 'charmie_door_start.egg-info/SOURCES.txt'
+[3.681s] running build_ext
+[3.682s] Creating /home/utilizador/charmie_ws/install/charmie_door_start/lib/python3.8/site-packages/charmie-door-start.egg-link (link to .)
+[3.684s] Installing door_start script to /home/utilizador/charmie_ws/install/charmie_door_start/lib/charmie_door_start
+[3.684s] 
+[3.684s] Installed /home/utilizador/charmie_ws/build/charmie_door_start
+[3.685s] running install_data
+[3.685s] creating /home/utilizador/charmie_ws/install/charmie_door_start/share/ament_index
+[3.686s] creating /home/utilizador/charmie_ws/install/charmie_door_start/share/ament_index/resource_index
+[3.686s] creating /home/utilizador/charmie_ws/install/charmie_door_start/share/ament_index/resource_index/packages
+[3.686s] copying resource/charmie_door_start -> /home/utilizador/charmie_ws/install/charmie_door_start/share/ament_index/resource_index/packages
+[3.687s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_door_start/share/charmie_door_start
+[3.785s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_door_start' returned '0': PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_door_start/prefix_override:/home/utilizador/charmie_ws/install/charmie_door_start/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_door_start/build --no-deps install_data

@@ -76,7 +76,7 @@ class InspectionNode(Node):
         self.odometry_subscriber = self.create_subscription(Odometry, "odom_a", self.get_odometry_robot_callback, 10)
 
         #YOLOv8Pose
-        self.yolo_pose_subscriber = self.create_subscription(Yolov8Pose, "yolov8_pose", self.yolo_pose_callback, 10)
+        self.yolo_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.yolo_pose_callback, 10)
 
         ###         Vars
         self.done_start_door = False

@@ -62,7 +62,7 @@ class RestaurantNode(Node):
         self.odometry_subscriber = self.create_subscription(Odometry, "odom",self.get_odometry_robot_callback, 10)
 
         #Yolo
-        self.yolov8_pose_subscriber = self.create_subscription(Yolov8Pose, "/yolov8_pose", self.yolov8_callback, 10)
+        self.yolov8_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.yolov8_callback, 10)
 
         #self.dummy_publisher = self.create_publisher(Bool, "Dummy", 10)
 

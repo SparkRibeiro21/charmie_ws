@@ -1,0 +1,24 @@
+[6.972s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_restaurant': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_restaurant/prefix_override:/home/utilizador/charmie_ws/install/charmie_restaurant/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_restaurant/build --no-deps install_data
+[7.906s] running develop
+[8.285s] running egg_info
+[8.285s] creating charmie_restaurant.egg-info
+[8.285s] writing charmie_restaurant.egg-info/PKG-INFO
+[8.285s] writing dependency_links to charmie_restaurant.egg-info/dependency_links.txt
+[8.286s] writing entry points to charmie_restaurant.egg-info/entry_points.txt
+[8.287s] writing requirements to charmie_restaurant.egg-info/requires.txt
+[8.287s] writing top-level names to charmie_restaurant.egg-info/top_level.txt
+[8.287s] writing manifest file 'charmie_restaurant.egg-info/SOURCES.txt'
+[8.290s] reading manifest file 'charmie_restaurant.egg-info/SOURCES.txt'
+[8.291s] writing manifest file 'charmie_restaurant.egg-info/SOURCES.txt'
+[8.356s] running build_ext
+[8.356s] Creating /home/utilizador/charmie_ws/install/charmie_restaurant/lib/python3.8/site-packages/charmie-restaurant.egg-link (link to .)
+[8.358s] Installing restaurant script to /home/utilizador/charmie_ws/install/charmie_restaurant/lib/charmie_restaurant
+[8.358s] 
+[8.359s] Installed /home/utilizador/charmie_ws/build/charmie_restaurant
+[8.359s] running install_data
+[8.359s] creating /home/utilizador/charmie_ws/install/charmie_restaurant/share/ament_index
+[8.359s] creating /home/utilizador/charmie_ws/install/charmie_restaurant/share/ament_index/resource_index
+[8.359s] creating /home/utilizador/charmie_ws/install/charmie_restaurant/share/ament_index/resource_index/packages
+[8.359s] copying resource/charmie_restaurant -> /home/utilizador/charmie_ws/install/charmie_restaurant/share/ament_index/resource_index/packages
+[8.360s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_restaurant/share/charmie_restaurant
+[8.881s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_restaurant' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_restaurant/prefix_override:/home/utilizador/charmie_ws/install/charmie_restaurant/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_restaurant/build --no-deps install_data

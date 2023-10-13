@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/src/charmie_interfaces/msg/Keypoints.msg

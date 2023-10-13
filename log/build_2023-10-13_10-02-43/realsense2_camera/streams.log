@@ -1,0 +1,121 @@
+[0.023s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:${PYTHONPATH} /home/utilizador/.local/bin/cmake /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/realsense2_camera
+[0.130s] -- The C compiler identification is GNU 9.4.0
+[0.203s] -- The CXX compiler identification is GNU 9.4.0
+[0.225s] -- Detecting C compiler ABI info
+[0.313s] -- Detecting C compiler ABI info - done
+[0.336s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.337s] -- Detecting C compile features
+[0.338s] -- Detecting C compile features - done
+[0.355s] -- Detecting CXX compiler ABI info
+[0.431s] -- Detecting CXX compiler ABI info - done
+[0.446s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.447s] -- Detecting CXX compile features
+[0.447s] -- Detecting CXX compile features - done
+[0.450s] -- Create Release Build.
+[0.450s] -- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)
+[0.454s] [33mCMake Warning (dev) at /opt/ros/foxy/share/ament_cmake_core/cmake/core/python.cmake:22 (find_package):
+[0.454s]   Policy CMP0148 is not set: The FindPythonInterp and FindPythonLibs modules
+[0.454s]   are removed.  Run "cmake --help-policy CMP0148" for policy details.  Use
+[0.454s]   the cmake_policy command to set the policy and suppress this warning.
+[0.454s] 
+[0.455s] Call Stack (most recent call first):
+[0.455s]   /opt/ros/foxy/share/ament_cmake_core/cmake/core/all.cmake:53 (include)
+[0.455s]   /opt/ros/foxy/share/ament_cmake_core/cmake/ament_cmake_core-extras.cmake:17 (include)
+[0.455s]   /opt/ros/foxy/share/ament_cmake_core/cmake/ament_cmake_coreConfig.cmake:41 (include)
+[0.455s]   /opt/ros/foxy/share/ament_cmake/cmake/ament_cmake_export_dependencies-extras.cmake:15 (find_package)
+[0.455s]   /opt/ros/foxy/share/ament_cmake/cmake/ament_cmakeConfig.cmake:41 (include)
+[0.455s]   CMakeLists.txt:105 (find_package)
+[0.455s] This warning is for project developers.  Use -Wno-dev to suppress it.
+[0.456s] [0m
+[0.478s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+[0.478s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[0.707s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.729s] -- Found builtin_interfaces: 1.0.0 (/opt/ros/foxy/share/builtin_interfaces/cmake)
+[0.770s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.784s] -- Found rosidl_adapter: 1.3.1 (/opt/ros/foxy/share/rosidl_adapter/cmake)
+[0.903s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "1.1.1f")  
+[0.937s] -- Found FastRTPS: /opt/ros/foxy/include  
+[1.027s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.061s] -- Found cv_bridge: 3.0.7 (/opt/ros/foxy/share/cv_bridge/cmake)
+[1.267s] -- Found image_transport: 2.4.0 (/opt/ros/foxy/share/image_transport/cmake)
+[1.326s] -- Found rmw_implementation_cmake: 1.0.4 (/opt/ros/foxy/share/rmw_implementation_cmake/cmake)
+[1.327s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[1.328s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[1.391s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+[1.391s] -- Looking for pthread_create in pthreads
+[1.446s] -- Looking for pthread_create in pthreads - not found
+[1.446s] -- Looking for pthread_create in pthread
+[1.509s] -- Looking for pthread_create in pthread - found
+[1.512s] -- Found Threads: TRUE  
+[1.746s] -- Found rclcpp_components: 2.4.3 (/opt/ros/foxy/share/rclcpp_components/cmake)
+[1.805s] -- Found realsense2_camera_msgs: 4.51.1 (/home/utilizador/charmie_ws/install/realsense2_camera_msgs/share/realsense2_camera_msgs/cmake)
+[1.849s] -- Found nav_msgs: 2.0.5 (/opt/ros/foxy/share/nav_msgs/cmake)
+[1.939s] -- Found tf2_ros: 0.13.14 (/opt/ros/foxy/share/tf2_ros/cmake)
+[2.331s] -- Found diagnostic_updater: 3.1.2 (/opt/ros/foxy/share/diagnostic_updater/cmake)
+[2.468s] -- Build for ROS2 Foxy
+[2.584s] -- Configuring done (2.5s)
+[2.622s] -- Generating done (0.0s)
+[2.625s] -- Build files have been written to: /home/utilizador/charmie_ws/build/realsense2_camera
+[2.644s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:${PYTHONPATH} /home/utilizador/.local/bin/cmake /home/utilizador/charmie_ws/src/realsense-ros/realsense2_camera -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/utilizador/charmie_ws/install/realsense2_camera
+[2.646s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:${PYTHONPATH} /home/utilizador/.local/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera -- -j8 -l8
+[2.700s] [  6%] [32mBuilding CXX object CMakeFiles/realsense2_camera_node.dir/rclcpp_components/node_main_realsense2_camera_node.cpp.o[0m
+[2.701s] [ 12%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/realsense_node_factory.cpp.o[0m
+[2.701s] [ 25%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/base_realsense_node.cpp.o[0m
+[2.701s] [ 25%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/parameters.cpp.o[0m
+[2.702s] [ 31%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/ros_sensor.cpp.o[0m
+[2.704s] [ 37%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/rs_node_setup.cpp.o[0m
+[2.705s] [ 43%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/ros_utils.cpp.o[0m
+[2.717s] [ 50%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/dynamic_params.cpp.o[0m
+[7.419s] [ 56%] [32m[1mLinking CXX executable realsense2_camera_node[0m
+[7.645s] [ 56%] Built target realsense2_camera_node
+[7.652s] [ 62%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/sensor_params.cpp.o[0m
+[7.656s] [ 68%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/named_filter.cpp.o[0m
+[12.638s] [ 75%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/profile_manager.cpp.o[0m
+[13.522s] [ 81%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/image_publisher.cpp.o[0m
+[14.463s] [ 87%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/tfs.cpp.o[0m
+[17.551s] [ 93%] [32mBuilding CXX object CMakeFiles/realsense2_camera.dir/src/ros_param_backend_foxy.cpp.o[0m
+[30.621s] [100%] [32m[1mLinking CXX shared library librealsense2_camera.so[0m
+[33.632s] [100%] Built target realsense2_camera
+[33.645s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:${PYTHONPATH} /home/utilizador/.local/bin/cmake --build /home/utilizador/charmie_ws/build/realsense2_camera -- -j8 -l8
+[33.721s] Invoking command in '/home/utilizador/charmie_ws/build/realsense2_camera': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:${PYTHONPATH} /home/utilizador/.local/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera
+[33.751s] -- Install configuration: "Release"
+[33.752s] -- Execute custom install script
+[33.752s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/lib/realsense2_camera/realsense2_camera_node
+[33.757s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/lib/librealsense2_camera.so
+[33.761s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/base_realsense_node.h
+[33.764s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/constants.h
+[33.770s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/dynamic_params.h
+[33.773s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/image_publisher.h
+[33.777s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/named_filter.h
+[33.780s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/profile_manager.h
+[33.782s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/realsense_node_factory.h
+[33.785s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/ros_param_backend.h
+[33.788s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/ros_sensor.h
+[33.791s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/ros_utils.h
+[33.793s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/include/sensor_params.h
+[33.796s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/launch/default.rviz
+[33.799s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/launch/rs_intra_process_demo_launch.py
+[33.801s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/launch/rs_launch.py
+[33.804s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/launch/rs_multi_camera_launch.py
+[33.806s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/library_path.sh
+[33.809s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/library_path.dsv
+[33.812s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/ament_index/resource_index/package_run_dependencies/realsense2_camera
+[33.816s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/ament_index/resource_index/parent_prefix_path/realsense2_camera
+[33.819s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/ament_prefix_path.sh
+[33.822s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/ament_prefix_path.dsv
+[33.825s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/path.sh
+[33.828s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/environment/path.dsv
+[33.831s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/local_setup.bash
+[33.835s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/local_setup.sh
+[33.839s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/local_setup.zsh
+[33.843s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/local_setup.dsv
+[33.847s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.dsv
+[33.850s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/ament_index/resource_index/packages/realsense2_camera
+[33.853s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/ament_index/resource_index/rclcpp_components/realsense2_camera
+[33.856s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/cmake/ament_cmake_export_include_directories-extras.cmake
+[33.859s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/cmake/ament_cmake_export_libraries-extras.cmake
+[33.862s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/cmake/ament_cmake_export_dependencies-extras.cmake
+[33.865s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/cmake/realsense2_cameraConfig.cmake
+[33.868s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/cmake/realsense2_cameraConfig-version.cmake
+[33.871s] -- Symlinking: /home/utilizador/charmie_ws/install/realsense2_camera/share/realsense2_camera/package.xml
+[33.885s] Invoked command in '/home/utilizador/charmie_ws/build/realsense2_camera' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs:/opt/ros/foxy LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages:${PYTHONPATH} /home/utilizador/.local/bin/cmake --install /home/utilizador/charmie_ws/build/realsense2_camera

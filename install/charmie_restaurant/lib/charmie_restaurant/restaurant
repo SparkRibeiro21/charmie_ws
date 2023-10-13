@@ -1,10 +1,10 @@
 #!/usr/bin/python3
-# EASY-INSTALL-ENTRY-SCRIPT: 'charmie-restaurant==0.0.0','console_scripts','restaurant'
+# EASY-INSTALL-ENTRY-SCRIPT: 'charmie-restaurant','console_scripts','restaurant'
 import re
 import sys
 
 # for compatibility with easy_install; see #2198
-__requires__ = 'charmie-restaurant==0.0.0'
+__requires__ = 'charmie-restaurant'
 
 try:
     from importlib.metadata import distribution
@@ -30,4 +30,4 @@ globals().setdefault('load_entry_point', importlib_load_entry_point)
 
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
-    sys.exit(load_entry_point('charmie-restaurant==0.0.0', 'console_scripts', 'restaurant')())
+    sys.exit(load_entry_point('charmie-restaurant', 'console_scripts', 'restaurant')())
