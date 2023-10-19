@@ -14,7 +14,7 @@ import numpy as np
 import math
 import time
 
-filename = "doors.pt"
+filename = "best.pt"
 
 
 ### --------------------------------------------- CODE EXPLANATION --------------------------------------------- ### 
@@ -61,7 +61,7 @@ class Yolo_obj(Node):
         # depending on the filename selected, the class names change
         if filename=='doors.pt':
             self.classNames = door_classname
-        elif filename=='Rui.pt':
+        elif filename=='best.pt':
             self.classNames = Rui_className
         else:
             print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
@@ -105,46 +105,56 @@ class Yolo_obj(Node):
 
         #print(results)
 
-        #if results:
+        # this for only does 1 time ...
         for r in results:
-                boxes = r.boxes
+            boxes = r.boxes
 
-                for box in boxes:
-                    cls = int(box.cls[0])
-                    conf = math.ceil(box.conf[0] * 100) / 100
-                    
-                    if self.debug_draw:
-                        x1, y1, x2, y2 = box.xyxy[0]
-                        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-                        #center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
-
-                        w, h = x2 - x1, y2 - y1
-                        if conf > self.threshold:
-                            cvzone.cornerRect(current_frame, (x1, y1, w, h), l=15)    
-                            cvzone.putTextRect(current_frame, f"{self.classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
-                        
-                            print(self.classNames[cls], 'confidence = ' + str(conf))
-                    
-                    else:
-                        pass
-                    
-                    if conf > self.threshold:
-                        self.obj.objects.append(str(self.classNames[cls]))
-                        self.obj.confidence.append(conf)
+            for box in boxes:
+                cls = int(box.cls[0])
+                conf = math.ceil(box.conf[0] * 100) / 100
                 
-                self.objects_publisher.publish(self.obj)
+                if self.debug_draw:
+                    x1, y1, x2, y2 = box.xyxy[0]
+                    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                    #center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
 
-                self.new_frame_time = time.time()
-                self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
-                self.prev_frame_time = self.new_frame_time
+                    w, h = x2 - x1, y2 - y1
+                    if conf > self.threshold:
+                        cvzone.cornerRect(current_frame, (x1, y1, w, h), l=15)    
+                        cvzone.putTextRect(current_frame, f"{self.classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
+                    
+                        print(self.classNames[cls], 'confidence = ' + str(conf))
+                
+                else:
+                    pass
+                
+                if conf > self.threshold:
+                    self.obj.objects.append(str(self.classNames[cls]))
+                    self.obj.confidence.append(conf)
+            
+            self.objects_publisher.publish(self.obj)
 
-                self.fps = str(self.fps)
-  
+            self.new_frame_time = time.time()
+            self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
+            self.prev_frame_time = self.new_frame_time
+
+            self.fps = str(self.fps)
+
+            if self.debug_draw:
                 # putting the FPS count on the frame
                 cv2.putText(current_frame, 'fps = ' + self.fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-
                 cv2.imshow('Output', current_frame) # Exibir a imagem capturada
                 cv2.waitKey(1)
+            
+                # THIS CODE IS TO SAVE IMAGES TO TEST WITHOUT THE ROBOT, IT SABES JPG AND RAW with object detection
+                # cv2.imshow("Intel RealSense Current Frame", current_frame)
+                # cv2.waitKey(1)
+                # with open("yolo_objects.raw", "wb") as f:
+                #     f.write(current_frame.tobytes())
+                # height, width, channels = current_frame.shape
+                # print(height, width, channels)
+                # cv2.imwrite("yolo_objects.jpg", current_frame) 
+                # time.sleep(1)
 
         
 def main(args=None):

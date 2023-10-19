@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 from ultralytics import YOLO
-# from ultralytics.yolo.engine.results import Results
-# from ultralytics.yolo.utils import DEFAULT_CFG, ROOT, ops
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool, Float32
@@ -17,9 +15,10 @@ import numpy as np
 import time
 
 # configurable parameters through ros topics
-DETECT_PERSON_LEGS_NOT_VISIBLE = False   # if False only detects people whose legs are visible 
+DETECT_PERSON_LEGS_NOT_VISIBLE = True  # if False only detects people whose legs are visible 
 MIN_PERSON_CONF_VALUE = 0.5
-# ---------- missing filter if person is right in front of the robot to communicate 
+MIN_KP_TO_DETECT_PERSON = 4  # this parameter does not consider the four legs keypoints 
+JUST_PERSON_RIGHT_IN_FRONT = False
 
 
 # must be adjusted if we want just to not detect the feet in cases where the walls are really low and we can see the knees
@@ -27,6 +26,15 @@ MIN_PERSON_CONF_VALUE = 0.5
 NUMBER_OF_LEG_KP_TO_BE_DETECTED = 2
 MIN_KP_CONF_VALUE = 0.5
 
+# TO DO TIAGO RIBEIRO:
+# - add box_top_left_x and box_top_left_y to detectedperson
+# - add box_width and box_height to detectedperson
+# - apply condition MIN_KP_TO_DETECT_PERSON
+
+# - create topics for parameters
+# - test send values through topics for parameters
+# - add x_rel and y_rel to detectedperson
+# - apply condition JUST_PERSON_RIGHT_IN_FRONT
 
 
 DRAW_PERSON_CONF = True
@@ -34,7 +42,6 @@ DRAW_PERSON_ID = True
 DRAW_PERSON_BOX = True
 DRAW_PERSON_KP = True
 DRAW_LOW_CONF_KP = False
-
 
 
 class YoloPoseNode(Node):
@@ -46,7 +53,7 @@ class YoloPoseNode(Node):
         self.model = YOLO('yolov8n-pose.pt')
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
-        self.debug_draw = False
+        self.debug_draw = True
 
         # Publisher (Pose of People Detected Filtered and Non Filtered)
         self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10)
@@ -59,7 +66,7 @@ class YoloPoseNode(Node):
         # Intel Realsense Subscribers
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
         self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
-        self.depth_image_subscriber = self.create_subscription(Image, "/depth/image_rect_raw", self.get_depth_image_callback, 10)
+        # self.depth_image_subscriber = self.create_subscription(Image, "/depth/image_rect_raw", self.get_depth_image_callback, 10)
 
 
         # to calculate the FPS
@@ -202,7 +209,7 @@ class YoloPoseNode(Node):
         yolov8_pose = Yolov8Pose()
         yolov8_pose_filtered = Yolov8Pose()
         ALL_CONDITIONS_MET = 1
-        num_persons_norm = 0
+        num_persons_filtered = 0
 
 
 
@@ -235,9 +242,13 @@ class YoloPoseNode(Node):
             if keypoints_id.conf[0][self.ANKLE_RIGHT_KP] > MIN_KP_CONF_VALUE:
                 legs_ctr+=1
 
-            print("legs_ctr = ", legs_ctr)
-            print(boxes_id.id)
+            person_id = boxes_id.id
+            if boxes_id.id == None:
+                person_id = 0 
 
+            print("legs_ctr = ", legs_ctr)
+            print("id = ", person_id)
+            
             if not legs_ctr >= NUMBER_OF_LEG_KP_TO_BE_DETECTED and not DETECT_PERSON_LEGS_NOT_VISIBLE:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                 pass
@@ -245,25 +256,16 @@ class YoloPoseNode(Node):
 
             # adds people to "person_pose" without any restriction
             new_person = DetectedPerson()
-            # new_person.index_person = 1.0
-            # new_person.conf_person = 2.0
-            # new_person.x_rel = 3.0
-            # new_person.y_rel = 4.0
-            # new_person.box_top_left_x = 5.0
-            # new_person.box_top_left_y = 6.0
-            # new_person.box_width = 7.0
-            # new_person.box_height = 8.0
-
-
+            new_person = self.add_person_to_detectedperson_msg(boxes_id, keypoints_id)
+            yolov8_pose.persons.append(new_person)
 
             
             if ALL_CONDITIONS_MET:
-                num_persons_norm+=1
+                num_persons_filtered+=1
 
                 # adds people to "person_pose" without any restriction
                 # code here to add to filtered topic
-
-
+                yolov8_pose_filtered.persons.append(new_person)
 
 
                 if self.debug_draw:
@@ -317,7 +319,7 @@ class YoloPoseNode(Node):
                         ) 
                     
                     elif not DRAW_PERSON_CONF and DRAW_PERSON_ID:
-                        if boxes_id.id != None:
+                        if person_id != 0:
 
                             # draws the background for the confidence of each person
                             cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+10, end_point_text_rect[1]) , red_yp , -1) 
@@ -325,7 +327,7 @@ class YoloPoseNode(Node):
                             current_frame_draw = cv2.putText(
                                 current_frame_draw,
                                 # f"{round(float(per.conf),2)}",
-                                f"{str(int(boxes_id.id))}",
+                                f"{str(int(person_id))}",
                                 (start_point_text[0], start_point_text[1]),
                                 cv2.FONT_HERSHEY_DUPLEX,
                                 1,
@@ -336,7 +338,7 @@ class YoloPoseNode(Node):
 
                     elif DRAW_PERSON_CONF and DRAW_PERSON_ID:
 
-                        if boxes_id.id != None:
+                        if person_id != 0:
 
                             # draws the background for the confidence of each person
                             cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+70, end_point_text_rect[1]) , red_yp , -1) 
@@ -344,7 +346,7 @@ class YoloPoseNode(Node):
                             current_frame_draw = cv2.putText(
                                 current_frame_draw,
                                 # f"{round(float(per.conf),2)}",
-                                f"{str(int(boxes_id.id))}",
+                                f"{str(int(person_id))}",
                                 (start_point_text[0], start_point_text[1]),
                                 cv2.FONT_HERSHEY_DUPLEX,
                                 1,
@@ -430,12 +432,24 @@ class YoloPoseNode(Node):
                                     c = (0,0,255)
                                     center_p = (int(keypoints_id.xy[0][kp][0]), int(keypoints_id.xy[0][kp][1]))
                                     cv2.circle(current_frame_draw, center_p, 5, c, -1)
+
+                        
+                        # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
+                        # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
+
             print("===")
 
         # here we have to:
         # - add the num_person to the Yolov8Pose msg
         # - publish the final poses into the topics
 
+        # yolov8_pose.persons.append(new_person)
+
+        yolov8_pose.num_person = num_persons
+        self.person_pose_publisher.publish(yolov8_pose)
+
+        yolov8_pose_filtered.num_person = num_persons_filtered
+        self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
         print("____END____")
 
@@ -448,21 +462,23 @@ class YoloPoseNode(Node):
         if self.debug_draw:
             # putting the FPS count on the frame
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-            cv2.putText(current_frame_draw, 'np:' + str(num_persons_norm) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.putText(current_frame_draw, 'np:' + str(num_persons_filtered) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow("Yolo Pose Detection", annotated_frame)
             # cv2.imshow("Yolo Track", annotated_frame2)
             cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
             cv2.waitKey(1)
         
-        # cv2.imshow("Intel RealSense Current Frame", current_frame)
-        # cv2.waitKey(1)
-        # with open("image_table.raw", "wb") as f:
-        #     f.write(current_frame.tobytes())
-        # height, width, channels = current_frame.shape
-        # print(height, width, channels)
-        # cv2.imwrite("charmie_dist_calib.jpg", current_frame) 
-        # time.sleep(1)
-
+        """
+        cv2.imshow("Intel RealSense Current Frame", current_frame)
+        cv2.waitKey(1)
+        with open("charmie_color_yp.raw", "wb") as f:
+            f.write(current_frame.tobytes())
+        height, width, channels = current_frame.shape
+        print(height, width, channels)
+        cv2.imwrite("charmie_color_yp.jpg", current_frame) 
+        time.sleep(1)
+        """
+        # time.sleep(5)
 
         
 
@@ -477,7 +493,7 @@ class YoloPoseNode(Node):
 
         """
         if img.height == 720:
-            file_name = "_test720_table.txt"
+            file_name = "charmie_depth_yp.txt"
         
             # Save the NumPy array to a text file
             with open(file_name, 'w') as file:
@@ -496,8 +512,8 @@ class YoloPoseNode(Node):
         cv2.waitKey(1) 
         """
         
-    def get_depth_image_callback(self, img: Image):
-        pass
+    # def get_depth_image_callback(self, img: Image):
+    #     pass
 
         # print(img.height, img.width)
         # current_frame = self.br.imgmsg_to_cv2(img, desired_encoding="passthrough")
@@ -526,6 +542,99 @@ class YoloPoseNode(Node):
         # cv2.imshow("Intel RealSense Depth Raw", current_frame)
         # cv2.waitKey(1)         
         
+    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id):
+        # receives the box and keypoints of a specidic person and returns the detected person 
+        # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
+        pass
+
+        person_id = boxes_id.id
+        if boxes_id.id == None:
+            person_id = 0 
+
+        # adds people to "person_pose" without any restriction
+        new_person = DetectedPerson()
+
+        new_person.index_person = int(person_id)
+        new_person.conf_person = float(boxes_id.conf)
+        new_person.x_rel = 0.0
+        new_person.y_rel = 0.0
+        new_person.box_top_left_x = 0
+        new_person.box_top_left_y = 0
+        new_person.box_width = 0
+        new_person.box_height = 0
+
+        # print(int(keypoints_id.xy[0][self.NOSE_KP][0]), int(keypoints_id.xy[0][self.NOSE_KP][1]), float(keypoints_id.conf[0][self.NOSE_KP]))
+
+        new_person.kp_nose_x = int(keypoints_id.xy[0][self.NOSE_KP][0])
+        new_person.kp_nose_y = int(keypoints_id.xy[0][self.NOSE_KP][1])
+        new_person.kp_nose_conf = float(keypoints_id.conf[0][self.NOSE_KP])
+
+        new_person.kp_eye_left_x = int(keypoints_id.xy[0][self.EYE_LEFT_KP][0])
+        new_person.kp_eye_left_y = int(keypoints_id.xy[0][self.EYE_LEFT_KP][1])
+        new_person.kp_eye_left_conf = float(keypoints_id.conf[0][self.EYE_LEFT_KP])
+
+        new_person.kp_eye_right_x = int(keypoints_id.xy[0][self.EYE_RIGHT_KP][0])
+        new_person.kp_eye_right_y = int(keypoints_id.xy[0][self.EYE_RIGHT_KP][1])
+        new_person.kp_eye_right_conf = float(keypoints_id.conf[0][self.EYE_RIGHT_KP])
+
+        new_person.kp_ear_left_x = int(keypoints_id.xy[0][self.EAR_LEFT_KP][0])
+        new_person.kp_ear_left_y = int(keypoints_id.xy[0][self.EAR_LEFT_KP][1])
+        new_person.kp_ear_left_conf = float(keypoints_id.conf[0][self.EAR_LEFT_KP])
+
+        new_person.kp_ear_right_x = int(keypoints_id.xy[0][self.EAR_RIGHT_KP][0])
+        new_person.kp_ear_right_y = int(keypoints_id.xy[0][self.EAR_RIGHT_KP][1])
+        new_person.kp_ear_right_conf = float(keypoints_id.conf[0][self.EAR_RIGHT_KP])
+
+        new_person.kp_shoulder_left_x = int(keypoints_id.xy[0][self.SHOULDER_LEFT_KP][0])
+        new_person.kp_shoulder_left_y = int(keypoints_id.xy[0][self.SHOULDER_LEFT_KP][1])
+        new_person.kp_shoulder_left_conf = float(keypoints_id.conf[0][self.SHOULDER_LEFT_KP])
+
+        new_person.kp_shoulder_right_x = int(keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][0])
+        new_person.kp_shoulder_right_y = int(keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][1])
+        new_person.kp_shoulder_right_conf = float(keypoints_id.conf[0][self.SHOULDER_RIGHT_KP])
+
+        new_person.kp_elbow_left_x = int(keypoints_id.xy[0][self.ELBOW_LEFT_KP][0])
+        new_person.kp_elbow_left_y = int(keypoints_id.xy[0][self.ELBOW_LEFT_KP][1])
+        new_person.kp_elbow_left_conf = float(keypoints_id.conf[0][self.ELBOW_LEFT_KP])
+
+        new_person.kp_elbow_right_x = int(keypoints_id.xy[0][self.ELBOW_RIGHT_KP][0])
+        new_person.kp_elbow_right_y = int(keypoints_id.xy[0][self.ELBOW_RIGHT_KP][1])
+        new_person.kp_elbow_right_conf = float(keypoints_id.conf[0][self.ELBOW_RIGHT_KP])
+
+        new_person.kp_wrist_left_x = int(keypoints_id.xy[0][self.WRIST_LEFT_KP][0])
+        new_person.kp_wrist_left_y = int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1])
+        new_person.kp_wrist_left_conf = float(keypoints_id.conf[0][self.WRIST_LEFT_KP])
+
+        new_person.kp_wrist_right_x = int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][0])
+        new_person.kp_wrist_right_y = int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1])
+        new_person.kp_wrist_right_conf = float(keypoints_id.conf[0][self.WRIST_RIGHT_KP])
+
+        new_person.kp_hip_left_x = int(keypoints_id.xy[0][self.HIP_LEFT_KP][0])
+        new_person.kp_hip_left_y = int(keypoints_id.xy[0][self.HIP_LEFT_KP][1])
+        new_person.kp_hip_left_conf = float(keypoints_id.conf[0][self.HIP_LEFT_KP])
+
+        new_person.kp_hip_right_x = int(keypoints_id.xy[0][self.HIP_RIGHT_KP][0])
+        new_person.kp_hip_right_y = int(keypoints_id.xy[0][self.HIP_RIGHT_KP][1])
+        new_person.kp_hip_right_conf = float(keypoints_id.conf[0][self.HIP_RIGHT_KP])
+
+        new_person.kp_knee_left_x = int(keypoints_id.xy[0][self.KNEE_LEFT_KP][0])
+        new_person.kp_knee_left_y = int(keypoints_id.xy[0][self.KNEE_LEFT_KP][1])
+        new_person.kp_knee_left_conf = float(keypoints_id.conf[0][self.KNEE_LEFT_KP])
+
+        new_person.kp_knee_right_x = int(keypoints_id.xy[0][self.KNEE_RIGHT_KP][0])
+        new_person.kp_knee_right_y = int(keypoints_id.xy[0][self.KNEE_RIGHT_KP][1])
+        new_person.kp_knee_right_conf = float(keypoints_id.conf[0][self.KNEE_RIGHT_KP])
+
+        new_person.kp_ankle_left_x = int(keypoints_id.xy[0][self.ANKLE_LEFT_KP][0])
+        new_person.kp_ankle_left_y = int(keypoints_id.xy[0][self.ANKLE_LEFT_KP][1])
+        new_person.kp_ankle_left_conf = float(keypoints_id.conf[0][self.ANKLE_LEFT_KP])
+
+        new_person.kp_ankle_right_x = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][0])
+        new_person.kp_ankle_right_y = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][1])
+        new_person.kp_ankle_right_conf = float(keypoints_id.conf[0][self.ANKLE_RIGHT_KP])
+
+        return new_person
+
 
     def line_between_two_keypoints(self, current_frame_draw, KP_ONE, KP_TWO, xy, conf, colour):
 

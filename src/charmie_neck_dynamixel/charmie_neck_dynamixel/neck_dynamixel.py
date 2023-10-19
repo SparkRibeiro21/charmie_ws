@@ -342,7 +342,7 @@ def main(args=None):
     dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_P_GAIN, TILT_P_GAIN)
 
     # move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-    move_neck(180, 145) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+    move_neck(135, 160) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
     node.get_logger().info("Set Neck to Initial Position, Looking Forward")
 
     
