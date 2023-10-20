@@ -2,7 +2,7 @@
 from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool, Float32
+from std_msgs.msg import Bool, Float32, Int16
 from geometry_msgs.msg import Pose2D
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, Yolov8Pose
@@ -15,11 +15,10 @@ import numpy as np
 import time
 
 # configurable parameters through ros topics
-DETECT_PERSON_LEGS_NOT_VISIBLE = True  # if False only detects people whose legs are visible 
-MIN_PERSON_CONF_VALUE = 0.5
-MIN_KP_TO_DETECT_PERSON = 4  # this parameter does not consider the four legs keypoints 
-JUST_PERSON_RIGHT_IN_FRONT = False
-
+ONLY_DETECT_PERSON_LEGS_VISIBLE = False       # if False only detects people whose legs are visible 
+MIN_PERSON_CONF_VALUE = 0.5                 # defines the minimum confidence value to be considered a person
+MIN_KP_TO_DETECT_PERSON = 4                 # this parameter does not consider the four legs keypoints 
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False    # only detects person right in front of the robot both on the x and y axis 
 
 # must be adjusted if we want just to not detect the feet in cases where the walls are really low and we can see the knees
 # 3 may be used in cases where it just does not detect on of the feet 
@@ -27,15 +26,7 @@ NUMBER_OF_LEG_KP_TO_BE_DETECTED = 2
 MIN_KP_CONF_VALUE = 0.5
 
 # TO DO TIAGO RIBEIRO:
-# - add box_top_left_x and box_top_left_y to detectedperson
-# - add box_width and box_height to detectedperson
-# - apply condition MIN_KP_TO_DETECT_PERSON
-
-# - create topics for parameters
-# - test send values through topics for parameters
 # - add x_rel and y_rel to detectedperson
-# - apply condition JUST_PERSON_RIGHT_IN_FRONT
-
 
 DRAW_PERSON_CONF = True
 DRAW_PERSON_ID = True
@@ -60,8 +51,10 @@ class YoloPoseNode(Node):
         self.person_pose_filtered_publisher = self.create_publisher(Yolov8Pose, "person_pose_filtered", 10)
 
         # Subscriber (Yolov8_Pose TR Parameters)
-        self.detect_person_legs_not_visible_subscriber = self.create_subscription(Bool, "det_per_leg_not_vis", self.get_detected_person_legs_not_visible_callback, 10)
+        self.only_detect_person_legs_visible_subscriber = self.create_subscription(Bool, "only_det_per_legs_vis", self.get_only_detect_person_legs_visible_callback, 10)
         self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_per_conf", self.get_minimum_person_confidence_callback, 10)
+        self.minimum_keypoints_to_detect_person_subscriber = self.create_subscription(Int16, "min_kp_det_per", self.get_minimum_keypoints_to_detect_person_callback, 10)
+        self.only_detect_person_right_in_front_subscriber = self.create_subscription(Bool, "only_det_per_right_in_front", self.get_only_detect_person_right_in_front_callback, 10)
 
         # Intel Realsense Subscribers
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
@@ -78,6 +71,7 @@ class YoloPoseNode(Node):
         # self.yolov8_pose_filtered = Yolov8Pose()
 
         self.N_KEYPOINTS = 17
+        self.NUMBER_OF_LEGS_KP = 4
         self.NOSE_KP = 0
         self.EYE_LEFT_KP = 1                        
         self.EYE_RIGHT_KP = 2
@@ -97,21 +91,43 @@ class YoloPoseNode(Node):
         self.ANKLE_RIGHT_KP = 16
 
 
-    def get_detected_person_legs_not_visible_callback(self, state: Bool):
-        DETECT_PERSON_LEGS_NOT_VISIBLE = state.data
-        if DETECT_PERSON_LEGS_NOT_VISIBLE:
-            self.get_logger().info('DETECT_PERSON_LEGS_NOT_VISIBLE = True')
+    def get_only_detect_person_legs_visible_callback(self, state: Bool):
+        global ONLY_DETECT_PERSON_LEGS_VISIBLE
+        # print(state.data)
+        ONLY_DETECT_PERSON_LEGS_VISIBLE = state.data
+        if ONLY_DETECT_PERSON_LEGS_VISIBLE:
+            self.get_logger().info('ONLY_DETECT_PERSON_LEGS_VISIBLE = True')
         else:
-            self.get_logger().info('DETECT_PERSON_LEGS_NOT_VISIBLE = False')        
-
+            self.get_logger().info('ONLY_DETECT_PERSON_LEGS_VISIBLE = False')        
 
     def get_minimum_person_confidence_callback(self, state: Float32):
-
-        if 1.0 > state.data > 0.0:
+        global MIN_PERSON_CONF_VALUE
+        # print(state.data)
+        if 0.0 <= state.data <= 1.0:
             MIN_PERSON_CONF_VALUE = state.data
             self.get_logger().info('NEW MIN_PERSON_CONF_VALUE RECEIVED')    
         else:
             self.get_logger().info('ERROR SETTING MIN_PERSON_CONF_VALUE')    
+
+    def get_minimum_keypoints_to_detect_person_callback(self, state: Int16):
+        global MIN_KP_TO_DETECT_PERSON
+        # print(state.data)
+        if 0 < state.data <= self.N_KEYPOINTS - self.NUMBER_OF_LEGS_KP:  # all keypoints without the legs
+            MIN_KP_TO_DETECT_PERSON = state.data
+            self.get_logger().info('NEW MIN_KP_TO_DETECT_PERSON RECEIVED')    
+        else:
+            self.get_logger().info('ERROR SETTING MIN_KP_TO_DETECT_PERSON')  
+
+    def get_only_detect_person_right_in_front_callback(self, state: Bool):
+        global ONLY_DETECT_PERSON_RIGHT_IN_FRONT
+        # print(state.data)
+        ONLY_DETECT_PERSON_RIGHT_IN_FRONT = state.data
+        if ONLY_DETECT_PERSON_RIGHT_IN_FRONT:
+            self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = True')
+        else:
+            self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False')  
+
+
 
 
     def get_color_image_callback(self, img: Image):
@@ -120,6 +136,7 @@ class YoloPoseNode(Node):
         # ROS2 Image Bridge for OpenCV
         current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
         current_frame_draw = current_frame.copy()
+        
         # Getting image dimensions
         self.img_width = img.width
         self.img_height = img.height
@@ -130,13 +147,9 @@ class YoloPoseNode(Node):
         # results = self.model(current_frame)
 
         # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
-        # r2 = self.model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-        # annotated_frame2 = r2[0].plot()
-
         results = self.model.track(current_frame, persist=True, tracker="bytetrack.yaml")
         annotated_frame = results[0].plot()
 
-        
         # type(results) = <class 'list'>
         # type(results[0]) = <class 'ultralytics.engine.results.Results'>
         # type(results[0].keypoints) = <class 'ultralytics.engine.results.Keypoints'>
@@ -203,34 +216,27 @@ class YoloPoseNode(Node):
         if not results[0].keypoints.has_visible:
             num_persons = 0
 
-
-
         print("___START___")
         yolov8_pose = Yolov8Pose()
         yolov8_pose_filtered = Yolov8Pose()
-        ALL_CONDITIONS_MET = 1
         num_persons_filtered = 0
-
-
 
         for person_idx in range(num_persons):
             keypoints_id = results[0].keypoints[person_idx]
             boxes_id = results[0].boxes[person_idx]
+            ALL_CONDITIONS_MET = 1
+            
             # print(keypoints_id.xy[0][0])
+            # print(keypoints_id.conf)   
 
             print(boxes_id.conf)
-
-            # checks whether the person confidence is above a defined level
-            if not boxes_id.conf > MIN_PERSON_CONF_VALUE:
-                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                # pass
             
             # guardar na variavel criada do yolo pose 
-            print(keypoints_id.conf[0][self.KNEE_LEFT_KP], 
-                  keypoints_id.conf[0][self.KNEE_RIGHT_KP],
-                  keypoints_id.conf[0][self.ANKLE_LEFT_KP], 
-                  keypoints_id.conf[0][self.ANKLE_RIGHT_KP]
-                  )
+            # print(keypoints_id.conf[0][self.KNEE_LEFT_KP], 
+            #       keypoints_id.conf[0][self.KNEE_RIGHT_KP],
+            #       keypoints_id.conf[0][self.ANKLE_LEFT_KP], 
+            #       keypoints_id.conf[0][self.ANKLE_RIGHT_KP]
+            #       )
             
             legs_ctr = 0
             if keypoints_id.conf[0][self.KNEE_LEFT_KP] > MIN_KP_CONF_VALUE:
@@ -249,10 +255,40 @@ class YoloPoseNode(Node):
             print("legs_ctr = ", legs_ctr)
             print("id = ", person_id)
             
-            if not legs_ctr >= NUMBER_OF_LEG_KP_TO_BE_DETECTED and not DETECT_PERSON_LEGS_NOT_VISIBLE:
+
+            body_kp_high_conf_counter = 0
+            for kp in range(self.N_KEYPOINTS - self.NUMBER_OF_LEGS_KP): # all keypoints without the legs
+                if keypoints_id.conf[0][kp] > MIN_KP_CONF_VALUE:
+                    body_kp_high_conf_counter+=1
+            print("body_kp_high_conf_counter = ", body_kp_high_conf_counter)
+
+
+            ########## afterwards what should be used to calculate center_comm_position should be the x and y person coordinates related to the robot 
+            center_comm_position = False
+            if self.img_width*1/3 < int(keypoints_id.xy[0][self.NOSE_KP][0]) < self.img_width*2/3:
+                center_comm_position = True
+              
+
+            # checks whether the person confidence is above a defined level
+            if not boxes_id.conf >= MIN_PERSON_CONF_VALUE:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                pass
+                print("- Misses minimum person confidence level")
+
+            # checks if flag to detect people whose legs are visible 
+            if not legs_ctr >= NUMBER_OF_LEG_KP_TO_BE_DETECTED and ONLY_DETECT_PERSON_LEGS_VISIBLE:
+                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                print("- Misses legs visible flag")
             
+            # checks whether the minimum number if body keypoints (excluding legs) has high confidence
+            if not body_kp_high_conf_counter >= MIN_KP_TO_DETECT_PERSON:
+                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                print("- Misses minimum number of body keypoints")
+
+            # checks if flag to detect people whose legs are visible 
+            if not center_comm_position and ONLY_DETECT_PERSON_RIGHT_IN_FRONT:
+                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                print("Misses minimum number of body keypoints")
+
 
             # adds people to "person_pose" without any restriction
             new_person = DetectedPerson()
@@ -266,7 +302,6 @@ class YoloPoseNode(Node):
                 # adds people to "person_pose" without any restriction
                 # code here to add to filtered topic
                 yolov8_pose_filtered.persons.append(new_person)
-
 
                 if self.debug_draw:
                     
@@ -389,7 +424,7 @@ class YoloPoseNode(Node):
 
                     # print(keypoints_id.xy)
                     # print(keypoints_id.xy[0][0])
-                    print(keypoints_id.conf)        
+                    # print(keypoints_id.conf)        
                     
                     if DRAW_PERSON_KP:
                     
@@ -433,17 +468,10 @@ class YoloPoseNode(Node):
                                     center_p = (int(keypoints_id.xy[0][kp][0]), int(keypoints_id.xy[0][kp][1]))
                                     cv2.circle(current_frame_draw, center_p, 5, c, -1)
 
-                        
                         # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
                         # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
 
             print("===")
-
-        # here we have to:
-        # - add the num_person to the Yolov8Pose msg
-        # - publish the final poses into the topics
-
-        # yolov8_pose.persons.append(new_person)
 
         yolov8_pose.num_person = num_persons
         self.person_pose_publisher.publish(yolov8_pose)
@@ -478,8 +506,6 @@ class YoloPoseNode(Node):
         cv2.imwrite("charmie_color_yp.jpg", current_frame) 
         time.sleep(1)
         """
-        # time.sleep(5)
-
         
 
     def get_aligned_depth_image_callback(self, img: Image):
@@ -510,42 +536,11 @@ class YoloPoseNode(Node):
         
         cv2.imshow("Intel RealSense Depth Alligned", current_frame)
         cv2.waitKey(1) 
-        """
-        
-    # def get_depth_image_callback(self, img: Image):
-    #     pass
-
-        # print(img.height, img.width)
-        # current_frame = self.br.imgmsg_to_cv2(img, desired_encoding="passthrough")
-        # depth_array = np.array(current_frame, dtype=np.float32)
-        # center_idx = np.array(depth_array.shape) // 2
-        # print ('center depth:', depth_array[center_idx[0], center_idx[1]])
-
-
-        # if img.height == 720:
-        """
-        file_name = "test_nota.txt"
-    
-        # Save the NumPy array to a text file
-        with open(file_name, 'w') as file:
-            np.savetxt(file, depth_array, fmt='%d', delimiter='\t')
-    
-        # np.savetxt(file_name, depth_array, fmt='%d', delimiter='\t', mode='a')
-    
-        # Optional: You can also specify formatting options using 'fmt'.
-        # In this example, '%d' specifies integer formatting and '\t' is used as the delimiter.
-    
-        print(f"Array saved to {file_name}")
-        time.sleep(1)
-        """
-        
-        # cv2.imshow("Intel RealSense Depth Raw", current_frame)
-        # cv2.waitKey(1)         
+        """       
         
     def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
-        pass
 
         person_id = boxes_id.id
         if boxes_id.id == None:
@@ -556,12 +551,12 @@ class YoloPoseNode(Node):
 
         new_person.index_person = int(person_id)
         new_person.conf_person = float(boxes_id.conf)
-        new_person.x_rel = 0.0
-        new_person.y_rel = 0.0
-        new_person.box_top_left_x = 0
-        new_person.box_top_left_y = 0
-        new_person.box_width = 0
-        new_person.box_height = 0
+        new_person.x_rel = 0.0 # MISSING!!!
+        new_person.y_rel = 0.0 # MISSING!!!
+        new_person.box_top_left_x = int(boxes_id.xyxy[0][0])
+        new_person.box_top_left_y = int(boxes_id.xyxy[0][1])
+        new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
+        new_person.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
         # print(int(keypoints_id.xy[0][self.NOSE_KP][0]), int(keypoints_id.xy[0][self.NOSE_KP][1]), float(keypoints_id.conf[0][self.NOSE_KP]))
 
