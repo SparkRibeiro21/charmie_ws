@@ -128,15 +128,13 @@ class YoloPoseNode(Node):
             self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False')  
 
 
-
-
     def get_color_image_callback(self, img: Image):
         self.get_logger().info('Receiving color video frame')
 
         # ROS2 Image Bridge for OpenCV
         current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
         current_frame_draw = current_frame.copy()
-        
+
         # Getting image dimensions
         self.img_width = img.width
         self.img_height = img.height
@@ -491,9 +489,8 @@ class YoloPoseNode(Node):
             # putting the FPS count on the frame
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.putText(current_frame_draw, 'np:' + str(num_persons_filtered) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-            cv2.imshow("Yolo Pose Detection", annotated_frame)
-            # cv2.imshow("Yolo Track", annotated_frame2)
             cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
+            # cv2.imshow("Yolo Pose Detection", annotated_frame)
             cv2.waitKey(1)
         
         """
