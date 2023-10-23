@@ -185,7 +185,7 @@ class PersonLocalisationClass:
             
             
             
-            # HOUSE (made in robocup, can make a function to improve, did not have tome for that)
+            # HOUSE (made in robocup, can make a function to improve, did not have time for that)
 
 
             cv2.line(self.test_image, (int(self.xc + self.scale*self.house_center_coordinates[0]), int(self.yc - self.scale * self.house_center_coordinates[1])), (int(self.xc + self.scale*self.house_left_bot_coordinates[0]), int(self.yc - self.scale * self.house_center_coordinates[1])), (255,0,255), 2)
