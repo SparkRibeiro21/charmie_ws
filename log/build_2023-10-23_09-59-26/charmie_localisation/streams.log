@@ -1,0 +1,17 @@
+[3.116s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_localisation': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_localisation/prefix_override:/home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_localisation/build --no-deps install_data
+[4.280s] running develop
+[5.014s] running egg_info
+[5.014s] writing charmie_localisation.egg-info/PKG-INFO
+[5.015s] writing dependency_links to charmie_localisation.egg-info/dependency_links.txt
+[5.015s] writing entry points to charmie_localisation.egg-info/entry_points.txt
+[5.015s] writing requirements to charmie_localisation.egg-info/requires.txt
+[5.015s] writing top-level names to charmie_localisation.egg-info/top_level.txt
+[5.023s] reading manifest file 'charmie_localisation.egg-info/SOURCES.txt'
+[5.028s] writing manifest file 'charmie_localisation.egg-info/SOURCES.txt'
+[5.149s] running build_ext
+[5.150s] Creating /home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages/charmie-localisation.egg-link (link to .)
+[5.151s] Installing localisation script to /home/utilizador/charmie_ws/install/charmie_localisation/lib/charmie_localisation
+[5.152s] 
+[5.152s] Installed /home/utilizador/charmie_ws/build/charmie_localisation
+[5.152s] running install_data
+[5.329s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_localisation' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_localisation/prefix_override:/home/utilizador/charmie_ws/install/charmie_localisation/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_localisation/build --no-deps install_data

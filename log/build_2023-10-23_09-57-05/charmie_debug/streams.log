@@ -1,0 +1,26 @@
+[9.295s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_debug': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_debug/build --no-deps install_data
+[10.571s] running develop
+[11.815s] running egg_info
+[11.821s] creating charmie_debug.egg-info
+[11.823s] writing charmie_debug.egg-info/PKG-INFO
+[11.825s] writing dependency_links to charmie_debug.egg-info/dependency_links.txt
+[11.826s] writing entry points to charmie_debug.egg-info/entry_points.txt
+[11.827s] writing requirements to charmie_debug.egg-info/requires.txt
+[11.827s] writing top-level names to charmie_debug.egg-info/top_level.txt
+[11.833s] writing manifest file 'charmie_debug.egg-info/SOURCES.txt'
+[11.853s] reading manifest file 'charmie_debug.egg-info/SOURCES.txt'
+[11.857s] writing manifest file 'charmie_debug.egg-info/SOURCES.txt'
+[12.141s] running build_ext
+[12.142s] Creating /home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages/charmie-debug.egg-link (link to .)
+[12.148s] Installing debug_main script to /home/utilizador/charmie_ws/install/charmie_debug/lib/charmie_debug
+[12.149s] 
+[12.149s] Installed /home/utilizador/charmie_ws/build/charmie_debug
+[12.149s] running install_data
+[12.158s] creating /home/utilizador/charmie_ws/install/charmie_debug/share/ament_index
+[12.158s] creating /home/utilizador/charmie_ws/install/charmie_debug/share/ament_index/resource_index
+[12.159s] creating /home/utilizador/charmie_ws/install/charmie_debug/share/ament_index/resource_index/packages
+[12.168s] copying resource/charmie_debug -> /home/utilizador/charmie_ws/install/charmie_debug/share/ament_index/resource_index/packages
+[12.169s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug
+[12.169s] creating /home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/launch
+[12.169s] copying launch/example.launch.py -> /home/utilizador/charmie_ws/install/charmie_debug/share/charmie_debug/launch
+[12.386s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_debug' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_debug/prefix_override:/home/utilizador/charmie_ws/install/charmie_debug/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_debug/build --no-deps install_data

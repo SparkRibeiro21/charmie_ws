@@ -1,0 +1,17 @@
+[2.993s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_navigation_sdnl': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_navigation_sdnl/prefix_override:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/build --no-deps install_data
+[3.936s] running develop
+[4.189s] running egg_info
+[4.189s] writing charmie_navigation_sdnl.egg-info/PKG-INFO
+[4.189s] writing dependency_links to charmie_navigation_sdnl.egg-info/dependency_links.txt
+[4.189s] writing entry points to charmie_navigation_sdnl.egg-info/entry_points.txt
+[4.189s] writing requirements to charmie_navigation_sdnl.egg-info/requires.txt
+[4.189s] writing top-level names to charmie_navigation_sdnl.egg-info/top_level.txt
+[4.192s] reading manifest file 'charmie_navigation_sdnl.egg-info/SOURCES.txt'
+[4.193s] writing manifest file 'charmie_navigation_sdnl.egg-info/SOURCES.txt'
+[4.227s] running build_ext
+[4.227s] Creating /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages/charmie-navigation-sdnl.egg-link (link to .)
+[4.228s] Installing navigation script to /home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/charmie_navigation_sdnl
+[4.229s] 
+[4.229s] Installed /home/utilizador/charmie_ws/build/charmie_navigation_sdnl
+[4.229s] running install_data
+[5.506s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_navigation_sdnl' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_navigation_sdnl/prefix_override:/home/utilizador/charmie_ws/install/charmie_navigation_sdnl/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_navigation_sdnl/build --no-deps install_data

@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+charmie_debug_visual/__init__.py
+charmie_debug_visual/debug_visual.py
+charmie_debug_visual.egg-info/PKG-INFO
+charmie_debug_visual.egg-info/SOURCES.txt
+charmie_debug_visual.egg-info/dependency_links.txt
+charmie_debug_visual.egg-info/entry_points.txt
+charmie_debug_visual.egg-info/requires.txt
+charmie_debug_visual.egg-info/top_level.txt
+charmie_debug_visual.egg-info/zip-safe
+resource/charmie_debug_visual

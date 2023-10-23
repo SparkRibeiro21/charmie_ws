@@ -1,0 +1,17 @@
+[3.525s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_odometry': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_odometry/prefix_override:/home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_odometry/build --no-deps install_data
+[4.741s] running develop
+[5.417s] running egg_info
+[5.418s] writing charmie_odometry.egg-info/PKG-INFO
+[5.419s] writing dependency_links to charmie_odometry.egg-info/dependency_links.txt
+[5.420s] writing entry points to charmie_odometry.egg-info/entry_points.txt
+[5.420s] writing requirements to charmie_odometry.egg-info/requires.txt
+[5.421s] writing top-level names to charmie_odometry.egg-info/top_level.txt
+[5.435s] reading manifest file 'charmie_odometry.egg-info/SOURCES.txt'
+[5.437s] writing manifest file 'charmie_odometry.egg-info/SOURCES.txt'
+[5.627s] running build_ext
+[5.628s] Creating /home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages/charmie-odometry.egg-link (link to .)
+[5.630s] Installing odometry script to /home/utilizador/charmie_ws/install/charmie_odometry/lib/charmie_odometry
+[5.631s] 
+[5.631s] Installed /home/utilizador/charmie_ws/build/charmie_odometry
+[5.631s] running install_data
+[5.796s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_odometry' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_odometry/prefix_override:/home/utilizador/charmie_ws/install/charmie_odometry/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_odometry/build --no-deps install_data

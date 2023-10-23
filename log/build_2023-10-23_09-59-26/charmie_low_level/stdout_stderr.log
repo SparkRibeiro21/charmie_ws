@@ -1,0 +1,15 @@
+running develop
+running egg_info
+writing charmie_low_level.egg-info/PKG-INFO
+writing dependency_links to charmie_low_level.egg-info/dependency_links.txt
+writing entry points to charmie_low_level.egg-info/entry_points.txt
+writing requirements to charmie_low_level.egg-info/requires.txt
+writing top-level names to charmie_low_level.egg-info/top_level.txt
+reading manifest file 'charmie_low_level.egg-info/SOURCES.txt'
+writing manifest file 'charmie_low_level.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/utilizador/charmie_ws/install/charmie_low_level/lib/python3.8/site-packages/charmie-low-level.egg-link (link to .)
+Installing low_level script to /home/utilizador/charmie_ws/install/charmie_low_level/lib/charmie_low_level
+
+Installed /home/utilizador/charmie_ws/build/charmie_low_level
+running install_data

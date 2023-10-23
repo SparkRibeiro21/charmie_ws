@@ -1,0 +1,3 @@
+[console_scripts]
+debug_visual = charmie_debug_visual.debug_visual:main
+

@@ -1,0 +1,17 @@
+[3.220s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_restaurant': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_restaurant/prefix_override:/home/utilizador/charmie_ws/install/charmie_restaurant/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_restaurant/build --no-deps install_data
+[4.423s] running develop
+[5.084s] running egg_info
+[5.084s] writing charmie_restaurant.egg-info/PKG-INFO
+[5.084s] writing dependency_links to charmie_restaurant.egg-info/dependency_links.txt
+[5.084s] writing entry points to charmie_restaurant.egg-info/entry_points.txt
+[5.085s] writing requirements to charmie_restaurant.egg-info/requires.txt
+[5.085s] writing top-level names to charmie_restaurant.egg-info/top_level.txt
+[5.100s] reading manifest file 'charmie_restaurant.egg-info/SOURCES.txt'
+[5.101s] writing manifest file 'charmie_restaurant.egg-info/SOURCES.txt'
+[5.268s] running build_ext
+[5.269s] Creating /home/utilizador/charmie_ws/install/charmie_restaurant/lib/python3.8/site-packages/charmie-restaurant.egg-link (link to .)
+[5.275s] Installing restaurant script to /home/utilizador/charmie_ws/install/charmie_restaurant/lib/charmie_restaurant
+[5.275s] 
+[5.276s] Installed /home/utilizador/charmie_ws/build/charmie_restaurant
+[5.277s] running install_data
+[5.388s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_restaurant' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_restaurant/prefix_override:/home/utilizador/charmie_ws/install/charmie_restaurant/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_restaurant/build --no-deps install_data

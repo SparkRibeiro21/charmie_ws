@@ -1,0 +1,24 @@
+[9.952s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_person_recognition': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_person_recognition/prefix_override:/home/utilizador/charmie_ws/install/charmie_person_recognition/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_person_recognition/build --no-deps install_data
+[12.144s] running develop
+[13.070s] running egg_info
+[13.070s] creating charmie_person_recognition.egg-info
+[13.071s] writing charmie_person_recognition.egg-info/PKG-INFO
+[13.071s] writing dependency_links to charmie_person_recognition.egg-info/dependency_links.txt
+[13.071s] writing entry points to charmie_person_recognition.egg-info/entry_points.txt
+[13.071s] writing requirements to charmie_person_recognition.egg-info/requires.txt
+[13.072s] writing top-level names to charmie_person_recognition.egg-info/top_level.txt
+[13.073s] writing manifest file 'charmie_person_recognition.egg-info/SOURCES.txt'
+[13.076s] reading manifest file 'charmie_person_recognition.egg-info/SOURCES.txt'
+[13.077s] writing manifest file 'charmie_person_recognition.egg-info/SOURCES.txt'
+[13.173s] running build_ext
+[13.175s] Creating /home/utilizador/charmie_ws/install/charmie_person_recognition/lib/python3.8/site-packages/charmie-person-recognition.egg-link (link to .)
+[13.175s] Installing person_recognition script to /home/utilizador/charmie_ws/install/charmie_person_recognition/lib/charmie_person_recognition
+[13.175s] 
+[13.175s] Installed /home/utilizador/charmie_ws/build/charmie_person_recognition
+[13.176s] running install_data
+[13.176s] creating /home/utilizador/charmie_ws/install/charmie_person_recognition/share/ament_index
+[13.176s] creating /home/utilizador/charmie_ws/install/charmie_person_recognition/share/ament_index/resource_index
+[13.176s] creating /home/utilizador/charmie_ws/install/charmie_person_recognition/share/ament_index/resource_index/packages
+[13.176s] copying resource/charmie_person_recognition -> /home/utilizador/charmie_ws/install/charmie_person_recognition/share/ament_index/resource_index/packages
+[13.176s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_person_recognition/share/charmie_person_recognition
+[13.530s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_person_recognition' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_person_recognition/prefix_override:/home/utilizador/charmie_ws/install/charmie_person_recognition/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_person_recognition/build --no-deps install_data

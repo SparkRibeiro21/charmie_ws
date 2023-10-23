@@ -1,0 +1,17 @@
+[3.277s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_receptionist': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_receptionist/prefix_override:/home/utilizador/charmie_ws/install/charmie_receptionist/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_receptionist/build --no-deps install_data
+[4.517s] running develop
+[5.222s] running egg_info
+[5.223s] writing charmie_receptionist.egg-info/PKG-INFO
+[5.224s] writing dependency_links to charmie_receptionist.egg-info/dependency_links.txt
+[5.225s] writing entry points to charmie_receptionist.egg-info/entry_points.txt
+[5.225s] writing requirements to charmie_receptionist.egg-info/requires.txt
+[5.226s] writing top-level names to charmie_receptionist.egg-info/top_level.txt
+[5.236s] reading manifest file 'charmie_receptionist.egg-info/SOURCES.txt'
+[5.243s] writing manifest file 'charmie_receptionist.egg-info/SOURCES.txt'
+[5.404s] running build_ext
+[5.404s] Creating /home/utilizador/charmie_ws/install/charmie_receptionist/lib/python3.8/site-packages/charmie-receptionist.egg-link (link to .)
+[5.407s] Installing receptionist script to /home/utilizador/charmie_ws/install/charmie_receptionist/lib/charmie_receptionist
+[5.409s] 
+[5.411s] Installed /home/utilizador/charmie_ws/build/charmie_receptionist
+[5.413s] running install_data
+[5.573s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_receptionist' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_receptionist/prefix_override:/home/utilizador/charmie_ws/install/charmie_receptionist/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_receptionist/build --no-deps install_data

@@ -1,0 +1,24 @@
+[10.271s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_person_localisation': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_person_localisation/prefix_override:/home/utilizador/charmie_ws/install/charmie_person_localisation/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_person_localisation/build --no-deps install_data
+[11.980s] running develop
+[12.874s] running egg_info
+[12.875s] creating charmie_person_localisation.egg-info
+[12.875s] writing charmie_person_localisation.egg-info/PKG-INFO
+[12.876s] writing dependency_links to charmie_person_localisation.egg-info/dependency_links.txt
+[12.877s] writing entry points to charmie_person_localisation.egg-info/entry_points.txt
+[12.877s] writing requirements to charmie_person_localisation.egg-info/requires.txt
+[12.877s] writing top-level names to charmie_person_localisation.egg-info/top_level.txt
+[12.880s] writing manifest file 'charmie_person_localisation.egg-info/SOURCES.txt'
+[12.883s] reading manifest file 'charmie_person_localisation.egg-info/SOURCES.txt'
+[12.884s] writing manifest file 'charmie_person_localisation.egg-info/SOURCES.txt'
+[13.038s] running build_ext
+[13.039s] Creating /home/utilizador/charmie_ws/install/charmie_person_localisation/lib/python3.8/site-packages/charmie-person-localisation.egg-link (link to .)
+[13.040s] Installing person_localisation script to /home/utilizador/charmie_ws/install/charmie_person_localisation/lib/charmie_person_localisation
+[13.041s] 
+[13.041s] Installed /home/utilizador/charmie_ws/build/charmie_person_localisation
+[13.041s] running install_data
+[13.042s] creating /home/utilizador/charmie_ws/install/charmie_person_localisation/share/ament_index
+[13.042s] creating /home/utilizador/charmie_ws/install/charmie_person_localisation/share/ament_index/resource_index
+[13.042s] creating /home/utilizador/charmie_ws/install/charmie_person_localisation/share/ament_index/resource_index/packages
+[13.042s] copying resource/charmie_person_localisation -> /home/utilizador/charmie_ws/install/charmie_person_localisation/share/ament_index/resource_index/packages
+[13.042s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_person_localisation/share/charmie_person_localisation
+[13.529s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_person_localisation' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_person_localisation/prefix_override:/home/utilizador/charmie_ws/install/charmie_person_localisation/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_person_localisation/build --no-deps install_data

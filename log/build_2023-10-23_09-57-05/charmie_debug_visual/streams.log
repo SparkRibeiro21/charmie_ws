@@ -1,0 +1,26 @@
+[9.793s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_debug_visual': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_debug_visual/prefix_override:/home/utilizador/charmie_ws/install/charmie_debug_visual/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_debug_visual/build --no-deps install_data
+[11.114s] /home/utilizador/.local/lib/python3.8/site-packages/setuptools/dist.py:717: UserWarning: Usage of dash-separated 'script-dir' will not be supported in future versions. Please use the underscore name 'script_dir' instead
+[11.114s]   warnings.warn(
+[11.264s] running develop
+[12.507s] running egg_info
+[12.508s] creating charmie_debug_visual.egg-info
+[12.510s] writing charmie_debug_visual.egg-info/PKG-INFO
+[12.511s] writing dependency_links to charmie_debug_visual.egg-info/dependency_links.txt
+[12.511s] writing entry points to charmie_debug_visual.egg-info/entry_points.txt
+[12.512s] writing requirements to charmie_debug_visual.egg-info/requires.txt
+[12.512s] writing top-level names to charmie_debug_visual.egg-info/top_level.txt
+[12.518s] writing manifest file 'charmie_debug_visual.egg-info/SOURCES.txt'
+[12.518s] reading manifest file 'charmie_debug_visual.egg-info/SOURCES.txt'
+[12.518s] writing manifest file 'charmie_debug_visual.egg-info/SOURCES.txt'
+[13.004s] running build_ext
+[13.005s] Creating /home/utilizador/charmie_ws/install/charmie_debug_visual/lib/python3.8/site-packages/charmie-debug-visual.egg-link (link to .)
+[13.005s] Installing debug_visual script to /home/utilizador/charmie_ws/install/charmie_debug_visual/lib/charmie_debug_visual
+[13.006s] 
+[13.007s] Installed /home/utilizador/charmie_ws/build/charmie_debug_visual
+[13.007s] running install_data
+[13.008s] creating /home/utilizador/charmie_ws/install/charmie_debug_visual/share/ament_index
+[13.008s] creating /home/utilizador/charmie_ws/install/charmie_debug_visual/share/ament_index/resource_index
+[13.009s] creating /home/utilizador/charmie_ws/install/charmie_debug_visual/share/ament_index/resource_index/packages
+[13.009s] copying resource/charmie_debug_visual -> /home/utilizador/charmie_ws/install/charmie_debug_visual/share/ament_index/resource_index/packages
+[13.010s] copying package.xml -> /home/utilizador/charmie_ws/install/charmie_debug_visual/share/charmie_debug_visual
+[14.691s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_debug_visual' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_debug_visual/prefix_override:/home/utilizador/charmie_ws/install/charmie_debug_visual/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_debug_visual/build --no-deps install_data

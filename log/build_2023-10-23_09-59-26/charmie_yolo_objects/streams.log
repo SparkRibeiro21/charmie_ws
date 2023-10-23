@@ -1,0 +1,17 @@
+[3.283s] Invoking command in '/home/utilizador/charmie_ws/build/charmie_yolo_objects': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_yolo_objects/prefix_override:/home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_yolo_objects/build --no-deps install_data
+[4.147s] running develop
+[4.629s] running egg_info
+[4.629s] writing charmie_yolo_objects.egg-info/PKG-INFO
+[4.629s] writing dependency_links to charmie_yolo_objects.egg-info/dependency_links.txt
+[4.630s] writing entry points to charmie_yolo_objects.egg-info/entry_points.txt
+[4.630s] writing requirements to charmie_yolo_objects.egg-info/requires.txt
+[4.630s] writing top-level names to charmie_yolo_objects.egg-info/top_level.txt
+[4.634s] reading manifest file 'charmie_yolo_objects.egg-info/SOURCES.txt'
+[4.635s] writing manifest file 'charmie_yolo_objects.egg-info/SOURCES.txt'
+[4.697s] running build_ext
+[4.697s] Creating /home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/python3.8/site-packages/charmie-yolo-objects.egg-link (link to .)
+[4.698s] Installing yolo_objects script to /home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/charmie_yolo_objects
+[4.698s] 
+[4.698s] Installed /home/utilizador/charmie_ws/build/charmie_yolo_objects
+[4.699s] running install_data
+[4.753s] Invoked command in '/home/utilizador/charmie_ws/build/charmie_yolo_objects' returned '0': AMENT_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces LD_LIBRARY_PATH=/home/utilizador/charmie_ws/install/charmie_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/utilizador/charmie_ws/build/charmie_yolo_objects/prefix_override:/home/utilizador/charmie_ws/install/charmie_yolo_objects/lib/python3.8/site-packages:/home/utilizador/charmie_ws/install/charmie_interfaces/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/utilizador/charmie_ws/build/charmie_yolo_objects/build --no-deps install_data

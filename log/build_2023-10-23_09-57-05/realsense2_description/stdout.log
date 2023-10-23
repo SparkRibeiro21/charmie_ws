@@ -1,0 +1,63 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python3
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Configuring done (0.7s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/utilizador/charmie_ws/build/realsense2_description
+-- Install configuration: ""
+-- Execute custom install script
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/launch/launch_utils.py
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/launch/view_model.launch.py
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/d415.stl
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/d435.dae
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/d455.stl
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/l515.dae
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/plug.stl
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/meshes/plug_collision.stl
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/rviz/urdf.rviz
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_d415.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_d435.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_d435i.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_d435i_imu_modules.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_d455.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_l515.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_materials.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_r410.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_r430.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/_usb_plug.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_d415_camera.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_d435_camera.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_d435_multiple_cameras.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_d435i_camera.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_d455_camera.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_l515_camera.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_r410_camera.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/urdf/test_r430_camera.urdf.xacro
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/ament_index/resource_index/package_run_dependencies/realsense2_description
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/ament_index/resource_index/parent_prefix_path/realsense2_description
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/environment/ament_prefix_path.sh
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/environment/ament_prefix_path.dsv
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/environment/path.sh
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/environment/path.dsv
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/local_setup.bash
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/local_setup.sh
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/local_setup.zsh
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/local_setup.dsv
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.dsv
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/ament_index/resource_index/packages/realsense2_description
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/cmake/realsense2_descriptionConfig.cmake
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/cmake/realsense2_descriptionConfig-version.cmake
+-- Symlinking: /home/utilizador/charmie_ws/install/realsense2_description/share/realsense2_description/package.xml
