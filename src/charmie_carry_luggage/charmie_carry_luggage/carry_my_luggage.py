@@ -30,10 +30,8 @@ class CarryLuggageNode(Node):
         self.get_logger().info("Initiliased Carry Luggage Node")
 
         # Neck Topics
-        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_pos", 10)
-        self.neck_error_publisher = self.create_publisher(Pose2D, "neck_error", 10)
-        #self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
-        self.flag_neck_position_publisher = self.create_publisher(Bool, "flag_neck_pos", 10)
+        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_to_pos", 10)
+        # self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
 
         # Low Level Topics
         # Low Level: RGB

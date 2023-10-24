@@ -53,7 +53,7 @@ class InspectionNode(Node):
         self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
         
         # Neck
-        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_pos", 10)
+        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_to_pos", 10)
         
         # Navigation 
         self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)

@@ -41,8 +41,7 @@ class RestaurantNode(Node):
         self.calibrate_ambient_noise_publisher = self.create_publisher(Bool, "calib_ambient_noise", 10)
         
         # Neck
-        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_pos", 10)
-        self.neck_error_publisher = self.create_publisher(Pose2D, "neck_error", 10)
+        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_to_pos", 10)
         
         # Navigation 
         self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
@@ -217,7 +216,9 @@ class RestaurantNode(Node):
             erro.x= float(error_x)
             erro.y= float(error_y)
             print("erro:", erro)
-            self.neck_error_publisher.publish(erro)
+            while(True):
+                print("You used function neck error! This function no longer exists, please change this! in this case should be neck_follow_person .")
+                # self.neck_error_publisher.publish(erro)
             # print('dist 2:', dist_2)
             print('dist:', dist)
             #time.sleep(0.05)

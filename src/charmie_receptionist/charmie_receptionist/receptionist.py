@@ -36,10 +36,8 @@ class ReceptionistNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         
         # Neck Topics
-        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_pos", 10)
-        self.neck_error_publisher = self.create_publisher(Pose2D, "neck_error", 10)
+        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_to_pos", 10)
         #self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
-        self.flag_neck_position_publisher = self.create_publisher(Bool, "flag_neck_pos", 10)
 
         # Low Level Topics
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
@@ -523,7 +521,9 @@ class ReceptionistNode(Node):
             erro.x= float(error_x)
             erro.y= float(error_y)
             print("erro:", erro)
-            self.neck_error_publisher.publish(erro)
+            while(True):
+                print("You used function neck error! This function no longer exists, please change this! in this case should be neck_follow_person .")
+                # self.neck_error_publisher.publish(erro)
             # print('dist 2:', dist_2)
             print('dist:', dist)
             #time.sleep(0.05)

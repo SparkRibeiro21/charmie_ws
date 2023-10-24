@@ -121,14 +121,6 @@ portHandler = PortHandler(DEVICENAME)
 packetHandler = PacketHandler(PROTOCOL_VERSION)
 
 
-
-# neck_to_pos
-# neck_to_coords
-# neck_follow_person
-# neck_follow_object
-# get_neck_pos
-
-
 class NeckControl():
     def __init__(self):
 
@@ -348,14 +340,22 @@ class NeckNode(Node):
         self.get_logger().info("Initialised CHARMIE Neck Node")
         print("Connected to Neck Board via:", DEVICENAME)  # check which port was really used
 
-        self.neck_position_subscriber = self.create_subscription(Pose2D, "neck_pos", self.neck_position_callback ,10)
-        # self.neck_error_subscriber = self.create_subscription(Pose2D, "neck_error", self.neck_error_callback , 10)
-        self.neck_get_position_publisher = self.create_publisher(Pose2D, "get_neck_pos", 10)
-        # self.flag_neck_position_subscriber = self.create_subscription(Bool, "flag_neck_pos", self.flag_neck_position_callback , 10)
-
+        # receives two angles, pan and tilt - used when robot must look at something known in advance (ex: direction of navigation, forward, look right/left)
+        self.neck_position_subscriber = self.create_subscription(Pose2D, "neck_to_pos", self.neck_position_callback ,10)
+        # receives coordinates where the robot must look at, knowing its own position (ex: look at the couch, look at the table)
         self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.nect_to_coords_callback, 10)
-        self.odom_subscriber = self.create_subscription(Odometry, "odom", self.odom_callback, 10)
 
+        # receives a person and the keypoint it must follow (ex: constantly looking at the person face, look at body center  to check hands and feet)
+        self.neck_position_subscriber = self.create_subscription(Pose2D, "neck_follow_person", self.neck_position_callback ,10)
+        # receives an object and it follows it, keeping it centered in the image (ex: constantly looking at a cup, plate, cereal box)
+        self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_follow_object", self.nect_to_coords_callback, 10)
+
+        # sends the current position of the servos after every change made on the publisher topics
+        self.neck_get_position_publisher = self.create_publisher(Pose2D, "get_neck_pos", 10)
+
+        # subscribes to robot position, to allow neck_to_coords
+        self.odom_subscriber = self.create_subscription(Odometry, "odom", self.odom_callback, 10)
+        # standard diagnostic publisher
         self.neck_diagnostic_publisher = self.create_publisher(Bool, "neck_diagnostic", 10)
 
         self.robot_x = 0.0
