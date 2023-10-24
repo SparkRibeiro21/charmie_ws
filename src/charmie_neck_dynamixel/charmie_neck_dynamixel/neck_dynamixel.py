@@ -69,7 +69,7 @@ DXL_ID_PAN = 1  # Dynamixel ID : 1
 DXL_ID_TILT = 2  # Dynamixel ID : 2
 BAUDRATE = 57600  # Dynamixel default baudrate : 57600
 # MAC GIL # DEVICENAME = '/dev/tty.usbserial-AI0282RX'  # Check which port is being used on your controller
-DEVICENAME = '/dev/ttyUSB2'  # Check which port is being used on your controller
+DEVICENAME = '/dev/ttyUSB1'  # Check which port is being used on your controller
 # ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
 
 TORQUE_ENABLE = 1  # Value for enabling the torque
@@ -82,8 +82,8 @@ DEGREES_TO_SERVO_TICKS_CONST = 11.3777292
 SERVO_TICKS_TO_DEGREES_CONST = 0.087891
 
 # max angles for each servo to prevent incorrect values
-MAX_PAN_ANGLE = 270
-MIN_PAN_ANGLE = 90
+MAX_PAN_ANGLE = 359
+MIN_PAN_ANGLE = 0
 MAX_TILT_ANGLE = 235
 MIN_TILT_ANGLE = 120
 
@@ -183,31 +183,40 @@ class NeckControl():
 
         # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         
-        self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(3)
-        self.move_neck(180, 130) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(3)
-        self.move_neck(180, 225) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(3)
-        self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(3)
-        self.move_neck(90, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(3)
-        self.move_neck(270, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(5)
-        self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(3)
-        self.move_neck(100, 120) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(3)
-        self.move_neck(260, 250) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(3)
-        self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(3)
-        self.move_neck(225, 155) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(3)
-        self.move_neck(135, 220) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        time.sleep(5)
-        self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # self.move_neck(360, 170) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        
+        
+        while (True):
+            self.move_neck(360, 170) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(1)
+            self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(1)
+        
+        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(3)
+        # self.move_neck(180, 130) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(3)
+        # self.move_neck(180, 225) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(3)
+        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(3)
+        # self.move_neck(90, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(3)
+        # self.move_neck(270, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(5)
+        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(3)
+        # self.move_neck(100, 120) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(3)
+        # self.move_neck(260, 250) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(3)
+        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(3)
+        # self.move_neck(225, 155) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(3)
+        # self.move_neck(135, 220) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        # time.sleep(5)
+        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         
 
 
