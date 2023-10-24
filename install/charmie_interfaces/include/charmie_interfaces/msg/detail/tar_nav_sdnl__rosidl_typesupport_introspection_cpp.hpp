@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_typesupport_introspection_cpp/charmie_interfaces/msg/detail/tar_nav_sdnl__rosidl_typesupport_introspection_cpp.hpp

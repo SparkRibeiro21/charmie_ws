@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/detected_person__type_support.h

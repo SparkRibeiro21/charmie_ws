@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/src/charmie_stickler_for_the_rules/setup.py

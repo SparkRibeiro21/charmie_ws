@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/src/charmie_carry_luggage/launch/carry_luggage_launch.launch.py

@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/src/charmie_bot/launch/launch_real.launch.py

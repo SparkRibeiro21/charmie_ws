@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/build/charmie_interfaces/rosidl_generator_c/charmie_interfaces/msg/detail/example_tr__struct.h

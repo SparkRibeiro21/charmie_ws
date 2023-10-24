@@ -1,3 +1,0 @@
-[console_scripts]
-audio = charmie_audio.audio:main
-

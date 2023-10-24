@@ -1,3 +1,0 @@
-[console_scripts]
-person_recognition = charmie_person_recognition.person_recognition:main
-

@@ -1,1 +1,0 @@
-/home/utilizador/charmie_ws/build/charmie_bot/ament_cmake_core/charmie_botConfig.cmake
