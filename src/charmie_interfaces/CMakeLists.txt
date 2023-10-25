@@ -32,6 +32,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RobotSpeech.msg"
   "msg/SpeechType.msg"
   "msg/TarNavSDNL.msg"
+  "msg/TrackObject.msg"
+  "msg/TrackPerson.msg"
   "msg/Yolov8Objects.msg"
   "msg/Yolov8Pose.msg"
   DEPENDENCIES std_msgs geometry_msgs

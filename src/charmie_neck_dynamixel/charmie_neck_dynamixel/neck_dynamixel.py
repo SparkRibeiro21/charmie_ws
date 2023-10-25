@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D 
 from std_msgs.msg import Bool
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import NeckPosition
+from charmie_interfaces.msg import NeckPosition, TrackObject, TrackPerson
 
 import math
 import tty

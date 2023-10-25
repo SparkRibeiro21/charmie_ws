@@ -1,0 +1,3 @@
+DetectedPerson person
+int32 kp_number
+bool is_center
