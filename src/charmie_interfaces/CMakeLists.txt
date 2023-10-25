@@ -22,9 +22,9 @@ find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/DetectedObject.msg"
   "msg/DetectedPerson.msg"
   "msg/Encoders.msg"
-  "msg/MultiObjects.msg"
   "msg/NeckPosition.msg"
   "msg/ObstacleInfo.msg"
   "msg/Obstacles.msg"
@@ -32,6 +32,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RobotSpeech.msg"
   "msg/SpeechType.msg"
   "msg/TarNavSDNL.msg"
+  "msg/Yolov8Objects.msg"
   "msg/Yolov8Pose.msg"
   DEPENDENCIES std_msgs geometry_msgs
 )

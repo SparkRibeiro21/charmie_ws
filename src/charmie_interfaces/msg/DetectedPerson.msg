@@ -2,6 +2,8 @@ int32 index_person
 float32 conf_person
 float32 x_rel
 float32 y_rel
+float32 z_rel
+float32 distance
 int32 box_top_left_x
 int32 box_top_left_y
 int32 box_width

@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import MultiObjects
+from charmie_interfaces.msg import DetectedObject, Yolov8Objects
 from cv_bridge import CvBridge
 import cv2 
 import cvzone
@@ -41,7 +41,7 @@ class Yolo_obj(Node):
 
         self.model = YOLO('/home/utilizador/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + filename)
         
-        self.objects_publisher = self.create_publisher(MultiObjects, 'objects_detected', 10)
+        self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
         # Intel Realsense
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
         
@@ -69,7 +69,7 @@ class Yolo_obj(Node):
 
         #self.crockery = ["Bowl", "Cup", "Fork", "Knife", "Mug", "Plate", "Spoon"]
 
-        self.obj = MultiObjects()
+        self.obj = Yolov8Objects()
         self.obj.objects = []
         self.obj.confidence = []
         self.obj.distance = []
