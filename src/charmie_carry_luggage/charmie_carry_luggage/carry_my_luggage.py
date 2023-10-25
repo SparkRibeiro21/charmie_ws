@@ -7,7 +7,7 @@ from geometry_msgs.msg import Vector3, Pose2D
 from std_msgs.msg import Int16, Bool, String
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL, Yolov8Pose
+from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL, Yolov8Pose, NeckPosition
 
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
@@ -30,7 +30,7 @@ class CarryLuggageNode(Node):
         self.get_logger().info("Initiliased Carry Luggage Node")
 
         # Neck Topics
-        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_to_pos", 10)
+        self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         # self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
 
         # Low Level Topics
@@ -98,9 +98,9 @@ class CarryLuggageNode(Node):
         self.depth_img = Image()
         
         #NECK
-        self.neck_pose = Pose2D()
-        self.neck_pose.x = 180.0
-        self.neck_pose.y = 180.0
+        self.neck_pose = NeckPosition()
+        self.neck_pose.pan = 180.0
+        self.neck_pose.tilt = 180.0
 
         self.distance = 0.0
         self.robot_t = 0.0

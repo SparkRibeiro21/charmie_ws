@@ -22,10 +22,10 @@ find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Encoders.msg"
-  "msg/ExampleTR.msg"
   "msg/DetectedPerson.msg"
+  "msg/Encoders.msg"
   "msg/MultiObjects.msg"
+  "msg/NeckPosition.msg"
   "msg/ObstacleInfo.msg"
   "msg/Obstacles.msg"
   "msg/PS4Controller.msg"

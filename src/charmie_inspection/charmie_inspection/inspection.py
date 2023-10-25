@@ -9,7 +9,7 @@ from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
 from std_msgs.msg import Bool, Int16, Float32
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import Obstacles, RobotSpeech, TarNavSDNL, Yolov8Pose, DetectedPerson
+from charmie_interfaces.msg import Obstacles, RobotSpeech, TarNavSDNL, Yolov8Pose, DetectedPerson, NeckPosition
 
 import mediapipe as mp
 import numpy as np
@@ -53,7 +53,7 @@ class InspectionNode(Node):
         self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
         
         # Neck
-        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_to_pos", 10)
+        self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         
         # Navigation 
         self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
@@ -212,9 +212,9 @@ class ReceptionistMain():
         self.mp_drawing = mp.solutions.drawing_utils
         self.mp_pose = mp.solutions.pose
         self.pose = self.mp_pose.Pose(min_detection_confidence=0.8)
-        self.neck_pose = Pose2D()
-        self.neck_pose.x = 180.0
-        self.neck_pose.y = 193.0
+        self.neck_pose = NeckPosition()
+        self.neck_pose.pan = 180.0
+        self.neck_pose.tilt = 193.0
         
         
     def wait_for_end_of_speaking(self):
@@ -436,11 +436,6 @@ class ReceptionistMain():
                 self.wait_for_end_of_speaking()
 
                 # self.state = 1
-
-                #OLHAR PARA A POSIÇÃO DO GUEST
-                # self.node.neck_position_publisher.publish(self.node.talk_neck)
-
-
 
                 aux_point = (0.0, 3.0)
 

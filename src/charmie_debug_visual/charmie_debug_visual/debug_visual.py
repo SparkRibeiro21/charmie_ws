@@ -33,9 +33,9 @@ class Robot():
         self.lidar_radius = 0.050/2 # meter
         self.robot_x = 0.0
         self.robot_y = 0.0
-        self.robot_t = math.pi/4
-        self.neck_hor_angle = math.radians(30)
-        self.neck_ver_angle = 0.0 # NOT USED ...
+        self.robot_t = 0.0 # math.pi/4
+        # self.neck_hor_angle = math.radians(30)
+        # self.neck_ver_angle = 0.0 # NOT USED ...
         self.all_pos_x_val = []
         self.all_pos_y_val = []
         self.all_pos_t_val = []
@@ -44,7 +44,6 @@ class Robot():
         self.flag_get_person = False
         self.t_ctr = 0.0
         self.t_ctr2 = 100+1
-
 
         self.x_ant = 0.0
         self.y_ant = 0.0
@@ -69,7 +68,8 @@ class Robot():
         self.coordinates_to_divisions(self.house_center_coordinates, self.house_right_bot_coordinates, self.house_right_bot_name)
         self.coordinates_to_divisions(self.house_center_coordinates, self.house_right_upp_coordinates, self.house_right_upp_name)
 
-        # print(self.house_divisions)
+        self.neck_pan = 0.0
+        self.neck_tilt = 0.0
         
 
 
@@ -159,14 +159,14 @@ class Robot():
             # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.house_right_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_bot_coordinates[1])), (int)(self.scale*self.lidar_radius*4), (255, 0, 0), -1)
             # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.house_right_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_upp_coordinates[1])), (int)(self.scale*self.lidar_radius*4), (255, 0, 0), -1)
            
-            # present and past localization positions
+            ### PRESENT AND PAST LOCATIONS OF ROBOT
             self.all_pos_x_val.append(self.robot_x)
             self.all_pos_y_val.append(self.robot_y)
             self.all_pos_t_val.append(self.robot_t)
             for i in range(len(self.all_pos_x_val)):
                 cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.all_pos_x_val[i]), int(self.yc_adj - self.scale * self.all_pos_y_val[i])), 1, (255, 255, 0), -1)
 
-            # robot
+            ### ROBOT
             cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
             cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
             cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
@@ -176,27 +176,22 @@ class Robot():
             # cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int(self.xc_adj + self.scale*(self.robot_x+1)), int(self.yc_adj - self.scale*(self.robot_y+1))), (0,255,255), 1)
             # cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int(self.xc_adj + self.scale*(self.robot_x-1)), int(self.yc_adj - self.scale*(self.robot_y+1))), (0,255,255), 1)
 
-            
+            # NECK DIRECTION, CAMERA FOV
             cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
-                     (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_hor_angle + math.pi/2 - math.pi/4)),
-                      int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_hor_angle + math.pi/2 - math.pi/4))), (0,255,255), 1)
+                     (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4)),
+                      int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4))), (0,255,255), 1)
             cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
-                     (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_hor_angle + math.pi/2 + math.pi/4)),
-                      int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_hor_angle + math.pi/2 + math.pi/4))), (0,255,255), 1)
+                     (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4)),
+                      int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
             
             
-            # HOUSE (made in robocup, can make a function to improve, did not have time for that)
 
-
-
-
-            # print(self.people_in_frame)
 
 
 
             # people
-            for people in self.people_in_frame_filtered: 
-                cv2.circle(self.test_image, (int(self.xc + self.scale*people[0]), int(self.yc - self.scale * people[1])), (int)(self.scale*self.lidar_radius*5), (203, 192, 255), -1)
+            # for people in self.people_in_frame_filtered: 
+            #     cv2.circle(self.test_image, (int(self.xc + self.scale*people[0]), int(self.yc - self.scale * people[1])), (int)(self.scale*self.lidar_radius*5), (203, 192, 255), -1)
            
 
 
@@ -223,20 +218,19 @@ class DebugVisualNode(Node):
         self.get_logger().info("Initialised CHARMIE Debug Visual Node")
 
         # self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
-        # self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
+        self.get_neck_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
         
         self.robot = Robot()
 
-        # self.update_drawings()
-        # self.create_timer(2, self.update_drawings)
 
-    # def get_speech_done_callback(self, state: Bool):
-    #     print("Received Speech Flag:", state.data)
-    #     self.get_logger().info("Received Speech Flag")
 
-    # def update_drawings(self):
-    #     self.robot.update_debug_drawings()
 
+    def get_neck_position_callback(self, pose: Pose2D):
+        
+        print("Received new neck position. PAN = ", pose.x, " TILT = ", pose.y)
+        self.robot.neck_pan = -math.radians(180 - pose.x)
+        self.robot.neck_tilt = -math.radians(180 - pose.y)
+        
     
 def main(args=None):
     rclpy.init(args=args)

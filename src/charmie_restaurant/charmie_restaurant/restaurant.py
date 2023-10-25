@@ -9,7 +9,7 @@ from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Bool, String, Int16
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import Obstacles, SpeechType, RobotSpeech, TarNavSDNL, Yolov8Pose
+from charmie_interfaces.msg import Obstacles, SpeechType, RobotSpeech, TarNavSDNL, Yolov8Pose, NeckPosition
 
 from cv_bridge import CvBridge
 import time
@@ -41,7 +41,7 @@ class RestaurantNode(Node):
         self.calibrate_ambient_noise_publisher = self.create_publisher(Bool, "calib_ambient_noise", 10)
         
         # Neck
-        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_to_pos", 10)
+        self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         
         # Navigation 
         self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
@@ -75,7 +75,7 @@ class RestaurantNode(Node):
         self.speech_type.restaurant = False
         self.speech_type.gpsr = False
         self.speech_str = RobotSpeech()
-        self.talk_neck = Pose2D()
+        self.talk_neck = NeckPosition()
 
         self.foods = []
         self.get_foods = 0
@@ -254,9 +254,9 @@ class RestaurantMain():
         self.person_coordinates.x = 0.0
         self.person_coordinates.y = 0.0
 
-        self.neck_pose = Pose2D()
-        self.neck_pose.x = 180.0
-        self.neck_pose.y = 193.0
+        self.neck_pose = NeckPosition()
+        self.neck_pose.pan = 180.0
+        self.neck_pose.tilt = 193.0
 
         self.target_x = 0.0
         self.target_y = 0.0

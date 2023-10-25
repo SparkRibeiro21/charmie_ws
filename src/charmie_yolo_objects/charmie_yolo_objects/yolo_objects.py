@@ -99,7 +99,7 @@ class Yolo_obj(Node):
         self.obj.position = []
 
         # minimum value of confidence for object to be accepted as true and sent via topic
-        self.threshold = 0.5
+        self.threshold = 0.2
 
         results = self.model(current_frame, stream = True)
 

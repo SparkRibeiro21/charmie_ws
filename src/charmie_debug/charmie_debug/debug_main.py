@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16, String
 from sensor_msgs.msg import LaserScan, Image
-from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL
+from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL, NeckPosition
 
 
 from cv_bridge import CvBridge
@@ -22,7 +22,7 @@ class TRNode(Node):
         self.get_logger().info("Initialised CHARMIE Debug Node")
         
         # Neck Topics
-        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_to_pos", 10)
+        self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
         self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
         
@@ -364,8 +364,7 @@ class TRNode(Node):
         # self.nav_ctr -= 0.5
 
     def timer_callback(self):
-        neck = Pose2D()
-        flag_neck = Bool()
+        neck = NeckPosition()
         flag_start_button = Bool()
         flag_vccs = Bool()
         flag_torso = Bool()
@@ -401,8 +400,8 @@ class TRNode(Node):
             
         """
         if self.counter == 0:
-            neck.x = 180.0
-            neck.y = 180.0 
+            neck.pan = 180.0
+            neck.tilt = 180.0 
             self.flag_get_neck_position = False
             # self.flag_get_start_button = False
             # self.flag_get_vccs = False
@@ -418,15 +417,15 @@ class TRNode(Node):
             omni_move.z = 100.0 - 10.0
             self.omni_move_publisher.publish(omni_move)
         if self.counter == 1:
-            neck.x = 270.0
-            neck.y = 180.0 
+            neck.pan = 270.0
+            neck.tilt = 180.0 
             omni_move.x = 0.0
             omni_move.y = 0.0
             omni_move.z = 100.0 + 10.0
             self.omni_move_publisher.publish(omni_move)
         if self.counter == 2:
-            neck.x = 180.0
-            neck.y = 180.0 
+            neck.pan = 180.0
+            neck.tilt = 180.0 
             self.flag_get_neck_position = True
             # self.flag_get_start_button = True
             # self.flag_get_vccs = True
@@ -442,15 +441,15 @@ class TRNode(Node):
             omni_move.z = 100.0
             self.omni_move_publisher.publish(omni_move)
         if self.counter == 3:
-            neck.x = 90.0
-            neck.y = 180.0 
+            neck.pan = 90.0
+            neck.tilt = 180.0 
             omni_move.x = 180.0
             omni_move.y = 20.0
             omni_move.z = 100.0
             self.omni_move_publisher.publish(omni_move)
         if self.counter == 4:
-            neck.x = 180.0
-            neck.y = 180.0 
+            neck.pan = 180.0
+            neck.tilt = 180.0 
             self.flag_get_neck_position = False
             # self.flag_get_start_button = False
             # self.flag_get_vccs = False
@@ -466,15 +465,15 @@ class TRNode(Node):
             omni_move.z = 100.0
             self.omni_move_publisher.publish(omni_move)
         if self.counter == 5:
-            neck.x = 180.0
-            neck.y = 120.0 
+            neck.pan = 180.0
+            neck.tilt = 120.0 
             omni_move.x = 270.0
             omni_move.y = 20.0
             omni_move.z = 100.0
             self.omni_move_publisher.publish(omni_move)
         if self.counter == 6:
-            neck.x = 180.0
-            neck.y = 180.0 
+            neck.pan = 180.0
+            neck.tilt = 180.0 
             self.flag_get_neck_position = True
             # self.flag_get_start_button = True
             # self.flag_get_vccs = True
@@ -490,18 +489,17 @@ class TRNode(Node):
             omni_move.z = 100.0 - 10.0
             self.omni_move_publisher.publish(omni_move)
         if self.counter == 7:
-            neck.x = 180.0
-            neck.y = 235.0 
+            neck.pan = 180.0
+            neck.tilt = 235.0 
             self.counter = -1
             omni_move.x = 0.0
             omni_move.y = 20.0
             omni_move.z = 100.0 + 10.0
             self.omni_move_publisher.publish(omni_move)
 
+        
         self.neck_position_publisher.publish(neck)
 
-        flag_neck.data = self.flag_get_neck_position
-        self.flag_neck_position_publisher.publish(flag_neck)
 
         # flag_start_button.data = self.flag_get_start_button
         # self.flag_start_button_publisher.publish(flag_start_button)

@@ -10,7 +10,7 @@ import cv2
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge,  CvBridgeError
-from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL
+from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL, NeckPosition
 
 import numpy as np
 # import face_recognition
@@ -36,7 +36,7 @@ class ReceptionistNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         
         # Neck Topics
-        self.neck_position_publisher = self.create_publisher(Pose2D, "neck_to_pos", 10)
+        self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         #self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
 
         # Low Level Topics
@@ -152,34 +152,30 @@ class ReceptionistNode(Node):
 
         self.coordinates = TarNavSDNL()
         #Código para ele olhar para a cara da pessoa e centrar a cara da pessoa na imagem
-        self.door_neck_coordinates = Pose2D()
-        self.door_neck_coordinates.x = 180.0
-        self.door_neck_coordinates.y = 180.0
+        self.door_neck_coordinates = NeckPosition()
+        self.door_neck_coordinates.pan = 180.0
+        self.door_neck_coordinates.tilt = 180.0
         
         #Definir como se estivesse a olhar ligeiramente para baixo - Perceber o que precisamos que olhe para baixo para detetarmos tudo direito
-        self.place_to_sit_neck = Pose2D()
-        self.place_to_sit_neck.x = 180.0
-        self.place_to_sit_neck.y = 160.0
+        self.place_to_sit_neck = NeckPosition()
+        self.place_to_sit_neck.pan = 180.0
+        self.place_to_sit_neck.tilt = 160.0
 
- 
-        
+        self.guest_neck = NeckPosition()
+        self.guest_neck.pan = 270.0
+        self.guest_neck.tilt = 193.0
 
-        self.guest_neck = Pose2D()
-        self.guest_neck.x = 270.0
-        self.guest_neck.y = 193.0
+        self.navigation_neck = NeckPosition()
+        self.navigation_neck.pan = 180.0
+        self.navigation_neck.tilt = 170.0
 
+        self.talk_neck = NeckPosition()
+        self.talk_neck.pan = 180.0
+        self.talk_neck.tilt = 193.0
 
-        self.navigation_neck = Pose2D()
-        self.navigation_neck.x = 180.0
-        self.navigation_neck.y = 170.0
-
-        self.talk_neck = Pose2D()
-        self.talk_neck.x = 180.0
-        self.talk_neck.y = 193.0
-
-        self.sofa_neck = Pose2D()
-        self.sofa_neck.x = 180.0
-        self.sofa_neck.y = 180.0
+        self.sofa_neck = NeckPosition()
+        self.sofa_neck.pan = 180.0
+        self.sofa_neck.tilt = 180.0
 
         self.br = CvBridge()
 
@@ -1108,8 +1104,6 @@ class ReceptionistMain():
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
 
-                
-                #self.node.neck_position_publisher.publish(self.node.sofa_coordinates)
 
                 #Sentou a o convidado
                 self.node.speech_str.command = f"Please take a sit on the sofa that I'm looking at."               
