@@ -1,1 +1,1 @@
-DetectedPerson object
+DetectedObject object
