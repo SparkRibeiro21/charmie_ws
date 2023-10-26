@@ -5,13 +5,12 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16, String
 from sensor_msgs.msg import LaserScan, Image
-from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL, NeckPosition
+from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL, NeckPosition, TrackPerson, DetectedPerson, Yolov8Pose
 
 
 from cv_bridge import CvBridge
 import cv2 
 import time
-
 
 import mediapipe as mp
 
@@ -21,6 +20,7 @@ class TRNode(Node):
         super().__init__("Debug")
         self.get_logger().info("Initialised CHARMIE Debug Node")
         
+        """
         # Neck Topics
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
@@ -69,13 +69,34 @@ class TRNode(Node):
         self.start_door_publisher = self.create_publisher(Bool, 'start_door', 10) 
         self.done_start_door_subscriber = self.create_subscription(Bool, 'done_start_door', self.done_start_door_callback, 10) 
         
+        """
+        # Neck Topics
+        self.neck_to_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
+        self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
+        self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
+
+        time.sleep(1)
+        a = NeckPosition()
+        a.pan = 230.0
+        a.tilt = 165.0
+        self.neck_to_position_publisher.publish(a)
+        time.sleep(2)
+
+        # test track person
+        self.neck_follow_person_publisher = self.create_publisher(TrackPerson, 'neck_follow_person', 10) 
+        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, 'person_pose_filtered', self.person_pose_filtered_callback, 10) 
+
+
+
+
+
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
-        self.create_timer(0.05, self.timer_callback)
+        # self.create_timer(0.05, self.timer_callback)
         # self.create_timer(2, self.timer_callback_audio)
         # self.create_timer(10, self.timer_callback2)
         # self.create_timer(20, self.timer_callback3)
-        self.create_timer(5, self.timer_callback4)
+        # self.create_timer(5, self.timer_callback4)
         
 
         # Get Flags
@@ -101,18 +122,49 @@ class TRNode(Node):
 
         self.br = CvBridge()
 
-        self.mp_face_detection = mp.solutions.face_detection
-        self.mp_drawing = mp.solutions.drawing_utils
-        self.mp_face_detection = self.mp_face_detection.FaceDetection()
-        self.mp_pose = mp.solutions.pose
-        self.pose = self.mp_pose.Pose()
+        # self.mp_face_detection = mp.solutions.face_detection
+        # self.mp_drawing = mp.solutions.drawing_utils
+        # self.mp_face_detection = self.mp_face_detection.FaceDetection()
+        # self.mp_pose = mp.solutions.pose
+        # self.pose = self.mp_pose.Pose()
 
 
 
         aux_start_door = Bool()
         aux_start_door.data = True
-        self.start_door_publisher.publish(aux_start_door)
+        # self.start_door_publisher.publish(aux_start_door)
         print("Fiz pedido da Door")
+
+
+    def person_pose_filtered_callback(self, pose: Yolov8Pose):
+        print("Recebi pose")
+        pass
+
+        print(pose.num_person)
+        if pose.num_person > 0:
+            aux = TrackPerson()
+            aux.person = pose.persons[0]
+            aux.kp_number = 5
+            aux.is_center = True   
+            self.neck_follow_person_publisher.publish(aux)    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         

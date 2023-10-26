@@ -5,12 +5,17 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D 
 from std_msgs.msg import Bool
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import NeckPosition, TrackObject, TrackPerson
+from sensor_msgs.msg import Image
+from charmie_interfaces.msg import NeckPosition, TrackObject, TrackPerson, DetectedObject, DetectedPerson
 
 import math
 import tty
 import termios
 import os
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+
+DEBUG_DRAW = True
 
 print(os.name)
 
@@ -40,8 +45,8 @@ else:
 
 from dynamixel_sdk import *  # Uses Dynamixel SDK library
 
-##########      PAN (ID = 1) down servo (left and right)
-##########      TILT (ID = 2)  up servo (up and down)
+##########      PAN (ID = 1)  bottom servo (left and right)
+##########      TILT (ID = 2)     up servo (up and down)
 
 # Control table address
 ADDR_MX_TORQUE_ENABLE = 24  # Control table address is different in Dynamixel model
@@ -135,9 +140,9 @@ class NeckNode(Node):
         self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.nect_to_coords_callback, 10)
 
         # receives a person and the keypoint it must follow (ex: constantly looking at the person face, look at body center  to check hands and feet)
-        self.neck_position_subscriber = self.create_subscription(Pose2D, "neck_follow_person", self.neck_follow_person_callback ,10)
+        self.neck_position_subscriber = self.create_subscription(TrackPerson, "neck_follow_person", self.neck_follow_person_callback ,10)
         # receives an object and it follows it, keeping it centered in the image (ex: constantly looking at a cup, plate, cereal box)
-        self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_follow_object", self.neck_follow_object_callback, 10)
+        self.neck_to_coords_subscriber = self.create_subscription(TrackObject, "neck_follow_object", self.neck_follow_object_callback, 10)
 
         # sends the current position of the servos after every change made on the publisher topics
         self.neck_get_position_publisher = self.create_publisher(NeckPosition, "get_neck_pos", 10)
@@ -146,6 +151,12 @@ class NeckNode(Node):
         self.odom_subscriber = self.create_subscription(Odometry, "odom", self.odom_callback, 10)
         # standard diagnostic publisher
         self.neck_diagnostic_publisher = self.create_publisher(Bool, "neck_diagnostic", 10)
+
+        if DEBUG_DRAW:
+            self.img = Image()
+            self.first_img_ready = False
+            self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
+            
 
         self.robot_x = 0.0
         self.robot_y = 0.0
@@ -171,6 +182,8 @@ class NeckNode(Node):
         # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
         
         global PAN_CONST_SHIFT, TILT_CONST_SHIFT 
+
+
 
 
         self.move_neck(neck_pos.pan + PAN_CONST_SHIFT, neck_pos.tilt + TILT_CONST_SHIFT)
@@ -223,11 +236,66 @@ class NeckNode(Node):
         # print(self.robot_x, self.robot_y, self.robot_t)
 
 
-    def neck_follow_person_callback(self, pose: Pose2D):
+    def neck_follow_person_callback(self, pose: TrackPerson):
+        print("Folow person received")
+
+        global read_pan_open_loop, read_tilt_open_loop
+
+
+        img_width = 1280
+        img_height = 720
+
+
+        target_x = pose.person.kp_nose_x
+        target_y = pose.person.kp_nose_y
+
+        hor_fov = 91.2
+        ver_fov = 65.5
+
+        print(target_x, target_y)
+
+        error_x = -int(img_width/2 - pose.person.kp_nose_x)
+        error_y = -int(img_height/2 - pose.person.kp_nose_y)
+
+        perc_x = error_x/(img_width/2)
+        perc_y = error_y/(img_height/2)
+
+        new_a_x = (-perc_x*(hor_fov/2))/5
+        new_a_y = (-perc_y*(ver_fov/2))/5
+
+        print("angs: ", new_a_x, new_a_y)
+
+        # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST)
+        
+        # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
+
+        self.send_neck_move(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
+
+
+        if DEBUG_DRAW and self.first_img_ready:
+            br = CvBridge()
+            current_frame = br.imgmsg_to_cv2(self.img, "bgr8")
+
+            # cv2.line(current_frame, (img_width//2, img_height//2), (img_width//2+error_x, img_height//2+error_y), (255,0,0), 3)
+            cv2.line(current_frame, (img_width//2, img_height//2), (img_width//2, img_height//2+error_y), (255,0,0), 3)
+            cv2.line(current_frame, (img_width//2, img_height//2), (img_width//2+error_x, img_height//2), (255,0,0), 3)
+
+            cv2.circle(current_frame, (img_width//2, img_height//2), 3, (0,0,255), -1)
+            cv2.circle(current_frame, (target_x, target_y), 3, (0,0,255), -1)
+
+            cv2.imshow("Neck Debug", current_frame)
+            cv2.waitKey(1)
+    
+        # time.sleep(1)
+
+
+    def neck_follow_object_callback(self, pose: TrackObject):
         pass
 
-    def neck_follow_object_callback(self, pose: Pose2D):
-        pass
+    def get_color_image_callback(self, img: Image):
+        # self.get_logger().info('Receiving color video frame')
+        self.img = img
+        self.first_img_ready = True
 
 
     ########## NECK CNOTROL FUNCTIONS ##########
@@ -288,7 +356,10 @@ class NeckNode(Node):
 
         self.get_logger().info("Set Neck to Initial Position, Looking Forward")
 
-        self.move_neck(200, 170) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        self.move_neck(225, 160) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+
+
+        # self.move_neck(0.5+225+33, 0.5+160+3) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         
         # self.move_neck(360, 170) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         
@@ -371,12 +442,15 @@ class NeckNode(Node):
     def move_neck(self, p, t):
         global read_pan_open_loop, read_tilt_open_loop
 
+        p = int(p)
+        t = int(t)
+
         print("START")
         
         d_t = 0.02
-        u_pan = 10 #300# 10
-        u_tilt_up = 5 #300 # 5
-        u_tilt_down = 2 #300 # 2
+        u_pan = 5 # 10
+        u_tilt_up = 2 #300 # 5
+        u_tilt_down = 1 #300 # 2
 
         signal_pan = 1
         signal_tilt = 1
