@@ -5,7 +5,7 @@ from rclpy.node import Node
 from std_msgs.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import  Yolov8Pose, DetectedPerson, SpeechType, RobotSpeech
+from charmie_interfaces.msg import  Yolov8Pose, DetectedPerson, SpeechType, RobotSpeech, NeckPosition
 
 import cv2
 import numpy as np
@@ -218,18 +218,18 @@ class DebugVisualNode(Node):
         self.get_logger().info("Initialised CHARMIE Debug Visual Node")
 
         # self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
-        self.get_neck_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
+        self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
         
         self.robot = Robot()
 
 
 
 
-    def get_neck_position_callback(self, pose: Pose2D):
+    def get_neck_position_callback(self, pose: NeckPosition):
         
-        print("Received new neck position. PAN = ", pose.x, " TILT = ", pose.y)
-        self.robot.neck_pan = -math.radians(180 - pose.x)
-        self.robot.neck_tilt = -math.radians(180 - pose.y)
+        print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
+        self.robot.neck_pan = -math.radians(180 - pose.pan)
+        self.robot.neck_tilt = -math.radians(180 - pose.tilt)
         
     
 def main(args=None):

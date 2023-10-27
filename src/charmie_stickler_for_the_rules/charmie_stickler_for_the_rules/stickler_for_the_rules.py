@@ -35,7 +35,7 @@ class ReceptionistNode(Node):
         
         # Neck Topics
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
-        #self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
+        #self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
 
         # Low Level Topics
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)

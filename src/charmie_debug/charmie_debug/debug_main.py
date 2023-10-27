@@ -24,7 +24,7 @@ class TRNode(Node):
         # Neck Topics
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
-        self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
+        self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
         
         # Low Level Topics
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
@@ -73,7 +73,7 @@ class TRNode(Node):
         # Neck Topics
         self.neck_to_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
-        self.neck_get_position_subscriber = self.create_subscription(Pose2D, "get_neck_pos", self.get_neck_position_callback, 10)
+        self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
 
         time.sleep(1)
         a = NeckPosition()
@@ -168,8 +168,8 @@ class TRNode(Node):
 
 
         
-    def get_neck_position_callback(self, pos: Pose2D):
-        print("Received Neck Position: pan =", int(pos.x), " tilt = ", int(pos.y))
+    def get_neck_position_callback(self, pos: NeckPosition):
+        print("Received Neck Position: pan =", int(pos.pan), " tilt = ", int(pos.tilt))
 
     def get_start_button_callback(self, state: Bool):
         print("Received Start Button: ", state.data)
