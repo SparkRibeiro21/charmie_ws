@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>charmie_person_recognition</name>
+  <name>charmie_point_cloud</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="tiagoribeiro80@gmail.com">utilizador</maintainer>
@@ -12,7 +12,7 @@
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>charmie_interfaces</depend>
- 
+
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
