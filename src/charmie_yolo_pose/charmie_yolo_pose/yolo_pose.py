@@ -58,9 +58,8 @@ class YoloPoseNode(Node):
 
         # Intel Realsense Subscribers
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
-        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
-        # self.depth_image_subscriber = self.create_subscription(Image, "/depth/image_rect_raw", self.get_depth_image_callback, 10)
-
+        # self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+        
 
         # to calculate the FPS
         self.prev_frame_time = 0 # used to record the time when we processed last frame
@@ -485,6 +484,7 @@ class YoloPoseNode(Node):
         self.fps = str(self.fps)
         print("fps = " + self.fps)
 
+        
         if self.debug_draw:
             # putting the FPS count on the frame
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
@@ -505,12 +505,12 @@ class YoloPoseNode(Node):
         """
         
 
-    def get_aligned_depth_image_callback(self, img: Image):
-        pass
+    # def get_aligned_depth_image_callback(self, img: Image):
+    #     pass
 
-        print(img.height, img.width)
-        current_frame = self.br.imgmsg_to_cv2(img, desired_encoding="passthrough")
-        depth_array = np.array(current_frame, dtype=np.float32)
+        # print(img.height, img.width)
+        # current_frame = self.br.imgmsg_to_cv2(img, desired_encoding="passthrough")
+        # depth_array = np.array(current_frame, dtype=np.float32)
         # center_idx = np.array(depth_array.shape) // 2
         # print ('center depth:', depth_array[center_idx[0], center_idx[1]])
 
