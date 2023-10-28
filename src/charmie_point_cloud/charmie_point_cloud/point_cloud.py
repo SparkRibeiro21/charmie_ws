@@ -5,6 +5,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from std_msgs.msg import Bool, String, Float32
 from charmie_interfaces.msg import NeckPosition, RequestPointCloud, RetrievePointCloud
+from geometry_msgs.msg import Point, Pose2D
 from cv_bridge import CvBridge, CvBridgeError
 
 import numpy as np
@@ -36,11 +37,14 @@ inc = 5
 
 ELEV = -150
 AZIM = -35
-DIM = 3000
+DIM = 6000
 
 class PointCloud():
     def __init__(self):
         print("New PointCloud Class Initialised")
+
+        global linhas, colunas
+        # print(linhas, colunas)
         
         # Parametros intrinsecos da Camera (Dados pelo Tiago por email)
         self.fx = 633.811950683593  # Distancia Focal em pixels (x-direction)
@@ -58,7 +62,7 @@ class PointCloud():
         # estes 4 não deviam ter uma variavel???????????
         self.T=np.identity(4)
         self.inverse_matrix = np.zeros([4, 4]) 
-        print(self.inverse_matrix)
+        # print(self.inverse_matrix)
 
         self.Z_MIN_A_VER = -1100
         self.inc = 5
@@ -71,7 +75,9 @@ class PointCloud():
         self.FINAL1 = []
         self.FINAL2 = []
         self.FINAL3 = []
-        self.ESCALA = 4  # Por questões de eficiencia, só vamos considerar 1 pixel em cada 4
+        self.ESCALA = 8  # Por questões de eficiencia, só vamos considerar 1 pixel em cada 4
+
+        self.retrieve_bbox = False
 
         if GRAF3D == 1:
             # inicializações necessárias para desenhar graficos com o MatPlotLib
@@ -89,7 +95,9 @@ class PointCloud():
         self.actualiza_tetas(' ')
         self.robo()      # calcula a cinematica uma vez para os vectores terem valore
         self.converter_2D_3D(0, 0, linhas, colunas)
-        self.graficos()
+
+        if GRAF3D == 1:
+            self.graficos()
 
     def Trans(self, tx, ty, tz):
         M = np.identity(4)
@@ -195,8 +203,11 @@ class PointCloud():
         # quando pressionar uma tecla qualquer, redesenha tudo para actualizar as variáveis
         # nova = self.jpg.copy()
         # cv2.rectangle(self.rgb_img_pc, (x1, y1), (x1+WIDTH, y1+HEIGHT), 255, 2)
-        cv2.imshow("New Image", self.rgb_img_pc)
-        cv2.waitKey(1)
+        # cv2.imshow("New Image", self.rgb_img_pc)
+        # cv2.imshow("Depth Image", self.depth_img_pc)
+        # print("RGB:", self.rgb_img_pc.shape, "DEPTH:", self.depth_img_pc.shape)
+        # cv2.waitKey(1)
+        pass
 
     def especifico(self, um, vm, height, width):
 
@@ -216,12 +227,13 @@ class PointCloud():
         self.FINAL2 = []
         self.FINAL3 = []
 
-        print(self.inverse_matrix)
-        # calcula toda a bounding box
+        # print(self.inverse_matrix)
+        # calcula toda a bounding box        
+        # if self.retrieve_bbox: # ver no futuro se faz sentido
         for u1 in range(u, u+height, self.ESCALA):
             for v1 in range(v, v+width, self.ESCALA):
                 depth = self.depth_img_pc[u1][v1]
-                # 
+                
                 # print(u1, v1, depth)
                 X = (v1 - self.cx) * depth / self.fx
                 Y = (u1 - self.cy) * depth / self.fy
@@ -240,19 +252,19 @@ class PointCloud():
 
         # calcula o ponto central da bounding box
         coord = self.especifico(height/ 2, width/2, height, width)
-        self.FINAL1.append(coord)
+        self.FINAL1 = coord
         print('FINAL1=', self.FINAL1)
 
         # DEPOIS TEM QUE SE APAGAR ISTO
         # calcula uma lista de pontos
-        self.lista_points = []
-        self.lista_points.append([u+50, v+25])
-        self.lista_points.append([u+25, v+75])
+        # self.lista_points = []
+
+        print("lp:", self.lista_points)
 
         nova = self.rgb_img_pc.copy()
 
         for i in range(len(self.lista_points)):
-            cv2.circle(nova, (self.lista_points[i][1], self.lista_points[i][0]), 3, (255,255,255), 1)
+            # cv2.circle(nova, (self.lista_points[i][1], self.lista_points[i][0]), 3, (255,255,255), 1)
             coord = self.especifico(self.lista_points[i][0]-u, self.lista_points[i][1]-v, height, width)
             self.FINAL2.append(coord)
         cv2.imshow("DEBUG DRAWINGS", nova)
@@ -279,7 +291,7 @@ class PointCloud():
         self.ax1.set_title('Y-X Plane - TOP view')
         #ax1.set_ylim(max(points[:, 1]), min(points[:, 1]))
         self.ax1.set_xlim( DIM,-DIM)
-        self.ax1.set_ylim(-DIM, DIM)
+        self.ax1.set_ylim(0, DIM)
         self.ax1.set_aspect('equal')
 
         # X-Z Plane (right SIDE View)
@@ -290,8 +302,8 @@ class PointCloud():
         self.ax2.set_xlabel('X')
         self.ax2.set_ylabel('Z')
         self.ax2.set_title('X-Z Plane - SIDE view')
-        self.ax2.set_xlim(-DIM, DIM)
-        self.ax2.set_ylim(-DIM, DIM)
+        self.ax2.set_xlim(0, DIM)
+        self.ax2.set_ylim(-DIM//2, DIM//2)
         self.ax2.set_aspect('equal')
 
         # Z-Y Plane (FRONT View)
@@ -302,7 +314,7 @@ class PointCloud():
         self.ax3.set_ylabel('Z')
         self.ax3.set_title('Y-Z Plane - FRONT view')
         self.ax3.set_xlim( DIM, -DIM)
-        self.ax3.set_ylim(-DIM,  DIM)
+        self.ax3.set_ylim(-DIM//2,  DIM//2)
         self.ax3.set_aspect('equal')
 
         # jet rainbow, hsv brg
@@ -315,9 +327,9 @@ class PointCloud():
         self.ax4.set_ylabel('Y')
         self.ax4.set_zlabel('Z')
         self.ax4.set_title('Orthogonal')
-        self.ax4.set_xlim(-DIM,  DIM)
+        self.ax4.set_xlim(0,  DIM)
         self.ax4.set_ylim( DIM, -DIM)
-        self.ax4.set_zlim( DIM, -DIM)
+        self.ax4.set_zlim( DIM//2, -DIM//2)
         #ax4.set_xlim(    0, 3000)
         #ax4.set_ylim(3000,     0)
         #ax4.set_zlim(2000, -2000)
@@ -341,12 +353,12 @@ class PointCloudNode(Node):
         self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
 
         # RequestPointCloud
-        # self.request_point_cloud_subscriber = self.create_subscription(RequestPointCloud, "ask_point_cloud", self.get_request_point_cloud_callback, 10)
+        self.request_point_cloud_subscriber = self.create_subscription(RequestPointCloud, "ask_point_cloud", self.get_request_point_cloud_callback, 10)
 
         # RetrievePointCloud
         self.retrieve_point_cloud_publisher = self.create_publisher(RetrievePointCloud, "get_point_cloud", 10)
 
-        self.create_timer(0.01, self.get_request_point_cloud_callback)
+        # self.create_timer(0.01, self.get_request_point_cloud_callback)
 
         # Point Cloud Instance
         self.br = CvBridge()
@@ -354,6 +366,8 @@ class PointCloudNode(Node):
         self.depth_img = Image()
         self.pcloud = PointCloud()
         self.neck_position = NeckPosition()
+
+        self.tempinho = time.perf_counter()
 
     def get_color_image_callback(self, img: Image):
         self.rgb_img = img
@@ -365,10 +379,12 @@ class PointCloudNode(Node):
 
     def get_neck_position_callback(self, neck_pos: NeckPosition):
         self.neck_position = neck_pos
-        print("Received Neck Position")
+        self.pcloud.teta[0] = 180 - neck_pos.pan
+        self.pcloud.teta[1] = 190 - neck_pos.tilt ###### ALTERAR PARA 180
+        # print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[1], ",", self.pcloud.teta[2], ")")
 
-    def get_request_point_cloud_callback(self): #, req: RequestPointCloud):
-
+    def get_request_point_cloud_callback(self, req: RequestPointCloud): #, req: RequestPointCloud):
+        
         if self.depth_img.height > 0 and self.rgb_img.height > 0: # prevents doing this code before receiving images
 
             rgb_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
@@ -377,31 +393,22 @@ class PointCloudNode(Node):
             width = self.rgb_img.width
             height = self.rgb_img.height
 
-            # print(len(rgb_frame))
-            # print(len(depth_frame))
             depth_frame_res = cv2.resize(depth_frame, (width, height), interpolation = cv2.INTER_NEAREST)
-            # print(len(depth_frame), len(depth_frame_res))
-            # tempinho = time.perf_counter()
 
-            # mas que raio é esta magia negra??? 2.5 seg para 0.001???
             depth_frame_res[depth_frame_res > 6000] = 0
             depth_frame_res[depth_frame_res <  300] = 0
-            # depth_array = np.array(current_frame, dtype=np.float32)
-            # for i in range(0, height):             #looping at python speed...
-            #     for j in range(0, width):     #...
-            #         if depth_frame_res[i, j] > MAX_DIST or depth_frame_res[i, j] < MIN_DIST:
-            #             depth_frame_res[i, j] = 0
-            # print('tempo = ', time.perf_counter() - tempinho)   # imprime o tempo de calculo em segundos
-        
-            # resize image
-            
-            # resized = cv2.resize(depth_array, (720, 1280), interpolation = cv2.INTER_AREA)
-           
-            self.pcloud.rgb_img_pc = rgb_frame
-            self.pcloud.depth_img_pc = depth_frame
-        
 
-            # CONFIRMAR MATRIZ INVERTIDA
+            self.pcloud.rgb_img_pc = rgb_frame
+            self.pcloud.depth_img_pc = depth_frame_res
+        
+            self.pcloud.lista_points = []
+            for i in range(len(req.requested_point_coords)):
+                # p = Pose2D()
+                # p = req.
+                self.pcloud.lista_points.append([req.requested_point_coords[i].y, req.requested_point_coords[i].x])   # [u,v] [linha, coluna]  [cima-baixo, esquerda-direita]
+
+            print(self.pcloud.lista_points)
+            self.pcloud.retrieve_bbox = req.retrieve_bbox 
 
             tecla = cv2.waitKey(1)  # le uma tecla
             if tecla != 27:         # se não for a tecla de ESCAPE, faz todo o processamento
@@ -421,12 +428,56 @@ class PointCloudNode(Node):
                 print("{:>8.3f}".format(i), end=' ')
             '''
             print('inc=', inc, '  ELEV=', ELEV, '  AZIM=', AZIM, ' DIM=', DIM, ' Z_MIN_A_VER=', Z_MIN_A_VER, ' WIDTH=', WIDTH, ' HEIGHT=', HEIGHT, ' ESCALA=', self.pcloud.ESCALA)
-
-            tempinho = time.perf_counter()
-            self.pcloud.converter_2D_3D(y1, x1, HEIGHT, WIDTH)      # converte as coordenadas de (u,v) para 3D (x, y, z)
-            print('tempo = ', time.perf_counter() - tempinho)   # imprime o tempo de calculo em segundos
+            
+            print('tempo_frame = ', time.perf_counter() - self.tempinho)   # imprime o tempo de calculo em segundos
+            
+            self.tempinho = time.perf_counter()
+            # self.pcloud.converter_2D_3D(y1, x1, HEIGHT, WIDTH)      # converte as coordenadas de (u,v) para 3D (x, y, z)
+            # self.pcloud.converter_2D_3D(0, 0, height, width)      # converte as coordenadas de (u,v) para 3D (x, y, z)
+            self.pcloud.converter_2D_3D(req.box_top_left_y, req.box_top_left_x, req.box_height, req.box_width)      # converte as coordenadas de (u,v) para 3D (x, y, z)
+            print('tempo_conver = ', time.perf_counter() - self.tempinho)   # imprime o tempo de calculo em segundos
+            self.tempinho = time.perf_counter()
             if GRAF3D == 1:
                 self.pcloud.graficos()      # mostra os graficos
+
+
+
+            # geometry_msgs/Point center_coords
+            # geometry_msgs/Point[] requested_point_coords
+            # geometry_msgs/Point[] bbox_point_coords
+
+            answer = RetrievePointCloud()
+            answer.center_coords.x = self.pcloud.FINAL1[0]
+            answer.center_coords.y = self.pcloud.FINAL1[1]
+            answer.center_coords.z = self.pcloud.FINAL1[2]
+            print(answer.center_coords)
+            print("----")
+
+            for i in range(len(self.pcloud.FINAL2)):
+                p = Point()
+                p.x = self.pcloud.FINAL2[i][0]
+                p.y = self.pcloud.FINAL2[i][1]
+                p.z = self.pcloud.FINAL2[i][2]
+                print(p)
+                answer.requested_point_coords.append(p)
+            print("====")
+
+            if req.retrieve_bbox:
+                for i in range(len(self.pcloud.FINAL3)):
+                    p = Point()
+                    p.x = self.pcloud.FINAL3[i][0]
+                    p.y = self.pcloud.FINAL3[i][1]
+                    p.z = self.pcloud.FINAL3[i][2]
+                    answer.bbox_point_coords.append(p)
+
+                    print(p)
+                print("####")
+            self.retrieve_point_cloud_publisher.publish(answer)
+
+            
+
+
+
 
 def main(args=None):
     rclpy.init(args=args)

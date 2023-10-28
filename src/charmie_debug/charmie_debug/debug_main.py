@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16, String
 from sensor_msgs.msg import LaserScan, Image
-from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL, NeckPosition, TrackPerson, DetectedPerson, Yolov8Pose
+from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL, NeckPosition, TrackPerson, DetectedPerson, Yolov8Pose, RequestPointCloud
 
 
 from cv_bridge import CvBridge
@@ -85,9 +85,13 @@ class TRNode(Node):
         # test track person
         self.neck_follow_person_publisher = self.create_publisher(TrackPerson, 'neck_follow_person', 10) 
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, 'person_pose_filtered', self.person_pose_filtered_callback, 10) 
+        self.person_pose = Yolov8Pose()
 
 
+        self.request_point_cloud_publisher = self.create_publisher(RequestPointCloud, 'ask_point_cloud', 10) 
 
+        
+        self.create_timer(1.0, self.request_point_cloud_person)
 
 
         # Timers
@@ -136,26 +140,44 @@ class TRNode(Node):
         print("Fiz pedido da Door")
 
 
-    def person_pose_filtered_callback(self, pose: Yolov8Pose):
-        print("Recebi pose")
+
+    def request_point_cloud_person(self):
+        if self.person_pose.num_person > 0:
+            aux = RequestPointCloud()
+            aux.box_top_left_x = self.person_pose.persons[0].box_top_left_x
+            aux.box_top_left_y = self.person_pose.persons[0].box_top_left_y
+            aux.box_width = self.person_pose.persons[0].box_width
+            aux.box_height = self.person_pose.persons[0].box_height
+            aux.retrieve_bbox = False
+
+            p1 = Pose2D()
+            p1.x = float(self.person_pose.persons[0].kp_nose_x)
+            p1.y = float(self.person_pose.persons[0].kp_nose_y)
+            aux.requested_point_coords.append(p1)
+
+            p2 = Pose2D()
+            p2.x = float(self.person_pose.persons[0].kp_shoulder_left_x)
+            p2.y = float(self.person_pose.persons[0].kp_shoulder_left_y)
+            aux.requested_point_coords.append(p2)
+
+            p3 = Pose2D()
+            p3.x = float(self.person_pose.persons[0].kp_hip_right_x)
+            p3.y = float(self.person_pose.persons[0].kp_hip_right_y)
+            aux.requested_point_coords.append(p3)
+
+            self.request_point_cloud_publisher.publish(aux)    
+
+    def person_pose_filtered_callback(self, pose: Yolov8Pose):        
+        self.person_pose = pose
         pass
 
-        print(pose.num_person)
-        if pose.num_person > 0:
-            aux = TrackPerson()
-            aux.person = pose.persons[0]
-            aux.kp_number = 5
-            aux.is_center = True   
-            self.neck_follow_person_publisher.publish(aux)    
-
-
-
-
-
-
-
-
-
+        # print(pose.num_person)
+        # if pose.num_person > 0:
+        #     aux = TrackPerson()
+        #     aux.person = pose.persons[0]
+        #     aux.kp_number = 5
+        #     aux.is_center = True   
+        #     self.neck_follow_person_publisher.publish(aux)    
 
 
 

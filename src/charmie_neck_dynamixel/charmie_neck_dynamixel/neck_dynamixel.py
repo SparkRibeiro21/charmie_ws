@@ -75,7 +75,7 @@ DXL_ID_PAN = 1  # Dynamixel ID : 1
 DXL_ID_TILT = 2  # Dynamixel ID : 2
 BAUDRATE = 57600  # Dynamixel default baudrate : 57600
 # MAC GIL # DEVICENAME = '/dev/tty.usbserial-AI0282RX'  # Check which port is being used on your controller
-DEVICENAME = '/dev/ttyUSB0'  # Check which port is being used on your controller
+DEVICENAME = '/dev/ttyUSB1'  # Check which port is being used on your controller
 # ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
 
 TORQUE_ENABLE = 1  # Value for enabling the torque
@@ -359,7 +359,7 @@ class NeckNode(Node):
         # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
 
         
-        self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        self.move_neck(270, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         time.sleep(3)
 
 
