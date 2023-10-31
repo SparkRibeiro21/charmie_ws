@@ -91,7 +91,7 @@ class TRNode(Node):
         self.request_point_cloud_publisher = self.create_publisher(RequestPointCloud, 'ask_point_cloud', 10) 
 
         
-        self.create_timer(1.0, self.request_point_cloud_person)
+        self.create_timer(0.1, self.request_point_cloud_person)
 
 
         # Timers
