@@ -2,9 +2,7 @@ string[] name_obj
 string[] category_obj
 int32 index_obj
 float32 conf_obj
-float32 x_rel
-float32 y_rel
-float32 z_rel
+geometry_msgs/Point position_relative
 float32 distance
 int32 box_top_left_x
 int32 box_top_left_y

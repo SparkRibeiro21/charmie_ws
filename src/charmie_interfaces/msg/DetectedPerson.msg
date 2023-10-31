@@ -1,8 +1,6 @@
 int32 index_person
 float32 conf_person
-float32 x_rel
-float32 y_rel
-float32 z_rel
+geometry_msgs/Point position_relative
 float32 distance
 int32 box_top_left_x
 int32 box_top_left_y
@@ -76,3 +74,6 @@ float32 kp_ankle_left_conf
 int32 kp_ankle_right_x
 int32 kp_ankle_right_y
 float32 kp_ankle_right_conf
+
+int32 body_center_x
+int32 body_center_y
