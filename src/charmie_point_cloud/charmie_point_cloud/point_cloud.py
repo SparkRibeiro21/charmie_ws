@@ -4,7 +4,7 @@ from rclpy.node import Node
 
 from sensor_msgs.msg import Image
 from std_msgs.msg import Bool, String, Float32
-from charmie_interfaces.msg import NeckPosition, RequestPointCloud, RetrievePointCloud
+from charmie_interfaces.msg import NeckPosition, RequestPointCloud, RetrievePointCloud, PointCloudCoordinates
 from geometry_msgs.msg import Point, Pose2D
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -23,9 +23,9 @@ import time
 # z de baixo para cima
 
 
-DEBUG_DRAW = True
+DEBUG_DRAW = False
 
-GRAF3D = True
+GRAF3D = False
 GRAF1 = False
 GRAF2 = True
 
@@ -54,11 +54,10 @@ Z_SHIFT = (1245+160) # height of the servos from the floor + height from the ser
 
 flag_show_rgb_depth = True
 
-nome = "Image Debug"
-
-
 # Create a named window
-cv2.namedWindow(nome)
+if DEBUG_DRAW:
+    nome = "Image Debug"
+    cv2.namedWindow(nome)
 
 
 
@@ -82,7 +81,6 @@ class PointCloud():
         self.d =    [ 25,   0, 145]
         self.l =    [ 28,   0, 130]
 
-        # estes 4 não deviam ter uma variavel???????????
         # self.T=np.identity(4)
         self.inverse_matrix = np.zeros([4, 4]) 
         # print(self.inverse_matrix)
@@ -139,7 +137,9 @@ class PointCloud():
 
     
     def click_event(self, event, x, y, flags, param):
-        global x1, y1, nova, flag_show_rgb_depth    #, WIDTH, HEIGHT
+        global x1, y1, flag_show_rgb_depth    #, WIDTH, HEIGHT
+
+        nova = self.rgb_img_pc
         if event == cv2.EVENT_LBUTTONDOWN:
             x1=x
             y1=y
@@ -158,24 +158,25 @@ class PointCloud():
             x1=x
             y1=y
             # self.update_imagem()
-            coordx, coordy, coordz = self.converter_2D_3D_unico(y, x)
-            cv2.rectangle(nova, (0,0), (280, 60), (0, 0, 0), -1)
-            texto = "{}, {}, {}".format(int(coordx)/1000, int(coordy)/1000, int(coordz)/1000)
-            cv2.putText(nova, texto, (10, 25), self.font, 0.75, (255, 255, 255), 1, cv2.LINE_AA)
-            texto = "( {}, {} )".format(x, y)
-            cv2.putText(nova, texto, (65, 50), self.font, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
-            # cv2.imshow(nome, nova)
+            if DEBUG_DRAW:
+                coordx, coordy, coordz = self.converter_2D_3D_unico(y, x)
+                cv2.rectangle(nova, (0,0), (280, 60), (0, 0, 0), -1)
+                texto = "{}, {}, {}".format(int(coordx)/1000, int(coordy)/1000, int(coordz)/1000)
+                cv2.putText(nova, texto, (10, 25), self.font, 0.75, (255, 255, 255), 1, cv2.LINE_AA)
+                texto = "( {}, {} )".format(x, y)
+                cv2.putText(nova, texto, (65, 50), self.font, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
+                # cv2.imshow(nome, nova)
             
             
-            
-            if flag_show_rgb_depth:
-                self.update_imagem()
-            else:
-                t_ = self.depth_img_pc.copy()
-                _, maximo, _, _= cv2.minMaxLoc(t_)
-                t_ = t_ / maximo * 255 
-                t_ = t_.astype(np.uint8)
-                cv2.imshow(nome, t_)
+                
+                if flag_show_rgb_depth:
+                    self.update_imagem()
+                else:
+                    t_ = self.depth_img_pc.copy()
+                    _, maximo, _, _= cv2.minMaxLoc(t_)
+                    t_ = t_ / maximo * 255 
+                    t_ = t_.astype(np.uint8)
+                    cv2.imshow(nome, t_)
             
             
 
@@ -415,7 +416,8 @@ class PointCloud():
 
         if self.ENVIO: # Se houver dados para representar
 
-            points = self.ENVIO[0][2].copy()
+
+            points = np.array(self.ENVIO[0][2].copy())
             for i in range(1,len(self.ENVIO)):
                 points = np.concatenate([points, self.ENVIO[i][2]])
 
@@ -427,6 +429,8 @@ class PointCloud():
                 self.ax4.clear()
 
                 # Y-X Plane (TOP View)
+                # third_elements = [point[2] for point in points]
+                # norm = Normalize(vmin=min(third_elements), vmax=max(third_elements))
                 norm = Normalize(vmin=min(points[:,2]), vmax=max(points[:,2]))
                 colors = norm(points[:,2])  # Map z values to the [0, 1] range using the Normalize object
                 #points = points[points[:, 2].argsort()[::-1]]
@@ -490,6 +494,10 @@ class PointCloud():
                 # for i in range(1,len(self.ENVIO)):
                 #     points = np.concatenate([points, self.ENVIO[i][2]])
 
+                # third_elements = [point[2] for point in points]
+                # norm = Normalize(vmin=min(third_elements), vmax=max(third_elements))
+                # colors = norm(third_elements)  # Map z values to the [0, 1] range using the Normalize object
+
                 norm = Normalize(vmin=min(points[:,2]), vmax=max(points[:,2]))
                 colors = norm(points[:,2])  # Map z values to the [0, 1] range using the Normalize object
 
@@ -501,53 +509,54 @@ class PointCloud():
                     if CUBO == 1:
                         points = np.array(self.ENVIO[i][2])
 
-                        print(points)
-
                         filtered_points = points[points[:, 2] != 0]
-                        px = filtered_points[:, 0]
-                        py = filtered_points[:, 1]
-                        pz = filtered_points[:, 2]
+                        # print(len(filtered_points))
 
-                        # Define os 8 vertices do cuboide
-                        minx = np.amin(px)
-                        maxx = np.amax(px)
-                        miny = np.amin(py)
-                        maxy = np.amax(py)
-                        minz = np.amin(pz)
-                        maxz = np.amax(pz)
-                        vertices = [
-                            [minx, miny, minz],
-                            [maxx, miny, minz],
-                            [maxx, maxy, minz],
-                            [minx, maxy, minz],
-                            [minx, miny, maxz],
-                            [maxx, miny, maxz],
-                            [maxx, maxy, maxz],
-                            [minx, maxy, maxz]
-                        ]
-                        # Define as 12 linhas do cuboide
-                        lines = [
-                            [vertices[0], vertices[1]],
-                            [vertices[1], vertices[2]],
-                            [vertices[2], vertices[3]],
-                            [vertices[3], vertices[0]],
-                            [vertices[4], vertices[5]],
-                            [vertices[5], vertices[6]],
-                            [vertices[6], vertices[7]],
-                            [vertices[7], vertices[4]],
-                            [vertices[0], vertices[4]],
-                            [vertices[1], vertices[5]],
-                            [vertices[2], vertices[6]],
-                            [vertices[3], vertices[7]]
-                        ]
-                        # Desenhas as linhas do cuboide
-                        for line in lines:
-                            x, y, z = zip(*line)
-                            self.ax5.plot(x, y, z, c='black', label='Centro')
+                        if len(filtered_points) > 0:
+                            px = filtered_points[:, 0]
+                            py = filtered_points[:, 1]
+                            pz = filtered_points[:, 2]
+                            
+                            # Define os 8 vertices do cuboide
+                            minx = np.amin(px)
+                            maxx = np.amax(px)
+                            miny = np.amin(py)
+                            maxy = np.amax(py)
+                            minz = np.amin(pz)
+                            maxz = np.amax(pz)
+                            vertices = [
+                                [minx, miny, minz],
+                                [maxx, miny, minz],
+                                [maxx, maxy, minz],
+                                [minx, maxy, minz],
+                                [minx, miny, maxz],
+                                [maxx, miny, maxz],
+                                [maxx, maxy, maxz],
+                                [minx, maxy, maxz]
+                            ]
+                            # Define as 12 linhas do cuboide
+                            lines = [
+                                [vertices[0], vertices[1]],
+                                [vertices[1], vertices[2]],
+                                [vertices[2], vertices[3]],
+                                [vertices[3], vertices[0]],
+                                [vertices[4], vertices[5]],
+                                [vertices[5], vertices[6]],
+                                [vertices[6], vertices[7]],
+                                [vertices[7], vertices[4]],
+                                [vertices[0], vertices[4]],
+                                [vertices[1], vertices[5]],
+                                [vertices[2], vertices[6]],
+                                [vertices[3], vertices[7]]
+                            ]
+                            # Desenhas as linhas do cuboide
+                            for line in lines:
+                                x, y, z = zip(*line)
+                                self.ax5.plot(x, y, z, c='black', label='Centro')
 
                     if RETA != 0:
                         res = self.ENVIO[i]
-                        bbox = self.RECEBO[i] #### ??????????????????????????????????????????????????? ELE ESQUECEU-SE ....
+                        bbox = self.RECEBO[i]
                         
 
                         # desenha EIXOS do ponto central da bounding box
@@ -590,10 +599,10 @@ class PointCloud():
 
 
     def update_imagem(self):
-        global nova, nome
+        global nome
+        nova = self.rgb_img_pc
 
         if self.ENVIO:       # garantir que a lista não está vazia
-            nova = self.rgb_img_pc
             for i in range(len(self.RECEBO)):
                 bbox = self.RECEBO[i]
                 res = self.ENVIO[i]
@@ -652,8 +661,8 @@ class PointCloudNode(Node):
         self.pcloud = PointCloud()
 
 
-
-        lb=cv2.setMouseCallback(nome, self.pcloud.click_event)      # inicializa a rotina do rato
+        if DEBUG_DRAW:
+            lb=cv2.setMouseCallback(nome, self.pcloud.click_event)      # inicializa a rotina do rato
 
         
         self.tempo_calculo = 0
@@ -671,7 +680,7 @@ class PointCloudNode(Node):
         self.neck_position = neck_pos
         self.pcloud.teta[0] = 180 - neck_pos.pan
         self.pcloud.teta[1] = 190 - neck_pos.tilt ###### ALTERAR PARA 180
-        print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[1], ",", self.pcloud.teta[2], ")")
+        # print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[1], ",", self.pcloud.teta[2], ")")
 
     def get_request_point_cloud_callback(self, req: RequestPointCloud): #, req: RequestPointCloud):
 
@@ -718,14 +727,55 @@ class PointCloudNode(Node):
             for i in self.pcloud.teta[0:2]:
                 print("{:>3.0f}".format(i), end=' ')
             print("]  -> ", end=' ')
-            '''
-            for i in T[0:3, 3]:
-                print("{:>8.3f}".format(i), end=' ')
-            '''
             print('inc=', inc, '  ELEV=', ELEV, '  AZIM=', AZIM, ' DIM=', DIM, ' Z_MIN_A_VER=', Z_MIN_A_VER, ' WIDTH=', WIDTH, ' HEIGHT=', HEIGHT, ' ESCALA=', self.pcloud.ESCALA)
             print("tetas = ", self.pcloud.teta)
             
-            # REMOVER! -  ????????????????????????????????????????????????
+
+            # conversion from RequestedPointCloud to self.pcloud.RECEBO
+            # print
+
+            # print("REQ:")
+            # for i in range(len(req.data)):
+                # print(req.data[i].bbox, " --- ", req.data[i].requested_point_coords)
+            
+
+            self.pcloud.RECEBO = []
+            for i in range(len(req.data)):
+                aux = []
+                # print(req.data[i].bbox.box_top_left_y)
+                aux.append([req.data[i].bbox.box_top_left_y, req.data[i].bbox.box_top_left_x, req.data[i].bbox.box_height, req.data[i].bbox.box_width])
+
+                a = []
+                for j in range(len(req.data[i].requested_point_coords)):
+                    a.append([int(req.data[i].requested_point_coords[j].y), int(req.data[i].requested_point_coords[j].x)])
+
+                aux.append(a)
+                # bbox = self.RECEBO[i]
+                # u_inicial, v_inicial, HEIGHT, WIDTH = bbox[0]
+                # for j in range(len(bbox[1])):
+                self.pcloud.RECEBO.append(aux)
+
+            # print("RECEBO = ", self.pcloud.RECEBO)
+
+
+
+
+            # for i in range(len(self.RECEBO)):
+            #     res = self.ENVIO[i]
+            #     cv2.rectangle(nova, (v_inicial, u_inicial), (v_inicial + WIDTH, u_inicial + HEIGHT), (255, 0, 0), 2)
+            #     cv2.circle(nova, (v_inicial + WIDTH // 2, u_inicial + HEIGHT // 2), 3, (0, 0, 255), 2)
+            #     str_central = "{}, {}, {}".format(int(res[0][0])/1000, int(res[0][1])/1000, int(res[0][2])/1000)
+            #     cv2.putText(nova, str_central, (v_inicial + WIDTH // 2 + 20, u_inicial + HEIGHT // 2 + 6), self.font, 0.5, (0, 0, 255), 1,
+            #                 cv2.LINE_AA)
+            #     for j in range(len(bbox[1])):
+            #         bb = bbox[1][j]
+            #         out = res[1][j]
+            #         cv2.circle(nova, (bb[1], bb[0]), 3, (255, 0, 0), 2)
+            #         str_temp = "{}, {}, {}".format(out[0]/1000, out[1]/1000, out[2]/1000)
+            #         cv2.putText(nova, str_temp, (bb[1] + 20, bb[0] + 6), self.font, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+
+
+            """
             self.pcloud.RECEBO = [
                 [
                     # bounding box 1
@@ -743,6 +793,7 @@ class PointCloudNode(Node):
                     [[350 + 25, 930 + 75], [350 + 75, 930 + 25], [350 + 75, 930 + 75]]
                 ]
             ]
+            """
 
             
             self.pcloud.ENVIO = []      # limpo a variavel onde vou guardar as minhas respostas, para este novo ciclo
@@ -765,7 +816,9 @@ class PointCloudNode(Node):
                     resp_outros.append(temp)
 
                 # calcula todos os pontos
-                resp_todos = self.pcloud.converter_2D_3D(u_inicial, v_inicial, HEIGHT, WIDTH)
+                resp_todos = []
+                if req.retrieve_bbox or GRAF3D:
+                    resp_todos = self.pcloud.converter_2D_3D(u_inicial, v_inicial, HEIGHT, WIDTH)
 
                 # Guarda todas as respostas na variavel ENVIO
                 temp = []
@@ -774,6 +827,57 @@ class PointCloudNode(Node):
                 temp.append(resp_todos)
                 self.pcloud.ENVIO.append(temp)
 
+
+            # convert ENVIO into RetrievePointCloud ROS Variable
+            # print("RETRIEVE START")
+            ret = RetrievePointCloud()
+            if len(self.pcloud.ENVIO) > 0:
+                for cc in self.pcloud.ENVIO:
+                    # print(cc)# , cc[1])
+                    # print("?")
+                    pcc = PointCloudCoordinates()
+
+                    point_c = Point()
+                    point_c.x = float(cc[0][0])
+                    point_c.y = float(cc[0][1])
+                    point_c.z = float(cc[0][2])
+
+                    pcc.center_coords = point_c
+
+                    kp_list = []
+                    for kp in cc[1]:
+                        # print("kp:", kp)
+                        point_kp = Point()
+                        point_kp.x = float(kp[0])
+                        point_kp.y = float(kp[1])
+                        point_kp.z = float(kp[2])
+                        kp_list.append(point_kp)
+
+                    pcc.requested_point_coords = kp_list
+
+                    bb_list = []
+                    for bb in cc[2]:
+                        # print("bb:", bb)
+                        point_bb = Point()
+                        point_bb.x = float(bb[0])
+                        point_bb.y = float(bb[1])
+                        point_bb.z = float(bb[2])
+                        bb_list.append(point_bb)
+
+                    pcc.bbox_point_coords = bb_list
+
+                    # print("-")
+                    ret.coords.append(pcc)
+            # print("RETRIEVE END")
+
+            self.retrieve_point_cloud_publisher.publish(ret)
+
+
+            # geometry_msgs/Point center_coords
+            # geometry_msgs/Point[] requested_point_coords
+            # geometry_msgs/Point[] bbox_point_coords
+
+
             # imprime os tempos de processamento e da frame
             print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
             print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
@@ -781,18 +885,18 @@ class PointCloudNode(Node):
 
             # desenha tudo na janela da imagem 2D
             
-            if flag_show_rgb_depth:
-                self.pcloud.update_imagem()
-            else:
-                t_ = self.pcloud.depth_img_pc.copy()
-                _, maximo, _, _= cv2.minMaxLoc(t_)
-                t_ = t_ / maximo * 255 
-                t_ = t_.astype(np.uint8)
-                cv2.imshow(nome, t_)
+            if DEBUG_DRAW:
+                if flag_show_rgb_depth:
+                    self.pcloud.update_imagem()
+                else:
+                    t_ = self.pcloud.depth_img_pc.copy()
+                    _, maximo, _, _= cv2.minMaxLoc(t_)
+                    t_ = t_ / maximo * 255 
+                    t_ = t_.astype(np.uint8)
+                    cv2.imshow(nome, t_)
 
             if GRAF3D == 1:
                 self.pcloud.graficos() # mostra os graficos
-
 
             """
             self.tempinho = time.perf_counter()

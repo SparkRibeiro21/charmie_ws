@@ -3,9 +3,9 @@ from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool, Float32, Int16
-from geometry_msgs.msg import Pose2D
+from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, Yolov8Pose
+from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, RequestPointCloud, RetrievePointCloud, BoundingBox, BoundingBoxAndPoints
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
@@ -26,7 +26,7 @@ NUMBER_OF_LEG_KP_TO_BE_DETECTED = 2
 MIN_KP_CONF_VALUE = 0.5
 
 # TO DO TIAGO RIBEIRO:
-# - add x_rel and y_rel to detectedperson
+# - add x_rel and y_rel to detectedperson and dist
 
 DRAW_PERSON_CONF = True
 DRAW_PERSON_ID = True
@@ -58,16 +58,25 @@ class YoloPoseNode(Node):
 
         # Intel Realsense Subscribers
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
-        # self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
         
+        # Point Cloud
+        self.request_point_cloud_publisher = self.create_publisher(RequestPointCloud, 'ask_point_cloud', 10) 
+        self.retrieve_point_cloud_subscriber = self.create_subscription(RetrievePointCloud, "get_point_cloud", self.get_point_cloud_callback, 10)
 
         # to calculate the FPS
         self.prev_frame_time = 0 # used to record the time when we processed last frame
         self.new_frame_time = 0 # used to record the time at which we processed current frame
         
         self.br = CvBridge()
-        # self.yolov8_pose = Yolov8Pose()
-        # self.yolov8_pose_filtered = Yolov8Pose()
+        self.rgb_img = Image()
+        self.detpth_img = Image()
+
+        self.results = []
+        self.waiting_for_pcloud = False
+        self.new_pcloud = RetrievePointCloud()
+        self.tempo_total = time.perf_counter()
+        self.center_torso_person_list = []
 
         self.N_KEYPOINTS = 17
         self.NUMBER_OF_LEGS_KP = 4
@@ -129,98 +138,204 @@ class YoloPoseNode(Node):
 
     def get_color_image_callback(self, img: Image):
         self.get_logger().info('Receiving color video frame')
+        
+
+        if not self.waiting_for_pcloud:
+            
+
+            self.tempo_total = time.perf_counter()
+            
+            self.rgb_img = img
+
+            # ROS2 Image Bridge for OpenCV
+            current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
+            # current_frame_draw = current_frame.copy()
+
+            # Getting image dimensions
+            self.img_width = self.rgb_img.width
+            self.img_height = self.rgb_img.height
+            # print(self.img_width)
+            # print(self.img_height)
+
+
+
+            # Launch Yolov8n-pose
+            # results = self.model(current_frame)
+            # ti = time.perf_counter()
+
+            # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
+            
+            # tempo_calculo = time.perf_counter()
+            self.results = self.model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+            # annotated_frame = self.results[0].plot()
+            # print('tempo calculo = ', time.perf_counter() - tempo_calculo)   # imprime o tempo de calculo em segundos
+
+            # tf = time.perf_counter()
+
+            # type(results) = <class 'list'>
+            # type(results[0]) = <class 'ultralytics.engine.results.Results'>
+            # type(results[0].keypoints) = <class 'ultralytics.engine.results.Keypoints'>
+            # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
+            
+            # /*** ultralytics.engine.results.Results ***/
+            # A class for storing and manipulating inference results.
+            # Attributes:
+            # Name 	        Type 	    Description
+            # orig_img 	    ndarray 	The original image as a numpy array.
+            # orig_shape 	tuple 	    The original image shape in (height, width) format.
+            # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
+            # masks 	    Masks 	    A Masks object containing the detection masks.
+            # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
+            # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
+            # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
+            # names 	    dict 	    A dictionary of class names.
+            # path 	        str 	    The path to the image file.
+            # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
+            
+            # /*** ultralytics.engine.results.Keypoints ***/
+            # A class for storing and   manipulating detection keypoints.
+            # Attributes:
+            # Name 	Type 	Description
+            # xy 	Tensor 	A collection of keypoints containing x, y coordinates for each detection.
+            # xyn 	Tensor 	A normalized version of xy with coordinates in the range [0, 1].
+            # conf 	Tensor 	Confidence values associated with keypoints if available, otherwise None.
+
+            # /*** ultralytics.engine.results.Boxes ***/
+            # A class for storing and manipulating detection boxes.
+            # Attributes:
+            # Name      Type                Description
+            # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
+            # conf 	    Tensor | ndarray 	The confidence values of the boxes.
+            # cls 	    Tensor | ndarray 	The class values of the boxes.
+            # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
+            # xywh 	    Tensor | ndarray 	The boxes in xywh format.
+            # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
+            # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
+            # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
+
+
+            # Index     Keypoint
+            # 0         Nose                              2   1
+            # 1         Left Eye                         / \ / \ 
+            # 2         Right Eye                       4   0   3 
+            # 3         Left Ear                        
+            # 4         Right Ear                              
+            # 5         Left Shoulder                  6---------5 
+            # 6         Right Shoulder                / |       | \  
+            # 7         Left Elbow                   /  |       |  \  
+            # 8         Right Elbow                8/   |       |   \7  
+            # 9         Left Wrist                  \   |       |   /
+            # 10        Right Wrist                10\  |       |  /9 
+            # 11        Left Hip                        ---------
+            # 12        Right Hip                     12|       |11  
+            # 13        Left Knee                       |       |
+            # 14        Right Knee                    14|       |13  
+            # 15        Left Ankle                      |       |
+            # 16        Right Ankle                   16|       |15  
+
+            # Calculate the number of persons detected
+            num_persons = len(self.results[0].keypoints)
+            if not self.results[0].keypoints.has_visible:
+                num_persons = 0
+
+            print("___START___")
+
+            self.center_torso_person_list = []
+            req = RequestPointCloud()
+            req.retrieve_bbox = False
+            for person_idx in range(num_persons):
+                keypoints_id = self.results[0].keypoints[person_idx]
+                boxes_id = self.results[0].boxes[person_idx]
+
+                bb = BoundingBox()
+                bb.box_top_left_x = int(boxes_id.xyxy[0][0])
+                bb.box_top_left_y = int(boxes_id.xyxy[0][1])
+                bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
+                bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+
+                person_center_x = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][0] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][0] + keypoints_id.xy[0][self.HIP_LEFT_KP][0] + keypoints_id.xy[0][self.HIP_RIGHT_KP][0]) / 4)
+                person_center_y = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][1] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][1] + keypoints_id.xy[0][self.HIP_LEFT_KP][1] + keypoints_id.xy[0][self.HIP_RIGHT_KP][1]) / 4)
+                self.center_torso_person_list.append((person_center_x, person_center_y))
+
+                nose_point = Pose2D()
+                nose_point.x = float(int(keypoints_id.xy[0][self.NOSE_KP][0]))
+                nose_point.y = float(int(keypoints_id.xy[0][self.NOSE_KP][1]))
+
+                torso_center_point = Pose2D()
+                torso_center_point.x = float(person_center_x)
+                torso_center_point.y = float(person_center_y)
+
+                # more points can be added here...
+
+                aux = BoundingBoxAndPoints()
+                aux.bbox = bb
+                aux.requested_point_coords.append(nose_point)
+                aux.requested_point_coords.append(torso_center_point)
+
+                req.data.append(aux)
+
+            self.waiting_for_pcloud = True
+            self.request_point_cloud_publisher.publish(req)
+            
+            # tempo_calculo = time.perf_counter()
+            # while self.waiting_for_pcloud:
+                # pass
+
+            # time.sleep(0.1)
+
+            # print('tempo calculo = ', time.perf_counter() - tempo_calculo)   # imprime o tempo de calculo em segundos
+
+            # print("passei")
+
+
+
+            # self.new_pcloud = RetrievePointCloud()
+
+            # while not self.waiting_for_pcloud and t < 0.1:
+
+            # function that adds the bounding boxes and selected points to a vector that is sent to point cloud pkg to calculate the people positions
+            # for person_idx in range(num_persons):
+                # adiciona bb a um vetor
+                # adiciona quais os kp a ver (nariz e centro do corpo ???)
+                # 
+
+            # watchdog com tempo maximo caso não responda com coordenadas
+            # coloca x,y,z a 0,0,0
+
+            # no for seguinte atribuir as coordenadas de cada pessoa à pessoa correcta 
+
+
+
+
+
+
+    def post_receiving_pcloud(self):
+
 
         # ROS2 Image Bridge for OpenCV
-        current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
+        current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
         current_frame_draw = current_frame.copy()
 
-        # Getting image dimensions
-        self.img_width = img.width
-        self.img_height = img.height
-        # print(self.img_width)
-        # print(self.img_height)
-
-        # Launch Yolov8n-pose
-        # results = self.model(current_frame)
-
-        # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
-        results = self.model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-        annotated_frame = results[0].plot()
-
-        # type(results) = <class 'list'>
-        # type(results[0]) = <class 'ultralytics.engine.results.Results'>
-        # type(results[0].keypoints) = <class 'ultralytics.engine.results.Keypoints'>
-        # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
-        
-        # /*** ultralytics.engine.results.Results ***/
-        # A class for storing and manipulating inference results.
-        # Attributes:
-        # Name 	        Type 	    Description
-        # orig_img 	    ndarray 	The original image as a numpy array.
-        # orig_shape 	tuple 	    The original image shape in (height, width) format.
-        # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
-        # masks 	    Masks 	    A Masks object containing the detection masks.
-        # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
-        # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
-        # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
-        # names 	    dict 	    A dictionary of class names.
-        # path 	        str 	    The path to the image file.
-        # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
-        
-        # /*** ultralytics.engine.results.Keypoints ***/
-        # A class for storing and   manipulating detection keypoints.
-        # Attributes:
-        # Name 	Type 	Description
-        # xy 	Tensor 	A collection of keypoints containing x, y coordinates for each detection.
-        # xyn 	Tensor 	A normalized version of xy with coordinates in the range [0, 1].
-        # conf 	Tensor 	Confidence values associated with keypoints if available, otherwise None.
-
-        # /*** ultralytics.engine.results.Boxes ***/
-        # A class for storing and manipulating detection boxes.
-        # Attributes:
-        # Name      Type                Description
-        # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
-        # conf 	    Tensor | ndarray 	The confidence values of the boxes.
-        # cls 	    Tensor | ndarray 	The class values of the boxes.
-        # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
-        # xywh 	    Tensor | ndarray 	The boxes in xywh format.
-        # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
-        # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
-        # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
-
-
-        # Index     Keypoint
-        # 0         Nose                              2   1
-        # 1         Left Eye                         / \ / \ 
-        # 2         Right Eye                       4   0   3 
-        # 3         Left Ear                        
-        # 4         Right Ear                              
-        # 5         Left Shoulder                  6---------5 
-        # 6         Right Shoulder                / |       | \  
-        # 7         Left Elbow                   /  |       |  \  
-        # 8         Right Elbow                8/   |       |   \7  
-        # 9         Left Wrist                  \   |       |   /
-        # 10        Right Wrist                10\  |       |  /9 
-        # 11        Left Hip                        ---------
-        # 12        Right Hip                     12|       |11  
-        # 13        Left Knee                       |       |
-        # 14        Right Knee                    14|       |13  
-        # 15        Left Ankle                      |       |
-        # 16        Right Ankle                   16|       |15  
+        annotated_frame = self.results[0].plot()
 
         # Calculate the number of persons detected
-        num_persons = len(results[0].keypoints)
-        if not results[0].keypoints.has_visible:
+        num_persons = len(self.results[0].keypoints)
+        if not self.results[0].keypoints.has_visible:
             num_persons = 0
 
-        print("___START___")
         yolov8_pose = Yolov8Pose()
         yolov8_pose_filtered = Yolov8Pose()
         num_persons_filtered = 0
 
+
+
+        # self.center_torso_person_list = [] # lista de pontos centrais das pessoas por ordem que vem do yolo
+        # dados que vêm no req -> self.new_pcloud
+
+
         for person_idx in range(num_persons):
-            keypoints_id = results[0].keypoints[person_idx]
-            boxes_id = results[0].boxes[person_idx]
+            keypoints_id = self.results[0].keypoints[person_idx]
+            boxes_id = self.results[0].boxes[person_idx]
             ALL_CONDITIONS_MET = 1
             
             # print(keypoints_id.xy[0][0])
@@ -286,6 +401,10 @@ class YoloPoseNode(Node):
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                 print("Misses minimum number of body keypoints")
 
+
+            print(self.new_pcloud)
+            print(person_idx)
+            print(self.new_pcloud.coords[person_idx].center_coords.x) # .requested_point_coords)
 
             # adds people to "person_pose" without any restriction
             new_person = DetectedPerson()
@@ -465,6 +584,11 @@ class YoloPoseNode(Node):
                                     center_p = (int(keypoints_id.xy[0][kp][0]), int(keypoints_id.xy[0][kp][1]))
                                     cv2.circle(current_frame_draw, center_p, 5, c, -1)
 
+
+                        cv2.circle(current_frame_draw, self.center_torso_person_list[person_idx], 5, (255, 255, 255), -1)
+                        
+                        cv2.putText(current_frame_draw, '('+'1.2'+','+'2.3'+','+'3.4'+')', self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+
                         # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
                         # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
 
@@ -490,7 +614,7 @@ class YoloPoseNode(Node):
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.putText(current_frame_draw, 'np:' + str(num_persons_filtered) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-            # cv2.imshow("Yolo Pose Detection", annotated_frame)
+            cv2.imshow("Yolo Pose Detection", annotated_frame)
             cv2.waitKey(1)
         
         """
@@ -503,10 +627,11 @@ class YoloPoseNode(Node):
         cv2.imwrite("charmie_color_yp.jpg", current_frame) 
         time.sleep(1)
         """
-        
+        # print('tempo parcial = ', tf - ti)
+        print('tempo total = ', time.perf_counter() - self.tempo_total)   # imprime o tempo de calculo em segundos
 
-    # def get_aligned_depth_image_callback(self, img: Image):
-    #     pass
+    def get_aligned_depth_image_callback(self, img: Image):
+        pass
 
         # print(img.height, img.width)
         # current_frame = self.br.imgmsg_to_cv2(img, desired_encoding="passthrough")
@@ -534,6 +659,13 @@ class YoloPoseNode(Node):
         cv2.imshow("Intel RealSense Depth Alligned", current_frame)
         cv2.waitKey(1) 
         """       
+
+    def get_point_cloud_callback(self, ret: RetrievePointCloud()):
+        
+        if self.waiting_for_pcloud:
+            self.waiting_for_pcloud = False
+            self.new_pcloud = ret
+            self.post_receiving_pcloud()
         
     def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id):
         # receives the box and keypoints of a specidic person and returns the detected person 
@@ -548,8 +680,8 @@ class YoloPoseNode(Node):
 
         new_person.index_person = int(person_id)
         new_person.conf_person = float(boxes_id.conf)
-        new_person.x_rel = 0.0 # MISSING!!!
-        new_person.y_rel = 0.0 # MISSING!!!
+        # new_person.x_rel = 0.0 # MISSING!!!
+        # new_person.y_rel = 0.0 # MISSING!!!
         new_person.box_top_left_x = int(boxes_id.xyxy[0][0])
         new_person.box_top_left_y = int(boxes_id.xyxy[0][1])
         new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])

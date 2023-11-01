@@ -22,12 +22,15 @@ find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/BoundingBox.msg"
+  "msg/BoundingBoxAndPoints.msg"
   "msg/DetectedObject.msg"
   "msg/DetectedPerson.msg"
   "msg/Encoders.msg"
   "msg/NeckPosition.msg"
   "msg/ObstacleInfo.msg"
   "msg/Obstacles.msg"
+  "msg/PointCloudCoordinates.msg"
   "msg/PS4Controller.msg"
   "msg/RequestPointCloud.msg"
   "msg/RetrievePointCloud.msg"
