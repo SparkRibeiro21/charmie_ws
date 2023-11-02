@@ -230,7 +230,7 @@ class YoloPoseNode(Node):
             if not self.results[0].keypoints.has_visible:
                 num_persons = 0
 
-            print("___START___")
+            print("___START___ num_persons =", num_persons)
 
             self.center_torso_person_list = []
             req = RequestPointCloud()
@@ -293,7 +293,6 @@ class YoloPoseNode(Node):
             boxes_id = self.results[0].boxes[person_idx]
             ALL_CONDITIONS_MET = 1
             
-            print(boxes_id.conf)
             
             legs_ctr = 0
             if keypoints_id.conf[0][self.KNEE_LEFT_KP] > MIN_KP_CONF_VALUE:
@@ -309,9 +308,9 @@ class YoloPoseNode(Node):
             if boxes_id.id == None:
                 person_id = 0 
 
-            print("legs_ctr = ", legs_ctr)
             print("id = ", person_id)
-            
+            print("conf", boxes_id.conf)
+            print("legs_ctr = ", legs_ctr)
 
             body_kp_high_conf_counter = 0
             for kp in range(self.N_KEYPOINTS - self.NUMBER_OF_LEGS_KP): # all keypoints without the legs
@@ -356,9 +355,9 @@ class YoloPoseNode(Node):
                 print(" - Misses not being right in front of the robot")
 
 
-            print(self.new_pcloud)
-            print(person_idx)
-            print(self.new_pcloud.coords[person_idx].requested_point_coords[1].x) # .requested_point_coords)
+            # print(self.new_pcloud)
+            # print(person_idx)
+            # print(self.new_pcloud.coords[person_idx].requested_point_coords[1].x) # .requested_point_coords)
 
             # adds people to "person_pose" without any restriction
             new_person = DetectedPerson()
