@@ -45,8 +45,8 @@ DIM = 6000
 
 # according to the kinematics at the moment, the origin is the actuation of the pan servo, therefore to consider the same (x, y, z) as the robot localisation
 # we must shift the axis so the new origin is the center of the robot on the floor
+X_SHIFT = (560//2)    # must configure so the 0 is the center of the robot, 560/2 is the robot radius
 Z_SHIFT = (1245+160) # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
-X_SHIFT = 0          # must configure so the 0 is the center of the robot
 
 flag_show_rgb_depth = True
 

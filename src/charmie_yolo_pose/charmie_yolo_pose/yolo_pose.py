@@ -15,8 +15,9 @@ import time
 ONLY_DETECT_PERSON_LEGS_VISIBLE = False       # if False only detects people whose legs are visible 
 MIN_PERSON_CONF_VALUE = 0.5                 # defines the minimum confidence value to be considered a person
 MIN_KP_TO_DETECT_PERSON = 4                 # this parameter does not consider the four legs keypoints 
-ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False    # only detects person right in front of the robot both on the x and y axis 
-
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT = True    # only detects person right in front of the robot both on the x and y axis 
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 1.8
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 0.5
 # must be adjusted if we want just to not detect the feet in cases where the walls are really low and we can see the knees
 # 3 may be used in cases where it just does not detect on of the feet 
 NUMBER_OF_LEG_KP_TO_BE_DETECTED = 2
@@ -321,9 +322,18 @@ class YoloPoseNode(Node):
 
             ########## afterwards what should be used to calculate center_comm_position should be the x and y person coordinates related to the robot 
             center_comm_position = False
-            if self.img_width*1/3 < int(keypoints_id.xy[0][self.NOSE_KP][0]) < self.img_width*2/3:
+
+            if 0 < self.new_pcloud.coords[person_idx].requested_point_coords[1].x/1000 < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD and \
+            -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD < self.new_pcloud.coords[person_idx].requested_point_coords[1].y/1000 < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
                 center_comm_position = True
-              
+
+            # if self.img_width*1/3 < int(keypoints_id.xy[0][self.NOSE_KP][0]) < self.img_width*2/3:
+            #     center_comm_position = True
+                                      
+            # cv2.putText(current_frame_draw, '('+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].x/1000,2))+
+            #             ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].y/1000,2))+
+            #             ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].z/1000,2))+')', self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+
 
             # checks whether the person confidence is above a defined level
             if not boxes_id.conf >= MIN_PERSON_CONF_VALUE:
@@ -343,7 +353,7 @@ class YoloPoseNode(Node):
             # checks if flag to detect people whose legs are visible 
             if not center_comm_position and ONLY_DETECT_PERSON_RIGHT_IN_FRONT:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print("Misses minimum number of body keypoints")
+                print(" - Misses not being right in front of the robot")
 
 
             print(self.new_pcloud)
