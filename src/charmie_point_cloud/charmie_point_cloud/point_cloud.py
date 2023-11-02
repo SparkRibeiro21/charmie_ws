@@ -3,7 +3,6 @@ import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import Image
-from std_msgs.msg import Bool, String, Float32
 from charmie_interfaces.msg import NeckPosition, RequestPointCloud, RetrievePointCloud, PointCloudCoordinates
 from geometry_msgs.msg import Point, Pose2D
 from cv_bridge import CvBridge, CvBridgeError
@@ -12,16 +11,12 @@ import numpy as np
 import cv2
 import math
 import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import Normalize
 import time
 
-
-
-# x do robô para a frente
-# y da direita para a esquerda
-# z de baixo para cima
-
+# x increases from the back of the robot to the front of the robot
+# y increases from the robot left to the robot right
+# z increases from the floor to the ceiling
 
 DEBUG_DRAW = False
 
@@ -29,10 +24,10 @@ GRAF3D = False
 GRAF1 = False
 GRAF2 = True
 
-x1 = -1     # coordenadas do rato
-y1 = -1     # coordenadas do rato
-WIDTH = 100 # largura da Bounding box
-HEIGHT = 100 # altura da Bounding box
+x1 = -1     # mouse coordinate
+y1 = -1     # mouse coordinate
+WIDTH = 100 # width of bounding box for debug
+HEIGHT = 100 # height of ounding box for debug
 
 # maximum and minimum distnace considered, outside this range is 0
 MAX_DIST = 6000
@@ -50,7 +45,8 @@ DIM = 6000
 
 # according to the kinematics at the moment, the origin is the actuation of the pan servo, therefore to consider the same (x, y, z) as the robot localisation
 # we must shift the axis so the new origin is the center of the robot on the floor
-Z_SHIFT = (1245+160) # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara
+Z_SHIFT = (1245+160) # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
+X_SHIFT = 0          # must configure so the 0 is the center of the robot
 
 flag_show_rgb_depth = True
 
@@ -60,7 +56,6 @@ if DEBUG_DRAW:
     cv2.namedWindow(nome)
 
 
-
 class PointCloud():
     def __init__(self):
         print("New PointCloud Class Initialised")
@@ -68,7 +63,7 @@ class PointCloud():
         global linhas, colunas, nome
         # print(linhas, colunas)
         
-        # Parametros intrinsecos da Camera (Dados pelo Tiago por email)
+        # Parametros intrinsecos da Camera (Dados pelo Tiago)
         self.fx = 633.811950683593  # Distancia Focal em pixels (x-direction)
         self.fy = 633.234680175781  # Distancia Focal em pixels (y-direction)
         self.cx = 629.688598632812  # Ponto Principal em pixels (x-coordinate)
@@ -81,24 +76,13 @@ class PointCloud():
         self.d =    [ 25,   0, 145]
         self.l =    [ 28,   0, 130]
 
-        # self.T=np.identity(4)
         self.inverse_matrix = np.zeros([4, 4]) 
         # print(self.inverse_matrix)
-
-        # self.Z_MIN_A_VER = -1100
-        # self.inc = 5
 
         self.rgb_img_pc = np.zeros((linhas,colunas,3), dtype=np.uint8)
         self.depth_img_pc = np.zeros((linhas,colunas), dtype=np.uint8)
 
-        # self.points = []  # Inicializa um array vazio para os points
-        # self.lista_points = []   # [u,v] [linha, coluna]  [cima-baixo, esquerda-direita]
-        # self.FINAL1 = []
-        # self.FINAL2 = []
-        # self.FINAL3 = []
         self.ESCALA = 16  # Por questões de eficiencia, só vamos considerar 1 pixel em cada 4
-
-        # self.retrieve_bbox = False
 
         self.font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -129,7 +113,7 @@ class PointCloud():
 
 
         self.actualiza_tetas(' ')
-        self.robo()      # calcula a cinematica uma vez para os inverse_matrix ter valores
+        self.robo()      # calculates the kinematics so the inverse matrix has initial values
         self.converter_2D_3D(0, 0, linhas, colunas)
 
         if GRAF3D == 1:
@@ -166,9 +150,7 @@ class PointCloud():
                 texto = "( {}, {} )".format(x, y)
                 cv2.putText(nova, texto, (65, 50), self.font, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
                 # cv2.imshow(nome, nova)
-            
-            
-                
+                            
                 if flag_show_rgb_depth:
                     self.update_imagem()
                 else:
@@ -179,7 +161,6 @@ class PointCloud():
                     cv2.imshow(nome, t_)
             
             
-
     def Trans(self, tx, ty, tz):
         M = np.identity(4)
         M[0][3] = tx
@@ -283,23 +264,9 @@ class PointCloud():
             for i in range(self.DOF):
                 self.teta[i] = 0
 
-        # self.show_images()
-
-
-    # def show_images(self):
-        # quando pressionar uma tecla qualquer, redesenha tudo para actualizar as variáveis
-        # nova = self.jpg.copy()
-        # cv2.rectangle(self.rgb_img_pc, (x1, y1), (x1+WIDTH, y1+HEIGHT), 255, 2)
-        # cv2.imshow("New Image", self.rgb_img_pc)
-        # cv2.imshow("Depth Image", self.depth_img_pc)
-        # print("RGB:", self.rgb_img_pc.shape, "DEPTH:", self.depth_img_pc.shape)
-        # cv2.waitKey(1)
-        # pass
 
     def converter_2D_3D_unico(self, u, v):
-        # global txt, cx, cy, fx, fy
 
-        # depth = txt[u][v]
         depth = self.depth_img_pc[u][v]
         if depth == 0:      # Só faz os cálculos de o ponto for válido (OPTIMIZAÇÃO)
 
@@ -311,8 +278,7 @@ class PointCloud():
             nao_zeros = (self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
             depth = np.min(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
             #print('u, v, min ', u, v, depth)
-            #result = [0, 0, 0]
-        #else:
+
         Z = depth
         X = (v - self.cx) * depth / self.fx
         Y = (u - self.cy) * depth / self.fy
@@ -321,8 +287,8 @@ class PointCloud():
         yn = -X
         zn = -Y
         result = np.dot(self.inverse_matrix, [xn, yn, zn, 1])
-        # result[0] += correcao no eixo dos xx
-        result[2] += Z_SHIFT  # Z=0 passa a ser o chão do laboratorio
+        result[0] += X_SHIFT
+        result[2] += Z_SHIFT  # Z=0 is the floor
         result = result[0:3].astype(np.int16)
         result = result.tolist()
         return result
@@ -330,11 +296,6 @@ class PointCloud():
     
     def converter_2D_3D(self, u, v, height, width):
         
-        # self.points = []  # Initialize an empty list for storing points
-        # self.FINAL1 = []
-        # self.FINAL2 = []
-        # self.FINAL3 = []
-
         points = []
 
         # print(self.inverse_matrix)
@@ -354,8 +315,8 @@ class PointCloud():
                     yn = -X
                     zn = -Y
                     result = np.dot(self.inverse_matrix, [xn, yn, zn, 1])
-                    # result[0] += correcao no eixo dos xx
-                    result[2] += Z_SHIFT  # Z=0 passa a ser o chão do laboratorio 
+                    result[0] += X_SHIFT
+                    result[2] += Z_SHIFT  # Z=0 is the floor
 
                     result = result[0:3].astype(np.int16)
                     result = result.tolist()
@@ -364,46 +325,6 @@ class PointCloud():
         return points
     
     
-    """               
-                # print(u1, v1, depth)
-                X = (v1 - self.cx) * depth / self.fx
-                Y = (u1 - self.cy) * depth / self.fy
-                Z = depth
-
-                xn = Z
-                yn = -X
-                zn = -Y
-                # CONFIRMAR INVERSE MATRIXX É MESMO T
-                result = np.dot(self.inverse_matrix, [xn, yn, zn, 1])
-                # print(".")
-                #if result[2]>Z_MIN_A_VER:  # Para limpar os pontos do chão
-                self.points.append([result[0], result[1], result[2]])
-                self.FINAL3.append([result[0], result[1], result[2]])
-        #print('FINAL3=', FINAL3)
-
-        # calcula o ponto central da bounding box
-        coord = self.especifico(height/ 2, width/2, height, width)
-        self.FINAL1 = coord
-        print('FINAL1=', self.FINAL1)
-
-        # DEPOIS TEM QUE SE APAGAR ISTO
-        # calcula uma lista de pontos
-        # self.lista_points = []
-
-        print("lp:", self.lista_points)
-
-        nova = self.rgb_img_pc.copy()
-
-        for i in range(len(self.lista_points)):
-            # cv2.circle(nova, (self.lista_points[i][1], self.lista_points[i][0]), 3, (255,255,255), 1)
-            coord = self.especifico(self.lista_points[i][0]-u, self.lista_points[i][1]-v, height, width)
-            self.FINAL2.append(coord)
-        cv2.imshow("DEBUG DRAWINGS", nova)
-        print('FINAL2=', self.FINAL2)
-
-        self.points = np.array(self.points)  # Convert the list of points to a numpy array para desenhar os graficos a 3D
-    """
-
     def graficos(self):
 
         global DIM
@@ -488,15 +409,6 @@ class PointCloud():
             if GRAF2:
 
                 self.ax5.clear()
-
-                # junto os pontos todos das N Bounding Boxes (OPTIMIZAÇÃO)
-                # points = self.ENVIO[0][2].copy()
-                # for i in range(1,len(self.ENVIO)):
-                #     points = np.concatenate([points, self.ENVIO[i][2]])
-
-                # third_elements = [point[2] for point in points]
-                # norm = Normalize(vmin=min(third_elements), vmax=max(third_elements))
-                # colors = norm(third_elements)  # Map z values to the [0, 1] range using the Normalize object
 
                 norm = Normalize(vmin=min(points[:,2]), vmax=max(points[:,2]))
                 colors = norm(points[:,2])  # Map z values to the [0, 1] range using the Normalize object
@@ -629,9 +541,6 @@ class PointCloud():
         cv2.imshow(nome, nova)
 
 
-
-
-
 class PointCloudNode(Node):
 
     def __init__(self):
@@ -651,8 +560,6 @@ class PointCloudNode(Node):
         # RetrievePointCloud
         self.retrieve_point_cloud_publisher = self.create_publisher(RetrievePointCloud, "get_point_cloud", 10)
 
-        # self.create_timer(0.01, self.get_request_point_cloud_callback)
-
         # Point Cloud Instance
         self.br = CvBridge()
         self.rgb_img = Image()
@@ -662,8 +569,7 @@ class PointCloudNode(Node):
 
 
         if DEBUG_DRAW:
-            lb=cv2.setMouseCallback(nome, self.pcloud.click_event)      # inicializa a rotina do rato
-
+            lb=cv2.setMouseCallback(nome, self.pcloud.click_event)      # initiates the mouse debug event detection
         
         self.tempo_calculo = 0
         self.tempo_frame = 0
@@ -702,25 +608,9 @@ class PointCloudNode(Node):
             self.pcloud.rgb_img_pc = rgb_frame
             self.pcloud.depth_img_pc = depth_frame_res
         
-            """
-            self.pcloud.lista_points = []
-            for i in range(len(req.requested_point_coords)):
-                # p = Pose2D()
-                # p = req.
-                self.pcloud.lista_points.append([req.requested_point_coords[i].y, req.requested_point_coords[i].x])   # [u,v] [linha, coluna]  [cima-baixo, esquerda-direita]
-
-            print(self.pcloud.lista_points)
-            self.pcloud.retrieve_bbox = req.retrieve_bbox 
-
-            """
             tecla = cv2.waitKey(1)  # le uma tecla
             if tecla != 27:         # se não for a tecla de ESCAPE, faz todo o processamento
                 self.pcloud.actualiza_tetas(tecla)  # actualiza as variaveis Theta da cinematica
-            # else:
-                # self.pcloud.show_images()
-            
-            #  T = self.pcloud.robo()              # calcula a matris inversa da cabeça toda
-           
 
             # imprime as variaveis todas apenas para DEBUG no terminal
             print("[ ", end=' ')
@@ -730,19 +620,9 @@ class PointCloudNode(Node):
             print('inc=', inc, '  ELEV=', ELEV, '  AZIM=', AZIM, ' DIM=', DIM, ' Z_MIN_A_VER=', Z_MIN_A_VER, ' WIDTH=', WIDTH, ' HEIGHT=', HEIGHT, ' ESCALA=', self.pcloud.ESCALA)
             print("tetas = ", self.pcloud.teta)
             
-
-            # conversion from RequestedPointCloud to self.pcloud.RECEBO
-            # print
-
-            # print("REQ:")
-            # for i in range(len(req.data)):
-                # print(req.data[i].bbox, " --- ", req.data[i].requested_point_coords)
-            
-
             self.pcloud.RECEBO = []
             for i in range(len(req.data)):
                 aux = []
-                # print(req.data[i].bbox.box_top_left_y)
                 aux.append([req.data[i].bbox.box_top_left_y, req.data[i].bbox.box_top_left_x, req.data[i].bbox.box_height, req.data[i].bbox.box_width])
 
                 a = []
@@ -750,52 +630,8 @@ class PointCloudNode(Node):
                     a.append([int(req.data[i].requested_point_coords[j].y), int(req.data[i].requested_point_coords[j].x)])
 
                 aux.append(a)
-                # bbox = self.RECEBO[i]
-                # u_inicial, v_inicial, HEIGHT, WIDTH = bbox[0]
-                # for j in range(len(bbox[1])):
                 self.pcloud.RECEBO.append(aux)
 
-            # print("RECEBO = ", self.pcloud.RECEBO)
-
-
-
-
-            # for i in range(len(self.RECEBO)):
-            #     res = self.ENVIO[i]
-            #     cv2.rectangle(nova, (v_inicial, u_inicial), (v_inicial + WIDTH, u_inicial + HEIGHT), (255, 0, 0), 2)
-            #     cv2.circle(nova, (v_inicial + WIDTH // 2, u_inicial + HEIGHT // 2), 3, (0, 0, 255), 2)
-            #     str_central = "{}, {}, {}".format(int(res[0][0])/1000, int(res[0][1])/1000, int(res[0][2])/1000)
-            #     cv2.putText(nova, str_central, (v_inicial + WIDTH // 2 + 20, u_inicial + HEIGHT // 2 + 6), self.font, 0.5, (0, 0, 255), 1,
-            #                 cv2.LINE_AA)
-            #     for j in range(len(bbox[1])):
-            #         bb = bbox[1][j]
-            #         out = res[1][j]
-            #         cv2.circle(nova, (bb[1], bb[0]), 3, (255, 0, 0), 2)
-            #         str_temp = "{}, {}, {}".format(out[0]/1000, out[1]/1000, out[2]/1000)
-            #         cv2.putText(nova, str_temp, (bb[1] + 20, bb[0] + 6), self.font, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-
-
-            """
-            self.pcloud.RECEBO = [
-                [
-                    # bounding box 1
-                    [367, 324, 120, 130],   # U, V, Height, Width
-                    [[367 + 25, 324 + 75], [367 + 75, 324 + 25], [367 + 75, 324 + 75]]  # Pontos especificos
-                ],
-                [
-                    # bounding box 2
-                    [81, 624, 230, 110],
-                    [[81 + 25, 624 + 75], [81 + 75, 624 + 25], [81 + 75, 624 + 75]]
-                ],
-                [
-                    # bounding box 3
-                    [350, 930, 240, 280],
-                    [[350 + 25, 930 + 75], [350 + 75, 930 + 25], [350 + 75, 930 + 75]]
-                ]
-            ]
-            """
-
-            
             self.pcloud.ENVIO = []      # limpo a variavel onde vou guardar as minhas respostas, para este novo ciclo
             self.tempo_calculo = time.perf_counter()
 
@@ -827,14 +663,12 @@ class PointCloudNode(Node):
                 temp.append(resp_todos)
                 self.pcloud.ENVIO.append(temp)
 
-
             # convert ENVIO into RetrievePointCloud ROS Variable
-            # print("RETRIEVE START")
             ret = RetrievePointCloud()
             if len(self.pcloud.ENVIO) > 0:
                 for cc in self.pcloud.ENVIO:
-                    # print(cc)# , cc[1])
-                    # print("?")
+                    # print(cc)
+
                     pcc = PointCloudCoordinates()
 
                     point_c = Point()
@@ -866,25 +700,16 @@ class PointCloudNode(Node):
 
                     pcc.bbox_point_coords = bb_list
 
-                    # print("-")
                     ret.coords.append(pcc)
-            # print("RETRIEVE END")
 
             self.retrieve_point_cloud_publisher.publish(ret)
-
-
-            # geometry_msgs/Point center_coords
-            # geometry_msgs/Point[] requested_point_coords
-            # geometry_msgs/Point[] bbox_point_coords
-
-
+            
             # imprime os tempos de processamento e da frame
             print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
             print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
             self.tempo_frame = time.perf_counter()
 
             # desenha tudo na janela da imagem 2D
-            
             if DEBUG_DRAW:
                 if flag_show_rgb_depth:
                     self.pcloud.update_imagem()
@@ -897,51 +722,6 @@ class PointCloudNode(Node):
 
             if GRAF3D == 1:
                 self.pcloud.graficos() # mostra os graficos
-
-            """
-            self.tempinho = time.perf_counter()
-            # self.pcloud.converter_2D_3D(y1, x1, HEIGHT, WIDTH)      # converte as coordenadas de (u,v) para 3D (x, y, z)
-            # self.pcloud.converter_2D_3D(0, 0, height, width)      # converte as coordenadas de (u,v) para 3D (x, y, z)
-            self.pcloud.converter_2D_3D(req.box_top_left_y, req.box_top_left_x, req.box_height, req.box_width)      # converte as coordenadas de (u,v) para 3D (x, y, z)
-            print('tempo_conver = ', time.perf_counter() - self.tempinho)   # imprime o tempo de calculo em segundos
-            self.tempinho = time.perf_counter()
-            if GRAF3D == 1:
-                self.pcloud.graficos()      # mostra os graficos
-
-
-
-            # geometry_msgs/Point center_coords
-            # geometry_msgs/Point[] requested_point_coords
-            # geometry_msgs/Point[] bbox_point_coords
-
-            answer = RetrievePointCloud()
-            answer.center_coords.x = self.pcloud.FINAL1[0]
-            answer.center_coords.y = self.pcloud.FINAL1[1]
-            answer.center_coords.z = self.pcloud.FINAL1[2]
-            print(answer.center_coords)
-            print("----")
-
-            for i in range(len(self.pcloud.FINAL2)):
-                p = Point()
-                p.x = self.pcloud.FINAL2[i][0]
-                p.y = self.pcloud.FINAL2[i][1]
-                p.z = self.pcloud.FINAL2[i][2]
-                print(p)
-                answer.requested_point_coords.append(p)
-            print("====")
-
-            if req.retrieve_bbox:
-                for i in range(len(self.pcloud.FINAL3)):
-                    p = Point()
-                    p.x = self.pcloud.FINAL3[i][0]
-                    p.y = self.pcloud.FINAL3[i][1]
-                    p.z = self.pcloud.FINAL3[i][2]
-                    answer.bbox_point_coords.append(p)
-
-                    print(p)
-                print("####")
-            self.retrieve_point_cloud_publisher.publish(answer)
-            """
 
 
 def main(args=None):

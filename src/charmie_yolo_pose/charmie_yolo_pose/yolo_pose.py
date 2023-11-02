@@ -5,13 +5,10 @@ from rclpy.node import Node
 from std_msgs.msg import Bool, Float32, Int16
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, RequestPointCloud, RetrievePointCloud, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, RequestPointCloud, RetrievePointCloud, BoundingBox, BoundingBoxAndPoints, PointCloudCoordinates
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
-# import array  
-# import sys
-# import math
 import time
 
 # configurable parameters through ros topics
@@ -25,8 +22,6 @@ ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False    # only detects person right in fron
 NUMBER_OF_LEG_KP_TO_BE_DETECTED = 2
 MIN_KP_CONF_VALUE = 0.5
 
-# TO DO TIAGO RIBEIRO:
-# - add x_rel and y_rel to detectedperson and dist
 
 DRAW_PERSON_CONF = True
 DRAW_PERSON_ID = True
@@ -139,10 +134,8 @@ class YoloPoseNode(Node):
     def get_color_image_callback(self, img: Image):
         self.get_logger().info('Receiving color video frame')
         
-
         if not self.waiting_for_pcloud:
             
-
             self.tempo_total = time.perf_counter()
             
             self.rgb_img = img
@@ -162,9 +155,7 @@ class YoloPoseNode(Node):
             # Launch Yolov8n-pose
             # results = self.model(current_frame)
             # ti = time.perf_counter()
-
             # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
-            
             # tempo_calculo = time.perf_counter()
             self.results = self.model.track(current_frame, persist=True, tracker="bytetrack.yaml")
             # annotated_frame = self.results[0].plot()
@@ -276,38 +267,7 @@ class YoloPoseNode(Node):
 
             self.waiting_for_pcloud = True
             self.request_point_cloud_publisher.publish(req)
-            
-            # tempo_calculo = time.perf_counter()
-            # while self.waiting_for_pcloud:
-                # pass
-
-            # time.sleep(0.1)
-
-            # print('tempo calculo = ', time.perf_counter() - tempo_calculo)   # imprime o tempo de calculo em segundos
-
-            # print("passei")
-
-
-
-            # self.new_pcloud = RetrievePointCloud()
-
-            # while not self.waiting_for_pcloud and t < 0.1:
-
-            # function that adds the bounding boxes and selected points to a vector that is sent to point cloud pkg to calculate the people positions
-            # for person_idx in range(num_persons):
-                # adiciona bb a um vetor
-                # adiciona quais os kp a ver (nariz e centro do corpo ???)
-                # 
-
-            # watchdog com tempo maximo caso não responda com coordenadas
-            # coloca x,y,z a 0,0,0
-
-            # no for seguinte atribuir as coordenadas de cada pessoa à pessoa correcta 
-
-
-
-
-
+        
 
     def post_receiving_pcloud(self):
 
@@ -327,28 +287,12 @@ class YoloPoseNode(Node):
         yolov8_pose_filtered = Yolov8Pose()
         num_persons_filtered = 0
 
-
-
-        # self.center_torso_person_list = [] # lista de pontos centrais das pessoas por ordem que vem do yolo
-        # dados que vêm no req -> self.new_pcloud
-
-
         for person_idx in range(num_persons):
             keypoints_id = self.results[0].keypoints[person_idx]
             boxes_id = self.results[0].boxes[person_idx]
             ALL_CONDITIONS_MET = 1
             
-            # print(keypoints_id.xy[0][0])
-            # print(keypoints_id.conf)   
-
             print(boxes_id.conf)
-            
-            # guardar na variavel criada do yolo pose 
-            # print(keypoints_id.conf[0][self.KNEE_LEFT_KP], 
-            #       keypoints_id.conf[0][self.KNEE_RIGHT_KP],
-            #       keypoints_id.conf[0][self.ANKLE_LEFT_KP], 
-            #       keypoints_id.conf[0][self.ANKLE_RIGHT_KP]
-            #       )
             
             legs_ctr = 0
             if keypoints_id.conf[0][self.KNEE_LEFT_KP] > MIN_KP_CONF_VALUE:
@@ -404,11 +348,11 @@ class YoloPoseNode(Node):
 
             print(self.new_pcloud)
             print(person_idx)
-            print(self.new_pcloud.coords[person_idx].center_coords.x) # .requested_point_coords)
+            print(self.new_pcloud.coords[person_idx].requested_point_coords[1].x) # .requested_point_coords)
 
             # adds people to "person_pose" without any restriction
             new_person = DetectedPerson()
-            new_person = self.add_person_to_detectedperson_msg(boxes_id, keypoints_id)
+            new_person = self.add_person_to_detectedperson_msg(boxes_id, keypoints_id, self.center_torso_person_list[person_idx], self.new_pcloud.coords[person_idx].requested_point_coords[1])
             yolov8_pose.persons.append(new_person)
 
             
@@ -587,7 +531,9 @@ class YoloPoseNode(Node):
 
                         cv2.circle(current_frame_draw, self.center_torso_person_list[person_idx], 5, (255, 255, 255), -1)
                         
-                        cv2.putText(current_frame_draw, '('+'1.2'+','+'2.3'+','+'3.4'+')', self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        cv2.putText(current_frame_draw, '('+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].x/1000,2))+
+                                    ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].y/1000,2))+
+                                    ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].z/1000,2))+')', self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
 
                         # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
                         # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
@@ -667,7 +613,7 @@ class YoloPoseNode(Node):
             self.new_pcloud = ret
             self.post_receiving_pcloud()
         
-    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id):
+    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, center_person, p_localisation):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
@@ -675,13 +621,11 @@ class YoloPoseNode(Node):
         if boxes_id.id == None:
             person_id = 0 
 
-        # adds people to "person_pose" without any restriction
         new_person = DetectedPerson()
 
         new_person.index_person = int(person_id)
         new_person.conf_person = float(boxes_id.conf)
-        # new_person.x_rel = 0.0 # MISSING!!!
-        # new_person.y_rel = 0.0 # MISSING!!!
+        new_person.position_relative = p_localisation
         new_person.box_top_left_x = int(boxes_id.xyxy[0][0])
         new_person.box_top_left_y = int(boxes_id.xyxy[0][1])
         new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
@@ -756,6 +700,9 @@ class YoloPoseNode(Node):
         new_person.kp_ankle_right_x = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][0])
         new_person.kp_ankle_right_y = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][1])
         new_person.kp_ankle_right_conf = float(keypoints_id.conf[0][self.ANKLE_RIGHT_KP])
+
+        new_person.body_center_x = center_person[0]
+        new_person.body_center_y = center_person[1]
 
         return new_person
 
