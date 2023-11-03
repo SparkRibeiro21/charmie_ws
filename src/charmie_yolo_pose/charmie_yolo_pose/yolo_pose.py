@@ -15,7 +15,7 @@ import time
 ONLY_DETECT_PERSON_LEGS_VISIBLE = False       # if False only detects people whose legs are visible 
 MIN_PERSON_CONF_VALUE = 0.5                 # defines the minimum confidence value to be considered a person
 MIN_KP_TO_DETECT_PERSON = 4                 # this parameter does not consider the four legs keypoints 
-ONLY_DETECT_PERSON_RIGHT_IN_FRONT = True    # only detects person right in front of the robot both on the x and y axis 
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False    # only detects person right in front of the robot both on the x and y axis 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 1.8
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 0.5
 # must be adjusted if we want just to not detect the feet in cases where the walls are really low and we can see the knees
@@ -569,7 +569,7 @@ class YoloPoseNode(Node):
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.putText(current_frame_draw, 'np:' + str(num_persons_filtered) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-            cv2.imshow("Yolo Pose Detection", annotated_frame)
+            # cv2.imshow("Yolo Pose Detection", annotated_frame)
             cv2.waitKey(1)
         
         """

@@ -5,7 +5,7 @@ from rclpy.node import Node
 from std_msgs.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import  Yolov8Pose, DetectedPerson, SpeechType, RobotSpeech, NeckPosition
+from charmie_interfaces.msg import  Yolov8Pose, DetectedPerson, NeckPosition
 
 import cv2
 import numpy as np
@@ -33,7 +33,7 @@ class Robot():
         self.lidar_radius = 0.050/2 # meter
         self.robot_x = 0.0
         self.robot_y = 0.0
-        self.robot_t = 0.0 # math.pi/4
+        self.robot_t = math.pi/4
         # self.neck_hor_angle = math.radians(30)
         # self.neck_ver_angle = 0.0 # NOT USED ...
         self.all_pos_x_val = []
@@ -60,8 +60,8 @@ class Robot():
         self.house_right_upp_name = "Bedroom"
 
         self.house_divisions = []
-        self.people_in_frame = []
-        self.people_in_frame_filtered = []
+        # self.people_in_frame = []
+        # self.people_in_frame_filtered = []
         
         self.coordinates_to_divisions(self.house_center_coordinates, self.house_left_bot_coordinates, self.house_left_bot_name)
         self.coordinates_to_divisions(self.house_center_coordinates, self.house_left_upp_coordinates, self.house_left_upp_name)
@@ -70,6 +70,8 @@ class Robot():
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
+
+        self.person_pose = Yolov8Pose()
         
 
 
@@ -172,10 +174,6 @@ class Robot():
             cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
                                          int(self.yc_adj - self.scale*self.robot_y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius)+2, (0, 255, 255), -1)
             
-            # neck
-            # cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int(self.xc_adj + self.scale*(self.robot_x+1)), int(self.yc_adj - self.scale*(self.robot_y+1))), (0,255,255), 1)
-            # cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int(self.xc_adj + self.scale*(self.robot_x-1)), int(self.yc_adj - self.scale*(self.robot_y+1))), (0,255,255), 1)
-
             # NECK DIRECTION, CAMERA FOV
             cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
                      (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4)),
@@ -185,9 +183,32 @@ class Robot():
                       int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
             
             
+            print("Test")
+            for person in self.person_pose.persons:
+                person_x = -person.position_relative.y/1000
+                person_y =  person.position_relative.x/1000
+                person_z =  person.position_relative.z/1000
+                # print(person.position_relative.x/1000, person.position_relative.y/1000)
 
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
+           
+                cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person_x*self.scale),
+                    int(self.yc_adj - self.scale*self.robot_y - person_y*self.scale)), (int)(self.scale*self.lidar_radius*5), (0, 255, 255), -1)
 
+                angle_person = math.atan2(person_x, person_y)
+                dist_person = math.sqrt(person_x**2 + person_y**2)
 
+                theta_aux = math.pi/2 - (angle_person - self.robot_t)
+
+                target_x = dist_person * math.cos(theta_aux) + self.robot_x
+                target_y = dist_person * math.sin(theta_aux) + self.robot_y
+
+                a_ref = (target_x, target_y)
+                print("Rel:", (person_x, person_y), "Abs:", a_ref)
+           
+                cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + target_x*self.scale),
+                    int(self.yc_adj - self.scale*self.robot_y - target_y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
 
             # people
             # for people in self.people_in_frame_filtered: 
@@ -217,9 +238,16 @@ class DebugVisualNode(Node):
         super().__init__("Robot")
         self.get_logger().info("Initialised CHARMIE Debug Visual Node")
 
-        # self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
+        # get neck position
         self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
         
+        # get yolo pose person detection filtered
+        self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
+        # self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.get_person_pose_callback, 10)
+
+
+
+
         self.robot = Robot()
 
 
@@ -230,7 +258,13 @@ class DebugVisualNode(Node):
         print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
         self.robot.neck_pan = -math.radians(180 - pose.pan)
         self.robot.neck_tilt = -math.radians(180 - pose.tilt)
+
+
+    def get_person_pose_callback(self, pose: Yolov8Pose):
         
+        print("Received new yolo pose. Number of people = ", pose.num_person)
+        self.robot.person_pose = pose
+
     
 def main(args=None):
     rclpy.init(args=args)
@@ -270,5 +304,5 @@ class DebugVisualMain():
     def main(self):
 
         while True:
-            pass
+            # pass
             self.node.robot.update_debug_drawings()
