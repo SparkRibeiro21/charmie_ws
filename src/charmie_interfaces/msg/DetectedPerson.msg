@@ -1,6 +1,7 @@
 int32 index_person
 float32 conf_person
 geometry_msgs/Point position_relative
+geometry_msgs/Point position_absolute
 int32 box_top_left_x
 int32 box_top_left_y
 int32 box_width
