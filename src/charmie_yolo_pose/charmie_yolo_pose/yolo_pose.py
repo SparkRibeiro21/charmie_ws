@@ -5,11 +5,13 @@ from rclpy.node import Node
 from std_msgs.msg import Bool, Float32, Int16
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
+from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, RequestPointCloud, RetrievePointCloud, BoundingBox, BoundingBoxAndPoints, PointCloudCoordinates
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
 import time
+import math
 
 # configurable parameters through ros topics
 ONLY_DETECT_PERSON_LEGS_VISIBLE = False       # if False only detects people whose legs are visible 
@@ -60,6 +62,9 @@ class YoloPoseNode(Node):
         self.request_point_cloud_publisher = self.create_publisher(RequestPointCloud, 'ask_point_cloud', 10) 
         self.retrieve_point_cloud_subscriber = self.create_subscription(RetrievePointCloud, "get_point_cloud", self.get_point_cloud_callback, 10)
 
+        # get robot_localisation
+        self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+
         # to calculate the FPS
         self.prev_frame_time = 0 # used to record the time when we processed last frame
         self.new_frame_time = 0 # used to record the time at which we processed current frame
@@ -73,6 +78,10 @@ class YoloPoseNode(Node):
         self.new_pcloud = RetrievePointCloud()
         self.tempo_total = time.perf_counter()
         self.center_torso_person_list = []
+
+        self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_t = 0.0 # math.pi/2
 
         self.N_KEYPOINTS = 17
         self.NUMBER_OF_LEGS_KP = 4
@@ -621,7 +630,31 @@ class YoloPoseNode(Node):
             self.waiting_for_pcloud = False
             self.new_pcloud = ret
             self.post_receiving_pcloud()
+
+
+    def odom_robot_callback(self, loc: Odometry):
+        self.odometry_msg_to_position(loc)
+
+
+    def odometry_msg_to_position(self, odom: Odometry):
         
+        self.robot_x = odom.pose.pose.position.x
+        self.robot_y = odom.pose.pose.position.y
+
+        qx = odom.pose.pose.orientation.x
+        qy = odom.pose.pose.orientation.y
+        qz = odom.pose.pose.orientation.z
+        qw = odom.pose.pose.orientation.w
+
+        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
+        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
+        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        # print(yaw, pitch, roll)
+
+        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        # print(self.robot_x, self.robot_y, self.robot_t)
+
+
     def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, center_person, p_localisation):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
@@ -634,7 +667,6 @@ class YoloPoseNode(Node):
 
         new_person.index_person = int(person_id)
         new_person.conf_person = float(boxes_id.conf)
-        new_person.position_relative = p_localisation
         new_person.box_top_left_x = int(boxes_id.xyxy[0][0])
         new_person.box_top_left_y = int(boxes_id.xyxy[0][1])
         new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
@@ -712,6 +744,33 @@ class YoloPoseNode(Node):
 
         new_person.body_center_x = center_person[0]
         new_person.body_center_y = center_person[1]
+
+        # changes the axis of point cloud coordinates to fit with robot axis
+        person_rel_pos = Point()
+        person_rel_pos.x = -p_localisation.y/1000
+        person_rel_pos.y =  p_localisation.x/1000
+        person_rel_pos.z =  p_localisation.z/1000
+        
+        new_person.position_relative = person_rel_pos
+        
+        # calculate the absolute position according to the robot localisation
+        angle_person = math.atan2(person_rel_pos.x, person_rel_pos.y)
+        dist_person = math.sqrt(person_rel_pos.x**2 + person_rel_pos.y**2)
+
+        theta_aux = math.pi/2 - (angle_person - self.robot_t)
+
+        target_x = dist_person * math.cos(theta_aux) + self.robot_x
+        target_y = dist_person * math.sin(theta_aux) + self.robot_y
+
+        a_ref = (target_x, target_y)
+        print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
+
+        person_abs_pos = Point()
+        person_abs_pos.x = target_x
+        person_abs_pos.y = target_y
+        person_abs_pos.z = p_localisation.z
+        
+        new_person.position_absolute = person_abs_pos
 
         return new_person
 

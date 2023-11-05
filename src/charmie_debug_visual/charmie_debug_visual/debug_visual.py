@@ -33,7 +33,7 @@ class Robot():
         self.lidar_radius = 0.050/2 # meter
         self.robot_x = 0.0
         self.robot_y = 0.0
-        self.robot_t = math.pi/4
+        self.robot_t = 0.0 # math.pi/4
         # self.neck_hor_angle = math.radians(30)
         # self.neck_ver_angle = 0.0 # NOT USED ...
         self.all_pos_x_val = []
@@ -185,37 +185,18 @@ class Robot():
             
             print("Test")
             for person in self.person_pose.persons:
-                person_x = -person.position_relative.y/1000
-                person_y =  person.position_relative.x/1000
-                person_z =  person.position_relative.z/1000
                 # print(person.position_relative.x/1000, person.position_relative.y/1000)
 
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
                 #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
            
-                cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person_x*self.scale),
-                    int(self.yc_adj - self.scale*self.robot_y - person_y*self.scale)), (int)(self.scale*self.lidar_radius*5), (0, 255, 255), -1)
 
-                angle_person = math.atan2(person_x, person_y)
-                dist_person = math.sqrt(person_x**2 + person_y**2)
-
-                theta_aux = math.pi/2 - (angle_person - self.robot_t)
-
-                target_x = dist_person * math.cos(theta_aux) + self.robot_x
-                target_y = dist_person * math.sin(theta_aux) + self.robot_y
-
-                a_ref = (target_x, target_y)
-                print("Rel:", (person_x, person_y), "Abs:", a_ref)
+                cv2.circle(self.test_image, (int(self.xc_adj + person.position_absolute.x*self.scale),
+                    int(self.yc_adj - person.position_absolute.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
+                
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
+                #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
            
-                cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + target_x*self.scale),
-                    int(self.yc_adj - self.scale*self.robot_y - target_y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
-
-            # people
-            # for people in self.people_in_frame_filtered: 
-            #     cv2.circle(self.test_image, (int(self.xc + self.scale*people[0]), int(self.yc - self.scale * people[1])), (int)(self.scale*self.lidar_radius*5), (203, 192, 255), -1)
-           
-
-
             cv2.imshow("Person Localization", self.test_image)
             # cv2.imshow("SDNL", self.image_plt)
             
@@ -245,25 +226,26 @@ class DebugVisualNode(Node):
         self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
         # self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.get_person_pose_callback, 10)
 
-
+        # get robot_localisation
+        self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
 
 
         self.robot = Robot()
 
 
-
-
     def get_neck_position_callback(self, pose: NeckPosition):
-        
         print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
         self.robot.neck_pan = -math.radians(180 - pose.pan)
         self.robot.neck_tilt = -math.radians(180 - pose.tilt)
 
 
     def get_person_pose_callback(self, pose: Yolov8Pose):
-        
         print("Received new yolo pose. Number of people = ", pose.num_person)
         self.robot.person_pose = pose
+
+
+    def odom_robot_callback(self, loc: Odometry):
+        self.robot.odometry_msg_to_position(loc)
 
     
 def main(args=None):

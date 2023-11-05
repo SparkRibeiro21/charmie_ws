@@ -276,7 +276,6 @@ class PersonLocalisationNode(Node):
         self.first_time = True
 
     def odom_robot_callback(self, loc: Odometry):
-
         self.per_loc.odometry_msg_to_position(loc)
 
 
