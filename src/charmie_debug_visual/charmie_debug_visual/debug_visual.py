@@ -57,8 +57,8 @@ class Robot():
         ]
 
         self.house_furniture = [ # houve furniture, coordinates of top left point and bottom left point in meters
-            {'name': 'Living Room', 'top_left_coords': (-4.05, 3.00), 'bot_right_coords': (-3.05, 1.00)}, 
-            {'name': 'Living Room', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (-3.55, 4.45)}, 
+            {'name': 'Couch', 'top_left_coords': (-4.05, 3.00), 'bot_right_coords': (-3.05, 1.00)}, 
+            {'name': 'Side Table', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (-3.55, 4.45)}, 
         ]
 
         self.neck_pan = 0.0
