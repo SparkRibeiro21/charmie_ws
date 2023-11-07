@@ -17,7 +17,7 @@ import math
 ONLY_DETECT_PERSON_LEGS_VISIBLE = False       # if False only detects people whose legs are visible 
 MIN_PERSON_CONF_VALUE = 0.5                 # defines the minimum confidence value to be considered a person
 MIN_KP_TO_DETECT_PERSON = 4                 # this parameter does not consider the four legs keypoints 
-ONLY_DETECT_PERSON_RIGHT_IN_FRONT = True    # only detects person right in front of the robot both on the x and y axis 
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False    # only detects person right in front of the robot both on the x and y axis 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.5
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 1.8
 # must be adjusted if we want just to not detect the feet in cases where the walls are really low and we can see the knees

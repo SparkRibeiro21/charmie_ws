@@ -56,6 +56,11 @@ class Robot():
             {'name': 'Bedroom',     'top_left_coords': (1.45, 9.45),  'bot_right_coords': ((4.95, 4.95))}
         ]
 
+        self.house_furniture = [ # houve furniture, coordinates of top left point and bottom left point in meters
+            {'name': 'Living Room', 'top_left_coords': (-4.05, 3.00), 'bot_right_coords': (-3.05, 1.00)}, 
+            {'name': 'Living Room', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (-3.55, 4.45)}, 
+        ]
+
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
 
@@ -106,6 +111,16 @@ class Robot():
                 
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*room['top_left_coords'][0]) , int(self.yc_adj - self.scale*room['top_left_coords'][1])), 6, (255,0,0), -1)
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*room['bot_right_coords'][0]), int(self.yc_adj - self.scale*room['bot_right_coords'][1])), 6, (0,0,255), -1)
+            
+            ### DRAWS THE HOUSE FURNITURE ###
+            for furniture in self.house_furniture:
+                cv2.rectangle(self.test_image, 
+                            (int(self.xc_adj + self.scale*furniture['top_left_coords'][0]) , int(self.yc_adj - self.scale*furniture['top_left_coords'][1])),
+                            (int(self.xc_adj + self.scale*furniture['bot_right_coords'][0]), int(self.yc_adj - self.scale*furniture['bot_right_coords'][1])),
+                            (120,0,120), -1)
+                
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*furniture['top_left_coords'][0]) , int(self.yc_adj - self.scale*furniture['top_left_coords'][1])), 6, (255,0,0), -1)
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*furniture['bot_right_coords'][0]), int(self.yc_adj - self.scale*furniture['bot_right_coords'][1])), 6, (0,0,255), -1)
 
             ### PRESENT AND PAST LOCATIONS OF ROBOT
             self.all_pos_x_val.append(self.robot_x)
