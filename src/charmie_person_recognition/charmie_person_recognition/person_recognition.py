@@ -3,10 +3,11 @@ import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import Bool, String, Float32
-from charmie_interfaces.msg import SpeechType, RobotSpeech, DetectedPerson, Yolov8Pose
+from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
+import time
 
 
 # TO DO TIAGO RIBEIRO:
@@ -36,8 +37,9 @@ class PersonRecognitionNode(Node):
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_filtered_callback, 10)   
         
+        self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         
-        self.create_timer(2, self.check_person_feet)
+        # self.create_timer(2, self.check_person_feet)
 
 
         self.robot = PersonRec()
@@ -46,6 +48,8 @@ class PersonRecognitionNode(Node):
         self.latest_color_image = Image()
         self.latest_person_pose = Yolov8Pose()
         self.br = CvBridge()
+
+        self.search_for_person()
 
     # def get_speech_done_callback(self, state: Bool):
     #     print("Received Speech Flag:", state.data)
@@ -287,7 +291,33 @@ class PersonRecognitionNode(Node):
 
 
         
+    def search_for_person(self):
+        print("Im in")
 
+        tetas = [-120, -60, 0, 60, 120]
+
+        for t in tetas:
+            print(t)
+            
+            np = NeckPosition()
+            np.pan = float(180 - t)
+            np.tilt = float(180)
+            self.neck_position_publisher.publish(np)
+            time.sleep(3)
+        
+
+        np = NeckPosition()
+        np.pan = float(180)
+        np.tilt = float(180)
+        self.neck_position_publisher.publish(np)
+        time.sleep(3)
+
+
+        np = NeckPosition()
+        np.pan = float(180+180)
+        np.tilt = float(180)
+        self.neck_position_publisher.publish(np)
+        time.sleep(3)
 
 
 

@@ -14,7 +14,7 @@ import numpy as np
 import math
 import time
 
-filename = "best.pt"
+filename = "last.pt"
 
 
 ### --------------------------------------------- CODE EXPLANATION --------------------------------------------- ### 
@@ -48,12 +48,12 @@ class Yolo_obj(Node):
         # Variables
         self.br = CvBridge()
 
-        Rui_className = ["Apple", "Bag", "Banana", "Bottle", "Bowl", "Chair",
-              "Cup", "Fork", "Knife", "Manga", "Mug", "Pear", "Person",
-              "Plastic-bag", "Plate", "Pringles", "Shelf", "Spoon",
-              "Table", "Tin-can", "Trash-can"]
+        Rui_className = ['7_up', 'bag', 'bowl', 'cheezit', 'chocolate_jello', 'cleanser', 'coffee_grounds', 
+                         'cola', 'cornflakes', 'cup', 'dishwasher_tab', 'fork', 'iced_tea', 'juice_pack', 
+                         'knife', 'milk', 'mustard', 'orange', 'orange_juice', 'plate', 'pringles', 'red_wine', 
+                         'spam', 'sponge', 'spoon', 'strawberry_jello', 'sugar', 'tennis_ball', 'tomato_soup', 
+                         'tropical_juice', 'tuna', 'water']
         
-
         door_classname = ['BallHandler', 'Door', 'Drawer', 
               'Fridge_Door', 'Hidden Handler', 'LevelHandler', 'PullHandler', 
               'WardrobeHandler', 'Wardrobe_Door']
@@ -61,7 +61,7 @@ class Yolo_obj(Node):
         # depending on the filename selected, the class names change
         if filename=='doors.pt':
             self.classNames = door_classname
-        elif filename=='best.pt':
+        elif filename=='best.pt' or filename=='last.pt':
             self.classNames = Rui_className
         else:
             print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
@@ -69,11 +69,11 @@ class Yolo_obj(Node):
 
         #self.crockery = ["Bowl", "Cup", "Fork", "Knife", "Mug", "Plate", "Spoon"]
 
-        self.obj = Yolov8Objects()
-        self.obj.objects = []
-        self.obj.confidence = []
-        self.obj.distance = []
-        self.obj.position = []
+        # self.obj = Yolov8Objects()
+        # self.obj.objects = []
+        # self.obj.confidence = []
+        # self.obj.distance = []
+        # self.obj.position = []
 
         self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
 
@@ -93,10 +93,10 @@ class Yolo_obj(Node):
         self.get_logger().info('Receiving color video frame')
         current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
         
-        self.obj.objects = []
-        self.obj.confidence = []
-        self.obj.distance = []
-        self.obj.position = []
+        # self.obj.objects = []
+        # self.obj.confidence = []
+        # self.obj.distance = []
+        # self.obj.position = []
 
         # minimum value of confidence for object to be accepted as true and sent via topic
         self.threshold = 0.2
@@ -128,11 +128,11 @@ class Yolo_obj(Node):
                 else:
                     pass
                 
-                if conf > self.threshold:
-                    self.obj.objects.append(str(self.classNames[cls]))
-                    self.obj.confidence.append(conf)
+                # if conf > self.threshold:
+                #     self.obj.objects.append(str(self.classNames[cls]))
+                #     self.obj.confidence.append(conf)
             
-            self.objects_publisher.publish(self.obj)
+            # self.objects_publisher.publish(self.obj)
 
             self.new_frame_time = time.time()
             self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
