@@ -103,6 +103,12 @@ class YoloPoseNode(Node):
         self.ANKLE_LEFT_KP = 15
         self.ANKLE_RIGHT_KP = 16
 
+        self.house_rooms = [ # houve rooms, coordinates of top left point and bottom left point in meters
+            {'name': 'Living Room', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (1.45, 0.45)}, 
+            {'name': 'Kitchen',     'top_left_coords': (-4.05, 9.45), 'bot_right_coords': (1.45, 4.95)},
+            {'name': 'Office',      'top_left_coords': (1.45, 4.95),  'bot_right_coords': ((4.95, 0.45))},
+            {'name': 'Bedroom',     'top_left_coords': (1.45, 9.45),  'bot_right_coords': ((4.95, 4.95))}
+        ]
 
     def get_only_detect_person_legs_visible_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE
@@ -549,10 +555,19 @@ class YoloPoseNode(Node):
 
                         cv2.circle(current_frame_draw, self.center_torso_person_list[person_idx], 5, (255, 255, 255), -1)
                         
-                        cv2.putText(current_frame_draw, '('+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].x/1000,2))+
-                                    ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].y/1000,2))+
-                                    ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].z/1000,2))+')', self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-
+                        # cv2.putText(current_frame_draw, '('+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].x/1000,2))+
+                        #             ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].y/1000,2))+
+                        #             ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].z/1000,2))+')',
+                        #             self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
+                        cv2.putText(current_frame_draw, '('+str(round(new_person.position_relative.x,2))+
+                                    ', '+str(round(new_person.position_relative.y,2))+
+                                    ', '+str(round(new_person.position_relative.z,2))+')',
+                                    self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
+                        
+                        cv2.putText(current_frame_draw, new_person.house_room,
+                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
                         # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
 
@@ -772,6 +787,8 @@ class YoloPoseNode(Node):
         
         new_person.position_absolute = person_abs_pos
 
+        new_person.house_room = self.person_position_to_house_rooms(person_abs_pos)
+
         return new_person
 
 
@@ -787,6 +804,25 @@ class YoloPoseNode(Node):
                 p2 = (int(xy[0][KP_TWO][0]), int(xy[0][KP_TWO][1]))
                 cv2.line(current_frame_draw, p1, p2, (0,0,255), 2) 
 
+
+
+    def person_position_to_house_rooms(self, person_pos):
+        
+        location = "Outside"
+
+        for room in self.house_rooms:
+            
+            min_x = room['top_left_coords'][0]
+            max_x = room['bot_right_coords'][0]
+            min_y = room['bot_right_coords'][1]
+            max_y = room['top_left_coords'][1]
+
+            # print(min_x, max_x, min_y, max_y)
+
+            if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
+                location = room['name'] 
+
+        return location
 
 def main(args=None):
     rclpy.init(args=args)

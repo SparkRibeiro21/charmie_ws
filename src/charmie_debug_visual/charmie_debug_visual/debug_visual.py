@@ -49,7 +49,7 @@ class Robot():
         self.y_ant = 0.0
 
 
-        self.house_divisions = [ 
+        self.house_rooms = [ # houve rooms, coordinates of top left point and bottom left point in meters
             {'name': 'Living Room', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (1.45, 0.45)}, 
             {'name': 'Kitchen',     'top_left_coords': (-4.05, 9.45), 'bot_right_coords': (1.45, 4.95)},
             {'name': 'Office',      'top_left_coords': (1.45, 4.95),  'bot_right_coords': ((4.95, 0.45))},
@@ -98,7 +98,7 @@ class Robot():
                     cv2.line(self.test_image, (0, int(self.yc_adj + self.scale*i)), (self.yc*2, int(self.yc_adj + self.scale*i)), (255, 255, 255), 1)
             
             ### DRAWS THE HOUSE WALLS ###
-            for room in self.house_divisions:
+            for room in self.house_rooms:
                 cv2.rectangle(self.test_image, 
                             (int(self.xc_adj + self.scale*room['top_left_coords'][0]) , int(self.yc_adj - self.scale*room['top_left_coords'][1])),
                             (int(self.xc_adj + self.scale*room['bot_right_coords'][0]), int(self.yc_adj - self.scale*room['bot_right_coords'][1])),
