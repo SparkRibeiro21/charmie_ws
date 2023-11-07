@@ -48,55 +48,19 @@ class Robot():
         self.x_ant = 0.0
         self.y_ant = 0.0
 
-        self.house_center_coordinates = (1.45, 4.95)
-        self.house_left_bot_coordinates = (-4.05, 0.45)
-        self.house_left_upp_coordinates = (-4.05, 9.45)
-        self.house_right_bot_coordinates = (4.95, 0.45)
-        self.house_right_upp_coordinates = (4.95, 9.45)
 
-        self.house_left_bot_name = "Living Room"
-        self.house_left_upp_name = "Kitchen"
-        self.house_right_bot_name = "Office"
-        self.house_right_upp_name = "Bedroom"
-
-        self.house_divisions = []
-        # self.people_in_frame = []
-        # self.people_in_frame_filtered = []
-        
-        self.coordinates_to_divisions(self.house_center_coordinates, self.house_left_bot_coordinates, self.house_left_bot_name)
-        self.coordinates_to_divisions(self.house_center_coordinates, self.house_left_upp_coordinates, self.house_left_upp_name)
-        self.coordinates_to_divisions(self.house_center_coordinates, self.house_right_bot_coordinates, self.house_right_bot_name)
-        self.coordinates_to_divisions(self.house_center_coordinates, self.house_right_upp_coordinates, self.house_right_upp_name)
+        self.house_divisions = [ 
+            {'name': 'Living Room', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (1.45, 0.45)}, 
+            {'name': 'Kitchen',     'top_left_coords': (-4.05, 9.45), 'bot_right_coords': (1.45, 4.95)},
+            {'name': 'Office',      'top_left_coords': (1.45, 4.95),  'bot_right_coords': ((4.95, 0.45))},
+            {'name': 'Bedroom',     'top_left_coords': (1.45, 9.45),  'bot_right_coords': ((4.95, 4.95))}
+        ]
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
 
         self.person_pose = Yolov8Pose()
         
-
-
-    def coordinates_to_divisions(self, p1, p2, name):
-        
-        min_x = min(p1[0], p2[0])
-        max_x = max(p1[0], p2[0])
-        min_y = min(p1[1], p2[1])
-        max_y = max(p1[1], p2[1])
-
-        aux_dict = {'min_x': min_x, 'max_x': max_x, 'min_y': min_y, 'max_y': max_y, "name": name}
-
-        self.house_divisions.append(aux_dict)
-
-
-    def locate_divisions(self):
-        
-        location = "Outside"
-
-        for loc in self.house_divisions:
-            if loc['min_x'] < self.robot_x < loc['max_x'] and loc['min_y'] < self.robot_y < loc['max_y']:
-                location = loc['name']
-
-        # print(location)
-
 
     def odometry_msg_to_position(self, odom: Odometry):
         
@@ -134,33 +98,15 @@ class Robot():
                     cv2.line(self.test_image, (0, int(self.yc_adj + self.scale*i)), (self.yc*2, int(self.yc_adj + self.scale*i)), (255, 255, 255), 1)
             
             ### DRAWS THE HOUSE WALLS ###
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_left_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_left_bot_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_left_bot_coordinates[1])), (int(self.xc_adj + self.scale*self.house_left_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_left_bot_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_left_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_left_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_left_bot_coordinates[1])), (255,0,255), 2)
-            
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_left_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_left_upp_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_left_upp_coordinates[1])), (int(self.xc_adj + self.scale*self.house_left_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_left_upp_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_left_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_left_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_left_upp_coordinates[1])), (255,0,255), 2)
+            for room in self.house_divisions:
+                cv2.rectangle(self.test_image, 
+                            (int(self.xc_adj + self.scale*room['top_left_coords'][0]) , int(self.yc_adj - self.scale*room['top_left_coords'][1])),
+                            (int(self.xc_adj + self.scale*room['bot_right_coords'][0]), int(self.yc_adj - self.scale*room['bot_right_coords'][1])),
+                            (255,0,255), 3)
+                
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*room['top_left_coords'][0]) , int(self.yc_adj - self.scale*room['top_left_coords'][1])), 6, (255,0,0), -1)
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*room['bot_right_coords'][0]), int(self.yc_adj - self.scale*room['bot_right_coords'][1])), 6, (0,0,255), -1)
 
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_right_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_bot_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_bot_coordinates[1])), (int(self.xc_adj + self.scale*self.house_right_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_bot_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_right_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_right_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_bot_coordinates[1])), (255,0,255), 2)
-
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_right_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_upp_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_upp_coordinates[1])), (int(self.xc_adj + self.scale*self.house_right_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_upp_coordinates[1])), (255,0,255), 2)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.house_right_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int(self.xc_adj + self.scale*self.house_right_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_upp_coordinates[1])), (255,0,255), 2)
-
-            # cantos da casa + central
-            # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.house_center_coordinates[0]), int(self.yc_adj - self.scale * self.house_center_coordinates[1])), (int)(self.scale*self.lidar_radius*4), (255, 0, 0), -1)
-            # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.house_left_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_left_bot_coordinates[1])), (int)(self.scale*self.lidar_radius*4), (255, 0, 0), -1)
-            # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.house_left_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_left_upp_coordinates[1])), (int)(self.scale*self.lidar_radius*4), (255, 0, 0), -1)
-            # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.house_right_bot_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_bot_coordinates[1])), (int)(self.scale*self.lidar_radius*4), (255, 0, 0), -1)
-            # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.house_right_upp_coordinates[0]), int(self.yc_adj - self.scale * self.house_right_upp_coordinates[1])), (int)(self.scale*self.lidar_radius*4), (255, 0, 0), -1)
-           
             ### PRESENT AND PAST LOCATIONS OF ROBOT
             self.all_pos_x_val.append(self.robot_x)
             self.all_pos_y_val.append(self.robot_y)
@@ -183,7 +129,6 @@ class Robot():
                       int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
             
             
-            print("Test")
             for person in self.person_pose.persons:
                 # print(person.position_relative.x/1000, person.position_relative.y/1000)
 
