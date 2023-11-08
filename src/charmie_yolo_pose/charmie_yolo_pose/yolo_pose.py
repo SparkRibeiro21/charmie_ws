@@ -14,12 +14,14 @@ import time
 import math
 
 # configurable parameters through ros topics
-ONLY_DETECT_PERSON_LEGS_VISIBLE = False       # if False only detects people whose legs are visible 
-MIN_PERSON_CONF_VALUE = 0.5                 # defines the minimum confidence value to be considered a person
-MIN_KP_TO_DETECT_PERSON = 4                 # this parameter does not consider the four legs keypoints 
-ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False    # only detects person right in front of the robot both on the x and y axis 
+ONLY_DETECT_PERSON_LEGS_VISIBLE = False              # if True only detects people whose legs are visible 
+MIN_PERSON_CONF_VALUE = 0.5                          # defines the minimum confidence value to be considered a person
+MIN_KP_TO_DETECT_PERSON = 4                          # this parameter does not consider the four legs keypoints 
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False            # only detects person right in front of the robot both on the x and y axis 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.5
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 1.8
+ONLY_DETECT_PERSON_ARM_RAISED = False                # if True only detects people with their arm raised or waving 
+
 # must be adjusted if we want just to not detect the feet in cases where the walls are really low and we can see the knees
 # 3 may be used in cases where it just does not detect on of the feet 
 NUMBER_OF_LEG_KP_TO_BE_DETECTED = 2
@@ -53,6 +55,7 @@ class YoloPoseNode(Node):
         self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_per_conf", self.get_minimum_person_confidence_callback, 10)
         self.minimum_keypoints_to_detect_person_subscriber = self.create_subscription(Int16, "min_kp_det_per", self.get_minimum_keypoints_to_detect_person_callback, 10)
         self.only_detect_person_right_in_front_subscriber = self.create_subscription(Bool, "only_det_per_right_in_front", self.get_only_detect_person_right_in_front_callback, 10)
+        self.only_detect_person_arm_raised_subscriber = self.create_subscription(Bool, "only_det_per_arm_raised", self.get_only_detect_person_arm_raised_callback, 10)
 
         # Intel Realsense Subscribers
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
@@ -110,6 +113,7 @@ class YoloPoseNode(Node):
             {'name': 'Bedroom',     'top_left_coords': (1.45, 9.45),  'bot_right_coords': ((4.95, 4.95))}
         ]
 
+
     def get_only_detect_person_legs_visible_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE
         # print(state.data)
@@ -128,6 +132,7 @@ class YoloPoseNode(Node):
         else:
             self.get_logger().info('ERROR SETTING MIN_PERSON_CONF_VALUE')    
 
+
     def get_minimum_keypoints_to_detect_person_callback(self, state: Int16):
         global MIN_KP_TO_DETECT_PERSON
         # print(state.data)
@@ -137,6 +142,7 @@ class YoloPoseNode(Node):
         else:
             self.get_logger().info('ERROR SETTING MIN_KP_TO_DETECT_PERSON')  
 
+
     def get_only_detect_person_right_in_front_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_RIGHT_IN_FRONT
         # print(state.data)
@@ -145,6 +151,16 @@ class YoloPoseNode(Node):
             self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = True')
         else:
             self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False')  
+
+
+    def get_only_detect_person_arm_raised_callback(self, state: Bool):
+        global ONLY_DETECT_PERSON_ARM_RAISED
+        # print(state.data)
+        ONLY_DETECT_PERSON_ARM_RAISED = state.data
+        if ONLY_DETECT_PERSON_ARM_RAISED:
+            self.get_logger().info('ONLY_DETECT_PERSON_ARM_RAISED = True')
+        else:
+            self.get_logger().info('ONLY_DETECT_PERSON_ARM_RAISED = False')  
 
 
     def get_color_image_callback(self, img: Image):
@@ -308,9 +324,33 @@ class YoloPoseNode(Node):
             boxes_id = self.results[0].boxes[person_idx]
             ALL_CONDITIONS_MET = 1
             
+            # condition whether the person has their arm raised, or waiving
+            # at the current time, we are using the wrist coordinates and somparing with the nose coordinate
+            is_hand_raised = False
+            hand_raised = "None"
+            if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]) and int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]):
+                # print("Both Arms Up")
+                hand_raised = "Both"
+                is_hand_raised = True
+            else:
+                if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]):
+                    # print("Right Arm Up")
+                    hand_raised = "Right"
+                    is_hand_raised = True
+                elif int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]):
+                    # print("Left Arm Up")
+                    hand_raised = "Left"
+                    is_hand_raised = True
+                else: 
+                    # print("Both Arms Down")
+                    hand_raised = "None"
+                    is_hand_raised = False
+
+            print("Hand Raised:", hand_raised, is_hand_raised)
+
             # adds people to "person_pose" without any restriction
             new_person = DetectedPerson()
-            new_person = self.add_person_to_detectedperson_msg(boxes_id, keypoints_id, self.center_torso_person_list[person_idx], self.new_pcloud.coords[person_idx].requested_point_coords[1])
+            new_person = self.add_person_to_detectedperson_msg(boxes_id, keypoints_id, self.center_torso_person_list[person_idx], self.new_pcloud.coords[person_idx].requested_point_coords[1], hand_raised)
             yolov8_pose.persons.append(new_person)
             
             legs_ctr = 0
@@ -337,17 +377,11 @@ class YoloPoseNode(Node):
                     body_kp_high_conf_counter+=1
             print("body_kp_high_conf_counter = ", body_kp_high_conf_counter)
 
-
-            ########## afterwards what should be used to calculate center_comm_position should be the x and y person coordinates related to the robot 
             center_comm_position = False
-
-            # if 0 < self.new_pcloud.coords[person_idx].requested_point_coords[1].x/1000 < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD and \
-            # -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD < self.new_pcloud.coords[person_idx].requested_point_coords[1].y/1000 < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
-            #     center_comm_position = True
-
             if -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD < new_person.position_relative.x < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD and \
              0 < new_person.position_relative.y < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
                center_comm_position = True
+
 
             # checks whether the person confidence is above a defined level
             if not boxes_id.conf >= MIN_PERSON_CONF_VALUE:
@@ -364,10 +398,15 @@ class YoloPoseNode(Node):
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                 print("- Misses minimum number of body keypoints")
 
-            # checks if flag to detect people whose legs are visible 
+            # checks if flag to detect people right in front of the robot 
             if not center_comm_position and ONLY_DETECT_PERSON_RIGHT_IN_FRONT:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                 print(" - Misses not being right in front of the robot")
+            
+            # checks if flag to detect people with their arm raised or waving (requesting assistance)
+            if not is_hand_raised and ONLY_DETECT_PERSON_ARM_RAISED:
+                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                print(" - Misses not being with their arm raised")
 
             # print(self.new_pcloud)
             # print(person_idx)
@@ -663,7 +702,7 @@ class YoloPoseNode(Node):
         # print(self.robot_x, self.robot_y, self.robot_t)
 
 
-    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, center_person, p_localisation):
+    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, center_person, p_localisation, arm_raised):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
@@ -679,6 +718,9 @@ class YoloPoseNode(Node):
         new_person.box_top_left_y = int(boxes_id.xyxy[0][1])
         new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
         new_person.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+
+        new_person.arm_raised = arm_raised
+        new_person.body_posture = "None"
 
         # print(int(keypoints_id.xy[0][self.NOSE_KP][0]), int(keypoints_id.xy[0][self.NOSE_KP][1]), float(keypoints_id.conf[0][self.NOSE_KP]))
 

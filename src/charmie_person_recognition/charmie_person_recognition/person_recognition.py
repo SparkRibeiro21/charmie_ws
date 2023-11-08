@@ -304,7 +304,6 @@ class PersonRecognitionNode(Node):
             np.tilt = float(180)
             self.neck_position_publisher.publish(np)
             time.sleep(3)
-        
 
         np = NeckPosition()
         np.pan = float(180)
@@ -312,14 +311,17 @@ class PersonRecognitionNode(Node):
         self.neck_position_publisher.publish(np)
         time.sleep(3)
 
-
         np = NeckPosition()
         np.pan = float(180+180)
         np.tilt = float(180)
         self.neck_position_publisher.publish(np)
         time.sleep(3)
 
-
+        np = NeckPosition()
+        np.pan = float(180)
+        np.tilt = float(180)
+        self.neck_position_publisher.publish(np)
+        time.sleep(3)
 
 def main(args=None):
     rclpy.init(args=args)
