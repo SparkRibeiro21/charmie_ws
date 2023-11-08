@@ -8,6 +8,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import time
+import threading
 
 
 # TO DO TIAGO RIBEIRO:
@@ -44,16 +45,14 @@ class PersonRecognitionNode(Node):
 
         self.robot = PersonRec()
 
-
         self.latest_color_image = Image()
         self.latest_person_pose = Yolov8Pose()
         self.br = CvBridge()
 
-        self.search_for_person()
 
-    # def get_speech_done_callback(self, state: Bool):
-    #     print("Received Speech Flag:", state.data)
-    #     self.get_logger().info("Received Speech Flag")
+        self.search_for_person_flag = True
+        # self.search_for_person()
+
 
     def get_color_image_callback(self, img: Image):
         self.latest_color_image = img
@@ -61,7 +60,7 @@ class PersonRecognitionNode(Node):
 
     def get_person_pose_filtered_callback(self, pose: Yolov8Pose):
         self.latest_person_pose = pose
-
+        # print("IN")
 
     def check_person_face(self):
         
@@ -290,41 +289,67 @@ class PersonRecognitionNode(Node):
             print(person.conf_person)
 
 
-        
-    def search_for_person(self):
-        print("Im in")
-
-        tetas = [-120, -60, 0, 60, 120]
-
-        for t in tetas:
-            print(t)
-            
-            np = NeckPosition()
-            np.pan = float(180 - t)
-            np.tilt = float(180)
-            self.neck_position_publisher.publish(np)
-            time.sleep(3)
-
-        np = NeckPosition()
-        np.pan = float(180)
-        np.tilt = float(180)
-        self.neck_position_publisher.publish(np)
-        time.sleep(3)
-
-        np = NeckPosition()
-        np.pan = float(180+180)
-        np.tilt = float(180)
-        self.neck_position_publisher.publish(np)
-        time.sleep(3)
-
-        np = NeckPosition()
-        np.pan = float(180)
-        np.tilt = float(180)
-        self.neck_position_publisher.publish(np)
-        time.sleep(3)
 
 def main(args=None):
     rclpy.init(args=args)
     node = PersonRecognitionNode()
+    th_main = threading.Thread(target=thread_main_restaurant, args=(node,), daemon=True)
+    th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
+
+
+def thread_main_restaurant(node: PersonRecognitionNode):
+    main = PersonRecognitionMain(node)
+    main.main()
+
+class PersonRecognitionMain():
+
+    def __init__(self, node: PersonRecognitionNode):
+        self.node = node
+
+    def main(self):
+        
+        if self.node.search_for_person_flag:
+            self.search_for_person()
+            self.node.search_for_person_flag = False
+        
+    def search_for_person(self):
+        print("In Search for Person.")
+
+        tetas = [-120, -60, 0, 60, 120]
+        person_detected = []
+            
+        for t in tetas:
+            print("Rotating Neck:", t)
+            
+            np = NeckPosition()
+            np.pan = float(180 - t)
+            np.tilt = float(180)
+            self.node.neck_position_publisher.publish(np)
+            time.sleep(3)
+            print(self.node.latest_person_pose.num_person)
+            for people in self.node.latest_person_pose.persons:
+                print(" - ", people.index_person, people.position_relative.x, 
+                      people.position_relative.y, people.position_relative.z)
+                person_detected.append(people)
+                
+            print("Total number of people detected:", len(person_detected))
+
+        np = NeckPosition()
+        np.pan = float(180)
+        np.tilt = float(180)
+        self.node.neck_position_publisher.publish(np)
+        time.sleep(3)
+
+        # np = NeckPosition()
+        # np.pan = float(180+180)
+        # np.tilt = float(180)
+        # self.node.neck_position_publisher.publish(np)
+        # time.sleep(3)
+
+        # np = NeckPosition()
+        # np.pan = float(180)
+        # np.tilt = float(180)
+        # self.node.neck_position_publisher.publish(np)
+        # time.sleep(3)

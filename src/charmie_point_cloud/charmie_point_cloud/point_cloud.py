@@ -267,7 +267,11 @@ class PointCloud():
 
     def converter_2D_3D_unico(self, u, v):
 
+        print(u, v)
+        
+
         depth = self.depth_img_pc[u][v]
+
         if depth == 0:      # Só faz os cálculos de o ponto for válido (OPTIMIZAÇÃO)
 
             # casos especiais, mas só em coordenadas especificas (não faz para a bounding box toda)
