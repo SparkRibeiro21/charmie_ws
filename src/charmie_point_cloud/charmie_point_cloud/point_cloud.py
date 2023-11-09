@@ -33,9 +33,6 @@ HEIGHT = 100 # height of ounding box for debug
 MAX_DIST = 6000
 MIN_DIST = 300
 
-linhas = 720
-colunas = 1280
-
 Z_MIN_A_VER = -1100
 inc = 5
 
@@ -60,7 +57,10 @@ class PointCloud():
     def __init__(self):
         print("New PointCloud Class Initialised")
 
-        global linhas, colunas, nome
+        global nome
+
+        self.linhas = 720
+        self.colunas = 1280
         # print(linhas, colunas)
         
         # Parametros intrinsecos da Camera (Dados pelo Tiago)
@@ -79,8 +79,8 @@ class PointCloud():
         self.inverse_matrix = np.zeros([4, 4]) 
         # print(self.inverse_matrix)
 
-        self.rgb_img_pc = np.zeros((linhas,colunas,3), dtype=np.uint8)
-        self.depth_img_pc = np.zeros((linhas,colunas), dtype=np.uint8)
+        self.rgb_img_pc = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
+        self.depth_img_pc = np.zeros((self.linhas, self.colunas), dtype=np.uint8)
 
         self.ESCALA = 16  # Por questões de eficiencia, só vamos considerar 1 pixel em cada 4
 
@@ -114,7 +114,7 @@ class PointCloud():
 
         self.actualiza_tetas(' ')
         self.robo()      # calculates the kinematics so the inverse matrix has initial values
-        self.converter_2D_3D(0, 0, linhas, colunas)
+        self.converter_2D_3D(0, 0, self.linhas, self.colunas)
 
         if GRAF3D == 1:
             self.graficos()
@@ -266,9 +266,15 @@ class PointCloud():
 
 
     def converter_2D_3D_unico(self, u, v):
-
-        print(u, v)
         
+        # this is to prevent 'bug' regarding maximum values on each axis
+        if u >= self.linhas:
+            u = self.linhas-1
+        
+        if v >= self.colunas:
+            v = self.colunas-1
+
+        # print(u, v)
 
         depth = self.depth_img_pc[u][v]
 
@@ -646,9 +652,11 @@ class PointCloudNode(Node):
                 # le os dados da BouundingBox
                 u_inicial, v_inicial, HEIGHT, WIDTH = bbox[0]
 
+                print("CENTER")
                 # calcula o ponto do centro
                 resp_centro = self.pcloud.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2)
 
+                print("REQUESTED")
                 # calcula a lista de pontos
                 resp_outros = []
                 for i in bbox[1]:
