@@ -322,11 +322,43 @@ class PersonRecognitionMain():
         print("In Search for Person.")
 
         tetas = [-120, -60, 0, 60, 120]
+        imshow_detected_people = True
 
 
         total_person_detected = []
         person_detected = []
         points = []
+
+
+
+
+
+        # teste Neck to coords
+        # aux_neck_to_coords = [
+        #     (-0.05, -1.0),
+        #     (-0.5, -1.0),
+        #     (-0.5, -0.2),
+        #     (-0.5,  0.2),
+        #     (-0.5,  1.0),
+        #     ( 0.5,  1.0),
+        #     ( 0.5,  0.2),
+
+        #     ( 0.5, -0.2),
+        #     ( 0.5, -1.0)
+        # ]
+        
+        # while True:
+        #     for n in aux_neck_to_coords:
+        #         pose = Pose2D()
+        #         pose.x = n[0]
+        #         pose.y = n[1]
+        #         pose.theta = 180.0
+        #         self.node.neck_to_coords_publisher.publish(pose)
+        #         time.sleep(3)
+
+
+
+
 
         people_ctr = 0
         for t in tetas:
@@ -351,6 +383,22 @@ class PersonRecognitionMain():
                 aux = (people.position_relative.x, people.position_relative.y) 
                 person_detected.append(aux)
                 points.append(aux)
+
+
+
+
+                if imshow_detected_people:
+
+                    y1 = people.box_top_left_y
+                    y2 = people.box_top_left_y + people.box_height
+
+                    x1 = people.box_top_left_x
+                    x2 = people.box_top_left_x + people.box_width
+
+                    # self.latest_color_image
+
+                    # cropped_image_l = current_frame[y1_l:y2_l, x1_l:x2_l]
+
 
 
             total_person_detected.append(person_detected.copy())

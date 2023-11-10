@@ -137,7 +137,7 @@ class NeckNode(Node):
         # receives two angles, pan and tilt - used when robot must look at something known in advance (ex: direction of navigation, forward, look right/left)
         self.neck_position_subscriber = self.create_subscription(NeckPosition, "neck_to_pos", self.neck_position_callback ,10)
         # receives coordinates where the robot must look at, knowing its own position (ex: look at the couch, look at the table)
-        self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.nect_to_coords_callback, 10)
+        self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.neck_to_coords_callback, 10)
 
         # receives a person and the keypoint it must follow (ex: constantly looking at the person face, look at body center  to check hands and feet)
         self.neck_position_subscriber = self.create_subscription(TrackPerson, "neck_follow_person", self.neck_follow_person_callback ,10)
@@ -162,11 +162,7 @@ class NeckNode(Node):
         self.robot_y = 0.0
         self.robot_t = 0.0
          
-        # self.create_timer(0.1, self.timer_callback)
         self.flag_get_neck_position = False
-        # self.k_e_x = 0.01
-        # self.k_e_y = 0.005
-        # self.max_error = 40.0
 
         self.initialise_servos()
 
@@ -182,14 +178,10 @@ class NeckNode(Node):
         # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
         
         global PAN_CONST_SHIFT, TILT_CONST_SHIFT 
-
-
-
-
         self.move_neck(neck_pos.pan + PAN_CONST_SHIFT, neck_pos.tilt + TILT_CONST_SHIFT)
 
 
-    def nect_to_coords_callback(self, pose: Pose2D):
+    def neck_to_coords_callback(self, pose: Pose2D):
         # calculate the angle according to last received odometry
         neck_target_x = pose.x
         neck_target_y = pose.y
@@ -197,28 +189,20 @@ class NeckNode(Node):
 
         global TILT_CONST_SHIFT # in this case it only makes sense to change the tilt because the pan is abstract   
 
-        print(math.degrees(self.robot_t))
+        # print(math.degrees(self.robot_t))
         
         ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
-        print("ang_rad:", ang)
+        # print("ang_rad:", ang)
         ang = math.degrees(ang)
-        print("ang_deg:", ang)
-        self.move_neck(180 - math.degrees(self.robot_t) + ang, neck_target_other_axis + TILT_CONST_SHIFT)
+        # print("ang_deg:", ang)
 
-        # get last
-        # pass
+        pan_neck_to_coords = math.degrees(self.robot_t) - ang
+        if pan_neck_to_coords < -math.degrees(math.pi):
+            pan_neck_to_coords += math.degrees(2*math.pi)
 
-        # aux_ang_tar = math.atan2(self.nav_target.move_target_coordinates.y - self.nav_target.rotate_target_coordinates.y, self.nav_target.move_target_coordinates.x - self.nav_target.rotate_target_coordinates.x)
-        
-        
-        # a = math.atan2(self.robot_y - pose.y)
-        
-        # cv2.line(self.test_image,   (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x), 
-        #                                 int(self.yc - self.scale*self.nav_target.move_target_coordinates.y)),
-        #                             (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x - self.scale * self.robot_radius * math.cos(aux_ang_tar)),# + math.pi/2)), 
-        #                                 int(self.yc - self.scale*self.nav_target.move_target_coordinates.y + self.scale * self.robot_radius * math.sin(aux_ang_tar))),# + math.pi/2))),
-        #                             (0, 255, 0), int(1.0 + thickness*self.scale/1000))
-                    
+        print("neck_to_coords:", pan_neck_to_coords, ang)
+        self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis + TILT_CONST_SHIFT)
+
 
     def odom_callback(self, odom: Odometry):
         # update the last odom value
@@ -356,16 +340,7 @@ class NeckNode(Node):
 
         self.get_logger().info("Set Neck to Initial Position, Looking Forward")
 
-        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-
-        
-        self.move_neck(180, 150) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-
-
-        # while True:
-        #     pass
-
+        self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         
         # self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         # time.sleep(3)
@@ -389,62 +364,6 @@ class NeckNode(Node):
         # time.sleep(5)
         # self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         
-        
-        
-        
-
-
-        # self.move_neck(0.5+225+33, 0.5+160+3) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        
-        # self.move_neck(360, 170) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        
-        
-        # while (True):
-        #     self.move_neck(360, 170) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        #     time.sleep(2)
-        #     self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        #     time.sleep(2)
-        #     self.move_neck(0, 170) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        #     time.sleep(2)
-        #     self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        #     time.sleep(2)
-            
-            # self.move_neck(135, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            # time.sleep(0.5)
-            # self.move_neck(225, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            # time.sleep(0.5)
-            # self.move_neck(0, 170) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            # time.sleep(2)
-            # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            # time.sleep(2)
-        
-        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-        # self.move_neck(180, 130) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-        # self.move_neck(180, 225) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-        # self.move_neck(90, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-        # self.move_neck(270, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(5)
-        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-        # self.move_neck(100, 120) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-        # self.move_neck(260, 250) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-        # self.move_neck(225, 155) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
-        # self.move_neck(135, 220) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(5)
-        # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        
-
 
     def read_servo_position(self):
 
