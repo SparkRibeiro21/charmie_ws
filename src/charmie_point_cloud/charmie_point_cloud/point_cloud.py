@@ -652,11 +652,11 @@ class PointCloudNode(Node):
                 # le os dados da BouundingBox
                 u_inicial, v_inicial, HEIGHT, WIDTH = bbox[0]
 
-                print("CENTER")
+                # print("CENTER")
                 # calcula o ponto do centro
                 resp_centro = self.pcloud.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2)
 
-                print("REQUESTED")
+                # print("REQUESTED")
                 # calcula a lista de pontos
                 resp_outros = []
                 for i in bbox[1]:

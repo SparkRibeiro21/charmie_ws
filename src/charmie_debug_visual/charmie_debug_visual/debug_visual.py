@@ -5,13 +5,16 @@ from rclpy.node import Node
 from std_msgs.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import  Yolov8Pose, DetectedPerson, NeckPosition
+from sensor_msgs.msg import Image
+from charmie_interfaces.msg import  Yolov8Pose, DetectedPerson, NeckPosition, ListOfPoints
+from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
 import numpy as np
 import math
 import threading
 
+DEBUG_DRAW = False
 
 class Robot():
     def __init__(self):
@@ -23,11 +26,10 @@ class Robot():
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
         self.scale = 0.057*1000
         self.xx_shift = -110
-        self.yy_shift = -370
+        self.yy_shift = -300 # -370
 
         self.xc_adj = self.xc - self.xx_shift
         self.yc_adj = self.yc - self.yy_shift
-
 
         self.robot_radius = 0.560/2 # meter
         self.lidar_radius = 0.050/2 # meter
@@ -100,7 +102,12 @@ class Robot():
         self.neck_tilt = 0.0
 
         self.person_pose = Yolov8Pose()
-        
+        self.search_for_person = ListOfPoints()
+
+        self.linhas = 720
+        self.colunas = 1280
+        self.current_frame = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
+
 
     def odometry_msg_to_position(self, odom: Odometry):
         
@@ -186,7 +193,22 @@ class Robot():
             cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
                      (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4)),
                       int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
-            
+                       
+
+            for person in self.search_for_person.coords:
+                # print(person.position_relative.x/1000, person.position_relative.y/1000)
+
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
+           
+
+                cv2.circle(self.test_image, (int(self.xc_adj + person.x*self.scale),
+                    int(self.yc_adj - person.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 0, 0), -1)
+                
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
+                #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
+           
+
             
             for person in self.person_pose.persons:
                 # print(person.position_relative.x/1000, person.position_relative.y/1000)
@@ -200,7 +222,11 @@ class Robot():
                 
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
                 #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
-           
+
+
+            if DEBUG_DRAW:
+                cv2.imshow("Debug Visual - RGB", self.current_frame)
+
             cv2.imshow("Person Localization", self.test_image)
             # cv2.imshow("SDNL", self.image_plt)
             
@@ -233,9 +259,14 @@ class DebugVisualNode(Node):
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
 
-
+        # search for person, person localisation 
+        self.search_for_person_subscriber = self.create_subscription(ListOfPoints, "search_for_person_points", self.search_for_person_callback, 10)
+        
+        # Intel Realsense Subscribers
+        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
+        
         self.robot = Robot()
-
+        
 
     def get_neck_position_callback(self, pose: NeckPosition):
         print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
@@ -251,6 +282,17 @@ class DebugVisualNode(Node):
     def odom_robot_callback(self, loc: Odometry):
         self.robot.odometry_msg_to_position(loc)
 
+
+    def search_for_person_callback(self, points: ListOfPoints):
+        self.robot.search_for_person = points
+
+
+    def get_color_image_callback(self, img: Image):
+        self.get_logger().info('Receiving color video frame')
+        # ROS2 Image Bridge for OpenCV
+        br = CvBridge()
+        self.robot.current_frame = br.imgmsg_to_cv2(img, "bgr8")
+        
     
 def main(args=None):
     rclpy.init(args=args)

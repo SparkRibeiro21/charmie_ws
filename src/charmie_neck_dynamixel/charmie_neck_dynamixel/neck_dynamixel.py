@@ -359,7 +359,7 @@ class NeckNode(Node):
         # self.move_neck(180, 190) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
 
         
-        self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        self.move_neck(180, 150) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         # time.sleep(3)
 
 

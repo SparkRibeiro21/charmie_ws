@@ -3,12 +3,14 @@ import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import Bool, String, Float32
-from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose
+from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
+from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose, ListOfPoints
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import time
 import threading
+import math
 
 
 # TO DO TIAGO RIBEIRO:
@@ -39,7 +41,9 @@ class PersonRecognitionNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_filtered_callback, 10)   
         
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
+        self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
         
+        self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
         # self.create_timer(2, self.check_person_feet)
 
 
@@ -318,8 +322,13 @@ class PersonRecognitionMain():
         print("In Search for Person.")
 
         tetas = [-120, -60, 0, 60, 120]
+
+
+        total_person_detected = []
         person_detected = []
-            
+        points = []
+
+        people_ctr = 0
         for t in tetas:
             print("Rotating Neck:", t)
             
@@ -328,19 +337,157 @@ class PersonRecognitionMain():
             np.tilt = float(180)
             self.node.neck_position_publisher.publish(np)
             time.sleep(3)
-            print(self.node.latest_person_pose.num_person)
+            # print(self.node.latest_person_pose.num_person)
+
+
+
+
+
             for people in self.node.latest_person_pose.persons:
+                people_ctr+=1
                 print(" - ", people.index_person, people.position_relative.x, 
                       people.position_relative.y, people.position_relative.z)
-                person_detected.append(people)
                 
-            print("Total number of people detected:", len(person_detected))
+                aux = (people.position_relative.x, people.position_relative.y) 
+                person_detected.append(aux)
+                points.append(aux)
 
-        np = NeckPosition()
-        np.pan = float(180)
-        np.tilt = float(180)
-        self.node.neck_position_publisher.publish(np)
-        time.sleep(3)
+
+            total_person_detected.append(person_detected.copy())
+            print("Total number of people detected:", len(person_detected), people_ctr)
+            person_detected.clear()
+
+
+
+        print(total_person_detected)
+            
+        """
+        total_points = []
+        points = []
+        p1 =  (-1.805,  0.362)
+        ### 
+        p2 =  (-2.355,  4.552)
+        p3 =  (-3.882,  2.830)
+        p4 =  (-1.694,  0.217)
+        ###
+        p5 =  ( 0.630,  2.417)
+        p6 =  (-2.560,  4.700)
+        ###
+        p7 =  ( 0.892,  3.195)
+        p8 =  ( 1.866, -0.373)
+        ###
+        p9 =  ( 1.754, -0.277)
+        p10 = ( 0.561, -0.944)
+
+        print(type(p1))
+
+        points.append(p1)
+        total_points.append(points.copy())
+        points.clear()
+
+        points.append(p2)
+        points.append(p3)
+        points.append(p4)
+        total_points.append(points.copy())
+        points.clear()
+
+        points.append(p5)
+        points.append(p6)
+        total_points.append(points.copy())
+        points.clear()
+
+        points.append(p7)
+        points.append(p8)
+        total_points.append(points.copy())
+        points.clear()
+
+        points.append(p9)
+        points.append(p10)
+        total_points.append(points.copy())
+        points.clear()
+        
+
+        points.append(p1)
+        points.append(p2)
+        points.append(p3)
+        points.append(p4)
+        points.append(p5)
+        points.append(p6)
+        points.append(p7)
+        points.append(p8)
+        points.append(p9)
+        points.append(p10)
+
+
+
+
+        print(total_points)
+        print("\n\n")
+
+        """
+        filtered_persons = []
+        for frame in total_person_detected:
+
+            if not len(filtered_persons):
+                for person in frame:
+                    filtered_persons.append(person)
+            else:
+                for person in frame:
+                    same_person_ctr = 0
+                    same_person_coords = (0,0)
+                    for filtered in filtered_persons: #_aux:
+                        dist = math.dist(person, filtered)
+                        # print("person:", person, "filtered:", filtered, "dist:", dist)
+                        
+                        if dist < 1.0:
+                            same_person_ctr+=1
+                            same_person_coords = filtered
+                        
+                    if same_person_ctr > 0:
+                         #print(same_person_ctr, same_person_coords, person)
+                        filtered_persons.remove(same_person_coords)
+                        
+                        avg_person = ((person[0]+same_person_coords[0])/2, (person[1]+same_person_coords[1])/2)
+                        # print(avg_person)
+                        filtered_persons.append(avg_person)
+                        points.append(avg_person)
+
+                    else:
+                        filtered_persons.append(person)
+
+            # print("---", filtered_persons)
+
+        
+        print("---", filtered_persons)
+        points_to_send = ListOfPoints()
+        # for debug, see all points and the average calculations
+        # for p in points:
+        for p in filtered_persons:
+            aux = Point()
+            aux.x = float(p[0])
+            aux.y = float(p[1])
+            aux.z = 0.0
+            points_to_send.coords.append(aux)
+
+        # print(points_to_send)
+        self.node.search_for_person_publisher.publish(points_to_send)
+
+
+        for p in filtered_persons:
+            pose = Pose2D()
+            pose.x = p[0]
+            pose.y = p[1]
+            pose.theta = 180.0
+            self.node.neck_to_coords_publisher.publish(pose)
+            time.sleep(3)
+
+
+
+        # np = NeckPosition()
+        # np.pan = float(180)
+        # np.tilt = float(180)
+        # self.node.neck_position_publisher.publish(np)
+        # time.sleep(3)
 
         # np = NeckPosition()
         # np.pan = float(180+180)
