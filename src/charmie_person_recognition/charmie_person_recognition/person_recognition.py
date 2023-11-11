@@ -327,10 +327,21 @@ class PersonRecognitionMain():
 
         total_person_detected = []
         person_detected = []
+        total_cropped_people = []
+        cropped_people = []
         points = []
+        croppeds = []
+
+        # person_detected_full = []
+        # points_full = []
 
 
 
+        np = NeckPosition()
+        np.pan = float(180 - tetas[0])
+        np.tilt = float(180)
+        self.node.neck_position_publisher.publish(np)
+        time.sleep(1.0)
 
 
         # teste Neck to coords
@@ -359,7 +370,6 @@ class PersonRecognitionMain():
 
 
 
-
         people_ctr = 0
         for t in tetas:
             print("Rotating Neck:", t)
@@ -377,12 +387,13 @@ class PersonRecognitionMain():
 
             for people in self.node.latest_person_pose.persons:
                 people_ctr+=1
-                print(" - ", people.index_person, people.position_relative.x, 
-                      people.position_relative.y, people.position_relative.z)
-                
-                aux = (people.position_relative.x, people.position_relative.y) 
+                print(" - ", people.index_person, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
+                print(" - ", people.index_person, people.position_relative.x,people.position_relative.y, people.position_relative.z)
+                aux = (people.position_absolute.x, people.position_absolute.y) 
                 person_detected.append(aux)
+                # person_detected_full.append(people)
                 points.append(aux)
+                # points_full.append(people)
 
 
 
@@ -395,20 +406,40 @@ class PersonRecognitionMain():
                     x1 = people.box_top_left_x
                     x2 = people.box_top_left_x + people.box_width
 
-                    # self.latest_color_image
-
-                    # cropped_image_l = current_frame[y1_l:y2_l, x1_l:x2_l]
-
-
+                    print(y1, y1, x1,x2)
+                    br = CvBridge()
+                    current_frame = br.imgmsg_to_cv2(self.node.latest_color_image, "bgr8")
+                    cropped_image = current_frame[y1:y2, x1:x2]
+                    cropped_people.append(cropped_image)
+                    
+                    # try:
+                    #     # Save the cropped image to a file
+                    #     cv2.imwrite("cropped_foot_left_"+str(ctr)+".jpg", cropped_image_l)
+                    #     cv2.imwrite("cropped_foot_right_"+str(ctr)+".jpg", cropped_image_r)
+                    # except:
+                    #     print("An exception has occurred!")
+                    croppeds.append(cropped_image)
 
             total_person_detected.append(person_detected.copy())
+            total_cropped_people.append(cropped_people.copy())
             print("Total number of people detected:", len(person_detected), people_ctr)
-            person_detected.clear()
+            person_detected.clear()          
+            cropped_people.clear()              
+            # person_detected_full.clear()
 
+        # print(person_detected_full)
 
+        # print(len(cropped_image))
+        # for cropped in cropped_people:
+        #     cv2.imshow("Detected People", cropped)
+        #     cv2.waitKey(1)
+        #     time.sleep(5)
 
         print(total_person_detected)
-            
+        print(len(points))
+
+
+
         """
         total_points = []
         points = []
@@ -473,6 +504,59 @@ class PersonRecognitionMain():
         print("\n\n")
 
         """
+
+       
+        filtered_persons = []
+        filtered_persons_cropped = []
+        for frame in range(len(total_person_detected)):
+
+            if not len(filtered_persons):
+                for person in range(len(total_person_detected[frame])):
+                    filtered_persons.append(total_person_detected[frame][person])
+                    filtered_persons_cropped.append(total_cropped_people[frame][person])
+            else:
+                for person in range(len(total_person_detected[frame])):
+                    same_person_ctr = 0
+                    same_person_coords = (0,0)
+                    for filtered in range(len(filtered_persons)): #_aux:
+
+                        # print("??? ", total_person_detected[frame][person], filtered_persons[filtered])
+                        dist = math.dist(total_person_detected[frame][person], filtered_persons[filtered])
+                        # print("person:", person, "filtered:", filtered, "dist:", dist)
+                        
+                        if dist < 1.0:
+                            same_person_ctr+=1
+                            same_person_coords = filtered_persons[filtered]
+                            same_person_cropped = filtered_persons_cropped[filtered] 
+                        
+                    if same_person_ctr > 0:
+                        
+                        # print(same_person_cropped)
+                        # print(total_cropped_people[frame][person])
+                        # print(len(same_person_cropped), len(total_cropped_people[frame][person]))
+                        # print(same_person_cropped.shape[0], same_person_cropped.shape[1])
+                        # print(total_cropped_people[frame][person].shape[0], total_cropped_people[frame][person].shape[1])
+                        
+                        # the same person is the person on the first frame, whereas total_cropped_people[frame][person] is the same person on the second frame
+                        if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
+                            filtered_persons_cropped.remove(same_person_cropped)
+                            filtered_persons_cropped.append(total_cropped_people[frame][person])
+
+                    
+                        #print(same_person_ctr, same_person_coords, person)
+                        filtered_persons.remove(same_person_coords)
+
+                        avg_person = ((total_person_detected[frame][person][0]+same_person_coords[0])/2, (total_person_detected[frame][person][1]+same_person_coords[1])/2)
+                        # print(avg_person)
+                        filtered_persons.append(avg_person)
+                        points.append(avg_person)
+
+                    else:
+                        filtered_persons.append(total_person_detected[frame][person])
+                        filtered_persons_cropped.append(total_cropped_people[frame][person])
+
+
+        """
         filtered_persons = []
         for frame in total_person_detected:
 
@@ -503,14 +587,30 @@ class PersonRecognitionMain():
                     else:
                         filtered_persons.append(person)
 
-            # print("---", filtered_persons)
+        """
+
+
+
+
+        # print("---", filtered_persons)
 
         
+        ctr = 0
+        for c in croppeds:
+            ctr+=1
+            cv2.imwrite("Person Detected_"+str(ctr)+".jpg", c)
+        ctr = 0
+        for c in filtered_persons_cropped:
+            ctr+=1
+            cv2.imwrite("Person Filtered_"+str(ctr)+".jpg", c)
+
+
+
         print("---", filtered_persons)
         points_to_send = ListOfPoints()
         # for debug, see all points and the average calculations
-        # for p in points:
-        for p in filtered_persons:
+        for p in points:
+        # for p in filtered_persons:
             aux = Point()
             aux.x = float(p[0])
             aux.y = float(p[1])
@@ -529,7 +629,7 @@ class PersonRecognitionMain():
             self.node.neck_to_coords_publisher.publish(pose)
             time.sleep(3)
 
-
+        
 
         # np = NeckPosition()
         # np.pan = float(180)

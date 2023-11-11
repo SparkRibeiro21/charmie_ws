@@ -818,7 +818,7 @@ class YoloPoseNode(Node):
         person_abs_pos = Point()
         person_abs_pos.x = target_x
         person_abs_pos.y = target_y
-        person_abs_pos.z = p_localisation.z
+        person_abs_pos.z = p_localisation.z/1000
         
         new_person.position_absolute = person_abs_pos
 
