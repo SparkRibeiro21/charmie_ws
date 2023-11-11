@@ -106,13 +106,21 @@ class YoloPoseNode(Node):
         self.ANKLE_LEFT_KP = 15
         self.ANKLE_RIGHT_KP = 16
 
+        # RoboCup 2023 House
+        # self.house_rooms = [ # house rooms, coordinates of top left point and bottom left point in meters
+        #     {'name': 'Living Room', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (1.45, 0.45)}, 
+        #     {'name': 'Kitchen',     'top_left_coords': (-4.05, 9.45), 'bot_right_coords': (1.45, 4.95)},
+        #     {'name': 'Office',      'top_left_coords': (1.45, 4.95),  'bot_right_coords': ((4.95, 0.45))},
+        #     {'name': 'Bedroom',     'top_left_coords': (1.45, 9.45),  'bot_right_coords': ((4.95, 4.95))}
+        # ]
+        
         self.house_rooms = [ # house rooms, coordinates of top left point and bottom left point in meters
-            {'name': 'Living Room', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (1.45, 0.45)}, 
-            {'name': 'Kitchen',     'top_left_coords': (-4.05, 9.45), 'bot_right_coords': (1.45, 4.95)},
-            {'name': 'Office',      'top_left_coords': (1.45, 4.95),  'bot_right_coords': ((4.95, 0.45))},
-            {'name': 'Bedroom',     'top_left_coords': (1.45, 9.45),  'bot_right_coords': ((4.95, 4.95))}
+            {'name': 'Corridor',     'top_left_coords': (-1.30, 5.98),  'bot_right_coords': ((0.8, 0.70))},
+            {'name': 'Living Room',  'top_left_coords': (-4.65, 3.86),  'bot_right_coords': ((-1.30, 0.70))},
+            {'name': 'Bedroom',     'top_left_coords': (-4.65, 5.98),  'bot_right_coords': ((-1.30, 3.86))},
+            {'name': 'Kitchen',     'top_left_coords': (-4.65, 9.62), 'bot_right_coords': (0.80, 5.98)},
+            {'name': 'Office',      'top_left_coords': (-4.65, 13.12),  'bot_right_coords': ((0.80, 9.62))}
         ]
-
 
     def get_only_detect_person_legs_visible_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE
