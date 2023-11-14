@@ -11,12 +11,11 @@ import cv2
 import time
 import threading
 import math
-
-
+import numpy as np
 
 # fourcc = cv2.VideoWriter_fourcc(*'H264')  # You can also use 'XVID' or 'MJPG' codecs
-width, height = 1280, 720  # You can adjust the resolution
-out = cv2.VideoWriter('charmie_test_21_TESTE.avi', cv2.VideoWriter_fourcc(*'MJPG'), 20.0, (width, height))
+# width, height = 1280, 720  # You can adjust the resolution
+# out = cv2.VideoWriter('charmie_test_21_TESTE.avi', cv2.VideoWriter_fourcc(*'MJPG'), 20.0, (width, height))
 
 # TO DO TIAGO RIBEIRO:
 # - crop face from color_image according to yolo pose  
@@ -50,8 +49,7 @@ class PersonRecognitionNode(Node):
         
         self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
         # self.create_timer(2, self.check_person_feet)
-
-
+        
         self.robot = PersonRec()
 
         self.latest_color_image = Image()
@@ -59,7 +57,7 @@ class PersonRecognitionNode(Node):
         self.br = CvBridge()
 
 
-        self.search_for_person_flag = False
+        self.search_for_person_flag = True
         
 
     def get_color_image_callback(self, img: Image):
@@ -331,6 +329,7 @@ class PersonRecognitionMain():
 
     def __init__(self, node: PersonRecognitionNode):
         self.node = node
+        # Create a black image
 
     def main(self):
         
@@ -348,39 +347,108 @@ class PersonRecognitionMain():
         # Construct the full path to the image
         # image_path = f"{desktop_path}/{image_filename}"
         # image_path = f"{image_filename}"
-
+        
+        
         # Read the image using cv2.imread
         image1 = cv2.imread("Person Filtered_1.jpg")
         image2 = cv2.imread("Person Filtered_2.jpg")
+        image2 = cv2.imread("Person Detected_3.jpg")
+
+        images = []
+        images.append(image1)
+        images.append(image2)
+        images.append(image2)
+        images.append(image1)
+
+        H = 500
+
 
         # Check if the image was successfully loaded
         if image1 is not None and image2 is not None:
             # Display some information about the image
-            print("Image1 shape:", image1.shape)
-            print("Image1 dtype:", image1.dtype)
-            print("Image2 shape:", image2.shape)
-            print("Image2 dtype:", image2.dtype)
+            
+            detected_person_final_image = np.zeros(( H+50+50, H*10, 3), np.uint8)
+            
+            y_offset = 50
+            x_offset = 50
+
+
+
+            i_ctr = 0
+            for i in images:
+                i_ctr += 1
+                print("Image1 shape:", i.shape)
+                print("Image1 dtype:", i.dtype)
+
+                scale_factor  = H/i.shape[0]
+                width = int(i.shape[1] * scale_factor)
+                height = int(i.shape[0] * scale_factor)
+                dim = (width, height)
+                print(scale_factor, dim)
+                i = cv2.resize(i, dim, interpolation = cv2.INTER_AREA)
+
+                # cv2.imshow("Image"+str(i_ctr), i)
+
+                detected_person_final_image[y_offset:y_offset+i.shape[0], x_offset:x_offset+i.shape[1]] = i
+
+                detected_person_final_image = cv2.putText(
+                    detected_person_final_image,
+                    f"{'Customer '+str(i_ctr)}",
+                    (x_offset, y_offset-10),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    1,
+                    (255, 255, 255),
+                    1,
+                    cv2.LINE_AA
+                ) 
+            
+                x_offset += width+50
+
+            detected_person_final_image = detected_person_final_image[0:H+50+50, 0:x_offset] # Slicing to crop the image
+            cv2.imshow("Customers Detected", detected_person_final_image)
+            # print("Image1 shape:", image1.shape)
+            # print("Image1 dtype:", image1.dtype)
+            # print("Image2 shape:", image2.shape)
+            # print("Image2 dtype:", image2.dtype)
+
+            
+            
+            # image2 = cv2.imread("Person Filtered_2.jpg")
+            # image2 = cv2.imread("Person Detected_3.jpg")
+
 
 
             # Display the image (you might need to adjust the window size)
-            cv2.imshow("Image1", image1)
-            cv2.imshow("Image2", image2)
+            # cv2.imshow("Image1", image1)
+            # cv2.imshow("Image2", image2)
+            # cv2.imshow("Final", self.detected_person_final_image)
+
+
+
+
+            # key = cv2.waitKey(1)  # Wait for a key press
+            # cv2.imshow("Image1", image1)
+            # key = cv2.waitKey(1)  # Wait for a key press
+            # key = cv2.waitKey(1)  # Wait for a key press
+            # if key == ord('q'):
+            #     pass  # Exit the loop
+
+
+            print("GO ON")
+
+
             while True:
 
-                print("GO ON")
+                # print("GO ON")
                 pass
                 key = cv2.waitKey(1)  # Wait for a key press
 
                 if key == ord('q'):
                     break  # Exit the loop
-            # cv2.destroyAllWindows()  # Close the window
+            # cv2.destroyAllWindows()  # Close the windowq
 
         else:
             print(f"Failed to load the image")
-
-
-
-
 
 
     def search_for_person(self):
@@ -658,7 +726,7 @@ class PersonRecognitionMain():
 
 
         # print("---", filtered_persons)
-
+        show_detected_people = True
         
         ctr = 0
         for c in croppeds:
@@ -668,6 +736,15 @@ class PersonRecognitionMain():
         for c in filtered_persons_cropped:
             ctr+=1
             cv2.imwrite("Person Filtered_"+str(ctr)+".jpg", c)
+
+
+        if show_detected_people:
+            pass
+
+
+
+
+
 
 
 
