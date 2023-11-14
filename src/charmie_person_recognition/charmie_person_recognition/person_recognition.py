@@ -64,17 +64,17 @@ class PersonRecognitionNode(Node):
         self.latest_color_image = img
         
         # generate video for yolo pose dataset
-        
-        frame = self.br.imgmsg_to_cv2(img, "bgr8")
-        
-        cv2.imshow('Frame', frame)
-
+        # 
+        # frame = self.br.imgmsg_to_cv2(img, "bgr8")
+        # 
+        # cv2.imshow('Frame', frame)
+        #    
         # Write the frame to the output video file
-        out.write(frame)
-
+        # out.write(frame)
+        # 
         # Break the loop if 'q' key is pressed
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            pass
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     pass
 
 
 
@@ -334,10 +334,10 @@ class PersonRecognitionMain():
     def main(self):
         
         if self.node.search_for_person_flag:
-            # self.search_for_person()
-            self.aux_for_imread()
+            self.search_for_person()
+            # self.aux_for_imread()
             self.node.search_for_person_flag = False
-        
+    """    
     def aux_for_imread(self):
         print("hello")
         # Specify the path to the image file on the desktop
@@ -406,6 +406,7 @@ class PersonRecognitionMain():
 
             detected_person_final_image = detected_person_final_image[0:H+50+50, 0:x_offset] # Slicing to crop the image
             cv2.imshow("Customers Detected", detected_person_final_image)
+            cv2.waitKey(100)
             # print("Image1 shape:", image1.shape)
             # print("Image1 dtype:", image1.dtype)
             # print("Image2 shape:", image2.shape)
@@ -434,22 +435,11 @@ class PersonRecognitionMain():
             #     pass  # Exit the loop
 
 
-            print("GO ON")
-
-
-            while True:
-
-                # print("GO ON")
-                pass
-                key = cv2.waitKey(1)  # Wait for a key press
-
-                if key == ord('q'):
-                    break  # Exit the loop
-            # cv2.destroyAllWindows()  # Close the windowq
-
+            # while True:
+            #     pass
         else:
             print(f"Failed to load the image")
-
+    """
 
     def search_for_person(self):
         print("In Search for Person.")
@@ -470,10 +460,10 @@ class PersonRecognitionMain():
 
 
 
-        np = NeckPosition()
-        np.pan = float(180 - tetas[0])
-        np.tilt = float(180)
-        self.node.neck_position_publisher.publish(np)
+        neck = NeckPosition()
+        neck.pan = float(180 - tetas[0])
+        neck.tilt = float(180)
+        self.node.neck_position_publisher.publish(neck)
         time.sleep(1.0)
 
 
@@ -507,10 +497,10 @@ class PersonRecognitionMain():
         for t in tetas:
             print("Rotating Neck:", t)
             
-            np = NeckPosition()
-            np.pan = float(180 - t)
-            np.tilt = float(180)
-            self.node.neck_position_publisher.publish(np)
+            neck = NeckPosition()
+            neck.pan = float(180 - t)
+            neck.tilt = float(180)
+            self.node.neck_position_publisher.publish(neck)
             time.sleep(3)
             # print(self.node.latest_person_pose.num_person)
 
@@ -722,9 +712,6 @@ class PersonRecognitionMain():
 
         """
 
-
-
-
         # print("---", filtered_persons)
         show_detected_people = True
         
@@ -739,11 +726,44 @@ class PersonRecognitionMain():
 
 
         if show_detected_people:
-            pass
+            H = 720
+            y_offset = 50
+            x_offset = 50
+            detected_person_final_image = np.zeros(( H+(y_offset*2), H*10, 3), np.uint8)
+            
+            i_ctr = 0
+            for i in filtered_persons_cropped:
+                i_ctr += 1
+                print("Image1 shape:", i.shape)
+                print("Image1 dtype:", i.dtype)
 
+                scale_factor  = H/i.shape[0]
+                width = int(i.shape[1] * scale_factor)
+                height = int(i.shape[0] * scale_factor)
+                dim = (width, height)
+                print(scale_factor, dim)
+                i = cv2.resize(i, dim, interpolation = cv2.INTER_AREA)
 
+                # cv2.imshow("Image"+str(i_ctr), i)
 
+                detected_person_final_image[y_offset:y_offset+i.shape[0], x_offset:x_offset+i.shape[1]] = i
 
+                detected_person_final_image = cv2.putText(
+                    detected_person_final_image,
+                    f"{'Customer '+str(i_ctr)}",
+                    (x_offset, y_offset-10),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    1,
+                    (255, 255, 255),
+                    1,
+                    cv2.LINE_AA
+                ) 
+            
+                x_offset += width+50
+
+            detected_person_final_image = detected_person_final_image[0:H+(y_offset*2), 0:x_offset] # Slicing to crop the image
+            cv2.imshow("Customers Detected", detected_person_final_image)
+            cv2.waitKey(100)
 
 
 
@@ -773,20 +793,20 @@ class PersonRecognitionMain():
 
         
 
-        # np = NeckPosition()
-        # np.pan = float(180)
-        # np.tilt = float(180)
-        # self.node.neck_position_publisher.publish(np)
+        # neck = NeckPosition()
+        # neck.pan = float(180)
+        # neck.tilt = float(180)
+        # self.node.neck_position_publisher.publish(neck)
         # time.sleep(3)
 
-        # np = NeckPosition()
-        # np.pan = float(180+180)
-        # np.tilt = float(180)
-        # self.node.neck_position_publisher.publish(np)
+        # neck = NeckPosition()
+        # neck.pan = float(180+180)
+        # neck.tilt = float(180)
+        # self.node.neck_position_publisher.publish(neck)
         # time.sleep(3)
 
-        # np = NeckPosition()
-        # np.pan = float(180)
-        # np.tilt = float(180)
-        # self.node.neck_position_publisher.publish(np)
+        # neck = NeckPosition()
+        # neck.pan = float(180)
+        # neck.tilt = float(180)
+        # self.node.neck_position_publisher.publish(neck)
         # time.sleep(3)
