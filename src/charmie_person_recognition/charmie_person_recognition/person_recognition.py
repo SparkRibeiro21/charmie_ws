@@ -13,6 +13,11 @@ import threading
 import math
 
 
+
+# fourcc = cv2.VideoWriter_fourcc(*'H264')  # You can also use 'XVID' or 'MJPG' codecs
+width, height = 1280, 720  # You can adjust the resolution
+out = cv2.VideoWriter('charmie_test_21_TESTE.avi', cv2.VideoWriter_fourcc(*'MJPG'), 20.0, (width, height))
+
 # TO DO TIAGO RIBEIRO:
 # - crop face from color_image according to yolo pose  
 # - crop hands from color_image according to yolo pose  
@@ -54,13 +59,28 @@ class PersonRecognitionNode(Node):
         self.br = CvBridge()
 
 
-        self.search_for_person_flag = True
-        # self.search_for_person()
-
+        self.search_for_person_flag = False
+        
 
     def get_color_image_callback(self, img: Image):
         self.latest_color_image = img
         
+        # generate video for yolo pose dataset
+        
+        frame = self.br.imgmsg_to_cv2(img, "bgr8")
+        
+        cv2.imshow('Frame', frame)
+
+        # Write the frame to the output video file
+        out.write(frame)
+
+        # Break the loop if 'q' key is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            pass
+
+
+
+
 
     def get_person_pose_filtered_callback(self, pose: Yolov8Pose):
         self.latest_person_pose = pose
@@ -315,9 +335,54 @@ class PersonRecognitionMain():
     def main(self):
         
         if self.node.search_for_person_flag:
-            self.search_for_person()
+            # self.search_for_person()
+            self.aux_for_imread()
             self.node.search_for_person_flag = False
         
+    def aux_for_imread(self):
+        print("hello")
+        # Specify the path to the image file on the desktop
+        # desktop_path = "/path/to/your/desktop"  # Replace this with the actual path to your desktop
+        # image_filename = "Person Filtered_1.jpg"  # Replace this with the actual filename of your image
+
+        # Construct the full path to the image
+        # image_path = f"{desktop_path}/{image_filename}"
+        # image_path = f"{image_filename}"
+
+        # Read the image using cv2.imread
+        image1 = cv2.imread("Person Filtered_1.jpg")
+        image2 = cv2.imread("Person Filtered_2.jpg")
+
+        # Check if the image was successfully loaded
+        if image1 is not None and image2 is not None:
+            # Display some information about the image
+            print("Image1 shape:", image1.shape)
+            print("Image1 dtype:", image1.dtype)
+            print("Image2 shape:", image2.shape)
+            print("Image2 dtype:", image2.dtype)
+
+
+            # Display the image (you might need to adjust the window size)
+            cv2.imshow("Image1", image1)
+            cv2.imshow("Image2", image2)
+            while True:
+
+                print("GO ON")
+                pass
+                key = cv2.waitKey(1)  # Wait for a key press
+
+                if key == ord('q'):
+                    break  # Exit the loop
+            # cv2.destroyAllWindows()  # Close the window
+
+        else:
+            print(f"Failed to load the image")
+
+
+
+
+
+
     def search_for_person(self):
         print("In Search for Person.")
 
