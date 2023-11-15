@@ -654,11 +654,23 @@ class PersonRecognitionMain():
                         # print(total_cropped_people[frame][person].shape[0], total_cropped_people[frame][person].shape[1])
                         
                         # the same person is the person on the first frame, whereas total_cropped_people[frame][person] is the same person on the second frame
-                        if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
-                            filtered_persons_cropped.remove(same_person_cropped)
-                            filtered_persons_cropped.append(total_cropped_people[frame][person])
+                        # if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
+                            # filtered_persons_cropped.remove(same_person_cropped)
+                            # filtered_persons_cropped.append(total_cropped_people[frame][person])
+                            # total_cropped_people[frame][person] = 
+                            # pass
 
-                    
+                        filtered_persons_cropped.remove(same_person_cropped)
+                        if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
+                            filtered_persons_cropped.append(total_cropped_people[frame][person])
+                        else:
+                            filtered_persons_cropped.append(same_person_cropped)
+                            
+                        
+
+
+
+
                         #print(same_person_ctr, same_person_coords, person)
                         filtered_persons.remove(same_person_coords)
 
@@ -726,19 +738,19 @@ class PersonRecognitionMain():
             detected_person_final_image = np.zeros(( H+(y_offset*2), H*10, 3), np.uint8)
             
             i_ctr = 0
-            for i in filtered_persons_cropped:
+            for i in range(len(filtered_persons_cropped)):
                 i_ctr += 1
-                print("Image shape:", i.shape)
-                print("Image dtype:", i.dtype)
+                print("Image shape:", filtered_persons_cropped[i].shape)
+                print("Image dtype:", filtered_persons_cropped[i].dtype)
 
-                scale_factor  = H/i.shape[0]
-                width = int(i.shape[1] * scale_factor)
-                height = int(i.shape[0] * scale_factor)
+                scale_factor  = H/filtered_persons_cropped[i].shape[0]
+                width = int(filtered_persons_cropped[i].shape[1] * scale_factor)
+                height = int(filtered_persons_cropped[i].shape[0] * scale_factor)
 
                 if width > H//2:
-                    scale_factor  = (H//2)/i.shape[1]
-                    width = int(i.shape[1] * scale_factor)
-                    height = int(i.shape[0] * scale_factor)
+                    scale_factor  = (H//2)/filtered_persons_cropped[i].shape[1]
+                    width = int(filtered_persons_cropped[i].shape[1] * scale_factor)
+                    height = int(filtered_persons_cropped[i].shape[0] * scale_factor)
 
 
 
@@ -747,11 +759,11 @@ class PersonRecognitionMain():
 
                 dim = (width, height)
                 print(scale_factor, dim)
-                i = cv2.resize(i, dim, interpolation = cv2.INTER_AREA)
+                filtered_persons_cropped[i] = cv2.resize(filtered_persons_cropped[i], dim, interpolation = cv2.INTER_AREA)
 
                 # cv2.imshow("Image"+str(i_ctr), i)
 
-                detected_person_final_image[y_offset:y_offset+i.shape[0], x_offset:x_offset+i.shape[1]] = i
+                detected_person_final_image[y_offset:y_offset+filtered_persons_cropped[i].shape[0], x_offset:x_offset+filtered_persons_cropped[i].shape[1]] = filtered_persons_cropped[i]
 
                 detected_person_final_image = cv2.putText(
                     detected_person_final_image,
@@ -763,7 +775,22 @@ class PersonRecognitionMain():
                     1,
                     cv2.LINE_AA
                 ) 
-            
+
+                print(filtered_persons[i])
+                
+                
+                detected_person_final_image = cv2.putText(
+                    detected_person_final_image,
+                    f"{'('+str(round(filtered_persons[i][0],2))+', '+str(round(filtered_persons[i][1],2))+')'}",
+                    (x_offset, int(height+(1.5*y_offset))),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    0.75,
+                    (255, 255, 255),
+                    1,
+                    cv2.LINE_AA
+                )
+                
+
                 x_offset += width+50
 
             print(max_image_height)
