@@ -288,7 +288,7 @@ class DebugVisualNode(Node):
 
 
     def get_color_image_callback(self, img: Image):
-        self.get_logger().info('Receiving color video frame')
+        # self.get_logger().info('Receiving color video frame')
         # ROS2 Image Bridge for OpenCV
         br = CvBridge()
         self.robot.current_frame = br.imgmsg_to_cv2(img, "bgr8")

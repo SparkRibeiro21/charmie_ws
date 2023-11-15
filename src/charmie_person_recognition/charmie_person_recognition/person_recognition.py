@@ -15,7 +15,7 @@ import numpy as np
 
 # fourcc = cv2.VideoWriter_fourcc(*'H264')  # You can also use 'XVID' or 'MJPG' codecs
 # width, height = 1280, 720  # You can adjust the resolution
-# out = cv2.VideoWriter('charmie_test_21_TESTE.avi', cv2.VideoWriter_fourcc(*'MJPG'), 20.0, (width, height))
+# out = cv2.VideoWriter('charmie_test_26.avi', cv2.VideoWriter_fourcc(*'MJPG'), 20.0, (width, height))
 
 # TO DO TIAGO RIBEIRO:
 # - crop face from color_image according to yolo pose  
@@ -64,18 +64,11 @@ class PersonRecognitionNode(Node):
         self.latest_color_image = img
         
         # generate video for yolo pose dataset
-        # 
         # frame = self.br.imgmsg_to_cv2(img, "bgr8")
-        # 
         # cv2.imshow('Frame', frame)
-        #    
-        # Write the frame to the output video file
+        # cv2.waitKey(5)
         # out.write(frame)
-        # 
-        # Break the loop if 'q' key is pressed
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     pass
-
+        
 
 
 
@@ -729,17 +722,29 @@ class PersonRecognitionMain():
             H = 720
             y_offset = 50
             x_offset = 50
+            max_image_height = 0
             detected_person_final_image = np.zeros(( H+(y_offset*2), H*10, 3), np.uint8)
             
             i_ctr = 0
             for i in filtered_persons_cropped:
                 i_ctr += 1
-                print("Image1 shape:", i.shape)
-                print("Image1 dtype:", i.dtype)
+                print("Image shape:", i.shape)
+                print("Image dtype:", i.dtype)
 
                 scale_factor  = H/i.shape[0]
                 width = int(i.shape[1] * scale_factor)
                 height = int(i.shape[0] * scale_factor)
+
+                if width > H//2:
+                    scale_factor  = (H//2)/i.shape[1]
+                    width = int(i.shape[1] * scale_factor)
+                    height = int(i.shape[0] * scale_factor)
+
+
+
+                if height > max_image_height:
+                    max_image_height = height
+
                 dim = (width, height)
                 print(scale_factor, dim)
                 i = cv2.resize(i, dim, interpolation = cv2.INTER_AREA)
@@ -761,7 +766,9 @@ class PersonRecognitionMain():
             
                 x_offset += width+50
 
-            detected_person_final_image = detected_person_final_image[0:H+(y_offset*2), 0:x_offset] # Slicing to crop the image
+            print(max_image_height)
+
+            detected_person_final_image = detected_person_final_image[0:max_image_height+(y_offset*2), 0:x_offset] # Slicing to crop the image
             cv2.imshow("Customers Detected", detected_person_final_image)
             cv2.waitKey(100)
 
@@ -771,8 +778,8 @@ class PersonRecognitionMain():
         print("---", filtered_persons)
         points_to_send = ListOfPoints()
         # for debug, see all points and the average calculations
-        for p in points:
-        # for p in filtered_persons:
+        # for p in points:
+        for p in filtered_persons:
             aux = Point()
             aux.x = float(p[0])
             aux.y = float(p[1])
@@ -793,11 +800,11 @@ class PersonRecognitionMain():
 
         
 
-        # neck = NeckPosition()
-        # neck.pan = float(180)
-        # neck.tilt = float(180)
-        # self.node.neck_position_publisher.publish(neck)
-        # time.sleep(3)
+        neck = NeckPosition()
+        neck.pan = float(180)
+        neck.tilt = float(180)
+        self.node.neck_position_publisher.publish(neck)
+        #time.sleep(3)
 
         # neck = NeckPosition()
         # neck.pan = float(180+180)
