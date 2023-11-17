@@ -36,6 +36,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RequestPointCloud.msg"
   "msg/RetrievePointCloud.msg"
   "msg/RobotSpeech.msg"
+  "msg/SearchForPerson.msg"
   "msg/SpeechType.msg"
   "msg/TarNavSDNL.msg"
   "msg/TrackObject.msg"

@@ -5,7 +5,7 @@ from rclpy.node import Node
 from std_msgs.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose, ListOfPoints
+from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose, ListOfPoints, SearchForPerson
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import time
@@ -47,6 +47,7 @@ class PersonRecognitionNode(Node):
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
         
+        self.search_for_person_subscriber = self.create_subscription(SearchForPerson, "search_for_person", 10, self.search_for_person_callback)
         self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
         # self.create_timer(2, self.check_person_feet)
         
@@ -56,9 +57,19 @@ class PersonRecognitionNode(Node):
         self.latest_person_pose = Yolov8Pose()
         self.br = CvBridge()
 
+        self.search_for_person_data = SearchForPerson()
 
-        self.search_for_person_flag = True
+        self.search_for_person_flag = False
         
+
+
+    def search_for_person_callback(self, sfp: SearchForPerson):
+        print("Received a start for person")
+        self.search_for_person_data = sfp
+        self.search_for_person_flag = True
+
+
+
 
     def get_color_image_callback(self, img: Image):
         self.latest_color_image = img
@@ -69,10 +80,6 @@ class PersonRecognitionNode(Node):
         # cv2.waitKey(5)
         # out.write(frame)
         
-
-
-
-
     def get_person_pose_filtered_callback(self, pose: Yolov8Pose):
         self.latest_person_pose = pose
         # print("IN")
@@ -437,8 +444,10 @@ class PersonRecognitionMain():
     def search_for_person(self):
         print("In Search for Person.")
 
-        tetas = [-120, -60, 0, 60, 120]
-        imshow_detected_people = True
+        tetas = self.node.search_for_person_data.angles
+        # tetas = [-120, -60, 0, 60, 120]
+        imshow_detected_people = self.node.search_for_person_data.show_image_people_detected
+        # imshow_detected_people = True
 
 
         total_person_detected = []
@@ -817,7 +826,8 @@ class PersonRecognitionMain():
         # print(points_to_send)
         self.node.search_for_person_publisher.publish(points_to_send)
 
-
+        """
+        
         for p in filtered_persons:
             pose = Pose2D()
             pose.x = p[0]
@@ -832,6 +842,10 @@ class PersonRecognitionMain():
         neck.pan = float(180)
         neck.tilt = float(180)
         self.node.neck_position_publisher.publish(neck)
+        
+        """
+
+
         #time.sleep(3)
 
         # neck = NeckPosition()
