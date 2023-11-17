@@ -47,7 +47,7 @@ class PersonRecognitionNode(Node):
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
         
-        self.search_for_person_subscriber = self.create_subscription(SearchForPerson, "search_for_person", 10, self.search_for_person_callback)
+        self.search_for_person_subscriber = self.create_subscription(SearchForPerson, "search_for_person", self.search_for_person_callback, 10)
         self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
         # self.create_timer(2, self.check_person_feet)
         
@@ -315,13 +315,13 @@ class PersonRecognitionNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = PersonRecognitionNode()
-    th_main = threading.Thread(target=thread_main_restaurant, args=(node,), daemon=True)
+    th_main = threading.Thread(target=thread_main_person_recognition, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
 
-def thread_main_restaurant(node: PersonRecognitionNode):
+def thread_main_person_recognition(node: PersonRecognitionNode):
     main = PersonRecognitionMain(node)
     main.main()
 
@@ -332,12 +332,15 @@ class PersonRecognitionMain():
         # Create a black image
 
     def main(self):
-        
-        if self.node.search_for_person_flag:
-            self.search_for_person()
-            # self.aux_for_imread()
-            self.node.search_for_person_flag = False
-    """    
+
+        while True:
+            print("...")
+            
+            if self.node.search_for_person_flag:
+                self.search_for_person()
+                # self.aux_for_imread()
+                self.node.search_for_person_flag = False
+        """    
     def aux_for_imread(self):
         print("hello")
         # Specify the path to the image file on the desktop
