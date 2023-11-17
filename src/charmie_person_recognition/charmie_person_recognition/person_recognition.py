@@ -660,6 +660,7 @@ class PersonRecognitionMain():
                             # total_cropped_people[frame][person] = 
                             # pass
 
+                        # in some cases, I remove and then add again the same value, so it photos match the locations
                         filtered_persons_cropped.remove(same_person_cropped)
                         if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
                             filtered_persons_cropped.append(total_cropped_people[frame][person])

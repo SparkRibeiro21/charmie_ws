@@ -56,11 +56,12 @@ class TRNode(Node):
         # Face Shining RGB
         self.face_publisher = self.create_publisher(Int16, "face_command", 10)
 
+        """
         # Audio
         self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
-        self.flag_listening_subscriber = self.create_subscription(Bool, "flag_listening", self.flag_listening_callback, 10)
         self.get_speech_subscriber = self.create_subscription(String, "get_speech", self.get_speech_callback, 10)
-        
+        # self.flag_listening_subscriber = self.create_subscription(Bool, "flag_listening", self.flag_listening_callback, 10)
+        """
         # Navigation 
         self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_pos_reached_callback, 10)
@@ -69,7 +70,7 @@ class TRNode(Node):
         self.start_door_publisher = self.create_publisher(Bool, 'start_door', 10) 
         self.done_start_door_subscriber = self.create_subscription(Bool, 'done_start_door', self.done_start_door_callback, 10) 
         
-        """
+        
         # Neck Topics
         self.neck_to_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
@@ -90,10 +91,13 @@ class TRNode(Node):
 
         self.request_point_cloud_publisher = self.create_publisher(RequestPointCloud, 'ask_point_cloud', 10) 
 
-        
-        self.create_timer(0.1, self.request_point_cloud_person)
+        """
+        # self.create_timer(0.1, self.request_point_cloud_person)
+        # self.create_timer(10, self.request_audio)
 
+        self.request_audio()
 
+        """
         # Timers
         self.counter = 1 # starts at 1 to avoid initial 
         # self.create_timer(0.05, self.timer_callback)
@@ -132,15 +136,52 @@ class TRNode(Node):
         # self.mp_pose = mp.solutions.pose
         # self.pose = self.mp_pose.Pose()
 
-
-
         aux_start_door = Bool()
         aux_start_door.data = True
-        # self.start_door_publisher.publish(aux_start_door)
+        self.start_door_publisher.publish(aux_start_door)
         print("Fiz pedido da Door")
+        """
+
+
+    def request_audio(self):
+        
+        sp = SpeechType()
+        sp.yes_or_no = False
+        sp.restaurant = True
+        self.audio_command_publisher.publish(sp)
+        print("Requested Audio")
+
+
+    def get_speech_callback(self, speech: String):
+        # speech_str = RobotSpeech()
+        
+        
+        # self.start_audio()
+
+        if speech.data == "ERROR":
+            print("I could not understand what you said, can you repeat please?")
+            # speech_str.command = "I could not understand what you said, can you repeat please?"
+            # speech_str.language = 'en'
+            # self.speaker_publisher.publish(speech_str)
+        else:
+            print(speech.data)
+            # speech_str.command = "Hello my name is Tiago."
+            # speech_str.language = 'en'
+            # speech_str.command = "Bom dia, o meu nome é Tiago e gosto de Robôs. Já agora, qual é a comida na cantina hoje?"
+            # speech_str.command = "Qual é a comida na cantina hoje?"
+            # speech_str.command = speech.data
+            # speech_str.language = 'en'
+            # self.speaker_publisher.publish(speech_str)
+        time.sleep(3)
+        self.request_audio()
+        
+
+    def done_start_door_callback(self, flag: Bool):
+        print("Recebi Fim do Start Door")
 
 
 
+    """
     def request_point_cloud_person(self):
         if self.person_pose.num_person > 0:
             aux = RequestPointCloud()
@@ -230,8 +271,9 @@ class TRNode(Node):
         self.get_logger().info('Receiving color video frame')
         current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
 
-        
-        """ image = cv2.cvtColor(current_frame, cv2.COLOR_RGB2BGR)
+    """
+    """ 
+        image = cv2.cvtColor(current_frame, cv2.COLOR_RGB2BGR)
         height, width, _ = image.shape
         results = self.pose.process(image)
         #print("RESULTS")
@@ -263,12 +305,12 @@ class TRNode(Node):
             cv2.imshow("Landmarks", image)
             cv2.waitKey(1)
         else: """
-        print('didnt found landmarks')
+        # print('didnt found landmarks')
         #cv2.imshow("c_camera", current_frame)   
         #cv2.waitKey(1)
             
         
-
+    """
     def get_depth_image_callback(self, img: Image):
         # print(img)
         print("---")
@@ -279,24 +321,11 @@ class TRNode(Node):
 
     def flag_listening_callback(self, flag: Bool):
         print("Finished Listening, now analising...")
+    """
 
-    def get_speech_callback(self, speech: String):
-        # speech_str = RobotSpeech()
-        self.start_audio()
 
-        """ if speech.data == "ERROR":
-            speech_str.command = "I could not understand what you said, can you repeat please?"
-            speech_str.language = 'en'
-            self.speaker_publisher.publish(speech_str)
-        else:
-            # speech_str.command = "Hello my name is Tiago."
-            # speech_str.language = 'en'
-            # speech_str.command = "Bom dia, o meu nome é Tiago e gosto de Robôs. Já agora, qual é a comida na cantina hoje?"
-            # speech_str.command = "Qual é a comida na cantina hoje?"
-            speech_str.command = speech.data
-            speech_str.language = 'en'
-            self.speaker_publisher.publish(speech_str) """
 
+    """
     def flag_pos_reached_callback(self, flag: Bool):
 
         time.sleep(5.0)
@@ -318,17 +347,15 @@ class TRNode(Node):
         aud.restaurant = True
         self.audio_command_publisher.publish(aud)
         print(aud)
-
-    def done_start_door_callback(self, flag: Bool):
-        print("Recebi Fim do Start Door")
-
-    def timer_callback4(self):
+    """
+    
+    # def timer_callback4(self):
         
         # if self.init == True:
         #     self.start_audio()
         #     self.init = False 
         
-        speak = RobotSpeech()
+        # speak = RobotSpeech()
         #speak.command = "Red Wine"
         # speak.language = 'en'
 
@@ -339,7 +366,8 @@ class TRNode(Node):
         
         # speak = RobotSpeech()
         
-        """ speak.command = "RedWine"
+    """ 
+        speak.command = "RedWine"
 
 
         self.speaker_publisher.publish(speak) """
@@ -396,7 +424,7 @@ class TRNode(Node):
             self.neck_ctr = 0
 
         """
-        
+    """
     def timer_callback_audio(self):
         if self.init == True:
             self.start_audio()
@@ -471,8 +499,8 @@ class TRNode(Node):
            
             self.omni_move_publisher.publish(omni_move)
             self.controller_updated = False
-            
         """
+    """
         if self.counter == 0:
             neck.pan = 180.0
             neck.tilt = 180.0 
