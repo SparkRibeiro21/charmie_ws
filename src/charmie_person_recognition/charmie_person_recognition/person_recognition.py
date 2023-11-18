@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import Bool, String, Float32
+from std_msgs.msg import Bool, String, Float32, Int16
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose, ListOfPoints, SearchForPerson
@@ -37,9 +37,10 @@ class PersonRecognitionNode(Node):
         super().__init__("PersonRecognition")
         self.get_logger().info("Initialised CHARMIE Person Recognition Node")
 
-        # self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
-        # self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
-        
+
+        # Low Level: RGB
+        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
+
         # image and pose subscriptions
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_filtered_callback, 10)   
@@ -67,6 +68,7 @@ class PersonRecognitionNode(Node):
         print("Received a start for person")
         self.search_for_person_data = sfp
         self.search_for_person_flag = True
+        print(":::", self.search_for_person_flag)
 
 
 
@@ -334,124 +336,24 @@ class PersonRecognitionMain():
     def main(self):
 
         while True:
-            print("...")
-            
+        
+            #print(self.node.search_for_person_flag)
             if self.node.search_for_person_flag:
                 self.search_for_person()
                 # self.aux_for_imread()
                 self.node.search_for_person_flag = False
-        """    
-    def aux_for_imread(self):
-        print("hello")
-        # Specify the path to the image file on the desktop
-        # desktop_path = "/path/to/your/desktop"  # Replace this with the actual path to your desktop
-        # image_filename = "Person Filtered_1.jpg"  # Replace this with the actual filename of your image
-
-        # Construct the full path to the image
-        # image_path = f"{desktop_path}/{image_filename}"
-        # image_path = f"{image_filename}"
-        
-        
-        # Read the image using cv2.imread
-        image1 = cv2.imread("Person Filtered_1.jpg")
-        image2 = cv2.imread("Person Filtered_2.jpg")
-        image2 = cv2.imread("Person Detected_3.jpg")
-
-        images = []
-        images.append(image1)
-        images.append(image2)
-        images.append(image2)
-        images.append(image1)
-
-        H = 500
-
-
-        # Check if the image was successfully loaded
-        if image1 is not None and image2 is not None:
-            # Display some information about the image
-            
-            detected_person_final_image = np.zeros(( H+50+50, H*10, 3), np.uint8)
-            
-            y_offset = 50
-            x_offset = 50
-
-
-
-            i_ctr = 0
-            for i in images:
-                i_ctr += 1
-                print("Image1 shape:", i.shape)
-                print("Image1 dtype:", i.dtype)
-
-                scale_factor  = H/i.shape[0]
-                width = int(i.shape[1] * scale_factor)
-                height = int(i.shape[0] * scale_factor)
-                dim = (width, height)
-                print(scale_factor, dim)
-                i = cv2.resize(i, dim, interpolation = cv2.INTER_AREA)
-
-                # cv2.imshow("Image"+str(i_ctr), i)
-
-                detected_person_final_image[y_offset:y_offset+i.shape[0], x_offset:x_offset+i.shape[1]] = i
-
-                detected_person_final_image = cv2.putText(
-                    detected_person_final_image,
-                    f"{'Customer '+str(i_ctr)}",
-                    (x_offset, y_offset-10),
-                    cv2.FONT_HERSHEY_DUPLEX,
-                    1,
-                    (255, 255, 255),
-                    1,
-                    cv2.LINE_AA
-                ) 
-            
-                x_offset += width+50
-
-            detected_person_final_image = detected_person_final_image[0:H+50+50, 0:x_offset] # Slicing to crop the image
-            cv2.imshow("Customers Detected", detected_person_final_image)
-            cv2.waitKey(100)
-            # print("Image1 shape:", image1.shape)
-            # print("Image1 dtype:", image1.dtype)
-            # print("Image2 shape:", image2.shape)
-            # print("Image2 dtype:", image2.dtype)
-
-            
-            
-            # image2 = cv2.imread("Person Filtered_2.jpg")
-            # image2 = cv2.imread("Person Detected_3.jpg")
-
-
-
-            # Display the image (you might need to adjust the window size)
-            # cv2.imshow("Image1", image1)
-            # cv2.imshow("Image2", image2)
-            # cv2.imshow("Final", self.detected_person_final_image)
-
-
-
-
-            # key = cv2.waitKey(1)  # Wait for a key press
-            # cv2.imshow("Image1", image1)
-            # key = cv2.waitKey(1)  # Wait for a key press
-            # key = cv2.waitKey(1)  # Wait for a key press
-            # if key == ord('q'):
-            #     pass  # Exit the loop
-
-
-            # while True:
-            #     pass
-        else:
-            print(f"Failed to load the image")
-    """
 
     def search_for_person(self):
         print("In Search for Person.")
+        
+        rgb = Int16()
+        rgb.data = 63
+        self.node.rgb_mode_publisher.publish(rgb)
 
         tetas = self.node.search_for_person_data.angles
         # tetas = [-120, -60, 0, 60, 120]
         imshow_detected_people = self.node.search_for_person_data.show_image_people_detected
         # imshow_detected_people = True
-
 
         total_person_detected = []
         person_detected = []
@@ -460,45 +362,14 @@ class PersonRecognitionMain():
         points = []
         croppeds = []
 
-        # person_detected_full = []
-        # points_full = []
-
-
-
-        neck = NeckPosition()
-        neck.pan = float(180 - tetas[0])
-        neck.tilt = float(180)
-        self.node.neck_position_publisher.publish(neck)
-        time.sleep(1.0)
-
-
-        # teste Neck to coords
-        # aux_neck_to_coords = [
-        #     (-0.05, -1.0),
-        #     (-0.5, -1.0),
-        #     (-0.5, -0.2),
-        #     (-0.5,  0.2),
-        #     (-0.5,  1.0),
-        #     ( 0.5,  1.0),
-        #     ( 0.5,  0.2),
-
-        #     ( 0.5, -0.2),
-        #     ( 0.5, -1.0)
-        # ]
-        
-        # while True:
-        #     for n in aux_neck_to_coords:
-        #         pose = Pose2D()
-        #         pose.x = n[0]
-        #         pose.y = n[1]
-        #         pose.theta = 180.0
-        #         self.node.neck_to_coords_publisher.publish(pose)
-        #         time.sleep(3)
-
-
-
+        # neck = NeckPosition()
+        # neck.pan = float(180 - tetas[0])
+        # neck.tilt = float(180)
+        # self.node.neck_position_publisher.publish(neck)
+        # time.sleep(1.0)
 
         people_ctr = 0
+        delay_ctr = 0
         for t in tetas:
             print("Rotating Neck:", t)
             
@@ -506,12 +377,13 @@ class PersonRecognitionMain():
             neck.pan = float(180 - t)
             neck.tilt = float(180)
             self.node.neck_position_publisher.publish(neck)
-            time.sleep(3)
+            if delay_ctr == 0: # since the initial angle of the tracking is never known, we do this to make sure there is time for the neck to reach the first position before analysing the yolo pose
+                time.sleep(2.0+1.5)
+            else:
+                time.sleep(1.5+1.5)
+            delay_ctr+=1
+
             # print(self.node.latest_person_pose.num_person)
-
-
-
-
 
             for people in self.node.latest_person_pose.persons:
                 people_ctr+=1
@@ -519,12 +391,7 @@ class PersonRecognitionMain():
                 print(" - ", people.index_person, people.position_relative.x,people.position_relative.y, people.position_relative.z)
                 aux = (people.position_absolute.x, people.position_absolute.y) 
                 person_detected.append(aux)
-                # person_detected_full.append(people)
                 points.append(aux)
-                # points_full.append(people)
-
-
-
 
                 if imshow_detected_people:
 
@@ -540,22 +407,13 @@ class PersonRecognitionMain():
                     cropped_image = current_frame[y1:y2, x1:x2]
                     cropped_people.append(cropped_image)
                     
-                    # try:
-                    #     # Save the cropped image to a file
-                    #     cv2.imwrite("cropped_foot_left_"+str(ctr)+".jpg", cropped_image_l)
-                    #     cv2.imwrite("cropped_foot_right_"+str(ctr)+".jpg", cropped_image_r)
-                    # except:
-                    #     print("An exception has occurred!")
                     croppeds.append(cropped_image)
 
             total_person_detected.append(person_detected.copy())
             total_cropped_people.append(cropped_people.copy())
             print("Total number of people detected:", len(person_detected), people_ctr)
             person_detected.clear()          
-            cropped_people.clear()              
-            # person_detected_full.clear()
-
-        # print(person_detected_full)
+            cropped_people.clear()
 
         # print(len(cropped_image))
         # for cropped in cropped_people:
@@ -565,74 +423,6 @@ class PersonRecognitionMain():
 
         print(total_person_detected)
         print(len(points))
-
-
-
-        """
-        total_points = []
-        points = []
-        p1 =  (-1.805,  0.362)
-        ### 
-        p2 =  (-2.355,  4.552)
-        p3 =  (-3.882,  2.830)
-        p4 =  (-1.694,  0.217)
-        ###
-        p5 =  ( 0.630,  2.417)
-        p6 =  (-2.560,  4.700)
-        ###
-        p7 =  ( 0.892,  3.195)
-        p8 =  ( 1.866, -0.373)
-        ###
-        p9 =  ( 1.754, -0.277)
-        p10 = ( 0.561, -0.944)
-
-        print(type(p1))
-
-        points.append(p1)
-        total_points.append(points.copy())
-        points.clear()
-
-        points.append(p2)
-        points.append(p3)
-        points.append(p4)
-        total_points.append(points.copy())
-        points.clear()
-
-        points.append(p5)
-        points.append(p6)
-        total_points.append(points.copy())
-        points.clear()
-
-        points.append(p7)
-        points.append(p8)
-        total_points.append(points.copy())
-        points.clear()
-
-        points.append(p9)
-        points.append(p10)
-        total_points.append(points.copy())
-        points.clear()
-        
-
-        points.append(p1)
-        points.append(p2)
-        points.append(p3)
-        points.append(p4)
-        points.append(p5)
-        points.append(p6)
-        points.append(p7)
-        points.append(p8)
-        points.append(p9)
-        points.append(p10)
-
-
-
-
-        print(total_points)
-        print("\n\n")
-
-        """
-
        
         filtered_persons = []
         filtered_persons_cropped = []
@@ -679,11 +469,6 @@ class PersonRecognitionMain():
                         else:
                             filtered_persons_cropped.append(same_person_cropped)
                             
-                        
-
-
-
-
                         #print(same_person_ctr, same_person_coords, person)
                         filtered_persons.remove(same_person_coords)
 
@@ -695,40 +480,6 @@ class PersonRecognitionMain():
                     else:
                         filtered_persons.append(total_person_detected[frame][person])
                         filtered_persons_cropped.append(total_cropped_people[frame][person])
-
-
-        """
-        filtered_persons = []
-        for frame in total_person_detected:
-
-            if not len(filtered_persons):
-                for person in frame:
-                    filtered_persons.append(person)
-            else:
-                for person in frame:
-                    same_person_ctr = 0
-                    same_person_coords = (0,0)
-                    for filtered in filtered_persons: #_aux:
-                        dist = math.dist(person, filtered)
-                        # print("person:", person, "filtered:", filtered, "dist:", dist)
-                        
-                        if dist < 1.0:
-                            same_person_ctr+=1
-                            same_person_coords = filtered
-                        
-                    if same_person_ctr > 0:
-                         #print(same_person_ctr, same_person_coords, person)
-                        filtered_persons.remove(same_person_coords)
-                        
-                        avg_person = ((person[0]+same_person_coords[0])/2, (person[1]+same_person_coords[1])/2)
-                        # print(avg_person)
-                        filtered_persons.append(avg_person)
-                        points.append(avg_person)
-
-                    else:
-                        filtered_persons.append(person)
-
-        """
 
         # print("---", filtered_persons)
         show_detected_people = True
@@ -791,7 +542,6 @@ class PersonRecognitionMain():
 
                 print(filtered_persons[i])
                 
-                
                 detected_person_final_image = cv2.putText(
                     detected_person_final_image,
                     f"{'('+str(round(filtered_persons[i][0],2))+', '+str(round(filtered_persons[i][1],2))+')'}",
@@ -802,7 +552,6 @@ class PersonRecognitionMain():
                     1,
                     cv2.LINE_AA
                 )
-                
 
                 x_offset += width+50
 
@@ -811,9 +560,6 @@ class PersonRecognitionMain():
             detected_person_final_image = detected_person_final_image[0:max_image_height+(y_offset*2), 0:x_offset] # Slicing to crop the image
             cv2.imshow("Customers Detected", detected_person_final_image)
             cv2.waitKey(100)
-
-
-
 
         print("---", filtered_persons)
         points_to_send = ListOfPoints()
@@ -829,36 +575,15 @@ class PersonRecognitionMain():
         # print(points_to_send)
         self.node.search_for_person_publisher.publish(points_to_send)
 
-        """
-        
-        for p in filtered_persons:
-            pose = Pose2D()
-            pose.x = p[0]
-            pose.y = p[1]
-            pose.theta = 180.0
-            self.node.neck_to_coords_publisher.publish(pose)
-            time.sleep(3)
-
-        
-
-        neck = NeckPosition()
-        neck.pan = float(180)
-        neck.tilt = float(180)
-        self.node.neck_position_publisher.publish(neck)
-        
-        """
-
-
-        #time.sleep(3)
-
-        # neck = NeckPosition()
-        # neck.pan = float(180+180)
-        # neck.tilt = float(180)
-        # self.node.neck_position_publisher.publish(neck)
-        # time.sleep(3)
+        # for p in filtered_persons:
+        #     pose = Pose2D()
+        #     pose.x = p[0]
+        #     pose.y = p[1]
+        #     pose.theta = 180.0
+        #     self.node.neck_to_coords_publisher.publish(pose)
+        #     time.sleep(3)
 
         # neck = NeckPosition()
         # neck.pan = float(180)
         # neck.tilt = float(180)
         # self.node.neck_position_publisher.publish(neck)
-        # time.sleep(3)
