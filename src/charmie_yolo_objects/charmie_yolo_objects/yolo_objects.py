@@ -2,14 +2,14 @@
 from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, String
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedObject, Yolov8Objects
 from cv_bridge import CvBridge
 import cv2 
 import cvzone
 
-import numpy as np
+# import numpy as np
 
 import math
 import time
@@ -45,8 +45,18 @@ class Yolo_obj(Node):
         # Intel Realsense
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
         
+        # For individual images
+        self.cropped_image_subscription = self.create_subscription(Image, '/cropped_image', self.cropped_image_callback, 10)
+        self.cropped_image_object_detected_publisher = self.create_publisher(String, '/cropped_image_object_detected', 10)
+
         # Variables
         self.br = CvBridge()
+
+        Final_calssName = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser', 
+            'Coffe_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
+            'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear', 
+            'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
+            'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water'] 
 
         Rui_className = ['7_up', 'bag', 'bowl', 'cheezit', 'chocolate_jello', 'cleanser', 'coffee_grounds', 
                          'cola', 'cornflakes', 'cup', 'dishwasher_tab', 'fork', 'iced_tea', 'juice_pack', 
@@ -63,6 +73,7 @@ class Yolo_obj(Node):
             self.classNames = door_classname
         elif filename=='best.pt' or filename=='last.pt':
             self.classNames = Rui_className
+            self.classNames = Final_calssName
         else:
             print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
             
@@ -155,6 +166,35 @@ class Yolo_obj(Node):
                 # print(height, width, channels)
                 # cv2.imwrite("yolo_objects.jpg", current_frame) 
                 # time.sleep(1)
+
+
+    def cropped_image_callback(self, msg: Image):
+        #convert msg to useful image 
+        img = self.br.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+
+        #execute detection
+        results = self.model(img)
+        msg = String()
+        
+        if results:
+            for r in results:
+                boxes = r.boxes
+                for box in boxes:
+                    cls = int(box.cls[0])
+                    conf = math.ceil(box.conf[0]*100) / 100
+                    if conf > 0.5:  # Threshold for detection confidence
+                        msg.data = self.classNames[int(cls)]
+                        self.get_logger().info('Object detected :)')
+    
+            """ cv2.imshow('Received Image', img)
+                if cv2.waitKey(1) == ord('q'): # Se a tecla 'q' for pressionada, saia
+                break"""
+            
+        else:
+            self.get_logger().info('Nothing detected :(')
+            
+        self.publisher_object.publish(msg)
+
 
         
 def main(args=None):
