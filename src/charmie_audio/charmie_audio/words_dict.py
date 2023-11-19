@@ -17,16 +17,16 @@ names_dict = {
 }
 
 drinks_dict = {
+    "RedWine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
+    "JuicePack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
+                      "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag"],
     "Cola":          [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold"],
-    "OrangeJuice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order", "or in", "our enjour"],
+    "TropicalJuice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
     "Milk":          ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok"],
 	"IceTea":        [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                     "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
-                    "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict"],
-    "JuicePack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
-                      "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag"],
-    "RedWine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
-    "TropicalJuice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
+                    "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict", " icy ", "nice t"],
+    "OrangeJuice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order", "or in", "our enjour", "northern juice"],
     "7up": ["seven", "up", "7", "simon", "nope", "devanab", "savannah", "sabona"],
     "Water": ["water"]
 }
@@ -39,17 +39,18 @@ foods_dict = {
     "StrawberryJello": ["strawberry"],
     "ChocolateJello":  ["chocolat", "jello"],
     "CofeeGrounds":    ["coffee", "grounds"],
+    "Sugar":           ["sugar"],
 
-    "Pear":            ["pear", "pair"],
+    "Pear":            ["pear", "pair", "pier", "beer"],
     "Plum":            ["plum", "clump"],
     "Peach":           ["peach"],
     "Lemon":           ["lemon"],
     # "Orange":          ["orange"],
+    "Strawberry":      ["strawberr"],
     "Banana":          ["banana"],
     "Apple":           ["apple"],
-    "Strawberry":      ["strawberr"],
 
-    "Pringles":        ["pringles", "sprinkles", "wrinkles"],
+    "Pringles":        ["pringles", "sprinkles", "wrinkles", "bringles", "friendos"],
     "Cornflakes":      ["cornflakes"],
     "Cheezit":         ["cheese", "cheezit"]
 }

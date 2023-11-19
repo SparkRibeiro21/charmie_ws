@@ -9,11 +9,13 @@ from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Bool, String, Int16
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import Obstacles, SpeechType, RobotSpeech, TarNavSDNL, Yolov8Pose, NeckPosition
+from charmie_interfaces.msg import Obstacles, SpeechType, RobotSpeech, TarNavSDNL, Yolov8Pose, NeckPosition, Yolov8Objects, SearchForPerson, ListOfPoints
 
 from cv_bridge import CvBridge
 import time
 from datetime import datetime, timedelta
+from std_srvs.srv import SetBool
+from functools import partial
 
 import cv2
 from math import sin, cos, pi, atan2, sqrt
@@ -24,7 +26,11 @@ class RestaurantNode(Node):
         super().__init__("Restaurant")
         self.get_logger().info("Initialised CHARMIE Restaurant Node")
         
-        ###         PUBs/SUBs        
+        ###         PUBs/SUBs       
+
+        # Arm
+        self.flag_arm_finish_subscriber = self.create_subscription(Bool, 'flag_arm_finished_movement', self.flag_arm_finish_callback, 10)  
+        self.barman_or_client_publisher = self.create_publisher(Int16, "barman_or_client", 10)
         
         # Door Start
         self.start_door_publisher = self.create_publisher(Bool, 'start_door', 10) 
@@ -36,12 +42,12 @@ class RestaurantNode(Node):
 
         # Audio
         self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
-        self.flag_listening_subscriber = self.create_subscription(Bool, "flag_listening", self.flag_listening_callback, 10)
         self.get_speech_subscriber = self.create_subscription(String, "get_speech", self.get_speech_callback, 10)
         self.calibrate_ambient_noise_publisher = self.create_publisher(Bool, "calib_ambient_noise", 10)
         
         # Neck
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
+        self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
         
         # Navigation 
         self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
@@ -61,21 +67,48 @@ class RestaurantNode(Node):
         self.odometry_subscriber = self.create_subscription(Odometry, "odom",self.get_odometry_robot_callback, 10)
 
         #Yolo
-        self.yolov8_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.yolov8_callback, 10)
+        self.yolov8_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.yolov8_pose_callback, 10)
+        self.objects_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected', self.yolov8_objects_callback, 10)
+        self.only_detect_person_arm_raised_publisher = self.create_publisher(Bool, "only_det_per_arm_raised", 10)
 
         #self.dummy_publisher = self.create_publisher(Bool, "Dummy", 10)
+        
+        #Search For Person
+        self.search_for_person_publisher = self.create_publisher(SearchForPerson, 'search_for_person', 10)
+        self.search_for_person_subscriber = self.create_subscription(ListOfPoints, "search_for_person_points", self.search_for_person_point_callback, 10)
+
+
+
+        # SERVICE TR
+        # self.bool_service_client = self.create_client(SetBool, 'bool_service')
+
+        # while not self.bool_service_client.wait_for_service(timeout_sec=1.0):
+        #     self.get_logger().info('Service not available, waiting again...')
 
 
         self.br = CvBridge()
         self.image_color = Image()
         self.depth_img = Image()
-        self.speech_type = SpeechType()
-        self.speech_type.receptionist = False
-        self.speech_type.yes_or_no = False
-        self.speech_type.restaurant = False
-        self.speech_type.gpsr = False
         self.speech_str = RobotSpeech()
         self.talk_neck = NeckPosition()
+        self.turn_around_neck = NeckPosition()
+        self.neck_a = NeckPosition()
+        self.neck_b = NeckPosition()
+        self.check_object = NeckPosition()
+        self.flag_arm_finish = False
+        self.flag_search_for_person_done = False
+
+        self.speech_type = SpeechType() # this variable must be deleted everywhere
+        self.request_audio_yes_or_no = SpeechType()
+        self.request_audio_yes_or_no.receptionist = False
+        self.request_audio_yes_or_no.yes_or_no = True
+        self.request_audio_yes_or_no.restaurant = False
+        self.request_audio_yes_or_no.gpsr = False
+        self.request_audio_restaurant = SpeechType()
+        self.request_audio_restaurant.receptionist = False
+        self.request_audio_restaurant.yes_or_no = False
+        self.request_audio_restaurant.restaurant = True
+        self.request_audio_restaurant.gpsr = False
 
         self.foods = []
         self.get_foods = 0
@@ -101,6 +134,8 @@ class RestaurantNode(Node):
         self.flag_navigation_done = False
 
         self.yolo_poses = Yolov8Pose()
+        self.yolo_objects = Yolov8Objects()
+        self.person_list_of_points = ListOfPoints()
 
         self.flag_speech_done = False
 
@@ -113,6 +148,47 @@ class RestaurantNode(Node):
 
         self.counter = 0
         self.tempo = 4.0
+
+        self.turn_around_neck.pan = 360.0
+        self.turn_around_neck.tilt = 180.0
+
+        self.talk_neck.pan = 180.0
+        self.talk_neck.tilt = 180.0
+
+        self.neck_a.pan = 135.0
+        self.neck_a.tilt = 180.0
+
+        self.neck_b.pan = 225.0
+        self.neck_b.tilt = 180.0
+
+        self.check_object.pan = 120.0
+        self.check_object.tilt = 187.0
+        
+    def call_service(self):
+        request = SetBool.Request()
+        request.data = True
+
+        print("Calling SetBool TR Service")
+
+    
+        future = self.bool_service_client.call_async(request)
+        future.add_done_callback(partial(self.callback_service_tr))
+        print('teste')
+
+        # rclpy.spin_until_future_complete(self, future)
+
+        # if future.result() is not None:
+        #     response = future.result()
+        #     self.get_logger().info('Service call result: Sucess: {response.sucess}, Message:{response.message}}')
+        # else:
+        #     self.get_logger().error('Service call failed')
+
+    def callback_service_tr(self, future):
+        try:
+            response = future.result()
+            print("acho que deu caralho")
+        except Exception as e:
+            self.get_logger().error("Service call failed: %r" % (e,))
 
     def get_odometry_robot_callback(self, loc:Odometry):
         self.robot_x = loc.pose.pose.position.x
@@ -130,31 +206,29 @@ class RestaurantNode(Node):
 
         self.robot_theta = atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
 
-
     def get_speech_done_callback(self, state: Bool):
         self.flag_speech_done = state.data
-        print("Received Speech Flag:", state.data)
+        # print("Received Speech Flag:", state.data)
 
+    def flag_arm_finish_callback(self, flag: Bool):
+        self.flag_arm_finish = flag.data
+        print("Received Arm Flag:", flag.data)
 
-    def flag_listening_callback(self, flag: Bool):
-        print("Finished Listening, now analising...")
-
+    # def flag_listening_callback(self, flag: Bool):
+    #     print("Finished Listening, now analising...")
 
     def get_speech_callback(self, keywords : String):
         print("Received Audio:", keywords.data)
         self.keywords = keywords
         self.flag_audio_done = True
 
-
     def flag_pos_reached_callback(self, state: Bool):
         self.flag_navigation_done = state.data
         #print("Received Navigation Flag:", state.data)
 
-
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
         print("Received Start Button:", state.data)
-
 
     def color_img_callbcak(self, img: Image):
         #print('camera callback')
@@ -164,12 +238,11 @@ class RestaurantNode(Node):
         """ cv2.imshow("c_camera", current_frame)   
         cv2.waitKey(1) """
 
-
     def get_depth_callback(self, img: Image):
         #print('camera callback')
         self.depth_img = img
 
-    def yolov8_callback(self, yolov8: Yolov8Pose):
+    def yolov8_pose_callback(self, yolov8: Yolov8Pose):
 
         #self.get_logger().info('Receiving Yolov8 Pose Info')
         """ if(yolov8.persons[0].kp_nose_y != None):
@@ -181,6 +254,13 @@ class RestaurantNode(Node):
 
         self.yolo_poses = yolov8
 
+    def yolov8_objects_callback(self, yolov8_objects: Yolov8Objects):
+        self.yolo_objects = yolov8_objects
+
+    def search_for_person_point_callback(self, LoP: ListOfPoints):
+        self.person_list_of_points = LoP
+        self.flag_search_for_person_done = True
+
     def coordinates_to_navigation(self, p1, p2, bool1, bool2):
         nav = TarNavSDNL()
         nav.flag_not_obs = bool1
@@ -191,45 +271,6 @@ class RestaurantNode(Node):
         nav.follow_me = bool2
         self.target_position_publisher.publish(nav)
 
-    """ def follow_center_face(self, erro_x, erro_y):
-        print('Center face')
-
-        erro = Pose2D()
-        dist_2 = erro_x**2 + erro_y**2
-        dist = math.sqrt(dist_2)
-        
-
-        while dist >= 10:
-            print('erro: ', abs(erro.x), abs(erro.y))
-            cv2_img = self.br.imgmsg_to_cv2(self.image_color, "bgr8")
-            #num_faces, center_face_x, center_face_y, center_x, center_y  = self.detect_face(cv2_img)
-            #print('Variaveis função renata:', num_faces, center_face_x, center_face_y, center_x, center_y)
-            #error_x = center_face_x - center_x
-            #error_y = center_face_y - center_y
-            #num_faces, face_x, face_y, shoulder, hip, center_x, center_y = self.found_landmarks(cv2_img)
-            error_x = face_x - center_x
-            error_y = face_y - center_y
-
-            print('erro_atualizado =', int(error_x), int(error_y))
-            dist_2 = error_x**2 + error_y**2
-            dist = math.sqrt(dist_2)
-            erro.x= float(error_x)
-            erro.y= float(error_y)
-            print("erro:", erro)
-            while(True):
-                print("You used function neck error! This function no longer exists, please change this! in this case should be neck_follow_person .")
-                # self.neck_error_publisher.publish(erro)
-            # print('dist 2:', dist_2)
-            print('dist:', dist)
-            #time.sleep(0.05)
-            cv2.imshow("c_camera", cv2_img)
-            cv2.waitKey(1)
-
-                   
-
-        print('centrei')
-         """
-
 def main(args=None):
     rclpy.init(args=args)
     node = RestaurantNode()
@@ -238,17 +279,18 @@ def main(args=None):
     rclpy.spin(node)
     rclpy.shutdown()
 
-
 def thread_main_restaurant(node: RestaurantNode):
     main = RestaurantMain(node)
     main.main()
-
 
 class RestaurantMain():
 
     def __init__(self, node: RestaurantNode):
         self.node = node
+        
         self.state = 0
+        #self.state = 1
+        self.count = 0
         self.hand_raised = 0
         self.person_coordinates = Pose2D()
         self.person_coordinates.x = 0.0
@@ -265,19 +307,22 @@ class RestaurantMain():
 
         self.i = 0
         
-        
     def wait_for_end_of_speaking(self):
         while not self.node.flag_speech_done:
             pass
         self.node.flag_speech_done = False
 
+    def wait_for_end_of_arm(self):
+        print('11111')
+        while not self.node.flag_arm_finish:
+            pass
+        self.node.flag_arm_finish = False
 
     def wait_for_end_of_audio(self):
         while not self.node.flag_audio_done:
             pass
         self.node.flag_audio_done = False
-        self.node.flag_speech_done = False 
-    
+        self.node.flag_speech_done = False
 
     def wait_for_start_button(self):
         while not self.node.start_button_state:
@@ -286,116 +331,26 @@ class RestaurantMain():
         f.data = False 
         self.node.flag_start_button_publisher.publish(f)
 
-
     def wait_for_end_of_navigation(self):
         while not self.node.flag_navigation_done:
             pass
         self.node.flag_navigation_done = False
         print("Finished Navigation")
 
-    def check_time(self):
-        
-        if self.node.ctr == 0:
-            self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (0.0, 1.0), False, False)
-        elif self.node.ctr == 1:
-            self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (0.5, 1.0), False, False)
-        elif self.node.ctr == 2:
-            self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (0.0, 1.0), False, False)
-        elif self.node.ctr == 3:
-            self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (-0.5, 1.0), False, False)
-            self.node.ctr = -1
-
-
-        self.node.ctr += 1
-        """ t1 = time.time()
-        #print(t1 - self.node.t)
-        if (t1-self.node.t) > self.node.tempo:
-            self.node.counter += 1
-            if self.node.counter == 1:
-                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (self.node.robot_x + 1.0, self.node.robot_y + 1.0), False, False)
-                print('1')
-                self.node.tempo += 5.0
-            
-            elif self.node.counter == 2:
-                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (self.node.robot_x + 1.0, self.node.robot_y + 0.0), False, False)
-                print('2')
-                self.node.tempo += 5.0
-
-            elif self.node.counter == 3:
-                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (self.node.robot_x + 1.0, self.node.robot_y - 1.0), False, False)
-                self.node.tempo += 5.0
-
-            elif self.node.counter == 4:
-                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (self.node.robot_x + 0.0, self.node.robot_y - 1.0), False, False)
-                self.node.tempo += 5.0
-
-            elif self.node.counter == 5:
-                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (self.node.robot_x - 1.0, self.node.robot_y - 1.0), False, False)
-                self.node.tempo += 5.0
-
-            elif self.node.counter == 6:
-                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (self.node.robot_x - 1.0, self.node.robot_y + 0.0), False, False)
-                self.node.tempo += 5.0
-
-            elif self.node.counter == 7:
-                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (self.node.robot_x - 1.0, self.node.robot_y + 1.0), False, False)
-                self.node.tempo += 5.0
-
-            elif self.node.counter == 8:
-                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (self.node.robot_x + 0.0, self.node.robot_y + 1.0), False, False)
-                self.node.tempo += 5.0
- """
-
-            
-        
-            
-        
-
-
-
-    def check_for_hand_raising(self):
-        #print('Hand raising function')
-        yolo = self.node.yolo_poses
-        if yolo.num_person > 0:
-            print('persons detected =', yolo.num_person)
-            for i in range(len(yolo.persons)):
-                if yolo.persons[i].kp_wrist_left_y < yolo.persons[i].kp_nose_y or yolo.persons[i].kp_wrist_right_y < yolo.persons[i].kp_nose_y:
-                    print('cumpri requisitos')
-                   
-                    
-                    #print(self.hand_raised)
-
-                    self.node.x_relative = yolo.persons[i].x_rel
-                    self.node.y_relative = yolo.persons[i].y_rel
-                    #self.hand_raised = 1
-
-                    self.node.i+=1
-
-
-                    #print('x = ', self.node.x_relative)
-                    #print('y = ', self.node.y_relative)
-
-                    #print(yolo.persons[i].kp_wrist_left_y, yolo.persons[i].kp_shoulder_left_y)
-                    #print(yolo.persons[i].kp_wrist_right_y, yolo.persons[i].kp_shoulder_right_y)
-                    
-                    """ current_frame = self.node.br.imgmsg_to_cv2(self.node.image_color, "bgr8")
-                    cv2.imshow("c_camera", current_frame)
-                    cv2.waitKey(1) """
-
-                else:
-                    pass
-                    #print('No hands up')
-                    #self.hand_raised = 0
-                    #print(self.hand_raised)
-
-        else:
-            #print('no persons detected')
-            self.hand_raised = 0
-
-
-
+    def waif_for_end_of_search_for_person(self):
+        while not self.node.flag_search_for_person_done:
+            pass
+        self.node.flag_search_for_person_done = False
+        print("Finished search for person")
 
     def main(self):
+        Waiting_for_start_button = 0
+        Searching_for_clients = 1
+        Navigation_to_person = 2
+        Receiving_order_speach = 3
+        Receiving_order_listen_and_confirm = 4
+        Collect_order_from_barman = 5
+        Delivering_order_to_client = 6
 
         print("IN NEW MAIN")
         time.sleep(1)
@@ -411,10 +366,14 @@ class RestaurantMain():
             # State 5 = Collect Order
             # State 6 = Final Speech
 
-            if self.state == 0:
+            if self.state == Waiting_for_start_button:
+
+                self.node.neck_position_publisher.publish(self.node.talk_neck)
+
+                ### @@@ Começar por fazer slam?
                 
                 # Print State
-                self.node.rgb_ctr = 0
+                self.node.rgb_ctr = 100
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
@@ -425,12 +384,14 @@ class RestaurantMain():
 
                 self.node.speech_str.command = "Hello! I am ready to start the restaurant task! Waiting for my start button to be pressed."
                 self.node.speaker_publisher.publish(self.node.speech_str)
+                # print("oi")
                 self.wait_for_end_of_speaking()
 
 
-                self.node.rgb_ctr = 22
+                self.node.rgb_ctr = 26
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
+
 
                 # START BUTTON
                 t = Bool()
@@ -438,126 +399,303 @@ class RestaurantMain():
                 self.node.flag_start_button_publisher.publish(t)
                 self.wait_for_start_button()
                 
-                
-                self.node.rgb_ctr = 41
+                self.node.rgb_ctr = 24
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb) 
 
+                self.node.rgb_ctr = 41
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb) 
                 
-                time.sleep(2)
-                
-                
-                self.node.speech_str.command = "I am ready to attend new clients. Please raise your hands if you want me to serve you."
+                # from now on only detected waving or calling people
+                only_detect_person_arm_raised = Bool()
+                only_detect_person_arm_raised.data = True
+                self.node.only_detect_person_arm_raised_publisher.publish(only_detect_person_arm_raised)
+
+                # self.node.speech_str.command = "Hello! My name is charmie and I am here to help you serve the customers. Are you the barman? Please say Yes robot when you see some lights rotating under my wheels."
+                self.node.speech_str.command = "Hello! My name is charmie and I am here to help you serve the customers. Are you the barman?"
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
 
-                time.sleep(0.5)
+                self.node.rgb_ctr = 12
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-               
+
+                ### AUDIO YES NO ###
+                self.node.audio_command_publisher.publish(self.node.request_audio_yes_or_no)
+                self.wait_for_end_of_audio()
+                time.sleep(1.0) # this is just so we can see the lights  
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                if self.node.keywords.data == "yes":
+                    # print("YES SIR")
+                    self.node.rgb_ctr = 11
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                else:
+                    # in this case we should do something... for now I will just leave it like this, since they will never say no
+                    # print("NO SIR")
+                    self.node.rgb_ctr = 1
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                # self.node.speech_type.yes_or_no = True
+                #self.node.audio_command_publisher.publish(self.node.speech_type)
+                #self.node.start_audio()
+                #self.wait_for_end_of_audio()
+                # self.node.speech_type.yes_or_no = False
+
+                # self.node.rgb_ctr = 24
+                # self.node.rgb.data = self.node.rgb_ctr
+                # self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                ### @@@ Aqui eu deveria verificar se ele disse sim ou não e não o estou a fazer 
+
+                self.node.speech_str.command = "Nice to meet you. I am going to turn around and search for possible customers. See you soon"
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+
+                
+                ########## AUXILIAR CODE JUST FOR TESTING ...
+
+                # this must be inside a while loop
+                order_confirmation = False
+                while not order_confirmation:
+
+                    self.node.rgb_ctr = 24
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                    self.node.speech_str.command = "Please state your order."
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    ### AUDIO YES NO ###
+                    self.node.audio_command_publisher.publish(self.node.request_audio_restaurant)
+                    self.wait_for_end_of_audio()
+                    time.sleep(1.0) # this is just so we can see the lights  
+                    self.node.rgb_ctr = 24
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb)                 
+
+                    self.node.speech_str.command = "Did you say "+self.node.keywords.data+"?"
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    ### AUDIO YES NO ###
+                    self.node.audio_command_publisher.publish(self.node.request_audio_yes_or_no)
+                    self.wait_for_end_of_audio()
+                    time.sleep(1.0) # this is just so we can see the lights  
+                    self.node.rgb_ctr = 24
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                    if self.node.keywords.data == "yes":
+                        # print("YES SIR")
+                        self.node.rgb_ctr = 11
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb)
+                                                
+                        self.node.speech_str.command = "Thank you I am going to get your order."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+                        
+                        order_confirmation = True
+
+
+                    else:
+                        # in this case we should do something... for now I will just leave it like this, since they will never say no
+                        # print("NO SIR")
+                        self.node.rgb_ctr = 1
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                        self.node.speech_str.command = "Sorry for my mistake, let's try again."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+
+
+                order_confirmation = False
+                while True:
+                    pass
+
+
+                ########## END OF AUXILIAR CODE JUST FOR TESTING ...
 
                 #Next State
-                self.state = 1 
-                self.node.t = time.time()
+                self.state = Searching_for_clients
 
-            elif self.state == 1:
-
-                # Print State
+            elif self.state == Searching_for_clients:
                 #print('State 1 = Hand Raising Detect')
 
-                #rais your hands
+                ### @@@ AQUI VOU-ME VIRAR 180 E VOU CHAMAR A FUNÇÃO DO SCAN DO PESCOÇO DO TIAGO ...
+                # Algo do tipo wait for end of tracking 
 
-                # Hand Raising Algorithm
-            
-                self.check_for_hand_raising()
+                sfp = SearchForPerson()
+                sfp.angles = [-120, -60, 0, 60, 120]
+                sfp.show_image_people_detected = True
+                self.node.search_for_person_publisher.publish(sfp)
+                self.waif_for_end_of_search_for_person()
 
-                #self.node.j += 1
+                print(self.node.person_list_of_points.coords)
 
-                #self.check_time()
+                ### @@@ 
 
-                """ if self.node.j > 80000:
-                    self.check_time()
-                    self.node.j = 0 """
+                ### @@@ Vou receber uma lista de pontos das coordenads das pessoas com a mão levantada e tenho de analisar:
+                # -> Se a lista está vazia e se estiver o próximo estado é o atual
+                # -> Se não estiver vazia devo analisar qual a pessoa mais perto de mim e escolher como alvo, atualizando os valores do alvo
+                #  
+
+                """ self.node.rgb_ctr = 12
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb) """
+
+                # just for debug purposes, it has its own switch case so it can be done right after receving and not wait for neck
+                if len(self.node.person_list_of_points.coords) == 0:
+                    self.node.rgb_ctr = 0
+                elif len(self.node.person_list_of_points.coords) == 1:
+                    self.node.rgb_ctr = 40
+                else:
+                    self.node.rgb_ctr = 10
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+
+
+                ### @@@ Diria também virar pelo menos pescoço para o barman, se não virar corpo todo...
+                self.node.neck_position_publisher.publish(self.node.turn_around_neck)
+                time.sleep(1)
+
+                if len(self.node.person_list_of_points.coords) > 0:
+
+                    if len(self.node.person_list_of_points.coords) == 1: # this if is just to say a different sentence because of singular and plurals
+                        self.node.speech_str.command = "I detected "+ str(len(self.node.person_list_of_points.coords))+" customer calling. Please look at my screen to see the customer."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+                    else: # higher than 1
+                        self.node.speech_str.command = "I detected "+ str(len(self.node.person_list_of_points.coords))+" customers calling. Please look at my screen to see the customers."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+
+
+                    p_ctr = 0 # just to count the people detected and add that info to the string that the robot will speak
+                    for p in self.node.person_list_of_points.coords:
+                        p_ctr+=1 # just to count the people detected and add that info to the string that the robot will speak
+                        pose = Pose2D()
+                        pose.x = p.x
+                        pose.y = p.y
+                        pose.theta = 180.0
+                        self.node.neck_to_coords_publisher.publish(pose)
+                        time.sleep(1) # this is just so the looking at customers is not oo quick
+                        self.node.speech_str.command = "I am looking at the detected calling customer "+str(p_ctr)+"." 
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+                        time.sleep(0.5) # this is just so the looking at customers is not oo quick
+
+
+                    self.node.neck_position_publisher.publish(self.node.talk_neck)
+
                     
+                    self.node.speech_str.command = "Completed Tracking. Moving on to the next state..." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+                        
+                    self.state = Navigation_to_person
+                    self.node.aux = Searching_for_clients
 
-                #start_time = time.time()
-                if self.node.counter == 1:
-                    print('1')
-                elif self.node.counter == 2:
-                    print('2')
+                    while True:
+                        pass
 
-                if self.node.i > 10000:         
+                else:
+                    self.node.speech_str.command = "I could not find any customers calling. I am going to search again for calling customers."
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.state == Searching_for_clients
+                    
+                """
+                ### @@@ Adicionar olhar para primeiro
+                self.node.neck_position_publisher.publish(self.node.neck_a)
+                
+                self.node.speech_str.command = "Looking at first customer calling."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                ### @@@ Adicionar olhar para segundo
+
+                self.node.neck_position_publisher.publish(self.node.neck_b)
+
+                self.node.speech_str.command = "Looking at second customer calling."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+                """
+                
+                """ if list_is_empty:
+                    self.state = Searching_for_clients
+
+                else:
+                    # -> Se não estiver vazia devo analisar qual a pessoa mais perto de mim e escolher como alvo, atualizando os valores do alvo
                     self.hand_raised == 1
                     
-                    self.node.i = 0
-                    print('Mão levantada')
-
                     self.node.rgb_ctr = 12
                     self.node.rgb.data = self.node.rgb_ctr
                     self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                    self.node.speech_str.command = "I detected a costumer calling for me. Please wait for me."
+                    ### @@@ Diria também virar pelo menos pescoço para o barman, se não virar corpo todo...
+                    self.node.talk_neck.pan = 360.0
+                    self.node.talk_neck.tilt = 180.0
+
+                    time.sleep(1)
+
+                    self.node.speech_str.command = "I detected a customer calling for me. Please wait for me."
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
 
-                    self.state = 2
-                    self.node.aux = 1
-                    self.person_coordinates.x = self.node.x_relative
-                    self.person_coordinates.y = self.node.y_relative
+                    self.node.talk_neck.pan = 180.0
+                    self.node.talk_neck.tilt = 180.0
 
-                else:
-                    pass
-                    #print('mão em baixo')
+                    self.state = Navigation_to_person
+                    self.node.aux = Searching_for_clients
+                    
+                    ### @@@ Dentro de um for:
+                    # Calcular a distancia absoluta da pessoa +  
+                    self.person_coordinates.x = x_point_cloud
+                    self.person_coordinates.y = y_point_cloud
+ """
+                    ### @@@ No fim do for tenho de ver quais as 2 pessoas com distancias absolutas mais pequenas de mim e guardar num array self.target
         
-            elif self.state == 2:
-
-                # Print State
+            elif self.state == Navigation_to_person:
                 print('State 2 = Navigation to Person')
-
                 # Navigation
 
                 """ self.node.customer_point.x = self.person_coordinates.x 
                 self.node.customer_point.y = self.person_coordinates.y  """
 
-                if self.node.aux == 1:
-                    person_x = self.person_coordinates.x
-                    person_y = self.person_coordinates.y
-                    #print(person_x)
-                    #print(person_y)
-                    angle_person = atan2(person_x, person_y)
-                    dist_person = sqrt(person_x**2 + person_y**2)
-                    #print(self.node.robot_t, angle_person, angle_person - self.node.robot_t)
-                    theta_aux = pi/2 - (angle_person - self.node.robot_theta)
-
-                    self.target_x = dist_person * cos(theta_aux) + self.node.robot_x
-                    self.target_y = dist_person * sin(theta_aux) + self.node.robot_y
-
+                ### @@@ Tenho de retirar as coordenadas da point cloud, ou se no detect calling já faz isso usar essas
+        
                 
+                #print('cliente x e y: ', self.target_x, self.target_y)
+                #print('robot x e y: ', self.node.robot_x, self.node.robot_y)
 
-                # target_x = person_x + self.node.robot_x
-                # target_y = person_y + self.node.robot_y
+                #self.node.coordinates_to_navigation((self.target_x, self.target_y),(self.target_x, self.target_y), False, False)
+                #self.wait_for_end_of_navigation()
 
-                """ self.node.customer_point.x = self.person_coordinates.x * sin(self.node.robot_theta) - self.person_coordinates.y * cos(self.node.robot_theta)
-                self.node.customer_point.y = self.person_coordinates.x * cos(self.node.robot_theta) + self.person_coordinates.y * sin(self.node.robot_theta)
-                """
-                print('cliente x e y: ', self.target_x, self.target_y)
-                print('robot x e y: ', self.node.robot_x, self.node.robot_y)
-
-                self.node.coordinates_to_navigation((self.target_x, self.target_y),(self.target_x, self.target_y), False, False)
-                self.wait_for_end_of_navigation()
-
-
-                # Look in the eyes of the person and ask is the person has called him,
-                # se sim prosseguir, se não virar para um dos lados, encontrar otra pessoa e ir
-
-                #if self.node.nose != self.node.int_error:
+                """ self.node.speech_str.command = "I should be moving to the customer."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking() """
 
                 #Next State
-                if self.node.aux == 1:
-                    self.state = 3
-                elif self.node.aux == 2:
-                    self.state = 6
+                if self.node.aux == Searching_for_clients:
+                    self.state = Receiving_order_speach
+                elif self.node.aux == Navigation_to_person:
+                    self.state = Delivering_order_to_client
 
-            elif self.state == 3:
+            elif self.state == Receiving_order_speach:
 
                 # Print State
                 print('State 3 = Receive Order - Speech')
@@ -566,12 +704,16 @@ class RestaurantMain():
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
                 # Speech Receive Order
 
-                # RECALIBRAR AUDIO  RECALIBRAR AUDIO 
-
-                self.node.coordinates_to_navigation((self.target_x, self.target_y),(self.target_x, self.target_y), False, False)
-                self.wait_for_end_of_navigation()
+                # RECALIBRAR AUDIO 
+                ### @@@  acho que as 2 próximas linhas de código são inúteis
+                #self.node.coordinates_to_navigation((self.target_x, self.target_y),(self.target_x, self.target_y), False, False)
+                #self.wait_for_end_of_navigation() 
 
                 time.sleep(1)
                 calib = Bool()
@@ -580,14 +722,14 @@ class RestaurantMain():
                 time.sleep(3) # obrigatorio depois de recalibrar audio
 
 
-                self.node.speech_str.command = "Hello! I am ready to receive your order. Please take your request after the green lights under my wheels."
+                self.node.speech_str.command = "Hello! My name is charmie and I am here to help you. I am ready to receive your order. Please say your order after the green lights under my wheels."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
         
                 #Next State
-                self.state = 4
+                self.state = Receiving_order_listen_and_confirm
 
-            elif self.state == 4:
+            elif self.state == Receiving_order_listen_and_confirm:
 
                 # Print State
                 print('State 4 = Receive Order - Listening and Confirm ')
@@ -601,11 +743,11 @@ class RestaurantMain():
                 self.node.speech_type.restaurant = True
                 
                 #self.node.speech_type.yes_or_no = True
-                self.node.audio_command_publisher.publish(self.node.speech_type)
+                #self.node.audio_command_publisher.publish(self.node.speech_type)
                 #self.node.start_audio()
-                self.wait_for_end_of_audio()
+                #self.wait_for_end_of_audio()
 
-                self.node.speech_type.restaurant = False
+                """ self.node.speech_type.restaurant = False
                 #self.node.speech_type.yes_or_no = False
                 self.pedido = self.node.keywords.data
                 self.pedido.replace(" ", ".")
@@ -622,24 +764,26 @@ class RestaurantMain():
                     self.node.get_foods = 3
                     self.node.foods.append(keyword_list[0])
                     self.node.foods.append(keyword_list[1])
-                    self.node.foods.append(keyword_list[2])
-
-                self.node.speech_str.command =f"Does your order include the following items. {self.pedido}? Please answer with yes Robot or no Robot after the green light underneath my wheels."
+                    self.node.foods.append(keyword_list[2]) """
+                
+                
+                self.node.speech_str.command =f"Does your order include the following items. blablabla. Please answer with yes or no after the green light under my wheels."
+                #self.node.speech_str.command =f"Does your order include the following items. {self.pedido}? Please answer with yes Robot or no Robot after the green light under my wheels."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
 
                 # Confirm Order
 
                 """ if self.node.get_foods == 1:
-                    self.node.speech_str.command =f"Does your order include {self.node.foods[0]}? Please answer with yes or no after the green light underneath my wheels."
+                    self.node.speech_str.command =f"Does your order include {self.node.foods[0]}? Please answer with yes or no after the green light under my wheels."
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
                 elif self.node.get_foods == 2:
-                    self.node.speech_str.command =f"Does your order include {self.node.foods[0]} and {self.node.foods[1]}? Please answer with yes or no after the green light underneath my wheels"
+                    self.node.speech_str.command =f"Does your order include {self.node.foods[0]} and {self.node.foods[1]}? Please answer with yes or no after the green light under my wheels"
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
                 elif self.node.get_foods == 3:
-                    self.node.speech_str.command = f"Does your order include {self.node.foods[0]}, {self.node.foods[1]} and {self.node.foods[2]}? Please answer with yes or no after the green light underneath my wheels"
+                    self.node.speech_str.command = f"Does your order include {self.node.foods[0]}, {self.node.foods[1]} and {self.node.foods[2]}? Please answer with yes or no after the green light under my wheels"
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
                 else:
@@ -653,20 +797,24 @@ class RestaurantMain():
                 # Listening Audio
 
                 self.node.speech_type.yes_or_no = True
-                self.node.audio_command_publisher.publish(self.node.speech_type)
+                #self.node.audio_command_publisher.publish(self.node.speech_type)
                 #self.node.start_audio()
-                self.wait_for_end_of_audio()
+                #self.wait_for_end_of_audio()
                 self.node.speech_type.yes_or_no = False
 
                 # Receive Order Confirmation
-                if self.node.keywords.data == 'yes':  # VERIFICAR COM O SPARK
-                    self.state = 5
-                    self.node.speech_str.command = "Thank you. I will get you your order."
-                    self.node.speaker_publisher.publish(self.node.speech_str)
-                    self.wait_for_end_of_speaking()
+                #if self.node.keywords.data == 'yes':  # VERIFICAR COM O SPARK
+                self.state = Collect_order_from_barman
+                self.node.speech_str.command = "Thank you. I will get you your order."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
 
-                else:
-                    self.node.speech_str.command = "I am sorry for the confusion. Can you please repeat the order after the green lights underneath my wheels?"
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                """ else:
+                    self.node.speech_str.command = "I am sorry for the confusion. Can you please repeat the order after the green lights under my wheels?"
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
 
@@ -674,31 +822,28 @@ class RestaurantMain():
                     self.node.rgb.data = self.node.rgb_ctr
                     self.node.rgb_mode_publisher.publish(self.node.rgb)
                     
-                    self.state = 4
+                    self.state = Receiving_order_listen_and_confirm """
                 
-
-                ##### SUPOSIÇÃO PARA TESTE
-                #self.state = 5
-
-            elif self.state == 5:
+            elif self.state == Collect_order_from_barman:
 
                 # Print State
                 print('State 5 = Collect Order')
                 
                 #rotate 
 
-                self.node.coordinates_to_navigation((self.node.robot_x ,self.node.robot_y), (self.node.robot_x+1.0 ,self.node.robot_y+1.0), False, False)
-                self.wait_for_end_of_navigation()
+                #self.node.coordinates_to_navigation((self.node.robot_x ,self.node.robot_y), (self.node.robot_x+1.0 ,self.node.robot_y+1.0), False, False)
+                #self.wait_for_end_of_navigation()
 
-                self.node.coordinates_to_navigation((self.node.robot_x,self.node.robot_y), self.node.collect_point, False, False)
-                self.wait_for_end_of_navigation()
-
-                time.sleep(1)
+                #self.node.coordinates_to_navigation((self.node.robot_x,self.node.robot_y), self.node.collect_point, False, False)
+                #self.wait_for_end_of_navigation()
 
                 # Navigation to the Collect Point
-                self.node.coordinates_to_navigation((0.0, 0.0), (0.0, 0.0), False, False)
-                self.wait_for_end_of_navigation()
+                #self.node.coordinates_to_navigation(self.node.collect_point, self.node.collect_point, False, False)
+                #self.wait_for_end_of_navigation()
 
+                self.node.speech_str.command = "I should be moving to my initial position."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
 
                 time.sleep(1)
                 calib = Bool()
@@ -709,36 +854,314 @@ class RestaurantMain():
 
                 # Collect Order
                 #if self.node.get_foods == 1:
-                self.node.speech_str.command =f"I want a {self.pedido}. As you can see, I forgot my arms today. Please place the products in the basket on my left shoulder. Please say yes Robot after my green lights whenever the request is ready."
+                #self.node.speech_str.command =f"Hello again, barman. I want a {self.pedido}. Is the order ready? Please Say yes Robot after the green lights under my wheel whenever it is ready ."
+                self.node.speech_str.command ="Hello again, barman. The customer order is a coke, pringles and pear. I will get ready to receive it."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
-                    # Listening Audio
-
+                # Listening Audio
 
                 self.node.rgb_ctr = 12
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.node.speech_type.yes_or_no = True
-                self.node.audio_command_publisher.publish(self.node.speech_type)
+                """ self.node.speech_type.yes_or_no = True
+                #self.node.audio_command_publisher.publish(self.node.speech_type)
                 #self.node.start_audio()
-                self.wait_for_end_of_audio()
-                self.node.speech_type.yes_or_no = False
+                #self.wait_for_end_of_audio()
+                self.node.speech_type.yes_or_no = False"""
 
-                self.node.speech_str.command = "Thank you."
+                """ while said_yes == False:
+                    self.node.speech_type.yes_or_no = True
+                    #self.node.audio_command_publisher.publish(self.node.speech_type)
+                    #self.node.start_audio()
+                    #self.wait_for_end_of_audio()
+                    self.node.speech_type.yes_or_no = False
+
+                    if self.node.keywords.data == 'yes':
+                        said_yes = True
+
+                    else:
+                        self.node.speech_str.command = "I am sorry for the confusion. Can you please repeat after the green lights under my wheels?"
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+
+                        self.node.rgb_ctr = 12
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) """
+
+
+                ### @@@ Preparing to grab the first item
+                place_to_go = Int16()
+                place_to_go.data = 0
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+                print('a')
+
+
+                """ #self.node.call_service()
+
+                place_to_go = Int16()
+                place_to_go.data = 1
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+                print('b')
+
+                #self.node.call_service()
+
+                place_to_go = Int16()
+                place_to_go.data = 2
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+                print('c')
+
+                #self.node.call_service()
+
+                place_to_go = Int16()
+                place_to_go.data = 3
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+                print('d')
+
+                place_to_go = Int16()
+                place_to_go.data = 4
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+                print('e')
+
+                place_to_go = Int16()
+                place_to_go.data = 5
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+                print('f')
+
+                place_to_go = Int16()
+                place_to_go.data = 6
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+                print('g') """
+
+
+                #Adicionar fala para colocar o objeto na mão
+                self.node.speech_str.command = "Please let me know when you place the order on my hand by saying 'Yes robot' after the green lights under my wheels."
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()
 
-                self.node.coordinates_to_navigation((self.node.robot_x ,self.node.robot_y), (self.node.robot_x+1.0 ,self.node.robot_y+1.0), False, False)
-                self.wait_for_end_of_navigation()
+                self.node.rgb_ctr = 12
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.node.coordinates_to_navigation((self.node.robot_x,self.node.robot_y), (self.target_x, self.target_y), False, False)
-                self.wait_for_end_of_navigation()
+                said_yes = False
+
+                """ while said_yes == False:
+                    self.node.speech_type.yes_or_no = True
+                    #self.node.audio_command_publisher.publish(self.node.speech_type)
+                    #self.node.start_audio()
+                    #self.wait_for_end_of_audio()
+                    self.node.speech_type.yes_or_no = False
+
+                    if self.node.keywords.data == 'yes':
+                        said_yes = True
+
+                    else:
+                        self.node.speech_str.command = "I am sorry for the confusion. Can you please repeat after the green lights under my wheels?"
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+
+                        self.node.rgb_ctr = 12
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) """
+                
+                ### @@@ Preparing to check the first item 
+
+                place_to_go = Int16()
+                place_to_go.data = 10
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+                print('a')
+
+                self.node.neck_position_publisher.publish(self.node.check_object)
+
+                #Adicionar fala para colocar o objeto na mão
+                self.node.speech_str.command = "I should be verifying if the object is the correct or not."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                self.node.neck_position_publisher.publish(self.node.talk_neck)
+
+                print(self.node.yolo_objects)
+
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+                        
+                ### @@@ Preparing to place the first item on tray
+                place_to_go = Int16()
+                place_to_go.data = 1
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+
+
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+
+                ### @@@ Preparing to grab the second item
+                place_to_go = Int16()
+                place_to_go.data = 2
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+
+
+                #Adicionar fala para colocar o objeto na mão
+                self.node.speech_str.command = "Please let me know when you place the order on my hand by saying 'Yes robot' after the green light under my wheels."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                self.node.rgb_ctr = 12
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                said_yes = False
+
+                """  while said_yes == False:
+                    self.node.speech_type.yes_or_no = True
+                    #self.node.audio_command_publisher.publish(self.node.speech_type)
+                    #self.node.start_audio()
+                    #self.wait_for_end_of_audio()
+                    self.node.speech_type.yes_or_no = False
+
+                    if self.node.keywords.data == 'yes':
+                        said_yes = True
+
+                    else:
+                        self.node.speech_str.command = "I am sorry for the confusion. Can you please repeat after the green lights under my wheels?"
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+
+                        self.node.rgb_ctr = 12
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) """
+                
+                ### @@@ Preparing to check the first item 
+
+                place_to_go = Int16()
+                place_to_go.data = 10
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+                print('a')                
+
+                self.node.neck_position_publisher.publish(self.node.check_object)
+
+                #Adicionar fala para colocar o objeto na mão
+                self.node.speech_str.command = "I should be verifying if the object is the correct or not."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                self.node.neck_position_publisher.publish(self.node.talk_neck)
+
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+
+                ### @@@ Preparing to place the second item on tray
+                place_to_go = Int16()
+                place_to_go.data = 3
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                ### @@@ Preparing to grab the third item
+                place_to_go = Int16()
+                place_to_go.data = 4
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+
+
+                #Adicionar fala para colocar o objeto na mão
+                self.node.speech_str.command = "Please let me know when you place the order on my hand by saying 'Yes robot' after the green light under my wheels."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                self.node.rgb_ctr = 12
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                said_yes = False
+
+                """ while said_yes == False:
+                    self.node.speech_type.yes_or_no = True
+                    #self.node.audio_command_publisher.publish(self.node.speech_type)
+                    #self.node.start_audio()
+                    #self.wait_for_end_of_audio()
+                    self.node.speech_type.yes_or_no = False
+
+                    if self.node.keywords.data == 'yes':
+                        said_yes = True
+
+                    else:
+                        self.node.speech_str.command = "I am sorry for the confusion. Can you please repeat after the green lights under my wheels?"
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+
+                        self.node.rgb_ctr = 12
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) """
+                
+                ### @@@ Preparing to check the first item 
+
+                place_to_go = Int16()
+                place_to_go.data = 10
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+                print('a')                
+                
+                self.node.neck_position_publisher.publish(self.node.check_object)
+
+                #Adicionar fala para colocar o objeto na mão
+                self.node.speech_str.command = "I should be verifying if the object is the correct or not."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                self.node.neck_position_publisher.publish(self.node.talk_neck)
+
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+
+                ### @@@ Preparing to place the third item on initial position
+                place_to_go = Int16()
+                place_to_go.data = 5
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+
+                ### @@@ Talvez para fase intermédia de testes tente apenas virar sobre ele 180
+
+                
+                #self.node.coordinates_to_navigation((self.node.robot_x ,self.node.robot_y), (self.node.robot_x+1.0 ,self.node.robot_y+1.0), False, False)
+                #self.wait_for_end_of_navigation()
+
+                #self.node.coordinates_to_navigation((self.node.robot_x,self.node.robot_y), (self.target_x, self.target_y), False, False)
+                #self.wait_for_end_of_navigation()
+
+                self.node.speech_str.command = "I should be moving to the costumer."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
 
 
 
                 """     elif self.node.get_foods == 2:
-                    self.node.speech_str.command =f"I want a {self.node.foods[0]} and {self.node.foods[1]}. As you can see, I forgot my arms today. Please place the products in my tray. Please say yes Charmie after my green lights whenever the request is ready."
+                    self.node.speech_str.command =f"I want a {self.node.foods[0]} and {self.node.foods[1]}. As you can see, I forgot my arms today. Please place the products in my tray. Please say yes Charmie after my green lights whenever the order is ready."
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
 
@@ -773,51 +1196,111 @@ class RestaurantMain():
 
                 
 
-                self.node.aux = 2
-                self.state = 2
+                self.node.aux = Navigation_to_person
+                self.state = Navigation_to_person
 
-            elif self.state == 6:
+            elif self.state == Delivering_order_to_client:
 
                 # Print State
                 print('State 6 = Final Speech')
 
-
                 #Deliver Order
-                self.node.speech_str.command = "Your order is here. As you can see, I forgot my arms today. Can you please collect the request from the basket on my left shoulder? Please say yes Robot after my green lights whenever the request is taken." 
+                self.node.speech_str.command = "Here are the items you have ordered. Please wait while I place them in front of you." 
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()                
                 #self.state = 1
 
-                self.node.speech_type.yes_or_no = True
-                self.node.audio_command_publisher.publish(self.node.speech_type)
-                #self.node.start_audio()
-                self.wait_for_end_of_audio()
-                self.node.speech_type.yes_or_no = False
+                place_to_go = Int16()
+                place_to_go.data = 6
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                
+                self.node.speech_str.command = "Here is your pear." 
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking() 
+
+                place_to_go = Int16()
+                place_to_go.data = 7
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+
+                self.node.speech_str.command = "Here is your orange juice." 
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking() 
+
+                place_to_go = Int16()
+                place_to_go.data = 8
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+                self.node.speech_str.command = "Here is your coke." 
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking() 
+                
+                place_to_go = Int16()
+                place_to_go.data = 9
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb)
 
                 self.node.speech_str.command = "Hope you enjoy it. See you soon." 
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking()  
 
-                self.node.coordinates_to_navigation((self.node.robot_x ,self.node.robot_y), (self.node.robot_x+1.0 ,self.node.robot_y+1.0), False, False)
-                self.wait_for_end_of_navigation()
 
-                self.node.coordinates_to_navigation((self.node.robot_x,self.node.robot_y), self.node.collect_point, False, False)
-                self.wait_for_end_of_navigation()
+                
 
-                self.node.coordinates_to_navigation(self.node.collect_point, self.node.collect_point, False, False)
-                self.wait_for_end_of_navigation()
+                #self.node.coordinates_to_navigation((self.node.robot_x ,self.node.robot_y), (self.node.robot_x+1.0 ,self.node.robot_y+1.0), False, False)
+                #self.wait_for_end_of_navigation()
 
-                self.node.coordinates_to_navigation((self.node.robot_x,self.node.robot_y), (self.target_x, self.target_y), False, False)
-                self.wait_for_end_of_navigation()
+                #self.node.coordinates_to_navigation((self.node.robot_x,self.node.robot_y), self.node.collect_point, False, False)
+                #self.wait_for_end_of_navigation()
 
-                self.node.speech_str.command = "I am ready to attend new clients. Please raise your hands if you want me to serve you."
+                #self.node.coordinates_to_navigation(self.node.collect_point, self.node.collect_point, False, False)
+                #self.wait_for_end_of_navigation()
+
+                #self.node.coordinates_to_navigation((self.node.robot_x,self.node.robot_y), (self.target_x, self.target_y), False, False)
+                #self.wait_for_end_of_navigation()
+
+                self.node.speech_str.command = "Should be moving to initial position." 
                 self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
+                self.wait_for_end_of_speaking()  
 
                 time.sleep(0.5)
 
-                self.state = 1
+                self.state = Navigation_to_person
+                self.node.aux = Searching_for_clients
+                self.count += 1
+                if self.count == 2:
+                    self.state = 99
+                else:
+                    self.node.speech_str.command = "Should be moving to initial position." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()  
+
      
             
             else:
+                self.node.speech_str.command = "I finished my restaurant task." 
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()  
+
+
                 pass

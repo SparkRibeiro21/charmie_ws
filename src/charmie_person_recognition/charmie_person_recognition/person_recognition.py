@@ -63,15 +63,10 @@ class PersonRecognitionNode(Node):
         self.search_for_person_flag = False
         
 
-
     def search_for_person_callback(self, sfp: SearchForPerson):
         print("Received a start for person")
         self.search_for_person_data = sfp
         self.search_for_person_flag = True
-        print(":::", self.search_for_person_flag)
-
-
-
 
     def get_color_image_callback(self, img: Image):
         self.latest_color_image = img

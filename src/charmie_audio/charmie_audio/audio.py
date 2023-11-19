@@ -45,11 +45,10 @@ DICT_CALIBRATION = False
 # - mais idiomas (adicionar tambem o portugues)
 # - adicionar a lingua ao speechtype recebido 
 # - solução para palavras iguais
-# - ligação direta aos rgb
 # - ligacao direta à fala
 # - definir keywords com antecedência (deixar tudo pronto para os objetos do dataset ycb)
 # - define all the error, diferent from each other
-# - recalibrar audios quando der erro x vezes?
+# - recalibrar audios quando der erro X vezes?
 # 
 # 
 # ---/---
@@ -64,6 +63,7 @@ DICT_CALIBRATION = False
 # - modo de treino, para calibrar palavras sem ser necesário mais nenhum node estar a correr
 # - reestruturar codigo pos robocup
 # - simplificar diagnostic para se ver no terminal
+# - ligação direta aos rgb
 
 
 """
@@ -857,17 +857,15 @@ class AudioNode(Node):
                 print("Numbers Detected =", numbers_predicted, "(", numbers_ctr, ")") 
                 print()    
 
-
                 rgb = Int16()
                 rgb.data = 19 # green same as when checking speech and keywords
-                self.node.rgb_mode_publisher.publish(rgb)
+                self.rgb_mode_publisher.publish(rgb)
 
             else:
 
-
                 rgb = Int16()
                 rgb.data = 9
-                self.node.rgb_mode_publisher.publish(rgb)
+                self.rgb_mode_publisher.publish(rgb)
         else:
             self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
 
