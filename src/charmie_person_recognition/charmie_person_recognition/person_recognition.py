@@ -5,7 +5,7 @@ from rclpy.node import Node
 from std_msgs.msg import Bool, String, Float32, Int16
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose, ListOfPoints, SearchForPerson, ListOfImages, ListOfStrings
+from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose, ListOfPoints, SearchForPerson, ListOfImages, ListOfStrings, RobotSpeech
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import time
@@ -52,7 +52,11 @@ class PersonRecognitionNode(Node):
         self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
         # self.create_timer(2, self.check_person_feet)
 
-
+        self.only_detect_person_right_in_front_publisher = self.create_publisher(Bool, "only_det_per_right_in_front", 10)
+        
+        # Speaker
+        self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
+        self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
 
         self.cropped_image_publisher = self.create_publisher(ListOfImages, '/cropped_image', 10)
         
@@ -63,9 +67,12 @@ class PersonRecognitionNode(Node):
         self.br = CvBridge()
 
         self.search_for_person_data = SearchForPerson()
+        self.speech_str = RobotSpeech()
+        self.flag_speech_done = False
 
         self.search_for_person_flag = False
-        self.check_stickler_rules = True
+        self.check_stickler_rules = False
+        self.check_if_charmie_is_being_followed = True
         
 
     def search_for_person_callback(self, sfp: SearchForPerson):
@@ -85,6 +92,10 @@ class PersonRecognitionNode(Node):
     def get_person_pose_filtered_callback(self, pose: Yolov8Pose):
         self.latest_person_pose = pose
         # print("IN")
+
+    def get_speech_done_callback(self, state: Bool):
+        self.flag_speech_done = state.data
+        # print("Received Speech Flag:", state.data)
 
     def check_person_face(self):
         print("Face Image")
@@ -154,7 +165,6 @@ class PersonRecognitionNode(Node):
         # self.cropped_image_publisher.publish(image_message)
         return image
     
-
     def check_person_hands(self):
         print("Hands Image")
         
@@ -381,6 +391,73 @@ class PersonRecognitionMain():
             if self.node.check_stickler_rules:
                 self.check_stickler_rules()
                 # self.node.check_stickler_rules = False
+
+            if self.node.check_if_charmie_is_being_followed:
+                self.check_if_charmie_is_being_followed()
+                # self.node.check_stickler_rules = False
+
+    def wait_for_end_of_speaking(self):
+        while not self.node.flag_speech_done:
+            pass
+        self.node.flag_speech_done = False
+
+    def check_if_charmie_is_being_followed(self):
+
+        # sends info to yolo pose to only detect people right in front of the camera
+        pose = Bool()
+        pose.data = True
+        self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+        # looks back to check if is being followed 
+        neck_look_back = NeckPosition()
+        neck_look_back.pan = float(360)
+        neck_look_back.tilt = float(180)
+        self.node.neck_position_publisher.publish(neck_look_back)
+
+        time.sleep(1.0)
+
+        # self.node.speech_str.command = "Please Follow Me. Keep yourself approximately 1 meter behind me. If you start to get behind I will warn you"
+        self.node.speech_str.command = "Please Follow Me. Come behind me."
+        self.node.speaker_publisher.publish(self.node.speech_str)
+        self.wait_for_end_of_speaking()
+
+        person_here = False
+        while not person_here:
+            if len(self.node.latest_person_pose.persons) > 0:
+                self.node.speech_str.command = "Thanks for coming behind me. Let's roll."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+                person_here = True
+            else:
+                # the person stopped following the robot
+                self.node.speech_str.command = "Please come behind me. I need you to follow me."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+                time.sleep(3.0)
+
+
+        prev_number_of_person = 1    
+        while True:
+          
+
+            if len(self.node.latest_person_pose.persons) > 0:
+                if prev_number_of_person == 0:
+                    self.node.speech_str.command = "Thanks for coming back. Let's roll."
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()    
+                    prev_number_of_person = 1   
+                # everything is ok
+                pass
+            else:
+                # the person stopped following the robot
+                self.node.speech_str.command = "You are falling behind, please come back. I will wait here for you"
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()        
+                prev_number_of_person = 0
+                time.sleep(3.0)
+
+
+
 
 
     def check_stickler_rules(self):

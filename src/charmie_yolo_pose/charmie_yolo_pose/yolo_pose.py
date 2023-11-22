@@ -385,9 +385,16 @@ class YoloPoseNode(Node):
                     body_kp_high_conf_counter+=1
             print("body_kp_high_conf_counter = ", body_kp_high_conf_counter)
 
+
+            # changed this condition from:
+            # 0 < new_person.position_relative.y < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
+            # to:
+            # -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD < new_person.position_relative.y < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
+            # this way, this condition can be used for both checking if the person is right in front and checking if the person is following the robot
+
             center_comm_position = False
             if -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD < new_person.position_relative.x < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD and \
-             0 < new_person.position_relative.y < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
+             -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD < new_person.position_relative.y < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
                center_comm_position = True
 
 

@@ -30,6 +30,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Encoders.msg"
   "msg/ListOfImages.msg"
   "msg/ListOfPoints.msg"
+  "msg/ListOfStrings.msg"
   "msg/NeckPosition.msg"
   "msg/ObstacleInfo.msg"
   "msg/Obstacles.msg"
