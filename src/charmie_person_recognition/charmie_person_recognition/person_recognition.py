@@ -51,6 +51,10 @@ class PersonRecognitionNode(Node):
         self.search_for_person_subscriber = self.create_subscription(SearchForPerson, "search_for_person", self.search_for_person_callback, 10)
         self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
         # self.create_timer(2, self.check_person_feet)
+
+
+
+        self.cropped_image_publisher = self.create_publisher(Image, '/cropped_image', 10)
         
         self.robot = PersonRec()
 
@@ -61,6 +65,7 @@ class PersonRecognitionNode(Node):
         self.search_for_person_data = SearchForPerson()
 
         self.search_for_person_flag = False
+        self.check_stickler_rules = True
         
 
     def search_for_person_callback(self, sfp: SearchForPerson):
@@ -84,7 +89,13 @@ class PersonRecognitionNode(Node):
     def check_person_face(self):
         
         # ROS2 Image Bridge for OpenCV
-        current_frame = self.br.imgmsg_to_cv2(self.latest_color_image, "bgr8")
+        print("a")
+        try:
+            current_frame = self.br.imgmsg_to_cv2(self.latest_color_image, "bgr8")
+        except Exception as error:
+            print("An error occurred:", error) # An error occurred: name 'x' is not defined
+        
+        print("b")
         current_pose = self.latest_person_pose
 
         # Crop the image to the rectangle
@@ -128,7 +139,10 @@ class PersonRecognitionNode(Node):
     def check_person_hands(self):
         
         # ROS2 Image Bridge for OpenCV
-        current_frame = self.br.imgmsg_to_cv2(self.latest_color_image, "bgr8")
+        try:
+            current_frame = self.br.imgmsg_to_cv2(self.latest_color_image, "bgr8")
+        except Exception as error:
+            print("An error occurred:", error) # An error occurred: name 'x' is not defined
         current_pose = self.latest_person_pose
 
         # Crop the image to the rectangle
@@ -156,7 +170,7 @@ class PersonRecognitionNode(Node):
             # int32 kp_wrist_right_y
             # float32 kp_wrist_right_caonf
             
-            threshold = 50
+            threshold = 100
 
             y1_l = person.kp_wrist_left_y - threshold
             y2_l = person.kp_wrist_left_y + threshold
@@ -189,7 +203,10 @@ class PersonRecognitionNode(Node):
     def check_person_feet(self):
         
         # ROS2 Image Bridge for OpenCV
-        current_frame = self.br.imgmsg_to_cv2(self.latest_color_image, "bgr8")
+        try:
+            current_frame = self.br.imgmsg_to_cv2(self.latest_color_image, "bgr8")
+        except Exception as error:
+            print("An error occurred:", error) # An error occurred: name 'x' is not defined
         current_pose = self.latest_person_pose
 
         # Crop the image to the rectangle
@@ -217,7 +234,7 @@ class PersonRecognitionNode(Node):
             # int32 kp_wrist_right_y
             # float32 kp_wrist_right_conf
 
-            threshold = 50
+            threshold = 60
 
             y1_l = person.kp_ankle_left_y - threshold
             y2_l = person.kp_ankle_left_y + threshold
@@ -250,7 +267,10 @@ class PersonRecognitionNode(Node):
     def check_person_garbage_nearby(self):
         
         # ROS2 Image Bridge for OpenCV
-        current_frame = self.br.imgmsg_to_cv2(self.latest_color_image, "bgr8")
+        try:
+            current_frame = self.br.imgmsg_to_cv2(self.latest_color_image, "bgr8")
+        except Exception as error:
+            print("An error occurred:", error) # An error occurred: name 'x' is not defined
         current_pose = self.latest_person_pose
 
         # Crop the image to the rectangle
@@ -278,35 +298,34 @@ class PersonRecognitionNode(Node):
             # int32 kp_wrist_right_y
             # float32 kp_wrist_right_conf
 
-            threshold = 50
+            threshold_h = 160
+            threshold_v = 100
 
-            y1_l = person.kp_ankle_left_y - threshold
-            y2_l = person.kp_ankle_left_y + threshold
+            y1 = person.kp_ankle_left_y - threshold_v
+            y2 = person.kp_ankle_left_y + threshold_v+30
 
-            x1_l = person.kp_ankle_left_x - threshold
-            x2_l = person.kp_ankle_left_x + threshold
+            x1 = person.kp_ankle_right_x - threshold_h
+            x2 = person.kp_ankle_left_x + threshold_h
 
-
-            y1_r = person.kp_ankle_right_y - threshold
-            y2_r = person.kp_ankle_right_y + threshold
-
-            x1_r = person.kp_ankle_right_x - threshold
-            x2_r = person.kp_ankle_right_x + threshold
 
 
             # Crop the image to the rectangle
-            cropped_image_l = current_frame[y1_l:y2_l, x1_l:x2_l]
-            cropped_image_r = current_frame[y1_r:y2_r, x1_r:x2_r]
+            cropped_image = current_frame[y1:y2, x1:x2]
 
             try:
                 # Save the cropped image to a file
-                cv2.imwrite("cropped_foot_left_"+str(ctr)+".jpg", cropped_image_l)
-                cv2.imwrite("cropped_foot_right_"+str(ctr)+".jpg", cropped_image_r)
+                cv2.imwrite("cropped_floor_"+str(ctr)+".jpg", cropped_image)
             except:
                 print("An exception has occurred!")
 
             print(person.conf_person)
 
+            bridge = CvBridge()
+            image_message = bridge.cv2_to_imgmsg(cropped_image, "bgr8")#, encoding="passthrough")
+            
+            
+            
+            self.cropped_image_publisher.publish(image_message)
 
 
 def main(args=None):
@@ -337,6 +356,20 @@ class PersonRecognitionMain():
                 self.search_for_person()
                 # self.aux_for_imread()
                 self.node.search_for_person_flag = False
+
+            if self.node.check_stickler_rules:
+                self.check_stickler_rules()
+                # self.node.check_stickler_rules = False
+
+
+    def check_stickler_rules(self):
+        print("Checking Stickler Rules")
+        self.node.check_person_face()
+        self.node.check_person_hands()
+        self.node.check_person_feet()
+        self.node.check_person_garbage_nearby()
+        time.sleep(1)
+
 
     def search_for_person(self):
         print("In Search for Person.")

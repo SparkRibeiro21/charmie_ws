@@ -20,6 +20,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BoundingBox.msg"
@@ -27,6 +28,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/DetectedObject.msg"
   "msg/DetectedPerson.msg"
   "msg/Encoders.msg"
+  "msg/ListOfImages.msg"
   "msg/ListOfPoints.msg"
   "msg/NeckPosition.msg"
   "msg/ObstacleInfo.msg"
@@ -43,7 +45,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TrackPerson.msg"
   "msg/Yolov8Objects.msg"
   "msg/Yolov8Pose.msg"
-  DEPENDENCIES std_msgs geometry_msgs
+  DEPENDENCIES std_msgs geometry_msgs sensor_msgs
 )
 
 ament_export_dependencies(rosidl_default_runtime)

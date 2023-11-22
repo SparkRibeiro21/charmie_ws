@@ -140,9 +140,9 @@ class NeckNode(Node):
         self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.neck_to_coords_callback, 10)
 
         # receives a person and the keypoint it must follow (ex: constantly looking at the person face, look at body center  to check hands and feet)
-        self.neck_position_subscriber = self.create_subscription(TrackPerson, "neck_follow_person", self.neck_follow_person_callback ,10)
+        self.neck_follow_person_subscriber = self.create_subscription(TrackPerson, "neck_follow_person", self.neck_follow_person_callback ,10)
         # receives an object and it follows it, keeping it centered in the image (ex: constantly looking at a cup, plate, cereal box)
-        self.neck_to_coords_subscriber = self.create_subscription(TrackObject, "neck_follow_object", self.neck_follow_object_callback, 10)
+        self.neck_follow_object_subscriber = self.create_subscription(TrackObject, "neck_follow_object", self.neck_follow_object_callback, 10)
 
         # sends the current position of the servos after every change made on the publisher topics
         self.neck_get_position_publisher = self.create_publisher(NeckPosition, "get_neck_pos", 10)
@@ -225,10 +225,8 @@ class NeckNode(Node):
 
         global read_pan_open_loop, read_tilt_open_loop
 
-
         img_width = 1280
         img_height = 720
-
 
         target_x = pose.person.kp_nose_x
         target_y = pose.person.kp_nose_y
@@ -250,7 +248,6 @@ class NeckNode(Node):
         print("angs: ", new_a_x, new_a_y)
 
         # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST)
-        
         # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
 
         self.send_neck_move(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)

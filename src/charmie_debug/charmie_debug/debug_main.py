@@ -11,8 +11,10 @@ from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechT
 from cv_bridge import CvBridge
 import cv2 
 import time
+import math
 
-import mediapipe as mp
+# import mediapipe as mp
+import threading
 
 class TRNode(Node):
 
@@ -70,12 +72,21 @@ class TRNode(Node):
         self.start_door_publisher = self.create_publisher(Bool, 'start_door', 10) 
         self.done_start_door_subscriber = self.create_subscription(Bool, 'done_start_door', self.done_start_door_callback, 10) 
         
-        
+        """
         # Neck Topics
         self.neck_to_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
-        self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
+        self.neck_follow_person_publisher = self.create_publisher(TrackPerson, "neck_follow_person",10)
+        # self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
+        
+        
+        self.yolov8_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.yolov8_pose_callback, 10)
 
+
+        self.yolo_poses = Yolov8Pose()
+
+
+        """    
         time.sleep(1)
         a = NeckPosition()
         a.pan = 230.0
@@ -95,52 +106,8 @@ class TRNode(Node):
         # self.create_timer(0.1, self.request_point_cloud_person)
         # self.create_timer(10, self.request_audio)
 
-        self.request_audio()
-
-        """
-        # Timers
-        self.counter = 1 # starts at 1 to avoid initial 
-        # self.create_timer(0.05, self.timer_callback)
-        # self.create_timer(2, self.timer_callback_audio)
-        # self.create_timer(10, self.timer_callback2)
-        # self.create_timer(20, self.timer_callback3)
-        # self.create_timer(5, self.timer_callback4)
-        
-
-        # Get Flags
-        self.flag_get_neck_position = False 
-        self.flag_get_start_button = False 
-        self.flag_get_vccs = False 
-        self.flag_get_torso = False 
-        self.flag_get_encoders = False 
-
-        # Get Variables
-        self.ps4_controller = PS4Controller()
-        self.controller_updated = False
-
-
-        # Extras
-        self.face_counter = 0
-        self.init = True
-        self.nav_ctr = 0
-        self.flag_init_nav = True
-        self.neck_ctr = 0
-        self.init_start_door = False
-        self.rgb_ctr = 1
-
-        self.br = CvBridge()
-
-        # self.mp_face_detection = mp.solutions.face_detection
-        # self.mp_drawing = mp.solutions.drawing_utils
-        # self.mp_face_detection = self.mp_face_detection.FaceDetection()
-        # self.mp_pose = mp.solutions.pose
-        # self.pose = self.mp_pose.Pose()
-
-        aux_start_door = Bool()
-        aux_start_door.data = True
-        self.start_door_publisher.publish(aux_start_door)
-        print("Fiz pedido da Door")
-        """
+        # self.request_audio()
+        # self.help_neck_follow_person()
 
 
     def request_audio(self):
@@ -178,6 +145,156 @@ class TRNode(Node):
 
     def done_start_door_callback(self, flag: Bool):
         print("Recebi Fim do Start Door")
+
+
+    def yolov8_pose_callback(self, yp: Yolov8Pose):
+        self.yolo_poses = yp
+
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = TRNode()
+    th_main = threading.Thread(target=thread_main_debug, args=(node,), daemon=True)
+    th_main.start()
+    rclpy.spin(node)
+    rclpy.shutdown()
+
+def thread_main_debug(node: TRNode):
+    main = DebugMain(node)
+    main.main()
+
+class DebugMain():
+
+    def __init__(self, node: TRNode):
+        self.node = node
+        
+        self.state = 0
+
+        self.image_height = 720
+        self.image_width = 1280
+        #self.state = 1
+        
+
+    def main(self):
+
+        print("IN THREAD MAIN")
+
+        ##### 1) olhar para umas coordenadas
+        pose = Pose2D()
+        pose.x = 2.0
+        pose.y = 2.0
+        pose.theta = 180.0
+        self.node.neck_to_coords_publisher.publish(pose)
+
+        neck_pos = NeckPosition()
+        
+        ##### 2) ler o yolo pose
+        latest_yp = Yolov8Pose()
+        dist = 10000 # supposedly should be +inf
+        id_to_follow = 0
+        while len(latest_yp) == 0:
+
+            latest_yp = self.node.yolo_poses
+
+            for p in latest_yp:
+                print(p.kp_nose_x, p.kp_nose_y)
+
+                ##### 3) ver qual a pessoa mais no centro
+                dist_aux = math.dist([p.kp_nose_x, p.kp_nose_y], [self.image_width//2, self.image_height//2]) 
+                if dist_aux < dist:
+                    dist = dist_aux
+                    ##### 4) decorar o ID
+                    id_to_follow = p.index_person
+                    print("TIME TO FOLLOW A PERSON... PLEASE WAIT")
+            time.sleep(3)
+        
+        
+        
+        ##### 5) estar constantemente a mandar follow person com a detected person do ID escolhido
+        while True:
+
+            lp = self.node.yolo_poses
+            correct_person = DetectedPerson()
+
+            id_selected_still_correct = False
+            for p in lp:
+                if p.index_person == id_to_follow:
+                    correct_person = p
+                    id_selected_still_correct = True
+
+            if id_selected_still_correct:
+                # olhar para a pessoa
+                self.node.neck_follow_person_publisher(correct_person)
+            else:
+                # olhar para cima 
+                neck_pos.pan = 180
+                neck_pos.tilt = 210
+                self.node.neck_to_position_publisher.publish(neck_pos)
+
+            time.sleep(0.5)
+
+            print('.')
+            pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    """
+    def help_neck_follow_person(self):
+
+        ### olhar para coords
+
+        while True:
+                
+            n = Pose2D()
+            n.x = 1.0
+            n.y = 1.0
+            n.theta = 180.0
+            self.neck_to_coords_publisher.publish(n)
+            time.sleep(0.5)
+                
+            n = Pose2D()
+            n.x = 0.0
+            n.y = 1.0
+            n.theta = 180.0
+            self.neck_to_coords_publisher.publish(n)
+            time.sleep(0.5)
+                
+            n = Pose2D()
+            n.x = -1.0
+            n.y = 1.0
+            n.theta = 180.0
+            self.neck_to_coords_publisher.publish(n)
+            time.sleep(0.5)
+                
+            n = Pose2D()
+            n.x = 0.0
+            n.y = 1.0
+            n.theta = 180.0
+            self.neck_to_coords_publisher.publish(n)
+            time.sleep(0.5)
+
+
+        ### selecionar o ID da pessoa mais central
+
+        # a cada iteração: 
+            # follow person do ID X
+        # testar para 30 FPS
+        pass
+
+    """
+
 
 
 
@@ -618,9 +735,3 @@ class TRNode(Node):
         print("DATA SENT ", self.counter)
         # self.counter+=1
         """
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = TRNode()
-    rclpy.spin(node)
-    rclpy.shutdown()

@@ -14,7 +14,7 @@ import cvzone
 import math
 import time
 
-filename = "last.pt"
+filename = "M_300epochs.pt"
 
 
 ### --------------------------------------------- CODE EXPLANATION --------------------------------------------- ### 
@@ -40,10 +40,11 @@ class Yolo_obj(Node):
         self.new_frame_time = 0
 
         self.model = YOLO('/home/utilizador/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + filename)
+        # self.model = YOLO('/home/charmie/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + filename)
         
-        self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
+        # self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
         # Intel Realsense
-        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
+        # self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
         
         # For individual images
         self.cropped_image_subscription = self.create_subscription(Image, '/cropped_image', self.cropped_image_callback, 10)
@@ -51,6 +52,12 @@ class Yolo_obj(Node):
 
         # Variables
         self.br = CvBridge()
+
+        lar_v_final_classname = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
+                                 'Coffe_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
+                                 'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
+                                 'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
+                                 'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
 
         Final_calssName = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser', 
             'Coffe_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
@@ -69,11 +76,8 @@ class Yolo_obj(Node):
               'WardrobeHandler', 'Wardrobe_Door']
         
         # depending on the filename selected, the class names change
-        if filename=='doors.pt':
-            self.classNames = door_classname
-        elif filename=='best.pt' or filename=='last.pt':
-            self.classNames = Rui_className
-            self.classNames = Final_calssName
+        if filename=='vfinal.pt' or filename=='M_300epochs.pt':
+            self.classNames = lar_v_final_classname
         else:
             print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
             
@@ -185,6 +189,7 @@ class Yolo_obj(Node):
                     if conf > 0.5:  # Threshold for detection confidence
                         msg.data = self.classNames[int(cls)]
                         self.get_logger().info('Object detected :)')
+                    print(self.classNames[int(cls)], conf)
     
             """ cv2.imshow('Received Image', img)
                 if cv2.waitKey(1) == ord('q'): # Se a tecla 'q' for pressionada, saia
@@ -193,7 +198,7 @@ class Yolo_obj(Node):
         else:
             self.get_logger().info('Nothing detected :(')
             
-        self.publisher_object.publish(msg)
+        self.cropped_image_object_detected_publisher.publish(msg)
 
 
         
