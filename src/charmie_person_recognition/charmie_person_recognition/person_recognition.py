@@ -5,7 +5,7 @@ from rclpy.node import Node
 from std_msgs.msg import Bool, String, Float32, Int16
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose, ListOfPoints, SearchForPerson
+from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose, ListOfPoints, SearchForPerson, ListOfImages, ListOfStrings
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import time
@@ -54,7 +54,7 @@ class PersonRecognitionNode(Node):
 
 
 
-        self.cropped_image_publisher = self.create_publisher(Image, '/cropped_image', 10)
+        self.cropped_image_publisher = self.create_publisher(ListOfImages, '/cropped_image', 10)
         
         self.robot = PersonRec()
 
@@ -87,6 +87,7 @@ class PersonRecognitionNode(Node):
         # print("IN")
 
     def check_person_face(self):
+        print("Face Image")
         
         # ROS2 Image Bridge for OpenCV
         print("a")
@@ -107,36 +108,55 @@ class PersonRecognitionNode(Node):
         print(current_pose.num_person)
 
         ctr = 0
-        for person in current_pose.persons:
-            ctr+=1
+        if len(current_pose.persons) > 0:
+            for person in current_pose.persons:
+                ctr+=1
 
-            # y1 = topo bounding box y
-            # y2 =  maior y dos dois ombros
-            # x1 = ombro mais a esq
-            # x2 = ombro mais a direita
+                # y1 = topo bounding box y
+                # y2 =  maior y dos dois ombros
+                # x1 = ombro mais a esq
+                # x2 = ombro mais a direita
+                
+                y1 = person.box_top_left_y
+                y2 = min(person.kp_shoulder_right_y, person.kp_shoulder_left_y)
+
+
+                x1 = min(person.kp_shoulder_right_x, person.kp_shoulder_left_x)
+                x2 = max(person.kp_shoulder_right_x, person.kp_shoulder_left_x)
+
+                print("F:", y1, y2, " - ", x1, x2)
+
+                cropped_image = current_frame[y1:y2, x1:x2]
+
+                print("image size:", cropped_image.shape[1], cropped_image.shape[0])
             
-            y1 = person.box_top_left_y
-            y2 = min(person.kp_shoulder_right_y, person.kp_shoulder_left_y)
+                # n_pixeis_x = x2-x1
+                # n_pixeis_y = y2-y1
+                # print("Pixeis Face:", n_pixeis_x, n_pixeis_y)
+
+                if cropped_image.shape[0] == 0 or  cropped_image.shape[1]:
+                    cropped_image = current_frame[0:1, 0:1]
+
+                try:
+                    # Save the cropped image to a file
+                    cv2.imwrite("cropped_face_"+str(ctr)+".jpg", cropped_image)
+                except:
+                    print("An exception has occurred!")
+
+                print(person.conf_person)
+                
+        else:
+            cropped_image = current_frame[0:1, 0:1]
 
 
-            x1 = min(person.kp_shoulder_right_x, person.kp_shoulder_left_x)
-            x2 = max(person.kp_shoulder_right_x, person.kp_shoulder_left_x)
-
-            print(y1, y2, person.kp_shoulder_left_y, " - ", x1, x2)
-
-            # Crop the image to the rectangle
-            cropped_image = current_frame[y1:y2, x1:x2]
-
-            try:
-                # Save the cropped image to a file
-                cv2.imwrite("cropped_face_"+str(ctr)+".jpg", cropped_image)
-            except:
-                print("An exception has occurred!")
-
-            print(person.conf_person)
-                  
+        bridge = CvBridge()
+        image = bridge.cv2_to_imgmsg(cropped_image, "bgr8")#, encoding="passthrough")
+        # self.cropped_image_publisher.publish(image_message)
+        return image
+    
 
     def check_person_hands(self):
+        print("Hands Image")
         
         # ROS2 Image Bridge for OpenCV
         try:
@@ -145,60 +165,57 @@ class PersonRecognitionNode(Node):
             print("An error occurred:", error) # An error occurred: name 'x' is not defined
         current_pose = self.latest_person_pose
 
-        # Crop the image to the rectangle
-        # cropped_image = current_frame[100:600, 100:400]
-
-        # Save the cropped image to a file
-        # cv2.imwrite("cropped_image.jpg", cropped_image)
-
         print(current_pose.num_person)
 
         ctr = 0
-        for person in current_pose.persons:
-            ctr+=1
-
-            # y1 = topo bounding box y
-            # y2 =  maior y dos dois ombros
-            # x1 = ombro mais a esq
-            # x2 = ombro mais a direita
+        if len(current_pose.persons) > 0:
+            for person in current_pose.persons:
+                ctr+=1
             
-            # int32 kp_wrist_left_x
-            # int32 kp_wrist_left_y
-            # float32 kp_wrist_left_conf
+                threshold = 100
 
-            # int32 kp_wrist_right_x
-            # int32 kp_wrist_right_y
-            # float32 kp_wrist_right_caonf
-            
-            threshold = 100
+                y1_l = max(person.kp_wrist_left_y - threshold, 0)
+                y2_l = min(person.kp_wrist_left_y + threshold, current_frame.shape[0])
 
-            y1_l = person.kp_wrist_left_y - threshold
-            y2_l = person.kp_wrist_left_y + threshold
+                x1_l = max(person.kp_wrist_left_x - threshold, 0)
+                x2_l = min(person.kp_wrist_left_x + threshold, current_frame.shape[1])
 
-            x1_l = person.kp_wrist_left_x - threshold
-            x2_l = person.kp_wrist_left_x + threshold
+                y1_r = max(person.kp_wrist_right_y - threshold, 0)
+                y2_r = min(person.kp_wrist_right_y + threshold, current_frame.shape[0])
 
+                x1_r = max(person.kp_wrist_right_x - threshold, 0)
+                x2_r = min(person.kp_wrist_right_x + threshold, current_frame.shape[1])
+ 
+                print("HL:", y1_l, y2_l, " - ", x1_l, x2_l)
+                print("HR:", y1_r, y2_r, " - ", x1_r, x2_r)
 
-            y1_r = person.kp_wrist_right_y - threshold
-            y2_r = person.kp_wrist_right_y + threshold
+                # Crop the image to the rectangle
+                cropped_image_l = current_frame[y1_l:y2_l, x1_l:x2_l]
+                cropped_image_r = current_frame[y1_r:y2_r, x1_r:x2_r]
 
-            x1_r = person.kp_wrist_right_x - threshold
-            x2_r = person.kp_wrist_right_x + threshold
+                print("image size left:", cropped_image_l.shape[1], cropped_image_l.shape[0])
+                print("image size right:", cropped_image_r.shape[1], cropped_image_r.shape[0])
+                # pode na mesma acontecer de a imagem ter um eixo vazio?..., caso a mão esteja fora do ecrã, testar pós qualificação
 
+                try:
+                    # Save the cropped image to a file
+                    cv2.imwrite("cropped_hand_left_"+str(ctr)+".jpg", cropped_image_l)
+                    cv2.imwrite("cropped_hand_right_"+str(ctr)+".jpg", cropped_image_r)
+                except:
+                    print("An exception has occurred!")
 
-            # Crop the image to the rectangle
-            cropped_image_l = current_frame[y1_l:y2_l, x1_l:x2_l]
-            cropped_image_r = current_frame[y1_r:y2_r, x1_r:x2_r]
+                print(person.conf_person)
 
-            try:
-                # Save the cropped image to a file
-                cv2.imwrite("cropped_hand_left_"+str(ctr)+".jpg", cropped_image_l)
-                cv2.imwrite("cropped_hand_right_"+str(ctr)+".jpg", cropped_image_r)
-            except:
-                print("An exception has occurred!")
-
-            print(person.conf_person)
-    
+        else:
+                cropped_image_l = current_frame[0:1, 0:1]
+                cropped_image_r = current_frame[0:1, 0:1]
+        
+        
+        bridge = CvBridge()
+        image_l = bridge.cv2_to_imgmsg(cropped_image_l, "bgr8")#, encoding="passthrough")
+        image_r = bridge.cv2_to_imgmsg(cropped_image_r, "bgr8")#, encoding="passthrough")
+        # self.cropped_image_publisher.publish(image_message)
+        return image_l, image_r
 
     def check_person_feet(self):
         
@@ -209,60 +226,57 @@ class PersonRecognitionNode(Node):
             print("An error occurred:", error) # An error occurred: name 'x' is not defined
         current_pose = self.latest_person_pose
 
-        # Crop the image to the rectangle
-        # cropped_image = current_frame[100:600, 100:400]
-
-        # Save the cropped image to a file
-        # cv2.imwrite("cropped_image.jpg", cropped_image)
-
         print(current_pose.num_person)
 
         ctr = 0
-        for person in current_pose.persons:
-            ctr+=1
+        if len(current_pose.persons) > 0:
+            for person in current_pose.persons:
+                ctr+=1
 
-            # y1 = topo bounding box y
-            # y2 =  maior y dos dois ombros
-            # x1 = ombro mais a esq
-            # x2 = ombro mais a direita
-            
-            # int32 kp_wrist_left_x
-            # int32 kp_wrist_left_y
-            # float32 kp_wrist_left_conf
+                threshold = 60
 
-            # int32 kp_wrist_right_x
-            # int32 kp_wrist_right_y
-            # float32 kp_wrist_right_conf
+                y1_l = max(person.kp_ankle_left_y - threshold, 0)
+                y2_l = min(person.kp_ankle_left_y + threshold, current_frame.shape[0])
 
-            threshold = 60
-
-            y1_l = person.kp_ankle_left_y - threshold
-            y2_l = person.kp_ankle_left_y + threshold
-
-            x1_l = person.kp_ankle_left_x - threshold
-            x2_l = person.kp_ankle_left_x + threshold
+                x1_l = max(person.kp_ankle_left_x - threshold, 0)
+                x2_l = min(person.kp_ankle_left_x + threshold, current_frame.shape[1])
 
 
-            y1_r = person.kp_ankle_right_y - threshold
-            y2_r = person.kp_ankle_right_y + threshold
+                y1_r = max(person.kp_ankle_right_y - threshold, 0)
+                y2_r = min(person.kp_ankle_right_y + threshold, current_frame.shape[0])
 
-            x1_r = person.kp_ankle_right_x - threshold
-            x2_r = person.kp_ankle_right_x + threshold
+                x1_r = max(person.kp_ankle_right_x - threshold, 0)
+                x2_r = min(person.kp_ankle_right_x + threshold, current_frame.shape[1])
+ 
+                print("FL:", y1_l, y2_l, " - ", x1_l, x2_l)
+                print("FR:", y1_r, y2_r, " - ", x1_r, x2_r)
 
+                # Crop the image to the rectangle
+                cropped_image_l = current_frame[y1_l:y2_l, x1_l:x2_l]
+                cropped_image_r = current_frame[y1_r:y2_r, x1_r:x2_r]
 
-            # Crop the image to the rectangle
-            cropped_image_l = current_frame[y1_l:y2_l, x1_l:x2_l]
-            cropped_image_r = current_frame[y1_r:y2_r, x1_r:x2_r]
+                print("image size left:", cropped_image_l.shape[1], cropped_image_l.shape[0])
+                print("image size right:", cropped_image_r.shape[1], cropped_image_r.shape[0])
+                # pode na mesma acontecer de a imagem ter um eixo vazio?..., caso a mão esteja fora do ecrã, testar pós qualificação
 
-            try:
-                # Save the cropped image to a file
-                cv2.imwrite("cropped_foot_left_"+str(ctr)+".jpg", cropped_image_l)
-                cv2.imwrite("cropped_foot_right_"+str(ctr)+".jpg", cropped_image_r)
-            except:
-                print("An exception has occurred!")
+                try:
+                    # Save the cropped image to a file
+                    cv2.imwrite("cropped_foot_left_"+str(ctr)+".jpg", cropped_image_l)
+                    cv2.imwrite("cropped_foot_right_"+str(ctr)+".jpg", cropped_image_r)
+                except:
+                    print("An exception has occurred!")
 
-            print(person.conf_person)
+                print(person.conf_person)
 
+        else:
+            cropped_image_l = current_frame[0:1, 0:1]
+            cropped_image_r = current_frame[0:1, 0:1]
+
+        bridge = CvBridge()
+        image_l = bridge.cv2_to_imgmsg(cropped_image_l, "bgr8")#, encoding="passthrough")
+        image_r = bridge.cv2_to_imgmsg(cropped_image_r, "bgr8")#, encoding="passthrough")
+        # self.cropped_image_publisher.publish(image_message)
+        return image_l, image_r
 
     def check_person_garbage_nearby(self):
         
@@ -282,51 +296,57 @@ class PersonRecognitionNode(Node):
         print(current_pose.num_person)
 
         ctr = 0
-        for person in current_pose.persons:
-            ctr+=1
+        if len(current_pose.persons) > 0:
+            for person in current_pose.persons:
+                ctr+=1
 
-            # y1 = topo bounding box y
-            # y2 =  maior y dos dois ombros
-            # x1 = ombro mais a esq
-            # x2 = ombro mais a direita
-            
-            # int32 kp_wrist_left_x
-            # int32 kp_wrist_left_y
-            # float32 kp_wrist_left_conf
+                # y1 = topo bounding box y
+                # y2 =  maior y dos dois ombros
+                # x1 = ombro mais a esq
+                # x2 = ombro mais a direita
+                
+                # int32 kp_wrist_left_x
+                # int32 kp_wrist_left_y
+                # float32 kp_wrist_left_conf
 
-            # int32 kp_wrist_right_x
-            # int32 kp_wrist_right_y
-            # float32 kp_wrist_right_conf
+                # int32 kp_wrist_right_x
+                # int32 kp_wrist_right_y
+                # float32 kp_wrist_right_conf
 
-            threshold_h = 160
-            threshold_v = 100
+                threshold_h = 250
+                threshold_v = 300
 
-            y1 = person.kp_ankle_left_y - threshold_v
-            y2 = person.kp_ankle_left_y + threshold_v+30
+                y1 = max(person.kp_knee_left_y, person.kp_knee_right_y)
+                y2 = min(person.kp_knee_left_y + threshold_v, person.kp_knee_right_y + threshold_v, current_frame.shape[0])
 
-            x1 = person.kp_ankle_right_x - threshold_h
-            x2 = person.kp_ankle_left_x + threshold_h
+                x1 = max(person.kp_ankle_right_x - threshold_h, 0)
+                x2 = min(person.kp_ankle_left_x + threshold_h, current_frame.shape[1])
+
+                print("SurrFloor:", y1, y2, " - ", x1, x2)
+
+                # Crop the image to the rectangle
+                cropped_image = current_frame[y1:y2, x1:x2]
+
+                print("image size:", cropped_image.shape[1], cropped_image.shape[0])
+
+                if cropped_image.shape[0] == 0 or cropped_image.shape[1] == 0:
+                    cropped_image = current_frame[0:1, 0:1]
+                    
+                try:
+                    # Save the cropped image to a file
+                    cv2.imwrite("cropped_floor_"+str(ctr)+".jpg", cropped_image)
+                except:
+                    print("An exception has occurred!")
+
+                print(person.conf_person)
+        else:
+            cropped_image = current_frame[0:1, 0:1]
 
 
-
-            # Crop the image to the rectangle
-            cropped_image = current_frame[y1:y2, x1:x2]
-
-            try:
-                # Save the cropped image to a file
-                cv2.imwrite("cropped_floor_"+str(ctr)+".jpg", cropped_image)
-            except:
-                print("An exception has occurred!")
-
-            print(person.conf_person)
-
-            bridge = CvBridge()
-            image_message = bridge.cv2_to_imgmsg(cropped_image, "bgr8")#, encoding="passthrough")
-            
-            
-            
-            self.cropped_image_publisher.publish(image_message)
-
+        bridge = CvBridge()
+        image = bridge.cv2_to_imgmsg(cropped_image, "bgr8")#, encoding="passthrough")
+        # self.cropped_image_publisher.publish(image_message)
+        return image
 
 def main(args=None):
     rclpy.init(args=args)
@@ -349,6 +369,7 @@ class PersonRecognitionMain():
 
     def main(self):
 
+        time.sleep(1.0)
         while True:
         
             #print(self.node.search_for_person_flag)
@@ -364,11 +385,19 @@ class PersonRecognitionMain():
 
     def check_stickler_rules(self):
         print("Checking Stickler Rules")
-        self.node.check_person_face()
-        self.node.check_person_hands()
-        self.node.check_person_feet()
-        self.node.check_person_garbage_nearby()
-        time.sleep(1)
+        face_img = self.node.check_person_face()
+        left_hand_img, right_hand_img = self.node.check_person_hands()
+        left_foot_img, right_foot_img = self.node.check_person_feet()
+        surrounding_feet_img = self.node.check_person_garbage_nearby()
+
+        imgs = ListOfImages()
+        imgs.images.append(left_hand_img)
+        imgs.images.append(right_hand_img)
+        imgs.images.append(surrounding_feet_img)
+        imgs.images.append(left_foot_img)
+        imgs.images.append(right_foot_img)
+        self.node.cropped_image_publisher.publish(imgs)
+        # time.sleep(5)
 
 
     def search_for_person(self):
