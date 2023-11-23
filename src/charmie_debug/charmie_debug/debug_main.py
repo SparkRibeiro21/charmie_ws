@@ -21,7 +21,22 @@ class TRNode(Node):
     def __init__(self):
         super().__init__("Debug")
         self.get_logger().info("Initialised CHARMIE Debug Node")
+
+        self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
+        self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.get_controller_callback, 10)
         
+        ### help for navigation
+        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
+        
+        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
+
+        self.create_timer(0.05, self.timer_callback)
+        self.ps4_controller = PS4Controller()
+        self.controller_updated = False
+
+
+
+
         """
         # Neck Topics
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
@@ -60,8 +75,8 @@ class TRNode(Node):
 
         """
         # Audio
-        self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
-        self.get_speech_subscriber = self.create_subscription(String, "get_speech", self.get_speech_callback, 10)
+        # self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
+        # self.get_speech_subscriber = self.create_subscription(String, "get_speech", self.get_speech_callback, 10)
         # self.flag_listening_subscriber = self.create_subscription(Bool, "flag_listening", self.flag_listening_callback, 10)
         """
         # Navigation 
@@ -74,16 +89,16 @@ class TRNode(Node):
         
         """
         # Neck Topics
-        self.neck_to_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
-        self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
-        self.neck_follow_person_publisher = self.create_publisher(TrackPerson, "neck_follow_person",10)
+        # self.neck_to_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
+        # self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
+        # self.neck_follow_person_publisher = self.create_publisher(TrackPerson, "neck_follow_person",10)
         # self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
         
         
-        self.yolov8_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.yolov8_pose_callback, 10)
+        # self.yolov8_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.yolov8_pose_callback, 10)
 
 
-        self.yolo_poses = Yolov8Pose()
+        # self.yolo_poses = Yolov8Pose()
 
 
         """    
@@ -110,6 +125,18 @@ class TRNode(Node):
         # self.help_neck_follow_person()
 
 
+    def get_controller_callback(self, controller: PS4Controller):
+        print("TRIANGLE = ", controller.triangle, "CIRCLE = ", controller.circle, "CROSS = ", controller.cross, "SQUARE = ", controller.square)
+        print("UP = ", controller.arrow_up, "RIGHT = ", controller.arrow_right, "DOWN = ", controller.arrow_down, "LEFT = ", controller.arrow_left)
+        print("L1 = ", controller.l1, "R1 = ", controller.r1, "L3 = ", controller.l3, "R3 = ", controller.r3)
+        print("SHA = ", controller.share, "OPT = ", controller.options, "PS = ", controller.ps)
+        print("L2 = ", controller.l2, "R2 = ", controller.r2)
+        print("L3_ang = ", controller.l3_ang, "L3_dis = ", controller.l3_dist, "L3_xx = ", controller.l3_xx, "L3_yy = ", controller.l3_yy)
+        print("R3_ang = ", controller.r3_ang, "R3_dis = ", controller.r3_dist, "R3_xx = ", controller.r3_xx, "R3_yy = ", controller.r3_yy)
+        self.ps4_controller = controller
+        self.controller_updated = True
+
+    """
     def request_audio(self):
         
         sp = SpeechType()
@@ -150,8 +177,87 @@ class TRNode(Node):
     def yolov8_pose_callback(self, yp: Yolov8Pose):
         self.yolo_poses = yp
 
+    """
 
 
+    def timer_callback(self):
+        # neck = NeckPosition()
+        # flag_start_button = Bool()
+        # flag_vccs = Bool()
+        # flag_torso = Bool()
+        # rgb_mode = Int16()
+        # torso_pos = Pose2D()
+        omni_move = Vector3()
+        # flag_encoders = Bool()
+
+        if self.controller_updated:
+            
+
+            pos = Pose2D()
+            if self.ps4_controller.arrow_up >= 2:
+                pos.x = float(1)
+                print("LEGS UP")
+            elif self.ps4_controller.arrow_down >= 2:
+                pos.x = float(-1)
+                print("LEGS DOWN")
+            else:
+                pos.x = float(0)
+                print("LEGS STOP")
+
+            if self.ps4_controller.arrow_right >= 2:
+                pos.y = float(1)
+                print("TORSO UP")
+            elif self.ps4_controller.arrow_left >= 2:
+                pos.y = float(-1)
+                print("TORSO DOWN")
+            else:
+                pos.y = float(0)
+                print("TORSO STOP")
+
+            self.torso_test_publisher.publish(pos)
+            
+
+
+            if self.ps4_controller.cross >= 2:
+                pos = Bool()
+                pos.data = True
+                self.flag_pos_reached_publisher.publish(pos)
+                print("NAVIGATION DONE")
+
+            # if self.ps4_controller.cross == 2: # RISING
+            #     rgb_mode.data = 4
+                #self.rgb_mode_publisher.publish(rgb_mode)
+            # elif self.ps4_controller.cross == 1: # FALLING:
+            #     rgb_mode.data = 2
+                #self.rgb_mode_publisher.publish(rgb_mode)
+
+            if self.ps4_controller.l3_dist > 0.0:
+                omni_move.x = self.ps4_controller.l3_ang
+                omni_move.y = self.ps4_controller.l3_dist*100/5
+            else:
+                omni_move.x = 0.0
+                omni_move.y = 0.0
+
+
+            if self.ps4_controller.r3_dist > 0.0:
+                omni_move.z = 100 + self.ps4_controller.r3_xx*10
+            else:
+                omni_move.z = 100.0
+            
+           
+            self.omni_move_publisher.publish(omni_move)
+            self.controller_updated = False
+
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = TRNode()
+    rclpy.spin(node)
+    rclpy.shutdown()
+
+
+"""
 def main(args=None):
     rclpy.init(args=args)
     node = TRNode()
@@ -210,7 +316,6 @@ class DebugMain():
             time.sleep(3)
         
         
-        
         ##### 5) estar constantemente a mandar follow person com a detected person do ID escolhido
         while True:
 
@@ -242,6 +347,7 @@ class DebugMain():
 
 
 
+"""
 
 
 
@@ -249,8 +355,7 @@ class DebugMain():
 
 
 
-
-    """
+"""
     def help_neck_follow_person(self):
 
         ### olhar para coords
@@ -298,7 +403,7 @@ class DebugMain():
 
 
 
-    """
+"""
     def request_point_cloud_person(self):
         if self.person_pose.num_person > 0:
             aux = RequestPointCloud()
@@ -389,7 +494,7 @@ class DebugMain():
         current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
 
     """
-    """ 
+""" 
         image = cv2.cvtColor(current_frame, cv2.COLOR_RGB2BGR)
         height, width, _ = image.shape
         results = self.pose.process(image)
@@ -427,7 +532,7 @@ class DebugMain():
         #cv2.waitKey(1)
             
         
-    """
+"""
     def get_depth_image_callback(self, img: Image):
         # print(img)
         print("---")
@@ -442,7 +547,7 @@ class DebugMain():
 
 
 
-    """
+"""
     def flag_pos_reached_callback(self, flag: Bool):
 
         time.sleep(5.0)
@@ -483,7 +588,7 @@ class DebugMain():
         
         # speak = RobotSpeech()
         
-    """ 
+""" 
         speak.command = "RedWine"
 
 
@@ -506,7 +611,7 @@ class DebugMain():
         # if self.rgb_ctr > 91:
         #     self.rgb_ctr = 2
 
-    """ def timer_callback2(self):
+""" def timer_callback2(self):
 
         p = Pose2D()
         if self.neck_ctr == 0:
@@ -541,7 +646,7 @@ class DebugMain():
             self.neck_ctr = 0
 
         """
-    """
+"""
     def timer_callback_audio(self):
         if self.init == True:
             self.start_audio()
@@ -617,7 +722,7 @@ class DebugMain():
             self.omni_move_publisher.publish(omni_move)
             self.controller_updated = False
         """
-    """
+"""
         if self.counter == 0:
             neck.pan = 180.0
             neck.tilt = 180.0 

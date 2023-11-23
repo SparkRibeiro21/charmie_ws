@@ -18,7 +18,7 @@ import time
 class RobotControl:
 
     def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB0', baudrate=9600)  # open serial port
+        self.ser = serial.Serial('/dev/ttyUSB2', baudrate=9600)  # open serial port
         print("Connected to Motor Board via:", self.ser.name)  # check which port was really used
 
         # FLAGS
@@ -253,6 +253,12 @@ class LowLevelNode(Node):
 
         self.low_level_diagnostic_publisher = self.create_publisher(Bool, "low_level_diagnostic", 10)
 
+
+        ### TEMP
+        self.torso_test_subscriber = self.create_subscription(Pose2D, "torso_test", self.torso_test_callback , 10)
+
+
+
         flag_diagn = Bool()
         flag_diagn.data = False
 
@@ -278,7 +284,53 @@ class LowLevelNode(Node):
         self.flag_get_torso_pos = False
         self.flag_get_encoders = False
 
-        
+    
+    def torso_test_callback(self, data: Pose2D):
+
+        print("receiving torso position ")
+        estado_legs = int(data.x)
+        estado_torso = int(data.y) 
+
+        if estado_legs == 0:
+            print("Legs Stopped")
+            self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_ACTIVE, False)
+            # nao anda
+        elif estado_legs == 1:
+            print("Legs Up")
+            self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_ACTIVE, True)
+            self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_MOVEM, True)
+            # cima
+        elif estado_legs == -1:
+            print("Legs Down")
+            self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_ACTIVE, True)
+            self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_MOVEM, False)
+            # baixo
+        else:
+            print("Legs Stopped 2")
+            self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_ACTIVE, False)
+            # nao amnda
+
+        if estado_torso == 0:
+            print("Torso Stopped")
+            self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, False)
+            # nao anda
+        elif estado_torso == 1:
+            print("Torso Up")
+            self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, True)
+            self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_MOVEM, True)
+            # cima
+        elif estado_torso == -1:
+            print("Torso Down")
+            self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, True)
+            self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_MOVEM, False)
+            # baixo
+        else:
+            print("Torso Stopped 2")
+            self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, False)
+            # nao amnda
+
+
+            
         
     def timer_callback(self):
 
