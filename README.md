@@ -12,7 +12,7 @@ ROS2 CHARMIE Workspace...
 
 [![Video Title](https://img.youtube.com/vi/RNr9uOhubqw/0.jpg)](https://www.youtube.com/watch?v=RNr9uOhubqw)
 
-https://m.youtube.com/watch?v=RNr9uOhubqw&pp=ygUOQ2hhcm1pZSB1bWluaG8%3D
+https://m.youtube.com/watch?v=RNr9uOhubqw
 
 ### RoboCup@Home 2022
 
