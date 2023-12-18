@@ -1,4 +1,4 @@
-ROS2 CHARMIE Workspace...
+ROS2 CHARMIE Workspace
 
 * [RoboCup@Home Qualification Videos](#robocuphome-qualification-videos)
   * [RoboCup@Home 2023](#robocuphome-2023)
