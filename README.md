@@ -31,6 +31,13 @@ https://m.youtube.com/watch?v=gNx9OYljlcw
 
 ## :trophy: Results
 
+|Event|Ranking|Points|
+| ------------- | ------------- | ------------- |
+|RoboCup@Home 2023|7/15|High|
+|Rui Silva|charmie_bot|Low|
+
+
+
 
 ## :handshake: Connect with us
 
