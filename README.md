@@ -1,7 +1,7 @@
 ## Welcome to LAR@Home CHARMIE ROS2 Workspace Github Repository  :mechanical_arm: :portugal:
 
 * [Requirements :rocket:](#rocket-requirements)
-* [RoboCup@Home Qualification Videos :robot:](#robocuphome-qualification-videos)
+* [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
   * [RoboCup@Home 2023 :netherlands:](#robocuphome-2023-netherlands)
   * [RoboCup@Home 2022 :fr:](#robocuphome-2022-fr)
 * [Results :trophy:](#trophy-results)
