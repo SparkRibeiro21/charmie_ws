@@ -3,7 +3,7 @@
 * [Requirements](#rocket-requirements)
 * [RoboCup@Home Qualification Videos](#robocuphome-qualification-videos)
   * [RoboCup@Home 2023](#robocuphome-2023-netherlands)
-  * [RoboCup@Home 2022](#robocuphome-2022-france)
+  * [RoboCup@Home 2022](#robocuphome-2022-fr)
 
 ## :rocket: Requirements
 
@@ -21,7 +21,7 @@ Python: 3.10
 
 https://m.youtube.com/watch?v=RNr9uOhubqw
 
-### RoboCup@Home 2022 :france:
+### RoboCup@Home 2022 :fr:
 
 [![Video Title](https://img.youtube.com/vi/gNx9OYljlcw/0.jpg)](https://www.youtube.com/watch?v=gNx9OYljlcw)
 
