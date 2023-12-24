@@ -8,7 +8,9 @@
 ## Requirements
 
 OS: Ubuntu 22.04 LTS
+
 ROS2: Humble
+
 Python: 3.10
 
 ## RoboCup@Home Qualification Videos
