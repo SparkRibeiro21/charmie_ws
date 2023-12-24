@@ -1,11 +1,11 @@
-## Welcome to LAR@Home CHARMIE ROS2 Workspace Github Repository  :mechanical_arm: :portugal:
+m## Welcome to LAR@Home CHARMIE ROS2 Workspace Github Repository  :mechanical_arm: :portugal:
 
-* [Requirements](#requirements)
+* [:rocket: Requirements](#rocket-requirements)
 * [RoboCup@Home Qualification Videos](#robocuphome-qualification-videos)
   * [RoboCup@Home 2023](#robocuphome-2023)
   * [RoboCup@Home 2022](#robocuphome-2022)
 
-## Requirements
+## :rocket: Requirements
 
 OS: Ubuntu 22.04 LTS
 
