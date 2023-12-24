@@ -5,7 +5,7 @@
   * [RoboCup@Home 2023 :netherlands:](#robocuphome-2023-netherlands)
   * [RoboCup@Home 2022 :fr:](#robocuphome-2022-fr)
 * [Results]
-* [Social Media]
+* [Social Media :handshake:](#connect-with-us-handshake)
 
 ## :rocket: Requirements
 
@@ -28,3 +28,5 @@ https://m.youtube.com/watch?v=RNr9uOhubqw
 [![Video Title](https://img.youtube.com/vi/gNx9OYljlcw/0.jpg)](https://www.youtube.com/watch?v=gNx9OYljlcw)
 
 https://m.youtube.com/watch?v=gNx9OYljlcw
+
+## :handshake: Connect with us
