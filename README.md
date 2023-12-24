@@ -54,7 +54,7 @@ https://m.youtube.com/watch?v=gNx9OYljlcw
   <img src="https://github.com/gauravghongde/social-icons/blob/master/PNG/Color/Facebook.png" alt="Facebook Logo" width="50">
 </a>
 <a href="https://www.tiktok.com/@lar_uminho">
-  <img src="https://github.com/gauravghongde/social-icons/blob/master/PNG/Color/Tik%20Tok.png" alt="Tik Tok Logo" width="50">
+  <img src="https://github.com/gauravghongde/social-icons/blob/master/PNG/Color/Tik%20Tok.png" alt="Tik Tok Logo" width="48">
 </a>
 <a href="https://github.com/SparkRibeiro21/charmie_ws">
   <img src="https://github.com/gauravghongde/social-icons/blob/master/SVG/Color/Github.svg" alt="Github Logo" width="50">
