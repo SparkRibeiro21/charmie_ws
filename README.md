@@ -4,6 +4,8 @@
 * [RoboCup@Home Qualification Videos :robot:](#robocuphome-qualification-videos)
   * [RoboCup@Home 2023 :netherlands:](#robocuphome-2023-netherlands)
   * [RoboCup@Home 2022 :fr:](#robocuphome-2022-fr)
+* [Results]
+* [Social Media]
 
 ## :rocket: Requirements
 
