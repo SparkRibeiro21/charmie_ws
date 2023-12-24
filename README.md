@@ -34,7 +34,7 @@ https://m.youtube.com/watch?v=gNx9OYljlcw
 |Event|Ranking|Points|
 | ------------- | ------------- | ------------- |
 |RoboCup 2023|7/15|932|
-|Rui Silva|charmie_bot|Low|
+|PortugalOpen 2023|3/3|400|
 
 
 
