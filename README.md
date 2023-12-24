@@ -33,3 +33,22 @@ https://m.youtube.com/watch?v=gNx9OYljlcw
 
 
 ## :handshake: Connect with us
+
+<a href="http://lar.dei.uminho.pt">
+  <img src="https://github.com/gauravghongde/social-icons/blob/master/SVG/Color/Safari.svg" alt="Safari Logo" width="52">
+</a>
+<a href="https://www.youtube.com/@lar_uminho">
+  <img src="https://github.com/gauravghongde/social-icons/blob/master/PNG/Color/Youtube.png" alt="YouTube Logo" width="50">
+</a>
+<a href="https://www.instagram.com/lar_uminho">
+  <img src="https://github.com/gauravghongde/social-icons/blob/master/SVG/Color/Instagram.svg" alt="Instagram Logo" width="50">
+</a>
+<a href="https://www.facebook.com/profile.php?id=100088692420376">
+  <img src="https://github.com/gauravghongde/social-icons/blob/master/PNG/Color/Facebook.png" alt="Facebook Logo" width="50">
+</a>
+<a href="https://www.tiktok.com/@lar_uminho">
+  <img src="https://github.com/gauravghongde/social-icons/blob/master/PNG/Color/Tik%20Tok.png" alt="Tik Tok Logo" width="50">
+</a>
+<a href="https://github.com/SparkRibeiro21/charmie_ws">
+  <img src="https://github.com/gauravghongde/social-icons/blob/master/SVG/Color/Github.svg" alt="Github Logo" width="50">
+</a>
