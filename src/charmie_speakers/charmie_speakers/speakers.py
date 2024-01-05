@@ -14,7 +14,7 @@ from pathlib import Path
 import subprocess
 import re
 
-VOICE_NO = 1
+VOICE_NO = 2
 
 
 class RobotSpeak():
@@ -56,10 +56,10 @@ class RobotSpeak():
                 vocoder_config= voc_config_path
             )
 
-        filename = "last_speaked.wav"
+        self.filename = "last_speaked.wav"
         home = str(Path.home())
-        midpath = "charmie_ws/src/charmie_speakers/charmie_speakers"
-        self.complete_path = home+'/'+midpath+'/'+filename
+        midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
+        self.complete_path = home+'/'+midpath+'/'
 
 
     def speak(self, speech: RobotSpeech):
@@ -74,15 +74,32 @@ class RobotSpeak():
             lang = 'en'
             print("Language: Other (Default: English)")
 
+
+        # this is just a test, it uses sentences pre recorded so that the robot does not waste any time processing what it wants to say.
+        # if speech.command == "Please say your order.":
+        #     
+        #     pygame.mixer.music.load(self.complete_path+"voice1.wav")
+        #     pygame.mixer.music.play()
+        #     while pygame.mixer.music.get_busy():
+        #         pass
+        # else:
+        #     init_time = time.time()
+        #     outputs = self.syn.tts(speech.command)
+        #     self.syn.save_wav(outputs, self.complete_path+self.filename)
+        #     print(time.time()-init_time)
+        #     pygame.mixer.music.load(self.complete_path+self.filename)
+        #     pygame.mixer.music.play()
+        #     while pygame.mixer.music.get_busy():
+        #         pass
+            
         init_time = time.time()
         outputs = self.syn.tts(speech.command)
-        self.syn.save_wav(outputs, self.complete_path)
+        self.syn.save_wav(outputs, self.complete_path+self.filename)
         print(time.time()-init_time)
-        pygame.mixer.music.load(self.complete_path)
+        pygame.mixer.music.load(self.complete_path+self.filename)
         pygame.mixer.music.play()
         while pygame.mixer.music.get_busy():
             pass
-
 
     def get_active_speaker_info(self):
         try:
