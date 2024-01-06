@@ -10,36 +10,31 @@ import cv2
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge,  CvBridgeError
-from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL, Yolov8Pose, NeckPosition
+from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL, Yolov8Pose, NeckPosition, SearchForPerson, ListOfPoints, TrackPerson, DetectedPerson, ListOfStrings
 
-import numpy as np
 import time
-import os
-from datetime import datetime
 
 import math
 
-import mediapipe as mp
-
-import argparse
-from mediapipe.python.solutions.drawing_utils import _normalized_to_pixel_coordinates
-
-class ReceptionistNode(Node):
+class SFTRNode(Node):
 
     def __init__(self):
-        super().__init__("ReceptionistNode")
-        self.get_logger().info("Initiliased Receptionist Node")
+        super().__init__("SFTRNode")
+        self.get_logger().info("Initiliased SFTR Node")
         
         #RGB
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         
         # Neck Topics
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
+        self.neck_follow_person_publisher = self.create_publisher(TrackPerson, "neck_follow_person", 10)
+        self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
         #self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
 
         # Low Level Topics
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
+        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
+        self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
     
         # Speaker
         self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
@@ -66,12 +61,19 @@ class ReceptionistNode(Node):
         
         # YOLO
         #self.depth_image_subscriber = self.create_subscription(Image, "/depth/image_rect_raw", self.get_depth_image_callback, 10)
-
+        self.yolov8_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.yolov8_pose_callback, 10)
+        self.only_detect_person_right_in_front_publisher = self.create_publisher(Bool, "only_det_per_right_in_front", 10)
+        
         #Comms with Main
         self.get_person_publisher = self.create_publisher(Bool, "get_person", 10)
-        self.person_info_subscriber = self.create_subscription(Pose2D, "person_info", self.person_info_callback, 10)
-        
+        #self.person_info_subscriber = self.create_subscription(Pose2D, "person_info", self.person_info_callback, 10)
 
+        #Search For Person
+        self.search_for_person_publisher = self.create_publisher(SearchForPerson, 'search_for_person', 10)
+        self.search_for_person_subscriber = self.create_subscription(ListOfPoints, "search_for_person_points", self.search_for_person_point_callback, 10)
+
+        self.check_stickler_rules_publisher = self.create_publisher(Bool, "check_stickler_rules", 10)
+        self.cropped_image_object_detected_subscriber = self.create_subscription(ListOfStrings, '/cropped_image_object_detected', self.list_of_stickler_rules_callback, 10)
 
         #RGB
         self.rgb_ctr = 2
@@ -84,92 +86,77 @@ class ReceptionistNode(Node):
         self.robot_y = 0.0
         self.robot_t = 0.0
 
+        self.flag_search_for_person_done = False
+        self.start_button_state = False
+        self.flag_person_inside_forbidden_room = True
+        self.flag_rule_being_broken = False
 
-        #Arena 1
-        self.begin_coordinates = (0.0, 3.0) # <----- CHANGE M
+        self.rule_unbroken = 100
+
+        # Casa LAR
+        self.begin_coordinates = (0.0, 3.0) # <----- CHANGE ME
         
-        self.forbiden_room_coordinates = (2.0, 6.9)
-        self.kitchen_room_coordinates = (0.5, 6.9) # coordenada da cozinha na porta entre cozinha e quarto
-        self.hall_room_coordinates = (1.3, 3.5)
-        self.living_room_coordinates = (1.3, 3.5)
-
-
-        self.entrance_coordinates = (0.0, 0.0)  
-
-        self.entrance_coordinates_orientation= (0.0, 0.0)
-
-        
-
-        self.bin_coordinates_orientation= (0.0, 0.0) # ----------> CHANGE ME
-    
-        self.find_coordinates = (1.3 , 8.5)
+        #self.forbidden_room_coordinates = (2.0, 6.9)
+        #self.kitchen_room_coordinates = (0.5, 6.9) # coordenada da cozinha na porta entre cozinha e quarto
+        #self.hall_room_coordinates = (1.3, 3.5)
+        #self.living_room_coordinates = (1.3, 3.5)
+        #self.entrance_coordinates = (0.0, 0.0)  
+        #self.entrance_coordinates_orientation= (0.0, 0.0) 
+        #self.bin_coordinates_orientation= (0.0, 0.0) # ----------> CHANGE ME
+        #self.find_coordinates = (1.3 , 8.5)
 
         self.talk_neck = NeckPosition()
         self.talk_neck.pan = 180.0
-        self.talk_neck.tilt = 193.0
+        self.talk_neck.tilt = 180.0
 
+        self.turn_around_neck = NeckPosition()
+        self.turn_around_neck.pan = 360.0
+        self.turn_around_neck.tilt = 180.0
+
+        self.look_down = NeckPosition()
+        self.look_down.pan = 180.0
+        self.look_down.tilt = 165.0
         
-      
-       
-
-       #Esta variavel vai servir para contar as vezes em que o robô vai verificar os sapatos e bebida, vai 
-       #fazê-lo em 3 diferentes espaços da casa 
+        #Esta variavel vai servir para contar as vezes em que o robô vai verificar os sapatos e bebida, vai 
+        #fazê-lo em 3 diferentes espaços da casa 
         self.count_rooms = 0
-       #COORDENADAS DE AUXILIO - VOU USAR OS TARGETS NAS PORTAS
-
-
+        #COORDENADAS DE AUXILIO - VOU USAR OS TARGETS NAS PORTAS
 
         #da sala para o escritório
         self.A_target_sala = (0.5 , 3.0)
         self.A_target_escritorio = (2.0 , 3.0)
 
         #da sala para a cozinha
-
         self.B_target_sala = (-1.5, 4.1)
         self.B_target_cozinha = (-1.5, 6.0)
 
         #da cozinha para o quarto
-
         self.C_target_cozinha = (0.5, 6.9)
         self.C_target_quarto = (2.0, 6.9)
-
         self.wardrobe_bedroom = (4.8 , 5.8)
         self.small_table = (2.5 , 9.2)
+
         #coordenadas de pontos estratégicos para onde poderá olhar no quarto
         self.coordinates_bed = (3.75 , 8.0)
-
         self.coordinates_corner_opposite_bed = (4.5 , 5.2)
-
         self.coordinates_corner_right = (2.0 , 5.5)
-
         self.coordinates_corner_left = (2.0 , 9.2)
 
         #coordenadas de pontos estratégicos para onde poderá olhar na cozinha
         self.coordinates_table = (-2.5 , 7.5)
-
         self.coordinates_pia = (-0.6 , 4.8)
-
         self.bin_coordinates = (0.8, 8.0)
 
         #coordenadas de pontos estratégicos para onde poderá olhar na sala
         self.sofa_coordinates = (-3.4, 3.6) 
-
         self.coordinates_corner_living_room = (0.8 , 3.8)
-
         self.door_coordinates_orientation= (1.3, 2.1)
         #coordenadas de pontos estratégicos para onde poderá olhar no escritório
-
         self.middle_point_rigth = (3.4, 1.9)
-
         self.chair_left = (3.4 , 3.5)
 
-
-
         self.coordinates = TarNavSDNL()
-        #Código para ele olhar para a cara da pessoa e centrar a cara da pessoa na imagem
-        self.door_neck_coordinates = NeckPosition()
-        self.door_neck_coordinates.pan = 180.0
-        self.door_neck_coordinates.tilt = 200.0
+
         
         #Definir como se estivesse a olhar ligeiramente para baixo - Perceber o que precisamos que olhe para baixo para detetarmos tudo direito
         self.place_to_sit_neck = NeckPosition()
@@ -185,10 +172,6 @@ class ReceptionistNode(Node):
         self.navigation_neck.pan = 180.0
         self.navigation_neck.tilt = 170.0
 
-        self.talk_neck = NeckPosition()
-        self.talk_neck.pan = 180.0
-        self.talk_neck.tilt = 193.0
-
         self.br = CvBridge()
 
         self.flag_left= False
@@ -200,14 +183,14 @@ class ReceptionistNode(Node):
         self.flag_navigation_done = False
         self.flag_audio_done = False
         # self.keyword_list = []
-        self.person_forbiden_room = 0
+        self.person_forbidden_room = 0
         self.person_with_shoes = 0
         self.person_with_drink = 0
 
 
         self.flag_shoes = False
         self.flag_drink = False
-        self.flag_forbiden = False
+        self.flag_forbidden = False
         self.num_faces = 0
 
         self.image_color = Image()
@@ -229,129 +212,36 @@ class ReceptionistNode(Node):
         self.rules = 0
 
         self.cv2_img = []
+        self.customer_position = []
         
         self.width = 0
         self.height = 0
         
-        
-        #Pastas relativas às funções das características como por exemplo, características, reconhecimento, etc.
-        #CAMINHOS QUE É PRECISO MUDAR NOME
-
-
-        self.get_caract = 0
-        self.caracteristics = []
-        self.filename = String()
-
-
-        self.MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
-        # MODEL_MEAN_VALUES = (78, 87, 114)
-
-        self.mp_face_detection = mp.solutions.face_detection
-        self.mp_drawing = mp.solutions.drawing_utils
-        self.mp_face_detection = self.mp_face_detection.FaceDetection()
-        self.mp_pose = mp.solutions.pose
-        self.pose = self.mp_pose.Pose()
-
         self.person_detected = Pose2D()
         self.person_detected.theta = -1.0
 
-    def person_info_callback(self, person: Pose2D):
-        self.person_detected = person
-        # print('RECEBI DADOS')
 
-    def follow_center_face(self, erro_x, erro_y):
-        print('Center face')
+        self.Initial_state = 0
+        self.Forbidden_room = 1
+        self.Kitchen = 2
+        self.BedRoom = 3 
+        self.Corridor = 4
+        self.LivingRoom = 5
+        self.end = 99
 
-        erro = Pose2D()
-        dist_2 = erro_x**2 + erro_y**2
-        dist = math.sqrt(dist_2)
-        
+        self.rule_drink = 0
+        self.rule_garbage = 1
+        self.rule_shoes = 2
 
-        while dist >= 10:
-            print('erro: ', abs(erro.x), abs(erro.y))
-            cv2_img = self.br.imgmsg_to_cv2(self.image_color, "bgr8")
-            #num_faces, center_face_x, center_face_y, center_x, center_y  = self.detect_face(cv2_img)
-            #print('Variaveis função renata:', num_faces, center_face_x, center_face_y, center_x, center_y)
-            #error_x = center_face_x - center_x
-            #error_y = center_face_y - center_y
-            num_faces, face_x, face_y, shoulder, hip, center_x, center_y = self.found_landmarks(cv2_img)
-            error_x = face_x - center_x
-            error_y = face_y - center_y
+        self.yolo_poses = Yolov8Pose()
 
-            print('erro_atualizado =', int(error_x), int(error_y))
-            dist_2 = error_x**2 + error_y**2
-            dist = math.sqrt(dist_2)
-            erro.x= float(error_x)
-            erro.y= float(error_y)
-            print("erro:", erro)
-            while(True):
-                print("You used function neck error! This function no longer exists, please change this! in this case should be neck_follow_person .")
-                # self.neck_error_publisher.publish(erro)
-            # print('dist 2:', dist_2)
-            print('dist:', dist)
-            #time.sleep(0.05)
-            cv2.imshow("c_camera", cv2_img)
-            cv2.waitKey(1)
+        self.latest_stickler_rules_detected = ListOfStrings()
+        self.flag_stckler_rules_done = False
 
-                   
-
-        print('centrei')
-
-
-    """ def yolo_pose_callback(self, yolo:Yolov8Pose):
-        self.yolo_pose=yolo
-        self.yolo_pose.persons """
-    
-
-    def found_landmarks(self, image):
-        self.get_logger().info('FUNCTION DETECT LANDMARKS')
-
-        
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        height, width, _ = image.shape
-        results = self.pose.process(image)
-        #print("RESULTS")
-
-        print('A')
-
-         
-        center_x = int(width/2)
-        center_y = int(height/2)
-
-        if results.pose_landmarks:
-            print('found landmarks')
-            self.mp_drawing.draw_landmarks(image, results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS, self.mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2), self.mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=2))
-            #LEFT_SIDE_IMG
-            
-            point_face_x = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.NOSE].x*width,2))
-            point_face_y = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.NOSE].y*height,2))
-            
-            print(point_face_x, point_face_y)
-
-            hip = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_HIP ].y*height,2))
-            
-            print(hip)
-            
-            shoulder = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_SHOULDER].y*height,2))
-            
-            print(shoulder)
-            
-            #cv2.line(image, (center_x,center_y), (point_face[0],point_face[1]), (0, 255, 255), 2)
-
-            num_person = 1
-            
-            cv2.imshow("Landmarks", image)
-            cv2.waitKey(1)
-        else:
-            print('didnt found landmarks')
-            num_person = 0
-            point_face_x = 0
-            point_face_y = 0
-            shoulder = 0
-            hip = 0
-        return num_person,point_face_x, point_face_y, shoulder, hip, center_x, center_y
-        
-    
+    def list_of_stickler_rules_callback(self, los: ListOfStrings):
+        self.latest_stickler_rules_detected = los
+        self.flag_stckler_rules_done = True
+     
     def coordinates_to_navigation(self, p1, p2, bool):
         nav = TarNavSDNL()
         nav.flag_not_obs = bool
@@ -369,10 +259,27 @@ class ReceptionistNode(Node):
         self.keywords = keywords
         self.flag_audio_done = True
 
+    def yolov8_pose_callback(self, yolov8: Yolov8Pose):
+
+        #self.get_logger().info('Receiving Yolov8 Pose Info')
+        """ if(yolov8.persons[0].kp_nose_y != None):
+            self.nose = yolov8.persons[0].kp_nose_y
+
+        else:
+            self.nose = self.int_error """
+        
+
+        self.yolo_poses = yolov8
+        #self.person.append(yolov8) -> aqui queria tentar basicamente criar um conjunto de pessoas detetadas para depois olhar para o nariz delas
+
     def get_speech_done_callback(self, state: Bool):
-        print("Received Speech Flag:", state.data)
+        # print("Received Speech Flag:", state.data)
         self.flag_speech_done = True
         #self.start_audio()
+
+    def search_for_person_point_callback(self, LoP: ListOfPoints):
+        self.person_list_of_points = LoP
+        self.flag_search_for_person_done = True
     
     def flag_pos_reached_callback(self, state: Bool):
         #print("Received Navigation Flag:", state.data)
@@ -383,6 +290,10 @@ class ReceptionistNode(Node):
 
     def get_odometry_robot_callback(self, odom:Odometry):
         self.robot_current_position = odom
+
+    def get_start_button_callback(self, state: Bool):
+        self.start_button_state = state.data
+        print("Received Start Button:", state.data)
 
     def get_localisation_robot_callback(self, loc:Odometry):
         self.robot_x = loc.pose.pose.position.x
@@ -395,26 +306,33 @@ class ReceptionistNode(Node):
 
         self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
 
+    def check_if_person_left_forbidden_room(self):
+        # Quando a pessoa sair, colocar flag_person_inside_forbidden_room = False
+        pass
+
 def main(args=None):
     rclpy.init(args=args)
-    node = ReceptionistNode()
-    th_main = threading.Thread(target=thread_main_receptionist, args=(node,), daemon=True)
+    node = SFTRNode()
+    th_main = threading.Thread(target=thread_main_SFTR, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
 
-def thread_main_receptionist(node: ReceptionistNode):
-    main = ReceptionistMain(node)
+def thread_main_SFTR(node: SFTRNode):
+    main = SFTRMain(node)
     main.main()
 
 
-class ReceptionistMain():
+class SFTRMain():
     
-    def __init__(self, node: ReceptionistNode):
+    def __init__(self, node: SFTRNode):
         self.node = node
         self.start = time.time()
         self.end = time.time()
+        i = 0
+        
+        
         
     def wait_for_end_of_speaking(self):
         while not self.node.flag_speech_done:
@@ -423,495 +341,1299 @@ class ReceptionistMain():
 
     
     def wait_for_end_of_navigation(self):
-        time.sleep(0.05)
+
+        self.node.neck_position_publisher.publish(self.node.look_down)
+
+        self.node.flag_navigation_done = False
+        self.node.rgb_ctr = 66
+        self.node.rgb.data = self.node.rgb_ctr
+        self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+        self.node.rgb_ctr = 42
+        self.node.rgb.data = self.node.rgb_ctr
+        self.node.rgb_mode_publisher.publish(self.node.rgb)
+        print("Started wait for end of navigation")
         while not self.node.flag_navigation_done:
             pass
+        print("Finished wait for end of navigation")
         self.node.flag_navigation_done = False
+        self.node.rgb_ctr = 62
+        self.node.rgb.data = self.node.rgb_ctr
+        self.node.rgb_mode_publisher.publish(self.node.rgb)
+        time.sleep(1)
+        print("Finished Navigation")
 
+    def wait_for_end_of_rule_reception(self):
+        while not self.node.flag_stckler_rules_done:
+            pass
+        self.node.flag_stckler_rules_done = False
 
     def wait_for_end_of_audio(self):
         while not self.node.flag_audio_done:
             pass
         self.node.flag_audio_done = False
         self.node.flag_speech_done = False  
+
+    def wait_for_start_button(self):
+        while not self.node.start_button_state:
+            pass
+        f = Bool()
+        f.data = False 
+        self.node.flag_start_button_publisher.publish(f)
+
+    def wait_for_end_of_search_for_person(self):
+        while not self.node.flag_search_for_person_done:
+            pass
+        self.node.flag_search_for_person_done = False
+        print("Finished search for person")
+
+    def choose_consequence(self, rule_unbroken):
+        if rule_unbroken == self.node.rule_drink:
+
+            self.node.rgb_ctr = 102 #tinoni
+            self.node.rgb.data = self.node.rgb_ctr
+            self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+            self.node.speech_str.command = "I detected a guest breaking the mandatory drink rule."
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            # OLHAR PARA PESSOA
+
+            """ self.node.speech_str.command = "I am looking at the detected guest breaking the mandatory drink rule." 
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+            time.sleep(0.5) # this is just so the looking at customers is not oo quick """
+
+            ### FAzer eye contact com o guest
+            
+            track = TrackPerson()
+            track.is_center = False
+            track.kp_number = 0 # 0 is for nose
+            track.person = self.node.yolo_poses.persons[0]
+            self.node.neck_follow_person_publisher.publish(track)
+
+            time.sleep(1) #para dar tempo de pescoço fazer movimento
+
+            self.node.speech_str.command = "Hello there guest. You are breaking the mandatory drink rule."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.node.speech_str.command = "In order to be at this party, you must have a drink in your hand. Please follow me to the living room."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.node.speech_str.command = "I will turn around for you to follow me to the drink table. Don't try to trick me."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.wait_for_end_of_navigation()
+
+            room = self.node.LivingRoom
+            self.check_if_charmie_is_being_followed()
+
+            self.node.speech_str.command = "Please wait here while I turn to you."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+            
+            self.wait_for_end_of_navigation()
+       
+            self.node.state = self.node.LivingRoom  
+
+        elif rule_unbroken == self.node.rule_garbage:
+
+            self.node.rgb_ctr = 102 #tinoni
+            self.node.rgb.data = self.node.rgb_ctr
+            self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+            self.node.speech_str.command = "I detected a guest breaking the no garbage on the floor rule."
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+            
+            """ # OLHAR PARA PESSOA
+
+            self.node.speech_str.command = "I am looking at the detected guest breaking the no garbage on the floor rule." 
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+            time.sleep(0.5) # this is just so the looking at customers is not oo quick """
+
+            ### FAzer eye contact com o guest
+            track = TrackPerson()
+            track.is_center = False
+            track.kp_number = 0 # 0 is for nose
+            track.person = self.node.yolo_poses.persons[0]
+            self.node.neck_follow_person_publisher.publish(track)
+            time.sleep(1)
+
+            self.node.speech_str.command = "Hello there guest. You are breaking the no garbage on the floor rule. "               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+
+            self.node.speech_str.command = "In order to be at this party, you can't have garbage on the floor. Please follow me to the kitchen so you can put the garbage on the garbage bin."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.node.speech_str.command = "I will turn around for you to follow me to the kitchen. Don't try to trick me."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.wait_for_end_of_navigation()
+
+            room = self.node.Kitchen
+            self.check_if_charmie_is_being_followed()
+
+            self.node.speech_str.command = "Please wait here while I turn to you."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+            
+            self.wait_for_end_of_navigation()
+            
+            self.node.state = self.node.end
+
+
+
+        elif rule_unbroken == self.node.rule_shoes:
+
+            self.node.rgb_ctr = 102 #tinoni
+            self.node.rgb.data = self.node.rgb_ctr
+            self.node.rgb_mode_publisher.publish(self.node.rgb)
+
+            self.node.speech_str.command = "I detected a guest breaking the no shoes allowed rule."
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+   
+            # OLHAR PARA PESSOA
+
+            """ self.node.speech_str.command = "I am looking at the detected guest breaking the no shoes allowed." 
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+            time.sleep(0.5) # this is just so the looking at customers is not oo quick """
+
+            track = TrackPerson()
+            track.is_center = False
+            track.kp_number = 0 # 0 is for nose
+            track.person = self.node.yolo_poses.persons[0]
+            self.node.neck_follow_person_publisher.publish(track)
+
+            time.sleep(1) #para dar tempo de pescoço fazer movimento
+
+            self.node.speech_str.command = "Hello there guest. You are breaking the no shoes allowed. "               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.node.speech_str.command = "In order to be at this party, you can't wear shoes. Please follow me to the entrance so you can take your shoes off."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.node.speech_str.command = "I will turn around for you to follow me to the entrance. Don't try to trick me."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.wait_for_end_of_navigation()
+
+            room = self.node.LivingRoom
+            self.check_if_charmie_is_being_followed()
+
+            self.node.speech_str.command = "Please wait here while I turn to you."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+            
+            self.wait_for_end_of_navigation()
+
+            self.node.state = self.node.BedRoom
      
+
+    def check_rule_drink(self):
+        while self.node.flag_rule_being_broken == True :
+            self.node.speech_str.command = "Please take any drink from the shelf."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.sleep(5)
+
+            self.node.speech_str.command = "Please stand in front of me so I can analise you again."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            # Funçao Tiago de análise
+            # Caso a regra deixe de ser cumprida, retorno flag = False 
+
+        
+    def check_rule_garbage(self):
+        while self.node.flag_rule_being_broken == True :
+            self.node.speech_str.command = "Please place the garbage at the garbage bin."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.sleep(5)
+
+            self.node.speech_str.command = "Please stand in front of me so I can analise you again."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            # Funçao Tiago de análise
+            # Caso a regra deixe de ser cumprida, retorno flag = False 
+        
+
+    def check_rule_shoes(self):
+        while self.node.flag_rule_being_broken == True :
+            self.node.speech_str.command = "Please place your shoes on the shelf."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            self.sleep(5)
+
+            self.node.speech_str.command = "Please stand in front of me so I can analise you again."               
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()
+
+            # Funçao Tiago de análise
+            # Caso a regra deixe de ser cumprida, retorno flag = False 
+
+
+    
     def main(self):
         time.sleep(1)
         print("IN NEW MAIN")
+        pose = Bool()
+        pose.data = False
+        self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+        
         while True:
+
+            # primeiro estado será anunciar que está pronto, ligar luzes, e ir para forbidden room
+            # segundo será fazer tracking + verificar pessoa + anunciar que há uma regra a ser quebrada + olhar para pessoa + dizer lhe que está a quebrar a regra
+            # + virar para fora da sala + caminhar para porta que liga a próxima divisão + virar cabeça para trás + verificar se pessoa está a seguir 
+            # (aqui loop caso n esteja a dizer para a pessoa o seguir enquanto caminha até um pouco fora da sala de forma a que a pessoa o possa seguir e eu ver)
+            # quando confirmar que a pessoa saiu, ir para o próximo estado (idealmente também havia um timeout, mas vou só fazer assim enquanto)
+
+
+            # No terceiro estado ir para o canto de uma divisão (cozinha) e fazer tracking. Guardar coordenadas das pessoas detetadas, olhar para elas, verificar
+            # se estão na divisão, as que estão guardar as suas posições, ir na direção delas, usar código de tirar fotos ao corpo todo e analisar o que tem ao lado
+            # Sempre associado a este código tenho de ter uma função que recebe a regra que está a quebrar (se for sapatos, envia a pessoa para a entrada, se for lixo
+            # acompanha ao lixo, se for bebidas acompanha à sala. No final verifica se havia mais pessoas por verificar na divisão onde estava (pq guardou o nr de pessoas
+            # a verificar) e se hpouvesse volta para lá e vai ter com elas, senão vai para a divisão seguinte). E assim sucessivamente 
+    
             #Navegação até ao espaço proibido
-            if self.node.state == 0:
-                print('state 0')
-                self.node.rgb_ctr = 0
+            if self.node.state == self.node.Initial_state:
+                print('Initial position state')
+
+                self.node.neck_position_publisher.publish(self.node.talk_neck)
+                
+                self.node.rgb_ctr = 100
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
-                #Informa que está pronto para começar a tarefa
-                self.node.get_logger().info("estado 0")
+
+                self.node.get_logger().info("Initial position state")
+
+                
+                ########## EXEMPLO DO FOLLOW PERSON COM O NECK
+                """ track = TrackPerson()
+                while True:
+                    if len(self.node.yolo_poses.persons) > 0:
+                        print("Person Found")
+
+                        track.is_center = False
+                        track.kp_number = 0 # 0 is for nose
+                        track.person = self.node.yolo_poses.persons[0]
+                        self.node.neck_follow_person_publisher.publish(track)
+
+                        self.node.speech_str.command = "Yes."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking() 
+                    else:
+                        print("Person not Found")
+                        self.node.speech_str.command = "No."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking() 
+                    time.sleep(3)
+                ### RESUMIDO SO PRECISAS DISTO:
+                #     track = TrackPerson()
+                #     track.is_center = False
+                #     track.kp_number = 0 # 0 is for nose
+                #     track.person = self.node.yolo_poses.persons[0]
+                #     self.node.neck_follow_person_publisher.publish(track) """
+               
+
+                ########## EXEMPLO DE PESSOAS A SEGUIR CHARMIE, DEPOIS TEM QUE SER ADAPTADO PARA FICAR NO PERSON RECOGNITION MAS PARA JA FICA ASSIM
+                # self.check_if_charmie_is_being_followed()
 
 
-                #self.node.neck_position_publisher.publish(self.node.talk_neck)
+                """ ########## EXEMPLO DE VERIFICAR REGRAS
 
-                self.node.speech_str.command = "Hello! I am ready to start the Stickler for the rules task!"
+                self.node.neck_position_publisher.publish(self.node.look_down)
+                flag_check_rules = Bool()
+                while True:
+                    if len(self.node.yolo_poses.persons) > 0:
+                        print("Person Found")
+
+                        flag_check_rules.data = True
+                        self.node.check_stickler_rules_publisher.publish(flag_check_rules)
+                        self.wait_for_end_of_rule_reception()
+
+                        print(self.node.latest_stickler_rules_detected)
+
+                        check_drink_hand, check_shoes, check_trash =  self.analise_stickler_rules(self.node.latest_stickler_rules_detected)
+                        print("Drink in Hand:", check_drink_hand, "Shoes:", check_shoes, "Trash:", check_trash)
+
+
+
+                        self.node.speech_str.command = "Yes."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking() 
+                    else:
+                        # print("Person not Found")
+                        self.node.speech_str.command = "No."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking() 
+                    time.sleep(5) """
+
+                self.node.speech_str.command = "Hello! I am ready to start the Stickler for the rules task! Waiting for start button to be pressed"
                 self.node.speaker_publisher.publish(self.node.speech_str)
                 self.wait_for_end_of_speaking() 
 
+                t = Bool()
+                t.data = True
+                self.node.flag_start_button_publisher.publish(t)
+                self.wait_for_start_button()
+                
+                self.node.rgb_ctr = 24
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb) 
 
-                #COMEÇAMOS DENTRO DA AREA NOS PONTOS PRÉ DEFINIDOS ()
-                #ASSUMINDO POR EXEMPLO QUE A SALA PROIBIDA É O QUARTO!!!!!!!!!!!!! <------- COULD CHANGEEEEE
+                self.node.rgb_ctr = 41
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb) 
 
-                # Começamos no starting point! 
+                # Robot deslocar-se até entrada da forbidden room
+                # self.wait_for_end_of_navigation()
 
-                # Se o quarto for a sala proibida fazemos - quarto, cozinha, sala, escritório ----------- OPÇÃO 1
-                # Se o escritório for a sala proibida fazemos - escritório, entrada, cozinha e quarto --- OPÇÃO 2
+                self.node.state = self.node.Forbidden_room
 
+            elif self.node.state == self.node.Forbidden_room:
+            
+                self.node.speech_str.command = "I will start by checking if there is someone breaking the forbidden room rule."               
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
 
-                #VAMOS PARA A DIVISÃO DA CASA PROIBIDA
-
-                # vai ser preciso colocar pontos intermédios para ir até ao sitio
-
-                #NO SITIO ONDE ESTÁ RODA PARA A PORTA ONDE TEM DE IR
-                #self.node.coordinates_to_navigation(self.node.begin_coordinates, self.node.B_target_sala, False)
-                #self.wait_for_end_of_navigation()
-
-                #VAI PARA A PORTA
-                #self.node.coordinates_to_navigation(self.node.B_target_sala, self.node.B_target_cozinha, False)
-                #self.wait_for_end_of_navigation()
-
-                #AVANÇA A PORTA NA DIREÇÃO DA SALA PROIBIDA
-                self.node.coordinates_to_navigation(self.node.B_target_cozinha, self.node.C_target_cozinha, False)
+                # ir até entrada
                 self.wait_for_end_of_navigation()
 
-                #AVANÇA PARA A ENTRADA DA SALA PROIBIDA
-                #self.node.coordinates_to_navigation(self.node.C_target_cozinha, self.node.C_target_quarto, False)
-                #self.wait_for_end_of_navigation()
+                self.node.speech_str.command = "Start tracking."               
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
 
-                #VAI PARA O PONTO
-                self.node.coordinates_to_navigation(self.node.forbiden_room_coordinates, self.node.coordinates_corner_right, False)
-                self.wait_for_end_of_navigation()
+                sfp = SearchForPerson()
+                sfp.angles = [-45, 0, 45]
+                sfp.show_image_people_detected = True
+                self.node.search_for_person_publisher.publish(sfp)
+                self.wait_for_end_of_search_for_person()
 
+                self.node.neck_position_publisher.publish(self.node.talk_neck)
 
-                #PRECISO QUE AQUI O ROBÔ RODE SOBRE SI PRÓPRIO E OLHE PARA OS VÁRIOS PONTOS DA SALA PROIBIDA
-                #EM TODOS OS PONTOS PRECISO DE FAZER VERIFICAÇÃO DO YOLO SE DETETO PESSOAS E SE ESTÃO DENTRO DO MAPA
-                #SERÁ UMA ESPÉCIE DE IF QUE ME COLOCA A 1 A VARIAVEL SE TIVER DETETADO ALGUÉM NA SALA PROIBIDA.
+                # just for debug purposes, it has its own switch case so it can be done right after receving and not wait for neck
+                if len(self.node.person_list_of_points.coords) == 0:
+                    self.node.rgb_ctr = 0
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb)
+                    self.node.speech_str.command = "I did not detect anyone breaking the forbidden room rule."
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+                    self.node.state = self.node.Kitchen
 
+                elif len(self.node.person_list_of_points.coords) == 1:
 
-                #Quero que veja as duas posições porque pode estar mais do que uma pessoa na sala proibida
-
-                self.node.coordinates_to_navigation(self.node.coordinates_corner_right, self.node.coordinates_bed, False)
-                self.wait_for_end_of_navigation() 
-
-                #TIRA FOTO 
-                #print('AAAAAAAA')
-                #self.node.coordinates_to_navigation(self.node.coordinates_corner_right, self.node.coordinates_bed, False)
-                #self.wait_for_end_of_navigation()
-                #print('BBBBBBBB')
-
-                # time.sleep(1)
-
-                b = Bool()
-                b.data = True
-                self.node.get_person_publisher.publish(b)
-                
-
-
-                self.node.state=1
-
-                self.start = time.time()
-
-
-
-                #PROCURAR PESSOAS COM O YOLO POSE
-                #JUNTAR A PARTE DE DETETAR SAPATOS E BEBIDAS
-
-            elif self.node.state == 1:
-                
-
-                    # if not self.node.flag_left:
-                        # print("repeti -1")
-                        #self.node.coordinates_to_navigation(self.node.coordinates_corner_right, self.node.small_table, False)
-                        #self.wait_for_end_of_navigation()
-                        # self.node.flag_left=True
-                        
-                    #RECOLHER NOVAMENTE OS PARAMETROS PARA OUTRA POSIÇÃO               
-                    
-                if self.node.person_detected.theta == 0 or self.node.person_detected.theta == -1:
-                    # print("0")
-                    
-                    # self.node.coordinates_to_navigation(self.node.coordinates_corner_right, (self.node.person_detected.x,self.node.person_detected.y), False)
-                    
-                    self.node.rgb_ctr = 102
+                    self.node.rgb_ctr = 102 #tinoni
                     self.node.rgb.data = self.node.rgb_ctr
                     self.node.rgb_mode_publisher.publish(self.node.rgb)
                     
-                    if self.node.flag_first_time:
-                        
-                        #Informar a regra desrespeitada
-                        self.node.speech_str.command = f"There is a guest breaking the forbidden room rule."               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.wait_for_end_of_speaking()
-
-                        self.node.speech_str.command = f"Hello there guest. You are breaking the forbidden room rule "               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.wait_for_end_of_speaking()
-
-
-                        self.node.speech_str.command = f"To stop breaking this rule, you must get out of the bedroom and join the other guests in the other rooms of the house."               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.wait_for_end_of_speaking()
-
-                        #Informar a ação a tomar
-                        self.node.speech_str.command = f"Please walk very slowly to another room so i can make eye contact with you and confirm when you stop breaking the rule"               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.wait_for_end_of_speaking()
-
-                        self.flag_forbiden = True
-                        self.node.flag_first_time=False
-
-
-                    # self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (self.node.person_detected.x,self.node.person_detected.y), False)
-                    # self.wait_for_end_of_navigation() 
-
-
-                
-                    self.end = time.time()
-                    if ((self.end - self.start)  >  20.0):
-                        print(self.end - self.start)
-                        #Informar a ação a tomar
-                        self.node.speech_str.command = f"Please walk very slowly to the outside of the bedroom."               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.start = time.time()
-
-
-                    #self.wait_for_end_of_speaking()
-                    #self.node.rules+=1
-
-                    #CHANGE THIS  ----- > self.node.coordinates_to_navigation(self.node.coordinates_corner_right, self.node.wardrobe_bedroom, False)
-                    #CHANGE THIS  ----- > self.wait_for_end_of_navigation()
-
-
-
-                    ### FALTA CODIGO DA CONFIRMACAO
-
-
-                    #continuar a receber informação do yolo para verificar quando a pessoa sai
-                elif self.node.person_detected.theta == 1:
-                    print("1")
-
-                    self.node.state=500
-                #VERIFICAR SE SAI
-
-                #CONTINUAR A DETEÇÃO COM O YOLO POSE, NO CASO DE CONTINUAR A DETETAR CONTINUA A DIZER QUE TEM DE SAIR, 
-                #SE SAIR, PODEMOS DIZER QUE CONFIRMOU QUE SAIU DO QUARTO E VAI AVANÇAR
-                else:
-                    print("Ainda não detetei ninguém nesta sala")
-                    #FICAR NA POSIÇÃO DO CANTO ATÉ DETETAR
-                
-            elif self.node.state == 500:  # detetou que pessoa bazou da casa
-
-                self.node.rgb_ctr = 12
-                self.node.rgb.data = self.node.rgb_ctr
-                self.node.rgb_mode_publisher.publish(self.node.rgb)
-
-
-                self.node.speech_str.command = f"I confirm that the party guest stopped breaking the rule by leaving the forbidden room."               
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                
-                
-                time.sleep(10)
-                
-                
-                self.node.state=2
-
-                
-
-                
-                print("SAIU DA CASA")
-
-
-
-            elif self.node.state==2:
-                self.node.rgb_ctr = 2
-                self.node.rgb.data = self.node.rgb_ctr
-                self.node.rgb_mode_publisher.publish(self.node.rgb)
-
-                #print("estado 2, saí do quarto, porque nao esta ninguem")
-            
-
-
-            #Estado na cozinha
-            """ elif self.node.state == 1:
-                self.node.get_logger().info("estado 1")
-                self.node.count_rooms +=1
-
-
-                #VAMOS PARA A LOCALIZAÇÃO AO LADO DA LOCALIZAÇÃO PROIBIDA, NESTE CASO TOU A CONSIDERAR 
-                # A COZINHA <------- COULD CHANGEEEEE
-
-                #Voltamos para o target da porta na sala proibida para não causar problemas na navegação
-                self.node.coordinates_to_navigation(self.node.forbiden_room_coordinates, self.node.C_target_cozinha, False)
-                self.wait_for_end_of_navigation()
-
-                #Vamos para a cozinha e ficamos orientados para a frente
-                self.node.coordinates_to_navigation(self.node.kitchen_room_coordinates, self.node.kitchen_room_coordinates, False)
-                self.wait_for_end_of_navigation()
-
-                self.node.coordinates_to_navigation(self.node.bin_coordinates, self.node.kitchen_room_coordinates, False)
-                self.wait_for_end_of_navigation()
-
-        
-                #COMEÇAMOS A PROCURAR COM O YOLO PESSOA COM SAPATOS E BEBIDAS NA MÃO, SE PERCEBERMOS QUE É DEMASIADO ANDAMOS
-                #COM O PESCOÇO MAIS PARA BAIXO PARA SÓ DETETAR TRONCO E PROCURAR SAPATOS. NESTE CASO, PRECISAMOS DE TER O AJUSTE 
-                #DO PESCOÇO COM OS KEYPOINTS
-
-                #SE ENCONTRAR SAPATOS A FLAG PERSON WITH SHOES VAI A 1
-
-
-                self.node.coordinates_to_navigation(self.node.bin_coordinates, self.node.coordinates_pia, False)
-                self.wait_for_end_of_navigation()
-
-                #PROCURAR PESSOAS COM O YOLO POSE
-                #JUNTAR A PARTE DE DETETAR SAPATOS E BEBIDAS
-
-
-                self.node.coordinates_to_navigation(self.node.bin_coordinates, self.node.coordinates_table, False)
-                self.wait_for_end_of_navigation()
-
-                #PROCURAR PESSOAS COM O YOLO POSE
-                #JUNTAR A PARTE DE DETETAR SAPATOS E BEBIDAS
-
-
-                self.node.state =2
-
-            elif self.node.state==2:
-
-                self.node.get_logger().info("estado 2")
-                
-                cv2_img = self.node.br.imgmsg_to_cv2(self.node.image_color, "bgr8")
-                num_faces, face_x, face_y, shoulder, hip, center_x, center_y = self.node.found_landmarks(cv2_img)
-            
-
-                if self.node.person_with_shoes == 1 and self.node.person_with_drink == 1:
-                    if (face_y < shoulder and shoulder < hip):
-                        error_x = face_x-center_x
-                        error_y = face_y-center_y
-                        self.node.follow_center_face(error_x,error_y)
-
-
-                        self.node.rgb_ctr = 12
-                        self.node.rgb.data = self.node.rgb_ctr
-                        self.node.rgb_mode_publisher.publish(self.node.rgb)
-
-
-                        #COLOCAR CÓDIGO SE OLHAR PARA A PESSOA CERTA COM O PESCOÇO PARA DEMONSTRAR QUE A PESSOA FOI IDENTIFICADA 
-                        #E PODEMOS APROXIMARMO-NOS DA PESSOA TAMBÉM
-
-                        #Informar a regra desrespeitada
-                        self.node.speech_str.command = f"Hi.You are with shoes in my house and you are without a drink and it's a party!!"               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.wait_for_end_of_speaking()
-                        
-
-                        #Informar a ação a tomar
-                        self.node.speech_str.command = f"You have to go to the entrance and take off your shoes and after that go to the kitchen and get your drink!! "               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.wait_for_end_of_speaking()
-                    
-                        self.flag_shoes = True
-                        self.flag_drink = True
-                        self.node.rules +=2
-
-
-                elif self.node.person_with_drink == 1 and self.node.person_with_shoes == 0:
-                     if (face_y < shoulder and shoulder < hip):
-                        error_x = face_x-center_x
-                        error_y = face_y-center_y
-                        self.node.follow_center_face(error_x,error_y)
-
-
-                        self.node.rgb_ctr = 12
-                        self.node.rgb.data = self.node.rgb_ctr
-                        self.node.rgb_mode_publisher.publish(self.node.rgb)
-
-                        #COLOCAR CÓDIGO SE OLHAR PARA A PESSOA CERTA COM O PESCOÇO PARA DEMONSTRAR QUE A PESSOA FOI IDENTIFICADA 
-                        #E PODEMOS APROXIMARMO-NOS DA PESSOA TAMBÉM
-
-                        #Informar a regra desrespeitada
-                        self.node.speech_str.command = f"Hi.You are without a drink and it's a party. "               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.wait_for_end_of_speaking()
-                        
-
-                        #Informar a ação a tomar
-                        self.node.speech_str.command = f"Go to the kitchen and get your drink! "               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.wait_for_end_of_speaking()
-                        
-                        self.flag_drink = True
-                        self.node.rules+=1
-
-                elif self.node.person_with_shoes == 1 and self.node.person_with_drink == 0:
-                     if (face_y < shoulder and shoulder < hip):
-                        error_x = face_x-center_x
-                        error_y = face_y-center_y
-                        self.node.follow_center_face(error_x,error_y)
-
-
-                        self.node.rgb_ctr = 12
-                        self.node.rgb.data = self.node.rgb_ctr
-                        self.node.rgb_mode_publisher.publish(self.node.rgb)
-
-                        #Informar a regra desrespeitada
-                        self.node.speech_str.command = f"Hi.You are with shoes in my house. "               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.wait_for_end_of_speaking()
-                        
-
-                        #Informar a ação a tomar
-                        self.node.speech_str.command = f"You have to go to the entrance and take off your shoes! "               
-                        #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
-                        self.node.speaker_publisher.publish(self.node.speech_str)
-                        self.wait_for_end_of_speaking()
-
-                        self.flag_shoes = True
-                        self.node.rules+=1
-
-                else:
-                    print("Ainda não detetei ninguém sem bebidas ou com sapatos nesta sala") 
-
-                if self.node.count_rooms == 1:
-                    self.node.state = 3
-                elif self.node.count_rooms == 2:
-                    self.node.state = 4
-                else: 
-                    self.node.state = 5
-                    
-                    print("VERIFIQUEI AS SALAS TODAS")
-
-
-
-            #Estado na sala
-            elif self.node.state ==3:
-                self.node.get_logger().info("estado 3")
-
-                self.node.count_rooms +=1
-                #PROCURAR PESSOAS COM O YOLO POSE
-                
-                #VAMOS PARA A LOCALIZAÇÃO AO LADO DA LOCALIZAÇÃO ANTERIOR, NESTE CASO TOU A CONSIDERAR 
-                # A SALA <------- COULD CHANGEEEEE
-
-                #Voltamos para o target da porta na sala proibida para não causar problemas na navegação
-                self.node.coordinates_to_navigation(self.node.B_target_cozinha, self.node.B_target_sala, False)
-                self.wait_for_end_of_navigation()
-
-                #Vamos para a sala e ficamos orientados para a frente
-                self.node.coordinates_to_navigation(self.node.B_target_sala, self.node.B_target_sala, False)
-                self.wait_for_end_of_navigation()
-
-                
-
-        
-                #COMEÇAMOS A PROCURAR COM O YOLO PESSOA COM SAPATOS E BEBIDAS NA MÃO, SE PERCEBERMOS QUE É DEMASIADO ANDAMOS
-                #COM O PESCOÇO MAIS PARA BAIXO PARA SÓ DETETAR TRONCO E PROCURAR SAPATOS. NESTE CASO, PRECISAMOS DE TER O AJUSTE 
-                #DO PESCOÇO COM OS KEYPOINTS
-
-                #SE ENCONTRAR SAPATOS A FLAG PERSON WITH SHOES VAI A 1
-
-
-                self.node.coordinates_to_navigation(self.node.B_target_sala, self.node.coordinates_corner_living_room, False)
-                self.wait_for_end_of_navigation()
-
-                 #PROCURAR PESSOAS COM O YOLO POSE
-                #JUNTAR A PARTE DE DETETAR SAPATOS E BEBIDAS
-
-                self.node.coordinates_to_navigation(self.node.coordinates_corner_living_room, self.node.door_coordinates_orientation, False)
-                self.wait_for_end_of_navigation()
-
-                 #PROCURAR PESSOAS COM O YOLO POSE
-                #JUNTAR A PARTE DE DETETAR SAPATOS E BEBIDAS
-
-                self.node.coordinates_to_navigation(self.node.coordinates_corner_living_room, self.node.sofa_coordinates, False)
-                self.wait_for_end_of_navigation()
-
-                 #PROCURAR PESSOAS COM O YOLO POSE
-                #JUNTAR A PARTE DE DETETAR SAPATOS E BEBIDAS
-
-                self.node.state =2
-
-            #Estado no escritório
-            elif self.node.state ==4:
-                self.node.get_logger().info("estado 4")
-
-                self.node.count_rooms +=1
-                #PROCURAR PESSOAS COM O YOLO POSE
-                
-                #VAMOS PARA A LOCALIZAÇÃO AO LADO DA LOCALIZAÇÃO ANTERIOR, NESTE CASO TOU A CONSIDERAR 
-                # O ESCRITÓRIO <------- COULD CHANGEEEEE
-
-                #Voltamos para o target da porta do escritório na sala para não causar problemas na navegação
-                self.node.coordinates_to_navigation(self.node.A_target_sala, self.node.A_target_escritorio, False)
-                self.wait_for_end_of_navigation()
-
-                #Vamos para o escritório e ficamos orientados para a frente
-                self.node.coordinates_to_navigation(self.node.A_target_escritorio, self.node.A_target_escritorio, False)
-                self.wait_for_end_of_navigation()
-
-                
-
-        
-                #COMEÇAMOS A PROCURAR COM O YOLO PESSOA COM SAPATOS E BEBIDAS NA MÃO, SE PERCEBERMOS QUE É DEMASIADO ANDAMOS
-                #COM O PESCOÇO MAIS PARA BAIXO PARA SÓ DETETAR TRONCO E PROCURAR SAPATOS. NESTE CASO, PRECISAMOS DE TER O AJUSTE 
-                #DO PESCOÇO COM OS KEYPOINTS
-
-                #SE ENCONTRAR SAPATOS A FLAG PERSON WITH SHOES VAI A 1
-
-
-                self.node.coordinates_to_navigation(self.node.A_target_escritorio, self.node.chair_left, False)
-                self.wait_for_end_of_navigation()
-
-                 #PROCURAR PESSOAS COM O YOLO POSE
-                #JUNTAR A PARTE DE DETETAR SAPATOS E BEBIDAS
-
-
-                self.node.coordinates_to_navigation(self.node.A_target_escritorio, self.node.middle_point_rigth, False)
-                self.wait_for_end_of_navigation()
-
-                 #PROCURAR PESSOAS COM O YOLO POSE
-                #JUNTAR A PARTE DE DETETAR SAPATOS E BEBIDAS
-
-
-                self.node.state =5
-            
-            
-            elif self.node.state == 5:
-                
-                self.node.get_logger().info("estado 5")
-                break 
-                if self.node.rules >= 4:
-
-                    self.node.neck_position_publisher.publish(self.node.talk_neck)
-                    self.node.speech_str.command = f"I already find the guests breaking 4 rules.. "               
-                    #self.node.speech_str.command = f"Please take a sit on the sit that i'm looking for."                            
+                    self.node.rgb_ctr = 40
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb)
+                    self.node.speech_str.command = "I detected a guest breaking the forbidden room rule."
                     self.node.speaker_publisher.publish(self.node.speech_str)
                     self.wait_for_end_of_speaking()
+
+                    for p in self.node.person_list_of_points.coords:
+                        pose = Pose2D()
+                        pose.x = p.x
+                        pose.y = p.y                
+                        print('a')
+                        self.node.customer_position.append(pose)
+                        pose.theta = 180.0
+                        print('b')
+                        self.node.neck_to_coords_publisher.publish(pose)
+                        #time.sleep(1) # this is just so the looking at customers is not oo quick
+                        
+
+
+                    """ ### FAzer eye contact com o guest
+                    track = TrackPerson()
+                    track.is_center = False
+                    track.kp_number = 0 # 0 is for nose
+                    track.person = self.node.yolo_poses.persons[0]
+                    self.node.neck_follow_person_publisher.publish(track)
+                    time.sleep(1) """
+
+                    self.node.speech_str.command = "I am looking at the detected guest breaking the forbidden room rule." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.speech_str.command = "Hello there guest. You are breaking the forbidden room rule. "               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+
+                    self.node.speech_str.command = "To stop breaking this rule, you must get out of the office and join the other guests in the other rooms of the house."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.speech_str.command = "I will turn around for you to follow me. Don't try to trick me."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    # Robot orienta-se para fora da forbidden room (ficando na zona da porta)
+                    self.wait_for_end_of_navigation()
+
+                    self.node.neck_position_publisher.publish(self.node.turn_around_neck)
+
+                    time.sleep(1)
+
+                    self.check_if_charmie_is_being_followed()
+
+                    self.node.rgb_ctr = 14
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                    # the person stopped following the robot
+                    self.node.speech_str.command = "You are no longer breaking the rule. Keep enjoying the party without breaking any rules."
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.neck_position_publisher.publish(self.node.talk_neck)
+
+                    self.node.state = self.node.Kitchen
+                    self.node.rgb_ctr = 24
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                    time.sleep(1)
+
                 else:
-                    if self.node.flag_forbiden == True:
-                        if self.node.flag_drink == False or self.node.flag_shoes == False:
-                            self.node.state=1
+                    self.node.speech_str.command = "I detected more than 1 guest breaking the rule. I am not prepared to solve that yet."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.rgb_ctr = 10
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb)
+                    
+                    self.node.rgb_ctr = 24
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+            # No terceiro estado ir para o canto de uma divisão (cozinha) e fazer tracking. Guardar coordenadas das pessoas detetadas, olhar para elas, verificar
+            # se estão na divisão, as que estão guardar as suas posições, ir na direção delas, usar código de tirar fotos ao corpo todo e analisar o que tem ao lado
+            # Sempre associado a este código tenho de ter uma função que recebe a regra que está a quebrar (se for sapatos, envia a pessoa para a entrada, se for lixo
+            # acompanha ao lixo, se for bebidas acompanha à sala. No final verifica se havia mais pessoas por verificar na divisão onde estava (pq guardou o nr de pessoas
+            # a verificar) e se hpouvesse volta para lá e vai ter com elas, senão vai para a divisão seguinte). E assim sucessivamente 
+
+            elif self.node.state == self.node.Kitchen:
+                
+                self.node.speech_str.command = "I will check if there is someone breaking rules in the kitchen."               
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                pose = Bool()
+                pose.data = False
+                self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                # Robot deslocar-se até saída da cozinha e orienta-se para dentro da cozinha
+                self.wait_for_end_of_navigation()
+
+                self.node.speech_str.command = "Start tracking."               
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                sfp = SearchForPerson()
+                sfp.angles = [-45, 0, 45]
+                sfp.show_image_people_detected = True
+                self.node.search_for_person_publisher.publish(sfp)
+                self.wait_for_end_of_search_for_person()
+
+                nr_persons_division = len(self.node.person_list_of_points.coords)
+
+                self.i = 0
+
+                if nr_persons_division == 0:
+                    self.node.speech_str.command = "I didn't detect anyone in the kitchen."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.state = self.node.BedRoom
+
+                else:
+
+                    self.node.rgb_ctr = 12
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                    self.node.speech_str.command = f"I detected " + str(nr_persons_division) + " persons in the kitchen."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.rgb_ctr = 24
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+                    
+
+                    p_ctr = 0
+                    for p in self.node.person_list_of_points.coords:
+                        p_ctr+=1 # just to count the people detected and add that info to the string that the robot will speak
+                        pose = Pose2D()
+                        pose.x = p.x
+                        pose.y = p.y
+                        self.node.customer_position.append(pose)
+                        pose.theta = 180.0
+                        self.node.neck_to_coords_publisher.publish(pose)
+                    
+                    
+                    ### FAzer eye contact com o guest
+                    # track = TrackPerson()
+                    # track.is_center = False
+                    # track.kp_number = 0 # 0 is for nose
+                    # track.person = self.node.yolo_poses.persons[0]
+                    # self.node.neck_follow_person_publisher.publish(track)
+                    #time.sleep(1)
+
+                    self.node.speech_str.command = "I am looking at the guest." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.speech_str.command = "Moving to the guest." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.wait_for_end_of_navigation()
+
+                    self.node.neck_position_publisher.publish(self.node.look_down)
+                    flag_check_rules = Bool()
+                
+                    if len(self.node.yolo_poses.persons) > 0:
+                        print("Person Found")
+
+                        self.node.rgb_ctr = 55
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        flag_check_rules.data = True
+                        self.node.check_stickler_rules_publisher.publish(flag_check_rules)
+                        self.wait_for_end_of_rule_reception()
+
+                        print(self.node.latest_stickler_rules_detected)
+
+                        check_drink_hand, check_shoes, check_trash =  self.analise_stickler_rules(self.node.latest_stickler_rules_detected)
+                        print("Drink in Hand:", check_drink_hand, "Shoes:", check_shoes, "Trash:", check_trash)
+
+                            # Chamar função que recebe regra a ser quebrada e que faz com que o robot haja em conformidade com essa regra
+                        #if check_drink_hand == True:
+                        
+                        self.choose_consequence(self.node.rule_drink) 
+                        self.node.speech_str.command = "Please take a drink from the drink table and then place in front of me so I can check if you are following the rule." 
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+
+                        """ elif check_trash == True:
+                            self.choose_consequence(self.node.rule_garbage) 
+                        elif check_shoes == True:
+                            self.choose_consequence(self.node.rule_shoes)
                         else:
-                            pass
+
+                            self.node.speech_str.command = "You are a saint. No rules being broken." 
+                            self.node.speaker_publisher.publish(self.node.speech_str)
+                            self.wait_for_end_of_speaking() """
+                        
+
+                        self.node.rgb_ctr = 34
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        check_drink_hand = True
+
+                        while check_drink_hand == True or check_trash == True or check_shoes == True:
+                        
+                            time.sleep(5)
+
+                            self.node.rgb_ctr = 55
+                            self.node.rgb.data = self.node.rgb_ctr
+                            self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                            pose = Bool()
+                            pose.data = True
+                            self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                            flag_check_rules.data = True
+                            self.node.check_stickler_rules_publisher.publish(flag_check_rules)
+                            self.wait_for_end_of_rule_reception()
+
+                            print(self.node.latest_stickler_rules_detected)
+
+
+
+                            if len(self.node.yolo_poses.persons) > 0:                                
+                                check_drink_hand, check_shoes, check_trash =  self.analise_stickler_rules(self.node.latest_stickler_rules_detected)
+                           
+                            else:
+                                self.node.speech_str.command = "Please stand in front of me so I can check if you stopped breaking the rule." 
+                                self.node.speaker_publisher.publish(self.node.speech_str)
+                                self.wait_for_end_of_speaking()
+
+                            self.node.speech_str.command = "Please take a drink from the drinking table and show it to me in a clear way." 
+                            self.node.speaker_publisher.publish(self.node.speech_str)
+                            self.wait_for_end_of_speaking()
+
+
+                        track = TrackPerson()
+                        track.is_center = False
+                        track.kp_number = 0 # 0 is for nose
+                        track.person = self.node.yolo_poses.persons[0]
+                        self.node.neck_follow_person_publisher.publish(track)
+
+                        pose = Bool()
+                        pose.data = False
+                        self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                        self.node.rgb_ctr = 24
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        self.node.speech_str.command = "You are no longer breaking the rule. Keep enjoying the party without breaking any rules."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
                     else:
-                        self.node.state=0 """
+                        # print("Person not Found")
+                        self.node.speech_str.command = "No."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking() 
+                    
+                    time.sleep(1)
+        
+                    self.i += 1
+
+            elif self.node.state == self.node.BedRoom:
+                
+                self.node.speech_str.command = "I will check if there is someone breaking rules in the bedroom."               
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                pose = Bool()
+                pose.data = False
+                self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                # Robot deslocar-se até saída da cozinha e orienta-se para dentro da cozinha
+                self.wait_for_end_of_navigation()
+
+                self.node.speech_str.command = "Start tracking."               
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                sfp = SearchForPerson()
+                sfp.angles = [-45, 0, 45]
+                sfp.show_image_people_detected = True
+                self.node.search_for_person_publisher.publish(sfp)
+                self.wait_for_end_of_search_for_person()
+
+                nr_persons_division = len(self.node.person_list_of_points.coords)
+
+                self.i = 0
+
+                if nr_persons_division == 0:
+                    self.node.speech_str.command = "I didn't detect anyone in the bedroom."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.state = self.node.Corridor
+
+                else:
+
+                    self.node.rgb_ctr = 12
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                    self.node.speech_str.command = f"I detected " + str(nr_persons_division) + " persons in the bedroom."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.rgb_ctr = 24
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+                    
+
+                    p_ctr = 0
+                    for p in self.node.person_list_of_points.coords:
+                        p_ctr+=1 # just to count the people detected and add that info to the string that the robot will speak
+                        pose = Pose2D()
+                        pose.x = p.x
+                        pose.y = p.y
+                        self.node.customer_position.append(pose)
+                        pose.theta = 180.0
+                        self.node.neck_to_coords_publisher.publish(pose)
+                    
+                    
+                    ### FAzer eye contact com o guest
+                    # track = TrackPerson()
+                    # track.is_center = False
+                    # track.kp_number = 0 # 0 is for nose
+                    # track.person = self.node.yolo_poses.persons[0]
+                    # self.node.neck_follow_person_publisher.publish(track)
+                    #time.sleep(1)
+
+                    self.node.speech_str.command = "I am looking at the guest." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.speech_str.command = "Moving to the guest." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.wait_for_end_of_navigation()
+
+                    self.node.neck_position_publisher.publish(self.node.look_down)
+                    flag_check_rules = Bool()
+                
+                    if len(self.node.yolo_poses.persons) > 0:
+                        print("Person Found")
+
+                        self.node.rgb_ctr = 55
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        flag_check_rules.data = True
+                        self.node.check_stickler_rules_publisher.publish(flag_check_rules)
+                        self.wait_for_end_of_rule_reception()
+
+                        print(self.node.latest_stickler_rules_detected)
+
+                        check_drink_hand, check_shoes, check_trash =  self.analise_stickler_rules(self.node.latest_stickler_rules_detected)
+                        print("Drink in Hand:", check_drink_hand, "Shoes:", check_shoes, "Trash:", check_trash)
+
+                            # Chamar função que recebe regra a ser quebrada e que faz com que o robot haja em conformidade com essa regra
+                        #if check_drink_hand == True:
+                        #    self.choose_consequence(self.node.rule_drink) 
+                        #elif check_trash == True:
+                        self.choose_consequence(self.node.rule_garbage) 
+                        self.node.speech_str.command = "Please place the garbage at the garbage bin and then place in front of me so I can check if you are following the rule." 
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+                        #elif check_shoes == True:
+                        #    self.choose_consequence(self.node.rule_shoes)
+
+                        """ else:
+                            self.node.speech_str.command = "You are a saint. No rules being broken." 
+                            self.node.speaker_publisher.publish(self.node.speech_str)
+                            self.wait_for_end_of_speaking() """
+
+                        self.node.rgb_ctr = 34
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        while check_drink_hand == True or check_trash == True or check_shoes == True:
+                        
+                            time.sleep(5)
+
+                            self.node.rgb_ctr = 55
+                            self.node.rgb.data = self.node.rgb_ctr
+                            self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                            pose = Bool()
+                            pose.data = True
+                            self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                            flag_check_rules.data = True
+                            self.node.check_stickler_rules_publisher.publish(flag_check_rules)
+                            self.wait_for_end_of_rule_reception()
+
+                            print(self.node.latest_stickler_rules_detected)
+
+                            if len(self.node.yolo_poses.persons) > 0:                                
+                                check_drink_hand, check_shoes, check_trash =  self.analise_stickler_rules(self.node.latest_stickler_rules_detected)
+                           
+                            else:
+                                self.node.speech_str.command = "Please stand in front of me so I can check if you stopped breaking the rule." 
+                                self.node.speaker_publisher.publish(self.node.speech_str)
+                                self.wait_for_end_of_speaking()
+
+                        track = TrackPerson()
+                        track.is_center = False
+                        track.kp_number = 0 # 0 is for nose
+                        track.person = self.node.yolo_poses.persons[0]
+                        self.node.neck_follow_person_publisher.publish(track)
+
+                        pose = Bool()
+                        pose.data = False
+                        self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                        self.node.rgb_ctr = 24
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        self.node.speech_str.command = "You are no longer breaking the rule. Keep enjoying the party without breaking any rules."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+                    else:
+                        # print("Person not Found")
+                        self.node.speech_str.command = "No."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking() 
+                    time.sleep(5)
+        
+                    self.i += 1
+
+            elif self.node.state == self.node.Corridor:
+                
+                self.node.speech_str.command = "I will check if there is someone breaking rules in the corridor."               
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                pose = Bool()
+                pose.data = False
+                self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                # Robot deslocar-se até saída da cozinha e orienta-se para dentro da cozinha
+                self.wait_for_end_of_navigation()
+
+                self.node.speech_str.command = "Start tracking."               
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                sfp = SearchForPerson()
+                sfp.angles = [-45, 0, 45]
+                sfp.show_image_people_detected = True
+                self.node.search_for_person_publisher.publish(sfp)
+                self.wait_for_end_of_search_for_person()
+
+                nr_persons_division = len(self.node.person_list_of_points.coords)
+
+                self.i = 0
+
+                if nr_persons_division == 0:
+                    self.node.speech_str.command = "I didn't detect anyone in the corridor."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.state = self.node.LivingRoom
+
+                else:
+
+                    self.node.rgb_ctr = 12
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                    self.node.speech_str.command = f"I detected " + str(nr_persons_division) + " persons in the corridor."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.rgb_ctr = 24
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+                    
+
+                    p_ctr = 0
+                    for p in self.node.person_list_of_points.coords:
+                        p_ctr+=1 # just to count the people detected and add that info to the string that the robot will speak
+                        pose = Pose2D()
+                        pose.x = p.x
+                        pose.y = p.y
+                        self.node.customer_position.append(pose)
+                        pose.theta = 180.0
+                        self.node.neck_to_coords_publisher.publish(pose)
+                    
+                    
+                    ### FAzer eye contact com o guest
+                    # track = TrackPerson()
+                    # track.is_center = False
+                    # track.kp_number = 0 # 0 is for nose
+                    # track.person = self.node.yolo_poses.persons[0]
+                    # self.node.neck_follow_person_publisher.publish(track)
+                    #time.sleep(1)
+
+                    self.node.speech_str.command = "I am looking at the guest." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.speech_str.command = "Moving to the guest." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.wait_for_end_of_navigation()
+
+                    self.node.neck_position_publisher.publish(self.node.look_down)
+                    flag_check_rules = Bool()
+                
+                    if len(self.node.yolo_poses.persons) > 0:
+                        print("Person Found")
+
+                        self.node.rgb_ctr = 55
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        flag_check_rules.data = True
+                        self.node.check_stickler_rules_publisher.publish(flag_check_rules)
+                        self.wait_for_end_of_rule_reception()
+
+                        print(self.node.latest_stickler_rules_detected)
+
+                        check_drink_hand, check_shoes, check_trash =  self.analise_stickler_rules(self.node.latest_stickler_rules_detected)
+                        print("Drink in Hand:", check_drink_hand, "Shoes:", check_shoes, "Trash:", check_trash)
+
+                            # Chamar função que recebe regra a ser quebrada e que faz com que o robot haja em conformidade com essa regra
+                        #if check_drink_hand == True:
+                        #    self.choose_consequence(self.node.rule_drink) 
+                        #elif check_trash == True:
+                        #    self.choose_consequence(self.node.rule_garbage) 
+                        #elif check_shoes == True:
+                        self.choose_consequence(self.node.rule_shoes)
 
 
 
+
+
+                        self.node.speech_str.command = "Please take off your shoes and then place in front of me so I can check if you are following the rule." 
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+
+                        """ else:
+                            self.node.speech_str.command = "You are a saint. No rules being broken." 
+                            self.node.speaker_publisher.publish(self.node.speech_str)
+                            self.wait_for_end_of_speaking() """
+                        
+                        self.node.rgb_ctr = 34
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        while check_drink_hand == True or check_trash == True or check_shoes == True:
+                        
+                            time.sleep(5)
+
+                            self.node.rgb_ctr = 55
+                            self.node.rgb.data = self.node.rgb_ctr
+                            self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                            pose = Bool()
+                            pose.data = True
+                            self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                            flag_check_rules.data = True
+                            self.node.check_stickler_rules_publisher.publish(flag_check_rules)
+                            self.wait_for_end_of_rule_reception()
+
+                            print(self.node.latest_stickler_rules_detected)
+
+                            if len(self.node.yolo_poses.persons) > 0:                                
+                                check_drink_hand, check_shoes, check_trash =  self.analise_stickler_rules(self.node.latest_stickler_rules_detected)
+                           
+                            else:
+                                self.node.speech_str.command = "Please stand in front of me so I can check if you stopped breaking the rule." 
+                                self.node.speaker_publisher.publish(self.node.speech_str)
+                                self.wait_for_end_of_speaking()
+
+                        track = TrackPerson()
+                        track.is_center = False
+                        track.kp_number = 0 # 0 is for nose
+                        track.person = self.node.yolo_poses.persons[0]
+                        self.node.neck_follow_person_publisher.publish(track)
+
+                        pose = Bool()
+                        pose.data = False
+                        self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                        self.node.rgb_ctr = 24
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        self.node.speech_str.command = "You are no longer breaking the rule. Keep enjoying the party without breaking any rules."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+                    else:
+                        # print("Person not Found")
+                        self.node.speech_str.command = "No."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking() 
+                    time.sleep(5)
+        
+                    self.i += 1
+
+            elif self.node.state == self.node.LivingRoom:
+
+                self.node.speech_str.command = "I will check if there is someone breaking rules in the living room."               
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                pose = Bool()
+                pose.data = False
+                self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                # Robot deslocar-se até saída da cozinha e orienta-se para dentro da cozinha
+                self.wait_for_end_of_navigation()
+
+                self.node.speech_str.command = "Start tracking."               
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                sfp = SearchForPerson()
+                sfp.angles = [-45, 0, 45]
+                sfp.show_image_people_detected = True
+                self.node.search_for_person_publisher.publish(sfp)
+                self.wait_for_end_of_search_for_person()
+
+                nr_persons_division = len(self.node.person_list_of_points.coords)
+
+                self.i = 0
+
+                if nr_persons_division == 0:
+                    self.node.speech_str.command = "I didn't detect anyone in the living room."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.state = self.node.Corridor
+
+                else:
+
+                    self.node.rgb_ctr = 12
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                    self.node.speech_str.command = f"I detected " + str(nr_persons_division) + " persons in the living room."               
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.rgb_ctr = 24
+                    self.node.rgb.data = self.node.rgb_ctr
+                    self.node.rgb_mode_publisher.publish(self.node.rgb) 
+                    
+
+                    p_ctr = 0
+                    for p in self.node.person_list_of_points.coords:
+                        p_ctr+=1 # just to count the people detected and add that info to the string that the robot will speak
+                        pose = Pose2D()
+                        pose.x = p.x
+                        pose.y = p.y
+                        self.node.customer_position.append(pose)
+                        pose.theta = 180.0
+                        self.node.neck_to_coords_publisher.publish(pose)
+                    
+                    
+                    ### FAzer eye contact com o guest
+                    # track = TrackPerson()
+                    # track.is_center = False
+                    # track.kp_number = 0 # 0 is for nose
+                    # track.person = self.node.yolo_poses.persons[0]
+                    # self.node.neck_follow_person_publisher.publish(track)
+                    #time.sleep(1)
+
+                    self.node.speech_str.command = "I am looking at the guest." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.node.speech_str.command = "Moving to the guest." 
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()
+
+                    self.wait_for_end_of_navigation()
+
+                    self.node.neck_position_publisher.publish(self.node.look_down)
+                    flag_check_rules = Bool()
+                
+                    if len(self.node.yolo_poses.persons) > 0:
+                        print("Person Found")
+
+                        self.node.rgb_ctr = 55
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        flag_check_rules.data = True
+                        self.node.check_stickler_rules_publisher.publish(flag_check_rules)
+                        self.wait_for_end_of_rule_reception()
+
+                        print(self.node.latest_stickler_rules_detected)
+
+                        check_drink_hand, check_shoes, check_trash =  self.analise_stickler_rules(self.node.latest_stickler_rules_detected)
+                        print("Drink in Hand:", check_drink_hand, "Shoes:", check_shoes, "Trash:", check_trash)
+
+                        """     # Chamar função que recebe regra a ser quebrada e que faz com que o robot haja em conformidade com essa regra
+                        if check_drink_hand == True:
+                            self.choose_consequence(self.node.rule_drink) 
+                        elif check_trash == True:
+                            self.choose_consequence(self.node.rule_garbage) 
+                        elif check_shoes == True:
+                            self.choose_consequence(self.node.rule_shoes)
+                        else: """
+                        self.node.speech_str.command = "You are not breaking any rule. Keep enjoying the party with the other guests." 
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking()
+
+                        self.node.rgb_ctr = 34
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        """ while check_drink_hand == True or check_trash == True or check_shoes == True:
+                        
+                            time.sleep(5)
+
+                            self.node.rgb_ctr = 55
+                            self.node.rgb.data = self.node.rgb_ctr
+                            self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                            pose = Bool()
+                            pose.data = True
+                            self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                            flag_check_rules.data = True
+                            self.node.check_stickler_rules_publisher.publish(flag_check_rules)
+                            self.wait_for_end_of_rule_reception()
+
+                            print(self.node.latest_stickler_rules_detected)
+
+                            if len(self.node.yolo_poses.persons) > 0:                                
+                                check_drink_hand, check_shoes, check_trash =  self.analise_stickler_rules(self.node.latest_stickler_rules_detected)
+                           
+                            else:
+                                self.node.speech_str.command = "Please stand in front of me so I can check if you stopped breaking the rule." 
+                                self.node.speaker_publisher.publish(self.node.speech_str)
+                                self.wait_for_end_of_speaking() """
+
+                        track = TrackPerson()
+                        track.is_center = False
+                        track.kp_number = 0 # 0 is for nose
+                        track.person = self.node.yolo_poses.persons[0]
+                        self.node.neck_follow_person_publisher.publish(track)
+
+                        pose = Bool()
+                        pose.data = False
+                        self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+                        self.node.rgb_ctr = 24
+                        self.node.rgb.data = self.node.rgb_ctr
+                        self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                        """ self.node.speech_str.command = "You are no longer breaking the rule. Keep enjoying the party without breaking any rules."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking() """
+
+                        self.node.state = self.node.Corridor
+                    else:
+                        # print("Person not Found")
+                        self.node.speech_str.command = "No."
+                        self.node.speaker_publisher.publish(self.node.speech_str)
+                        self.wait_for_end_of_speaking() 
+                    
+                    time.sleep(1)
+                    self.node.state = self.node.Corridor
+        
+                    self.i += 1
+
+            elif self.node.state == self.node.end:
+                self.node.rgb_ctr = 100
+                self.node.rgb.data = self.node.rgb_ctr
+                self.node.rgb_mode_publisher.publish(self.node.rgb) 
+
+                self.node.speech_str.command = "I've finished my stickler for the rules task."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+
+                while True:
+                    pass
+
+    def check_if_charmie_is_being_followed(self):
+
+        # sends info to yolo pose to only detect people right in front of the camera
+        pose = Bool()
+        pose.data = True
+        self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+        # looks back to check if is being followed 
+        neck_look_back = NeckPosition()
+        neck_look_back.pan = float(360)
+        neck_look_back.tilt = float(180)
+        self.node.neck_position_publisher.publish(neck_look_back)
+
+        time.sleep(1.0)
+
+        #self.node.speech_str.command = "Please Follow Me. Keep yourself approximately 1 meter behind me. If you start to get behind I will warn you"
+        self.node.speech_str.command = "Please Follow Me."
+        self.node.speaker_publisher.publish(self.node.speech_str)
+        self.wait_for_end_of_speaking()
+
+        person_here = False
+        while not person_here:
+            if len(self.node.yolo_poses.persons) > 0:
+                self.node.speech_str.command = "Thanks for coming behind me. Let's roll."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+                person_here = True
+            else:
+                # the person stopped following the robot
+                self.node.speech_str.command = "Please come behind me. I need you to follow me."
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()
+                time.sleep(3.0)
+
+
+        prev_number_of_person = 1
+        while not self.node.flag_navigation_done:
+          
+
+            if len(self.node.yolo_poses.persons) > 0:
+                if prev_number_of_person == 0:
+                    self.node.speech_str.command = "Thanks for coming back. Let's roll."
+                    self.node.speaker_publisher.publish(self.node.speech_str)
+                    self.wait_for_end_of_speaking()    
+                    prev_number_of_person = 1   
+                # everything is ok
+            else:
+                # the person stopped following the robot
+                self.node.speech_str.command = "You are falling behind, please come back. I will wait here for you"
+                self.node.speaker_publisher.publish(self.node.speech_str)
+                self.wait_for_end_of_speaking()        
+                prev_number_of_person = 0
+                time.sleep(3.0)
+
+
+        self.node.flag_navigation_done = False
+
+        pose = Bool()
+        pose.data = True
+        self.node.only_detect_person_right_in_front_publisher.publish(pose)
+
+
+
+    def analise_stickler_rules(self, rules: ListOfStrings):
+
+        check_drink_hand = False
+        check_shoes = False
+        check_trash = False
+
+        if rules.strings[0] == '' and rules.strings[1] == '':
+            print("Breaking Drink in Hand Rule")
+            check_drink_hand = True
+            """ self.node.speech_str.command = "Breaking Drink in Hand Rule."
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()  """
+        
+        if rules.strings[3] == 'shoe' and rules.strings[4] == 'shoe':
+            print("Breaking Shoes Rule")
+            check_shoes = True
+            """ self.node.speech_str.command = "Breaking Shoes Rule."
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()  """
+        
+        if rules.strings[2] != '':
+            print("Breaking Garbage Rule")
+            check_trash = True
+            """ self.node.speech_str.command = "Breaking Garbage Rule."
+            self.node.speaker_publisher.publish(self.node.speech_str)
+            self.wait_for_end_of_speaking()  """
+
+        return check_drink_hand, check_shoes, check_trash

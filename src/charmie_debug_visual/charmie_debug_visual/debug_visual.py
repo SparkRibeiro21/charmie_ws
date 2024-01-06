@@ -269,13 +269,13 @@ class DebugVisualNode(Node):
         
 
     def get_neck_position_callback(self, pose: NeckPosition):
-        print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
+        # print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
         self.robot.neck_pan = -math.radians(180 - pose.pan)
         self.robot.neck_tilt = -math.radians(180 - pose.tilt)
 
 
     def get_person_pose_callback(self, pose: Yolov8Pose):
-        print("Received new yolo pose. Number of people = ", pose.num_person)
+        # print("Received new yolo pose. Number of people = ", pose.num_person)
         self.robot.person_pose = pose
 
 

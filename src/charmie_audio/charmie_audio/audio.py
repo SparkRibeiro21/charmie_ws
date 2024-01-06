@@ -980,12 +980,7 @@ class AudioNode(Node):
 
     # def wait_for_end_of_speaking()
         
-
-
-
-
-
-
+        
 def main(args=None):
     rclpy.init(args=args)
     node = AudioNode()

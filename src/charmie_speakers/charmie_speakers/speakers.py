@@ -14,7 +14,7 @@ from pathlib import Path
 import subprocess
 import re
 
-VOICE_NO = 2
+VOICE_NO = 1
 
 
 class RobotSpeak():

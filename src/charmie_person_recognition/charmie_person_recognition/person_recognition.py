@@ -60,6 +60,9 @@ class PersonRecognitionNode(Node):
 
         self.cropped_image_publisher = self.create_publisher(ListOfImages, '/cropped_image', 10)
         
+
+        self.check_stickler_rules_subscriber = self.create_subscription(Bool, "check_stickler_rules", self.check_stickler_rules_callback, 10)
+
         self.robot = PersonRec()
 
         self.latest_color_image = Image()
@@ -72,8 +75,11 @@ class PersonRecognitionNode(Node):
 
         self.search_for_person_flag = False
         self.check_stickler_rules = False
-        self.check_if_charmie_is_being_followed = True
+        self.check_if_charmie_is_being_followed = False
         
+    def check_stickler_rules_callback(self, state: Bool):
+        print("Check Stickler Flag Arrived")
+        self.check_stickler_rules = state.data
 
     def search_for_person_callback(self, sfp: SearchForPerson):
         print("Received a start for person")
@@ -380,6 +386,10 @@ class PersonRecognitionMain():
     def main(self):
 
         time.sleep(1.0)
+
+
+        self.show_restaurant_detected_customers_with_imread_images()
+
         while True:
         
             #print(self.node.search_for_person_flag)
@@ -390,11 +400,11 @@ class PersonRecognitionMain():
 
             if self.node.check_stickler_rules:
                 self.check_stickler_rules()
-                # self.node.check_stickler_rules = False
-
+                self.node.check_stickler_rules = False
+                
             if self.node.check_if_charmie_is_being_followed:
                 self.check_if_charmie_is_being_followed()
-                # self.node.check_stickler_rules = False
+
 
     def wait_for_end_of_speaking(self):
         while not self.node.flag_speech_done:
@@ -458,8 +468,6 @@ class PersonRecognitionMain():
 
 
 
-
-
     def check_stickler_rules(self):
         print("Checking Stickler Rules")
         face_img = self.node.check_person_face()
@@ -512,9 +520,9 @@ class PersonRecognitionMain():
             neck.tilt = float(180)
             self.node.neck_position_publisher.publish(neck)
             if delay_ctr == 0: # since the initial angle of the tracking is never known, we do this to make sure there is time for the neck to reach the first position before analysing the yolo pose
-                time.sleep(2.0+1.5)
+                time.sleep(2.0)
             else:
-                time.sleep(1.5+1.5)
+                time.sleep(1.5)
             delay_ctr+=1
 
             # print(self.node.latest_person_pose.num_person)
@@ -721,3 +729,85 @@ class PersonRecognitionMain():
         # neck.pan = float(180)
         # neck.tilt = float(180)
         # self.node.neck_position_publisher.publish(neck)
+
+
+    def show_restaurant_detected_customers_with_imread_images(self):
+
+
+        filtered_persons_cropped = []
+        filtered_persons_cropped.append(cv2.imread("Person Filtered_1.jpg"))
+        filtered_persons_cropped.append(cv2.imread("Person Filtered_2.jpg"))
+
+        # aux = cv2.imread("Person Filtered_1.jpg")
+        # cv2.imshow("aaa", aux)
+        # cv2.waitKey(0)
+
+        if True:
+            H = 720
+            y_offset = 50
+            x_offset = 50
+            max_image_height = 0
+            detected_person_final_image = np.zeros(( H+(y_offset*2), H*10, 3), np.uint8)
+            
+            i_ctr = 0
+            for i in range(len(filtered_persons_cropped)):
+                i_ctr += 1
+                print("Image shape:", filtered_persons_cropped[i].shape)
+                print("Image dtype:", filtered_persons_cropped[i].dtype)
+
+                scale_factor  = H/filtered_persons_cropped[i].shape[0]
+                width = int(filtered_persons_cropped[i].shape[1] * scale_factor)
+                height = int(filtered_persons_cropped[i].shape[0] * scale_factor)
+
+                if width > H//2 + 50:
+                    scale_factor  = (H//2)/filtered_persons_cropped[i].shape[1]
+                    width = int(filtered_persons_cropped[i].shape[1] * scale_factor)
+                    height = int(filtered_persons_cropped[i].shape[0] * scale_factor)
+
+
+
+                if height > max_image_height:
+                    max_image_height = height
+
+                dim = (width, height)
+                print(scale_factor, dim)
+                filtered_persons_cropped[i] = cv2.resize(filtered_persons_cropped[i], dim, interpolation = cv2.INTER_AREA)
+
+                # cv2.imshow("Image"+str(i_ctr), i)
+
+                detected_person_final_image[y_offset:y_offset+filtered_persons_cropped[i].shape[0], x_offset:x_offset+filtered_persons_cropped[i].shape[1]] = filtered_persons_cropped[i]
+
+                detected_person_final_image = cv2.putText(
+                    detected_person_final_image,
+                    f"{'Customer '+str(i_ctr)}",
+                    (x_offset, y_offset-10),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    1,
+                    (255, 255, 255),
+                    1,
+                    cv2.LINE_AA
+                ) 
+
+                # print(filtered_persons[i])
+                
+                # detected_person_final_image = cv2.putText(
+                #     detected_person_final_image,
+                #     f"{'('+str(round(filtered_persons[i][0],2))+', '+str(round(filtered_persons[i][1],2))+')'}",
+                #     (x_offset, int(height+(1.5*y_offset))),
+                #     cv2.FONT_HERSHEY_DUPLEX,
+                #     0.75,
+                #     (255, 255, 255),
+                #     1,
+                #     cv2.LINE_AA
+                # )
+
+                x_offset += width+50
+
+            print(max_image_height)
+
+            detected_person_final_image = detected_person_final_image[0:max_image_height+(y_offset*2), 0:x_offset] # Slicing to crop the image
+            cv2.imshow("Customers Detected", detected_person_final_image)
+            cv2.waitKey(100)
+
+        while True:
+            pass

@@ -415,15 +415,7 @@ class LocalisationNode(Node):
     
         # print(self.robot_x_fused, self.robot_y_fused, self.robot_t_fused)
         
-
-
-
-
-
-
-
-
-
+        
 
     def PoseWithCovarianceStamped_to_Odometry(self, pose_c: PoseWithCovarianceStamped):
         od = Odometry()
