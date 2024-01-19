@@ -1,4 +1,4 @@
-## Welcome to LAR@Home CHARMIE ROS2 Workspace Github Repository  :mechanical_arm: :portugal:
+## Welcome to LAR@Home CHARMIE ROS2 Workspace Repository  :mechanical_arm: :portugal:
 
 * [Requirements :rocket:](#rocket-requirements)
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
