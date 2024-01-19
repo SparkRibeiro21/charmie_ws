@@ -15,10 +15,16 @@ import time
 #   when setting torso and legs position i need to send two variables, but the way it is
 # made I can only send one command value, for MD49 I just needed to send one
 
+
+# TO DO WHEN CHANGING TO SRV:
+# - debug buttons
+
+
+
 class RobotControl:
 
     def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB2', baudrate=9600)  # open serial port
+        self.ser = serial.Serial('/dev/ttyUSB0', baudrate=9600)  # open serial port
         print("Connected to Motor Board via:", self.ser.name)  # check which port was really used
 
         # FLAGS
@@ -48,8 +54,9 @@ class RobotControl:
         # self.CURRENT = {'GetVar': 'i', 'Value': [0, 0, 0, 0], 'NoBytes': 2}
         # self.VI = {'GetVar': 'p', 'Value': [0, 0, 0, 0, 0, 0], 'NoBytes': 3}
         self.ENCODERS = {'GetVar': 'e', 'Value': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'NoBytes': 8}
-        self.START_BUTTON = {'GetVar': 'B', 'Value': [0, 0], 'NoBytes': 1}
-        self.VCCS = {'GetVar': 'U', 'Value': [0, 0], 'NoBytes': 1}
+        self.START_BUTTON = {'GetVar': 's', 'Value': [0, 0], 'NoBytes': 1}        
+        self.DEBUG_BUTTONS = {'GetVar': 'b', 'Value': [0, 0], 'NoBytes': 1}
+        self.VCCS = {'GetVar': 'u', 'Value': [0, 0], 'NoBytes': 1}
         self.LIN_ACT = {'GetVar': 'w', 'Value': [0, 0], 'NoBytes': 1}
         
         # SETS
@@ -259,10 +266,12 @@ class LowLevelNode(Node):
 
 
 
+
         flag_diagn = Bool()
         flag_diagn.data = False
 
         self.create_timer(0.05, self.timer_callback)
+        self.create_timer(1.0, self.timer_callback2)
 
         self.robot = RobotControl()
 
@@ -330,8 +339,23 @@ class LowLevelNode(Node):
             # nao amnda
 
 
+    def timer_callback2(self):
+            # request start button here
+            aux_s = self.robot.get_omni_variables(self.robot.START_BUTTON)
+            print("Start Button State: ", bool(aux_s[0]))
+
+            aux_v = self.robot.get_omni_variables(self.robot.VCCS)
+            print("VCC: ", aux_v[0]/5, " Emergency: ", bool(aux_v[1]))
+
+            aux_b = self.robot.get_omni_variables(self.robot.DEBUG_BUTTONS)
+            print("DEBUG BUTTONS STATE: ", aux_b[0], (aux_b[0] >> 0)&1, (aux_b[0] >> 1)&1, (aux_b[0] >> 2)&1)
+
+            aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
+            print("DEBUG BUTTONS STATE: ", aux_t[0], aux_t[1])
             
-        
+
+
+
     def timer_callback(self):
 
         if  self.flag_get_start_button:
