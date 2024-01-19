@@ -57,12 +57,12 @@ class RobotControl:
         self.START_BUTTON = {'GetVar': 's', 'Value': [0, 0], 'NoBytes': 1}        
         self.DEBUG_BUTTONS = {'GetVar': 'b', 'Value': [0, 0], 'NoBytes': 1}
         self.VCCS = {'GetVar': 'u', 'Value': [0, 0], 'NoBytes': 1}
-        self.LIN_ACT = {'GetVar': 'w', 'Value': [0, 0], 'NoBytes': 1}
+        self.LIN_ACT = {'GetVar': 'h', 'Value': [0, 0], 'NoBytes': 1}
         
         # SETS
         self.RGB = {'SetVar': 'Q', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 255}
-        self.LEGS = {'SetVar': 'Y', 'Value': [0, 0], 'NoBytes': 1, 'Min': 0, 'Max': 90}
-        self.TORSO = {'SetVar': 'Z', 'Value': [0, 0], 'NoBytes': 1, 'Min': 0, 'Max': 90}
+        self.LEGS = {'SetVar': 'S', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 90}
+        self.TORSO = {'SetVar': 'M', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 140}
         
         self.LINEAR_V = {'SetVar': 'V', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 100}
         self.ANGULAR_V = {'SetVar': 'W', 'Value': [100], 'NoBytes': 1, 'Min': 0, 'Max': 200}
@@ -272,6 +272,7 @@ class LowLevelNode(Node):
 
         self.create_timer(0.05, self.timer_callback)
         self.create_timer(1.0, self.timer_callback2)
+        self.create_timer(5, self.timer_callback3)
 
         self.robot = RobotControl()
 
@@ -338,6 +339,14 @@ class LowLevelNode(Node):
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, False)
             # nao amnda
 
+    def timer_callback3(self):
+        l = 30
+        t = 40
+        print("Received LEGST/TORSO POSITION: ", l, t)
+        self.robot.set_omni_variables(self.robot.LEGS, l)
+        self.robot.set_omni_variables(self.robot.TORSO, t)
+
+
 
     def timer_callback2(self):
             # request start button here
@@ -351,7 +360,7 @@ class LowLevelNode(Node):
             print("DEBUG BUTTONS STATE: ", aux_b[0], (aux_b[0] >> 0)&1, (aux_b[0] >> 1)&1, (aux_b[0] >> 2)&1)
 
             aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
-            print("DEBUG BUTTONS STATE: ", aux_t[0], aux_t[1])
+            print("TORSO POSITION: LEGS HEIGHT:", aux_t[0], "TORSO ANGLE:", aux_t[1])
             
 
 
