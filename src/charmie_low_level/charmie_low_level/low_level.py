@@ -7,6 +7,7 @@ from std_msgs.msg import Bool, Int16
 from charmie_interfaces.msg import Encoders
 import serial
 import time
+import struct
 
 
 # TO DO:
@@ -28,7 +29,7 @@ class RobotControl:
         print("Connected to Motor Board via:", self.ser.name)  # check which port was really used
 
         # FLAGS
-        self.RESET_ENCODERS = {'EnableVar': 'o', 'DisableVar': 'o', 'Value': True}  # same value for enable and disable
+        self.RESET_ENCODERS = {'EnableVar': 'r', 'DisableVar': 'r', 'Value': True}  # same value for enable and disable
         # self.REGULATOR = {'EnableVar': 'R', 'DisableVar': 'r', 'Value': True}
         self.TIMEOUT = {'EnableVar': 'T', 'DisableVar': 't', 'Value': True}
         self.MOVEMENT = {'EnableVar': 'G', 'DisableVar': 'g', 'Value': True}
@@ -58,11 +59,13 @@ class RobotControl:
         self.DEBUG_BUTTONS = {'GetVar': 'b', 'Value': [0, 0], 'NoBytes': 1}
         self.VCCS = {'GetVar': 'u', 'Value': [0, 0], 'NoBytes': 1}
         self.LIN_ACT = {'GetVar': 'h', 'Value': [0, 0], 'NoBytes': 1}
+        self.ORIENTATION = {'GetVar': 'o', 'Value': [0, 0], 'NoBytes': 1}
+        self.IMU = {'GetVar': 'i', 'Value': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'NoBytes': 9}
         
         # SETS
         self.RGB = {'SetVar': 'Q', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 255}
-        self.LEGS = {'SetVar': 'S', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 90}
-        self.TORSO = {'SetVar': 'M', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 140}
+        self.LEGS = {'SetVar': 'S', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 140}
+        self.TORSO = {'SetVar': 'M', 'Value': [0], 'NoBytes': 1, 'Min': 8, 'Max': 170}
         
         self.LINEAR_V = {'SetVar': 'V', 'Value': [0], 'NoBytes': 1, 'Min': 0, 'Max': 100}
         self.ANGULAR_V = {'SetVar': 'W', 'Value': [100], 'NoBytes': 1, 'Min': 0, 'Max': 200}
@@ -340,30 +343,43 @@ class LowLevelNode(Node):
             # nao amnda
 
     def timer_callback3(self):
-        l = 30
-        t = 40
-        print("Received LEGST/TORSO POSITION: ", l, t)
-        self.robot.set_omni_variables(self.robot.LEGS, l)
-        self.robot.set_omni_variables(self.robot.TORSO, t)
+        l = 50
+        t = 8
+        # print("Received LEGS/TORSO POSITION: ", l, t)
+        # self.robot.set_omni_variables(self.robot.LEGS, l)
+        # self.robot.set_omni_variables(self.robot.TORSO, t)
 
 
 
     def timer_callback2(self):
             # request start button here
-            aux_s = self.robot.get_omni_variables(self.robot.START_BUTTON)
-            print("Start Button State: ", bool(aux_s[0]))
+            # aux_s = self.robot.get_omni_variables(self.robot.START_BUTTON)
+            # print("Start Button State: ", bool(aux_s[0]))
 
-            aux_v = self.robot.get_omni_variables(self.robot.VCCS)
-            print("VCC: ", aux_v[0]/5, " Emergency: ", bool(aux_v[1]))
+            # aux_v = self.robot.get_omni_variables(self.robot.VCCS)
+            # print("VCC: ", aux_v[0]/5, " Emergency: ", bool(aux_v[1]))
 
-            aux_b = self.robot.get_omni_variables(self.robot.DEBUG_BUTTONS)
-            print("DEBUG BUTTONS STATE: ", aux_b[0], (aux_b[0] >> 0)&1, (aux_b[0] >> 1)&1, (aux_b[0] >> 2)&1)
+            # aux_b = self.robot.get_omni_variables(self.robot.DEBUG_BUTTONS)
+            # print("DEBUG BUTTONS STATE: ", aux_b[0], (aux_b[0] >> 0)&1, (aux_b[0] >> 1)&1, (aux_b[0] >> 2)&1)
 
-            aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
-            print("TORSO POSITION: LEGS HEIGHT:", aux_t[0], "TORSO ANGLE:", aux_t[1])
+            # aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
+            # print("LEGS HEIGHT:", aux_t[0], "TORSO ANGLE:", aux_t[1])
+
+            aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
+            print("ORIENTATION:", (aux_o[0]<<8|aux_o[1])/10)
+
+            aux_i = self.robot.get_omni_variables(self.robot.IMU)
+            print("MAGX:", struct.unpack('!h', struct.pack('!BB', aux_i[0], aux_i[1]))[0],
+                  "MAGY:", struct.unpack('!h', struct.pack('!BB', aux_i[2], aux_i[3]))[0],             
+                  "MAGZ:", struct.unpack('!h', struct.pack('!BB', aux_i[4], aux_i[5]))[0],
+                  "ACCX:", struct.unpack('!h', struct.pack('!BB', aux_i[6], aux_i[7]))[0],
+                  "ACCY:", struct.unpack('!h', struct.pack('!BB', aux_i[8], aux_i[9]))[0],
+                  "ACCZ:", struct.unpack('!h', struct.pack('!BB', aux_i[10], aux_i[11]))[0],
+                  "GYRX:", struct.unpack('!h', struct.pack('!BB', aux_i[12], aux_i[13]))[0],
+                  "GYRY:", struct.unpack('!h', struct.pack('!BB', aux_i[14], aux_i[15]))[0],
+                  "GYRZ:", struct.unpack('!h', struct.pack('!BB', aux_i[16], aux_i[17]))[0],
+                  )
             
-
-
 
     def timer_callback(self):
 
