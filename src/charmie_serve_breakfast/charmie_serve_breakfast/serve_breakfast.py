@@ -27,16 +27,16 @@ class ServeBreakfastNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = ServeBreakfastNode()
-    th_main = threading.Thread(target=thread_main_restaurant, args=(node,), daemon=True)
+    th_main = threading.Thread(target=thread_main_serve_breakfast, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-def thread_main_restaurant(node: ServeBreakfastNode):
-    main = RestaurantMain(node)
+def thread_main_serve_breakfast(node: ServeBreakfastNode):
+    main = ServeBreakfastMain(node)
     main.main()
 
-class RestaurantMain():
+class ServeBreakfastMain():
 
     def __init__(self, node: ServeBreakfastNode):
         self.node = node
@@ -87,7 +87,7 @@ class RestaurantMain():
                 self.state = Final_State
             
             elif self.state == Final_State:
-                # self.node.speech_str.command = "I have finished my restaurant task." 
+                # self.node.speech_str.command = "I have finished my serve breakfast task." 
                 # self.node.speaker_publisher.publish(self.node.speech_str)
                 # self.wait_for_end_of_speaking()  
                 self.state += 1
