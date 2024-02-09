@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		"speakers = charmie_speakers.speakers:main"
+		"speakers = charmie_speakers.speakers:main",
+		"save_audio = charmie_speakers.save_audio:main"
         ],
     },
 )

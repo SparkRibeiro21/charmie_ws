@@ -24,7 +24,8 @@ setup(
     entry_points={
         'console_scripts': [
             "debug_main = charmie_debug.debug_main:main",
-		    "debug_visual = charmie_debug.debug_visual:main"
+		    "debug_visual = charmie_debug.debug_visual:main",
+		    "debug_spkr_face = charmie_debug.debug_spkr_face:main"
         ],
     },
 )
