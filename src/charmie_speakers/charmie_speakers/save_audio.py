@@ -33,8 +33,12 @@ complete_path = home+'/'+midpath+'/'
 # COMMAND = "The host name is Paris and the favourite drink is milk."
 # FILENAME = "receptionist_host_info"
 
-COMMAND = "Please stay on my left until I give you instructions on where to sit."
-FILENAME = "receptionist_stay_left"
+# COMMAND = "Please stay on my left until I give you instructions on where to sit."
+# FILENAME = "receptionist_stay_left"
+
+COMMAND = "But while I do this task, let me play some music for you."
+FILENAME = "music_pre_start"
+
 
 class RobotSpeak():
     def __init__(self):
@@ -84,12 +88,30 @@ def main(args=None):
     
     pygame.init()
     
-    
+    f = open(complete_path+FILENAME+".txt", "w")
+    f.write(COMMAND)
+    f.close()
+
+
     # charmie_speech = RobotSpeak()
 
+    # pygame.mixer.music.load(complete_path+"ready_serve_breakfast.wav")
+    # pygame.mixer.music.play()
+    # while pygame.mixer.music.get_busy():
+    #     pass
 
-
-    pygame.mixer.music.load(complete_path+"music_soy_el_fuego.wav")
+    pygame.mixer.music.load(complete_path+"music_pre_start.wav")
     pygame.mixer.music.play()
     while pygame.mixer.music.get_busy():
         pass
+
+
+    #open and read the file after the overwriting:
+    f2 = open(complete_path+FILENAME+".txt", "r")
+    print(f2.read())
+
+
+    # pygame.mixer.music.load(complete_path+"renata_teste.wav")
+    # pygame.mixer.music.play()
+    # while pygame.mixer.music.get_busy():
+    #     pass
