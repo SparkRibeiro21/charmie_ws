@@ -18,30 +18,25 @@ home = str(Path.home())
 midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
 complete_path = home+'/'+midpath+'/'
 
-# COMMAND = "Hello, my name is charmie."
-# FILENAME = "introduction"
+# MODE can be the following commands:
+# "STANDARD": convert one command into wav and txt 
+# "RECEPTIONIST": reads names and drinks arrays and generates all commands for first guest names, second guest names and favourite drinks
 
-# COMMAND = "Waiting for start button to be pressed."
-# FILENAME = "waiting_start_button"
 
-# COMMAND = "Waiting for door to be opened."
-# FILENAME = "waiting_door_open"
+names_list = ["Adam", "Paris", "William"]
+drinks_list = ["milk", "orange juice", "red wine"]
 
-# COMMAND = "I am ready to start the serve the breakfast task."
-# FILENAME = "ready_serve_breakfast"
+MODE = "RECEPTIONIST"
 
-# COMMAND = "The host name is Paris and the favourite drink is milk."
-# FILENAME = "receptionist_host_info"
-
-# COMMAND = "Please stay on my left until I give you instructions on where to sit."
-# FILENAME = "receptionist_stay_left"
-
-COMMAND = "But while I do this task, let me play some music for you."
-FILENAME = "music_pre_start"
+COMMAND = "Leia."
+FILENAME = "leia"
 
 
 class RobotSpeak():
     def __init__(self):
+        pygame.init()
+        pygame.mixer.music.set_volume(1.0)
+
         self.path = "/home/utilizador/.local/lib/python3.10/site-packages/TTS/.models.json"
         self.model_manager = ModelManager(self.path)
 
@@ -52,63 +47,75 @@ class RobotSpeak():
             tts_checkpoint= mode_path,
             tts_config_path= config_path,
         )
-        
+
+    def convert_command(self, play_sound):
+
         self.filename = FILENAME+".wav"
 
-
-        # this is just a test, it uses sentences pre recorded so that the robot does not waste any time processing what it wants to say.
-        # if speech.command == "Please say your order.":
-        #     
-        #     pygame.mixer.music.load(self.complete_path+"voice1.wav")
-        #     pygame.mixer.music.play()
-        #     while pygame.mixer.music.get_busy():
-        #         pass
-        # else:
-        #     init_time = time.time()
-        #     outputs = self.syn.tts(speech.command)
-        #     self.syn.save_wav(outputs, self.complete_path+self.filename)
-        #     print(time.time()-init_time)
-        #     pygame.mixer.music.load(self.complete_path+self.filename)
-        #     pygame.mixer.music.play()
-        #     while pygame.mixer.music.get_busy():
-        #         pass
+        # create txt file with command for face package 
+        f = open(complete_path+FILENAME+".txt", "w")
+        f.write(COMMAND)
+        f.close()
         
+        # create wav file for speakers package 
         print("Initialised synthetisation.")
-        
         init_time = time.time()
         outputs = self.syn.tts(COMMAND)
         self.syn.save_wav(outputs, complete_path+self.filename)
         print(time.time()-init_time)
-        pygame.mixer.music.load(complete_path+self.filename)
-        pygame.mixer.music.play()
-        while pygame.mixer.music.get_busy():
-            pass
+
+        if play_sound:
+            # play wav file in speakers
+            pygame.mixer.music.load(complete_path+self.filename)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pass
 
 def main(args=None):
     
-    pygame.init()
+    charmie_speech = RobotSpeak()
     
-    f = open(complete_path+FILENAME+".txt", "w")
-    f.write(COMMAND)
-    f.close()
+    global COMMAND, FILENAME
+
+    if MODE == "STANDARD":
+        charmie_speech.convert_command(play_sound=True)
+    elif MODE == "RECEPTIONIST":
+        for name in names_list:
+            pass
+            # COMMAND = "The first guest name is "+name+"."
+            # FILENAME = "recep_first_guest_"+name.lower()
+            # print(COMMAND, FILENAME)
+            # charmie_speech.convert_command(play_sound=True)
+            # COMMAND = "The second guest name is "+name+"."
+            # FILENAME = "recep_second_guest_"+name.lower()
+            # print(COMMAND, FILENAME)
+            # charmie_speech.convert_command(play_sound=True)
+        for drink in drinks_list:
+            COMMAND = "The favourite drink is "+drink+"."
+            FILENAME = "recep_drink_"+drink.lower().replace(" ", "_")
+            print(COMMAND, FILENAME)
+            charmie_speech.convert_command(play_sound=True)
 
 
-    # charmie_speech = RobotSpeak()
+     
+
+    #  while True:
+   #      pass
 
     # pygame.mixer.music.load(complete_path+"ready_serve_breakfast.wav")
     # pygame.mixer.music.play()
     # while pygame.mixer.music.get_busy():
     #     pass
 
-    pygame.mixer.music.load(complete_path+"music_pre_start.wav")
-    pygame.mixer.music.play()
-    while pygame.mixer.music.get_busy():
-        pass
+    # pygame.mixer.music.load(complete_path+"music_pre_start.wav")
+    # pygame.mixer.music.play()
+    # while pygame.mixer.music.get_busy():
+    #     pass
 
 
     #open and read the file after the overwriting:
-    f2 = open(complete_path+FILENAME+".txt", "r")
-    print(f2.read())
+    # f2 = open(complete_path+FILENAME+".txt", "r")
+    # print(f2.read())
 
 
     # pygame.mixer.music.load(complete_path+"renata_teste.wav")

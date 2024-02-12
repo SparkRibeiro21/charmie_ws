@@ -10,9 +10,6 @@ import time
 from charmie_interfaces.srv import SpeechCommand
 
 
-# perceber como vou fazer para o wait for end of ...
-
-# remover o partial ...
 
 
 class TestNode(Node):
@@ -27,22 +24,32 @@ class TestNode(Node):
 
         self.waited_for_end_of_speaking = False
 
-    def call_speech_command_server(self, filename, command, wait_for_end_of=True):
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         request = SpeechCommand.Request()
         request.filename = filename
         request.command = command
+        request.quick_voice = quick_voice
     
         future = self.client.call_async(request)
+        print("Sent Command")
 
         if wait_for_end_of:
-            future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_speech_command)
     
-    def callback_call_speech_command(self, future, a, b):
+
+
+    def callback_call_speech_command(self, future): #, a, b):
 
         try:
-            self.waited_for_end_of_speaking = True
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success)+str(response.message))
+            # print("oi")
+            # time.sleep(3)
+            self.waited_for_end_of_speaking = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
             
@@ -88,7 +95,7 @@ class RestaurantMain():
         Final_State = 7
 
         print("IN NEW MAIN")
-        time.sleep(5)
+        time.sleep(2)
 
         while True:
 
@@ -102,10 +109,50 @@ class RestaurantMain():
             # State 6 = Final Speech
 
             if self.state == Waiting_for_start_button:
-                a += "a"
-                self.node.call_speech_command_server(a, "")
+                """
+                # a += "a"
+                self.node.call_speech_command_server("ready_serve_breakfast", "", wait_for_end_of=True)
                 self.wait_for_end_of_speaking()
-                time.sleep(2)
+                print("Test Wait")
+
+                start = time.time()
+                while time.time() < start + 3: # in seconds
+                    print(".", end='')
+                print()
+                
+                self.node.call_speech_command_server("waiting_door_open", "", wait_for_end_of=False)
+                # self.wait_for_end_of_speaking()
+                print("Test Not Wait")
+
+                start = time.time()
+                while time.time() < start + 3: # in seconds
+                    print(",", end='')
+                print()
+                """
+
+                # self.node.call_speech_command_server("receptionist_second_guest", "", wait_for_end_of=True)
+                # self.node.call_speech_command_server(command="Welcome to the serve the breakfast task", wait_for_end_of=True)#, quick_voice=Fa)
+                self.node.call_speech_command_server(filename="receptionist_second_guest_john", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
+                self.wait_for_end_of_speaking()
+                print("Test Wait")
+
+
+
+                # self.node.call_speech_command_server("introduction_quick", "", wait_for_end_of=True)
+                # self.node.call_speech_command_server(command="I will start in a minute", wait_for_end_of=True)#, quick_voice=True)
+                self.node.call_speech_command_server(filename="recep_drink_red_win", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
+                self.wait_for_end_of_speaking()
+                print("Test Wait")
+
+
+                start = time.time()
+                while time.time() < start + 3: # in seconds
+                    pass
+                    # print(",", end='')
+                print()
+
+
+
                 #print('State 0 = Initial')
 
                 # your code here ...
