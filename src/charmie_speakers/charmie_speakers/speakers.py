@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
-from charmie_interfaces.msg import RobotSpeech
+from charmie_interfaces.srv import SpeechCommand
 
 from TTS.utils.manage import ModelManager
 from TTS.utils.synthesizer import Synthesizer
@@ -10,96 +10,99 @@ from TTS.utils.synthesizer import Synthesizer
 import time
 import pygame
 from pathlib import Path
+import os
 
 import subprocess
 import re
 
-VOICE_NO = 1
+
+home = str(Path.home())
+midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
+complete_path = home+'/'+midpath+'/'
 
 
 class RobotSpeak():
     def __init__(self):
-        self.path = "/home/utilizador/.local/lib/python3.10/site-packages/TTS/.models.json"
-        self.model_manager = ModelManager(self.path)
+        self.voice_models_path = "/home/utilizador/.local/lib/python3.10/site-packages/TTS/.models.json"
+        self.model_manager = ModelManager(self.voice_models_path)
         pygame.init()
 
-
-        if VOICE_NO == 1: # jenny
-            self.model_name = "jenny"
-            mode_path, config_path, model_item = self.model_manager.download_model("tts_models/en/jenny/jenny") # LENTO 8/10
-            # voc_path, voc_config_path, _ = self.model_manager.download_model(model_item["default_vocoder"])
-            self.syn = Synthesizer(
-                tts_checkpoint= mode_path,
-                tts_config_path= config_path,
-                # vocoder_checkpoint= voc_path,
-                # vocoder_config= voc_config_path
-            )
-        elif VOICE_NO == 2: # tacotron2-DDC_ph
-            self.model_name = "tacotron2-DDC_ph"
-            mode_path, config_path, model_item = self.model_manager.download_model("tts_models/en/ljspeech/tacotron2-DDC_ph") # 6/10
-            voc_path, voc_config_path, _ = self.model_manager.download_model(model_item["default_vocoder"])
-            self.syn = Synthesizer(
-                tts_checkpoint= mode_path,
-                tts_config_path= config_path,
-                vocoder_checkpoint= voc_path,
-                vocoder_config= voc_config_path
-            )
-           
-        else: # VOICE_NO == 3: # overflow
-            self.model_name = "overflow"
-            mode_path, config_path, model_item = self.model_manager.download_model("tts_models/en/ljspeech/overflow") # 5/10
-            voc_path, voc_config_path, _ = self.model_manager.download_model(model_item["default_vocoder"])
-            self.syn = Synthesizer(
-                tts_checkpoint= mode_path,
-                tts_config_path= config_path,
-                vocoder_checkpoint= voc_path,
-                vocoder_config= voc_config_path
-            )
-
-        self.filename = "last_speaked.wav"
-        home = str(Path.home())
-        midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
-        self.complete_path = home+'/'+midpath+'/'
+        # automatically sets the computer speakers to 100% of the volume.
+        # it does not work with over amplification. 
+        # So in loud environments remove the following line and manually set the volume to max
+        pygame.mixer.music.set_volume(1.0) 
 
 
-    def speak(self, speech: RobotSpeech):
+        # good quality but slow render voice
+        # self.model_name = "jenny"
+        mode_path, config_path, model_item = self.model_manager.download_model("tts_models/en/jenny/jenny")
+        self.syn_jenny = Synthesizer(
+            tts_checkpoint= mode_path,
+            tts_config_path= config_path
+        )
 
-        if speech.language == 'pt':
-            lang = speech.language
-            print("Language: Portuguese")
-        elif speech.language == 'en':
-            lang = speech.language
-            print("Language: English")
+        # worse quality but quick render voice
+        # self.model_name = "tacotron2-DDC_ph"
+        mode_path, config_path, model_item = self.model_manager.download_model("tts_models/en/ljspeech/tacotron2-DDC_ph")
+        voc_path, voc_config_path, _ = self.model_manager.download_model(model_item["default_vocoder"])
+        self.syn_taco = Synthesizer(
+            tts_checkpoint= mode_path,
+            tts_config_path= config_path,
+            vocoder_checkpoint= voc_path,
+            vocoder_config= voc_config_path
+        )
+
+
+    def play_command(self, filename):
+        
+        # missing sending commands to face.............................................................................................
+        
+        if os.path.isfile(complete_path+filename+".txt"):
+            print("File sent to face!")
         else:
-            lang = 'en'
-            print("Language: Other (Default: English)")
+            print("File not sent to face!")
 
 
-        # this is just a test, it uses sentences pre recorded so that the robot does not waste any time processing what it wants to say.
-        # if speech.command == "Please say your order.":
-        #     
-        #     pygame.mixer.music.load(self.complete_path+"voice1.wav")
-        #     pygame.mixer.music.play()
-        #     while pygame.mixer.music.get_busy():
-        #         pass
-        # else:
-        #     init_time = time.time()
-        #     outputs = self.syn.tts(speech.command)
-        #     self.syn.save_wav(outputs, self.complete_path+self.filename)
-        #     print(time.time()-init_time)
-        #     pygame.mixer.music.load(self.complete_path+self.filename)
-        #     pygame.mixer.music.play()
-        #     while pygame.mixer.music.get_busy():
-        #         pass
-            
-        init_time = time.time()
-        outputs = self.syn.tts(speech.command)
-        self.syn.save_wav(outputs, self.complete_path+self.filename)
-        print(time.time()-init_time)
-        pygame.mixer.music.load(self.complete_path+self.filename)
-        pygame.mixer.music.play()
-        while pygame.mixer.music.get_busy():
-            pass
+        if os.path.isfile(complete_path+filename+".wav"):
+            pygame.mixer.music.load(complete_path+filename+".wav")
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pass
+            success = True
+            message = ""
+
+        else:
+            success = False
+            message = "File does not exist!!!"
+
+        return success, message
+
+
+    def load_and_play_command(self, jenny_or_taco, command):
+        
+        temp_filename = "temp.wav"
+
+        if jenny_or_taco: # tacotron synthesizer
+            init_time = time.time()
+            outputs = self.syn_taco.tts(command)
+            self.syn_taco.save_wav(outputs, complete_path+temp_filename)
+            print(time.time()-init_time)
+            pygame.mixer.music.load(complete_path+temp_filename)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pass
+        else: # jenny synthesizer
+            init_time = time.time()
+            outputs = self.syn_jenny.tts(command)
+            self.syn_jenny.save_wav(outputs, complete_path+temp_filename)
+            print(time.time()-init_time)
+            pygame.mixer.music.load(complete_path+temp_filename)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pass
+
+        return True, ""
+
 
     def get_active_speaker_info(self):
         try:
@@ -122,25 +125,27 @@ class RobotSpeak():
             return "Unknown"
 
 
-
 class SpeakerNode(Node):
 
     def __init__(self):
         super().__init__("Speaker")
         self.get_logger().info("Initialised CHARMIE Speaker Node")
 
+        # initialize models loading 
         self.charmie_speech = RobotSpeak()
 
-        self.speaker_command_subscriber = self.create_subscription(RobotSpeech, "speech_command", self.speaker_command_callback, 10)
-        self.flag_speech_done_publisher = self.create_publisher(Bool, "flag_speech_done", 10)
 
+        self.server_speech_command = self.create_service(SpeechCommand, "speech_command", self.callback_speech_command) 
+        self.get_logger().info("Speech Command Server has been started")
+
+
+
+        # Diagnostics for the speakers package
         self.speakers_diagnostic_publisher = self.create_publisher(Bool, "speakers_diagnostic", 10)
 
         flag_diagn = Bool()
         flag_diagn.data = True
 
-        
-        
         print("\nOutput Sound Devices:")
 
         active_speaker_type = self.charmie_speech.get_active_speaker_info()
@@ -155,18 +160,38 @@ class SpeakerNode(Node):
             flag_diagn.data = False
 
         self.speakers_diagnostic_publisher.publish(flag_diagn)
+
+        # print("Test mode")
+        # time.sleep(2)
+        #self.test()
+
+
+    def test(self):
+        self.charmie_speech.load_and_play_command(True, "What is your name and favourite drink?")
+
+
+    def callback_speech_command(self, request, response):
+        print("Received request")
+
+        # string filename # name of audio file to be played
+        # string command  # if there is no filename, a command string can be sent to be played in real time 
+        # bool quick_voice # if you do not want to use the pretty voice that takes more time to load, raising this flag uses the secondary quick voice
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        if request.filename == "":
+            # speakers mode where received string must be synthesized and played now
+            success, message = self.charmie_speech.load_and_play_command(request.quick_voice, request.command)
         
-    def speaker_command_callback(self, speech: RobotSpeech):
+        else:
+            # speakers mode where received filename must be played
+            success, message = self.charmie_speech.play_command(request.filename)
 
-        print("\nReceived String:", speech.command)
-        self.get_logger().info("Received Speech String")
-        self.charmie_speech.speak(speech)
-        flag = Bool()
-        flag.data = True
-        self.flag_speech_done_publisher.publish(flag)
-        print("Finished Speaking.")
-        self.get_logger().info("Finished Speaking")
-
+        response.success = success
+        response.message = message
+        return response
+    
 
 def main(args=None):
     rclpy.init(args=args)

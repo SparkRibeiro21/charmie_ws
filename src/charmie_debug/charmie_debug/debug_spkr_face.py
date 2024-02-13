@@ -74,10 +74,20 @@ class RestaurantMain():
         # VARS ...
         self.state = 0
     
-    def wait_for_end_of_speaking(self):
-        while not self.node.waited_for_end_of_speaking:
+    def speech_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+        
+        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_speaking:
             pass
         self.node.waited_for_end_of_speaking = False
+    
+
+    # def wait_for_end_of_speaking(self):
+    #     while not self.node.waited_for_end_of_speaking:
+    #         pass
+    #     self.node.waited_for_end_of_speaking = False
         
         
 
@@ -132,21 +142,44 @@ class RestaurantMain():
 
                 # self.node.call_speech_command_server("receptionist_second_guest", "", wait_for_end_of=True)
                 # self.node.call_speech_command_server(command="Welcome to the serve the breakfast task", wait_for_end_of=True)#, quick_voice=Fa)
-                self.node.call_speech_command_server(filename="receptionist_second_guest_john", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
-                self.wait_for_end_of_speaking()
-                print("Test Wait")
-
-
 
                 # self.node.call_speech_command_server("introduction_quick", "", wait_for_end_of=True)
                 # self.node.call_speech_command_server(command="I will start in a minute", wait_for_end_of=True)#, quick_voice=True)
-                self.node.call_speech_command_server(filename="recep_drink_red_win", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
-                self.wait_for_end_of_speaking()
+                
+
+                # self.node.call_speech_command_server(filename="receptionist_second_guest_john", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
+                # self.wait_for_end_of_speaking()
+                # print("Test Wait")
+
+                # self.node.call_speech_command_server(filename="recep_drink_red_win", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
+                # self.wait_for_end_of_speaking()
+                # print("Test Wait")
+
+
+
+
+                # self.speech_server(filename="receptionist_second_guest_john", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
+                self.speech_server(filename="", command="My favourite drink is pleno", wait_for_end_of=True, quick_voice=True)
+                # self.wait_for_end_of_speaking()
                 print("Test Wait")
 
 
+                # start = time.time()
+                # while time.time() < start + 4: # in seconds
+                #     pass
+                #     print(".", end='')
+                # print()
+
+
+                # self.speech_server(filename="recep_drink_red_wine", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
+                self.speech_server(filename="", command="The favourite drink of leia is water", wait_for_end_of=True, quick_voice=True)
+                # self.wait_for_end_of_speaking()
+                print("Test Wait")
+
+
+
                 start = time.time()
-                while time.time() < start + 3: # in seconds
+                while time.time() < start + 4: # in seconds
                     pass
                     # print(",", end='')
                 print()
