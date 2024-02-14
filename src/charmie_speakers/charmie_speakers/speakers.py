@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
 from charmie_interfaces.srv import SpeechCommand
+from example_interfaces.msg import String
 
 from TTS.utils.manage import ModelManager
 from TTS.utils.synthesizer import Synthesizer
@@ -15,14 +16,17 @@ import os
 import subprocess
 import re
 
-
-home = str(Path.home())
-midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
-complete_path = home+'/'+midpath+'/'
-
-
 class RobotSpeak():
-    def __init__(self):
+    def __init__(self, node):
+        # imports the main speakers node to publish face info
+        self.node = node
+
+        # info regarding the paths for the recorded files intended to be played
+        self.home = str(Path.home())
+        self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
+        self.complete_path = self.home+'/'+self.midpath+'/'
+
+        # TTS synthetiser models path 
         self.voice_models_path = "/home/utilizador/.local/lib/python3.10/site-packages/TTS/.models.json"
         self.model_manager = ModelManager(self.voice_models_path)
         pygame.init()
@@ -53,67 +57,88 @@ class RobotSpeak():
         )
 
 
+    # function for pre recorded commands 
     def play_command(self, filename):
         
-        # missing sending commands to face.............................................................................................
+        # if there is an audio
+        if os.path.isfile(self.complete_path+filename+".wav"):
+
         
-        if os.path.isfile(complete_path+filename+".txt"):
-            print("File sent to face!")
-        else:
-            print("File not sent to face!")
+            # if there is a txt file corresponding to the audio
+            if os.path.isfile(self.complete_path+filename+".txt"):
+
+                string_from_file = open(self.complete_path+filename+".txt", "r")
+
+                # send string to face to ease UI
+                str = String()
+                str.data = string_from_file.read()
+                print(str.data)
+                self.node.speech_to_face_publisher.publish(str)
+
+                message = "Text Sent to Face Node"
+                print("File sent to face!")
+            else:
+                message = "Text File not Found. NOT sent to face."
+                print("File not sent to face!")
 
 
-        if os.path.isfile(complete_path+filename+".wav"):
-            pygame.mixer.music.load(complete_path+filename+".wav")
+            # play the recorded file 
+            pygame.mixer.music.load(self.complete_path+filename+".wav")
             pygame.mixer.music.play()
             while pygame.mixer.music.get_busy():
                 pass
             success = True
-            message = ""
 
         else:
             success = False
             message = "File does not exist!!!"
 
+        # retrieves the sucess and message to be returned by the server, so the requester has info on what happened
         return success, message
 
 
-    def load_and_play_command(self, jenny_or_taco, command):
+    # function for commands to be created in the moment 
+    def load_and_play_command(self, command, jenny_or_taco):
         
         temp_filename = "temp.wav"
 
         if jenny_or_taco: # tacotron synthesizer
+            # creates the audio file from the command received
             init_time = time.time()
             outputs = self.syn_taco.tts(command)
-            self.syn_taco.save_wav(outputs, complete_path+temp_filename)
+            self.syn_taco.save_wav(outputs, self.complete_path+temp_filename)
             print(time.time()-init_time)
-            pygame.mixer.music.load(complete_path+temp_filename)
+            # plays the created audio file
+            pygame.mixer.music.load(self.complete_path+temp_filename)
             pygame.mixer.music.play()
             while pygame.mixer.music.get_busy():
                 pass
         else: # jenny synthesizer
+            # creates the audio file from the command received
             init_time = time.time()
             outputs = self.syn_jenny.tts(command)
-            self.syn_jenny.save_wav(outputs, complete_path+temp_filename)
+            self.syn_jenny.save_wav(outputs, self.complete_path+temp_filename)
             print(time.time()-init_time)
-            pygame.mixer.music.load(complete_path+temp_filename)
+            # plays the created audio file
+            pygame.mixer.music.load(self.complete_path+temp_filename)
             pygame.mixer.music.play()
             while pygame.mixer.music.get_busy():
                 pass
 
         return True, ""
 
-
+    # diagnostics function to know which speaker is being used by the PC - debug purposes
     def get_active_speaker_info(self):
         try:
+            # checks which the speakers list available 
             output = subprocess.check_output(["pacmd", "list-sinks"]).decode()
-
             active_port_match = re.search(r'active port:.*?<(.*?)>', output)
             if active_port_match:
                 active_port = active_port_match.group(1).strip().lower()
 
                 print(f"Active Port: {active_port}")
 
+                # returns the type of speakers going to be used 
                 if "headphones" in active_port:
                     return "External"
                 elif "speaker" in active_port:
@@ -131,48 +156,54 @@ class SpeakerNode(Node):
         super().__init__("Speaker")
         self.get_logger().info("Initialised CHARMIE Speaker Node")
 
-        # initialize models loading 
-        self.charmie_speech = RobotSpeak()
+        # initialize robot speech class with acess to node variables
+        self.charmie_speech = RobotSpeak(self)
 
-
+        # TOPICS:
+        # To publish the received strings to the face node
+        self.speech_to_face_publisher = self.create_publisher(String, "speech_to_face_command", 10)    
+        # Diagnostics for the speakers package
+        self.speakers_diagnostic_publisher = self.create_publisher(Bool, "speakers_diagnostic", 10) 
+        
+        # SERVICES:
+        # Main receive commads 
         self.server_speech_command = self.create_service(SpeechCommand, "speech_command", self.callback_speech_command) 
         self.get_logger().info("Speech Command Server has been started")
 
 
-
-        # Diagnostics for the speakers package
-        self.speakers_diagnostic_publisher = self.create_publisher(Bool, "speakers_diagnostic", 10)
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-
+        # Get Information regarding which speakers are being used 
         print("\nOutput Sound Devices:")
-
         active_speaker_type = self.charmie_speech.get_active_speaker_info()
 
+        flag_diagn = Bool()
+        # if a known system is being used 
         if active_speaker_type != "Unknown":
             print(f"The active speaker is: {active_speaker_type}")
             self.get_logger().info(f"The active speaker is: {active_speaker_type}")
             flag_diagn.data = True
+        # if an unkown system is being used
         else:
             print("Unable to determine the active speaker.")
             self.get_logger().info(f"The active speaker is: {active_speaker_type}")
             flag_diagn.data = False
 
+        # Sends information to diagnostics node
         self.speakers_diagnostic_publisher.publish(flag_diagn)
 
-        # print("Test mode")
-        # time.sleep(2)
-        #self.test()
+        # Test Function for some quick tests if necessary
+        # self.test()
 
 
+    # Test Function for some quick tests if necessary
     def test(self):
         self.charmie_speech.load_and_play_command(True, "What is your name and favourite drink?")
 
 
+    # Main Function regarding received commands
     def callback_speech_command(self, request, response):
         print("Received request")
 
+        # Type of service received: 
         # string filename # name of audio file to be played
         # string command  # if there is no filename, a command string can be sent to be played in real time 
         # bool quick_voice # if you do not want to use the pretty voice that takes more time to load, raising this flag uses the secondary quick voice
@@ -180,19 +211,21 @@ class SpeakerNode(Node):
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
 
+        # if filename comes empty it is automatically assumed that it is intended to use the load and play mode
         if request.filename == "":
             # speakers mode where received string must be synthesized and played now
-            success, message = self.charmie_speech.load_and_play_command(request.quick_voice, request.command)
+            success, message = self.charmie_speech.load_and_play_command(request.command, request.quick_voice)
         
         else:
             # speakers mode where received filename must be played
             success, message = self.charmie_speech.play_command(request.filename)
 
+        # returns whether the message was played and some informations regarding status
         response.success = success
         response.message = message
         return response
     
-
+# Standard ROS2 main function
 def main(args=None):
     rclpy.init(args=args)
     node = SpeakerNode()
