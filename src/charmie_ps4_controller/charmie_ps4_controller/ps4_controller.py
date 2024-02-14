@@ -2,7 +2,9 @@
 
 import rclpy
 from rclpy.node import Node
+
 from charmie_interfaces.msg import PS4Controller
+from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool
 
 import math
@@ -31,6 +33,11 @@ NUM_BUTTONS = 15
 
 # analogs
 # LR2
+
+
+CONTROL_TORSO = True
+CONTROL_WAIT_FOR_END_OF_NAVIGATION = True
+CONTROL_MOTORS = True
 
 pow15 = 32767
 
@@ -473,17 +480,23 @@ class ControllerNode(Node):
         super().__init__("PS4_Controller")
         self.get_logger().info("Initialised CHARMIE PS4 Controller Node")
 
-        self.controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
-        
         self.controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
 
-        self.create_timer(0.05, self.timer_callback)
-
+        self.controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
         self.ps4_diagnostic_publisher = self.create_publisher(Bool, "ps4_diagnostic", 10)
+        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
+        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
+        self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
+        
+        
+
+
+        self.create_timer(0.05, self.timer_callback)
 
         flag_diagn = Bool()
         flag_diagn.data = True
         self.ps4_diagnostic_publisher.publish(flag_diagn)
+        
 
         
     def timer_callback(self):
@@ -522,10 +535,100 @@ class ControllerNode(Node):
             ps_con.r3_xx = float(self.controller.R3xx)
             ps_con.r3_yy = float(self.controller.R3yy)
 
+            if ps_con.l3_dist < 0.1:
+                ps_con.l3_ang = 0.0
+
+            if ps_con.r3_dist < 0.1:
+                ps_con.r3_ang = 0.0
+
+            print(ps_con.arrow_up, ps_con.arrow_right, ps_con.arrow_down, ps_con.arrow_left, "|",
+                  ps_con.triangle, ps_con.circle, ps_con.cross, ps_con.square, "|",
+                  ps_con.l1, ps_con.r1, round(ps_con.l2, 1), round(ps_con.r2, 1), ps_con.l3, ps_con.r3, "|",
+                  ps_con.share, ps_con.ps, ps_con.options, "|",
+                  str(round(ps_con.l3_ang)).rjust(3), round(ps_con.l3_dist, 1), str(round(ps_con.l3_xx, 1)).rjust(4), str(round(ps_con.l3_yy, 1)).rjust(4), "|", 
+                  str(round(ps_con.r3_ang)).rjust(3), round(ps_con.r3_dist, 1), str(round(ps_con.r3_xx, 1)).rjust(4), str(round(ps_con.r3_yy, 1)).rjust(4)
+                  )
+
             self.controller_publisher.publish(ps_con)
             
+            # control code
+            self.control_robot(ps_con)
+
+            # gets values ready for next iteration
             self.controller.every_button_update()
             self.controller.values_updated = False
+    
+
+    def control_robot(self, ps4_controller):
+
+        if CONTROL_TORSO:
+            pos = Pose2D()
+            if ps4_controller.arrow_up >= 2:
+                pos.x = float(1)
+                # print("LEGS UP")
+            elif ps4_controller.arrow_down >= 2:
+                pos.x = float(-1)
+                # print("LEGS DOWN")
+            else:
+                pos.x = float(0)
+                # print("LEGS STOP")
+
+            if ps4_controller.arrow_right >= 2:
+                pos.y = float(1)
+                # print("TORSO UP")
+            elif ps4_controller.arrow_left >= 2:
+                pos.y = float(-1)
+                # print("TORSO DOWN")
+            else:
+                pos.y = float(0)
+                # print("TORSO STOP")
+
+            self.torso_test_publisher.publish(pos)
+
+
+        if CONTROL_WAIT_FOR_END_OF_NAVIGATION:
+            pos = Bool()
+            pos.data = True
+            if ps4_controller.options:
+                self.flag_pos_reached_publisher.publish(pos)
+            # print("NAVIGATION DONE")
+
+
+        if CONTROL_MOTORS:
+            omni_move = Vector3()
+            if ps4_controller.l3_dist >= 0.1:
+                omni_move.x = ps4_controller.l3_ang
+                omni_move.y = ps4_controller.l3_dist*100/5
+            else:
+                omni_move.x = 0.0
+                omni_move.y = 0.0
+
+            if ps4_controller.r3_dist >= 0.1:
+                omni_move.z = 100 + ps4_controller.r3_xx*10
+            else:
+                omni_move.z = 100.0
+                       
+            self.omni_move_publisher.publish(omni_move)
+
+            
+
+        # DONE - motores movimentacao
+    
+        # DONE - torso
+    
+        #      - neck
+    
+        # DONE - wait for end of navigation
+    
+        #      - rgb
+    
+        #      - speaker
+
+        #      - arm
+    
+
+    
+
 
 
 def thread_controller(node):
