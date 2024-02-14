@@ -17,10 +17,10 @@ complete_path = home+'/'+midpath+'/'
 names_list = ["Adam", "Paris", "William"]
 drinks_list = ["milk", "orange juice", "red wine"]
 
-MODE = "RECEPTIONIST"
+MODE = "STANDARD"
 
-COMMAND = "Leia."
-FILENAME = "leia"
+COMMAND = "Oops, there seems to be a problem. Did you try to trick me? Let's try again."
+FILENAME = "arm_error_receive_object"
 
 
 class RobotSpeak():
