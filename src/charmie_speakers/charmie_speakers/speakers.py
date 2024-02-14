@@ -21,6 +21,14 @@ class RobotSpeak():
         # imports the main speakers node to publish face info
         self.node = node
 
+        # starts pygame, library that reproduces audio files
+        pygame.init()
+
+        # automatically sets the computer speakers to 100% of the volume.
+        # it does not work with over amplification. 
+        # So in loud environments remove the following line and manually set the volume to max
+        pygame.mixer.music.set_volume(1.0) 
+
         # info regarding the paths for the recorded files intended to be played
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
@@ -29,13 +37,6 @@ class RobotSpeak():
         # TTS synthetiser models path 
         self.voice_models_path = "/home/utilizador/.local/lib/python3.10/site-packages/TTS/.models.json"
         self.model_manager = ModelManager(self.voice_models_path)
-        pygame.init()
-
-        # automatically sets the computer speakers to 100% of the volume.
-        # it does not work with over amplification. 
-        # So in loud environments remove the following line and manually set the volume to max
-        pygame.mixer.music.set_volume(1.0) 
-
 
         # good quality but slow render voice
         # self.model_name = "jenny"

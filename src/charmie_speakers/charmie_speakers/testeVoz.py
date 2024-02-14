@@ -1,3 +1,7 @@
+# THE GOAL OF THIS PYTHON FILE:
+# To test all TTS voices available and select which are intended to be used
+# In the main code is used jenny(27) as the main one and tacotron2-DDC_ph(12) as the secondary.
+
 # this piece of code is just a bunch of examples when testing the new coqui-ai
 # also there are a list of all the voices to be compared
 # check for more info: https://github.com/coqui-ai/TTS
@@ -22,6 +26,7 @@ wav = tts.tts(text="Hello world!", speaker_wav="my/cloning/audio.wav", language=
 # Text to speech to a file
 tts.tts_to_file(text="Hello world!", speaker_wav="my/cloning/audio.wav", language="en", file_path="output.wav")
 """
+
 
 
 
