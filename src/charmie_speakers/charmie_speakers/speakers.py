@@ -88,6 +88,13 @@ class RobotSpeak():
             pygame.mixer.music.play()
             while pygame.mixer.music.get_busy():
                 pass
+
+            # sends empty string to tell face that the audio has finished to be played
+            str = String()
+            str.data = ""
+            print(str.data)
+            self.node.speech_to_face_publisher.publish(str)
+
             success = True
 
         else:
@@ -104,27 +111,56 @@ class RobotSpeak():
         temp_filename = "temp.wav"
 
         if jenny_or_taco: # tacotron synthesizer
+
             # creates the audio file from the command received
             init_time = time.time()
             outputs = self.syn_taco.tts(command)
             self.syn_taco.save_wav(outputs, self.complete_path+temp_filename)
             print(time.time()-init_time)
+
+            # send string to face to ease UI
+            str = String()
+            str.data = command
+            print(str.data)
+            self.node.speech_to_face_publisher.publish(str)
+
             # plays the created audio file
             pygame.mixer.music.load(self.complete_path+temp_filename)
             pygame.mixer.music.play()
             while pygame.mixer.music.get_busy():
                 pass
+
+            # sends empty string to tell face that the audio has finished to be played
+            str = String()
+            str.data = ""
+            print(str.data)
+            self.node.speech_to_face_publisher.publish(str)
+        
         else: # jenny synthesizer
+
             # creates the audio file from the command received
             init_time = time.time()
             outputs = self.syn_jenny.tts(command)
             self.syn_jenny.save_wav(outputs, self.complete_path+temp_filename)
             print(time.time()-init_time)
+
+            # send string to face to ease UI
+            str = String()
+            str.data = command
+            print(str.data)
+            self.node.speech_to_face_publisher.publish(str)
+
             # plays the created audio file
             pygame.mixer.music.load(self.complete_path+temp_filename)
             pygame.mixer.music.play()
             while pygame.mixer.music.get_busy():
                 pass
+
+            # sends empty string to tell face that the audio has finished to be played
+            str = String()
+            str.data = ""
+            print(str.data)
+            self.node.speech_to_face_publisher.publish(str)
 
         return True, ""
 
@@ -162,7 +198,7 @@ class SpeakerNode(Node):
 
         # TOPICS:
         # To publish the received strings to the face node
-        self.speech_to_face_publisher = self.create_publisher(String, "speech_to_face_command", 10)    
+        self.speech_to_face_publisher = self.create_publisher(String, "display_command_face", 10)    
         # Diagnostics for the speakers package
         self.speakers_diagnostic_publisher = self.create_publisher(Bool, "speakers_diagnostic", 10) 
         

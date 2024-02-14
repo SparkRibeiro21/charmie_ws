@@ -158,8 +158,8 @@ class RestaurantMain():
 
 
 
-                self.speech_server(filename="introduction_full", command="", wait_for_end_of=True)#, quick_voice=Fa)
-                # self.speech_server(filename="", command="My favourite drink is pleno", wait_for_end_of=True, quick_voice=True)
+                # self.speech_server(filename="introduction_full", command="", wait_for_end_of=True)#, quick_voice=Fa)
+                self.speech_server(filename="", command="My favourite drink is pleno", wait_for_end_of=True, quick_voice=False)
                 # self.wait_for_end_of_speaking()
                 # print("Test Wait")
 
@@ -171,8 +171,8 @@ class RestaurantMain():
                 # print()
 
 
-                self.speech_server(filename="music_pre_start", command="", wait_for_end_of=True)#, quick_voice=Fa)
-                # self.speech_server(filename="", command="The favourite drink of leia is water", wait_for_end_of=True, quick_voice=True)
+                # self.speech_server(filename="music_pre_start", command="", wait_for_end_of=True)#, quick_voice=Fa)
+                self.speech_server(filename="", command="The favourite drink of leia is water", wait_for_end_of=True, quick_voice=False)
                 # self.wait_for_end_of_speaking()
                 # print("Test Wait")
 
