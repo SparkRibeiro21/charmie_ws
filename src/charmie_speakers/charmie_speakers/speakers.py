@@ -30,12 +30,14 @@ class RobotSpeak():
         pygame.mixer.music.set_volume(1.0) 
 
         # info regarding the paths for the recorded files intended to be played
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
         self.complete_path = self.home+'/'+self.midpath+'/'
 
         # TTS synthetiser models path 
-        self.voice_models_path = "/home/utilizador/.local/lib/python3.10/site-packages/TTS/.models.json"
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.voice_models_path = self.home+"/.local/lib/python3.10/site-packages/TTS/.models.json"
         self.model_manager = ModelManager(self.voice_models_path)
 
         # good quality but slow render voice
