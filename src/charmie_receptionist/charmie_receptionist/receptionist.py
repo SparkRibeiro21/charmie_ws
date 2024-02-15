@@ -92,11 +92,12 @@ class ReceptionistNode(Node):
         self.rgb_ctr = 2
         self.rgb = Int16()
 
+        
+
         #Arena 1
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.robot_t = 0.0
-
 
         #Arena 1
         #self.begin_coordinates = (0.0, 3.0) # <----- CHANGE ME
