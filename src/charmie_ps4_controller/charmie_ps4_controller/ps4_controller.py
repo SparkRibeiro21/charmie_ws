@@ -508,10 +508,10 @@ class ControllerNode(Node):
         flag_diagn.data = True
         self.ps4_diagnostic_publisher.publish(flag_diagn)
 
-        neck_pos = NeckPosition()
-        neck_pos.pan = 180
-        neck_pos.tilt = 180
-        self.neck_position_publisher.publish(neck_pos)
+        self.neck_pos = NeckPosition()
+        self.neck_pos.pan = 180.0
+        self.neck_pos.tilt = 180.0
+        self.neck_position_publisher.publish(self.neck_pos)
     
 
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
@@ -692,32 +692,38 @@ class ControllerNode(Node):
                 self.speech_server(filename="receptionist_question", wait_for_end_of=False)
                 
 
-
         if CONTROL_NECK:
+            pass
             
-            neck_inc = 5
-            if ps4_controller.square >= 2:
-                neck_pos.pan -= neck_inc
-                if neck_pos.pan < 0:
-                    neck_pos.pan = 0
-            elif ps4_controller.circle >= 2:
-                neck_pos.pan += neck_inc
-                if neck_pos.pan > 359:
-                    neck_pos.pan = 359
+            neck_inc = 5.0
+            if ps4_controller.circle >= 2:
+                self.neck_pos.pan -= neck_inc
+                if self.neck_pos.pan < 0.0:
+                    self.neck_pos.pan = 0.0
+                self.neck_position_publisher.publish(self.neck_pos)
+                print(self.neck_pos)
+
+            elif ps4_controller.square >= 2:
+                self.neck_pos.pan += neck_inc
+                if self.neck_pos.pan > 359.0:
+                    self.neck_pos.pan = 359.0
+                self.neck_position_publisher.publish(self.neck_pos)
+                print(self.neck_pos)
 
             if ps4_controller.cross >= 2:
-                neck_pos.tilt -= neck_inc
-                if neck_pos.tilt < 120:
-                    neck_pos.tilt = 120
-            elif ps4_controller.triangle >= 2:
-                neck_pos.tilt += neck_inc
-                if neck_pos.tilt > 235:
-                    neck_pos.tilt = 235
+                self.neck_pos.tilt -= neck_inc
+                if self.neck_pos.tilt < 120.0:
+                    self.neck_pos.tilt = 120.0
+                self.neck_position_publisher.publish(self.neck_pos)
+                print(self.neck_pos)
 
-        neck_pos = NeckPosition()
-        neck_pos.pan = 180
-        neck_pos.tilt = 180
-        self.neck_position_publisher.publish(neck_pos)
+            elif ps4_controller.triangle >= 2:
+                self.neck_pos.tilt += neck_inc
+                if self.neck_pos.tilt > 235.0:
+                    self.neck_pos.tilt = 235.0
+                self.neck_position_publisher.publish(self.neck_pos)
+                print(self.neck_pos)
+            
 
         if CONTROL_ARM:
             pass

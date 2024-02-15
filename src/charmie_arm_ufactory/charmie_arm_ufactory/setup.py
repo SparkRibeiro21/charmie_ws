@@ -1,8 +1,6 @@
 from setuptools import setup
-import os
-from glob import glob
 
-package_name = 'charmie_demonstration'
+package_name = 'charmie_arm_ufactory'
 
 setup(
     name=package_name,
@@ -12,19 +10,17 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='utilizador',
-    maintainer_email='tiagoribeiro80@gmail.com',
+    maintainer='charmie',
+    maintainer_email='charmie@todo.todo',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		"welcome_demonstration = charmie_demonstration.welcome_demonstration:main",
-		"pick_place_demonstration = charmie_demonstration.pick_place_demonstration:main"
+            "arm_ufactory = charmie_arm_ufactory.arm_ufactory:main"
         ],
     },
 )
