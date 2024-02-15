@@ -3,9 +3,10 @@
 import rclpy
 from rclpy.node import Node
 
-from charmie_interfaces.msg import PS4Controller
+from charmie_interfaces.msg import PS4Controller, NeckPosition
+from charmie_interfaces.srv import SpeechCommand
 from geometry_msgs.msg import Pose2D, Vector3
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Int16
 
 import math
 import numpy as np
@@ -34,10 +35,16 @@ NUM_BUTTONS = 15
 # analogs
 # LR2
 
+rgb_demonstration = [100, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 100, 101, 102, 103, 104, 105, 106, 255]
+
 
 CONTROL_TORSO = True
 CONTROL_WAIT_FOR_END_OF_NAVIGATION = True
 CONTROL_MOTORS = True
+CONTROL_RGB = True
+CONTROL_SPEAKERS = True
+CONTROL_NECK = True
+CONTROL_ARM = True
 
 pow15 = 32767
 
@@ -487,16 +494,62 @@ class ControllerNode(Node):
         self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
         self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
+        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
+        self.client = self.create_client(SpeechCommand, "speech_command")# Neck
+        self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         
-        
-
 
         self.create_timer(0.05, self.timer_callback)
+
+        self.rgb_demo_index = 0
+        self.waited_for_end_of_speaking = False # not used, but here to be in conformity with other uses
 
         flag_diagn = Bool()
         flag_diagn.data = True
         self.ps4_diagnostic_publisher.publish(flag_diagn)
+
+        neck_pos = NeckPosition()
+        neck_pos.pan = 180
+        neck_pos.tilt = 180
+        self.neck_position_publisher.publish(neck_pos)
+    
+
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+        request = SpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+        request.quick_voice = quick_voice
+    
+        future = self.client.call_async(request)
+        print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_speech_command)
+
+    def callback_call_speech_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success)+str(response.message))
+            # print("oi")
+            # time.sleep(3)
+            self.waited_for_end_of_speaking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+    def speech_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         
+        self.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
+        
+        if wait_for_end_of:
+          while not self.waited_for_end_of_speaking:
+            pass
+        self.waited_for_end_of_speaking = False
 
         
     def timer_callback(self):
@@ -611,25 +664,73 @@ class ControllerNode(Node):
             self.omni_move_publisher.publish(omni_move)
 
             
+        if CONTROL_RGB:
+            rgb_mode = Int16()
 
-        # DONE - motores movimentacao
-    
+            if ps4_controller.r1 == 2:
+                self.rgb_demo_index+=1
+                if self.rgb_demo_index >= len(rgb_demonstration):
+                    self.rgb_demo_index-=len(rgb_demonstration)
+
+                print(self.rgb_demo_index)
+                rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                self.rgb_mode_publisher.publish(rgb_mode)
+            
+            elif ps4_controller.l1 == 2:
+                self.rgb_demo_index-=1
+                if self.rgb_demo_index < 0:
+                    self.rgb_demo_index+=len(rgb_demonstration)
+
+                print(self.rgb_demo_index)
+                rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                self.rgb_mode_publisher.publish(rgb_mode)
+
+        if CONTROL_SPEAKERS:
+            if ps4_controller.r3 == 2:
+                self.speech_server(filename="introduction_full", wait_for_end_of=False)
+            elif ps4_controller.l3 == 2:
+                self.speech_server(filename="receptionist_question", wait_for_end_of=False)
+                
+
+
+        if CONTROL_NECK:
+            
+            neck_inc = 5
+            if ps4_controller.square >= 2:
+                neck_pos.pan -= neck_inc
+                if neck_pos.pan < 0:
+                    neck_pos.pan = 0
+            elif ps4_controller.circle >= 2:
+                neck_pos.pan += neck_inc
+                if neck_pos.pan > 359:
+                    neck_pos.pan = 359
+
+            if ps4_controller.cross >= 2:
+                neck_pos.tilt -= neck_inc
+                if neck_pos.tilt < 120:
+                    neck_pos.tilt = 120
+            elif ps4_controller.triangle >= 2:
+                neck_pos.tilt += neck_inc
+                if neck_pos.tilt > 235:
+                    neck_pos.tilt = 235
+
+        neck_pos = NeckPosition()
+        neck_pos.pan = 180
+        neck_pos.tilt = 180
+        self.neck_position_publisher.publish(neck_pos)
+
+        if CONTROL_ARM:
+            pass
+
+
+        # DONE - motores movimentacao    
         # DONE - torso
-    
-        #      - neck
-    
         # DONE - wait for end of navigation
-    
-        #      - rgb
-    
-        #      - speaker
-
+        # DONE - rgb
+        # DONE - speakers
+        #      - neck
         #      - arm
     
-
-    
-
-
 
 def thread_controller(node):
     node.controller.listen()
