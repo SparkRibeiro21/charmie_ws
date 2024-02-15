@@ -1,0 +1,24 @@
+# This format is suitable for the following services
+#   - set_servo_angle
+#   - set_servo_angle_j
+
+# set_servo_angle/set_servo_angle_j
+float32[] angles
+float32 speed       0
+float32 acc         0
+float32 mvtime      0
+
+# set_servo_angle
+bool wait           false
+float32 timeout     -1
+
+# set_servo_angle
+float32 radius      -1
+
+# set_servo_angle
+bool relative       false
+
+---
+
+int16 ret
+string message
