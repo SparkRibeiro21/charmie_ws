@@ -16,6 +16,7 @@ Python: 3.10
 ROS2: Humble
 
 Arm (UFACTORY xArm 6): [Github Repository](https://github.com/xArm-Developer/xarm_ros2/tree/humble?tab=readme-ov-file)
+To setup the arm in your workspace, please follow the preparation steps on the repository above. 
 
 ## :robot: RoboCup@Home Qualification Videos
 
