@@ -24,13 +24,13 @@ To setup the arm in your workspace, please follow the preparation steps on the x
 
 [![Video Title](https://img.youtube.com/vi/RNr9uOhubqw/0.jpg)](https://www.youtube.com/watch?v=RNr9uOhubqw)
 
-https://m.youtube.com/watch?v=RNr9uOhubqw
+[Youtube Link for 2024 Qualification Video](https://m.youtube.com/watch?v=RNr9uOhubqw)
 
 ### RoboCup@Home 2023 :fr:
 
 [![Video Title](https://img.youtube.com/vi/gNx9OYljlcw/0.jpg)](https://www.youtube.com/watch?v=gNx9OYljlcw)
 
-https://m.youtube.com/watch?v=gNx9OYljlcw
+[Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=gNx9OYljlcw)
 
 ## :trophy: Results
 
