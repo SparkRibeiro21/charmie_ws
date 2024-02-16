@@ -229,6 +229,10 @@ class SpeakerNode(Node):
         # Sends information to diagnostics node
         self.speakers_diagnostic_publisher.publish(flag_diagn)
 
+        # Initial Speaking "Hello" for debug purposes
+        self.charmie_speech.play_command("introduction_hello") 
+
+
         # Test Function for some quick tests if necessary
         # self.test()
 
