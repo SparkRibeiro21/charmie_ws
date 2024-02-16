@@ -10,10 +10,9 @@
 ## :rocket: Requirements
 
 OS: Ubuntu 22.04 LTS
-
 ROS2: Humble
-
 Python: 3.10
+[123](https://github.com/xArm-Developer/xarm_ros2/tree/humble?tab=readme-ov-file)
 
 ## :robot: RoboCup@Home Qualification Videos
 
