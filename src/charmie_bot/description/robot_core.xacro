@@ -65,6 +65,7 @@
     </gazebo>
 
     <!--LOWER BODY-->
+    <!--medidas do lower body começam no topo do chassis-->
     <joint name="lower_body_joint" type="fixed">
         <parent link="base_link"/>
         <child link="lower_body_link"/>
@@ -97,6 +98,9 @@
     </gazebo>
 
     <!--UPPER BODY-->
+    <!--para dar altura do body de 114 cm desde a parte de baixo do chassis até ao topo do tronco,
+    necessito de considerar a altura do chassis + a altura da box do lower body para ao somar este
+    valor me dar os 114 cm-->
     <joint name="upper_body_joint" type="fixed">
         <parent link="lower_body_link"/>
         <child link="upper_body_link"/>
@@ -107,24 +111,222 @@
         
     <link name="upper_body_link">
         <visual>
-            <origin xyz="0 0 0.25" rpy="0 0 ${pi/2}"/>
+            <origin xyz="0 0 0.27" rpy="0 0 ${pi/2}"/>
             <geometry>
-                <box size="0.2 0.05 0.50"/>
+                <box size="0.2 0.11 0.54"/>
             </geometry>
-            <material name="white"/>
+            <material name="red"/>
         </visual>
         <collision>
-            <origin xyz="0 0 0.25" rpy="0 0 ${pi/2}"/>
+            <origin xyz="0 0 0.27" rpy="0 0 ${pi/2}"/>
             <geometry>
-                <box size="0.2 0.05 0.50"/>
+                <box size="0.2 0.11 0.54"/>
             </geometry>
         </collision>
-        <xacro:inertial_box mass="0.03" x="0.2" y="0.05" z="0.50">
-            <origin xyz="0 0 0.25" rpy="0 0 0"/>
+        <xacro:inertial_box mass="0.03" x="0.2" y="0.11" z="0.54">
+            <origin xyz="0 0 0.27" rpy="0 0 0"/>
         </xacro:inertial_box>
     </link>
 
     <gazebo reference="upper_body_link">
+        <material>Gazebo/White</material>
+    </gazebo>
+
+
+    <!--UPPER BACK CHASSIS-->
+    <joint name="upper_back_chassis_joint" type="fixed">
+        <parent link="chassi_link"/>
+        <child link="upper_back_chassis_link"/>
+        <origin xyz="0 0 0.365" rpy="0 0 0"/>
+        <!-- <axis xyz="0 1 0"/>
+        <limit lower="0.1745" upper="1.2217" velocity="100" effort="100"/> -->
+    </joint>
+        
+    <link name="upper_back_chassis_link">
+        <visual>
+            <origin xyz="-0.13 0 0" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <box size="0.525 0.26 0.245"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <collision>
+            <origin xyz="-0.13 0 0" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <box size="0.525 0.26 0.245"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.03" x="0.525" y="0.26" z="0.245">
+            <origin xyz="-0.13 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <gazebo reference="upper_back_chassis_link">
+        <material>Gazebo/White</material>
+    </gazebo>
+
+
+    <!--UPPER FRONT CHASSIS // TABULEIRO-->
+    <joint name="upper_front_chassis_joint" type="fixed">
+        <parent link="upper_back_chassis_link"/>
+        <child link="upper_front_chassis_link"/>
+        <origin xyz="0 0 -0.045" rpy="0 0 0"/>
+        <!-- <axis xyz="0 1 0"/>
+        <limit lower="0.1745" upper="1.2217" velocity="100" effort="100"/> -->
+    </joint>
+        
+    <link name="upper_front_chassis_link">
+        <visual>
+            <origin xyz="0.1 0 0" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <box size="0.525 0.2 0.025"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <origin xyz="0.1 0 0" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <box size="0.525 0.2 0.025"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.03" x="0.525" y="0.2" z="0.025">
+            <origin xyz="0.1 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <gazebo reference="upper_front_chassis_link">
+        <material>Gazebo/White</material>
+    </gazebo>
+
+
+    <!--BOTTOM LINEAR ACTUATOR CHASSIS-->
+    <joint name="linear_actuator_joint" type="fixed">
+        <parent link="upper_front_chassis_link"/>
+        <child link="linear_actuator_link"/>
+        <origin xyz="0.04 0 0.0" rpy="0 0 0"/>
+        <!-- <axis xyz="0 1 0"/>
+        <limit lower="0.1745" upper="1.2217" velocity="100" effort="100"/> -->
+    </joint>
+        
+    <link name="linear_actuator_link">
+        <visual>
+            <origin xyz="0.04 0 0.095" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <cylinder radius="0.04" length="0.19"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <collision>
+            <origin xyz="0.04 0 0.095" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <cylinder radius="0.04" length="0.19"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="0.03" length="0.19" radius="0.04">
+            <origin xyz="0.04 0 0.095" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="linear_actuator_link">
+        <material>Gazebo/White</material>
+    </gazebo>
+
+
+    <!--TOP LINEAR ACTUATOR CHASSIS-->
+    <joint name="top_linear_actuator_joint" type="fixed">
+        <parent link="linear_actuator_link"/>
+        <child link="top_linear_actuator_link"/>
+        <origin xyz="0 0 0.34" rpy="0 0 0"/>
+        <!-- <axis xyz="0 1 0"/>
+        <limit lower="0.1745" upper="1.2217" velocity="100" effort="100"/> -->
+    </joint>
+        
+    <link name="top_linear_actuator_link">
+        <visual>
+            <origin xyz="0.02 0 0" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <cylinder radius="0.02" length="0.31"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <collision>
+            <origin xyz="0.02 0 0" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <cylinder radius="0.02" length="0.31"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="0.03" length="0.31" radius="0.02">
+            <origin xyz="0.02 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="top_linear_actuator_link">
+        <material>Gazebo/White</material>
+    </gazebo>
+
+
+    <!--MICROFONE-->
+    <joint name="microfone_joint" type="fixed">
+        <parent link="top_linear_actuator_link"/>
+        <child link="microfone_link"/>
+        <origin xyz="0.045 0 0.1775" rpy="0 0 0"/>
+        <!-- <axis xyz="0 1 0"/>
+        <limit lower="0.1745" upper="1.2217" velocity="100" effort="100"/> -->
+    </joint>
+        
+    <link name="microfone_link">
+        <visual>
+            <origin xyz="0.0 0 0" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <cylinder radius="0.045" length="0.09"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <origin xyz="0.0 0 0" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <cylinder radius="0.045" length="0.09"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="0.03" length="0.09" radius="0.045">
+            <origin xyz="0.0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="microfone_link">
+        <material>Gazebo/White</material>
+    </gazebo>
+
+
+    <!--COLUNAS-->
+    <joint name="colunas_joint" type="fixed">
+        <parent link="upper_back_chassis_link"/>
+        <child link="colunas_link"/>
+        <origin xyz="-0.050 0 0.56" rpy="0 0 0"/>
+        <!-- <axis xyz="0 1 0"/>
+        <limit lower="0.1745" upper="1.2217" velocity="100" effort="100"/> -->
+    </joint>
+        
+    <link name="colunas_link">
+        <visual>
+            <origin xyz="0.0 0 0" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <box size="0.31 0.07 0.075"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <collision>
+            <origin xyz="0.0 0 0" rpy="0 0 ${pi/2}"/>
+            <geometry>
+                <box size="0.31 0.07 0.075"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.03" x="0.31" y="0.07" z="0.075">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <gazebo reference="colunas_link">
         <material>Gazebo/White</material>
     </gazebo>
 
