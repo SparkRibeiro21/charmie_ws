@@ -35,6 +35,12 @@ NUM_BUTTONS = 15
 # analogs
 # LR2
 
+# Constant Vatiables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_4  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+
+
 rgb_demonstration = [100, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 100, 101, 102, 103, 104, 105, 106, 255]
 
 
@@ -512,6 +518,8 @@ class ControllerNode(Node):
         self.neck_pos.pan = 180.0
         self.neck_pos.tilt = 180.0
         self.neck_position_publisher.publish(self.neck_pos)
+
+        self.watchdog_timer = 0
     
 
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
@@ -553,8 +561,11 @@ class ControllerNode(Node):
 
         
     def timer_callback(self):
+
         ps_con = PS4Controller()
+
         if self.controller.values_updated == True:
+            self.watchdog_timer = 0
 
             ps_con.arrow_up = int(self.controller.button_state(self.controller.ARROW_UP))
             ps_con.arrow_right = int(self.controller.button_state(self.controller.ARROW_RIGHT))
@@ -599,7 +610,7 @@ class ControllerNode(Node):
                   ps_con.l1, ps_con.r1, round(ps_con.l2, 1), round(ps_con.r2, 1), ps_con.l3, ps_con.r3, "|",
                   ps_con.share, ps_con.ps, ps_con.options, "|",
                   str(round(ps_con.l3_ang)).rjust(3), round(ps_con.l3_dist, 1), str(round(ps_con.l3_xx, 1)).rjust(4), str(round(ps_con.l3_yy, 1)).rjust(4), "|", 
-                  str(round(ps_con.r3_ang)).rjust(3), round(ps_con.r3_dist, 1), str(round(ps_con.r3_xx, 1)).rjust(4), str(round(ps_con.r3_yy, 1)).rjust(4)
+                  str(round(ps_con.r3_ang)).rjust(3), round(ps_con.r3_dist, 1), str(round(ps_con.r3_xx, 1)).rjust(4), str(round(ps_con.r3_yy, 1)).rjust(4), "|"
                   )
 
             self.controller_publisher.publish(ps_con)
@@ -610,6 +621,36 @@ class ControllerNode(Node):
             # gets values ready for next iteration
             self.controller.every_button_update()
             self.controller.values_updated = False
+
+        else:
+            self.watchdog_timer += 1
+
+
+        if self.watchdog_timer >= 40: # since the ps4 controller checks every 50 ms. 20*50ms is 1 second. 40 is 2 seconds.
+            # this is set if in any kind of emergency the controller stops communicating. 
+            # If the system continues with the last received variables it may result in physical damages.
+            # Therefore, to every moving part that may continue moving is set stop commands
+            self.watchdog_timer = 0
+
+            # sends command to change RGB value
+            rgb_mode = Int16()
+            rgb_mode.data = RED+HALF_ROTATE
+            self.rgb_mode_publisher.publish(rgb_mode)
+
+            # sends command to stop torso
+            pos = Pose2D()
+            pos.x = float(0)
+            pos.y = float(0)
+            self.torso_test_publisher.publish(pos)
+
+            # sends commands to stop movement platform
+            omni_move = Vector3()
+            omni_move.x = 0.0
+            omni_move.y = 0.0
+            omni_move.z = 100.0
+            self.omni_move_publisher.publish(omni_move)
+
+        print(self.watchdog_timer)
     
 
     def control_robot(self, ps4_controller):
@@ -618,34 +659,25 @@ class ControllerNode(Node):
             pos = Pose2D()
             if ps4_controller.arrow_up >= 2:
                 pos.x = float(1)
-                # print("LEGS UP")
             elif ps4_controller.arrow_down >= 2:
                 pos.x = float(-1)
-                # print("LEGS DOWN")
             else:
                 pos.x = float(0)
-                # print("LEGS STOP")
 
             if ps4_controller.arrow_right >= 2:
                 pos.y = float(1)
-                # print("TORSO UP")
             elif ps4_controller.arrow_left >= 2:
                 pos.y = float(-1)
-                # print("TORSO DOWN")
             else:
                 pos.y = float(0)
-                # print("TORSO STOP")
 
             self.torso_test_publisher.publish(pos)
-
 
         if CONTROL_WAIT_FOR_END_OF_NAVIGATION:
             pos = Bool()
             pos.data = True
             if ps4_controller.options:
                 self.flag_pos_reached_publisher.publish(pos)
-            # print("NAVIGATION DONE")
-
 
         if CONTROL_MOTORS:
             omni_move = Vector3()
@@ -663,7 +695,6 @@ class ControllerNode(Node):
                        
             self.omni_move_publisher.publish(omni_move)
 
-            
         if CONTROL_RGB:
             rgb_mode = Int16()
 
@@ -691,10 +722,7 @@ class ControllerNode(Node):
             elif ps4_controller.l3 == 2:
                 self.speech_server(filename="receptionist_question", wait_for_end_of=False)
                 
-
         if CONTROL_NECK:
-            pass
-            
             neck_inc = 5.0
             if ps4_controller.circle >= 2:
                 self.neck_pos.pan -= neck_inc
@@ -724,19 +752,9 @@ class ControllerNode(Node):
                 self.neck_position_publisher.publish(self.neck_pos)
                 print(self.neck_pos)
             
-
         if CONTROL_ARM:
             pass
 
-
-        # DONE - motores movimentacao    
-        # DONE - torso
-        # DONE - wait for end of navigation
-        # DONE - rgb
-        # DONE - speakers
-        #      - neck
-        #      - arm
-    
 
 def thread_controller(node):
     node.controller.listen()
