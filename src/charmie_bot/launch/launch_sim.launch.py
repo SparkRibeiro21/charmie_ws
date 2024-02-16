@@ -45,6 +45,12 @@ def generate_launch_description():
                        output='screen',
                        parameters=[{'use_sim_time': True}])
     
+    joint_state_gui = Node(package='joint_state_publisher_gui',
+                       executable='joint_state_publisher_gui',
+                       name='joint_state_publisher_gui',
+                       output='screen',
+                       parameters=[{'use_sim_time': True}])
+    
     joint_state_broadcaster_spawner = Node(
                         package="controller_manager",
                         executable="spawner.py",
@@ -62,5 +68,5 @@ def generate_launch_description():
         #arm_rviz_launch,
         gazebo,
         spawn_entity,
-        joint_state 
+        joint_state_gui
     ])
