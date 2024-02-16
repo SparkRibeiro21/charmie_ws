@@ -14,36 +14,8 @@ import numpy as np
 from pyPS4Controller.controller import Controller
 import threading
 
-NUM_BUTTONS = 15
 
-# ARROW_UP = 0
-# ARROW_RIGHT = 1
-# ARROW_DOWN = 2
-# ARROW_LEFT = 3
-# TRIANGLE = 4
-# CIRCLE = 5
-# CROSS = 6
-# SQUARE = 7
-# L1 = 8
-# R1 = 9
-# L3 = 10
-# R3 = 11
-# OPTIONS = 12
-# SHARE = 13
-# PS = 14
-
-# analogs
-# LR2
-
-# Constant Vatiables to ease RGB_MODE coding
-RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
-SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_4  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
-
-
-rgb_demonstration = [100, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 100, 101, 102, 103, 104, 105, 106, 255]
-
-
+# CONTROL VARIABLES, this is waht defines which modules will the ps4 controller control
 CONTROL_TORSO = True
 CONTROL_WAIT_FOR_END_OF_NAVIGATION = True
 CONTROL_MOTORS = True
@@ -52,7 +24,13 @@ CONTROL_SPEAKERS = True
 CONTROL_NECK = True
 CONTROL_ARM = True
 
-pow15 = 32767
+# Constant Vatiables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_4  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+
+# rgb leds used for demonstration, can be added any other necessary for demonstration
+rgb_demonstration = [100, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 100, 101, 102, 103, 104, 105, 106, 255]
 
 
 class MyController(Controller):
@@ -80,8 +58,11 @@ class MyController(Controller):
         self.L2dist_ant = 0.0
         self.R2dist_ant = 0.0
 
+        NUM_BUTTONS = 15
         self.buttons = np.zeros(NUM_BUTTONS, dtype=np.int8)
         self.buttons_ant = np.zeros(NUM_BUTTONS, dtype=np.int8)
+
+        self.pow15 = 32767   
 
         self.ARROW_UP = 0
         self.ARROW_RIGHT = 1
@@ -108,18 +89,11 @@ class MyController(Controller):
         self.RISING_OR_ON = 2  # to help 'if' commands that must consider both values: if x >=  RISING_OR_ON:
         self.FALLING_OR_OFF = 1  # to help 'if' commands that must consider both values: if x <=  FALLING_OR_OFF:
 
-        # Esta logica não está ao contrário????????? so o LOw e o HIGH do falling e rising
         # 0 LOW  -> LOW  = OFF
-        # 1 LOW  -> HIGH = FALLING
-        # 2 HIGH -> LOW  = RISING
+        # 1 HIGH -> LOW  = FALLING
+        # 2 LOW  -> HIGH = RISING
         # 3 HIGH -> HIGH = ON
 
-        # for x in range(NUM_BUTTONS):
-        #     # print(x)
-        #     self.buttons[x] = x
-        #     x+=1
-
-        # self.buttons[PS] = 0
 
     def on_up_arrow_press(self):
         # print("on_up_arrow_press")
@@ -358,7 +332,7 @@ class MyController(Controller):
 
     def on_L2_press(self, value):
         self.L2dist_ant = self.L2dist
-        self.L2dist = ((value+pow15) / (2*pow15))
+        self.L2dist = ((value+self.pow15) / (2*self.pow15))
         self.L2R2_updated = True
         self.values_updated = True
             
@@ -380,7 +354,7 @@ class MyController(Controller):
         self.values_updated = True
 
     def on_R2_press(self, value):
-        self.R2dist = ((value+pow15) / (2*pow15))
+        self.R2dist = ((value+self.pow15) / (2*self.pow15))
         # print("TR: R2: {}".format(value), ",\t{:.2f}%".format(self.R2dist*100), ",\t{}".format(self.R2dist))
         # self.L2R2_updated = True
         self.values_updated = True
@@ -392,23 +366,23 @@ class MyController(Controller):
         self.values_updated = True
 
     def on_L3_up(self, value):
-        self.L3yy = -(value / pow15)
-        # print("TR: L3_up: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.L3yy))
+        self.L3yy = -(value / self.pow15)
+        # print("TR: L3_up: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3yy))
         self.update_L3()
 
     def on_L3_down(self, value):
-        self.L3yy = -(value / pow15)
-        # print("TR: L3_down: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.L3yy))
+        self.L3yy = -(value / self.pow15)
+        # print("TR: L3_down: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3yy))
         self.update_L3()
 
     def on_L3_left(self, value):
-        self.L3xx = (value / pow15)
-        # print("TR: L3_left: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.L3xx))
+        self.L3xx = (value / self.pow15)
+        # print("TR: L3_left: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3xx))
         self.update_L3()
 
     def on_L3_right(self, value):
-        self.L3xx = (value / pow15)
-        # print("TR: L3_right: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.L3xx))
+        self.L3xx = (value / self.pow15)
+        # print("TR: L3_right: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3xx))
         self.update_L3()
 
     def on_L3_y_at_rest(self):
@@ -441,23 +415,23 @@ class MyController(Controller):
         self.values_updated = True
 
     def on_R3_up(self, value):
-        self.R3yy = -(value / pow15)
-        # print("TR: R3_up: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.R3yy))
+        self.R3yy = -(value / self.pow15)
+        # print("TR: R3_up: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3yy))
         self.update_R3()
 
     def on_R3_down(self, value):
-        self.R3yy = -(value / pow15)
-        # print("TR: R3_down: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.R3yy))
+        self.R3yy = -(value / self.pow15)
+        # print("TR: R3_down: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3yy))
         self.update_R3()
 
     def on_R3_left(self, value):
-        self.R3xx = (value / pow15)
-        # print("TR: R3_left: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.R3xx))
+        self.R3xx = (value / self.pow15)
+        # print("TR: R3_left: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3xx))
         self.update_R3()
 
     def on_R3_right(self, value):
-        self.R3xx = (value / pow15)
-        # print("TR: R3_right: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.R3xx))
+        self.R3xx = (value / self.pow15)
+        # print("TR: R3_right: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3xx))
         self.update_R3()
 
     def on_R3_y_at_rest(self):
@@ -520,6 +494,7 @@ class ControllerNode(Node):
         self.neck_position_publisher.publish(self.neck_pos)
 
         self.watchdog_timer = 0
+        self.watchdog_flag = False
     
 
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
@@ -565,7 +540,8 @@ class ControllerNode(Node):
         ps_con = PS4Controller()
 
         if self.controller.values_updated == True:
-            self.watchdog_timer = 0
+            self.watchdog_timer = 0            
+            self.watchdog_flag = False
 
             ps_con.arrow_up = int(self.controller.button_state(self.controller.ARROW_UP))
             ps_con.arrow_right = int(self.controller.button_state(self.controller.ARROW_RIGHT))
@@ -623,14 +599,18 @@ class ControllerNode(Node):
             self.controller.values_updated = False
 
         else:
-            self.watchdog_timer += 1
+            if not self.watchdog_flag:
+                self.watchdog_timer += 1
 
 
-        if self.watchdog_timer >= 40: # since the ps4 controller checks every 50 ms. 20*50ms is 1 second. 40 is 2 seconds.
+        if self.watchdog_timer == 40: # since the ps4 controller checks every 50 ms. 20*50ms is 1 second. 40 is 2 seconds.
             # this is set if in any kind of emergency the controller stops communicating. 
             # If the system continues with the last received variables it may result in physical damages.
             # Therefore, to every moving part that may continue moving is set stop commands
-            self.watchdog_timer = 0
+            self.watchdog_flag = True
+            self.watchdog_timer += 1
+
+            print("WATCHDOG BLOCK - NO COMMUNICATIONS IN THE LAST 2 SECONDS")
 
             # sends command to change RGB value
             rgb_mode = Int16()
