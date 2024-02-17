@@ -24,7 +24,7 @@ CONTROL_SPEAKERS = True
 CONTROL_NECK = True
 CONTROL_ARM = True
 
-# Constant Vatiables to ease RGB_MODE coding
+# Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_4  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
@@ -475,7 +475,7 @@ class ControllerNode(Node):
         self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-        self.client = self.create_client(SpeechCommand, "speech_command")# Neck
+        self.client = self.create_client(SpeechCommand, "speech_command")
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         
 
@@ -631,7 +631,7 @@ class ControllerNode(Node):
             self.omni_move_publisher.publish(omni_move)
 
         print(self.watchdog_timer)
-    
+
 
     def control_robot(self, ps4_controller):
 
