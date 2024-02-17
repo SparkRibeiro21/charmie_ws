@@ -23,6 +23,7 @@ CONTROL_RGB = True
 CONTROL_SPEAKERS = True
 CONTROL_NECK = True
 CONTROL_ARM = True
+CONTROL_SET_MOVEMENT = True
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -30,7 +31,7 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 # rgb leds used for demonstration, can be added any other necessary for demonstration
-rgb_demonstration = [100, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 100, 101, 102, 103, 104, 105, 106, 255]
+rgb_demonstration = [100, 0, 13, 24, 35, 46, 57, 68, 79, 100, 101, 102, 103, 104, 105, 106, 255]
 
 
 class MyController(Controller):
@@ -467,26 +468,58 @@ class ControllerNode(Node):
         super().__init__("PS4_Controller")
         self.get_logger().info("Initialised CHARMIE PS4 Controller Node")
 
+        # Create Controller object
         self.controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
 
-        self.controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
-        self.ps4_diagnostic_publisher = self.create_publisher(Bool, "ps4_diagnostic", 10)
+        ### Topics (Publisher and Subscribers) ###   
+        # Low Level 
         self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
-        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-        self.client = self.create_client(SpeechCommand, "speech_command")
+        self.set_movement_publisher = self.create_publisher(Bool, "set_movement", 10)
+
+        # Navigation
+        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
+
+        # PS4 Controller
+        self.controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
+
+        # Disgnostic
+        self.ps4_diagnostic_publisher = self.create_publisher(Bool, "ps4_diagnostic", 10)
+
+        # Neck
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         
+        ### Services (Clients) ###
+        # Speakers
+        self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+
 
         self.create_timer(0.05, self.timer_callback)
 
         self.rgb_demo_index = 0
         self.waited_for_end_of_speaking = False # not used, but here to be in conformity with other uses
 
+        self.wfeon = Bool()
+        self.torso_pos = Pose2D()
+
         flag_diagn = Bool()
         flag_diagn.data = True
         self.ps4_diagnostic_publisher.publish(flag_diagn)
+
+        self.set_movement = Bool()
+        self.set_movement.data = True
+        self.set_movement_publisher.publish(self.set_movement)
+
+        self.omni_move = Vector3()
+        self.omni_move.x = 0.0
+        self.omni_move.y = 0.0
+        self.omni_move.z = 100.0
+        self.omni_move_publisher.publish(self.omni_move)
+
+        self.rgb_mode = Int16()
+        self.rgb_mode.data = RAINBOW_ROT
+        self.rgb_mode_publisher.publish(self.rgb_mode)
 
         self.neck_pos = NeckPosition()
         self.neck_pos.pan = 180.0
@@ -503,7 +536,7 @@ class ControllerNode(Node):
         request.command = command
         request.quick_voice = quick_voice
     
-        future = self.client.call_async(request)
+        future = self.speech_command_client.call_async(request)
         print("Sent Command")
 
         if wait_for_end_of:
@@ -612,23 +645,22 @@ class ControllerNode(Node):
 
             print("WATCHDOG BLOCK - NO COMMUNICATIONS IN THE LAST 2 SECONDS")
 
-            # sends command to change RGB value
-            rgb_mode = Int16()
-            rgb_mode.data = RED+HALF_ROTATE
-            self.rgb_mode_publisher.publish(rgb_mode)
+            # locks motors
+            self.set_movement.data = False
+            self.set_movement_publisher.publish(self.set_movement)
 
             # sends command to stop torso
-            pos = Pose2D()
-            pos.x = float(0)
-            pos.y = float(0)
-            self.torso_test_publisher.publish(pos)
+            self.torso_pos.x = 0.0
+            self.torso_pos.y = 0.0
+            self.torso_test_publisher.publish(self.torso_pos)
 
-            # sends commands to stop movement platform
-            omni_move = Vector3()
-            omni_move.x = 0.0
-            omni_move.y = 0.0
-            omni_move.z = 100.0
-            self.omni_move_publisher.publish(omni_move)
+            # changes to a red value to notify it entered in motors locked mode
+            self.rgb_mode.data = RED+HALF_ROTATE
+            self.rgb_mode_publisher.publish(self.rgb_mode)
+
+            # in case it is not intended for the robot to speak since it may disturb other packages
+            if CONTROL_SPEAKERS:
+                self.speech_server(filename="motors_locked", wait_for_end_of=False)
 
         print(self.watchdog_timer)
 
@@ -636,47 +668,45 @@ class ControllerNode(Node):
     def control_robot(self, ps4_controller):
 
         if CONTROL_TORSO:
-            pos = Pose2D()
+
             if ps4_controller.arrow_up >= 2:
-                pos.x = float(1)
+                self.torso_pos.x = 1.0
             elif ps4_controller.arrow_down >= 2:
-                pos.x = float(-1)
+                self.torso_pos.x = -1.0
             else:
-                pos.x = float(0)
+                self.torso_pos.x = 0.0
 
             if ps4_controller.arrow_right >= 2:
-                pos.y = float(1)
+                self.torso_pos.y = 1.0
             elif ps4_controller.arrow_left >= 2:
-                pos.y = float(-1)
+                self.torso_pos.y = -1.0
             else:
-                pos.y = float(0)
+                self.torso_pos.y = 0.0
 
-            self.torso_test_publisher.publish(pos)
+            self.torso_test_publisher.publish(self.torso_pos)
 
         if CONTROL_WAIT_FOR_END_OF_NAVIGATION:
-            pos = Bool()
-            pos.data = True
+            self.wfeon.data = True
             if ps4_controller.options:
-                self.flag_pos_reached_publisher.publish(pos)
+                self.flag_pos_reached_publisher.publish(self.wfeon)
 
         if CONTROL_MOTORS:
-            omni_move = Vector3()
+
             if ps4_controller.l3_dist >= 0.1:
-                omni_move.x = ps4_controller.l3_ang
-                omni_move.y = ps4_controller.l3_dist*100/5
+                self.omni_move.x = ps4_controller.l3_ang
+                self.omni_move.y = ps4_controller.l3_dist*100/5
             else:
-                omni_move.x = 0.0
-                omni_move.y = 0.0
+                self.omni_move.x = 0.0
+                self.omni_move.y = 0.0
 
             if ps4_controller.r3_dist >= 0.1:
-                omni_move.z = 100 + ps4_controller.r3_xx*10
+                self.omni_move.z = 100 + ps4_controller.r3_xx*10
             else:
-                omni_move.z = 100.0
+                self.omni_move.z = 100.0
                        
-            self.omni_move_publisher.publish(omni_move)
+            self.omni_move_publisher.publish(self.omni_move)
 
         if CONTROL_RGB:
-            rgb_mode = Int16()
 
             if ps4_controller.r1 == 2:
                 self.rgb_demo_index+=1
@@ -684,8 +714,8 @@ class ControllerNode(Node):
                     self.rgb_demo_index-=len(rgb_demonstration)
 
                 print(self.rgb_demo_index)
-                rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
-                self.rgb_mode_publisher.publish(rgb_mode)
+                self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                self.rgb_mode_publisher.publish(self.rgb_mode)
             
             elif ps4_controller.l1 == 2:
                 self.rgb_demo_index-=1
@@ -693,8 +723,8 @@ class ControllerNode(Node):
                     self.rgb_demo_index+=len(rgb_demonstration)
 
                 print(self.rgb_demo_index)
-                rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
-                self.rgb_mode_publisher.publish(rgb_mode)
+                self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                self.rgb_mode_publisher.publish(self.rgb_mode)
 
         if CONTROL_SPEAKERS:
             if ps4_controller.r3 == 2:
@@ -731,9 +761,51 @@ class ControllerNode(Node):
                     self.neck_pos.tilt = 235.0
                 self.neck_position_publisher.publish(self.neck_pos)
                 print(self.neck_pos)
-            
+
+        if CONTROL_SET_MOVEMENT:
+
+            if ps4_controller.ps == 2:
+                if self.set_movement.data == False:
+                    
+                    # stops locked motor mode, motors can now run
+                    self.set_movement.data = True
+                    self.set_movement_publisher.publish(self.set_movement)
+
+                    # returns to the value it was previously
+                    self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                    self.rgb_mode_publisher.publish(self.rgb_mode)
+
+                    # in case it is not intended for the robot to speak since it may disturb other packages
+                    if CONTROL_SPEAKERS:
+                        self.speech_server(filename="motors_unlocked", wait_for_end_of=False)
+
+                else:
+
+                    # locks motors
+                    self.set_movement.data = False
+                    self.set_movement_publisher.publish(self.set_movement)
+
+                    # sends command to stop torso
+                    self.torso_pos.x = 0.0
+                    self.torso_pos.y = 0.0
+                    self.torso_test_publisher.publish(self.torso_pos)
+
+                    # changes to a red value to notify it entered in motors locked mode
+                    self.rgb_mode.data = RED+HALF_ROTATE
+                    self.rgb_mode_publisher.publish(self.rgb_mode)
+
+                    # in case it is not intended for the robot to speak since it may disturb other packages
+                    if CONTROL_SPEAKERS:
+                        self.speech_server(filename="motors_locked", wait_for_end_of=False)
+
         if CONTROL_ARM:
             pass
+
+
+                # reajustar o watchdig para ficar em conformidade
+                # reativar rgb mal se resolva o erro
+                # por a declaracao variaveis todas em cima 
+
 
 
 def thread_controller(node):

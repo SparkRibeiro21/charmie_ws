@@ -19,8 +19,8 @@ drinks_list = ["milk", "orange juice", "red wine"]
 
 MODE = "STANDARD"
 
-COMMAND = "Hello."
-FILENAME = "introduction_hello"
+COMMAND = "Motors unlocked."
+FILENAME = "motors_unlocked"
 
 
 class RobotSpeak():

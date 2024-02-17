@@ -17,8 +17,9 @@ class TestNode(Node):
     def __init__(self):
         super().__init__("Test")
         self.get_logger().info("Initialised CHARMIE Test Speakers and Face Node")
-        # self.server_ = self.create_service(SpeechCommand, "add_two_ints", self.callback_first_service) 
-        self.client = self.create_client(SpeechCommand, "speech_command")
+
+        self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+
         while not self.client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
 
@@ -30,7 +31,7 @@ class TestNode(Node):
         request.command = command
         request.quick_voice = quick_voice
     
-        future = self.client.call_async(request)
+        future = self.speech_command_client.call_async(request)
         print("Sent Command")
 
         if wait_for_end_of:
