@@ -73,6 +73,8 @@ class ArmUfactory(Node):
 		self.barman_or_client_subscriber = self.create_subscription(Int16, "barman_or_client", self.go_barman_or_go_client_callback, 10)
 		self.choose_action_subscriber = self.create_subscription(Int16, 'action', self.choose_action_callback, 10)
 		self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
+
+		self.object_grabbed_publisher = self.create_publisher(Bool, "object_grabbed", 10)
 	
 		self.flag_arm_finished_movement_ = Bool()
 		self.gripper_reached_target = Bool()
@@ -93,6 +95,9 @@ class ArmUfactory(Node):
 		self.gripper_opening = []
 		self.a = 0
 		self.choose_action = Int16()
+
+		self.flag_object_grabbed = Bool()
+		self.flag_object_grabbed.data = False
 
 		self.estado_tr = 0
 		self.ctr_button = 0
@@ -333,6 +338,8 @@ class ArmUfactory(Node):
 			
 			print("ESTADO = ", self.estado_tr)
 
+			self.gripper_tr = future.result().data
+
 			self.demonstration()
 			""" if self.choose_action.data == 1:
 				if self.ctr_button < 6:
@@ -411,6 +418,75 @@ class ArmUfactory(Node):
 			self.arm_finished_movement.data = False
 			self.estado_tr = 0
 			print('FEITO CHECK') 
+
+	def verify_if_object_is_grabbed(self):
+		# aqui quero fechar, verificar se tenho algo e se tiver colocar uma flag a 1, se não tiver manter a 0. 
+		# Essa flag é que me vai permitir avançar para o próximo estado ou ficar aqui e voltar ao princípio
+		if self.estado_tr == 0:
+			#Fechar Garra
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('aa')
+		
+		elif self.estado_tr == 1: 
+			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
+			print('valor da garra =', self.future)
+			print('cc')
+
+		elif self.estado_tr == 2:
+			if self.gripper_tr >= 5.0:
+				self.flag_object_grabbed.data = True
+				print('OBJECT GRABBED')
+			else:
+				self.flag_object_grabbed.data = False
+				print('OBJECT NOT GRABBED')
+
+			self.arm_finished_movement.data = True
+			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
+			self.arm_finished_movement.data = False
+			self.estado_tr = 0
+
+			self.object_grabbed_publisher.publish(self.flag_object_grabbed)
+			self.flag_object_grabbed.data = False
+
+			print("FEITO!!!")
+			self.next_arm_movement = 999
+			self.demonstration()
+
+
+
+	def open_gripper(self):
+		# aqui quero fechar, verificar se tenho algo e se tiver colocar uma flag a 1, se não tiver manter a 0. 
+		# Essa flag é que me vai permitir avançar para o próximo estado ou ficar aqui e voltar ao princípio
+		if self.estado_tr == 0:
+			#Fechar Garra
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('aa')
+		
+		elif self.estado_tr == 1: 
+			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
+			print('valor da garra =', self.future)
+			print('cc')
+
+		elif self.estado_tr == 2:
+			self.arm_finished_movement.data = True
+			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
+			self.arm_finished_movement.data = False
+			self.estado_tr = 0
+			print("FEITO!!!")
+			self.next_arm_movement = 999
+			self.demonstration()
+		
+
 
 	def go_grab_first_object(self):
 		# self.flag_arm_finished_movement_.data = False
@@ -2224,8 +2300,9 @@ class ArmUfactory(Node):
 			self.go_grab_first_object()
 			#self.next_arm_movement = 1
 
-		elif self.next_arm_movement == 1:
+		elif self.next_arm_movement == 1:	
 			self.go_place_first_object_tray()
+			
 			#self.next_arm_movement = 2
    
 		elif self.next_arm_movement == 2:
@@ -2259,6 +2336,13 @@ class ArmUfactory(Node):
 		elif self.next_arm_movement == 9:
 			self.go_rest_arm()
 			#self.next_arm_movement = 0
+
+		elif self.next_arm_movement == 19:
+			self.open_gripper()
+
+		elif self.next_arm_movement == 20:
+			self.verify_if_object_is_grabbed()
+			#if self.flag_object_grabbed.data == True:
 
 		else:
 			pass
