@@ -44,7 +44,7 @@ class ArmUfactory(Node):
 			self.get_logger().warn("Waiting for Server Motion Enavle...")
 
 		while not self.set_mode_client.wait_for_service(1.0):
-			self.get_logger().warn("Waiting for Server Set Mdde Client...")
+			self.get_logger().warn("Waiting for Server Set Mode Client...")
 
 		while not self.set_gripper_enable.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Gripper Enable...")
