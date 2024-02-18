@@ -48,7 +48,6 @@ class TestNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success)+str(response.message))
-            # print("oi")
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
         except Exception as e:
