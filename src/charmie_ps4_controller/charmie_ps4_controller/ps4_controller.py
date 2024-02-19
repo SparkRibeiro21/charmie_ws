@@ -15,16 +15,6 @@ from pyPS4Controller.controller import Controller
 import threading
 
 
-# CONTROL VARIABLES, this is waht defines which modules will the ps4 controller control
-CONTROL_TORSO = True
-CONTROL_WAIT_FOR_END_OF_NAVIGATION = True
-CONTROL_MOTORS = True
-CONTROL_RGB = True
-CONTROL_SPEAKERS = True
-CONTROL_NECK = True
-CONTROL_ARM = True
-CONTROL_SET_MOVEMENT = True
-
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_4  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
@@ -468,6 +458,17 @@ class ControllerNode(Node):
         super().__init__("PS4_Controller")
         self.get_logger().info("Initialised CHARMIE PS4 Controller Node")
 
+        ### ROS2 Parameters ###
+        # when declaring a ros2 parameter the second argument of the function is the default value 
+        self.declare_parameter("control_arm", True) 
+        self.declare_parameter("control_motors", True)
+        self.declare_parameter("control_neck", True) 
+        self.declare_parameter("control_rgb", True) 
+        self.declare_parameter("control_set_movement", True) 
+        self.declare_parameter("control_speakers", True)
+        self.declare_parameter("control_torso", True)
+        self.declare_parameter("control_wait_for_end_of_navigation", True)
+
         # Create Controller object
         self.controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
 
@@ -494,6 +495,15 @@ class ControllerNode(Node):
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
 
+        # CONTROL VARIABLES, this is waht defines which modules will the ps4 controller control
+        self.CONTROL_ARM = self.get_parameter("control_arm").value
+        self.CONTROL_MOTORS = self.get_parameter("control_motors").value
+        self.CONTROL_NECK = self.get_parameter("control_neck").value
+        self.CONTROL_RGB = self.get_parameter("control_rgb").value
+        self.CONTROL_SET_MOVEMENT = self.get_parameter("control_set_movement").value
+        self.CONTROL_SPEAKERS = self.get_parameter("control_speakers").value
+        self.CONTROL_TORSO = self.get_parameter("control_torso").value
+        self.CONTROL_WAIT_FOR_END_OF_NAVIGATION = self.get_parameter("control_wait_for_end_of_navigation").value
 
         self.create_timer(0.05, self.timer_callback)
 
@@ -659,7 +669,7 @@ class ControllerNode(Node):
             self.rgb_mode_publisher.publish(self.rgb_mode)
 
             # in case it is not intended for the robot to speak since it may disturb other packages
-            if CONTROL_SPEAKERS:
+            if self.CONTROL_SPEAKERS:
                 self.speech_server(filename="motors_locked", wait_for_end_of=False)
 
         print(self.watchdog_timer)
@@ -667,7 +677,7 @@ class ControllerNode(Node):
 
     def control_robot(self, ps4_controller):
 
-        if CONTROL_TORSO:
+        if self.CONTROL_TORSO:
 
             if ps4_controller.arrow_up >= 2:
                 self.torso_pos.x = 1.0
@@ -685,12 +695,12 @@ class ControllerNode(Node):
 
             self.torso_test_publisher.publish(self.torso_pos)
 
-        if CONTROL_WAIT_FOR_END_OF_NAVIGATION:
+        if self.CONTROL_WAIT_FOR_END_OF_NAVIGATION:
             self.wfeon.data = True
             if ps4_controller.options:
                 self.flag_pos_reached_publisher.publish(self.wfeon)
 
-        if CONTROL_MOTORS:
+        if self.CONTROL_MOTORS:
 
             if ps4_controller.l3_dist >= 0.1:
                 self.omni_move.x = ps4_controller.l3_ang
@@ -706,7 +716,7 @@ class ControllerNode(Node):
                        
             self.omni_move_publisher.publish(self.omni_move)
 
-        if CONTROL_RGB:
+        if self.CONTROL_RGB:
 
             if ps4_controller.r1 == 2:
                 self.rgb_demo_index+=1
@@ -726,13 +736,13 @@ class ControllerNode(Node):
                 self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
                 self.rgb_mode_publisher.publish(self.rgb_mode)
 
-        if CONTROL_SPEAKERS:
+        if self.CONTROL_SPEAKERS:
             if ps4_controller.r3 == 2:
                 self.speech_server(filename="introduction_full", wait_for_end_of=False)
             elif ps4_controller.l3 == 2:
                 self.speech_server(filename="receptionist_question", wait_for_end_of=False)
                 
-        if CONTROL_NECK:
+        if self.CONTROL_NECK:
             neck_inc = 5.0
             if ps4_controller.circle >= 2:
                 self.neck_pos.pan -= neck_inc
@@ -762,7 +772,7 @@ class ControllerNode(Node):
                 self.neck_position_publisher.publish(self.neck_pos)
                 print(self.neck_pos)
 
-        if CONTROL_SET_MOVEMENT:
+        if self.CONTROL_SET_MOVEMENT:
 
             if ps4_controller.ps == 2:
                 if self.set_movement.data == False:
@@ -776,7 +786,7 @@ class ControllerNode(Node):
                     self.rgb_mode_publisher.publish(self.rgb_mode)
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
-                    if CONTROL_SPEAKERS:
+                    if self.CONTROL_SPEAKERS:
                         self.speech_server(filename="motors_unlocked", wait_for_end_of=False)
 
                 else:
@@ -795,10 +805,10 @@ class ControllerNode(Node):
                     self.rgb_mode_publisher.publish(self.rgb_mode)
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
-                    if CONTROL_SPEAKERS:
+                    if self.CONTROL_SPEAKERS:
                         self.speech_server(filename="motors_locked", wait_for_end_of=False)
 
-        if CONTROL_ARM:
+        if self.CONTROL_ARM:
             pass
 
 
