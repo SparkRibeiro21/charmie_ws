@@ -3,9 +3,10 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, RegisterEventHandler
+from launch.actions import IncludeLaunchDescription, RegisterEventHandler, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import UnlessCondition
+from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
 from launch_ros.substitutions import FindPackageShare
 
 from launch_ros.actions import Node
@@ -17,7 +18,7 @@ import xacro
 def generate_launch_description():
 
     package_name='charmie_bot' #<--- CHANGE ME
-
+    
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
                     get_package_share_directory(package_name),'launch','rsp.launch.py'
@@ -44,6 +45,12 @@ def generate_launch_description():
                        output='screen',
                        parameters=[{'use_sim_time': True}])
     
+    joint_state_gui = Node(package='joint_state_publisher_gui',
+                       executable='joint_state_publisher_gui',
+                       name='joint_state_publisher_gui',
+                       output='screen',
+                       parameters=[{'use_sim_time': True}])
+    
     joint_state_broadcaster_spawner = Node(
                         package="controller_manager",
                         executable="spawner.py",
@@ -58,7 +65,8 @@ def generate_launch_description():
     # Launch them all!
     return LaunchDescription([
         rsp,
+        #arm_rviz_launch,
         gazebo,
         spawn_entity,
-        joint_state 
+        joint_state_gui
     ])

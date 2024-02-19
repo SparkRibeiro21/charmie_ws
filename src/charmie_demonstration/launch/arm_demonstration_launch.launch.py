@@ -89,7 +89,7 @@ def generate_launch_description():
                        output='screen',
                        parameters=[{'use_sim_time': True}])
     
-    demonstration = Node(package='charmie_demonstration',
+    pick_and_place_demonstration = Node(package='charmie_demonstration',
                      executable='pick_place_demonstration',
                      name='pick_place_demonstration',
                      )
@@ -113,6 +113,11 @@ def generate_launch_description():
                 executable='low_level',
                 name='low_level',
                 )
+    
+    ps4_controller = Node(package='charmie_ps4_controller',
+                executable='ps4_controller',
+                name='ps4_controller',
+                )
 
     return LaunchDescription([
         speakers,
@@ -122,5 +127,6 @@ def generate_launch_description():
         neck,
         low_level,
         arm,
-        demonstration,
+        ps4_controller,
+        pick_and_place_demonstration,
     ])
