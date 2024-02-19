@@ -214,12 +214,11 @@ class ArmUfactory(Node):
 		# Velocidade do gripper varia entre 1.0 e 5000.0
 
 		set_gripper_speed_req= SetFloat32.Request()
-		set_gripper_speed_req.data = 5000.0
+		set_gripper_speed_req.data = 2000.0
 		self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
 		rclpy.spin_until_future_complete(self, self.future)
 
 		print('gripper_speed')
-
 
 	def deg_to_rad(self, deg):
 		rad = [deg[0] * math.pi / 180,
@@ -469,8 +468,6 @@ class ArmUfactory(Node):
 			self.next_arm_movement = 999
 			self.demonstration()
 
-
-
 	def open_gripper(self):
 		# aqui quero fechar, verificar se tenho algo e se tiver colocar uma flag a 1, se não tiver manter a 0. 
 		# Essa flag é que me vai permitir avançar para o próximo estado ou ficar aqui e voltar ao princípio
@@ -498,8 +495,6 @@ class ArmUfactory(Node):
 			self.next_arm_movement = 999
 			self.demonstration()
 		
-
-
 	def go_grab_first_object(self):
 		# self.flag_arm_finished_movement_.data = False
 		# while self.flag_arm_finished_movement_.data == False:
@@ -690,8 +685,8 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 8: 
 			#Fechar Garra
-			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.pos = 300.0
+			self.set_gripper_req.pos = self.gripper_tr + 60.0
+			#self.set_gripper_req.pos = 300.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
@@ -699,8 +694,8 @@ class ArmUfactory(Node):
 			print('jj')
 
 		elif self.estado_tr == 9:
-			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.pos = 500.0
+			self.set_gripper_req.pos = self.gripper_tr + 60.0
+			#self.set_gripper_req.pos = 500.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
@@ -712,8 +707,8 @@ class ArmUfactory(Node):
 
 
 		elif self.estado_tr == 10: 
-			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.pos = 700.0
+			self.set_gripper_req.pos = 900.0
+			#self.set_gripper_req.pos = 700.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
@@ -723,35 +718,6 @@ class ArmUfactory(Node):
 			print('ll') 
    
 		elif self.estado_tr == 11:
-			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('mm')
-
-		elif self.estado_tr == 12:
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('mm')
-			""" self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr)) """
-
-		elif self.estado_tr == 13: 
-			#Abrir garra
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('nn')
-
-		elif self.estado_tr == 14:
 			self.arm_finished_movement.data = True
 			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
 			self.arm_finished_movement.data = False
@@ -759,8 +725,6 @@ class ArmUfactory(Node):
 			print('FEITO 2.0') 
 			self.next_arm_movement = 999
 			self.demonstration()
-		
-			#self.flag_arm_finished_movement_.data = True
 
 		# I will get ready to receive the second object
 			
@@ -948,10 +912,8 @@ class ArmUfactory(Node):
 			print('ii')
 
 		elif self.estado_tr == 9: 
-			#Fechar Garra
-  			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-    		
-			self.set_gripper_req.pos = 500.0
+			self.set_gripper_req.pos = self.gripper_tr + 60.0
+			#self.set_gripper_req.pos = 500.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
@@ -959,15 +921,12 @@ class ArmUfactory(Node):
 			print('jj')
 
 		elif self.estado_tr == 10:
-			self.set_gripper_req.pos = 700.0
+			self.set_gripper_req.pos = self.gripper_tr + 60.0
+			#self.set_gripper_req.pos = 700.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
-
-			""" self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))"""
 			print('kk') 
 
 
@@ -980,40 +939,6 @@ class ArmUfactory(Node):
 			print('ll')
 
 		elif self.estado_tr == 12:
-			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('mm')
-
-		elif self.estado_tr== 13:
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			""" self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))"""
-			print('n') 
-
-		elif self.estado_tr == 14:
-			#Abrir garra
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('o')
-
-		elif self.estado_tr == 15:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('p')
-
-		elif self.estado_tr == 16:
 			self.arm_finished_movement.data = True
 			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
 			self.arm_finished_movement.data = False
@@ -1021,8 +946,6 @@ class ArmUfactory(Node):
 			print('FEITO 4.0') 
 			self.next_arm_movement = 999
 			self.demonstration()
-			# Depois disto o robot tem de falar no restaurant e dar um led verde
-
 		# I will get ready to receive the third object
 
 	def go_grab_third_object(self):
@@ -1156,6 +1079,13 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 6:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 2000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+
+		elif self.estado_tr == 7:
 			self.arm_finished_movement.data = True
 			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
 			self.arm_finished_movement.data = False
@@ -1676,7 +1606,6 @@ class ArmUfactory(Node):
 			print('jj')
 
 		elif self.estado_tr == 6:
-
 			#Fechar Garra
 			self.set_gripper_req.pos = self.gripper_tr + 60.0
 			self.set_gripper_req.wait = True
@@ -1687,44 +1616,21 @@ class ArmUfactory(Node):
 
 
 		elif self.estado_tr == 7: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 8:
-			self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('mm')
-
-		elif self.estado_tr == 9:
-
-			#Fechar Garra
-			self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-			print('n')
-
-		elif self.estado_tr == 10:
 			#Abrir garra
 			self.set_gripper_req.pos = 900.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('ll')
 
-		elif self.estado_tr == 11:
+		elif self.estado_tr == 8:
 			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 			print('ll')
 
 
-		elif self.estado_tr == 12:
+		elif self.estado_tr == 9:
 			self.arm_finished_movement.data = True
 			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
 			self.arm_finished_movement.data = False
@@ -1776,37 +1682,20 @@ class ArmUfactory(Node):
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 5:
-			###POS JUICE TRAY
-			self.joint_values_req.angles = self.deg_to_rad(self.place_juice_tray)
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_juice_tray)
-			self.joint_values_req.speed = 0.15 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
 		
-		elif self.estado_tr == 7:
+		elif self.estado_tr == 5:
 			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 8:
+		elif self.estado_tr == 6:
 			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 			print('ii')
 
-		elif self.estado_tr == 9:
+		elif self.estado_tr == 7:
 			#waypoints
 			self.joint_values_req.angles = self.deg_to_rad(self.pre2_place_juice_tray)
 			self.joint_values_req.speed = 0.2 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
@@ -1815,7 +1704,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 10:
+		elif self.estado_tr == 8:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_juice_tray)
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
@@ -1823,7 +1712,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 11:
+		elif self.estado_tr == 9:
 			self.joint_values_req.angles = self.deg_to_rad([-243.0, -58.0, -5.0, 135.0, 88.0, -214.0])
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
@@ -1831,7 +1720,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 		
-		elif self.estado_tr == 12:
+		elif self.estado_tr == 10:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_juice_table)
 			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
@@ -1839,7 +1728,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 			
-		elif self.estado_tr == 13:
+		elif self.estado_tr == 11:
 			self.joint_values_req.angles = self.deg_to_rad(self.place_juice_table)
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
@@ -1847,12 +1736,12 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 14: 
+		elif self.estado_tr == 12: 
 			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 			print('ii')
 
-		elif self.estado_tr == 15: 
+		elif self.estado_tr == 13: 
 			#Fechar Garra
 			self.set_gripper_req.pos = self.gripper_tr + 60.0
 			self.set_gripper_req.wait = True
@@ -1861,20 +1750,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 			print('jj')
 
-		elif self.estado_tr == 16:
-
-			self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('kk')
-
-
-		elif self.estado_tr == 17: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 18:
+		elif self.estado_tr == 14:
 			self.set_gripper_req.pos = self.gripper_tr + 60.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
@@ -1882,14 +1758,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 			print('mm')
 
-		elif self.estado_tr == 19:
-
-			self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('n')
-
-		elif self.estado_tr == 20:
+		elif self.estado_tr == 15:
 			#Abrir garra
 			self.set_gripper_req.pos = 900.0
 			self.set_gripper_req.wait = True
@@ -1897,12 +1766,12 @@ class ArmUfactory(Node):
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 21:
+		elif self.estado_tr == 16:
 			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 			print('ll')
 
-		elif self.estado_tr == 22:
+		elif self.estado_tr == 17:
 			self.arm_finished_movement.data = True
 			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
 			self.arm_finished_movement.data = False
@@ -1947,22 +1816,6 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 4:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_coke_tray)
-			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 5:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_coke_tray)
-			self.joint_values_req.speed = 0.2 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
 			# Fechar garra
 			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = True
@@ -1970,12 +1823,12 @@ class ArmUfactory(Node):
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 7:
+		elif self.estado_tr == 5:
 			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 			print('ll')
 
-		elif self.estado_tr == 8:
+		elif self.estado_tr == 6:
 			#waypoints
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_coke_tray)
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
@@ -1984,7 +1837,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 9:
+		elif self.estado_tr == 7:
 			self.joint_values_req.angles = self.deg_to_rad([-202.0, 47.0, -63.0, 163.0, 119.0, -259.0])
 			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
@@ -1992,7 +1845,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 		
-		elif self.estado_tr == 10:
+		elif self.estado_tr == 8:
 			self.joint_values_req.angles = self.deg_to_rad(self.place_coke_table)
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
@@ -2000,12 +1853,12 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 11: 
+		elif self.estado_tr == 9: 
 			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 			print('ii')
 
-		elif self.estado_tr == 12: 
+		elif self.estado_tr == 10: 
 			#Fechar Garra
 			self.set_gripper_req.pos = self.gripper_tr + 60.0
 			self.set_gripper_req.wait = True
@@ -2014,20 +1867,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 			print('jj')
 
-		elif self.estado_tr == 13:
-
-			self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('kk')
-
-
-		elif self.estado_tr == 14: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 15:
+		elif self.estado_tr == 11:
 			self.set_gripper_req.pos = self.gripper_tr + 60.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
@@ -2035,14 +1875,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 			print('mm')
 
-		elif self.estado_tr == 16:
-
-			self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('n')
-
-		elif self.estado_tr == 17:
+		elif self.estado_tr == 12:
 			#Abrir garra
 			self.set_gripper_req.pos = 900.0
 			self.set_gripper_req.wait = True
@@ -2050,12 +1883,12 @@ class ArmUfactory(Node):
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 18:
+		elif self.estado_tr == 13:
 			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 			print('ll')
 
-		elif self.estado_tr == 19:
+		elif self.estado_tr == 14:
 			self.arm_finished_movement.data = True
 			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
 			self.arm_finished_movement.data = False

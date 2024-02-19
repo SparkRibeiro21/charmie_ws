@@ -219,8 +219,6 @@ class RestaurantNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
     
-
-
     def callback_call_speech_command(self, future): #, a, b):
 
         try:
@@ -294,7 +292,6 @@ class RestaurantMain():
             pass
         self.node.waited_for_end_of_speaking = False
     
-
     def main(self):
         Initial_state = 0
         Go_grab_first_object = 1
@@ -341,10 +338,10 @@ class RestaurantMain():
 
                 print('after speak 1')
 
-                place_to_go = Int16()
+                """ place_to_go = Int16()
                 place_to_go.data = 18
                 self.node.barman_or_client_publisher.publish(place_to_go)
-                self.wait_for_end_of_arm()
+                self.wait_for_end_of_arm()  """
 
                 self.wait_for_end_of_navigation()
 
@@ -418,7 +415,6 @@ class RestaurantMain():
                     self.wait_for_end_of_arm()
                     self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
                     self.state = Go_place_first_object_tray
-
 
             elif self.state == Go_grab_second_object:
 
@@ -538,7 +534,7 @@ class RestaurantMain():
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.wait_for_end_of_navigation()
+                #self.wait_for_end_of_navigation()
 
                 self.node.rgb_ctr = 14
                 self.node.rgb.data = self.node.rgb_ctr
