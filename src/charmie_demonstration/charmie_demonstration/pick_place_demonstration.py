@@ -341,6 +341,11 @@ class RestaurantMain():
 
                 print('after speak 1')
 
+                place_to_go = Int16()
+                place_to_go.data = 18
+                self.node.barman_or_client_publisher.publish(place_to_go)
+                self.wait_for_end_of_arm()
+
                 self.wait_for_end_of_navigation()
 
                 self.node.rgb_ctr = 14
