@@ -23,7 +23,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 # rgb leds used for demonstration, can be added any other necessary for demonstration
 rgb_demonstration = [100, 0, 13, 24, 35, 46, 57, 68, 79, 100, 101, 102, 103, 104, 105, 106, 255]
 
-
+# Controller Class, what communicates with the physical controller
 class MyController(Controller):
 
     def __init__(self, **kwargs):
@@ -87,222 +87,121 @@ class MyController(Controller):
 
 
     def on_up_arrow_press(self):
-        # print("on_up_arrow_press")
-        # self.every_button_update()
         self.buttons[self.ARROW_UP] = 1
-        # self.buttons_updated = True
         self.values_updated = True
 
     def on_down_arrow_press(self):
-        # print("on_down_arrow_press")
-        # self.every_button_update()
         self.buttons[self.ARROW_DOWN] = 1
-        # self.buttons_updated = True
         self.values_updated = True
 
     def on_up_down_arrow_release(self):
-        # print("on_up_down_arrow_release")
-        # self.every_button_update()
         self.buttons[self.ARROW_UP] = 0
         self.buttons[self.ARROW_DOWN] = 0
-        # self.buttons_updated = True
         self.values_updated = True
 
     def on_left_arrow_press(self):
-        # print("on_left_arrow_press")
-        # self.every_button_update()
         self.buttons[self.ARROW_LEFT] = 1
-        # self.buttons_updated = True
         self.values_updated = True
 
     def on_right_arrow_press(self):
-        # print("on_right_arrow_press")
-        # self.every_button_update()
         self.buttons[self.ARROW_RIGHT] = 1
-        # self.buttons_updated = True
         self.values_updated = True
 
     def on_left_right_arrow_release(self):
-        # print("on_left_right_arrow_release")
-        # self.every_button_update()
         self.buttons[self.ARROW_LEFT] = 0
         self.buttons[self.ARROW_RIGHT] = 0
-        # self.buttons_updated = True
         self.values_updated = True
 
     def on_x_press(self):
-        # self.every_button_update()
-        # print("Hello world")
         self.buttons[self.CROSS] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # pass
 
     def on_x_release(self):
-        # self.every_button_update()
-        # print("Goodbye world")
         self.buttons[self.CROSS] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # self.a = False
-        # h.set_var_false()
-        # print(controller.a)
 
     def on_triangle_press(self):
-        # self.every_button_update()
         self.buttons[self.TRIANGLE] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_triangle_press")
 
     def on_triangle_release(self):
-        # self.every_button_update()
         self.buttons[self.TRIANGLE] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_triangle_release")
 
     def on_circle_press(self):
-        # self.every_button_update()
         self.buttons[self.CIRCLE] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_circle_press")
 
     def on_circle_release(self):
-        # self.every_button_update()
         self.buttons[self.CIRCLE] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_circle_release")
 
     def on_square_press(self):
-        # self.every_button_update()
         self.buttons[self.SQUARE] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_square_press")
 
     def on_square_release(self):
-        # self.every_button_update()
         self.buttons[self.SQUARE] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_square_release")
 
     def on_L1_press(self):
-        # self.every_button_update()
         self.buttons[self.L1] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_L1_press")
 
     def on_L1_release(self):
-        # self.every_button_update()
         self.buttons[self.L1] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_L1_release")
 
     def on_R1_press(self):
-        # self.every_button_update()
         self.buttons[self.R1] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_R1_press")
 
     def on_R1_release(self):
-        # self.every_button_update()
         self.buttons[self.R1] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_R1_release")
 
     def on_L3_press(self):
-        # self.every_button_update()
         self.buttons[self.L3] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_L3_press")
 
     def on_L3_release(self):
-        # self.every_button_update()
         self.buttons[self.L3] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_L3_release")
 
     def on_R3_press(self):
-        # self.every_button_update()
         self.buttons[self.R3] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_R3_press")
 
     def on_R3_release(self):
-        # self.every_button_update()
         self.buttons[self.R3] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("on_R3_release")
 
     def on_options_press(self):
-        # self.buttons_ant = self.buttons
-        # self.every_button_update()
         self.buttons[self.OPTIONS] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
-        # print("on_options_press")
 
     def on_options_release(self):
-        # self.buttons_ant = self.buttons
-        # self.every_button_update()
         self.buttons[self.OPTIONS] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
-        # print("on_options_release")
 
     def on_share_press(self):
-        # self.buttons_ant = self.buttons
-        # self.every_button_update()
         self.buttons[self.SHARE] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
-        # print("on_share_press")
 
     def on_share_release(self):
-        # self.buttons_ant = self.buttons
-        # self.every_button_update()
         self.buttons[self.SHARE] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
-        # print("on_share_release")
 
     def on_playstation_button_press(self):
-        # self.buttons_ant = self.buttons
-        # self.every_button_update()
         self.buttons[self.PS] = 1
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
-        # print("on_playstation_button_press")
 
     def on_playstation_button_release(self):
-        # self.buttons_ant = self.buttons
-        # self.every_button_update()
         self.buttons[self.PS] = 0
-        # self.buttons_updated = True
         self.values_updated = True
-        # print("XXX BUTTONS =", self.buttons, "\t\t", "BUTTONS_ANT =", self.buttons_ant)
-        # print("on_playstation_button_release")
 
     def every_button_update(self):
 
-        # np.copyto(self.buttons_ant, self.buttons)
         self.buttons_ant = np.array(self.buttons)
 
         # what made sense was for this flag to be activated only after the buttons attribution on the event function
@@ -326,74 +225,46 @@ class MyController(Controller):
         self.L2dist = ((value+self.pow15) / (2*self.pow15))
         self.L2R2_updated = True
         self.values_updated = True
-            
-        # print("TR: L2: {}".format(value), ",\t{:.2f}%".format(self.L2dist*100), ",\t{}".format(self.L2dist), ",\t{:.2f}%".format(self.L2dist_ant*100), ",\t{}".format(self.L2dist_ant))
-        # int("TR: L2_ANT: {}".format(value))
-        # print("L2: {}".format(value), ",\t{:.2f}".format(self.L2dist), ",\t{:.2f}".format(self.L2dist_ant))
-
-        # if int(self.L2dist*100) is not int(self.L2dist_ant*100):  # NAO E NECESSARIO, POIS  NAO???
-        #     self.L2R2_updated = True
-            # print("DIFFERENT")
-        #else:
-        #    pass
-            # print("SAME")
 
     def on_L2_release(self):
         self.L2dist = 0.0
-        # print("TR: L2_release", ",\t{}".format(self.L2dist))
-        # self.L2R2_updated = True
         self.values_updated = True
 
     def on_R2_press(self, value):
         self.R2dist = ((value+self.pow15) / (2*self.pow15))
-        # print("TR: R2: {}".format(value), ",\t{:.2f}%".format(self.R2dist*100), ",\t{}".format(self.R2dist))
-        # self.L2R2_updated = True
         self.values_updated = True
 
     def on_R2_release(self):
         self.R2dist = 0.0
-        # print("TR: R2_release", ",\t{}".format(self.R2dist))
-        # self.L2R2_updated = True
         self.values_updated = True
 
     def on_L3_up(self, value):
         self.L3yy = -(value / self.pow15)
-        # print("TR: L3_up: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3yy))
         self.update_L3()
 
     def on_L3_down(self, value):
         self.L3yy = -(value / self.pow15)
-        # print("TR: L3_down: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3yy))
         self.update_L3()
 
     def on_L3_left(self, value):
         self.L3xx = (value / self.pow15)
-        # print("TR: L3_left: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3xx))
         self.update_L3()
 
     def on_L3_right(self, value):
         self.L3xx = (value / self.pow15)
-        # print("TR: L3_right: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3xx))
         self.update_L3()
 
     def on_L3_y_at_rest(self):
         # L3 joystick is at rest after the joystick was moved and let go off # up and down
         self.L3yy = 0.0
-        # print("TR: L3_y_at_rest", ",\t{}".format(self.L3yy))
-        # print("REST YY")
         self.update_L3()
 
     def on_L3_x_at_rest(self):
         # L3 joystick is at rest after the joystick was moved and let go off  # left and right
         self.L3xx = 0.0
-        # print("TR: L3_x_at_rest", ",\t{}".format(self.L3xx))
-        # print("REST XX")
         self.update_L3()
 
     def update_L3(self):
-        # self.every_button_update() # added in the ROS version
-        # contas: para angulo, é a tangente yy/xx para dist é a hipotenusa
-        # self.L3ang = math.atan2(self.L3yy, self.L3xx)/math.pi*180
         # with this the angles are the same as the trigonometric circle
         self.L3ang = math.atan2(-self.L3xx, self.L3yy)/math.pi*180+0  # 0 -> front # the +0 is to ignore negative zero
         self.L3dist = math.sqrt(self.L3yy**2 + self.L3xx**2)
@@ -401,45 +272,35 @@ class MyController(Controller):
             self.L3dist = 1.0
         if self.L3ang < 0.0:
             self.L3ang += 360
-        # print("TR: ang: {:.2f}".format(self.L3ang), "\tdist: {:.2f}".format(self.L3dist))
-        # self.analogs_updated = True
         self.values_updated = True
 
     def on_R3_up(self, value):
         self.R3yy = -(value / self.pow15)
-        # print("TR: R3_up: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3yy))
         self.update_R3()
 
     def on_R3_down(self, value):
         self.R3yy = -(value / self.pow15)
-        # print("TR: R3_down: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3yy))
         self.update_R3()
 
     def on_R3_left(self, value):
         self.R3xx = (value / self.pow15)
-        # print("TR: R3_left: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3xx))
         self.update_R3()
 
     def on_R3_right(self, value):
         self.R3xx = (value / self.pow15)
-        # print("TR: R3_right: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3xx))
         self.update_R3()
 
     def on_R3_y_at_rest(self):
         # R3 joystick is at rest after the joystick was moved and let go off  # up and down
         self.R3yy = 0.0
-        # print("TR: R3_y_at_rest", ",\t{}".format(self.R3yy))
         self.update_R3()
 
     def on_R3_x_at_rest(self):
         # R3 joystick is at rest after the joystick was moved and let go off  # left and right
         self.R3xx = 0.0
-        # print("TR: R3_x_at_rest", ",t{}".format(self.R3xx))
         self.update_R3()
 
     def update_R3(self):
-        # contas: para angulo, é a tangente yy/xx para dist é a hipotenusa
-        # self.R3ang = math.atan2(self.R3yy, self.R3xx)/math.pi*180
         # with this the angles are the same as the trigonometric circle
         self.R3ang = math.atan2(-self.R3xx, self.R3yy)/math.pi*180+0  # 0 -> front # the +0 is to ignore negative zero
         self.R3dist = math.sqrt(self.R3yy**2 + self.R3xx**2)
@@ -447,8 +308,6 @@ class MyController(Controller):
             self.R3dist = 1.0
         if self.R3ang < 0.0:
             self.R3ang += 360
-        # print("TR: ang: {:.2f}".format(self.R3ang), "\tdist: {:.2f}".format(self.R3dist), "X=", self.R3xx, "Y=", self.R3yy)
-        # self.analogs_updated = True
         self.values_updated = True
         
 
@@ -505,6 +364,7 @@ class ControllerNode(Node):
         self.CONTROL_TORSO = self.get_parameter("control_torso").value
         self.CONTROL_WAIT_FOR_END_OF_NAVIGATION = self.get_parameter("control_wait_for_end_of_navigation").value
 
+        # timer that checks the controller every 50 ms 
         self.create_timer(0.05, self.timer_callback)
 
         self.rgb_demo_index = 0
@@ -513,6 +373,7 @@ class ControllerNode(Node):
         self.wfeon = Bool()
         self.torso_pos = Pose2D()
 
+        # initial commands send to different nodes  
         flag_diagn = Bool()
         flag_diagn.data = True
         self.ps4_diagnostic_publisher.publish(flag_diagn)
@@ -571,6 +432,7 @@ class ControllerNode(Node):
             self.get_logger().error("Service call failed %r" % (e,))
 
 
+    # function to be called in tasks to send commands to speakers
     def speech_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         
         self.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
@@ -583,12 +445,14 @@ class ControllerNode(Node):
         
     def timer_callback(self):
 
+        # create ps4 controller object
         ps_con = PS4Controller()
 
         if self.controller.values_updated == True:
             self.watchdog_timer = 0            
             self.watchdog_flag = False
 
+            # attribute controller data to ps4 controller object   
             ps_con.arrow_up = int(self.controller.button_state(self.controller.ARROW_UP))
             ps_con.arrow_right = int(self.controller.button_state(self.controller.ARROW_RIGHT))
             ps_con.arrow_down = int(self.controller.button_state(self.controller.ARROW_DOWN))
@@ -621,12 +485,14 @@ class ControllerNode(Node):
             ps_con.r3_xx = float(self.controller.R3xx)
             ps_con.r3_yy = float(self.controller.R3yy)
 
+            # prevents small noises in joy sticks
             if ps_con.l3_dist < 0.1:
                 ps_con.l3_ang = 0.0
 
             if ps_con.r3_dist < 0.1:
                 ps_con.r3_ang = 0.0
             
+            # overall debug print
             print("\n", ps_con.arrow_up, ps_con.arrow_right, ps_con.arrow_down, ps_con.arrow_left, "|",
                   ps_con.triangle, ps_con.circle, ps_con.cross, ps_con.square, "|",
                   ps_con.l1, ps_con.r1, round(ps_con.l2, 1), round(ps_con.r2, 1), ps_con.l3, ps_con.r3, "|",
@@ -635,9 +501,10 @@ class ControllerNode(Node):
                   str(round(ps_con.r3_ang)).rjust(3), round(ps_con.r3_dist, 1), str(round(ps_con.r3_xx, 1)).rjust(4), str(round(ps_con.r3_yy, 1)).rjust(4), "|",
                   end='')
 
+            # publishes ps4 controller object so if any other needs it, can use controller data  
             self.controller_publisher.publish(ps_con)
             
-            # control code
+            # control code to send commands to other nodes if CONTROL variables are set to true (ros2 params)
             self.control_robot(ps_con)
 
             # gets values ready for next iteration
@@ -685,6 +552,7 @@ class ControllerNode(Node):
         print(".", end='')
 
 
+    # control code to send commands to other nodes if CONTROL variables are set to true (ros2 params)
     def control_robot(self, ps4_controller):
 
         if self.CONTROL_TORSO:
@@ -712,6 +580,7 @@ class ControllerNode(Node):
 
         if self.CONTROL_MOTORS:
 
+            # left joy stick to control x and y movement (direction and linear speed) 
             if ps4_controller.l3_dist >= 0.1:
                 self.omni_move.x = ps4_controller.l3_ang
                 self.omni_move.y = ps4_controller.l3_dist*100/5
@@ -719,6 +588,7 @@ class ControllerNode(Node):
                 self.omni_move.x = 0.0
                 self.omni_move.y = 0.0
 
+            # right joy stick to control angular speed
             if ps4_controller.r3_dist >= 0.1:
                 self.omni_move.z = 100 + ps4_controller.r3_xx*10
             else:
@@ -749,12 +619,17 @@ class ControllerNode(Node):
                     self.rgb_mode_publisher.publish(self.rgb_mode)
 
         if self.CONTROL_SPEAKERS:
+
+            # examples of two different speech commands
             if ps4_controller.r3 == 2:
                 self.speech_server(filename="introduction_full", wait_for_end_of=False)
             elif ps4_controller.l3 == 2:
                 self.speech_server(filename="receptionist_question", wait_for_end_of=False)
                 
         if self.CONTROL_NECK:
+
+            # circle and square to move neck left and right
+            # triangle and cross to move the neck up and down
             neck_inc = 5.0
             if ps4_controller.circle >= 2:
                 self.neck_pos.pan -= neck_inc
@@ -825,11 +700,6 @@ class ControllerNode(Node):
 
         if self.CONTROL_ARM:
             pass
-
-
-                # reajustar o watchdig para ficar em conformidade
-                # reativar rgb mal se resolva o erro
-                # por a declaracao variaveis todas em cima 
 
 
 def thread_controller(node):
