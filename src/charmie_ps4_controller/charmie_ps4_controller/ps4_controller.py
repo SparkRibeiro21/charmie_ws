@@ -517,24 +517,28 @@ class ControllerNode(Node):
         flag_diagn.data = True
         self.ps4_diagnostic_publisher.publish(flag_diagn)
 
-        self.set_movement = Bool()
-        self.set_movement.data = True
-        self.set_movement_publisher.publish(self.set_movement)
+        if self.CONTROL_SET_MOVEMENT:
+            self.set_movement = Bool()
+            self.set_movement.data = True
+            self.set_movement_publisher.publish(self.set_movement)
 
-        self.omni_move = Vector3()
-        self.omni_move.x = 0.0
-        self.omni_move.y = 0.0
-        self.omni_move.z = 100.0
-        self.omni_move_publisher.publish(self.omni_move)
+        if self.CONTROL_MOTORS:
+            self.omni_move = Vector3()
+            self.omni_move.x = 0.0
+            self.omni_move.y = 0.0
+            self.omni_move.z = 100.0
+            self.omni_move_publisher.publish(self.omni_move)
 
-        self.rgb_mode = Int16()
-        self.rgb_mode.data = RAINBOW_ROT
-        self.rgb_mode_publisher.publish(self.rgb_mode)
+        if self.CONTROL_RGB:
+            self.rgb_mode = Int16()
+            self.rgb_mode.data = RAINBOW_ROT
+            self.rgb_mode_publisher.publish(self.rgb_mode)
 
-        self.neck_pos = NeckPosition()
-        self.neck_pos.pan = 180.0
-        self.neck_pos.tilt = 180.0
-        self.neck_position_publisher.publish(self.neck_pos)
+        if self.CONTROL_NECK:
+            self.neck_pos = NeckPosition()
+            self.neck_pos.pan = 180.0
+            self.neck_pos.tilt = 180.0
+            self.neck_position_publisher.publish(self.neck_pos)
 
         self.watchdog_timer = 0
         self.watchdog_flag = False
@@ -655,21 +659,23 @@ class ControllerNode(Node):
             print("WATCHDOG BLOCK - NO COMMUNICATIONS IN THE LAST 2 SECONDS")
 
             # only does this if not in locked motors mode, this prevents always sending the following commands continuously even when it is already locked (mainly stops speaking a lot of times)
-
             if self.set_movement.data == True:
                     
                 # locks motors
-                self.set_movement.data = False
-                self.set_movement_publisher.publish(self.set_movement)
+                if self.CONTROL_SET_MOVEMENT:
+                    self.set_movement.data = False
+                    self.set_movement_publisher.publish(self.set_movement)
 
                 # sends command to stop torso
-                self.torso_pos.x = 0.0
-                self.torso_pos.y = 0.0
-                self.torso_test_publisher.publish(self.torso_pos)
+                if self.CONTROL_TORSO:
+                    self.torso_pos.x = 0.0
+                    self.torso_pos.y = 0.0
+                    self.torso_test_publisher.publish(self.torso_pos)
 
                 # changes to a red value to notify it entered in motors locked mode
-                self.rgb_mode.data = RED+HALF_ROTATE
-                self.rgb_mode_publisher.publish(self.rgb_mode)
+                if self.CONTROL_RGB:
+                    self.rgb_mode.data = RED+HALF_ROTATE
+                    self.rgb_mode_publisher.publish(self.rgb_mode)
 
                 # in case it is not intended for the robot to speak since it may disturb other packages
                 if self.CONTROL_SPEAKERS:
@@ -722,23 +728,25 @@ class ControllerNode(Node):
 
         if self.CONTROL_RGB:
 
-            if ps4_controller.r1 == 2:
-                self.rgb_demo_index+=1
-                if self.rgb_demo_index >= len(rgb_demonstration):
-                    self.rgb_demo_index-=len(rgb_demonstration)
+            # only does this if not in locked motors mode, otherwise it will change the rgb and being in this mode might be unoticed
+            if self.set_movement.data == True:
+                if ps4_controller.r1 == 2:
+                    self.rgb_demo_index+=1
+                    if self.rgb_demo_index >= len(rgb_demonstration):
+                        self.rgb_demo_index-=len(rgb_demonstration)
 
-                # print(self.rgb_demo_index)
-                self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
-                self.rgb_mode_publisher.publish(self.rgb_mode)
-            
-            elif ps4_controller.l1 == 2:
-                self.rgb_demo_index-=1
-                if self.rgb_demo_index < 0:
-                    self.rgb_demo_index+=len(rgb_demonstration)
+                    # print(self.rgb_demo_index)
+                    self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                    self.rgb_mode_publisher.publish(self.rgb_mode)
+                
+                elif ps4_controller.l1 == 2:
+                    self.rgb_demo_index-=1
+                    if self.rgb_demo_index < 0:
+                        self.rgb_demo_index+=len(rgb_demonstration)
 
-                # print(self.rgb_demo_index)
-                self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
-                self.rgb_mode_publisher.publish(self.rgb_mode)
+                    # print(self.rgb_demo_index)
+                    self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                    self.rgb_mode_publisher.publish(self.rgb_mode)
 
         if self.CONTROL_SPEAKERS:
             if ps4_controller.r3 == 2:
@@ -786,8 +794,9 @@ class ControllerNode(Node):
                     self.set_movement_publisher.publish(self.set_movement)
 
                     # returns to the value it was previously
-                    self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
-                    self.rgb_mode_publisher.publish(self.rgb_mode)
+                    if self.CONTROL_RGB:
+                        self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                        self.rgb_mode_publisher.publish(self.rgb_mode)
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:
@@ -800,13 +809,15 @@ class ControllerNode(Node):
                     self.set_movement_publisher.publish(self.set_movement)
 
                     # sends command to stop torso
-                    self.torso_pos.x = 0.0
-                    self.torso_pos.y = 0.0
-                    self.torso_test_publisher.publish(self.torso_pos)
-
-                    # changes to a red value to notify it entered in motors locked mode
-                    self.rgb_mode.data = RED+HALF_ROTATE
-                    self.rgb_mode_publisher.publish(self.rgb_mode)
+                    if self.CONTROL_RGB:
+                        self.torso_pos.x = 0.0
+                        self.torso_pos.y = 0.0
+                        self.torso_test_publisher.publish(self.torso_pos)
+                
+                    # changes to a red value to notify it entered in motors locked mode    
+                    if self.CONTROL_RGB:
+                        self.rgb_mode.data = RED+HALF_ROTATE
+                        self.rgb_mode_publisher.publish(self.rgb_mode)
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:
@@ -819,7 +830,6 @@ class ControllerNode(Node):
                 # reajustar o watchdig para ficar em conformidade
                 # reativar rgb mal se resolva o erro
                 # por a declaracao variaveis todas em cima 
-
 
 
 def thread_controller(node):
