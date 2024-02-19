@@ -26,6 +26,7 @@ class ArmUfactory(Node):
 		self.set_mode_client = self.create_client(SetInt16, '/xarm/set_mode')
 		self.set_state_client = self.create_client(SetInt16, '/xarm/set_state')
 		self.set_gripper_enable = self.create_client(SetInt16, '/xarm/set_gripper_enable')
+		self.set_gripper_speed = self.create_client(SetFloat32, '/xarm/set_gripper_speed')
 		self.set_gripper_mode = self.create_client(SetInt16, '/xarm/set_gripper_mode')
 		self.set_gripper = self.create_client(GripperMove, '/xarm/set_gripper_position')
 		self.set_pause_time_client = self.create_client(SetFloat32, '/xarm/set_pause_time')
@@ -48,6 +49,9 @@ class ArmUfactory(Node):
 
 		while not self.set_gripper_enable.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Gripper Enable...")
+
+		while not self.set_gripper_speed.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Set Gripper Speed...")
 
 		while not self.set_gripper_mode.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Gripper Mode...")
@@ -206,6 +210,15 @@ class ArmUfactory(Node):
 		rclpy.spin_until_future_complete(self, self.future)
 
 		print('gripper_mode')
+
+		# Velocidade do gripper varia entre 1.0 e 5000.0
+
+		set_gripper_speed_req= SetFloat32.Request()
+		set_gripper_speed_req.data = 5000.0
+		self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+		rclpy.spin_until_future_complete(self, self.future)
+
+		print('gripper_speed')
 
 
 	def deg_to_rad(self, deg):

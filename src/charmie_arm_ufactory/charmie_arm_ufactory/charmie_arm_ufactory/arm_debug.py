@@ -210,8 +210,10 @@ class ArmUfactory(Node):
 
 		print('gripper_mode')
 
+		# Velocidade do gripper varia entre 1.0 e 5000.0
+
 		set_gripper_speed_req= SetFloat32.Request()
-		set_gripper_speed_req.data = 0.0
+		set_gripper_speed_req.data = 5000.0
 		self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
 		rclpy.spin_until_future_complete(self, self.future)
 
@@ -376,7 +378,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 		#Fechar garra
 			print('a')
-			self.set_gripper_req.pos = 500.0
+			self.set_gripper_req.pos = 900.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
@@ -402,21 +404,29 @@ class ArmUfactory(Node):
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
-		
+
+
 		elif self.estado_tr == 4: 
+
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 5: 
 			#Abrir garra
-			self.set_gripper_req.pos = 20.0
+			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 5: 
+		elif self.estado_tr == 6: 
 			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 			print('ll')
 
-		elif self.estado_tr == 6:
+		elif self.estado_tr == 7:
 			self.arm_finished_movement.data = True
 			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
 			self.arm_finished_movement.data = False
