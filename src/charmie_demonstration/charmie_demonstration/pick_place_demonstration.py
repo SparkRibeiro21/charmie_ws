@@ -275,6 +275,7 @@ class RestaurantMain():
         print('11111')
         while not self.node.flag_arm_finish:
             pass
+        print('arm movement finished')
         self.node.flag_arm_finish = False
 
     def wait_for_end_of_navigation(self):
@@ -391,15 +392,14 @@ class RestaurantMain():
 
                 print('State 2 = Go place first object tray')
 
-                self.node.neck_position_publisher.publish(self.node.place_objects_tray)
-
                 ### @@@ Preparing to grab the first item
                 place_to_go = Int16()
                 place_to_go.data = 20
                 self.node.barman_or_client_publisher.publish(place_to_go)
                 self.wait_for_end_of_arm()
 
-                if self.flag_object_grabbed.data == True:
+                if self.node.flag_object_grabbed == True:
+                    self.node.neck_position_publisher.publish(self.node.place_objects_tray)
                     place_to_go = Int16()
                     place_to_go.data = 1
                     self.node.barman_or_client_publisher.publish(place_to_go)
@@ -407,11 +407,11 @@ class RestaurantMain():
                     self.state = Go_grab_second_object
                 else:
                     self.speech_server(filename="arm_error_receive_object", command="", wait_for_end_of=True)
-                    self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
                     place_to_go = Int16()
                     place_to_go.data = 19
                     self.node.barman_or_client_publisher.publish(place_to_go)
                     self.wait_for_end_of_arm()
+                    self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
                     self.state = Go_place_first_object_tray
 
 
@@ -447,15 +447,27 @@ class RestaurantMain():
                 
                 print('State 4 = Go place second object tray')
 
-                self.node.neck_position_publisher.publish(self.node.place_objects_tray)
-
                 ### @@@ Preparing to grab the first item
                 place_to_go = Int16()
-                place_to_go.data = 3
+                place_to_go.data = 20
                 self.node.barman_or_client_publisher.publish(place_to_go)
                 self.wait_for_end_of_arm()
 
-                self.state = Go_grab_third_object
+                if self.node.flag_object_grabbed == True:
+                    self.node.neck_position_publisher.publish(self.node.place_objects_tray)
+                    place_to_go = Int16()
+                    place_to_go.data = 3
+                    self.node.barman_or_client_publisher.publish(place_to_go)
+                    self.wait_for_end_of_arm()
+                    self.state = Go_grab_third_object
+                else:
+                    self.speech_server(filename="arm_error_receive_object", command="", wait_for_end_of=True)
+                    place_to_go = Int16()
+                    place_to_go.data = 19
+                    self.node.barman_or_client_publisher.publish(place_to_go)
+                    self.wait_for_end_of_arm()
+                    self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                    self.state = Go_place_second_object_tray
 
             elif self.state == Go_grab_third_object:
 
@@ -475,10 +487,6 @@ class RestaurantMain():
 
                 self.speech_server(filename="arm_place_object_gripper", command="", wait_for_end_of=True)
 
-                self.state = Go_place_third_object_tray
-
-            elif self.state == Go_place_third_object_tray:
-
                 time.sleep(1)
 
                 self.node.rgb_ctr = 14
@@ -489,15 +497,35 @@ class RestaurantMain():
 
                 print('State 6 = Go place third object tray')
 
+                self.state = Go_place_third_object_tray
+
+            elif self.state == Go_place_third_object_tray:
+
                 self.node.neck_position_publisher.publish(self.node.talk_neck)
 
                 ### @@@ Preparing to grab the first item
                 place_to_go = Int16()
-                place_to_go.data = 5
+                place_to_go.data = 20
                 self.node.barman_or_client_publisher.publish(place_to_go)
                 self.wait_for_end_of_arm()
 
-                ##### MUDAR ESTE MOVE TABLE DE SITIO PARA UM ESTADO QUE FAÇA MAIS SENTIDO
+                if self.node.flag_object_grabbed == True:
+                    self.node.neck_position_publisher.publish(self.node.place_objects_tray)
+                    place_to_go = Int16()
+                    place_to_go.data = 5
+                    self.node.barman_or_client_publisher.publish(place_to_go)
+                    self.wait_for_end_of_arm()
+                    self.state = Go_place_first_object_table
+                else:
+                    self.speech_server(filename="arm_error_receive_object", command="", wait_for_end_of=True)
+                    place_to_go = Int16()
+                    place_to_go.data = 19
+                    self.node.barman_or_client_publisher.publish(place_to_go)
+                    self.wait_for_end_of_arm()
+                    self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                    self.state = Go_place_third_object_tray
+
+            elif self.state == Go_place_first_object_table:
 
                 self.speech_server(filename="move_table", command="", wait_for_end_of=True)
 
@@ -506,10 +534,6 @@ class RestaurantMain():
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
                 self.wait_for_end_of_navigation()
-                
-                self.state = Go_place_first_object_table
-
-            elif self.state == Go_place_first_object_table:
 
                 self.node.rgb_ctr = 14
                 self.node.rgb.data = self.node.rgb_ctr

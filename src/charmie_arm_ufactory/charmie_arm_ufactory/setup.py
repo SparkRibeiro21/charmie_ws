@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "arm_ufactory = charmie_arm_ufactory.arm_ufactory:main"
+            "arm_ufactory = charmie_arm_ufactory.arm_ufactory:main",
+            "arm_debug = charmie_arm_ufactory.arm_debug:main"
         ],
     },
 )
