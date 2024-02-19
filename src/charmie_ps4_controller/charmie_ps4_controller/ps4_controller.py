@@ -14,39 +14,14 @@ import numpy as np
 from pyPS4Controller.controller import Controller
 import threading
 
-NUM_BUTTONS = 15
 
-# ARROW_UP = 0
-# ARROW_RIGHT = 1
-# ARROW_DOWN = 2
-# ARROW_LEFT = 3
-# TRIANGLE = 4
-# CIRCLE = 5
-# CROSS = 6
-# SQUARE = 7
-# L1 = 8
-# R1 = 9
-# L3 = 10
-# R3 = 11
-# OPTIONS = 12
-# SHARE = 13
-# PS = 14
+# Constant Variables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_4  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
-# analogs
-# LR2
-
-rgb_demonstration = [100, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 100, 101, 102, 103, 104, 105, 106, 255]
-
-
-CONTROL_TORSO = True
-CONTROL_WAIT_FOR_END_OF_NAVIGATION = True
-CONTROL_MOTORS = True
-CONTROL_RGB = True
-CONTROL_SPEAKERS = True
-CONTROL_NECK = True
-CONTROL_ARM = True
-
-pow15 = 32767
+# rgb leds used for demonstration, can be added any other necessary for demonstration
+rgb_demonstration = [100, 0, 13, 24, 35, 46, 57, 68, 79, 100, 101, 102, 103, 104, 105, 106, 255]
 
 
 class MyController(Controller):
@@ -74,8 +49,11 @@ class MyController(Controller):
         self.L2dist_ant = 0.0
         self.R2dist_ant = 0.0
 
+        NUM_BUTTONS = 15
         self.buttons = np.zeros(NUM_BUTTONS, dtype=np.int8)
         self.buttons_ant = np.zeros(NUM_BUTTONS, dtype=np.int8)
+
+        self.pow15 = 32767   
 
         self.ARROW_UP = 0
         self.ARROW_RIGHT = 1
@@ -102,18 +80,11 @@ class MyController(Controller):
         self.RISING_OR_ON = 2  # to help 'if' commands that must consider both values: if x >=  RISING_OR_ON:
         self.FALLING_OR_OFF = 1  # to help 'if' commands that must consider both values: if x <=  FALLING_OR_OFF:
 
-        # Esta logica não está ao contrário????????? so o LOw e o HIGH do falling e rising
         # 0 LOW  -> LOW  = OFF
-        # 1 LOW  -> HIGH = FALLING
-        # 2 HIGH -> LOW  = RISING
+        # 1 HIGH -> LOW  = FALLING
+        # 2 LOW  -> HIGH = RISING
         # 3 HIGH -> HIGH = ON
 
-        # for x in range(NUM_BUTTONS):
-        #     # print(x)
-        #     self.buttons[x] = x
-        #     x+=1
-
-        # self.buttons[PS] = 0
 
     def on_up_arrow_press(self):
         # print("on_up_arrow_press")
@@ -352,7 +323,7 @@ class MyController(Controller):
 
     def on_L2_press(self, value):
         self.L2dist_ant = self.L2dist
-        self.L2dist = ((value+pow15) / (2*pow15))
+        self.L2dist = ((value+self.pow15) / (2*self.pow15))
         self.L2R2_updated = True
         self.values_updated = True
             
@@ -374,7 +345,7 @@ class MyController(Controller):
         self.values_updated = True
 
     def on_R2_press(self, value):
-        self.R2dist = ((value+pow15) / (2*pow15))
+        self.R2dist = ((value+self.pow15) / (2*self.pow15))
         # print("TR: R2: {}".format(value), ",\t{:.2f}%".format(self.R2dist*100), ",\t{}".format(self.R2dist))
         # self.L2R2_updated = True
         self.values_updated = True
@@ -386,23 +357,23 @@ class MyController(Controller):
         self.values_updated = True
 
     def on_L3_up(self, value):
-        self.L3yy = -(value / pow15)
-        # print("TR: L3_up: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.L3yy))
+        self.L3yy = -(value / self.pow15)
+        # print("TR: L3_up: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3yy))
         self.update_L3()
 
     def on_L3_down(self, value):
-        self.L3yy = -(value / pow15)
-        # print("TR: L3_down: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.L3yy))
+        self.L3yy = -(value / self.pow15)
+        # print("TR: L3_down: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3yy))
         self.update_L3()
 
     def on_L3_left(self, value):
-        self.L3xx = (value / pow15)
-        # print("TR: L3_left: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.L3xx))
+        self.L3xx = (value / self.pow15)
+        # print("TR: L3_left: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3xx))
         self.update_L3()
 
     def on_L3_right(self, value):
-        self.L3xx = (value / pow15)
-        # print("TR: L3_right: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.L3xx))
+        self.L3xx = (value / self.pow15)
+        # print("TR: L3_right: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.L3xx))
         self.update_L3()
 
     def on_L3_y_at_rest(self):
@@ -435,23 +406,23 @@ class MyController(Controller):
         self.values_updated = True
 
     def on_R3_up(self, value):
-        self.R3yy = -(value / pow15)
-        # print("TR: R3_up: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.R3yy))
+        self.R3yy = -(value / self.pow15)
+        # print("TR: R3_up: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3yy))
         self.update_R3()
 
     def on_R3_down(self, value):
-        self.R3yy = -(value / pow15)
-        # print("TR: R3_down: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.R3yy))
+        self.R3yy = -(value / self.pow15)
+        # print("TR: R3_down: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3yy))
         self.update_R3()
 
     def on_R3_left(self, value):
-        self.R3xx = (value / pow15)
-        # print("TR: R3_left: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.R3xx))
+        self.R3xx = (value / self.pow15)
+        # print("TR: R3_left: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3xx))
         self.update_R3()
 
     def on_R3_right(self, value):
-        self.R3xx = (value / pow15)
-        # print("TR: R3_right: {}".format(value), ",\t{:.2f}%".format(abs(value/pow15)*100), ",\t{}".format(self.R3xx))
+        self.R3xx = (value / self.pow15)
+        # print("TR: R3_right: {}".format(value), ",\t{:.2f}%".format(abs(value/self.pow15)*100), ",\t{}".format(self.R3xx))
         self.update_R3()
 
     def on_R3_y_at_rest(self):
@@ -487,31 +458,86 @@ class ControllerNode(Node):
         super().__init__("PS4_Controller")
         self.get_logger().info("Initialised CHARMIE PS4 Controller Node")
 
+        ### ROS2 Parameters ###
+        # when declaring a ros2 parameter the second argument of the function is the default value 
+        self.declare_parameter("control_arm", True) 
+        self.declare_parameter("control_motors", True)
+        self.declare_parameter("control_neck", True) 
+        self.declare_parameter("control_rgb", True) 
+        self.declare_parameter("control_set_movement", True) 
+        self.declare_parameter("control_speakers", True)
+        self.declare_parameter("control_torso", True)
+        self.declare_parameter("control_wait_for_end_of_navigation", True)
+
+        # Create Controller object
         self.controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
 
-        self.controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
-        self.ps4_diagnostic_publisher = self.create_publisher(Bool, "ps4_diagnostic", 10)
+        ### Topics (Publisher and Subscribers) ###   
+        # Low Level 
         self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
-        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-        self.client = self.create_client(SpeechCommand, "speech_command")# Neck
+        self.set_movement_publisher = self.create_publisher(Bool, "set_movement", 10)
+
+        # Navigation
+        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
+
+        # PS4 Controller
+        self.controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
+
+        # Disgnostic
+        self.ps4_diagnostic_publisher = self.create_publisher(Bool, "ps4_diagnostic", 10)
+
+        # Neck
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         
+        ### Services (Clients) ###
+        # Speakers
+        self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+
+        # CONTROL VARIABLES, this is waht defines which modules will the ps4 controller control
+        self.CONTROL_ARM = self.get_parameter("control_arm").value
+        self.CONTROL_MOTORS = self.get_parameter("control_motors").value
+        self.CONTROL_NECK = self.get_parameter("control_neck").value
+        self.CONTROL_RGB = self.get_parameter("control_rgb").value
+        self.CONTROL_SET_MOVEMENT = self.get_parameter("control_set_movement").value
+        self.CONTROL_SPEAKERS = self.get_parameter("control_speakers").value
+        self.CONTROL_TORSO = self.get_parameter("control_torso").value
+        self.CONTROL_WAIT_FOR_END_OF_NAVIGATION = self.get_parameter("control_wait_for_end_of_navigation").value
 
         self.create_timer(0.05, self.timer_callback)
 
         self.rgb_demo_index = 0
         self.waited_for_end_of_speaking = False # not used, but here to be in conformity with other uses
 
+        self.wfeon = Bool()
+        self.torso_pos = Pose2D()
+
         flag_diagn = Bool()
         flag_diagn.data = True
         self.ps4_diagnostic_publisher.publish(flag_diagn)
+
+        self.set_movement = Bool()
+        self.set_movement.data = True
+        self.set_movement_publisher.publish(self.set_movement)
+
+        self.omni_move = Vector3()
+        self.omni_move.x = 0.0
+        self.omni_move.y = 0.0
+        self.omni_move.z = 100.0
+        self.omni_move_publisher.publish(self.omni_move)
+
+        self.rgb_mode = Int16()
+        self.rgb_mode.data = RAINBOW_ROT
+        self.rgb_mode_publisher.publish(self.rgb_mode)
 
         self.neck_pos = NeckPosition()
         self.neck_pos.pan = 180.0
         self.neck_pos.tilt = 180.0
         self.neck_position_publisher.publish(self.neck_pos)
+
+        self.watchdog_timer = 0
+        self.watchdog_flag = False
     
 
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
@@ -520,7 +546,7 @@ class ControllerNode(Node):
         request.command = command
         request.quick_voice = quick_voice
     
-        future = self.client.call_async(request)
+        future = self.speech_command_client.call_async(request)
         print("Sent Command")
 
         if wait_for_end_of:
@@ -553,8 +579,12 @@ class ControllerNode(Node):
 
         
     def timer_callback(self):
+
         ps_con = PS4Controller()
+
         if self.controller.values_updated == True:
+            self.watchdog_timer = 0            
+            self.watchdog_flag = False
 
             ps_con.arrow_up = int(self.controller.button_state(self.controller.ARROW_UP))
             ps_con.arrow_right = int(self.controller.button_state(self.controller.ARROW_RIGHT))
@@ -599,7 +629,7 @@ class ControllerNode(Node):
                   ps_con.l1, ps_con.r1, round(ps_con.l2, 1), round(ps_con.r2, 1), ps_con.l3, ps_con.r3, "|",
                   ps_con.share, ps_con.ps, ps_con.options, "|",
                   str(round(ps_con.l3_ang)).rjust(3), round(ps_con.l3_dist, 1), str(round(ps_con.l3_xx, 1)).rjust(4), str(round(ps_con.l3_yy, 1)).rjust(4), "|", 
-                  str(round(ps_con.r3_ang)).rjust(3), round(ps_con.r3_dist, 1), str(round(ps_con.r3_xx, 1)).rjust(4), str(round(ps_con.r3_yy, 1)).rjust(4)
+                  str(round(ps_con.r3_ang)).rjust(3), round(ps_con.r3_dist, 1), str(round(ps_con.r3_xx, 1)).rjust(4), str(round(ps_con.r3_yy, 1)).rjust(4), "|"
                   )
 
             self.controller_publisher.publish(ps_con)
@@ -610,62 +640,83 @@ class ControllerNode(Node):
             # gets values ready for next iteration
             self.controller.every_button_update()
             self.controller.values_updated = False
-    
+
+        else:
+            if not self.watchdog_flag:
+                self.watchdog_timer += 1
+
+
+        if self.watchdog_timer == 40: # since the ps4 controller checks every 50 ms. 20*50ms is 1 second. 40 is 2 seconds.
+            # this is set if in any kind of emergency the controller stops communicating. 
+            # If the system continues with the last received variables it may result in physical damages.
+            # Therefore, to every moving part that may continue moving is set stop commands
+            self.watchdog_flag = True
+            self.watchdog_timer += 1
+
+            print("WATCHDOG BLOCK - NO COMMUNICATIONS IN THE LAST 2 SECONDS")
+
+            # locks motors
+            self.set_movement.data = False
+            self.set_movement_publisher.publish(self.set_movement)
+
+            # sends command to stop torso
+            self.torso_pos.x = 0.0
+            self.torso_pos.y = 0.0
+            self.torso_test_publisher.publish(self.torso_pos)
+
+            # changes to a red value to notify it entered in motors locked mode
+            self.rgb_mode.data = RED+HALF_ROTATE
+            self.rgb_mode_publisher.publish(self.rgb_mode)
+
+            # in case it is not intended for the robot to speak since it may disturb other packages
+            if self.CONTROL_SPEAKERS:
+                self.speech_server(filename="motors_locked", wait_for_end_of=False)
+
+        print(self.watchdog_timer)
+
 
     def control_robot(self, ps4_controller):
 
-        if CONTROL_TORSO:
-            pos = Pose2D()
+        if self.CONTROL_TORSO:
+
             if ps4_controller.arrow_up >= 2:
-                pos.x = float(1)
-                # print("LEGS UP")
+                self.torso_pos.x = 1.0
             elif ps4_controller.arrow_down >= 2:
-                pos.x = float(-1)
-                # print("LEGS DOWN")
+                self.torso_pos.x = -1.0
             else:
-                pos.x = float(0)
-                # print("LEGS STOP")
+                self.torso_pos.x = 0.0
 
             if ps4_controller.arrow_right >= 2:
-                pos.y = float(1)
-                # print("TORSO UP")
+                self.torso_pos.y = 1.0
             elif ps4_controller.arrow_left >= 2:
-                pos.y = float(-1)
-                # print("TORSO DOWN")
+                self.torso_pos.y = -1.0
             else:
-                pos.y = float(0)
-                # print("TORSO STOP")
+                self.torso_pos.y = 0.0
 
-            self.torso_test_publisher.publish(pos)
+            self.torso_test_publisher.publish(self.torso_pos)
 
-
-        if CONTROL_WAIT_FOR_END_OF_NAVIGATION:
-            pos = Bool()
-            pos.data = True
+        if self.CONTROL_WAIT_FOR_END_OF_NAVIGATION:
+            self.wfeon.data = True
             if ps4_controller.options:
-                self.flag_pos_reached_publisher.publish(pos)
-            # print("NAVIGATION DONE")
+                self.flag_pos_reached_publisher.publish(self.wfeon)
 
+        if self.CONTROL_MOTORS:
 
-        if CONTROL_MOTORS:
-            omni_move = Vector3()
             if ps4_controller.l3_dist >= 0.1:
-                omni_move.x = ps4_controller.l3_ang
-                omni_move.y = ps4_controller.l3_dist*100/5
+                self.omni_move.x = ps4_controller.l3_ang
+                self.omni_move.y = ps4_controller.l3_dist*100/5
             else:
-                omni_move.x = 0.0
-                omni_move.y = 0.0
+                self.omni_move.x = 0.0
+                self.omni_move.y = 0.0
 
             if ps4_controller.r3_dist >= 0.1:
-                omni_move.z = 100 + ps4_controller.r3_xx*10
+                self.omni_move.z = 100 + ps4_controller.r3_xx*10
             else:
-                omni_move.z = 100.0
+                self.omni_move.z = 100.0
                        
-            self.omni_move_publisher.publish(omni_move)
+            self.omni_move_publisher.publish(self.omni_move)
 
-            
-        if CONTROL_RGB:
-            rgb_mode = Int16()
+        if self.CONTROL_RGB:
 
             if ps4_controller.r1 == 2:
                 self.rgb_demo_index+=1
@@ -673,8 +724,8 @@ class ControllerNode(Node):
                     self.rgb_demo_index-=len(rgb_demonstration)
 
                 print(self.rgb_demo_index)
-                rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
-                self.rgb_mode_publisher.publish(rgb_mode)
+                self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                self.rgb_mode_publisher.publish(self.rgb_mode)
             
             elif ps4_controller.l1 == 2:
                 self.rgb_demo_index-=1
@@ -682,19 +733,16 @@ class ControllerNode(Node):
                     self.rgb_demo_index+=len(rgb_demonstration)
 
                 print(self.rgb_demo_index)
-                rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
-                self.rgb_mode_publisher.publish(rgb_mode)
+                self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                self.rgb_mode_publisher.publish(self.rgb_mode)
 
-        if CONTROL_SPEAKERS:
+        if self.CONTROL_SPEAKERS:
             if ps4_controller.r3 == 2:
                 self.speech_server(filename="introduction_full", wait_for_end_of=False)
             elif ps4_controller.l3 == 2:
                 self.speech_server(filename="receptionist_question", wait_for_end_of=False)
                 
-
-        if CONTROL_NECK:
-            pass
-            
+        if self.CONTROL_NECK:
             neck_inc = 5.0
             if ps4_controller.circle >= 2:
                 self.neck_pos.pan -= neck_inc
@@ -723,20 +771,52 @@ class ControllerNode(Node):
                     self.neck_pos.tilt = 235.0
                 self.neck_position_publisher.publish(self.neck_pos)
                 print(self.neck_pos)
-            
 
-        if CONTROL_ARM:
+        if self.CONTROL_SET_MOVEMENT:
+
+            if ps4_controller.ps == 2:
+                if self.set_movement.data == False:
+                    
+                    # stops locked motor mode, motors can now run
+                    self.set_movement.data = True
+                    self.set_movement_publisher.publish(self.set_movement)
+
+                    # returns to the value it was previously
+                    self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
+                    self.rgb_mode_publisher.publish(self.rgb_mode)
+
+                    # in case it is not intended for the robot to speak since it may disturb other packages
+                    if self.CONTROL_SPEAKERS:
+                        self.speech_server(filename="motors_unlocked", wait_for_end_of=False)
+
+                else:
+
+                    # locks motors
+                    self.set_movement.data = False
+                    self.set_movement_publisher.publish(self.set_movement)
+
+                    # sends command to stop torso
+                    self.torso_pos.x = 0.0
+                    self.torso_pos.y = 0.0
+                    self.torso_test_publisher.publish(self.torso_pos)
+
+                    # changes to a red value to notify it entered in motors locked mode
+                    self.rgb_mode.data = RED+HALF_ROTATE
+                    self.rgb_mode_publisher.publish(self.rgb_mode)
+
+                    # in case it is not intended for the robot to speak since it may disturb other packages
+                    if self.CONTROL_SPEAKERS:
+                        self.speech_server(filename="motors_locked", wait_for_end_of=False)
+
+        if self.CONTROL_ARM:
             pass
 
 
-        # DONE - motores movimentacao    
-        # DONE - torso
-        # DONE - wait for end of navigation
-        # DONE - rgb
-        # DONE - speakers
-        #      - neck
-        #      - arm
-    
+                # reajustar o watchdig para ficar em conformidade
+                # reativar rgb mal se resolva o erro
+                # por a declaracao variaveis todas em cima 
+
+
 
 def thread_controller(node):
     node.controller.listen()

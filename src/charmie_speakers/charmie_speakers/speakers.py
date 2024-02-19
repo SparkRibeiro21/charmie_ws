@@ -75,11 +75,10 @@ class RobotSpeak():
                 # send string to face to ease UI
                 str = String()
                 str.data = string_from_file.read()
-                print(str.data)
                 self.node.speech_to_face_publisher.publish(str)
 
                 message = "Text Sent to Face Node"
-                print("File sent to face!")
+                print("File sent to face! - '", str.data, "'")
             else:
                 message = "Text File not Found. NOT sent to face."
                 print("File not sent to face!")
@@ -94,7 +93,8 @@ class RobotSpeak():
             # sends empty string to tell face that the audio has finished to be played
             str = String()
             str.data = ""
-            print(str.data)
+            # print(str.data)
+            print("File sent to face! - End of Sentence")
             self.node.speech_to_face_publisher.publish(str)
 
             success = True
@@ -228,6 +228,9 @@ class SpeakerNode(Node):
 
         # Sends information to diagnostics node
         self.speakers_diagnostic_publisher.publish(flag_diagn)
+
+        # Initial Speaking "Hello" for debug purposes
+        self.charmie_speech.play_command("introduction_hello") 
 
         # Test Function for some quick tests if necessary
         # self.test()
