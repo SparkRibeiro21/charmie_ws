@@ -11,9 +11,12 @@
 
 OS: Ubuntu 22.04 LTS
 
+Python: 3.10
+
 ROS2: Humble
 
-Python: 3.10
+Arm (UFACTORY xArm 6): [xArm Humble Repo](https://github.com/xArm-Developer/xarm_ros2/tree/humble?tab=readme-ov-file)
+To setup the arm in your workspace, please follow the preparation steps on the xArm Humble repository. 
 
 ## :robot: RoboCup@Home Qualification Videos
 
@@ -21,13 +24,13 @@ Python: 3.10
 
 [![Video Title](https://img.youtube.com/vi/RNr9uOhubqw/0.jpg)](https://www.youtube.com/watch?v=RNr9uOhubqw)
 
-https://m.youtube.com/watch?v=RNr9uOhubqw
+[Youtube Link for 2024 Qualification Video](https://m.youtube.com/watch?v=RNr9uOhubqw)
 
 ### RoboCup@Home 2023 :fr:
 
 [![Video Title](https://img.youtube.com/vi/gNx9OYljlcw/0.jpg)](https://www.youtube.com/watch?v=gNx9OYljlcw)
 
-https://m.youtube.com/watch?v=gNx9OYljlcw
+[Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=gNx9OYljlcw)
 
 ## :trophy: Results
 
@@ -59,3 +62,5 @@ https://m.youtube.com/watch?v=gNx9OYljlcw
 <a href="https://github.com/SparkRibeiro21/charmie_ws">
   <img src="https://github.com/gauravghongde/social-icons/blob/master/SVG/Color/Github.svg" alt="Github Logo" width="50">
 </a>
+
+

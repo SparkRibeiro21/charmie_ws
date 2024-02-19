@@ -19,8 +19,8 @@ drinks_list = ["milk", "orange juice", "red wine"]
 
 MODE = "STANDARD"
 
-COMMAND = "Oops, there seems to be a problem. Did you try to trick me? Let's try again."
-FILENAME = "arm_error_receive_object"
+COMMAND = "Motors unlocked."
+FILENAME = "motors_unlocked"
 
 
 class RobotSpeak():

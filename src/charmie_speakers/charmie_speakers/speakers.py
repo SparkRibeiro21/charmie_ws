@@ -30,12 +30,14 @@ class RobotSpeak():
         pygame.mixer.music.set_volume(1.0) 
 
         # info regarding the paths for the recorded files intended to be played
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
         self.complete_path = self.home+'/'+self.midpath+'/'
 
         # TTS synthetiser models path 
-        self.voice_models_path = "/home/utilizador/.local/lib/python3.10/site-packages/TTS/.models.json"
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.voice_models_path = self.home+"/.local/lib/python3.10/site-packages/TTS/.models.json"
         self.model_manager = ModelManager(self.voice_models_path)
 
         # good quality but slow render voice
@@ -73,11 +75,10 @@ class RobotSpeak():
                 # send string to face to ease UI
                 str = String()
                 str.data = string_from_file.read()
-                print(str.data)
                 self.node.speech_to_face_publisher.publish(str)
 
                 message = "Text Sent to Face Node"
-                print("File sent to face!")
+                print("File sent to face! - '", str.data, "'")
             else:
                 message = "Text File not Found. NOT sent to face."
                 print("File not sent to face!")
@@ -92,7 +93,8 @@ class RobotSpeak():
             # sends empty string to tell face that the audio has finished to be played
             str = String()
             str.data = ""
-            print(str.data)
+            # print(str.data)
+            print("File sent to face! - End of Sentence")
             self.node.speech_to_face_publisher.publish(str)
 
             success = True
@@ -226,6 +228,9 @@ class SpeakerNode(Node):
 
         # Sends information to diagnostics node
         self.speakers_diagnostic_publisher.publish(flag_diagn)
+
+        # Initial Speaking "Hello" for debug purposes
+        self.charmie_speech.play_command("introduction_hello") 
 
         # Test Function for some quick tests if necessary
         # self.test()

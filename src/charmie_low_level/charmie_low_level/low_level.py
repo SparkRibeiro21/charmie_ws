@@ -79,6 +79,7 @@ class RobotControl:
         self.OMNI_MOVE = {'CommVar': 'O', 'Lin': 0, 'Ang': 100, 'Dir': 0}
         self.OMNI_MOVE_ANT = {'Lin': 0, 'Ang': 100, 'Dir': 0}
 
+
     def set_omni_flags(self, comm_dict, num):
         comm_dict['Value'] = num
         if num is True:  # Enable
@@ -258,6 +259,8 @@ class LowLevelNode(Node):
         self.flag_torso_pos_subscriber = self.create_subscription(Bool, "flag_torso_pos", self.flag_torso_pos_callback , 10)
 
         self.omni_move_subscriber = self.create_subscription(Vector3, "omni_move", self.omni_move_callback , 10)
+        self.set_movement_subscriber = self.create_subscription(Bool, "set_movement", self.set_movement_callback , 10)
+
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
 
@@ -274,17 +277,21 @@ class LowLevelNode(Node):
         flag_diagn.data = False
 
         self.create_timer(0.05, self.timer_callback)
-        self.create_timer(1.0, self.timer_callback2)
-        self.create_timer(5, self.timer_callback3)
+        # self.create_timer(1.0, self.timer_callback2)
 
         self.robot = RobotControl()
 
         self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
         self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
         self.robot.set_omni_flags(self.robot.TIMEOUT, False)
-        print(self.robot.get_omni_variables(self.robot.ACCELERATION))
-        print(type(self.robot.get_omni_variables(self.robot.ACCELERATION)))
-        if self.robot.get_omni_variables(self.robot.ACCELERATION) == [1, 1]:
+        self.robot.set_omni_variables(self.robot.RGB, 100)
+
+        # test and reorganize
+        aaa = self.robot.get_omni_variables(self.robot.ACCELERATION)
+
+        print(aaa)
+        print(type(aaa))
+        if aaa == [1, 1]:
             flag_diagn.data = True
         else:
             flag_diagn.data = False
@@ -341,15 +348,6 @@ class LowLevelNode(Node):
             print("Torso Stopped 2")
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, False)
             # nao amnda
-
-    def timer_callback3(self):
-        l = 50
-        t = 8
-        # print("Received LEGS/TORSO POSITION: ", l, t)
-        # self.robot.set_omni_variables(self.robot.LEGS, l)
-        # self.robot.set_omni_variables(self.robot.TORSO, t)
-
-
 
     def timer_callback2(self):
             # request start button here
@@ -458,6 +456,14 @@ class LowLevelNode(Node):
             self.get_logger().info("Received Reading Encoder State False")
         self.flag_get_encoders = flag.data
 
+    def set_movement_callback(self, flag: Bool):
+        # print("Set Movement Set To: ", flag.data)
+        if flag.data:
+            self.get_logger().info("Received Set Movement State True")
+        else:
+            self.get_logger().info("Received Set Movement State False")
+        self.robot.set_omni_flags(self.robot.MOVEMENT, flag.data)
+        
 
     def rgb_mode_callback(self, mode: Int16):
         print("Received RGB mode: ", mode.data)
