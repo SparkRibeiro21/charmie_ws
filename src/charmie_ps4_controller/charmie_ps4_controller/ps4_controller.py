@@ -24,10 +24,6 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 rgb_demonstration = [100, 0, 13, 24, 35, 46, 57, 68, 79, 100, 101, 102, 103, 104, 105, 106, 255]
 
 
-
-
-
-
 class MyController(Controller):
 
     def __init__(self, **kwargs):
@@ -551,7 +547,7 @@ class ControllerNode(Node):
         request.quick_voice = quick_voice
     
         future = self.speech_command_client.call_async(request)
-        print("Sent Command")
+        #print("Sent Command")
 
         if wait_for_end_of:
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
@@ -565,7 +561,6 @@ class ControllerNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success)+str(response.message))
-            # print("oi")
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
         except Exception as e:
@@ -627,14 +622,14 @@ class ControllerNode(Node):
 
             if ps_con.r3_dist < 0.1:
                 ps_con.r3_ang = 0.0
-
-            print(ps_con.arrow_up, ps_con.arrow_right, ps_con.arrow_down, ps_con.arrow_left, "|",
+            
+            print("\n", ps_con.arrow_up, ps_con.arrow_right, ps_con.arrow_down, ps_con.arrow_left, "|",
                   ps_con.triangle, ps_con.circle, ps_con.cross, ps_con.square, "|",
                   ps_con.l1, ps_con.r1, round(ps_con.l2, 1), round(ps_con.r2, 1), ps_con.l3, ps_con.r3, "|",
                   ps_con.share, ps_con.ps, ps_con.options, "|",
                   str(round(ps_con.l3_ang)).rjust(3), round(ps_con.l3_dist, 1), str(round(ps_con.l3_xx, 1)).rjust(4), str(round(ps_con.l3_yy, 1)).rjust(4), "|", 
-                  str(round(ps_con.r3_ang)).rjust(3), round(ps_con.r3_dist, 1), str(round(ps_con.r3_xx, 1)).rjust(4), str(round(ps_con.r3_yy, 1)).rjust(4), "|"
-                  )
+                  str(round(ps_con.r3_ang)).rjust(3), round(ps_con.r3_dist, 1), str(round(ps_con.r3_xx, 1)).rjust(4), str(round(ps_con.r3_yy, 1)).rjust(4), "|",
+                  end='')
 
             self.controller_publisher.publish(ps_con)
             
@@ -659,24 +654,29 @@ class ControllerNode(Node):
 
             print("WATCHDOG BLOCK - NO COMMUNICATIONS IN THE LAST 2 SECONDS")
 
-            # locks motors
-            self.set_movement.data = False
-            self.set_movement_publisher.publish(self.set_movement)
+            # only does this if not in locked motors mode, this prevents always sending the following commands continuously even when it is already locked (mainly stops speaking a lot of times)
 
-            # sends command to stop torso
-            self.torso_pos.x = 0.0
-            self.torso_pos.y = 0.0
-            self.torso_test_publisher.publish(self.torso_pos)
+            if self.set_movement.data == True:
+                    
+                # locks motors
+                self.set_movement.data = False
+                self.set_movement_publisher.publish(self.set_movement)
 
-            # changes to a red value to notify it entered in motors locked mode
-            self.rgb_mode.data = RED+HALF_ROTATE
-            self.rgb_mode_publisher.publish(self.rgb_mode)
+                # sends command to stop torso
+                self.torso_pos.x = 0.0
+                self.torso_pos.y = 0.0
+                self.torso_test_publisher.publish(self.torso_pos)
 
-            # in case it is not intended for the robot to speak since it may disturb other packages
-            if self.CONTROL_SPEAKERS:
-                self.speech_server(filename="motors_locked", wait_for_end_of=False)
+                # changes to a red value to notify it entered in motors locked mode
+                self.rgb_mode.data = RED+HALF_ROTATE
+                self.rgb_mode_publisher.publish(self.rgb_mode)
 
-        print(self.watchdog_timer)
+                # in case it is not intended for the robot to speak since it may disturb other packages
+                if self.CONTROL_SPEAKERS:
+                    self.speech_server(filename="motors_locked", wait_for_end_of=False)
+
+        # print(self.watchdog_timer, end='')
+        print(".", end='')
 
 
     def control_robot(self, ps4_controller):
@@ -727,7 +727,7 @@ class ControllerNode(Node):
                 if self.rgb_demo_index >= len(rgb_demonstration):
                     self.rgb_demo_index-=len(rgb_demonstration)
 
-                print(self.rgb_demo_index)
+                # print(self.rgb_demo_index)
                 self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
                 self.rgb_mode_publisher.publish(self.rgb_mode)
             
@@ -736,7 +736,7 @@ class ControllerNode(Node):
                 if self.rgb_demo_index < 0:
                     self.rgb_demo_index+=len(rgb_demonstration)
 
-                print(self.rgb_demo_index)
+                # print(self.rgb_demo_index)
                 self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
                 self.rgb_mode_publisher.publish(self.rgb_mode)
 
@@ -753,28 +753,28 @@ class ControllerNode(Node):
                 if self.neck_pos.pan < 0.0:
                     self.neck_pos.pan = 0.0
                 self.neck_position_publisher.publish(self.neck_pos)
-                print(self.neck_pos)
+                # print(self.neck_pos)
 
             elif ps4_controller.square >= 2:
                 self.neck_pos.pan += neck_inc
                 if self.neck_pos.pan > 359.0:
                     self.neck_pos.pan = 359.0
                 self.neck_position_publisher.publish(self.neck_pos)
-                print(self.neck_pos)
+                # print(self.neck_pos)
 
             if ps4_controller.cross >= 2:
                 self.neck_pos.tilt -= neck_inc
                 if self.neck_pos.tilt < 120.0:
                     self.neck_pos.tilt = 120.0
                 self.neck_position_publisher.publish(self.neck_pos)
-                print(self.neck_pos)
+                # print(self.neck_pos)
 
             elif ps4_controller.triangle >= 2:
                 self.neck_pos.tilt += neck_inc
                 if self.neck_pos.tilt > 235.0:
                     self.neck_pos.tilt = 235.0
                 self.neck_position_publisher.publish(self.neck_pos)
-                print(self.neck_pos)
+                # print(self.neck_pos)
 
         if self.CONTROL_SET_MOVEMENT:
 
