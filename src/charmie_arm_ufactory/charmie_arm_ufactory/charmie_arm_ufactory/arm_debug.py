@@ -27,6 +27,7 @@ class ArmUfactory(Node):
 		self.set_state_client = self.create_client(SetInt16, '/xarm/set_state')
 		self.set_gripper_enable = self.create_client(SetInt16, '/xarm/set_gripper_enable')
 		self.set_gripper_mode = self.create_client(SetInt16, '/xarm/set_gripper_mode')
+		self.set_gripper_speed = self.create_client(SetFloat32, '/xarm/set_gripper_speed')
 		self.set_gripper = self.create_client(GripperMove, '/xarm/set_gripper_position')
 		self.set_pause_time_client = self.create_client(SetFloat32, '/xarm/set_pause_time')
 		self.get_gripper_position = self.create_client(GetFloat32,'/xarm/get_gripper_position')
@@ -48,6 +49,9 @@ class ArmUfactory(Node):
 
 		while not self.set_gripper_enable.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Gripper Enable...")
+
+		while not self.set_gripper_speed.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Set Gripper Speed...")
 
 		while not self.set_gripper_mode.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Gripper Mode...")
@@ -71,7 +75,6 @@ class ArmUfactory(Node):
 		# ARM TOPICS
 
 		self.barman_or_client_subscriber = self.create_subscription(Int16, "barman_or_client", self.go_barman_or_go_client_callback, 10)
-		self.choose_action_subscriber = self.create_subscription(Int16, 'action', self.choose_action_callback, 10)
 		self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
 
 		self.object_grabbed_publisher = self.create_publisher(Bool, "object_grabbed", 10)
@@ -206,6 +209,15 @@ class ArmUfactory(Node):
 		rclpy.spin_until_future_complete(self, self.future)
 
 		print('gripper_mode')
+
+		# Velocidade do gripper varia entre 1.0 e 5000.0
+
+		set_gripper_speed_req= SetFloat32.Request()
+		set_gripper_speed_req.data = 5000.0
+		self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+		rclpy.spin_until_future_complete(self, self.future)
+
+		print('gripper_speed')
 
 	def deg_to_rad(self, deg):
 		rad = [deg[0] * math.pi / 180,
@@ -366,7 +378,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 		#Fechar garra
 			print('a')
-			self.set_gripper_req.pos = 500.0
+			self.set_gripper_req.pos = 900.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
@@ -378,7 +390,7 @@ class ArmUfactory(Node):
 			print('ll')
 
 		elif self.estado_tr == 2:
-			self.joint_values_req.angles = self.deg_to_rad([-30.0, 90.0, -90.0, 0.0, 90.0, 10.0] )
+			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position )
 			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -392,21 +404,29 @@ class ArmUfactory(Node):
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
-		
+
+
 		elif self.estado_tr == 4: 
+
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 5: 
 			#Abrir garra
-			self.set_gripper_req.pos = 20.0
+			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 5: 
+		elif self.estado_tr == 6: 
 			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 			print('ll')
 
-		elif self.estado_tr == 6:
+		elif self.estado_tr == 7:
 			self.arm_finished_movement.data = True
 			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
 			self.arm_finished_movement.data = False
@@ -444,48 +464,12 @@ class ArmUfactory(Node):
 		print('valor vindo do pick and place: ', self.next_arm_movement)
 		print('wqijhuebds')
 		print('estado tr: ',self.estado_tr)
-		if self.next_arm_movement == 0:
-			self.go_grab_first_object()
-				#self.next_arm_movement = 1
-
-		elif self.next_arm_movement == 1:
-			self.go_place_first_object_tray()
-				#self.next_arm_movement = 2
-   
-		elif self.next_arm_movement == 2:
-			self.go_grab_second_object()
-				#self.next_arm_movement = 3
-	
-		elif self.next_arm_movement == 3:
-			self.go_place_second_object_tray()
-				#self.next_arm_movement = 4
-	
-		elif self.next_arm_movement == 4:
-			self.go_grab_third_object()
-				#self.next_arm_movement = 5
-	
-		elif self.next_arm_movement == 5:
-			self.go_place_third_object()
-				#self.next_arm_movement = 6
-	
-		elif self.next_arm_movement == 6:
-			self.place_first_object_table()
-				#self.next_arm_movement = 7
-	
-		elif self.next_arm_movement == 7:
-			self.place_second_object_table()
-				#self.next_arm_movement = 8
-	
-		elif self.next_arm_movement == 8:
-			self.place_third_object_table()
-				#self.next_arm_movement = 9
-	
-		elif self.next_arm_movement == 9:
-			self.go_rest_arm()
-				#self.next_arm_movement = 0
-
-		elif self.next_arm_movement == 19:
+		if self.next_arm_movement == 19:
 			self.open_gripper()
+
+		elif self.next_arm_movement == 18:
+				#print('estado tr: ',self.estado_tr)
+			self.open_close_gripper()
 
 		elif self.next_arm_movement == 20:
 				#print('estado tr: ',self.estado_tr)
