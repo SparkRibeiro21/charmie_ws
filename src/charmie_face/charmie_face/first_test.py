@@ -12,6 +12,18 @@ def save_text_file(type, data = ""):
     with open(destination + "temp.txt", "w") as file:
         file.write(f"{type}|{data}|")
 
+def get_filename(file_name, extension):
+    if not os.path.exists(destination + file_name + extension):
+        return f"{file_name}{extension}"
+    
+    count = 1
+    while True:
+        new_filename = f"{file_name}_{count}{extension}"
+        if not os.path.exists(destination + new_filename):
+            return new_filename
+        count += 1
+
+
 def copy_file(source, file_name):
     shutil.copyfile(source, destination + file_name)
 
@@ -40,7 +52,7 @@ def main():
             file_type = classify_file(file_extension)
 
             if file_type == 'Unknown':
-                print("File type unknow. Please enter a valid file.")
+                print("File type unknown. Please enter a valid file.")
                 continue
 
             save_text_file(file_type, "media/" + file_name + file_extension)
@@ -57,11 +69,13 @@ def main():
             file_type = classify_file(file_extension)
 
             if file_type == 'Unknown':
-                print("File type unknow. Please enter a valid file.")
+                print("File type unknown. Please enter a valid file.")
                 continue
 
-            copy_file(file_location, file_name + file_extension)
-            save_text_file(file_type, "temp/" + file_name + file_extension)
+            new_filename = get_filename(file_name, file_extension)
+
+            copy_file(file_location, new_filename)
+            save_text_file(file_type, "temp/" + new_filename)
             print("File copied successfully.")
 
 

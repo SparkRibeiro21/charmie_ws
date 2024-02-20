@@ -806,6 +806,10 @@ class PersonRecognitionMain():
             print(max_image_height)
 
             detected_person_final_image = detected_person_final_image[0:max_image_height+(y_offset*2), 0:x_offset] # Slicing to crop the image
+            ### add imwrite here to furthermore show in face
+            ### configure image size and layouts to fit face precisely
+            ### if file with name already exists add a counter
+            ### while to know the last counter
             cv2.imshow("Customers Detected", detected_person_final_image)
             cv2.waitKey(100)
 

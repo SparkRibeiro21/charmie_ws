@@ -200,7 +200,7 @@ class SpeakerNode(Node):
 
         # TOPICS:
         # To publish the received strings to the face node
-        self.speech_to_face_publisher = self.create_publisher(String, "display_command_face", 10)    
+        self.speech_to_face_publisher = self.create_publisher(String, "display_speech_face", 10)    
         # Diagnostics for the speakers package
         self.speakers_diagnostic_publisher = self.create_publisher(Bool, "speakers_diagnostic", 10) 
         

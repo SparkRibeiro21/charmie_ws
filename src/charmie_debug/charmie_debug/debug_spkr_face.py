@@ -7,9 +7,9 @@ from functools import partial
 import threading
 import time
 
+from example_interfaces.msg import String
 from charmie_interfaces.srv import SpeechCommand
-
-
+from sensor_msgs.msg import Image
 
 
 class TestNode(Node):
@@ -18,12 +18,15 @@ class TestNode(Node):
         super().__init__("Test")
         self.get_logger().info("Initialised CHARMIE Test Speakers and Face Node")
 
+        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
+
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
 
-        while not self.client.wait_for_service(1.0):
+        while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
 
         self.waited_for_end_of_speaking = False
+        self.test_face_str = String()
 
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         request = SpeechCommand.Request()
@@ -158,7 +161,7 @@ class RestaurantMain():
 
 
 
-                self.speech_server(filename="introduction_full", command="", wait_for_end_of=True)#, quick_voice=Fa)
+                ### self.speech_server(filename="introduction_full", command="", wait_for_end_of=True)#, quick_voice=Fa)
                 # self.speech_server(filename="recep", command="My favourite drink is pleno", wait_for_end_of=True, quick_voice=False)
                 # self.speech_server(filename="receptionist2_1", wait_for_end_of=True)
                 # self.wait_for_end_of_speaking()
@@ -172,10 +175,45 @@ class RestaurantMain():
                 # print()
 
 
-                # self.speech_server(filename="music_pre_start", command="", wait_for_end_of=True)#, quick_voice=Fa)
-                self.speech_server(filename="", command="The favourite drink of leia is water", wait_for_end_of=True, quick_voice=False)
+                ### self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)#, quick_voice=Fa)
+                # self.speech_server(filename="", command="The favourite drink of Leia is water.", wait_for_end_of=True, quick_voice=False)
                 # self.wait_for_end_of_speaking()
                 # print("Test Wait")
+
+
+                self.node.test_face_str.data = "demo1"
+                self.node.image_to_face_publisher.publish(self.node.test_face_str)
+                time.sleep(1)
+
+                self.node.test_face_str.data = "demo2"
+                self.node.image_to_face_publisher.publish(self.node.test_face_str)
+                time.sleep(1)
+
+                self.node.test_face_str.data = "demo3"
+                self.node.image_to_face_publisher.publish(self.node.test_face_str)
+                time.sleep(1)
+
+                self.node.test_face_str.data = "demo4"
+                self.node.image_to_face_publisher.publish(self.node.test_face_str)
+                time.sleep(1)
+
+                self.node.test_face_str.data = "demo5"
+                self.node.image_to_face_publisher.publish(self.node.test_face_str)
+                time.sleep(1)
+
+                self.node.test_face_str.data = "demo6"
+                self.node.image_to_face_publisher.publish(self.node.test_face_str)
+                time.sleep(1)
+
+                self.node.test_face_str.data = "demo7"
+                self.node.image_to_face_publisher.publish(self.node.test_face_str)
+                time.sleep(1)
+
+                self.node.test_face_str.data = "demo8"
+                self.node.image_to_face_publisher.publish(self.node.test_face_str)
+                time.sleep(1)
+
+                
 
 
 
@@ -183,7 +221,7 @@ class RestaurantMain():
                 while time.time() < start + 3: # in seconds
                     pass
                     # print(",", end='')
-                print()
+                # print()
 
 
 
