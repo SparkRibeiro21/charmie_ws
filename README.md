@@ -18,6 +18,9 @@ ROS2: Humble
 Arm (UFACTORY xArm 6): [xArm Humble Repo](https://github.com/xArm-Developer/xarm_ros2/tree/humble?tab=readme-ov-file)
 To setup the arm in your workspace, please follow the preparation steps on the xArm Humble repository. 
 
+Cameras (IntelRealsense 455 and 405): [Realsense Repo](https://github.com/IntelRealSense/realsense-ros)
+To setup the realsense package in your workspace, please follow the installation steps on the Intel Realsense repository. 
+
 ## :robot: RoboCup@Home Qualification Videos
 
 ### RoboCup@Home 2024 :netherlands:
