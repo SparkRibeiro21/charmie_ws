@@ -5,6 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Float32
 from charmie_interfaces.msg import SpeechType, RobotSpeech
 
+import time
 import os
 import shutil
 
@@ -16,6 +17,13 @@ class Face():
         #     1- Go to the device location and open the terminal there
         #     2- write pwd to get the location
         self.destination = "/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_52037149ea96c3a1/SanDisk SD card/temp/"
+
+        # send initial face
+        # self.save_text_file("img", "media/" + file_name + file_extension)
+        self.save_text_file("img", "media/" + "demo7" + ".gif")
+        print("File saved successfully.")
+
+
 
     def save_text_file(self, type, data = ""):
         with open(self.destination + "temp.txt", "w") as file:
@@ -43,10 +51,15 @@ class FaceNode(Node):
         # receive strings to show in face
         self.speech_to_face_subscriber = self.create_subscription(String, "display_command_face", self.speech_to_face_callback, 10)
         
-
     def speech_to_face_callback(self, command: String):
-        print("Received Speech String:", command.data)
-        self.face.save_text_file("text", command.data)
+
+        if command.data != "":
+            print("Received Speech String:", command.data)
+            self.face.save_text_file("text", command.data)
+        else:
+            time.sleep(0.5)
+            self.face.save_text_file("img", "media/" + "demo5" + ".gif")
+            print("File saved successfully.")
 
 def main(args=None):
     rclpy.init(args=args)
