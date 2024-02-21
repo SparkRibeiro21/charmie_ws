@@ -40,7 +40,7 @@ To setup the realsense package in your workspace, please follow the installation
 |Event|Ranking|Points|
 | ------------- | ------------- | ------------- |
 |RoboCup 2023|7/15|932|
-|RoboCup PortugalOpen 2023|3/3|400|
+|RoboCup Portugal Open 2023|3/3|400|
 
 
 
