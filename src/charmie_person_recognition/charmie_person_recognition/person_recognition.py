@@ -807,7 +807,9 @@ class PersonRecognitionMain():
 
             detected_person_final_image = detected_person_final_image[0:max_image_height+(y_offset*2), 0:x_offset] # Slicing to crop the image
             ### add imwrite here to furthermore show in face
+            ### test if imgwrite is a blocking function so we dont have the problem to send the file to face while it is not correctly created
             ### configure image size and layouts to fit face precisely
+            ### add filename depending on date and hour, so when debugging we know when the image was generated
             ### if file with name already exists add a counter
             ### while to know the last counter
             cv2.imshow("Customers Detected", detected_person_final_image)

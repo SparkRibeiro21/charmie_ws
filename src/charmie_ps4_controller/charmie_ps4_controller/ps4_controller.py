@@ -354,7 +354,7 @@ class ControllerNode(Node):
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
 
-        # CONTROL VARIABLES, this is waht defines which modules will the ps4 controller control
+        # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
         self.CONTROL_ARM = self.get_parameter("control_arm").value
         self.CONTROL_MOTORS = self.get_parameter("control_motors").value
         self.CONTROL_NECK = self.get_parameter("control_neck").value

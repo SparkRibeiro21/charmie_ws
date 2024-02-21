@@ -2,13 +2,17 @@
 import rclpy
 from rclpy.node import Node
 
-from example_interfaces.msg import Bool, String, Float32
-from charmie_interfaces.msg import SpeechType, RobotSpeech
+from example_interfaces.msg import String
 
 import time
 import os
 import shutil
 from pathlib import Path
+
+
+### parametros: se usa o publicar frases no ecrã ou não.
+### time after sentence variable
+### initial face also used after finishing a sentence
 
 class Face():
     def __init__(self):
@@ -19,27 +23,22 @@ class Face():
         #     2- write pwd to get the location
         self.destination = "/run/user/1000/gvfs/mtp:host=SAMSUNG_SAMSUNG_Android_52037149ea96c3a1/SanDisk SD card/temp/"
 
+        # info regarding the paths for the custom files intended to be sent to the face
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
         self.complete_path = self.home+'/'+self.midpath+'/'
 
-        # send initial face
-        # self.save_text_file("img", "media/" + file_name + file_extension)
-        # self.save_text_file("video", "media/" + "hasb" + ".mp4")
-        # print("File saved successfully.")
-        # self.save_text_file("img", "media/" + self.complete_path)
+        # sends initial face
+        self.save_text_file("img", "media/" + "demo5" + ".gif")
+        print("Initial Face Set!")
         
-        new_filename = self.get_filename("temp", ".jpg")
-        # the name afther complete path is received from the topic 
-        self.copy_file(self.complete_path+"clients_temp.jpg", new_filename)
-        self.save_text_file("img", "temp/" + new_filename)
-        print("File copied successfully.")
-
-
+    # checks if file exist on the tablet SD card and writes in file so it will appear on face
     def save_text_file(self, type, data = ""):
         with open(self.destination + "temp.txt", "w") as file:
             file.write(f"{type}|{data}|")
 
+    # checks the filename of custom faces being sent and changes the name so there is no conflict in files with similar names
     def get_filename(self, file_name, extension):
         if not os.path.exists(self.destination + file_name + extension):
             return f"{file_name}{extension}"
@@ -51,9 +50,11 @@ class Face():
                 return new_filename
             count += 1
 
+    # copys the custom face file from the /list_of_temp_faces to the tablet SD card
     def copy_file(self, source, file_name):
         shutil.copyfile(source, self.destination + file_name)
 
+    # classifies file between image and video so the the tablet knows which one it is and shows them correctly
     def classify_file(self, file_extension):
         if file_extension.lower() in ['.jpg', '.jpeg', '.png', '.bmp', '.gif']:
             return "img"
@@ -62,29 +63,47 @@ class Face():
         else:
             return "Unknown"
 
+# ROS2 Face Node
 class FaceNode(Node):
     def __init__(self):
         super().__init__("Face")
         self.get_logger().info("Initialised CHARMIE Face Node")
 
+        # Create Face object
         self.face = Face()
 
-        ### TOPICS:
-        # receive strings to show in face
+        ### ROS2 Parameters ###
+        # when declaring a ros2 parameter the second argument of the function is the default value 
+        self.declare_parameter("show_speech", True) 
+
+        ### Topics (Subscribers) ###   
+        # Receive speech strings to show in face
         self.speech_to_face_subscriber = self.create_subscription(String, "display_speech_face", self.speech_to_face_callback, 10)
+        # Receive image or video files name to show in face
         self.image_to_face_subscriber = self.create_subscription(String, "display_image_face", self.image_to_face_callback, 10)
-        
+        # Receive custom image name to send to tablet and show in face
+        self.custom_image_to_face_subscriber = self.create_subscription(String, "display_custom_image_face", self.custom_image_to_face_callback, 10)
+      
+        # whether or not it is intended to show the speech strings on the face while the robot talks
+        self.SHOW_SPEECH = self.get_parameter("show_speech").value
+
+    # Receive speech strings to show in face  
     def speech_to_face_callback(self, command: String):
 
-        if command.data != "":
-            self.face.save_text_file("text", command.data)
-            print("Received Speech String:", command.data)
-        else:
-            time.sleep(0.5)
-            self.face.save_text_file("img", "media/" + "demo5" + ".gif")
-            print("Back to Standard face")
+        if self.SHOW_SPEECH:
+            if command.data != "":
+                self.face.save_text_file("text", command.data)
+                print("Received Speech String:", command.data)
+            else:
+                time.sleep(0.5)
+                self.face.save_text_file("img", "media/" + "demo5" + ".gif")
+                print("Back to Standard face")
 
+
+    # Receive image or video files name to show in face
     def image_to_face_callback(self, command: String):
+
+        # list of all faces available, must be edited for every new face available
         if command.data == "demo1":
             self.face.save_text_file("img", "media/" + "demo1.png")
             print("Received Image:", command.data)
@@ -113,8 +132,25 @@ class FaceNode(Node):
             print("Error receiving image, file does not exist")
 
 
+    # Receive custom image name to send to tablet and show in face
+    def custom_image_to_face_callback(self, command: String):
 
-
+        # checks whether file exists, maybe there was some typo 
+        isExisting = os.path.exists(self.face.complete_path + command.data + ".jpg")
+        
+        if isExisting:
+            # checks the filename of custom faces being sent and changes the name so there is no conflict in files with similar names
+            new_filename = self.face.get_filename(command.data, ".jpg")
+            
+            # the name afther complete path is received from the topic 
+            # self.face.copy_file(self.face.complete_path+"clients_temp.jpg", new_filename)
+            self.face.copy_file(self.face.complete_path + command.data + ".jpg", new_filename)
+            
+            # checks if file exist on the tablet SD card and writes in file so it will appear on face
+            self.face.save_text_file("img", "temp/" + new_filename)
+            print("File copied successfully.")
+        else:
+            print("Error! File not found!")
 
 def main(args=None):
     rclpy.init(args=args)
