@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool
+from example_interfaces.msg import Bool
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3
 from charmie_interfaces.msg import TarNavSDNL, Obstacles

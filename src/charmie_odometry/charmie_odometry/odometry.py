@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool
+from example_interfaces.msg import Bool
 from geometry_msgs.msg import Twist, TransformStamped
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import Encoders

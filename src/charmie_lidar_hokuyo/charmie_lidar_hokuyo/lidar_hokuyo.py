@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
-from std_msgs.msg import Bool
+from example_interfaces.msg import Bool
 
 import threading
 import traceback

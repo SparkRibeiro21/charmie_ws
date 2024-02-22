@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D 
-from std_msgs.msg import Bool
+from example_interfaces.msg import Bool
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import NeckPosition, TrackObject, TrackPerson, DetectedObject, DetectedPerson

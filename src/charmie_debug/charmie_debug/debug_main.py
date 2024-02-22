@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
-from std_msgs.msg import Bool, Int16, String
+from example_interfaces.msg import Bool, Int16, String
 from sensor_msgs.msg import LaserScan, Image
 from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL, NeckPosition, TrackPerson, DetectedPerson, Yolov8Pose, RequestPointCloud
 

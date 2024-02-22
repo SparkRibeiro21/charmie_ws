@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import Bool, String, Float32, Int16
+from example_interfaces.msg import Bool, String, Float32, Int16
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import NeckPosition, DetectedPerson, Yolov8Pose, ListOfPoints, SearchForPerson, ListOfImages, ListOfStrings, RobotSpeech

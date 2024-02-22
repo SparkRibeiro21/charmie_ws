@@ -6,7 +6,7 @@ from rclpy.node import Node
 import threading
 
 from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
-from std_msgs.msg import Bool, Int16, Float32
+from example_interfaces.msg import Bool, Int16, Float32
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import Obstacles, RobotSpeech, TarNavSDNL, Yolov8Pose, DetectedPerson, NeckPosition
