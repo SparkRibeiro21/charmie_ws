@@ -10,9 +10,9 @@ import shutil
 from pathlib import Path
 
 
-### parametros: se usa o publicar frases no ecrã ou não.
-### time after sentence variable
-### initial face also used after finishing a sentence
+    ### parametros: se usa o publicar frases no ecrã ou não.
+    ### time after sentence variable
+### save latest face and put that on after the speech
 
 class Face():
     def __init__(self):
@@ -75,6 +75,7 @@ class FaceNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
+        self.declare_parameter("after_speech_timer", 0.0) 
 
         ### Topics (Subscribers) ###   
         # Receive speech strings to show in face
@@ -86,6 +87,8 @@ class FaceNode(Node):
       
         # whether or not it is intended to show the speech strings on the face while the robot talks
         self.SHOW_SPEECH = self.get_parameter("show_speech").value
+        # the time after every speaked sentence, that the face remains the speech after finished the speakers (float) 
+        self.AFTER_SPEECH_TIMER = self.get_parameter("after_speech_timer").value
 
     # Receive speech strings to show in face  
     def speech_to_face_callback(self, command: String):
@@ -95,7 +98,7 @@ class FaceNode(Node):
                 self.face.save_text_file("text", command.data)
                 print("Received Speech String:", command.data)
             else:
-                time.sleep(0.5)
+                time.sleep(self.AFTER_SPEECH_TIMER)
                 self.face.save_text_file("img", "media/" + "demo5" + ".gif")
                 print("Back to Standard face")
 

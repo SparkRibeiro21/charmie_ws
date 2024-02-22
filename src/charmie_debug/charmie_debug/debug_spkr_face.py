@@ -187,6 +187,7 @@ class RestaurantMain():
                 time.sleep(5)
 
                 self.speech_server(filename="introduction_full", command="", wait_for_end_of=True)
+                time.sleep(2)
 
                 self.node.test_image_face_str.data = "demo1"
                 self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
@@ -205,6 +206,7 @@ class RestaurantMain():
                 time.sleep(1)
 
                 self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                time.sleep(2)
 
                 self.node.test_image_face_str.data = "demo5"
                 self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
