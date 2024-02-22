@@ -324,7 +324,7 @@ class ControllerNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("control_arm", True) 
-        self.declare_parameter("control_face", True)
+        self.declare_parameter("control_face", False)
         self.declare_parameter("control_motors", True)
         self.declare_parameter("control_neck", True) 
         self.declare_parameter("control_rgb", True) 
@@ -358,6 +358,9 @@ class ControllerNode(Node):
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         
+        # Arm 
+        self.barman_or_client_publisher = self.create_publisher(Int16, "barman_or_client", 10)
+
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -719,9 +722,12 @@ class ControllerNode(Node):
                 self.image_to_face_publisher.publish(self.face_mode)
 
 
-
         if self.CONTROL_ARM:
-            pass
+            if ps4_controller.share == 2:
+                ### @@@ Preparing to grab the first item
+                place_to_go = Int16()
+                place_to_go.data = 18
+                self.barman_or_client_publisher.publish(place_to_go)
 
 
 def thread_controller(node):

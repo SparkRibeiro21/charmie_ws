@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
             "arm_ufactory = charmie_arm_ufactory.arm_ufactory:main",
             "arm_debug = charmie_arm_ufactory.arm_debug:main",
-            "arm_cutlery = charmie_arm_ufactory.arm_cutlery:main"
+            "arm_cutlery = charmie_arm_ufactory.arm_cutlery:main",
+            "arm_hello = charmie_arm_ufactory.arm_hello:main"
         ],
     },
 )
