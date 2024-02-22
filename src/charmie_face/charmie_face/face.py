@@ -10,10 +10,6 @@ import shutil
 from pathlib import Path
 
 
-    ### parametros: se usa o publicar frases no ecrã ou não.
-    ### time after sentence variable
-### save latest face and put that on after the speech
-
 class Face():
     def __init__(self):
         print("New Face Class Initialised")
@@ -29,14 +25,19 @@ class Face():
         self.midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
         self.complete_path = self.home+'/'+self.midpath+'/'
 
-        # sends initial face
-        self.save_text_file("img", "media/" + "demo5" + ".gif")
-        print("Initial Face Set!")
-        
+        # saves the latest face received, this is used to return after a speech command ends
+        self.last_face_type = ""
+        self.last_face_path = ""
+
     # checks if file exist on the tablet SD card and writes in file so it will appear on face
     def save_text_file(self, type, data = ""):
         with open(self.destination + "temp.txt", "w") as file:
             file.write(f"{type}|{data}|")
+        
+        # saves the last face to set after finishing speaking
+        if type != "text":
+            self.last_face_type = type
+            self.last_face_path = data
 
     # checks the filename of custom faces being sent and changes the name so there is no conflict in files with similar names
     def get_filename(self, file_name, extension):
@@ -63,6 +64,7 @@ class Face():
         else:
             return "Unknown"
 
+
 # ROS2 Face Node
 class FaceNode(Node):
     def __init__(self):
@@ -76,6 +78,7 @@ class FaceNode(Node):
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
         self.declare_parameter("after_speech_timer", 0.0) 
+        self.declare_parameter("initial_face", "demo5") 
 
         ### Topics (Subscribers) ###   
         # Receive speech strings to show in face
@@ -89,7 +92,15 @@ class FaceNode(Node):
         self.SHOW_SPEECH = self.get_parameter("show_speech").value
         # the time after every speaked sentence, that the face remains the speech after finished the speakers (float) 
         self.AFTER_SPEECH_TIMER = self.get_parameter("after_speech_timer").value
+        # which face should be displayed after initialising the face node (string) 
+        self.INITIAL_FACE = self.get_parameter("initial_face").value
 
+        # sends initial face
+        first_face = String()
+        first_face.data = self.INITIAL_FACE
+        self.image_to_face_callback(first_face)
+
+        
     # Receive speech strings to show in face  
     def speech_to_face_callback(self, command: String):
 
@@ -99,7 +110,9 @@ class FaceNode(Node):
                 print("Received Speech String:", command.data)
             else:
                 time.sleep(self.AFTER_SPEECH_TIMER)
-                self.face.save_text_file("img", "media/" + "demo5" + ".gif")
+                # after receiving the end of speech command, it sends to the face the latest face sent before the speech command
+                self.face.save_text_file(self.face.last_face_type, self.face.last_face_path)
+                print(self.face.last_face_type, self.face.last_face_path)
                 print("Back to Standard face")
 
 
