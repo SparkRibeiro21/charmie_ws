@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import Bool, String, Float32
+from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image

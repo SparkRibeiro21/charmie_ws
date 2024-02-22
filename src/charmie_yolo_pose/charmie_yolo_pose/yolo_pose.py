@@ -2,7 +2,7 @@
 from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool, Float32, Int16
+from example_interfaces.msg import Bool, Float32, Int16
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry

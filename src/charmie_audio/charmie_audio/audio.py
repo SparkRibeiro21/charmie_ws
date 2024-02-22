@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import Bool, String, Float32, Int16
+from example_interfaces.msg import Bool, String, Float32, Int16
 from charmie_interfaces.msg import SpeechType, RobotSpeech
 
 import io

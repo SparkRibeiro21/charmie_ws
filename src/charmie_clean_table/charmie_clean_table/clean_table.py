@@ -5,7 +5,7 @@ from rclpy.node import Node
 
 import threading
 
-from std_msgs.msg import Bool, String, Int16
+from example_interfaces.msg import Bool, String, Int16
 from charmie_interfaces.msg import SpeechType, RobotSpeech
 
 

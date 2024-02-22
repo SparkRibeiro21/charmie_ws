@@ -94,6 +94,8 @@ class FaceNode(Node):
         self.AFTER_SPEECH_TIMER = self.get_parameter("after_speech_timer").value
         # which face should be displayed after initialising the face node (string) 
         self.INITIAL_FACE = self.get_parameter("initial_face").value
+        
+        self.get_logger().info("Initial Face Received is: %s" %self.INITIAL_FACE)
 
         # sends initial face
         first_face = String()

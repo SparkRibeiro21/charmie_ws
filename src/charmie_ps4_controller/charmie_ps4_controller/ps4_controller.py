@@ -6,7 +6,7 @@ from rclpy.node import Node
 from charmie_interfaces.msg import PS4Controller, NeckPosition
 from charmie_interfaces.srv import SpeechCommand
 from geometry_msgs.msg import Pose2D, Vector3
-from std_msgs.msg import Bool, Int16
+from example_interfaces.msg import Bool, Int16
 from example_interfaces.msg import String
 
 import math

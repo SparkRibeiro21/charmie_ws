@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool
+from example_interfaces.msg import Bool, String
 from charmie_interfaces.srv import SpeechCommand
-from example_interfaces.msg import String
 
 from TTS.utils.manage import ModelManager
 from TTS.utils.synthesizer import Synthesizer

@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 import math
-from std_msgs.msg import Bool, String, Float32, Int16
+from example_interfaces.msg import Bool, String, Float32, Int16
 from charmie_interfaces.msg import SpeechType, RobotSpeech
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from functools import partial

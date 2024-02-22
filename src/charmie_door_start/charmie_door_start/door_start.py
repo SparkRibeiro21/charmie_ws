@@ -2,7 +2,7 @@
 import rclpy
 import numpy as np
 from sensor_msgs.msg import LaserScan
-from std_msgs.msg import Bool, Int16
+from example_interfaces.msg import Bool, Int16
 from rclpy.node import Node
 from charmie_interfaces.msg import Obstacles, ObstacleInfo
 

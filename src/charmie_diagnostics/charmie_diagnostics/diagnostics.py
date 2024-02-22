@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
-from std_msgs.msg import Bool, Int16
+from example_interfaces.msg import Bool, Int16
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import RobotSpeech
 

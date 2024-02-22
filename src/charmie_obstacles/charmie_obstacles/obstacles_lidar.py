@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from charmie_interfaces.msg import ObstacleInfo, Obstacles
-from std_msgs.msg import Bool
+from example_interfaces.msg import Bool
 
 import cv2
 import numpy as np

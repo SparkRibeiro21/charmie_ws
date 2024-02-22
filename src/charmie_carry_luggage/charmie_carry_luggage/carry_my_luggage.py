@@ -4,7 +4,7 @@ from rclpy.node import Node
 import threading
 
 from geometry_msgs.msg import Vector3, Pose2D
-from std_msgs.msg import Int16, Bool, String
+from example_interfaces.msg import Int16, Bool, String
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL, Yolov8Pose, NeckPosition

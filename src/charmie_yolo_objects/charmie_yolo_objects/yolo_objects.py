@@ -2,7 +2,7 @@
 from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool, String
+from example_interfaces.msg import Bool, String
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedObject, Yolov8Objects, ListOfImages, ListOfStrings
 from cv_bridge import CvBridge

@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int16, Bool
+from example_interfaces.msg import Int16, Bool
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Quaternion
 # from charmie_interfaces.msg import Encoders

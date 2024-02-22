@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool, Int16
+from example_interfaces.msg import Bool, Int16
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from geometry_msgs.msg import Pose, Point, Quaternion
 from charmie_interfaces.msg import RobotSpeech
