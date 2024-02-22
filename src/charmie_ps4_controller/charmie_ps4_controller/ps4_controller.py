@@ -324,7 +324,7 @@ class ControllerNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("control_arm", True) 
-        self.declare_parameter("control_face", False)
+        self.declare_parameter("control_face", True)
         self.declare_parameter("control_motors", True)
         self.declare_parameter("control_neck", True) 
         self.declare_parameter("control_rgb", True) 
@@ -623,15 +623,6 @@ class ControllerNode(Node):
                     # print(self.rgb_demo_index)
                     self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
                     self.rgb_mode_publisher.publish(self.rgb_mode)
-                
-                elif ps4_controller.l1 == 2:
-                    self.rgb_demo_index-=1
-                    if self.rgb_demo_index < 0:
-                        self.rgb_demo_index+=len(rgb_demonstration)
-
-                    # print(self.rgb_demo_index)
-                    self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
-                    self.rgb_mode_publisher.publish(self.rgb_mode)
 
         if self.CONTROL_SPEAKERS:
             # examples of two different speech commands
@@ -712,7 +703,7 @@ class ControllerNode(Node):
 
 
         if self.CONTROL_FACE:
-            if ps4_controller.share == 2:
+            if ps4_controller.l1 == 2:
                 self.face_demo_index+=1
                 if self.face_demo_index >= len(face_demonstration):
                     self.face_demo_index-=len(face_demonstration)
@@ -724,7 +715,7 @@ class ControllerNode(Node):
 
         if self.CONTROL_ARM:
             if ps4_controller.share == 2:
-                ### @@@ Preparing to grab the first item
+                # Command to say hello 
                 place_to_go = Int16()
                 place_to_go.data = 18
                 self.barman_or_client_publisher.publish(place_to_go)

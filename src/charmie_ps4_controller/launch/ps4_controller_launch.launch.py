@@ -97,8 +97,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),
-        speakers,
         face,
+        speakers,
         # neck,
         # low_level,
         ps4_controller,
