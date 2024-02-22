@@ -129,7 +129,10 @@ class FaceNode(Node):
             self.face.save_text_file("img", "media/" + "demo7.gif")
             print("Received Image:", command.data)
         elif command.data == "demo8":
-            self.face.save_text_file("video", "media/" + "hasb.mp4")
+            self.face.save_text_file("video", "media/" + "demo8.MOV")
+            print("Received Image:", command.data)
+        elif command.data == "demo9":
+            self.face.save_text_file("img", "media/" + "demo9.jpg")
             print("Received Image:", command.data)
         else:
             print("Error receiving image, file does not exist")

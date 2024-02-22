@@ -7,6 +7,7 @@ from charmie_interfaces.msg import PS4Controller, NeckPosition
 from charmie_interfaces.srv import SpeechCommand
 from geometry_msgs.msg import Pose2D, Vector3
 from std_msgs.msg import Bool, Int16
+from example_interfaces.msg import String
 
 import math
 import numpy as np
@@ -22,6 +23,9 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 
 # rgb leds used for demonstration, can be added any other necessary for demonstration
 rgb_demonstration = [100, 0, 13, 24, 35, 46, 57, 68, 79, 100, 101, 102, 103, 104, 105, 106, 255]
+
+# rgb leds used for demonstration, can be added any other necessary for demonstration
+face_demonstration = ["demo5", "demo2", "demo1", "demo8", "demo9"]
 
 # Controller Class, what communicates with the physical controller
 class MyController(Controller):
@@ -320,6 +324,7 @@ class ControllerNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("control_arm", True) 
+        self.declare_parameter("control_face", True)
         self.declare_parameter("control_motors", True)
         self.declare_parameter("control_neck", True) 
         self.declare_parameter("control_rgb", True) 
@@ -349,6 +354,9 @@ class ControllerNode(Node):
 
         # Neck
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
+
+        # Face
+        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         
         ### Services (Clients) ###
         # Speakers
@@ -356,6 +364,7 @@ class ControllerNode(Node):
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
         self.CONTROL_ARM = self.get_parameter("control_arm").value
+        self.CONTROL_FACE = self.get_parameter("control_face").value
         self.CONTROL_MOTORS = self.get_parameter("control_motors").value
         self.CONTROL_NECK = self.get_parameter("control_neck").value
         self.CONTROL_RGB = self.get_parameter("control_rgb").value
@@ -368,6 +377,7 @@ class ControllerNode(Node):
         self.create_timer(0.05, self.timer_callback)
 
         self.rgb_demo_index = 0
+        self.face_demo_index = 0
         self.waited_for_end_of_speaking = False # not used, but here to be in conformity with other uses
 
         self.wfeon = Bool()
@@ -400,6 +410,11 @@ class ControllerNode(Node):
             self.neck_pos.pan = 180.0
             self.neck_pos.tilt = 180.0
             self.neck_position_publisher.publish(self.neck_pos)
+
+        if self.CONTROL_FACE:
+            self.face_mode = String()
+            self.face_mode.data = "demo5"
+            self.image_to_face_publisher.publish(self.face_mode)
 
         self.watchdog_timer = 0
         self.watchdog_flag = False
@@ -556,7 +571,6 @@ class ControllerNode(Node):
     def control_robot(self, ps4_controller):
 
         if self.CONTROL_TORSO:
-
             if ps4_controller.arrow_up >= 2:
                 self.torso_pos.x = 1.0
             elif ps4_controller.arrow_down >= 2:
@@ -579,7 +593,6 @@ class ControllerNode(Node):
                 self.flag_pos_reached_publisher.publish(self.wfeon)
 
         if self.CONTROL_MOTORS:
-
             # left joy stick to control x and y movement (direction and linear speed) 
             if ps4_controller.l3_dist >= 0.1:
                 self.omni_move.x = ps4_controller.l3_ang
@@ -597,7 +610,6 @@ class ControllerNode(Node):
             self.omni_move_publisher.publish(self.omni_move)
 
         if self.CONTROL_RGB:
-
             # only does this if not in locked motors mode, otherwise it will change the rgb and being in this mode might be unoticed
             if self.set_movement.data == True:
                 if ps4_controller.r1 == 2:
@@ -619,7 +631,6 @@ class ControllerNode(Node):
                     self.rgb_mode_publisher.publish(self.rgb_mode)
 
         if self.CONTROL_SPEAKERS:
-
             # examples of two different speech commands
             if ps4_controller.r3 == 2:
                 self.speech_server(filename="introduction_full", wait_for_end_of=False)
@@ -627,7 +638,6 @@ class ControllerNode(Node):
                 self.speech_server(filename="receptionist_question", wait_for_end_of=False)
                 
         if self.CONTROL_NECK:
-
             # circle and square to move neck left and right
             # triangle and cross to move the neck up and down
             neck_inc = 5.0
@@ -660,7 +670,6 @@ class ControllerNode(Node):
                 # print(self.neck_pos)
 
         if self.CONTROL_SET_MOVEMENT:
-
             if ps4_controller.ps == 2:
                 if self.set_movement.data == False:
                     
@@ -697,6 +706,19 @@ class ControllerNode(Node):
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:
                         self.speech_server(filename="motors_locked", wait_for_end_of=False)
+
+
+        if self.CONTROL_FACE:
+            if ps4_controller.share == 2:
+                self.face_demo_index+=1
+                if self.face_demo_index >= len(face_demonstration):
+                    self.face_demo_index-=len(face_demonstration)
+
+                # print(self.rgb_demo_index)
+                self.face_mode.data = face_demonstration[self.face_demo_index]
+                self.image_to_face_publisher.publish(self.face_mode)
+
+
 
         if self.CONTROL_ARM:
             pass

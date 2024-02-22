@@ -189,9 +189,9 @@ class RestaurantMain():
                 self.speech_server(filename="introduction_full", command="", wait_for_end_of=True)
                 time.sleep(2)
 
-                self.node.test_image_face_str.data = "demo1"
+                self.node.test_image_face_str.data = "demo9"
                 self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
-                time.sleep(1)
+                time.sleep(2)
 
                 self.node.test_image_face_str.data = "demo2"
                 self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
