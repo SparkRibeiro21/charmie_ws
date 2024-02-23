@@ -4,10 +4,9 @@ import rclpy
 from rclpy.node import Node
 
 from charmie_interfaces.msg import PS4Controller, NeckPosition
-from charmie_interfaces.srv import SpeechCommand
+from charmie_interfaces.srv import SpeechCommand, ArmCommand
 from geometry_msgs.msg import Pose2D, Vector3
-from example_interfaces.msg import Bool, Int16
-from example_interfaces.msg import String
+from example_interfaces.msg import Bool, Int16, String
 
 import math
 import numpy as np
@@ -359,11 +358,13 @@ class ControllerNode(Node):
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         
         # Arm 
-        self.barman_or_client_publisher = self.create_publisher(Int16, "barman_or_client", 10)
+        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
 
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        self.arm_command_client = self.create_client(ArmCommand, "arm_command")
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
         self.CONTROL_ARM = self.get_parameter("control_arm").value
@@ -382,9 +383,18 @@ class ControllerNode(Node):
         self.rgb_demo_index = 0
         self.face_demo_index = 0
         self.waited_for_end_of_speaking = False # not used, but here to be in conformity with other uses
+        self.waited_for_end_of_arm = False # not used, but here to be in conformity with other uses
+        self.arm_ready = True
+
+        # Sucess and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_sucess = True
+        self.speech_message = ""
+        self.arm_sucess = True
+        self.arm_message = ""
 
         self.wfeon = Bool()
         self.torso_pos = Pose2D()
+        self.select_movement = String()
 
         # initial commands send to different nodes  
         flag_diagn = Bool()
@@ -422,7 +432,17 @@ class ControllerNode(Node):
         self.watchdog_timer = 0
         self.watchdog_flag = False
     
-
+    def arm_finished_movement_callback(self, flag: Bool):
+        # self.get_logger().info("Received response from arm finishing movement")
+        self.arm_ready = True
+        self.waited_for_end_of_arm = True
+        self.arm_sucess = flag.data
+        if flag.data:
+            self.arm_message = "Arm sucessfully moved"
+        else:
+            self.arm_message = "Wrong Movement Received"
+        
+    ### SPEECH SERVICE ###
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         request = SpeechCommand.Request()
         request.filename = filename
@@ -435,6 +455,11 @@ class ControllerNode(Node):
         if wait_for_end_of:
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
+        else:
+            self.speech_sucess = True
+            self.speech_message = "Wait for answer not needed"
+
+
 
     def callback_call_speech_command(self, future): #, a, b):
 
@@ -443,15 +468,20 @@ class ControllerNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info(str(response.success)+str(response.message))
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_sucess = response.success
+            self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
 
+
+    ### SET FUNCTIONS ###
+
     # function to be called in tasks to send commands to speakers
-    def speech_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         
         self.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
         
@@ -460,7 +490,32 @@ class ControllerNode(Node):
             pass
         self.waited_for_end_of_speaking = False
 
+        return self.speech_sucess, self.speech_message
+
+    # function to be called in tasks to send commands to arm
+    def set_arm(self, command="", wait_for_end_of=True):
         
+        temp = String()
+        temp.data = command
+        self.arm_command_publisher.publish(temp)
+
+
+
+
+        if wait_for_end_of:
+            while not self.waited_for_end_of_arm:
+                pass
+            self.waited_for_end_of_arm = False
+        else:
+            self.arm_sucess = True
+            self.arm_message = "Wait for answer not needed"
+
+
+        self.get_logger().info("Set Arm Response: %s" %(str(self.arm_sucess) + " - " + str(self.arm_message)))
+
+        return self.arm_sucess, self.arm_message
+
+
     def timer_callback(self):
 
         # create ps4 controller object
@@ -564,7 +619,7 @@ class ControllerNode(Node):
 
                 # in case it is not intended for the robot to speak since it may disturb other packages
                 if self.CONTROL_SPEAKERS:
-                    self.speech_server(filename="motors_locked", wait_for_end_of=False)
+                    self.set_speech(filename="motors_locked", wait_for_end_of=False)
 
         # print(self.watchdog_timer, end='')
         print(".", end='')
@@ -627,9 +682,11 @@ class ControllerNode(Node):
         if self.CONTROL_SPEAKERS:
             # examples of two different speech commands
             if ps4_controller.r3 == 2:
-                self.speech_server(filename="introduction_full", wait_for_end_of=False)
+                success, message = self.set_speech(filename="introduction_full", wait_for_end_of=False)
+                print(success, message)
             elif ps4_controller.l3 == 2:
-                self.speech_server(filename="receptionist_question", wait_for_end_of=False)
+                success, message = self.set_speech(filename="receptionist_question", wait_for_end_of=False)
+                print(success, message)
                 
         if self.CONTROL_NECK:
             # circle and square to move neck left and right
@@ -678,7 +735,7 @@ class ControllerNode(Node):
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:
-                        self.speech_server(filename="motors_unlocked", wait_for_end_of=False)
+                        self.set_speech(filename="motors_unlocked", wait_for_end_of=False)
 
                 else:
 
@@ -699,8 +756,7 @@ class ControllerNode(Node):
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:
-                        self.speech_server(filename="motors_locked", wait_for_end_of=False)
-
+                        self.set_speech(filename="motors_locked", wait_for_end_of=False)
 
         if self.CONTROL_FACE:
             if ps4_controller.l1 == 2:
@@ -712,13 +768,13 @@ class ControllerNode(Node):
                 self.face_mode.data = face_demonstration[self.face_demo_index]
                 self.image_to_face_publisher.publish(self.face_mode)
 
-
         if self.CONTROL_ARM:
-            if ps4_controller.share == 2:
-                # Command to say hello 
-                place_to_go = Int16()
-                place_to_go.data = 18
-                self.barman_or_client_publisher.publish(place_to_go)
+            if self.arm_ready: 
+                if ps4_controller.share == 2:
+                    self.arm_ready = False
+                    # Command to say hello 
+                    success, message = self.set_arm(command="debug_initial", wait_for_end_of=False)
+                    print(success, message)
 
 
 def thread_controller(node):

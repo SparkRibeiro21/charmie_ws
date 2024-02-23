@@ -26,9 +26,14 @@ class TestNode(Node):
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
 
+        # Variables
         self.waited_for_end_of_speaking = False
         self.test_image_face_str = String()
         self.test_custom_image_face_str = String()
+
+        # Sucess and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_sucess = True
+        self.speech_message = ""
 
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         request = SpeechCommand.Request()
@@ -42,6 +47,9 @@ class TestNode(Node):
         if wait_for_end_of:
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
+        else:
+            self.speech_sucess = True
+            self.speech_message = "Wait for answer not needed"
     
 
 
@@ -52,7 +60,9 @@ class TestNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info(str(response.success)+str(response.message))
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_sucess = response.success
+            self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
         except Exception as e:
@@ -79,7 +89,7 @@ class RestaurantMain():
         # VARS ...
         self.state = 0
     
-    def speech_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         
         self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
         
@@ -87,6 +97,8 @@ class RestaurantMain():
           while not self.node.waited_for_end_of_speaking:
             pass
         self.node.waited_for_end_of_speaking = False
+
+        return self.node.speech_sucess, self.node.speech_message
     
 
     # def wait_for_end_of_speaking(self):
@@ -163,9 +175,9 @@ class RestaurantMain():
 
 
 
-                ### self.speech_server(filename="introduction_full", command="", wait_for_end_of=True)
-                # self.speech_server(filename="recep", command="My favourite drink is pleno", wait_for_end_of=True, quick_voice=False)
-                # self.speech_server(filename="receptionist2_1", wait_for_end_of=True)
+                ### self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
+                # self.set_speech(filename="recep", command="My favourite drink is pleno", wait_for_end_of=True, quick_voice=False)
+                # self.set_speech(filename="receptionist2_1", wait_for_end_of=True)
                 # self.wait_for_end_of_speaking()
                 # print("Test Wait")
 
@@ -177,16 +189,29 @@ class RestaurantMain():
                 # print()
 
 
-                ### self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)#, quick_voice=Fa)
-                # self.speech_server(filename="", command="The favourite drink of Leia is water.", wait_for_end_of=True, quick_voice=False)
+                ### self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)#, quick_voice=Fa)
+                # self.set_speech(filename="", command="The favourite drink of Leia is water.", wait_for_end_of=True, quick_voice=False)
                 # self.wait_for_end_of_speaking()
                 # print("Test Wait")
 
+
+                success, message = self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                print(success, message)
+                time.sleep(5)
+                success, message = self.set_speech(filename="introduction_full", command="", wait_for_end_of=False)
+                print(success, message)
+                time.sleep(5)
+                success, message = self.set_speech(filename="arm_close_grippe", command="", wait_for_end_of=True)
+                print(success, message)
+                time.sleep(5)
+
+
+                """
                 self.node.test_custom_image_face_str.data = "clients_temp"
                 self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
                 time.sleep(5)
 
-                self.speech_server(filename="introduction_full", command="", wait_for_end_of=True)
+                self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
                 time.sleep(2)
 
                 self.node.test_image_face_str.data = "demo9"
@@ -205,7 +230,7 @@ class RestaurantMain():
                 self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
                 time.sleep(1)
 
-                self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
                 time.sleep(2)
 
                 self.node.test_image_face_str.data = "demo5"
@@ -223,7 +248,7 @@ class RestaurantMain():
                 self.node.test_image_face_str.data = "demo8"
                 self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
                 time.sleep(1)
-
+                """
                 
 
 

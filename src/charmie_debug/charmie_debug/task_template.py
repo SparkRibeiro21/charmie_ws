@@ -46,6 +46,10 @@ class GpsrNode(Node):
         self.waited_for_end_of_speaking = False
         self.flag_navigation_done = False
 
+        # Sucess and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_sucess = True
+        self.speech_message = ""
+
     # Function to send commands to speaker module 
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         request = SpeechCommand.Request()
@@ -57,7 +61,11 @@ class GpsrNode(Node):
         print("Sent Command")
 
         if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
+        else:
+            self.speech_sucess = True
+            self.speech_message = "Wait for answer not needed"
 
     # Function that wait for a response from the service (int his case: wait for speech being said to be over)
     def callback_call_speech_command(self, future): #, a, b):
@@ -67,7 +75,9 @@ class GpsrNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info(str(response.success)+str(response.message))
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_sucess = response.success
+            self.speech_message = response.message
             self.waited_for_end_of_speaking = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
@@ -103,13 +113,17 @@ class GpsrMain():
     # wait_for_end_of functions ... 
     # functions where the state machine must wait or not (depending on the wait_for_end_of) for a command 
     # whether this is a variable or just finish a sub-task (speaking, hearing, navigating ...)
-    def speech_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         
         self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
+        
         if wait_for_end_of:
           while not self.node.waited_for_end_of_speaking:
             pass
         self.node.waited_for_end_of_speaking = False
+
+        return self.node.speech_sucess, self.node.speech_message
+    
 
     # just an example of a wait for end of navigation
     def wait_for_end_of_navigation(self):
@@ -143,7 +157,11 @@ class GpsrMain():
                 # your code here ...
 
                 # send speech command to speakers voice, intrucing the robot 
-                self.speech_server(filename="introduction_full", wait_for_end_of=True)
+                self.set_speech(filename="introduction_full", wait_for_end_of=True)
+                # if you want to have some information regarding the the set_speech you just sent you can try the following:
+                success, message = self.set_speech(filename="introduction_full", wait_for_end_of=True)
+                # THIS CAN BE DONE FOR ALL set_(something) functions
+                print(success, message)
                 
                 # send rgb commands to low level
                 self.rgb_mode.data = CYAN+ROTATE

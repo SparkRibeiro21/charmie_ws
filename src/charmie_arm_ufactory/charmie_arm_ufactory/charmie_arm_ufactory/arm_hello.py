@@ -1,9 +1,10 @@
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool, Int16
+from example_interfaces.msg import Bool, Int16, String
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from geometry_msgs.msg import Pose, Point, Quaternion
 from charmie_interfaces.msg import RobotSpeech
+from charmie_interfaces.srv import ArmCommand
 from std_srvs.srv import SetBool
 from functools import partial
 import numpy as np 
@@ -18,8 +19,11 @@ class ArmUfactory(Node):
 		super().__init__("arm_ufactory")
 		self.get_logger().info("Initialised my test Node")	
 
-		# ARM SERVICES
+		# ARM TOPICS
+		self.arm_command_subscriber = self.create_subscription(String, "arm_command", self.arm_command_callback, 10)
+		self.flag_arm_finish_publisher = self.create_publisher(Bool, 'arm_finished_movement', 10)
 
+		# ARM SERVICES
 		self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
 		self.set_joint_client = self.create_client(MoveJoint, '/xarm/set_servo_angle')
 		self.motion_enable_client = self.create_client(SetInt16ById, '/xarm/motion_enable')
@@ -67,19 +71,12 @@ class ArmUfactory(Node):
 
 		self.create_service(SetBool, 'bool_service', self.bool_service_callback)
 		print("Bool TR Service is ready")
-  
 
+		# SERVICES:
+        # Main receive commads 
+		# self.server_speech_command = self.create_service(ArmCommand, "arm_command", self.callback_arm_command) 
+		# self.get_logger().info("Speech Command Server has been started")
 
-		self.flag_arm_finish_publisher = self.create_publisher(Bool, 'flag_arm_finished_movement', 10)
-
-		# ARM TOPICS
-
-		self.barman_or_client_subscriber = self.create_subscription(Int16, "barman_or_client", self.go_barman_or_go_client_callback, 10)
-		self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
-
-		self.object_grabbed_publisher = self.create_publisher(Bool, "object_grabbed", 10)
-	
-		self.flag_arm_finished_movement_ = Bool()
 		self.gripper_reached_target = Bool()
 		self.set_gripper_req = GripperMove.Request()
 		self.joint_values_req = MoveJoint.Request()
@@ -89,23 +86,17 @@ class ArmUfactory(Node):
 		self.plan_exec_req = PlanExec.Request()
 		self.plan_pose_resp = PlanPose.Response()
 		self.joint_plan_req = PlanJoint.Request()
-		self.arm_finished_movement = Bool()
 
+		self.wrong_movement_received = False
+		self.end_of_movement = False
 		self.next_arm_movement = -1
 		self.gripper_tr = 0.0
-		# self.gripper_tr_chegou = False
-
 		self.gripper_opening = []
-		self.a = 0
-		self.choose_action = Int16()
-
-		self.flag_object_grabbed = Bool()
-		self.flag_object_grabbed.data = False
-
 		self.estado_tr = 0
-		self.ctr_button = 0
-		self.ctr_speaker = 0
-		self.processo = 0
+
+		self.setup()
+		print('---------')
+
 
 	def bool_service_callback(self, request, response):
 
@@ -118,20 +109,25 @@ class ArmUfactory(Node):
 			response.success = True
 			response.message = "Action Failed"
 
-
-		self.demonstration()
-
+		self.movement_selection()
 		return response
-			
-	def go_barman_or_go_client_callback(self, place_to_go: Int16):
-		self.get_logger().info(f"Received place_to_go: {place_to_go}")
-		self.next_arm_movement = place_to_go.data
-		self.demonstration()
+
+
+	def arm_command_callback(self, move: String):
+		self.get_logger().info(f"Received movement selection: {move.data}")
+		self.next_arm_movement = move.data
+		self.movement_selection()
+		# this is used when a wrong command is received
+		if self.wrong_movement_received:
+			self.wrong_movement_received = False
+			temp = Bool()
+			temp.data = False
+			self.flag_arm_finish_publisher.publish(temp)
+
 
 	def setup(self):
 		
 		#define key positions and keypoints
-
 		self.initial_position = [-215.0, 83.4, -65.0, -0.5, 74.9, -90.0] 
 		self.restaurant_initial_position = [-224.8, 83.4, -65.0, -0.5, 74.9, -90.0] 
 		self.pre_get_order_position = [-149.0, 2.0, -78.0, 245.0, 32.5, -331.0]
@@ -229,16 +225,18 @@ class ArmUfactory(Node):
 		 ]
 		return rad
 
+
 	def callback_service_tr(self, future):
 		try:
 			print(future.result())			
 			self.estado_tr += 1
 			print("ESTADO = ", self.estado_tr)
-			self.demonstration()
+			self.movement_selection()
 
 		except Exception as e:
 			self.get_logger().error("Service call failed: %r" % (e,))
 			
+
 	def callback_service_tr_gripper(self, future):
 		try:
 			print(future.result())
@@ -252,11 +250,12 @@ class ArmUfactory(Node):
 			
 			print("ESTADO = ", self.estado_tr)
 			self.gripper_tr = future.result().data
-			self.demonstration()
+			self.movement_selection()
 
 
 		except Exception as e:
 			self.get_logger().error("Service call failed: %r" % (e,))
+
 
 	def open_close_gripper(self):
 		if self.estado_tr == 0:
@@ -275,7 +274,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 2:
 			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
+			self.joint_values_req.speed = 0.4 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -283,7 +282,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 3:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
+			self.joint_values_req.speed = 0.4 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -315,12 +314,13 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 		
 		elif self.estado_tr == 8:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			print('FEITO Abrir fechar garra') 
-			# Depois disto o robot tem de falar no restaurant e dar um led verde
+			print('FEITO Abrir fechar garra')
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
 		print('Abertura gripper em mm =', current_gripper_pos)
@@ -347,27 +347,19 @@ class ArmUfactory(Node):
 
 		return self.gripper_reached_target.data
 
-	def demonstration(self):
-		# self.get_logger().info("INSIDE DEMONSTRATION")	
+
+	def movement_selection(self):
+		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
-		if self.next_arm_movement == 18:
-				#print('estado tr: ',self.estado_tr)
+		if self.next_arm_movement == "debug_initial":
 			self.open_close_gripper()
 		else:
-			print('pass - ', self.next_arm_movement)
-			pass
-	
+			self.wrong_movement_received = True
+			print('Wrong Movement Received - ', self.next_arm_movement)	
 		
-	def move_to_goal(self):
-		self.setup()
-		self.demonstration()
-		print('---------')
-
 
 def main(args=None):
 	rclpy.init(args=args)
 	node = ArmUfactory()
-	node.move_to_goal()
-	#nodae.move_to_goal()
 	rclpy.spin(node)
 	rclpy.shutdown()
