@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 
 from charmie_interfaces.msg import PS4Controller, NeckPosition
-from charmie_interfaces.srv import SpeechCommand, ArmCommand
+from charmie_interfaces.srv import SpeechCommand
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, String
 
@@ -364,7 +364,6 @@ class ControllerNode(Node):
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
-        self.arm_command_client = self.create_client(ArmCommand, "arm_command")
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
         self.CONTROL_ARM = self.get_parameter("control_arm").value

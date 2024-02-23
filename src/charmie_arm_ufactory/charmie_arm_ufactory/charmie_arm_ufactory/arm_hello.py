@@ -4,7 +4,6 @@ from example_interfaces.msg import Bool, Int16, String
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from geometry_msgs.msg import Pose, Point, Quaternion
 from charmie_interfaces.msg import RobotSpeech
-from charmie_interfaces.srv import ArmCommand
 from std_srvs.srv import SetBool
 from functools import partial
 import numpy as np 
@@ -71,11 +70,6 @@ class ArmUfactory(Node):
 
 		self.create_service(SetBool, 'bool_service', self.bool_service_callback)
 		print("Bool TR Service is ready")
-
-		# SERVICES:
-        # Main receive commads 
-		# self.server_speech_command = self.create_service(ArmCommand, "arm_command", self.callback_arm_command) 
-		# self.get_logger().info("Speech Command Server has been started")
 
 		self.gripper_reached_target = Bool()
 		self.set_gripper_req = GripperMove.Request()

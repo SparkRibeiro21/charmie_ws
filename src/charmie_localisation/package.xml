@@ -9,7 +9,7 @@
 
 	<depend>rclpy</depend>
 	<depend>geometry_msgs</depend>
-	<depend>std_msgs</depend>
+	<depend>example_interfaces</depend>
 	<depend>nav_msgs</depend>
 	<depend>charmie_interfaces</depend>
   

@@ -20,7 +20,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 find_package(geometry_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
+find_package(example_interfaces REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -49,7 +49,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Yolov8Pose.msg"
   "srv/FirstTRService.srv"
   "srv/SpeechCommand.srv"
-  DEPENDENCIES std_msgs geometry_msgs sensor_msgs
+  DEPENDENCIES example_interfaces geometry_msgs sensor_msgs
 )
 
 ament_export_dependencies(rosidl_default_runtime)
