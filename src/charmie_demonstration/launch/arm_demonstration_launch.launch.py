@@ -121,12 +121,12 @@ def generate_launch_description():
 
     return LaunchDescription([
         speakers,
+        arm,
         LaunchDescription(declared_arguments + [robot_driver_launch]),
         node_robot_state_publisher,
         joint_state,
         neck,
         low_level,
-        arm,
         ps4_controller,
         pick_and_place_demonstration,
     ])

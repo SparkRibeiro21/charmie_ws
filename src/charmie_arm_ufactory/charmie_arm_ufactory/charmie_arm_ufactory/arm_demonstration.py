@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool, Int16
-from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
+from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint, Call
 from geometry_msgs.msg import Pose, Point, Quaternion
 from charmie_interfaces.msg import RobotSpeech
 from std_srvs.srv import SetBool
@@ -31,6 +31,7 @@ class ArmUfactory(Node):
 		self.set_gripper = self.create_client(GripperMove, '/xarm/set_gripper_position')
 		self.set_pause_time_client = self.create_client(SetFloat32, '/xarm/set_pause_time')
 		self.get_gripper_position = self.create_client(GetFloat32,'/xarm/get_gripper_position')
+		self.clean_errrors_client = self.create_client(Call, '/xarm/clean_error')
 		#self.plan_pose_client = self.create_client(PlanPose, '/xarm_pose_plan')
 		#self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
 		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
@@ -64,6 +65,9 @@ class ArmUfactory(Node):
 
 		while not self.get_gripper_position.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
+
+		while not self.clean_errrors_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Clean Errors...")
 
 		self.create_service(SetBool, 'bool_service', self.bool_service_callback)
 		print("Bool TR Service is ready")
@@ -217,8 +221,15 @@ class ArmUfactory(Node):
 		set_gripper_speed_req.data = 2000.0
 		self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
 		rclpy.spin_until_future_complete(self, self.future)
-
+		
 		print('gripper_speed')
+		
+		# Clean error
+
+		""" self.future = self.clean_errrors_client.call_async()
+		rclpy.spin_until_future_complete(self, self.future) """
+
+		
 
 	def deg_to_rad(self, deg):
 		rad = [deg[0] * math.pi / 180,
@@ -1991,6 +2002,14 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 
 		elif self.estado_tr == 5:
+			#Abrir garra
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
 			self.arm_finished_movement.data = True
 			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
 			self.arm_finished_movement.data = False
