@@ -440,6 +440,8 @@ class ControllerNode(Node):
             self.arm_message = "Arm sucessfully moved"
         else:
             self.arm_message = "Wrong Movement Received"
+
+        self.get_logger().info("Received Arm Finished")
         
     ### SPEECH SERVICE ###
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
@@ -772,7 +774,7 @@ class ControllerNode(Node):
                 if ps4_controller.share == 2:
                     self.arm_ready = False
                     # Command to say hello 
-                    success, message = self.set_arm(command="debug_initial", wait_for_end_of=False)
+                    success, message = self.set_arm(command="hello", wait_for_end_of=False)
                     print(success, message)
 
 
