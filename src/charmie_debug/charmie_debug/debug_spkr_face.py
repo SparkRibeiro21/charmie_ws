@@ -7,10 +7,14 @@ from functools import partial
 import threading
 import time
 
-from example_interfaces.msg import String
+from example_interfaces.msg import String, Int16
 from charmie_interfaces.srv import SpeechCommand
 from sensor_msgs.msg import Image
 
+# Constant Variables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_4  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 class TestNode(Node):
 
@@ -18,9 +22,16 @@ class TestNode(Node):
         super().__init__("Test")
         self.get_logger().info("Initialised CHARMIE Test Speakers and Face Node")
 
+        ### Topics (Publisher and Subscribers) ###  
+        # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
 
+        # Low level
+        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
+
+        ### Services (Clients) ###
+        # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
 
         while not self.speech_command_client.wait_for_service(1.0):
@@ -34,6 +45,8 @@ class TestNode(Node):
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
         self.speech_sucess = True
         self.speech_message = ""
+        self.rgb_sucess = True
+        self.rgb_message = ""
 
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         request = SpeechCommand.Request()
@@ -100,6 +113,18 @@ class RestaurantMain():
 
         return self.node.speech_sucess, self.node.speech_message
     
+    
+    def set_rgb(self, command="", wait_for_end_of=True):
+        
+        temp = Int16()
+        temp.data = command
+        self.node.rgb_mode_publisher.publish(temp)
+
+        self.node.rgb_sucess = True
+        self.node.rgb_message = "Value Sucessfully Sent"
+
+        return self.node.rgb_sucess, self.node.rgb_message
+
 
     # def wait_for_end_of_speaking(self):
     #     while not self.node.waited_for_end_of_speaking:
@@ -195,12 +220,16 @@ class RestaurantMain():
                 # print("Test Wait")
 
 
+                s, m = self.set_rgb(RED+MOON)
+                print(s, m)
                 success, message = self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
                 print(success, message)
                 time.sleep(5)
+                self.set_rgb(BLUE+ROTATE)
                 success, message = self.set_speech(filename="introduction_full", command="", wait_for_end_of=False)
                 print(success, message)
                 time.sleep(5)
+                self.set_rgb(WHITE+ALTERNATE_QUARTERS)
                 success, message = self.set_speech(filename="arm_close_grippe", command="", wait_for_end_of=True)
                 print(success, message)
                 time.sleep(5)

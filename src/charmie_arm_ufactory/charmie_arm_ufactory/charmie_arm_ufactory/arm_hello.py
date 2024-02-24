@@ -83,13 +83,16 @@ class ArmUfactory(Node):
 
 		self.wrong_movement_received = False
 		self.end_of_movement = False
-		self.next_arm_movement = "debug_initial"
 		self.gripper_tr = 0.0
 		self.gripper_opening = []
 		self.estado_tr = 0
 
+		# initial debug movement 
+		self.next_arm_movement = "debug_initial"
+
 		self.setup()
 		print('---------')
+		self.movement_selection()
 
 
 	def bool_service_callback(self, request, response):
@@ -315,6 +318,75 @@ class ArmUfactory(Node):
 			print('FEITO Abrir fechar garra')
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def hello(self):
+		
+		self.get_logger().warning("Going to make hello movement")	
+		
+
+		"""
+		if self.estado_tr == 0:
+		#Fechar garra
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+	
+		elif self.estado_tr == 1: 
+			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
+			print('ll')
+
+		elif self.estado_tr == 2:
+			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 4: 
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 5: 
+			#Abrir garra
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6: 
+			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
+			print('ll')
+
+		elif self.estado_tr == 7: 
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 5000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 8:
+			"""
+		temp = Bool()
+		temp.data = True
+		self.flag_arm_finish_publisher.publish(temp)
+		self.estado_tr = 0
+		print('FEITO Abrir fechar garra')
+		self.get_logger().info("FINISHED MOVEMENT")	
 
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
 		print('Abertura gripper em mm =', current_gripper_pos)
@@ -347,6 +419,8 @@ class ArmUfactory(Node):
 		print('valor vindo do pick and place: ', self.next_arm_movement)
 		if self.next_arm_movement == "debug_initial":
 			self.open_close_gripper()
+		elif self.next_arm_movement == "hello":
+			self.hello()
 		else:
 			self.wrong_movement_received = True
 			print('Wrong Movement Received - ', self.next_arm_movement)	

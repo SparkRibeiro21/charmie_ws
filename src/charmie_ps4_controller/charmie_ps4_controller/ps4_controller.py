@@ -494,12 +494,12 @@ class ControllerNode(Node):
     # function to be called in tasks to send commands to arm
     def set_arm(self, command="", wait_for_end_of=True):
         
+        # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
+        self.waited_for_end_of_arm = False
+        
         temp = String()
         temp.data = command
         self.arm_command_publisher.publish(temp)
-
-
-
 
         if wait_for_end_of:
             while not self.waited_for_end_of_arm:
