@@ -83,7 +83,7 @@ class ArmUfactory(Node):
 
 		self.wrong_movement_received = False
 		self.end_of_movement = False
-		self.next_arm_movement = -1
+		self.next_arm_movement = "debug_initial"
 		self.gripper_tr = 0.0
 		self.gripper_opening = []
 		self.estado_tr = 0
