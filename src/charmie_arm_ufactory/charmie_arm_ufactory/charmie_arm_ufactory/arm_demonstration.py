@@ -1992,24 +1992,12 @@ class ArmUfactory(Node):
 		elif self.estado_tr == 3:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
 			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
+			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 4:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-
-		elif self.estado_tr == 5:
-			#Abrir garra
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
 			self.arm_finished_movement.data = True
 			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
 			self.arm_finished_movement.data = False
