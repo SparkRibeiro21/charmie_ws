@@ -16,6 +16,100 @@ RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_4  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
+"""
+
+->  ->  ->  ->  ->  HOW TO CREATE A TASK?
+
+1) IMPORT ALL ROS2 TOPICS/SERVICES NECESSARY AND WAIT_FOR_SERVICE
+2) PLAN THE STATES AND SET THE STATES FOR YOUR TASK:
+
+        self.Waiting_for_task_start = 0
+        self.Approach_kitchen_counter = 1
+        self.Picking_up_spoon = 2
+        self.Picking_up_milk = 3
+        self.Picking_up_cereal = 4
+        self.Picking_up_bowl = 5
+        self.Approach_kitchen_table = 6
+        self.Placing_bowl = 7
+        self.Placing_cereal = 8
+        self.Placing_milk = 9
+        self.Placing_spoon = 10
+        self.Final_State = 7
+
+# 3) CREATE THE STATE STRUCTURE:
+        
+        if self.state == self.Waiting_for_task_start:
+                # your code here ...
+                                
+                # next state
+                self.state = self.Approach_kitchen_counter
+
+            elif self.state == self.Approach_kitchen_counter:
+                # your code here ...
+                                
+                # next state
+                self.state = self.Picking_up_spoon
+
+            elif self.state == self.Picking_up_spoon:
+                # your code here ...
+                                
+                # next state
+                self.state = self.Picking_up_milk
+
+            (...)
+
+# 4) CREATE THE PSEUDOCODE OF EACH STATE:
+            
+            elif self.state == self.Picking_up_spoon:
+                
+                ##### NECK LOOKS AT TABLE
+
+                ##### MOVES ARM TO TOP OF TABLE POSITION
+
+                ##### SPEAK: Searching for objects
+
+                ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
+                
+                ##### SPEAK: Found spoon
+                
+                ##### SPEAK: Check face to see object detected
+
+                ##### SHOW FACE DETECTED OBJECT
+
+                ##### MOVE ARM TO PICK UP OBJECT 
+
+                ##### IF AN ERROR IS DETECTED:
+
+                    ##### SPEAK: There is a problem picking up the object
+
+                    ##### MOVE ARM TO ERROR POSITION 
+                
+                    ##### NECK LOOK JUDGE
+
+                    ##### SPEAK: Need help, put object on my hand as it is on my face
+
+                    ##### SHOW FACE GRIPPER SPOON 
+
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+
+                        ##### SPEAK: Close gripper in 3 2 1 
+
+                        ##### ARM: CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED: 
+
+                            ##### SPEAK: There seems to be a problem, please retry.
+
+                            ##### ARM OPEN GRIPPER
+                        
+                ##### NECK LOOK TRAY
+                        
+                ##### ARM PLACE OBJECT IN TRAY
+
+                self.state = self.Picking_up_milk
+
+# 5) REPLACE ALL THE SPEAKS IN PSEUDOCODE WITH self.set_speech(...), CREATE FILES IN ros2 run charmie_speakers save_audio
+"""
 
 class ServeBreakfastNode(Node):
 
@@ -113,8 +207,10 @@ class ServeBreakfastMain():
         self.Placing_cereal = 8
         self.Placing_milk = 9
         self.Placing_spoon = 10
-        self.Final_State = 7
+        self.Final_State = 11
 
+        # to debug just a part of the task you can just change the initial state, example:
+        # self.state = self.Approach_kitchen_table
         self.state = self.Waiting_for_task_start
 
 
@@ -167,84 +263,63 @@ class ServeBreakfastMain():
                 self.set_rgb(RED+ALTERNATE_QUARTERS)
                 self.set_face("help_pick_milk")
                 
-                
                 self.state = self.Approach_kitchen_counter
 
             elif self.state == self.Approach_kitchen_counter:
-                #print('State 1 = Hand Raising Detect')
-
                 # your code here ...
                                 
                 # next state
                 self.state = self.Picking_up_spoon
 
-            if self.state == self.Picking_up_spoon:
-                #print('State 0 = Initial')
-
+            elif self.state == self.Picking_up_spoon:
                 # your code here ...
                                 
                 # next state
                 self.state = self.Picking_up_milk
 
             elif self.state == self.Picking_up_milk:
-                #print('State 1 = Hand Raising Detect')
-
                 # your code here ...
                                 
                 # next state
                 self.state = self.Picking_up_cereal
            
-            if self.state == self.Picking_up_cereal:
-                #print('State 0 = Initial')
-
+            elif self.state == self.Picking_up_cereal:
                 # your code here ...
                                 
                 # next state
                 self.state = self.Picking_up_bowl
 
             elif self.state == self.Picking_up_bowl:
-                #print('State 1 = Hand Raising Detect')
-
                 # your code here ...
                                 
                 # next state
                 self.state = self.Approach_kitchen_table
 
-            if self.state == self.Approach_kitchen_table:
-                #print('State 0 = Initial')
-
+            elif self.state == self.Approach_kitchen_table:
                 # your code here ...
                                 
                 # next state
                 self.state = self.Placing_bowl
 
             elif self.state == self.Placing_bowl:
-                #print('State 1 = Hand Raising Detect')
-
                 # your code here ...
                                 
                 # next state
                 self.state = self.Placing_cereal 
 
             elif self.state == self.Placing_cereal:
-                #print('State 1 = Hand Raising Detect')
-
                 # your code here ...
                                 
                 # next state
                 self.state = self.Placing_milk
            
-            if self.state == self.Placing_milk:
-                #print('State 0 = Initial')
-
+            elif self.state == self.Placing_milk:
                 # your code here ...
                                 
                 # next state
                 self.state = self.Placing_spoon
 
             elif self.state == self.Placing_spoon:
-                #print('State 1 = Hand Raising Detect')
-
                 # your code here ...
                                 
                 # next state

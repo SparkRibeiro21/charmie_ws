@@ -19,8 +19,8 @@ drinks_list = ["milk", "orange juice", "red wine"]
 
 MODE = "STANDARD"
 
-COMMAND = "Motors unlocked."
-FILENAME = "motors_unlocked"
+COMMAND = "I need help. Please place the object on my hand, as shown on my face."
+FILENAME = "check_face_put_object_hand"
 
 
 class RobotSpeak():

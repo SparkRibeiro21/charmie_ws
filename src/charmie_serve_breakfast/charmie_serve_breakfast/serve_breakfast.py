@@ -113,8 +113,10 @@ class ServeBreakfastMain():
         self.Placing_cereal = 8
         self.Placing_milk = 9
         self.Placing_spoon = 10
-        self.Final_State = 7
+        self.Final_State = 11
 
+        # to debug just a part of the task you can just change the initial state, example:
+        # self.state = self.Approach_kitchen_table
         self.state = self.Waiting_for_task_start
 
 
@@ -160,102 +162,330 @@ class ServeBreakfastMain():
 
         while True:
 
+            ##### ADJUST WAIT_FOR_END_OF_SPEAKING
             if self.state == self.Waiting_for_task_start:
 
-                self.set_face("help_pick_cup")
-                self.set_speech(filename="introduction_full", wait_for_end_of=True)
-                self.set_rgb(RED+ALTERNATE_QUARTERS)
-                self.set_face("help_pick_milk")
+                self.set_face("demo5")
+
+                ##### NECK LOOKS FORWARD
                 
+                self.set_speech(filename="sb_ready_start", wait_for_end_of=True)
+
+                self.set_speech(filename="waiting_start_button", wait_for_end_of=True) # must change to door open
+                # self.set_speech(filename="waiting_door_open", wait_for_end_of=False)
+                
+                # self.set_rgb(RED+ALTERNATE_QUARTERS)
+                # self.set_face("help_pick_milk")
+
+                ###### WAITS FOR START BUTTON / DOOR OPEN
+
+                time.sleep(2)
                 
                 self.state = self.Approach_kitchen_counter
 
             elif self.state == self.Approach_kitchen_counter:
-                #print('State 1 = Hand Raising Detect')
 
-                # your code here ...
-                                
-                # next state
+                ##### NECK LOOKS TO NAVIGATION
+
+                self.set_speech(filename="sb_moving_kitchen_counter", wait_for_end_of=True)
+
+                ###### MOVEMENT TO THE KITCHEN COUNTER
+
+                self.set_speech(filename="sb_arrived_kitchen_counter", wait_for_end_of=True)
+                
                 self.state = self.Picking_up_spoon
 
-            if self.state == self.Picking_up_spoon:
-                #print('State 0 = Initial')
+            elif self.state == self.Picking_up_spoon:
+                
+                ##### NECK LOOKS AT TABLE
 
-                # your code here ...
-                                
-                # next state
+                ##### MOVES ARM TO TOP OF TABLE POSITION
+
+                self.set_speech(filename="search_objects", wait_for_end_of=True)
+
+                ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
+
+                self.set_speech(filename="sb_found_spoon", wait_for_end_of=True)
+
+                self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
+
+                ##### SHOW FACE DETECTED OBJECT
+
+                ##### MOVE ARM TO PICK UP OBJECT 
+
+                ##### IF AN ERROR IS DETECTED:
+                
+                self.set_speech(filename="problem_pick_object", wait_for_end_of=True) # False
+                   
+                    ##### MOVE ARM TO ERROR POSITION 
+                
+                    ##### NECK LOOK JUDGE
+                
+                self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
+                    
+                    ##### SHOW FACE GRIPPER SPOON 
+                
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+                
+                self.set_speech(filename="arm_close_gripper", wait_for_end_of=True)
+
+                        ##### ARM CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED:
+                
+                self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
+                        
+                            ##### ARM OPEN GRIPPER
+                        
+                ##### NECK LOOK TRAY
+                
+                ##### ARM PLACE OBJECT IN TRAY
+
                 self.state = self.Picking_up_milk
 
             elif self.state == self.Picking_up_milk:
-                #print('State 1 = Hand Raising Detect')
 
-                # your code here ...
-                                
-                # next state
+                ##### NECK LOOKS AT TABLE
+
+                ##### MOVES ARM TO TOP OF TABLE POSITION
+
+                self.set_speech(filename="search_objects", wait_for_end_of=True)
+
+                ##### YOLO OBJECTS SEARCH FOR MILK, FOR BOTH CAMERAS
+
+                self.set_speech(filename="sb_found_milk", wait_for_end_of=True)
+
+                self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
+
+                ##### SHOW FACE DETECTED OBJECT
+
+                ##### MOVE ARM TO PICK UP OBJECT 
+
+                ##### IF AN ERROR IS DETECTED:
+                
+                self.set_speech(filename="problem_pick_object", wait_for_end_of=True) # False
+                   
+                    ##### MOVE ARM TO ERROR POSITION 
+                
+                    ##### NECK LOOK JUDGE
+                
+                self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
+                    
+                    ##### SHOW FACE GRIPPER MILK 
+                
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+                
+                self.set_speech(filename="arm_close_gripper", wait_for_end_of=True)
+
+                        ##### ARM CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED:
+                
+                self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
+                        
+                            ##### ARM OPEN GRIPPER
+                        
+                ##### NECK LOOK TRAY
+                        
+                ##### ARM PLACE OBJECT IN TRAY
+
                 self.state = self.Picking_up_cereal
            
-            if self.state == self.Picking_up_cereal:
-                #print('State 0 = Initial')
+            elif self.state == self.Picking_up_cereal:
 
-                # your code here ...
-                                
-                # next state
+                ##### NECK LOOKS AT TABLE
+
+                ##### MOVES ARM TO TOP OF TABLE POSITION
+
+                self.set_speech(filename="search_objects", wait_for_end_of=True)
+
+                ##### YOLO OBJECTS SEARCH FOR CEREAL, FOR BOTH CAMERAS
+
+                self.set_speech(filename="sb_found_cereal", wait_for_end_of=True)
+
+                self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
+
+                ##### SHOW FACE DETECTED OBJECT
+
+                ##### MOVE ARM TO PICK UP OBJECT 
+
+                ##### IF AN ERROR IS DETECTED:
+                
+                self.set_speech(filename="problem_pick_object", wait_for_end_of=True) # False
+                   
+                    ##### MOVE ARM TO ERROR POSITION 
+                
+                    ##### NECK LOOK JUDGE
+                
+                self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
+                    
+                    ##### SHOW FACE GRIPPER SPOON 
+                
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+                
+                self.set_speech(filename="arm_close_gripper", wait_for_end_of=True)
+
+                        ##### ARM CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED:
+                
+                self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
+                        
+                            ##### ARM OPEN GRIPPER
+                        
+                ##### NECK LOOK TRAY
+                        
+                ##### ARM PLACE OBJECT IN TRAY
+
                 self.state = self.Picking_up_bowl
 
             elif self.state == self.Picking_up_bowl:
-                #print('State 1 = Hand Raising Detect')
 
-                # your code here ...
-                                
-                # next state
+                ##### NECK LOOKS AT TABLE
+
+                ##### MOVES ARM TO TOP OF TABLE POSITION
+
+                self.set_speech(filename="search_objects", wait_for_end_of=True)
+
+                ##### YOLO OBJECTS SEARCH FOR BOWL, FOR BOTH CAMERAS
+
+                self.set_speech(filename="sb_found_bowl", wait_for_end_of=True)
+
+                self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
+
+                ##### SHOW FACE DETECTED OBJECT
+
+                ##### MOVE ARM TO PICK UP OBJECT 
+
+                ##### IF AN ERROR IS DETECTED:
+                
+                self.set_speech(filename="problem_pick_object", wait_for_end_of=True) # False
+                   
+                    ##### MOVE ARM TO ERROR POSITION 
+                
+                    ##### NECK LOOK JUDGE
+
+                self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
+                    
+                    ##### SHOW FACE GRIPPER BOWL 
+                
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+                
+                self.set_speech(filename="arm_close_gripper", wait_for_end_of=True)
+
+                        ##### ARM CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED:
+                
+                self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
+                        
+                            ##### ARM OPEN GRIPPER
+                        
+                ##### NECK LOOK TRAY
+                        
+                ##### ARM PLACE OBJECT IN TRAY
+
                 self.state = self.Approach_kitchen_table
 
-            if self.state == self.Approach_kitchen_table:
-                #print('State 0 = Initial')
+            elif self.state == self.Approach_kitchen_table:
 
-                # your code here ...
-                                
-                # next state
+                self.set_speech(filename="objects_all_collected", wait_for_end_of=True)
+
+                ##### NECK LOOKS TO NAVIGATION
+
+                self.set_speech(filename="sb_moving_kitchen_table", wait_for_end_of=True)
+
+                ###### MOVEMENT TO THE KITCHEN TABLE
+
+                self.set_speech(filename="sb_arrived_kitchen_table", wait_for_end_of=True)
+
+                self.set_speech(filename="place_object_table", wait_for_end_of=True)
+
+                self.set_speech(filename="place_stay_clear", wait_for_end_of=True)
+
                 self.state = self.Placing_bowl
 
             elif self.state == self.Placing_bowl:
-                #print('State 1 = Hand Raising Detect')
 
-                # your code here ...
-                                
-                # next state
+                ##### NECK TRAY
+
+                ##### NECK TABLE
+
+                ##### ARM MOVE TO TABLE
+
+                ##### ARM PLACE OBJECT
+
+                self.set_speech(filename="place_object_placed", wait_for_end_of=True)
+
                 self.state = self.Placing_cereal 
 
             elif self.state == self.Placing_cereal:
-                #print('State 1 = Hand Raising Detect')
 
-                # your code here ...
-                                
-                # next state
+                ##### NECK TRAY
+
+                ##### ARM MOVE TRAY
+
+                ##### ARM PICK OBJECT 
+
+                ##### NECK TABLE
+
+                ##### ARM MOVE TO TABLE
+
+                ##### ARM POUR IN BOWL
+
+                ##### ARM PLACE OBJECT
+
+                self.set_speech(filename="place_object_placed", wait_for_end_of=True)
+
                 self.state = self.Placing_milk
            
-            if self.state == self.Placing_milk:
-                #print('State 0 = Initial')
+            elif self.state == self.Placing_milk:
 
-                # your code here ...
-                                
-                # next state
+                ##### NECK TRAY
+
+                ##### ARM MOVE TRAY
+
+                ##### ARM PICK OBJECT 
+
+                ##### NECK TABLE
+
+                ##### ARM MOVE TO TABLE
+
+                ##### ARM POUR IN BOWL
+
+                ##### ARM PLACE OBJECT
+
+                self.set_speech(filename="place_object_placed", wait_for_end_of=True)
+
                 self.state = self.Placing_spoon
 
             elif self.state == self.Placing_spoon:
-                #print('State 1 = Hand Raising Detect')
 
-                # your code here ...
-                                
-                # next state
+                ##### NECK TRAY
+
+                ##### ARM MOVE TRAY
+
+                ##### ARM PICK OBJECT 
+
+                ##### NECK TABLE
+
+                ##### ARM MOVE TO TABLE
+
+                ##### ARM PLACE OBJECT
+
+                self.set_speech(filename="place_object_placed", wait_for_end_of=True)
+
                 self.state = self.Final_State 
                 
             elif self.state == self.Final_State:
                 # self.node.speech_str.command = "I have finished my serve breakfast task." 
                 # self.node.speaker_publisher.publish(self.node.speech_str)
                 # self.wait_for_end_of_speaking()  
-                self.state += 1
-                print("Finished task!!!")
+
+                self.set_speech(filename="sb_finished", wait_for_end_of=True)
+
+                while True:
+                    pass
 
             else:
                 pass
