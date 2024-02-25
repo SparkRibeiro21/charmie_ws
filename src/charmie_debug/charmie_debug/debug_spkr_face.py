@@ -47,6 +47,8 @@ class TestNode(Node):
         self.speech_message = ""
         self.rgb_sucess = True
         self.rgb_message = ""
+        self.face_sucess = True
+        self.face_message = ""
 
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         request = SpeechCommand.Request()
@@ -124,6 +126,19 @@ class RestaurantMain():
         self.node.rgb_message = "Value Sucessfully Sent"
 
         return self.node.rgb_sucess, self.node.rgb_message
+    
+    
+    def set_face(self, command="", wait_for_end_of=True):
+        
+        temp = String()
+        temp.data = command
+        self.node.image_to_face_publisher.publish(temp)
+
+        self.node.face_sucess = True
+        self.node.face_message = "Value Sucessfully Sent"
+
+        return self.node.face_sucess, self.node.face_message
+
 
 
     # def wait_for_end_of_speaking(self):
@@ -219,6 +234,11 @@ class RestaurantMain():
                 # self.wait_for_end_of_speaking()
                 # print("Test Wait")
 
+                """
+                self.node.test_custom_image_face_str.data = "clients_temp"
+                self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
+                time.sleep(5)
+
 
                 s, m = self.set_rgb(RED+MOON)
                 print(s, m)
@@ -234,52 +254,44 @@ class RestaurantMain():
                 print(success, message)
                 time.sleep(5)
 
-
                 """
-                self.node.test_custom_image_face_str.data = "clients_temp"
-                self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
-                time.sleep(5)
 
-                self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
-                time.sleep(2)
-
-                self.node.test_image_face_str.data = "demo9"
-                self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
-                time.sleep(2)
-
-                self.node.test_image_face_str.data = "demo2"
-                self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
-                time.sleep(1)
-
-                self.node.test_image_face_str.data = "demo3"
-                self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
-                time.sleep(1)
-
-                self.node.test_image_face_str.data = "demo4"
-                self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
-                time.sleep(1)
-
-                self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
-                time.sleep(2)
-
-                self.node.test_image_face_str.data = "demo5"
-                self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
-                time.sleep(1)
-
-                self.node.test_image_face_str.data = "demo6"
-                self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
-                time.sleep(1)
-
-                self.node.test_image_face_str.data = "demo7"
-                self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
-                time.sleep(1)
-
-                self.node.test_image_face_str.data = "demo8"
-                self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
-                time.sleep(1)
-                """
                 
+                self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
+                # time.sleep(2)
 
+                self.set_face("help_pick_cup")
+                # self.node.test_image_face_str.data = "help_pick_cup"
+                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
+                time.sleep(3)
+
+                self.set_face("help_pick_bowl")
+                # self.node.test_image_face_str.data = "help_pick_bowl"
+                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
+                time.sleep(3)
+
+                self.set_face("help_pick_cereal")
+                # self.node.test_image_face_str.data = "help_pick_cereal"
+                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
+                time.sleep(3)
+
+                # self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                # time.sleep(2)
+
+                self.set_face("help_pick_milk")
+                # self.node.test_image_face_str.data = "help_pick_milk"
+                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
+                time.sleep(3)
+
+                self.set_face("help_pick_spoon")
+                # self.node.test_image_face_str.data = "help_pick_spoon"
+                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
+                time.sleep(3)
+
+
+                # self.node.test_image_face_str.data = "demo5"
+                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
+                time.sleep(3)
 
 
                 start = time.time()

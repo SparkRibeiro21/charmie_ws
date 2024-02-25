@@ -149,6 +149,18 @@ class FaceNode(Node):
         elif command.data == "demo9":
             self.face.save_text_file("img", "media/" + "demo9.jpg")
             print("Received Image:", command.data)
+
+        elif command.data == "help_pick_cup":
+            self.face.save_text_file("img", "media/" + "help_pick_cup.jpg")
+        elif command.data == "help_pick_bowl":
+            self.face.save_text_file("img", "media/" + "help_pick_bowl.jpg")
+        elif command.data == "help_pick_milk":
+            self.face.save_text_file("img", "media/" + "help_pick_milk.jpg")
+        elif command.data == "help_pick_cereal":
+            self.face.save_text_file("img", "media/" + "help_pick_cereal.jpg")
+        elif command.data == "help_pick_spoon":
+            self.face.save_text_file("img", "media/" + "help_pick_spoon.jpg")
+
         else:
             print("Error receiving image, file does not exist")
 
