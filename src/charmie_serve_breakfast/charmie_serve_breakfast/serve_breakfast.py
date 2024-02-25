@@ -478,10 +478,7 @@ class ServeBreakfastMain():
                 self.state = self.Final_State 
                 
             elif self.state == self.Final_State:
-                # self.node.speech_str.command = "I have finished my serve breakfast task." 
-                # self.node.speaker_publisher.publish(self.node.speech_str)
-                # self.wait_for_end_of_speaking()  
-
+                
                 self.set_speech(filename="sb_finished", wait_for_end_of=True)
 
                 while True:
