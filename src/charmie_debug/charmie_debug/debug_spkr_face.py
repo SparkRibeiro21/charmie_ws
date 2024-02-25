@@ -105,7 +105,7 @@ class RestaurantMain():
         self.state = 0
     
     def set_speech(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
-        
+
         self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
         
         if wait_for_end_of:
@@ -151,7 +151,6 @@ class RestaurantMain():
         # wait_for_end_of functions ...
 
     def main(self):
-        a = "a"
         Waiting_for_start_button = 0
         Searching_for_clients = 1
         Navigation_to_person = 2
