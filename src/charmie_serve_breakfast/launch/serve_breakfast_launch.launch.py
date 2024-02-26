@@ -110,7 +110,7 @@ def generate_launch_description():
         # LaunchDescription(declared_arguments + [robot_driver_launch]),
         face,
         speakers,
-        # neck,
+        neck,
         # low_level,
         # arm,
         serve_breakfast,

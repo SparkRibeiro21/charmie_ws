@@ -6,8 +6,8 @@ from rclpy.node import Node
 import threading
 
 from example_interfaces.msg import Bool, String, Int16
-from charmie_interfaces.msg import SpeechType, RobotSpeech
-from charmie_interfaces.srv import SpeechCommand
+from geometry_msgs.msg import Pose2D
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition
 
 import time
 
@@ -23,6 +23,7 @@ class ServeBreakfastNode(Node):
         super().__init__("ServeBreakfast")
         self.get_logger().info("Initialised CHARMIE ServeBreakfast Node")
 
+
         ### Topics (Publisher and Subscribers) ###  
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
@@ -31,25 +32,42 @@ class ServeBreakfastNode(Node):
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
 
+        # Neck
+        # self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
+        self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
+
+
         ### Services (Clients) ###
+        # Neck
+        self.neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
+
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
 
+
+        ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
+        # Neck 
+        while not self.neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Neck Position Command...")
+
+        # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
 
         # Variables
         self.waited_for_end_of_speaking = False
-        self.test_image_face_str = String()
-        self.test_custom_image_face_str = String()
+        self.waited_for_end_of_neck = False
 
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
         self.speech_sucess = True
         self.speech_message = ""
+        self.neck_sucess = True
+        self.neck_message = ""
         self.rgb_sucess = True
         self.rgb_message = ""
         self.face_sucess = True
         self.face_message = ""
+
 
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         request = SpeechCommand.Request()
@@ -66,8 +84,6 @@ class ServeBreakfastNode(Node):
         else:
             self.speech_sucess = True
             self.speech_message = "Wait for answer not needed"
-    
-
 
     def callback_call_speech_command(self, future): #, a, b):
 
@@ -81,6 +97,37 @@ class ServeBreakfastNode(Node):
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
+
+
+    def call_neck_position_command_server(self, position=[0, 0], wait_for_end_of=True):
+        request = SetNeckPosition.Request()
+        request.pan = float(position[0])
+        request.tilt = float(position[1])
+        
+        future = self.neck_position_client.call_async(request)
+        print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_neck_command)
+        else:
+            self.speech_sucess = True
+            self.speech_message = "Wait for answer not needed"
+    
+    def callback_call_neck_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_sucess = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_neck = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
@@ -131,7 +178,17 @@ class ServeBreakfastMain():
         self.node.waited_for_end_of_speaking = False
 
         return self.node.speech_sucess, self.node.speech_message
-    
+
+    def set_neck(self, position=[0, 0], wait_for_end_of=True):
+
+        self.node.call_neck_position_command_server(position=position, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_neck:
+            pass
+        self.node.waited_for_end_of_neck = False
+
+        return self.node.neck_sucess, self.node.neck_message
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -167,20 +224,22 @@ class ServeBreakfastMain():
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
 
         while True:
-            pass
-
-        while True:
 
             ##### ADJUST WAIT_FOR_END_OF_SPEAKING
             if self.state == self.Waiting_for_task_start:
 
                 self.set_face("demo5")
 
+                # TO LOOK BACK MUST BE -180 and not 180
                 ##### NECK LOOKS FORWARD
-                
+                # temp = NeckPosition()
+                # temp.pan = float(-190)
+                # temp.tilt = float(10)
+                # self.node.neck_position_publisher.publish(temp)
+                self.set_neck(position=[30, 30], wait_for_end_of=True)
+
                 self.set_speech(filename="sb_ready_start", wait_for_end_of=True)
 
-                self.set_speech(filename="waiting_start_button", wait_for_end_of=True) # must change to door open
                 # self.set_speech(filename="waiting_door_open", wait_for_end_of=False)
                 
                 # self.set_rgb(RED+ALTERNATE_QUARTERS)
@@ -189,6 +248,13 @@ class ServeBreakfastMain():
                 ###### WAITS FOR START BUTTON / DOOR OPEN
 
                 time.sleep(2)
+                
+                s, m = self.set_neck(position=[-180, 0], wait_for_end_of=True)
+                print(s,m)
+                self.set_speech(filename="waiting_start_button", wait_for_end_of=True) # must change to door open
+
+                while True:
+                    pass
                 
                 self.state = self.Approach_kitchen_counter
 

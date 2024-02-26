@@ -48,6 +48,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Yolov8Objects.msg"
   "msg/Yolov8Pose.msg"
   "srv/FirstTRService.srv"
+  "srv/SetNeckPosition.srv"
   "srv/SpeechCommand.srv"
   DEPENDENCIES example_interfaces geometry_msgs sensor_msgs
 )

@@ -1,0 +1,7 @@
+# Service to send a position to both servos on charmie neck (pan, tilt)
+
+float64 pan  # value to bottom servo, rotate left ot right
+float64 tilt # value to top servo, rotate up or down
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.
