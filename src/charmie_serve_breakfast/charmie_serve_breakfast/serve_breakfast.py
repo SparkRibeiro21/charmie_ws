@@ -26,6 +26,7 @@ class ServeBreakfastNode(Node):
         ### Topics (Publisher and Subscribers) ###  
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
+        self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
 
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
@@ -144,11 +145,16 @@ class ServeBreakfastMain():
         return self.node.rgb_sucess, self.node.rgb_message
     
     
-    def set_face(self, command="", wait_for_end_of=True):
+    def set_face(self, command="", custom="", wait_for_end_of=True):
         
-        temp = String()
-        temp.data = command
-        self.node.image_to_face_publisher.publish(temp)
+        if custom == "":
+            temp = String()
+            temp.data = command
+            self.node.image_to_face_publisher.publish(temp)
+        else:
+            temp = String()
+            temp.data = custom
+            self.node.custom_image_to_face_publisher.publish(temp)
 
         self.node.face_sucess = True
         self.node.face_message = "Value Sucessfully Sent"

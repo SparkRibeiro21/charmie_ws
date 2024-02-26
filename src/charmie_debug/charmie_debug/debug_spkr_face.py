@@ -128,17 +128,21 @@ class RestaurantMain():
         return self.node.rgb_sucess, self.node.rgb_message
     
     
-    def set_face(self, command="", wait_for_end_of=True):
+    def set_face(self, command="", custom="", wait_for_end_of=True):
         
-        temp = String()
-        temp.data = command
-        self.node.image_to_face_publisher.publish(temp)
+        if custom == "":
+            temp = String()
+            temp.data = command
+            self.node.image_to_face_publisher.publish(temp)
+        else:
+            temp = String()
+            temp.data = custom
+            self.node.custom_image_to_face_publisher.publish(temp)
 
         self.node.face_sucess = True
         self.node.face_message = "Value Sucessfully Sent"
 
         return self.node.face_sucess, self.node.face_message
-
 
 
     # def wait_for_end_of_speaking(self):
@@ -260,20 +264,26 @@ class RestaurantMain():
                 time.sleep(3)
 
 
-                self.set_speech(filename="introduction_ful", command="", wait_for_end_of=True)
+                # self.set_speech(filename="introduction_ful", command="", wait_for_end_of=True)
 
 
-                self.set_speech(command="Hello motherfucker", wait_for_end_of=True)
+                # self.set_speech(command="Hello motherfucker", wait_for_end_of=True)
 
 
                 # self.node.test_custom_image_face_str.data = "clients_temp"
                 # self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
                 # time.sleep(5)
+                self.set_face(custom="clients_temp")
+                time.sleep(3)
+
 
                 self.set_face("help_pick_bowl")
                 time.sleep(3)
 
                 self.set_face("help_pick_cereal")
+                time.sleep(3)
+
+                self.set_face(custom="clients_tem")
                 time.sleep(3)
 
                 # self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
