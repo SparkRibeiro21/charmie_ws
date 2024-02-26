@@ -7,7 +7,7 @@ from example_interfaces.msg import Bool
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import TrackObject, TrackPerson, DetectedObject, DetectedPerson
-from charmie_interfaces.srv import SetNeckPosition
+from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition
 
 import math
 import tty
@@ -157,8 +157,9 @@ class NeckNode(Node):
 
         # SERVICES:
         # Main receive commads 
-        self.server_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_neck_position) 
-        self.get_logger().info("Neck Position Server has been started")
+        self.server_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_set_neck_position) 
+        self.server_neck_position = self.create_service(GetNeckPosition, "get_neck_pos", self.callback_get_neck_position) 
+        self.get_logger().info("Neck Servers have been started")
 
 
         # if DEBUG_DRAW:
@@ -182,7 +183,7 @@ class NeckNode(Node):
 
 
     ########## SERVICES ##########
-    def callback_neck_position(self, request, response):
+    def callback_set_neck_position(self, request, response):
         
         # Type of service received: 
         # float64 pan  # value to bottom servo, rotate left ot right
@@ -202,6 +203,21 @@ class NeckNode(Node):
         response.message = "neck test"
         return response
 
+    def callback_get_neck_position(self, request, response):
+        
+        # Type of service received: 
+        # (nothing)
+        # ---
+        # float64 pan  # value to bottom servo, rotate left ot right
+        # float64 tilt # value to top servo, rotate up or down
+
+        self.get_logger().info("Received Get Neck Position")
+        
+        # returns the reading values of both neck servos
+        response.pan  = float(int(read_pan_open_loop *SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
+        response.tilt = float(int(read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
+
+        return response
 
 
     ########## CALLBACKS ##########

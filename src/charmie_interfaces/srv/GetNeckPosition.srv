@@ -1,0 +1,5 @@
+# Service to get the position of both servos on charmie neck (pan, tilt)
+
+---
+float64 pan  # value to bottom servo, rotate left ot right
+float64 tilt # value to top servo, rotate up or down

@@ -7,7 +7,7 @@ import threading
 
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D
-from charmie_interfaces.srv import SpeechCommand, SetNeckPosition
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition
 
 import time
 
@@ -39,7 +39,8 @@ class ServeBreakfastNode(Node):
 
         ### Services (Clients) ###
         # Neck
-        self.neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
+        self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
+        self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
 
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -47,8 +48,10 @@ class ServeBreakfastNode(Node):
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Neck 
-        while not self.neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Neck Position Command...")
+        while not self.set_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+        while not self.get_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
 
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
@@ -57,6 +60,7 @@ class ServeBreakfastNode(Node):
         # Variables
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_neck = False
+        self.waited_for_end_of_get_neck = False
 
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
         self.speech_sucess = True
@@ -68,7 +72,10 @@ class ServeBreakfastNode(Node):
         self.face_sucess = True
         self.face_message = ""
 
+        self.get_neck_position = [1.0, 1.0]
+        
 
+    #### SPEECH SERVER FUCNTIONS #####
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         request = SpeechCommand.Request()
         request.filename = filename
@@ -76,7 +83,7 @@ class ServeBreakfastNode(Node):
         request.quick_voice = quick_voice
     
         future = self.speech_command_client.call_async(request)
-        print("Sent Command")
+        # print("Sent Command")
 
         if wait_for_end_of:
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
@@ -101,22 +108,23 @@ class ServeBreakfastNode(Node):
             self.get_logger().error("Service call failed %r" % (e,))   
 
 
-    def call_neck_position_command_server(self, position=[0, 0], wait_for_end_of=True):
+    #### SET NECK POSITION SERVER FUCNTIONS #####
+    def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
         request = SetNeckPosition.Request()
         request.pan = float(position[0])
         request.tilt = float(position[1])
         
-        future = self.neck_position_client.call_async(request)
-        print("Sent Command")
+        future = self.set_neck_position_client.call_async(request)
+        # print("Sent Command")
 
         if wait_for_end_of:
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
-            future.add_done_callback(self.callback_call_neck_command)
+            future.add_done_callback(self.callback_call_set_neck_command)
         else:
             self.speech_sucess = True
             self.speech_message = "Wait for answer not needed"
     
-    def callback_call_neck_command(self, future): #, a, b):
+    def callback_call_set_neck_command(self, future): #, a, b):
 
         try:
             # in this function the order of the line of codes matter
@@ -131,6 +139,31 @@ class ServeBreakfastNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
+
+    #### GET NECK POSITION SERVER FUCNTIONS #####
+    def call_get_neck_position_server(self):
+        request = GetNeckPosition.Request()
+        
+        future = self.get_neck_position_client.call_async(request)
+        # print("Sent Command")
+
+        # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+        future.add_done_callback(self.callback_call_get_neck_command)
+    
+    def callback_call_get_neck_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info("Received Neck Position: (%s" %(str(response.pan) + ", " + str(response.tilt)+")"))
+            self.get_neck_position[0] = response.pan
+            self.get_neck_position[1] = response.tilt
+            # time.sleep(3)
+            self.waited_for_end_of_get_neck = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
 
 def main(args=None):
     rclpy.init(args=args)
@@ -167,6 +200,7 @@ class ServeBreakfastMain():
         # self.state = self.Approach_kitchen_table
         self.state = self.Waiting_for_task_start
 
+    ##### SETS #####
 
     def set_speech(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
 
@@ -181,7 +215,7 @@ class ServeBreakfastMain():
 
     def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
-        self.node.call_neck_position_command_server(position=position, wait_for_end_of=wait_for_end_of)
+        self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
           while not self.node.waited_for_end_of_neck:
@@ -201,7 +235,6 @@ class ServeBreakfastMain():
 
         return self.node.rgb_sucess, self.node.rgb_message
     
-    
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
         if custom == "":
@@ -219,6 +252,21 @@ class ServeBreakfastMain():
         return self.node.face_sucess, self.node.face_message
 
 
+    ##### GETS #####
+    def get_neck(self, wait_for_end_of=True):
+    
+        self.node.call_get_neck_position_server()
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_get_neck:
+            pass
+        self.node.waited_for_end_of_get_neck = False
+
+
+        return self.node.get_neck_position[0], self.node.get_neck_position[1] 
+
+
+
     def main(self):
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
@@ -227,6 +275,9 @@ class ServeBreakfastMain():
 
             ##### ADJUST WAIT_FOR_END_OF_SPEAKING
             if self.state == self.Waiting_for_task_start:
+
+                p, t = self.get_neck()
+                self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
 
                 self.set_face("demo5")
 
@@ -240,6 +291,11 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="sb_ready_start", wait_for_end_of=True)
 
+
+
+                self.node.get_logger().info("p, t = %s" %(str(self.node.get_neck_position[0])+", "+str(self.node.get_neck_position[1])))
+
+
                 # self.set_speech(filename="waiting_door_open", wait_for_end_of=False)
                 
                 # self.set_rgb(RED+ALTERNATE_QUARTERS)
@@ -249,9 +305,12 @@ class ServeBreakfastMain():
 
                 time.sleep(2)
                 
-                s, m = self.set_neck(position=[-180, 0], wait_for_end_of=True)
+                s, m = self.set_neck(position=[-180, 20], wait_for_end_of=True)
                 print(s,m)
                 self.set_speech(filename="waiting_start_button", wait_for_end_of=True) # must change to door open
+
+                p, t = self.get_neck(wait_for_end_of=True)
+                self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
 
                 while True:
                     pass
