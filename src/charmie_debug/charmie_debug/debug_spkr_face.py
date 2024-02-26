@@ -233,12 +233,9 @@ class RestaurantMain():
                 # self.wait_for_end_of_speaking()
                 # print("Test Wait")
 
+
+
                 """
-                self.node.test_custom_image_face_str.data = "clients_temp"
-                self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
-                time.sleep(5)
-
-
                 s, m = self.set_rgb(RED+MOON)
                 print(s, m)
                 success, message = self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
@@ -260,42 +257,38 @@ class RestaurantMain():
                 # time.sleep(2)
 
                 self.set_face("help_pick_cup")
-                # self.node.test_image_face_str.data = "help_pick_cup"
-                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
                 time.sleep(3)
 
+
+                self.set_speech(filename="introduction_ful", command="", wait_for_end_of=True)
+
+
+                self.set_speech(command="Hello motherfucker", wait_for_end_of=True)
+
+
+                # self.node.test_custom_image_face_str.data = "clients_temp"
+                # self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
+                # time.sleep(5)
+
                 self.set_face("help_pick_bowl")
-                # self.node.test_image_face_str.data = "help_pick_bowl"
-                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
                 time.sleep(3)
 
                 self.set_face("help_pick_cereal")
-                # self.node.test_image_face_str.data = "help_pick_cereal"
-                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
                 time.sleep(3)
 
                 # self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
                 # time.sleep(2)
 
                 self.set_face("help_pick_milk")
-                # self.node.test_image_face_str.data = "help_pick_milk"
-                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
                 time.sleep(3)
 
                 self.set_face("help_pick_spoon")
-                # self.node.test_image_face_str.data = "help_pick_spoon"
-                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
                 time.sleep(3)
 
 
-                # self.node.test_image_face_str.data = "demo5"
-                # self.node.image_to_face_publisher.publish(self.node.test_image_face_str)
-                time.sleep(3)
-
-
-                start = time.time()
-                while time.time() < start + 3: # in seconds
-                    pass
+                # start = time.time()
+                # while time.time() < start + 3: # in seconds
+                #     pass
                     # print(",", end='')
                 # print()
 

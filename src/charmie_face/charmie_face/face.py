@@ -12,7 +12,7 @@ from pathlib import Path
 
 class Face():
     def __init__(self):
-        print("New Face Class Initialised")
+        # print("New Face Class Initialised")
 
         # Info to get device host:
         #     1- Go to the device location and open the terminal there
@@ -69,7 +69,7 @@ class Face():
 class FaceNode(Node):
     def __init__(self):
         super().__init__("Face")
-        self.get_logger().info("Initialised CHARMIE Face Node")
+        self.get_logger().info("Initialised CHARMIE FACE Node")
 
         # Create Face object
         self.face = Face()
@@ -106,49 +106,44 @@ class FaceNode(Node):
     # Receive speech strings to show in face  
     def speech_to_face_callback(self, command: String):
 
+
         if self.SHOW_SPEECH:
             if command.data != "":
                 self.face.save_text_file("text", command.data)
-                print("Received Speech String:", command.data)
+                self.get_logger().info("FACE received (text) - %s" %command.data)
+                # print("Received Speech String:", command.data)
             else:
                 time.sleep(self.AFTER_SPEECH_TIMER)
                 # after receiving the end of speech command, it sends to the face the latest face sent before the speech command
                 self.face.save_text_file(self.face.last_face_type, self.face.last_face_path)
-                print(self.face.last_face_type, self.face.last_face_path)
-                print("Back to Standard face")
+                # print(self.face.last_face_type, self.face.last_face_path)
+                # print("Back to Standard face")
 
 
     # Receive image or video files name to show in face
     def image_to_face_callback(self, command: String):
+        
+        self.get_logger().info("FACE received (standard) - %s" %command.data)
 
         # list of all faces available, must be edited for every new face available
         if command.data == "demo1":
             self.face.save_text_file("img", "media/" + "demo1.png")
-            print("Received Image:", command.data)
         elif command.data == "demo2":
             self.face.save_text_file("img", "media/" + "demo2.jpg")
-            print("Received Image:", command.data)
         elif command.data == "demo3":
             self.face.save_text_file("img", "media/" + "demo3.png")
-            print("Received Image:", command.data)
         elif command.data == "demo4":
             self.face.save_text_file("img", "media/" + "demo4.jpg")
-            print("Received Image:", command.data)
         elif command.data == "demo5":
             self.face.save_text_file("img", "media/" + "demo5.gif")
-            print("Received Image:", command.data)
         elif command.data == "demo6":
             self.face.save_text_file("img", "media/" + "demo6.gif")
-            print("Received Image:", command.data)
         elif command.data == "demo7":
             self.face.save_text_file("img", "media/" + "demo7.gif")
-            print("Received Image:", command.data)
         elif command.data == "demo8":
             self.face.save_text_file("video", "media/" + "demo8.MOV")
-            print("Received Image:", command.data)
         elif command.data == "demo9":
             self.face.save_text_file("img", "media/" + "demo9.jpg")
-            print("Received Image:", command.data)
 
         elif command.data == "help_pick_cup":
             self.face.save_text_file("img", "media/" + "help_pick_cup.jpg")
@@ -162,11 +157,12 @@ class FaceNode(Node):
             self.face.save_text_file("img", "media/" + "help_pick_spoon.jpg")
 
         else:
-            print("Error receiving image, file does not exist")
-
+            self.get_logger().error("FACE received (standard) does not exist!")
 
     # Receive custom image name to send to tablet and show in face
     def custom_image_to_face_callback(self, command: String):
+
+        self.get_logger().info("FACE received (custom) - %s" %command.data)
 
         # checks whether file exists, maybe there was some typo 
         isExisting = os.path.exists(self.face.complete_path + command.data + ".jpg")
@@ -181,9 +177,10 @@ class FaceNode(Node):
             
             # checks if file exist on the tablet SD card and writes in file so it will appear on face
             self.face.save_text_file("img", "temp/" + new_filename)
-            print("File copied successfully.")
+            # print("File copied successfully.")
+
         else:
-            print("Error! File not found!")
+            self.get_logger().error("FACE received (custom) does not exist!")
 
 def main(args=None):
     rclpy.init(args=args)

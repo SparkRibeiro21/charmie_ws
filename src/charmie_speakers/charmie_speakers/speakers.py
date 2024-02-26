@@ -77,10 +77,10 @@ class RobotSpeak():
                 self.node.speech_to_face_publisher.publish(str)
 
                 message = "Text Sent to Face Node"
-                print("File sent to face! - '", str.data, "'")
+                # print("File sent to face! - '", str.data, "'")
             else:
                 message = "Text File not Found. NOT sent to face."
-                print("File not sent to face!")
+                # print("File not sent to face!")
 
 
             # play the recorded file 
@@ -93,7 +93,7 @@ class RobotSpeak():
             str = String()
             str.data = ""
             # print(str.data)
-            print("File sent to face! - End of Sentence")
+            # print("File sent to face! - End of Sentence")
             self.node.speech_to_face_publisher.publish(str)
 
             success = True
@@ -122,7 +122,7 @@ class RobotSpeak():
             # send string to face to ease UI
             str = String()
             str.data = command
-            print(str.data)
+            # print(str.data)
             self.node.speech_to_face_publisher.publish(str)
 
             # plays the created audio file
@@ -134,7 +134,7 @@ class RobotSpeak():
             # sends empty string to tell face that the audio has finished to be played
             str = String()
             str.data = ""
-            print(str.data)
+            # print(str.data)
             self.node.speech_to_face_publisher.publish(str)
         
         else: # jenny synthesizer
@@ -148,7 +148,7 @@ class RobotSpeak():
             # send string to face to ease UI
             str = String()
             str.data = command
-            print(str.data)
+            # print(str.data)
             self.node.speech_to_face_publisher.publish(str)
 
             # plays the created audio file
@@ -160,7 +160,7 @@ class RobotSpeak():
             # sends empty string to tell face that the audio has finished to be played
             str = String()
             str.data = ""
-            print(str.data)
+            # print(str.data)
             self.node.speech_to_face_publisher.publish(str)
 
         return True, ""
@@ -174,7 +174,7 @@ class RobotSpeak():
             if active_port_match:
                 active_port = active_port_match.group(1).strip().lower()
 
-                print(f"Active Port: {active_port}")
+                # print(f"Active Port: {active_port}")
 
                 # returns the type of speakers going to be used 
                 if "headphones" in active_port:
@@ -210,18 +210,18 @@ class SpeakerNode(Node):
 
 
         # Get Information regarding which speakers are being used 
-        print("\nOutput Sound Devices:")
+        # print("\nOutput Sound Devices:")
         active_speaker_type = self.charmie_speech.get_active_speaker_info()
 
         flag_diagn = Bool()
         # if a known system is being used 
         if active_speaker_type != "Unknown":
-            print(f"The active speaker is: {active_speaker_type}")
+            # print(f"The active speaker is: {active_speaker_type}")
             self.get_logger().info(f"The active speaker is: {active_speaker_type}")
             flag_diagn.data = True
         # if an unkown system is being used
         else:
-            print("Unable to determine the active speaker.")
+            # print("Unable to determine the active speaker.")
             self.get_logger().info(f"The active speaker is: {active_speaker_type}")
             flag_diagn.data = False
 
@@ -242,7 +242,7 @@ class SpeakerNode(Node):
 
     # Main Function regarding received commands
     def callback_speech_command(self, request, response):
-        print("Received request")
+        # print("Received request")
 
         # Type of service received: 
         # string filename # name of audio file to be played
@@ -255,11 +255,15 @@ class SpeakerNode(Node):
         # if filename comes empty it is automatically assumed that it is intended to use the load and play mode
         if request.filename == "":
             # speakers mode where received string must be synthesized and played now
+            self.get_logger().info("SPEAKERS received (custom) - %s" %request.command)
             success, message = self.charmie_speech.load_and_play_command(request.command, request.quick_voice)
         
         else:
             # speakers mode where received filename must be played
+            self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
             success, message = self.charmie_speech.play_command(request.filename)
+            if success == False:
+                self.get_logger().error("SPEAKERS received (file) does not exist!")
 
         # returns whether the message was played and some informations regarding status
         response.success = success

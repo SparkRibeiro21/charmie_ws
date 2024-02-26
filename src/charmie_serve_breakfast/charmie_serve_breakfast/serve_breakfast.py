@@ -158,7 +158,10 @@ class ServeBreakfastMain():
 
     def main(self):
 
-        print("IN SERVE BREAKFAST MAIN")
+        self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
+
+        while True:
+            pass
 
         while True:
 
@@ -478,7 +481,7 @@ class ServeBreakfastMain():
                 self.state = self.Final_State 
                 
             elif self.state == self.Final_State:
-                
+
                 self.set_speech(filename="sb_finished", wait_for_end_of=True)
 
                 while True:

@@ -259,7 +259,7 @@ class ServeBreakfastMain():
 
     def main(self):
 
-        print("IN SERVE BREAKFAST MAIN")
+        self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
 
         while True:
 
