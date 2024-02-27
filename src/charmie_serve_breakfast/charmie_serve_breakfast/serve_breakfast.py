@@ -277,23 +277,15 @@ class ServeBreakfastMain():
             if self.state == self.Waiting_for_task_start:
 
                 p, t = self.get_neck()
-                self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
+                # self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
 
                 self.set_face("demo5")
 
-                # TO LOOK BACK MUST BE -180 and not 180
-                ##### NECK LOOKS FORWARD
-                # temp = NeckPosition()
-                # temp.pan = float(-190)
-                # temp.tilt = float(10)
-                # self.node.neck_position_publisher.publish(temp)
                 self.set_neck(position=[30, 30], wait_for_end_of=True)
 
                 self.set_speech(filename="sb_ready_start", wait_for_end_of=True)
-
-
-
-                self.node.get_logger().info("p, t = %s" %(str(self.node.get_neck_position[0])+", "+str(self.node.get_neck_position[1])))
+                
+                # self.node.get_logger().info("p, t = %s" %(str(self.node.get_neck_position[0])+", "+str(self.node.get_neck_position[1])))
 
 
                 # self.set_speech(filename="waiting_door_open", wait_for_end_of=False)
@@ -305,15 +297,17 @@ class ServeBreakfastMain():
 
                 time.sleep(2)
                 
-                s, m = self.set_neck(position=[-180, 20], wait_for_end_of=True)
-                print(s,m)
+                self.set_neck(position=[-180, 20], wait_for_end_of=True)
+                
+                # print(s,m)
+                
                 self.set_speech(filename="waiting_start_button", wait_for_end_of=True) # must change to door open
 
-                p, t = self.get_neck(wait_for_end_of=True)
-                self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
+                # p, t = self.get_neck(wait_for_end_of=True)
+                # self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
 
-                while True:
-                    pass
+                # while True:
+                #     pass
                 
                 self.state = self.Approach_kitchen_counter
 

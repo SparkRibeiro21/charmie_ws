@@ -74,10 +74,7 @@ PROTOCOL_VERSION = 1.0  # See which protocol version is used in the Dynamixel
 # Default setting
 DXL_ID_PAN = 1  # Dynamixel ID : 1 
 DXL_ID_TILT = 2  # Dynamixel ID : 2
-BAUDRATE = 57600  # Dynamixel default baudrate : 57600
-# MAC GIL # DEVICENAME = '/dev/tty.usbserial-AI0282RX'  # Check which port is being used on your controller
-DEVICENAME = '/dev/ttyUSB1'  # Check which port is being used on your controller
-# ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
+BAUDRATE = 57600  # Dynamixel default baudrate : 576
 
 TORQUE_ENABLE = 1  # Value for enabling the torque
 TORQUE_DISABLE = 0  # Value for disabling the torque
@@ -118,11 +115,6 @@ TILT_CONST_SHIFT = 0  # (180 + 10 = 190)
 # index = 0
 # dxl_goal_position = [DXL_MINIMUM_POSITION_VALUE, DXL_MAXIMUM_POSITION_VALUE]  # Goal position
 
-# Initialize PortHandler instance
-# Set the port path
-# Get methods and members of PortHandlerLinux or PortHandlerWindows
-portHandler = PortHandler(DEVICENAME)
-
 # Initialize PacketHandler instance
 # Set the protocol version
 # Get methods and members of Protocol1PacketHandler or Protocol2PacketHandler
@@ -134,7 +126,8 @@ class NeckNode(Node):
     def __init__(self):
         super().__init__("Neck")
         self.get_logger().info("Initialised CHARMIE Neck Node")
-        print("Connected to Neck Board via:", DEVICENAME)  # check which port was really used
+
+        self.declare_parameter("device_name", "USB1") 
 
         # receives two angles, pan and tilt - used when robot must look at something known in advance (ex: direction of navigation, forward, look right/left)
         ########### self.neck_position_subscriber = self.create_subscription(NeckPosition, "neck_to_pos", self.neck_position_callback ,10)
@@ -161,7 +154,21 @@ class NeckNode(Node):
         self.server_neck_position = self.create_service(GetNeckPosition, "get_neck_pos", self.callback_get_neck_position) 
         self.get_logger().info("Neck Servers have been started")
 
+        # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
+        DEVICE_PARAM = self.get_parameter("device_name").value
 
+
+        DEVICENAME = "/dev/tty"+DEVICE_PARAM # "/dev/ttyUSB1"  # Check which port is being used on your controller
+        # ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
+        # Initialize PortHandler instance
+        # Set the port path
+        # Get methods and members of PortHandlerLinux or PortHandlerWindows
+        self.portHandler = PortHandler(DEVICENAME)
+
+        ########## CHANGE TO LOGGER ##########
+        print("Connected to Neck Board via:", DEVICENAME)  # check which port was really used
+        
+        
         # if DEBUG_DRAW:
         #     self.img = Image()
         #     self.first_img_ready = False
@@ -335,7 +342,7 @@ class NeckNode(Node):
         global read_pan_open_loop, read_tilt_open_loop
         
         # Open port
-        if portHandler.openPort():
+        if self.portHandler.openPort():
             print("Succeeded to open the port")
         else:
             print("Failed to open the port")
@@ -344,7 +351,7 @@ class NeckNode(Node):
             quit()
 
         # Set port baudrate
-        if portHandler.setBaudRate(BAUDRATE):
+        if self.portHandler.setBaudRate(BAUDRATE):
             print("Succeeded to change the baudrate")
         else:
             print("Failed to change the baudrate")
@@ -353,7 +360,7 @@ class NeckNode(Node):
             quit()
 
         # Enable Dynamixel Torque
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_TILT, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
         if dxl_comm_result != COMM_SUCCESS:
             print("TILT %s" % packetHandler.getTxRxResult(dxl_comm_result))
         elif dxl_error != 0:
@@ -361,7 +368,7 @@ class NeckNode(Node):
         else:
             print("Dynamixel TILT has been successfully connected")
 
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
         if dxl_comm_result != COMM_SUCCESS:
             print("PAN %s" % packetHandler.getTxRxResult(dxl_comm_result))
         elif dxl_error != 0:
@@ -371,13 +378,13 @@ class NeckNode(Node):
         # self.get_logger().info("Set Torque Mode")
 
         # Set PID parameters for each servo (different params because of how smooth the movement must be on each axis)
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_D_GAIN, PAN_D_GAIN)
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_I_GAIN, PAN_I_GAIN)
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_P_GAIN, PAN_P_GAIN)
+        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_D_GAIN, PAN_D_GAIN)
+        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_I_GAIN, PAN_I_GAIN)
+        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_P_GAIN, PAN_P_GAIN)
 
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_D_GAIN, TILT_D_GAIN)
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_I_GAIN, TILT_I_GAIN)
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_P_GAIN, TILT_P_GAIN)
+        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_TILT, ADDR_MX_D_GAIN, TILT_D_GAIN)
+        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_TILT, ADDR_MX_I_GAIN, TILT_I_GAIN)
+        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_TILT, ADDR_MX_P_GAIN, TILT_P_GAIN)
 
         read_pan_open_loop, read_tilt_open_loop = self.read_servo_position()
 
@@ -392,8 +399,8 @@ class NeckNode(Node):
 
         global read_pan_closed_loop, read_tilt_closed_loop
 
-        p, dxl_comm_result, dxl_error  = packetHandler.read4ByteTxRx(portHandler, DXL_ID_PAN,  ADDR_MX_PRESENT_POSITION)
-        t, dxl_comm_result, dxl_error = packetHandler.read4ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_PRESENT_POSITION)
+        p, dxl_comm_result, dxl_error  = packetHandler.read4ByteTxRx(self.portHandler, DXL_ID_PAN,  ADDR_MX_PRESENT_POSITION)
+        t, dxl_comm_result, dxl_error = packetHandler.read4ByteTxRx(self.portHandler, DXL_ID_TILT, ADDR_MX_PRESENT_POSITION)
         
         # when the servo is moving it usually returns values extremely high, this way these values are filtered
         if p < 4096:
@@ -510,13 +517,13 @@ class NeckNode(Node):
 
         ########## self.publish_get_neck_pos(read_pan_open_loop, read_tilt_open_loop)
         
-        dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID_PAN, ADDR_MX_GOAL_POSITION, p)
+        dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_GOAL_POSITION, p)
         if dxl_comm_result != COMM_SUCCESS:
             print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
         elif dxl_error != 0:
             print("%s" % packetHandler.getRxPacketError(dxl_error))
 
-        dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_ID_TILT, ADDR_MX_GOAL_POSITION, t)
+        dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(self.portHandler, DXL_ID_TILT, ADDR_MX_GOAL_POSITION, t)
         if dxl_comm_result != COMM_SUCCESS:
             print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
         elif dxl_error != 0:
