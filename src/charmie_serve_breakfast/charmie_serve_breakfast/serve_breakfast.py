@@ -7,7 +7,7 @@ import threading
 
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D
-from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates
 
 import time
 
@@ -41,6 +41,7 @@ class ServeBreakfastNode(Node):
         # Neck
         self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
         self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
+        self.set_neck_coordinates_client = self.create_client(SetNeckCoordinates, "neck_to_coords")
 
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -52,14 +53,17 @@ class ServeBreakfastNode(Node):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
         while not self.get_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-
+        while not self.set_neck_coordinates_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
 
         # Variables
         self.waited_for_end_of_speaking = False
-        self.waited_for_end_of_neck = False
+        self.waited_for_end_of_neck_pos = False
+        self.waited_for_end_of_neck_coords = False
         self.waited_for_end_of_get_neck = False
 
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
@@ -75,7 +79,7 @@ class ServeBreakfastNode(Node):
         self.get_neck_position = [1.0, 1.0]
         
 
-    #### SPEECH SERVER FUCNTIONS #####
+    #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         request = SpeechCommand.Request()
         request.filename = filename
@@ -108,7 +112,7 @@ class ServeBreakfastNode(Node):
             self.get_logger().error("Service call failed %r" % (e,))   
 
 
-    #### SET NECK POSITION SERVER FUCNTIONS #####
+    #### SET NECK POSITION SERVER FUNCTIONS #####
     def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
         request = SetNeckPosition.Request()
         request.pan = float(position[0])
@@ -121,8 +125,8 @@ class ServeBreakfastNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_set_neck_command)
         else:
-            self.speech_sucess = True
-            self.speech_message = "Wait for answer not needed"
+            self.neck_sucess = True
+            self.neck_message = "Wait for answer not needed"
     
     def callback_call_set_neck_command(self, future): #, a, b):
 
@@ -135,12 +139,47 @@ class ServeBreakfastNode(Node):
             self.speech_sucess = response.success
             self.speech_message = response.message
             # time.sleep(3)
-            self.waited_for_end_of_neck = True
+            self.waited_for_end_of_neck_pos = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
 
-    #### GET NECK POSITION SERVER FUCNTIONS #####
+    #### SET NECK COORDINATES SERVER FUNCTIONS #####
+    def call_neck_coordinates_server(self, x, y, z, tilt, flag, wait_for_end_of=True):
+        request = SetNeckCoordinates.Request()
+        request.coords.x = float(x)
+        request.coords.y = float(y)
+        request.coords.z = float(z)
+        request.is_tilt = flag
+        request.tilt = float(tilt)
+        
+        future = self.set_neck_coordinates_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_set_neck_coords_command)
+        else:
+            self.neck_sucess = True
+            self.neck_message = "Wait for answer not needed"
+    
+    def callback_call_set_neck_coords_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_sucess = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_neck_coords = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
+
+
+    #### GET NECK POSITION SERVER FUNCTIONS #####
     def call_get_neck_position_server(self):
         request = GetNeckPosition.Request()
         
@@ -218,9 +257,34 @@ class ServeBreakfastMain():
         self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
-          while not self.node.waited_for_end_of_neck:
+          while not self.node.waited_for_end_of_neck_pos:
             pass
-        self.node.waited_for_end_of_neck = False
+        self.node.waited_for_end_of_neck_pos = False
+
+        return self.node.neck_sucess, self.node.neck_message
+    
+    def set_neck_coords(self, position=[], ang=0.0, wait_for_end_of=True):
+
+        #  x, y, z, tilt, flag, wait_for_end_of=True):
+        self.node.get_logger().info("LENGTH %d"%len(position))
+
+        if len(position) == 2:
+            self.node.call_neck_coordinates_server(x=position[0], y=position[1], z=0.0, tilt=ang, flag=True, wait_for_end_of=wait_for_end_of)
+        elif len(position) == 3:
+            print("You tried neck to coordintes using (x,y,z) please switch to (x,y,theta)")
+            pass
+            # The following line is correct, however since the functionality is not implemented yet, should not be called
+            # self.node.call_neck_coordinates_server(x=position[0], y=position[1], z=position[2], tilt=0.0, flag=False, wait_for_end_of=wait_for_end_of)
+        else:
+            print("Something went wrong")
+
+
+        # self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
+        
+        # if wait_for_end_of:
+        #   while not self.node.waited_for_end_of_neck_coords:
+        #     pass
+        # self.node.waited_for_end_of_neck_coords = False
 
         return self.node.neck_sucess, self.node.neck_message
     
@@ -266,7 +330,6 @@ class ServeBreakfastMain():
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
 
 
-
     def main(self):
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
@@ -276,12 +339,12 @@ class ServeBreakfastMain():
             ##### ADJUST WAIT_FOR_END_OF_SPEAKING
             if self.state == self.Waiting_for_task_start:
 
-                p, t = self.get_neck()
-                self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
+                # p, t = self.get_neck()
+                # self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
 
-                self.set_face("demo5")
+                self.set_face("help_pick_cereal")
 
-                self.set_neck(position=[30, 30], wait_for_end_of=True)
+                # self.set_neck(position=[30, 30], wait_for_end_of=True)
 
                 self.set_speech(filename="sb_ready_start", wait_for_end_of=True)
                 
@@ -297,8 +360,27 @@ class ServeBreakfastMain():
 
                 time.sleep(2)
                 
-                self.set_neck(position=[-180, 20], wait_for_end_of=True)
+                # self.set_neck(position=[-180, 20], wait_for_end_of=True)
                 
+
+                self.set_neck_coords(position=[1.0, 1.0], ang=30, wait_for_end_of=True)
+
+                time.sleep(2)
+                
+                self.set_neck_coords(position=[2.0, 1.0, 2.0], wait_for_end_of=True)
+
+                time.sleep(2)
+                
+                self.set_neck_coords(position=[0.0, 2.0], ang=0, wait_for_end_of=True)
+
+                time.sleep(2)
+                
+                self.set_neck_coords(position=[-2.0, 2.0], ang=-30, wait_for_end_of=True)
+
+                time.sleep(2)
+                
+                self.set_neck_coords(position=[0.0, -2.0], ang=0, wait_for_end_of=True)
+
                 # print(s,m)
                 
                 self.set_speech(filename="waiting_start_button", wait_for_end_of=True) # must change to door open

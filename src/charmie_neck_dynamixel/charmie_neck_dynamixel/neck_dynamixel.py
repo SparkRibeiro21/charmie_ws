@@ -6,8 +6,8 @@ from geometry_msgs.msg import Pose2D
 from example_interfaces.msg import Bool
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import TrackObject, TrackPerson, DetectedObject, DetectedPerson
-from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition
+from charmie_interfaces.msg import TrackObject, TrackPerson
+from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates
 
 import math
 import tty
@@ -109,8 +109,8 @@ read_tilt_open_loop = 115*DEGREES_TO_SERVO_TICKS_CONST
 # The servos start position (180, 180) does not make the robot look forward because of the camera and face angle.
 # These values are necessary to adjust to this position shift 
 # With recent changes to hardware, the neck part is now perpendicular to the floor, therefore this is no longer necessary
-PAN_CONST_SHIFT = 0
-TILT_CONST_SHIFT = 0  # (180 + 10 = 190)
+# PAN_CONST_SHIFT = 0
+# TILT_CONST_SHIFT = 0  # (180 + 10 = 190)
 
 # index = 0
 # dxl_goal_position = [DXL_MINIMUM_POSITION_VALUE, DXL_MAXIMUM_POSITION_VALUE]  # Goal position
@@ -135,7 +135,7 @@ class NeckNode(Node):
         # receives two angles, pan and tilt - used when robot must look at something known in advance (ex: direction of navigation, forward, look right/left)
         ########### self.neck_position_subscriber = self.create_subscription(NeckPosition, "neck_to_pos", self.neck_position_callback ,10)
         # receives coordinates where the robot must look at, knowing its own position (ex: look at the couch, look at the table)
-        self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.neck_to_coords_callback, 10)
+        # self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.neck_to_coords_callback, 10)
 
         # receives a person and the keypoint it must follow (ex: constantly looking at the person face, look at body center  to check hands and feet)
         self.neck_follow_person_subscriber = self.create_subscription(TrackPerson, "neck_follow_person", self.neck_follow_person_callback ,10)
@@ -152,8 +152,9 @@ class NeckNode(Node):
 
         # SERVICES:
         # Main receive commads 
-        self.server_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_set_neck_position) 
-        self.server_neck_position = self.create_service(GetNeckPosition, "get_neck_pos", self.callback_get_neck_position) 
+        self.server_set_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_set_neck_position) 
+        self.server_get_neck_position = self.create_service(GetNeckPosition, "get_neck_pos", self.callback_get_neck_position) 
+        self.server_set_neck_to_coordinates = self.create_service(SetNeckCoordinates, "neck_to_coords", self.callback_set_neck_to_coordinates) 
         self.get_logger().info("Neck Servers have been started")
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
@@ -179,7 +180,7 @@ class NeckNode(Node):
         #     self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
             
         self.robot_x = 0.0
-        self.robot_y = 0.0
+        self.robot_y = 1.0
         self.robot_t = 0.0
          
         self.flag_get_neck_position = False
@@ -190,7 +191,6 @@ class NeckNode(Node):
         flag_diagn.data = True
         self.neck_diagnostic_publisher.publish(flag_diagn)
         
-
 
     ########## SERVICES ##########
     def callback_set_neck_position(self, request, response):
@@ -229,6 +229,53 @@ class NeckNode(Node):
 
         return response
 
+    def callback_set_neck_to_coordinates(self, request, response):
+        
+        # Type of service received: 
+        # geometry_msgs/Point coords  # house coordinates the robot must look at 
+        # bool is_tilt # if this flag is true, the robot will use the tilt value for the tilt servo rather than the z value of coords
+        # float64 tilt # ang value to be set on tilt servo
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        # calculate the angle according to last received odometry
+        neck_target_x = request.coords.x
+        neck_target_y = request.coords.y
+
+        if request.is_tilt:
+            neck_target_other_axis = request.tilt
+            self.get_logger().info("Received Neck Coordinates %s" %("("+str(request.coords.x)+", "+str(request.coords.y)+") - ["+str(request.tilt)+"]"))
+        else:
+            pass
+            self.get_logger().warn("Not implemented yet... switch to x,y with tilt.")
+            ##### STILL HAVE TO MAKE THE MATH FOR THIS CASE
+
+        # print(math.degrees(self.robot_t))
+       
+        ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
+        # print("ang_rad:", ang)
+        ang = math.degrees(ang)
+        # print("ang_deg:", ang)
+    
+        pan_neck_to_coords = math.degrees(self.robot_t) - ang
+        if pan_neck_to_coords < -math.degrees(math.pi):
+            pan_neck_to_coords += math.degrees(2*math.pi)
+    
+        # if the robot wants to look back, it uses the correct side to do so without damaging itself
+        if pan_neck_to_coords == -180:
+            pan_neck_to_coords = 180
+
+        # print("neck_to_coords:", pan_neck_to_coords, ang)
+        # self.get_logger().info("neck back angle %d" %pan_neck_to_coords)
+
+        self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis+180.0)
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "neck test"
+        return response
+        
 
     ########## CALLBACKS ##########
     # def neck_position_callback(self, neck_pos: NeckPosition):
@@ -239,29 +286,25 @@ class NeckNode(Node):
     #     self.move_neck(neck_pos.pan+180.0, neck_pos.tilt+180.0)
 
 
-    def neck_to_coords_callback(self, pose: Pose2D):
-        # calculate the angle according to last received odometry
-        neck_target_x = pose.x
-        neck_target_y = pose.y
-        neck_target_other_axis = pose.theta
-
-        ##### remove TILT_CONST_SHIFT #####
-        
-        global TILT_CONST_SHIFT # in this case it only makes sense to change the tilt because the pan is abstract   
-
-        # print(math.degrees(self.robot_t))
-        
-        ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
-        # print("ang_rad:", ang)
-        ang = math.degrees(ang)
-        # print("ang_deg:", ang)
-
-        pan_neck_to_coords = math.degrees(self.robot_t) - ang
-        if pan_neck_to_coords < -math.degrees(math.pi):
-            pan_neck_to_coords += math.degrees(2*math.pi)
-
-        print("neck_to_coords:", pan_neck_to_coords, ang)
-        self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis + TILT_CONST_SHIFT)
+    # def neck_to_coords_callback(self, pose: Pose2D):
+    #     # calculate the angle according to last received odometry
+    #     neck_target_x = pose.x
+    #     neck_target_y = pose.y
+    #     neck_target_other_axis = pose.theta
+    # 
+    #     # print(math.degrees(self.robot_t))
+    #     
+    #     ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
+    #     # print("ang_rad:", ang)
+    #     ang = math.degrees(ang)
+    #     # print("ang_deg:", ang)
+    # 
+    #     pan_neck_to_coords = math.degrees(self.robot_t) - ang
+    #     if pan_neck_to_coords < -math.degrees(math.pi):
+    #         pan_neck_to_coords += math.degrees(2*math.pi)
+    # 
+    #     print("neck_to_coords:", pan_neck_to_coords, ang)
+    #     self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis)
 
 
     def odom_callback(self, odom: Odometry):
