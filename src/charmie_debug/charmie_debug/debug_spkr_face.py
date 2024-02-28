@@ -260,7 +260,7 @@ class RestaurantMain():
                 # self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
                 # time.sleep(2)
 
-                self.set_face("help_pick_cup")
+                self.set_face("help_pick_cu")
                 time.sleep(3)
 
 
@@ -280,7 +280,7 @@ class RestaurantMain():
                 self.set_face("help_pick_bowl")
                 time.sleep(3)
 
-                self.set_face("help_pick_cereal")
+                self.set_face("help_pick_cerea")
                 time.sleep(3)
 
                 self.set_face(custom="clients_tem")

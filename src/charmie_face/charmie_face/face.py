@@ -32,7 +32,7 @@ class Face():
 
     # checks if file exist on the tablet SD card and writes in file so it will appear on face
     def save_text_file(self, data = ""):
-        print("DATA:", data)
+        # print("DATA:", data)
 
         with open(self.destination_temp + "temp.txt", "w") as file:
             file.write(f"{data}")
@@ -117,18 +117,29 @@ class FaceNode(Node):
     # Receive image or video files name to show in face
     def image_to_face_callback(self, command: String):
         
-        ##### MISSING ERROR MESSAGE WHEN FILE DOES NOT EXIST, BUT NOW I HAVE TO DO THAT WITHOUT KNOWING THE EXTENSION
-        self.get_logger().info("FACE received (standard) - %s" %command.data)
-        self.face.save_text_file("media/" + command.data)
+        # since the extension is not known, a system to check all filenames disregarding the extension had to be created
+        file_exists = False
+        files = os.listdir(self.face.destination_media)
+        for file in files:
+            file_name, file_extension = os.path.splitext(file)
+            if file_name == command.data:
+                file_exists = True
+
+        if file_exists:
+            self.get_logger().info("FACE received (standard) - %s" %command.data)
+            self.face.save_text_file("media/" + command.data)
+
+        else:
+            self.get_logger().error("FACE received (standard) does not exist! - %s" %command.data)
 
 
     # Receive custom image name to send to tablet and show in face
     def custom_image_to_face_callback(self, command: String):
 
         # checks whether file exists, maybe there was some typo 
-        isExisting = os.path.exists(self.face.complete_path + command.data + ".jpg")
+        file_exists = os.path.exists(self.face.complete_path + command.data + ".jpg")
         
-        if isExisting:
+        if file_exists:
             self.get_logger().info("FACE received (custom) - %s" %command.data)
             
             # checks the filename of custom faces being sent and changes the name so there is no conflict in files with similar names
