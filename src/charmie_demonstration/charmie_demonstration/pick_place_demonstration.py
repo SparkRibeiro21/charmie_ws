@@ -9,7 +9,7 @@ from geometry_msgs.msg import Pose2D
 from example_interfaces.msg import Bool, String, Int16
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import Obstacles, SpeechType, RobotSpeech, TarNavSDNL, Yolov8Pose, NeckPosition, Yolov8Objects, SearchForPerson, ListOfPoints
+from charmie_interfaces.msg import RobotSpeech, TarNavSDNL, Yolov8Pose, NeckPosition, Yolov8Objects, SearchForPerson, ListOfPoints
 from charmie_interfaces.srv import SpeechCommand
 
 import time
@@ -34,8 +34,8 @@ class RestaurantNode(Node):
         self.object_grabbed_subscriber = self.create_subscription(Bool, "object_grabbed", self.flag_object_grabbed_callback, 10)
 
         #Speaker
-        self.client = self.create_client(SpeechCommand, "speech_command")
-        while not self.client.wait_for_service(1.0):
+        self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
         
         # Neck
@@ -94,6 +94,9 @@ class RestaurantNode(Node):
         self.check_object.tilt = 187.0
 
         self.waited_for_end_of_speaking = False
+
+        self.speech_sucess = True
+        self.speech_message = ""
         
     def call_service(self):
         request = SetBool.Request()
@@ -136,10 +139,6 @@ class RestaurantNode(Node):
         # print(yaw, pitch, roll)
 
         self.robot_theta = atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-
-    def get_speech_done_callback(self, state: Bool):
-        self.flag_speech_done = state.data
-        # print("Received Speech Flag:", state.data)
 
     def flag_arm_finish_callback(self, flag: Bool):
         self.flag_arm_finish = flag.data
@@ -212,12 +211,15 @@ class RestaurantNode(Node):
         request.command = command
         request.quick_voice = quick_voice
     
-        future = self.client.call_async(request)
+        future = self.speech_command_client.call_async(request)
         print("Sent Command")
 
         if wait_for_end_of:
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
+        else:
+            self.speech_sucess = True
+            self.speech_message = "Wait for answer not needed"
     
     def callback_call_speech_command(self, future): #, a, b):
 
@@ -226,8 +228,9 @@ class RestaurantNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info(str(response.success)+str(response.message))
-            # print("oi")
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_sucess = response.success
+            self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
         except Exception as e:
@@ -283,7 +286,7 @@ class RestaurantMain():
         self.node.flag_navigation_done = False
         print("Finished Navigation")
 
-    def speech_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
         
         self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
         
@@ -291,6 +294,8 @@ class RestaurantMain():
           while not self.node.waited_for_end_of_speaking:
             pass
         self.node.waited_for_end_of_speaking = False
+
+        return self.node.speech_sucess, self.node.speech_message
     
     def main(self):
         Initial_state = 0
@@ -334,7 +339,7 @@ class RestaurantMain():
 
                 print('State 0 = Initial')
 
-                self.speech_server(filename="introduction_full", command="", wait_for_end_of=True)
+                #self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
 
                 print('after speak 1')
 
@@ -343,17 +348,17 @@ class RestaurantMain():
                 self.node.barman_or_client_publisher.publish(place_to_go)
                 self.wait_for_end_of_arm()  """
 
-                self.wait_for_end_of_navigation()
+                #self.wait_for_end_of_navigation()
 
                 self.node.rgb_ctr = 14
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.speech_server(filename="demo_three_objects", command="", wait_for_end_of=True)
+                #self.set_speech(filename="demo_three_objects", command="", wait_for_end_of=True)
 
                 print('after speak 2 ')
 
-                self.speech_server(filename="demo_ready_objects", command="", wait_for_end_of=True)
+                self.set_speech(filename="demo_ready_objects", command="", wait_for_end_of=True)
 
                 print('after speak 3')
 
@@ -378,7 +383,7 @@ class RestaurantMain():
                 self.node.barman_or_client_publisher.publish(place_to_go)
                 self.wait_for_end_of_arm()
 
-                self.speech_server(filename="arm_place_object_gripper", command="", wait_for_end_of=True)
+                self.set_speech(filename="arm_place_object_gripper", command="", wait_for_end_of=True)
 
                 time.sleep(1)
 
@@ -386,7 +391,7 @@ class RestaurantMain():
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
 
                 self.state = Go_place_first_object_tray
 
@@ -408,12 +413,12 @@ class RestaurantMain():
                     self.wait_for_end_of_arm()
                     self.state = Go_grab_second_object
                 else:
-                    self.speech_server(filename="arm_error_receive_object", command="", wait_for_end_of=True)
+                    self.set_speech(filename="arm_error_receive_object", command="", wait_for_end_of=True)
                     place_to_go = Int16()
                     place_to_go.data = 19
                     self.node.barman_or_client_publisher.publish(place_to_go)
                     self.wait_for_end_of_arm()
-                    self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                    self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
                     self.state = Go_place_first_object_tray
 
             elif self.state == Go_grab_second_object:
@@ -432,7 +437,7 @@ class RestaurantMain():
                 self.node.barman_or_client_publisher.publish(place_to_go)
                 self.wait_for_end_of_arm()
                 
-                self.speech_server(filename="arm_place_object_gripper", command="", wait_for_end_of=True)
+                self.set_speech(filename="arm_place_object_gripper", command="", wait_for_end_of=True)
 
                 time.sleep(1)
 
@@ -440,7 +445,7 @@ class RestaurantMain():
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
 
                 self.state = Go_place_second_object_tray
 
@@ -462,12 +467,12 @@ class RestaurantMain():
                     self.wait_for_end_of_arm()
                     self.state = Go_grab_third_object
                 else:
-                    self.speech_server(filename="arm_error_receive_object", command="", wait_for_end_of=True)
+                    self.set_speech(filename="arm_error_receive_object", command="", wait_for_end_of=True)
                     place_to_go = Int16()
                     place_to_go.data = 19
                     self.node.barman_or_client_publisher.publish(place_to_go)
                     self.wait_for_end_of_arm()
-                    self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                    self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
                     self.state = Go_place_second_object_tray
 
             elif self.state == Go_grab_third_object:
@@ -486,7 +491,7 @@ class RestaurantMain():
                 self.node.barman_or_client_publisher.publish(place_to_go)
                 self.wait_for_end_of_arm()
 
-                self.speech_server(filename="arm_place_object_gripper", command="", wait_for_end_of=True)
+                self.set_speech(filename="arm_place_object_gripper", command="", wait_for_end_of=True)
 
                 time.sleep(1)
 
@@ -494,7 +499,7 @@ class RestaurantMain():
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
 
                 print('State 6 = Go place third object tray')
 
@@ -518,17 +523,17 @@ class RestaurantMain():
                     self.wait_for_end_of_arm()
                     self.state = Go_place_first_object_table
                 else:
-                    self.speech_server(filename="arm_error_receive_object", command="", wait_for_end_of=True)
+                    self.set_speech(filename="arm_error_receive_object", command="", wait_for_end_of=True)
                     place_to_go = Int16()
                     place_to_go.data = 19
                     self.node.barman_or_client_publisher.publish(place_to_go)
                     self.wait_for_end_of_arm()
-                    self.speech_server(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                    self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
                     self.state = Go_place_third_object_tray
 
             elif self.state == Go_place_first_object_table:
 
-                self.speech_server(filename="move_table", command="", wait_for_end_of=True)
+                self.set_speech(filename="move_table", command="", wait_for_end_of=True)
 
                 self.node.rgb_ctr = 46
                 self.node.rgb.data = self.node.rgb_ctr
@@ -540,13 +545,13 @@ class RestaurantMain():
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.speech_server(filename="place_object_table", command="", wait_for_end_of=True)
+                self.set_speech(filename="place_object_table", command="", wait_for_end_of=True)
 
                 self.node.rgb_ctr = 24
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.speech_server(filename="place_stay_clear", command="", wait_for_end_of=True)
+                self.set_speech(filename="place_stay_clear", command="", wait_for_end_of=True)
 
                 print('State 7 = Go place first object table')
 
@@ -558,7 +563,7 @@ class RestaurantMain():
                 self.node.barman_or_client_publisher.publish(place_to_go)
                 self.wait_for_end_of_arm()
 
-                self.speech_server(filename="place_object_placed", command="", wait_for_end_of=True)
+                self.set_speech(filename="place_object_placed", command="", wait_for_end_of=True)
                 
                 self.state = Go_place_second_object_table
 
@@ -578,7 +583,7 @@ class RestaurantMain():
                 self.node.barman_or_client_publisher.publish(place_to_go)
                 self.wait_for_end_of_arm()
 
-                self.speech_server(filename="place_object_placed", command="", wait_for_end_of=True)
+                self.set_speech(filename="place_object_placed", command="", wait_for_end_of=True)
                 
                 self.state = Go_place_third_object_table
 
@@ -598,7 +603,7 @@ class RestaurantMain():
                 self.node.barman_or_client_publisher.publish(place_to_go)
                 self.wait_for_end_of_arm()
 
-                self.speech_server(filename="place_object_placed", command="", wait_for_end_of=True)
+                self.set_speech(filename="place_object_placed", command="", wait_for_end_of=True)
                 
                 self.state = Go_rest
 
@@ -630,7 +635,7 @@ class RestaurantMain():
                 self.node.rgb.data = self.node.rgb_ctr
                 self.node.rgb_mode_publisher.publish(self.node.rgb)
 
-                self.speech_server(filename="demo_end", command="", wait_for_end_of=True)
+                self.set_speech(filename="demo_end", command="", wait_for_end_of=True)
 
                 
                 #self.node.neck_position_publisher.publish(self.node.place_objects_tray)
