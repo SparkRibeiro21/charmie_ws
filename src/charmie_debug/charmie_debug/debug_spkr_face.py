@@ -19,7 +19,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 class TestNode(Node):
 
     def __init__(self):
-        super().__init__("Test")
+        super().__init__("Debug")
         self.get_logger().info("Initialised CHARMIE Test Speakers and Face Node")
 
         ### Topics (Publisher and Subscribers) ###  
@@ -257,7 +257,7 @@ class RestaurantMain():
                 """
 
                 
-                self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
+                # self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
                 # time.sleep(2)
 
                 self.set_face("help_pick_cup")
