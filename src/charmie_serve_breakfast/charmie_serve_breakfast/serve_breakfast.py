@@ -277,7 +277,7 @@ class ServeBreakfastMain():
             if self.state == self.Waiting_for_task_start:
 
                 p, t = self.get_neck()
-                # self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
+                self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
 
                 self.set_face("demo5")
 
@@ -306,8 +306,8 @@ class ServeBreakfastMain():
                 # p, t = self.get_neck(wait_for_end_of=True)
                 # self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
 
-                # while True:
-                #     pass
+                while True:
+                    pass
                 
                 self.state = self.Approach_kitchen_counter
 

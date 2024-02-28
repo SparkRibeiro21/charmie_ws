@@ -128,6 +128,9 @@ class NeckNode(Node):
         self.get_logger().info("Initialised CHARMIE Neck Node")
 
         self.declare_parameter("device_name", "USB1") 
+        self.declare_parameter("speed_up", 4) 
+        self.declare_parameter("speed_down", 2) 
+        self.declare_parameter("speed_sides", 10) 
 
         # receives two angles, pan and tilt - used when robot must look at something known in advance (ex: direction of navigation, forward, look right/left)
         ########### self.neck_position_subscriber = self.create_subscription(NeckPosition, "neck_to_pos", self.neck_position_callback ,10)
@@ -147,7 +150,6 @@ class NeckNode(Node):
         # standard diagnostic publisher
         self.neck_diagnostic_publisher = self.create_publisher(Bool, "neck_diagnostic", 10)
 
-
         # SERVICES:
         # Main receive commads 
         self.server_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_set_neck_position) 
@@ -156,8 +158,11 @@ class NeckNode(Node):
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
         DEVICE_PARAM = self.get_parameter("device_name").value
-
-
+        
+        self.u_tilt_up = self.get_parameter("speed_up").value
+        self.u_tilt_down = self.get_parameter("speed_down").value
+        self.u_pan = self.get_parameter("speed_sides").value
+        
         DEVICENAME = "/dev/tty"+DEVICE_PARAM # "/dev/ttyUSB1"  # Check which port is being used on your controller
         # ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
         # Initialize PortHandler instance
@@ -168,13 +173,11 @@ class NeckNode(Node):
         ########## CHANGE TO LOGGER ##########
         print("Connected to Neck Board via:", DEVICENAME)  # check which port was really used
         
-        
         # if DEBUG_DRAW:
         #     self.img = Image()
         #     self.first_img_ready = False
         #     self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
             
-
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.robot_t = 0.0
@@ -391,9 +394,7 @@ class NeckNode(Node):
         self.get_logger().info("Set Neck to Initial Position, Looking Forward")
 
         self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        
-        # self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        # time.sleep(3)
+
 
     def read_servo_position(self):
 
@@ -432,9 +433,6 @@ class NeckNode(Node):
         print("START")
         
         d_t = 0.02
-        u_pan = 10
-        u_tilt_up = 5 #300 # 5
-        u_tilt_down = 2 #300 # 2
 
         signal_pan = 1
         signal_tilt = 1
@@ -449,24 +447,24 @@ class NeckNode(Node):
         else:
             signal_pan = 1
 
-        div_pan = int(abs(pan_dif)//u_pan)*signal_pan
-        rem_pan = int(abs(pan_dif)%u_pan)*signal_pan
+        div_pan = int(abs(pan_dif)//self.u_pan)*signal_pan
+        rem_pan = int(abs(pan_dif)%self.u_pan)*signal_pan
 
 
         tilt_dif = int(t) - read_tilt_open_loop_deg
 
         if tilt_dif < 0.0:
             signal_tilt = -1
-            u_tilt =  u_tilt_down
+            u_tilt =  self.u_tilt_down
         else:
             signal_tilt = 1
-            u_tilt = u_tilt_up
+            u_tilt = self.u_tilt_up
 
         div_tilt = int(abs(tilt_dif)//u_tilt)*signal_tilt
         rem_tilt = int(abs(tilt_dif)%u_tilt)*signal_tilt
 
         
-        print("PAN:", read_pan_open_loop_deg, " -> ", p, "dif:", pan_dif, "u_pan:", u_pan, "div:", div_pan, "rem:", rem_pan)
+        print("PAN:", read_pan_open_loop_deg, " -> ", p, "dif:", pan_dif, "u_pan:", self.u_pan, "div:", div_pan, "rem:", rem_pan)
         print("TILT:", read_tilt_open_loop_deg, " -> ", t, "dif:", tilt_dif, "u_tilt:", u_tilt, "div:", div_tilt, "rem:", rem_tilt)
 
         ctr = 1
@@ -479,7 +477,7 @@ class NeckNode(Node):
             if new_pan == p:
                 new_pan = p
             else:
-                new_pan = read_pan_open_loop_deg+rem_pan+((ctr)*signal_pan*u_pan)
+                new_pan = read_pan_open_loop_deg+rem_pan+((ctr)*signal_pan*self.u_pan)
             
             if new_tilt == t:
                 new_tilt = t
