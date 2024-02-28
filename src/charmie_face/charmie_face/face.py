@@ -73,7 +73,7 @@ class FaceNode(Node):
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
         self.declare_parameter("after_speech_timer", 0.0) 
-        self.declare_parameter("initial_face", "demo1") 
+        self.declare_parameter("initial_face", "demo5") 
 
         ### Topics (Subscribers) ###   
         # Receive speech strings to show in face

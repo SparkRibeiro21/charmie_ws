@@ -260,6 +260,7 @@ class RestaurantMain():
                 # self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
                 # time.sleep(2)
 
+                self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
                 self.set_face("help_pick_cu")
                 time.sleep(3)
 
@@ -273,6 +274,8 @@ class RestaurantMain():
                 # self.node.test_custom_image_face_str.data = "clients_temp"
                 # self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
                 # time.sleep(5)
+
+                self.set_speech(filename="introduction_ful", command="", wait_for_end_of=True)
                 self.set_face(custom="clients_temp")
                 time.sleep(3)
 
@@ -280,7 +283,7 @@ class RestaurantMain():
                 self.set_face("help_pick_bowl")
                 time.sleep(3)
 
-                self.set_face("help_pick_cerea")
+                self.set_face("demo8")
                 time.sleep(3)
 
                 self.set_face(custom="clients_tem")

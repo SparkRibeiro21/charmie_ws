@@ -260,10 +260,11 @@ class SpeakerNode(Node):
         
         else:
             # speakers mode where received filename must be played
-            self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
             success, message = self.charmie_speech.play_command(request.filename)
             if success == False:
-                self.get_logger().error("SPEAKERS received (file) does not exist!")
+                self.get_logger().error("SPEAKERS received (file) does not exist! - %s" %request.filename)
+            else:
+                self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
 
         # returns whether the message was played and some informations regarding status
         response.success = success
