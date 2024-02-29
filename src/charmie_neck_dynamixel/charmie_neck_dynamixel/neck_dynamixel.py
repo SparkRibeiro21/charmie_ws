@@ -180,7 +180,7 @@ class NeckNode(Node):
         #     self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
             
         self.robot_x = 0.0
-        self.robot_y = 1.0
+        self.robot_y = 0.0
         self.robot_t = 0.0
          
         self.flag_get_neck_position = False

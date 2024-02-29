@@ -9,12 +9,15 @@ from cv_bridge import CvBridge
 import cv2 
 import cvzone
 
+from pathlib import Path
+
 # import numpy as np
 
 import math
 import time
 
 objects_filename = "m_size_model_300_epochs_after_nandinho.pt"
+# objects_filename = "serve_breakfast_v1.pt"
 shoes_filename = "shoes_socks_v1.pt"
 
 
@@ -41,13 +44,19 @@ class Yolo_obj(Node):
         # used to record the time at which we processed current frame
         self.new_frame_time = 0
 
+        # info regarding the paths for the recorded files intended to be played
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.home = str(Path.home())
+        self.midpath = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects"
+        self.complete_path = self.home+'/'+self.midpath+'/'
+
         # self.model = YOLO('/home/utilizador/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + filename)
-        self.object_model = YOLO('/home/charmie/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + objects_filename)
-        self.shoes_model = YOLO('/home/charmie/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + shoes_filename)
+        self.object_model = YOLO(self.complete_path + objects_filename)
+        self.shoes_model = YOLO(self.complete_path + shoes_filename)
         
         # self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
         # Intel Realsense
-        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
+        self.color_image_subscriber = self.create_subscription(Image, "camera/camera/color/image_raw", self.get_color_image_callback, 10)
         
         # For individual images
         self.cropped_image_subscription = self.create_subscription(ListOfImages, '/cropped_image', self.cropped_image_callback, 10)
@@ -61,6 +70,8 @@ class Yolo_obj(Node):
                                  'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
                                  'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
                                  'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+
+        self.serve_breakfast_classname = ['bowl', 'spoon', "milk", "cereal"]
 
         self.shoes_socks_classname = ['shoe', 'sock']
 
@@ -83,10 +94,12 @@ class Yolo_obj(Node):
         # depending on the filename selected, the class names change
         if objects_filename == 'vfinal.pt' or objects_filename == 'M_300epochs.pt' or objects_filename == "m_size_model_300_epochs_after_nandinho.pt":
             self.objects_classNames = self.lar_v_final_classname
+        elif objects_filename == 'serve_breakfast_v1.pt':
+            self.objects_classNames = self.serve_breakfast_classname
         else:
             print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
             
-        self.object_threshold = 0.5
+        self.object_threshold = 0.2
         self.shoes_threshold = 0.5
 
         self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
