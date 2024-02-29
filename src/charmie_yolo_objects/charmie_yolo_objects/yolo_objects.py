@@ -9,12 +9,15 @@ from cv_bridge import CvBridge
 import cv2 
 import cvzone
 
+from pathlib import Path
+
 # import numpy as np
 
 import math
 import time
 
 objects_filename = "m_size_model_300_epochs_after_nandinho.pt"
+# objects_filename = "serve_breakfast_v1.pt"
 shoes_filename = "shoes_socks_v1.pt"
 
 
@@ -41,9 +44,15 @@ class Yolo_obj(Node):
         # used to record the time at which we processed current frame
         self.new_frame_time = 0
 
+        # info regarding the paths for the recorded files intended to be played
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.home = str(Path.home())
+        self.midpath = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects"
+        self.complete_path = self.home+'/'+self.midpath+'/'
+
         # self.model = YOLO('/home/utilizador/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + filename)
-        self.object_model = YOLO('/home/charmie/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + objects_filename)
-        self.shoes_model = YOLO('/home/charmie/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + shoes_filename)
+        self.object_model = YOLO(self.complete_path + objects_filename)
+        self.shoes_model = YOLO(self.complete_path + shoes_filename)
         
         # self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
         # Intel Realsense
@@ -62,6 +71,8 @@ class Yolo_obj(Node):
                                  'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
                                  'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
                                  'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        
+        self.serve_breakfast_classname = ['bowl', 'spoon', "milk", "cereal"]
 
         self.shoes_socks_classname = ['shoe', 'sock']
 
@@ -84,6 +95,8 @@ class Yolo_obj(Node):
         # depending on the filename selected, the class names change
         if objects_filename == 'vfinal.pt' or objects_filename == 'M_300epochs.pt' or objects_filename == "m_size_model_300_epochs_after_nandinho.pt":
             self.objects_classNames = self.lar_v_final_classname
+        elif objects_filename == 'serve_breakfast_v1.pt':
+            self.objects_classNames = self.serve_breakfast_classname
         else:
             print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
             
@@ -108,11 +121,25 @@ class Yolo_obj(Node):
         self.get_logger().info('Receiving color video frame head')
         current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
         
+        # cv2.imshow("Intel RealSense Current Frame", current_frame)
+        # cv2.waitKey(1)
+        
+        
+        # self.obj.objects = []
+        # self.obj.confidence = []
+        # self.obj.distance = []
+        # self.obj.position = []
+
+        # minimum value of confidence for object to be accepted as true and sent via topic
+        
         results = self.object_model(current_frame, stream = True)
 
         threshold = self.object_threshold
         classNames = self.objects_classNames
 
+        #print(results)
+
+        # this for only does 1 time ...
         for r in results:
             boxes = r.boxes
 
@@ -134,6 +161,37 @@ class Yolo_obj(Node):
                 
                 else:
                     pass
+
+        """
+        # minimum value of confidence for object to be accepted as true and sent via topic
+        results = self.shoes_model(current_frame, stream = True)
+
+        threshold = self.shoes_threshold
+        classNames = self.shoes_socks_classname                
+
+        # this for only does 1 time ...
+        for r in results:
+            boxes = r.boxes
+
+            for box in boxes:
+                cls = int(box.cls[0])
+                conf = math.ceil(box.conf[0] * 100) / 100
+                
+                if self.debug_draw:
+                    x1, y1, x2, y2 = box.xyxy[0]
+                    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                    #center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
+
+                    w, h = x2 - x1, y2 - y1
+                    if conf >= threshold:
+                        cvzone.cornerRect(current_frame, (x1, y1, w, h), l=15)    
+                        cvzone.putTextRect(current_frame, f"{classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
+                    
+                        print(classNames[cls], 'confidence = ' + str(conf))
+                
+                else:
+                    pass
+        """
 
         self.new_frame_time = time.time()
         self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
@@ -142,18 +200,45 @@ class Yolo_obj(Node):
         self.fps = str(self.fps)
 
         if self.debug_draw:
+            # putting the FPS count on the frame
+            # cv2.putText(current_frame, 'fps = ' + self.fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow('Output_head', current_frame) # Exibir a imagem capturada
             cv2.waitKey(1)
+
+            # THIS CODE IS TO SAVE IMAGES TO TEST WITHOUT THE ROBOT, IT SABES JPG AND RAW with object detection
+            # cv2.imshow("Intel RealSense Current Frame", current_frame)
+            # cv2.waitKey(1)
+            # with open("yolo_objects.raw", "wb") as f:
+            #     f.write(current_frame.tobytes())
+            # height, width, channels = current_frame.shape
+            # print(height, width, channels)
+            # cv2.imwrite("yolo_objects.jpg", current_frame) 
+            # time.sleep(1)
 
 
     def get_color_image_hand_callback(self, img: Image):
         self.get_logger().info('Receiving color video frame hand')
         current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
+
+        # cv2.imshow("Intel RealSense Current Frame", current_frame)
+        # cv2.waitKey(1)
+        
+        
+        # self.obj.objects = []
+        # self.obj.confidence = []
+        # self.obj.distance = []
+        # self.obj.position = []
+
+        # minimum value of confidence for object to be accepted as true and sent via topic
         
         results = self.object_model(current_frame, stream = True)
 
         threshold = self.object_threshold
         classNames = self.objects_classNames
+
+        #print(results)
+
+        # this for only does 1 time ...
 
         for r in results:
             boxes = r.boxes
@@ -176,6 +261,37 @@ class Yolo_obj(Node):
                 
                 else:
                     pass
+        
+        """
+        # minimum value of confidence for object to be accepted as true and sent via topic
+        results = self.shoes_model(current_frame, stream = True)
+
+        threshold = self.shoes_threshold
+        classNames = self.shoes_socks_classname                
+
+        # this for only does 1 time ...
+        for r in results:
+            boxes = r.boxes
+
+            for box in boxes:
+                cls = int(box.cls[0])
+                conf = math.ceil(box.conf[0] * 100) / 100
+                
+                if self.debug_draw:
+                    x1, y1, x2, y2 = box.xyxy[0]
+                    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                    #center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
+
+                    w, h = x2 - x1, y2 - y1
+                    if conf >= threshold:
+                        cvzone.cornerRect(current_frame, (x1, y1, w, h), l=15)    
+                        cvzone.putTextRect(current_frame, f"{classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
+                    
+                        print(classNames[cls], 'confidence = ' + str(conf))
+                
+                else:
+                    pass
+        """
 
         self.new_frame_time = time.time()
         self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
@@ -188,6 +304,16 @@ class Yolo_obj(Node):
             # cv2.putText(current_frame, 'fps = ' + self.fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow('Output_hand', current_frame) # Exibir a imagem capturada
             cv2.waitKey(1)
+
+            # THIS CODE IS TO SAVE IMAGES TO TEST WITHOUT THE ROBOT, IT SABES JPG AND RAW with object detection
+            # cv2.imshow("Intel RealSense Current Frame", current_frame)
+            # cv2.waitKey(1)
+            # with open("yolo_objects.raw", "wb") as f:
+            #     f.write(current_frame.tobytes())
+            # height, width, channels = current_frame.shape
+            # print(height, width, channels)
+            # cv2.imwrite("yolo_objects.jpg", current_frame) 
+            # time.sleep(1)
         
 
     def cropped_image_callback(self, msg_list_of_images: ListOfImages):
