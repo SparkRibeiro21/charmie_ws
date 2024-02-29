@@ -47,7 +47,8 @@ class Yolo_obj(Node):
         
         # self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
         # Intel Realsense
-        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
         
         # For individual images
         self.cropped_image_subscription = self.create_subscription(ListOfImages, '/cropped_image', self.cropped_image_callback, 10)
@@ -103,29 +104,15 @@ class Yolo_obj(Node):
 
 ### --------------------------------------------- /////////////// --------------------------------------------- ###
 
-    def get_color_image_callback(self, img: Image):
-        self.get_logger().info('Receiving color video frame')
+    def get_color_image_head_callback(self, img: Image):
+        self.get_logger().info('Receiving color video frame head')
         current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
         
-
-        # cv2.imshow("Intel RealSense Current Frame", current_frame)
-        # cv2.waitKey(1)
-        
-        
-        # self.obj.objects = []
-        # self.obj.confidence = []
-        # self.obj.distance = []
-        # self.obj.position = []
-
-        # minimum value of confidence for object to be accepted as true and sent via topic
         results = self.object_model(current_frame, stream = True)
 
         threshold = self.object_threshold
         classNames = self.objects_classNames
 
-        #print(results)
-
-        # this for only does 1 time ...
         for r in results:
             boxes = r.boxes
 
@@ -148,15 +135,26 @@ class Yolo_obj(Node):
                 else:
                     pass
 
+        self.new_frame_time = time.time()
+        self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
+        self.prev_frame_time = self.new_frame_time
 
-        """
-        # minimum value of confidence for object to be accepted as true and sent via topic
-        results = self.shoes_model(current_frame, stream = True)
+        self.fps = str(self.fps)
 
-        threshold = self.shoes_threshold
-        classNames = self.shoes_socks_classname                
+        if self.debug_draw:
+            cv2.imshow('Output_head', current_frame) # Exibir a imagem capturada
+            cv2.waitKey(1)
 
-        # this for only does 1 time ...
+
+    def get_color_image_hand_callback(self, img: Image):
+        self.get_logger().info('Receiving color video frame hand')
+        current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
+        
+        results = self.object_model(current_frame, stream = True)
+
+        threshold = self.object_threshold
+        classNames = self.objects_classNames
+
         for r in results:
             boxes = r.boxes
 
@@ -178,8 +176,6 @@ class Yolo_obj(Node):
                 
                 else:
                     pass
-        """
-
 
         self.new_frame_time = time.time()
         self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
@@ -190,18 +186,8 @@ class Yolo_obj(Node):
         if self.debug_draw:
             # putting the FPS count on the frame
             # cv2.putText(current_frame, 'fps = ' + self.fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-            cv2.imshow('Output', current_frame) # Exibir a imagem capturada
+            cv2.imshow('Output_hand', current_frame) # Exibir a imagem capturada
             cv2.waitKey(1)
-        
-            # THIS CODE IS TO SAVE IMAGES TO TEST WITHOUT THE ROBOT, IT SABES JPG AND RAW with object detection
-            # cv2.imshow("Intel RealSense Current Frame", current_frame)
-            # cv2.waitKey(1)
-            # with open("yolo_objects.raw", "wb") as f:
-            #     f.write(current_frame.tobytes())
-            # height, width, channels = current_frame.shape
-            # print(height, width, channels)
-            # cv2.imwrite("yolo_objects.jpg", current_frame) 
-            # time.sleep(1)
         
 
     def cropped_image_callback(self, msg_list_of_images: ListOfImages):

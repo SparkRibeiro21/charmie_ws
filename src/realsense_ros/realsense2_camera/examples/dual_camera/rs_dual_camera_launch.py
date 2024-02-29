@@ -39,6 +39,8 @@ local_parameters = [{'name': 'camera_name1',            'default': 'camera1', 'd
                     {'name': 'camera_name2',            'default': 'camera2', 'description': 'camera unique name'},
                     {'name': 'camera_namespace1',       'default': 'camera1', 'description': 'camera1 namespace'},
                     {'name': 'camera_namespace2',       'default': 'camera2', 'description': 'camera2 namespace'},
+                    {'name': 'align_depth.enable1',     'default': 'true', 'description': 'enable align depth filter'},
+                    {'name': 'align_depth.enable2',     'default': 'true', 'description': 'enable align depth filter'},
                     {'name': 'enable_color1',           'default': 'true', 'description': 'enable color stream'},
                     {'name': 'enable_color2',           'default': 'true', 'description': 'enable color stream'},
                     {'name': 'enable_depth1',           'default': 'true', 'description': 'enable depth stream'},
