@@ -83,13 +83,16 @@ class ArmUfactory(Node):
 
 		self.wrong_movement_received = False
 		self.end_of_movement = False
-		self.next_arm_movement = -1
 		self.gripper_tr = 0.0
 		self.gripper_opening = []
 		self.estado_tr = 0
 
+		# initial debug movement 
+		self.next_arm_movement = "debug_initial"
+
 		self.setup()
 		print('---------')
+		self.movement_selection()
 
 
 	def bool_service_callback(self, request, response):
@@ -122,7 +125,7 @@ class ArmUfactory(Node):
 	def setup(self):
 		
 		#define key positions and keypoints
-		self.initial_position = [-215.0, 83.4, -65.0, -0.5, 74.9, -90.0] 
+		self.initial_position_bruno = [-215.0, 83.4, -65.0, -0.5, 74.9, -90.0] 
 		self.restaurant_initial_position = [-224.8, 83.4, -65.0, -0.5, 74.9, -90.0] 
 		self.pre_get_order_position = [-149.0, 2.0, -78.0, 245.0, 32.5, -331.0]
 		self.get_order_position = [-158.0, 33.0, -118.0, 255.0, 22.0, -343.0]
@@ -141,6 +144,17 @@ class ArmUfactory(Node):
 		self.pre_place_juice_table = [-197.0, -14.0, -72.0, 159.0, 46.0, -242.0]
 		self.place_coke_table = [-194.0, 54.0, -117.0, 170.0, 72.0, -255.0]
 		self.pre_place_coke_table = [-185.0, 49.0, -110.0, 177.0, 73.0, -264.0]
+
+		# INITIAL DEBUG MOVEMENT
+		self.secondary_initial_position_debug = [-214.8, 83.4, -65.0, -0.5, 74.9, -90.0]  
+
+		# HELLO WAVING MOVEMENT
+		self.initial_position =       [-224.8,   83.4,  -65.0,   -0.5,   74.9,  -90.0] 
+		self.first_waving_position =  [ -90.0,  -53.0,  -35.0,  154.0,  -20.9, -250.0] 
+		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0, -250.0] 
+
+
+
 		#self.check_object = [51.0, 17.0, -114.0, 5.0, 112.0, -44.0]
 		
 		#define key positions and keypoints
@@ -253,7 +267,6 @@ class ArmUfactory(Node):
 
 	def open_close_gripper(self):
 		if self.estado_tr == 0:
-		#Fechar garra
 			print('a')
 			self.set_gripper_req.pos = 900.0
 			self.set_gripper_req.wait = True
@@ -267,7 +280,7 @@ class ArmUfactory(Node):
 			print('ll')
 
 		elif self.estado_tr == 2:
-			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
+			self.joint_values_req.angles = self.deg_to_rad(self.secondary_initial_position_debug)
 			self.joint_values_req.speed = 0.4 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -315,6 +328,151 @@ class ArmUfactory(Node):
 			print('FEITO Abrir fechar garra')
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def hello(self):
+		
+		# Removed safety waypoints
+		"""
+		if self.estado_tr == 0:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+	
+		elif self.estado_tr == 1: 
+			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
+			print('ll')
+
+		elif self.estado_tr == 2: # safety
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		"""
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 4:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 5:
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
+			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 7:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 8:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 9:
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 10:
+			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 11:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 12:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 13:
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 14:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			print('FEITO Abrir fechar garra')
+			self.get_logger().info("FINISHED MOVEMENT")	
 
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
 		print('Abertura gripper em mm =', current_gripper_pos)
@@ -347,6 +505,8 @@ class ArmUfactory(Node):
 		print('valor vindo do pick and place: ', self.next_arm_movement)
 		if self.next_arm_movement == "debug_initial":
 			self.open_close_gripper()
+		elif self.next_arm_movement == "hello":
+			self.hello()
 		else:
 			self.wrong_movement_received = True
 			print('Wrong Movement Received - ', self.next_arm_movement)	

@@ -19,8 +19,8 @@ drinks_list = ["milk", "orange juice", "red wine"]
 
 MODE = "STANDARD"
 
-COMMAND = "Motors unlocked."
-FILENAME = "motors_unlocked"
+COMMAND = "Waiting for start button to be pressed."
+FILENAME = "waiting_start_button"
 
 
 class RobotSpeak():

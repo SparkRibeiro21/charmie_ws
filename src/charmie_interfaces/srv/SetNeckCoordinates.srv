@@ -1,0 +1,8 @@
+# Service to send a space coordinate so both servos look at a specific location, can be used a tilt value rather than the z coordinate
+
+geometry_msgs/Point coords  # house coordinates the robot must look at 
+bool is_tilt # if this flag is true, the robot will use the tilt value for the tilt servo rather than the z value of coords
+float64 tilt # ang value to be set on tilt servo
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.

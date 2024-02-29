@@ -78,21 +78,25 @@ def generate_launch_description():
                     {'control_torso': True},
                     {'control_wait_for_end_of_navigation': True},
                     ],
+                emulate_tty=True
                 )
     
     speakers = Node(package='charmie_speakers',
                         executable='speakers',
                         name='speakers',
+                        emulate_tty=True
                         )
     
     neck = Node(package='charmie_neck_dynamixel',
                 executable='neck_dynamixel',
                 name='neck_dynamixel',
+                emulate_tty=True
                 )
     
     low_level = Node(package='charmie_low_level',
                 executable='low_level',
                 name='low_level',
+                emulate_tty=True
                 )
     
     face = Node(package='charmie_face',
@@ -103,11 +107,13 @@ def generate_launch_description():
                     {'after_speech_timer': 1.0},
                     {'initial_face': 'demo5'},
                     ],
+                emulate_tty=True
                 )
 
     arm = Node(package='charmie_arm_ufactory',
                         executable='arm_hello',
                         name='arm_hello',
+                emulate_tty=True
                         )
     
 

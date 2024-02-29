@@ -19,8 +19,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-find_package(geometry_msgs REQUIRED)
 find_package(example_interfaces REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -48,6 +48,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Yolov8Objects.msg"
   "msg/Yolov8Pose.msg"
   "srv/FirstTRService.srv"
+  "srv/GetNeckPosition.srv"
+  "srv/SetNeckCoordinates.srv"
+  "srv/SetNeckPosition.srv"
   "srv/SpeechCommand.srv"
   DEPENDENCIES example_interfaces geometry_msgs sensor_msgs
 )

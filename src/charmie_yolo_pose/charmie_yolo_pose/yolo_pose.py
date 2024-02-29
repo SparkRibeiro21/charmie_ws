@@ -13,6 +13,8 @@ import numpy as np
 import time
 import math
 
+from pathlib import Path
+
 # configurable parameters through ros topics
 ONLY_DETECT_PERSON_LEGS_VISIBLE = False              # if True only detects people whose legs are visible 
 MIN_PERSON_CONF_VALUE = 0.5                          # defines the minimum confidence value to be considered a person
@@ -40,8 +42,16 @@ class YoloPoseNode(Node):
         super().__init__("YoloPose")
         self.get_logger().info("Initialised YoloPose Node")
 
-        # Yolo Model - Yolov8 Pode Nano
-        self.model = YOLO('yolov8n-pose.pt')
+        # info regarding the paths for the recorded files intended to be played
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.home = str(Path.home())
+        self.midpath = "charmie_ws/src/charmie_yolo_pose/charmie_yolo_pose"
+        self.complete_path = self.home+'/'+self.midpath+'/'
+
+        # Yolo Model - Yolov8 Pose
+        # self.model = YOLO(self.complete_path + 'yolov8s-pose.pt')
+        # If the PC used has lower frame rates switch to:
+        self.model = YOLO(self.complete_path + 'yolov8n-pose.pt')
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.debug_draw = True
@@ -686,7 +696,7 @@ class YoloPoseNode(Node):
         cv2.waitKey(1) 
         """       
 
-    def get_point_cloud_callback(self, ret: RetrievePointCloud()):
+    def get_point_cloud_callback(self, ret: RetrievePointCloud):
         
         if self.waiting_for_pcloud:
             self.waiting_for_pcloud = False

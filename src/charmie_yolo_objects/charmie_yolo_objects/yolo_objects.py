@@ -11,6 +11,8 @@ import cvzone
 
 from pathlib import Path
 
+from pathlib import Path
+
 # import numpy as np
 
 import math
@@ -50,7 +52,15 @@ class Yolo_obj(Node):
         self.midpath = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects"
         self.complete_path = self.home+'/'+self.midpath+'/'
 
+        # info regarding the paths for the recorded files intended to be played
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.home = str(Path.home())
+        self.midpath = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects"
+        self.complete_path = self.home+'/'+self.midpath+'/'
+
         # self.model = YOLO('/home/utilizador/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + filename)
+        self.object_model = YOLO(self.complete_path + objects_filename)
+        self.shoes_model = YOLO(self.complete_path + shoes_filename)
         self.object_model = YOLO(self.complete_path + objects_filename)
         self.shoes_model = YOLO(self.complete_path + shoes_filename)
         
@@ -100,7 +110,7 @@ class Yolo_obj(Node):
         else:
             print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
             
-        self.object_threshold = 0.5
+        self.object_threshold = 0.2
         self.shoes_threshold = 0.5
 
         self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
