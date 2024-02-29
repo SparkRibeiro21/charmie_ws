@@ -558,8 +558,9 @@ class PointCloudNode(Node):
         self.get_logger().info("Initialised CHARMIE PointCloud Node")
         
         # Intel Realsense Subscribers
-        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
-        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        # self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
+        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
         
         # Neck Position
         self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
@@ -584,7 +585,7 @@ class PointCloudNode(Node):
         self.tempo_calculo = 0
         self.tempo_frame = 0
 
-    def get_color_image_callback(self, img: Image):
+    def get_color_image_head_callback(self, img: Image):
         self.rgb_img = img
         # print("Received RGB Image")
 

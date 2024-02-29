@@ -36,6 +36,7 @@ DRAW_PERSON_BOX = True
 DRAW_PERSON_KP = True
 DRAW_LOW_CONF_KP = False
 
+#### ros2 param - yolo pose model (s,n,m,l,x) 
 
 class YoloPoseNode(Node):
     def __init__(self):
@@ -49,9 +50,9 @@ class YoloPoseNode(Node):
         self.complete_path = self.home+'/'+self.midpath+'/'
 
         # Yolo Model - Yolov8 Pose
-        # self.model = YOLO(self.complete_path + 'yolov8s-pose.pt')
+        self.model = YOLO(self.complete_path + 'yolov8s-pose.pt')
         # If the PC used has lower frame rates switch to:
-        self.model = YOLO(self.complete_path + 'yolov8n-pose.pt')
+        # self.model = YOLO(self.complete_path + 'yolov8n-pose.pt')
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.debug_draw = True
@@ -68,7 +69,8 @@ class YoloPoseNode(Node):
         self.only_detect_person_arm_raised_subscriber = self.create_subscription(Bool, "only_det_per_arm_raised", self.get_only_detect_person_arm_raised_callback, 10)
 
         # Intel Realsense Subscribers
-        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
+        ### self.color_image_subscriber = self.create_subscription(Image, "camera/camera/color/image_raw", self.get_color_image_callback, 10)
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         # self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
         
         # Point Cloud
@@ -181,7 +183,7 @@ class YoloPoseNode(Node):
             self.get_logger().info('ONLY_DETECT_PERSON_ARM_RAISED = False')  
 
 
-    def get_color_image_callback(self, img: Image):
+    def get_color_image_head_callback(self, img: Image):
         self.get_logger().info('Receiving color video frame')
         
         if not self.waiting_for_pcloud:

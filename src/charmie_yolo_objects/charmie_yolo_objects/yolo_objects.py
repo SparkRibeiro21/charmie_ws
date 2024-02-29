@@ -52,15 +52,7 @@ class Yolo_obj(Node):
         self.midpath = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects"
         self.complete_path = self.home+'/'+self.midpath+'/'
 
-        # info regarding the paths for the recorded files intended to be played
-        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
-        self.home = str(Path.home())
-        self.midpath = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects"
-        self.complete_path = self.home+'/'+self.midpath+'/'
-
         # self.model = YOLO('/home/utilizador/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + filename)
-        self.object_model = YOLO(self.complete_path + objects_filename)
-        self.shoes_model = YOLO(self.complete_path + shoes_filename)
         self.object_model = YOLO(self.complete_path + objects_filename)
         self.shoes_model = YOLO(self.complete_path + shoes_filename)
         
