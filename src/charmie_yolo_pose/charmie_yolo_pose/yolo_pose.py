@@ -70,13 +70,7 @@ class YoloPoseNode(Node):
         self.only_detect_person_arm_raised_subscriber = self.create_subscription(Bool, "only_det_per_arm_raised", self.get_only_detect_person_arm_raised_callback, 10)
 
         # Intel Realsense Subscribers
-        ### self.color_image_subscriber = self.create_subscription(Image, "camera/camera/color/image_raw", self.get_color_image_callback, 10)
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        # self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
-        
-        # Point Cloud
-        self.request_point_cloud_publisher = self.create_publisher(RequestPointCloud, 'ask_point_cloud', 10) 
-        # self.retrieve_point_cloud_subscriber = self.create_subscription(RetrievePointCloud, "get_point_cloud", self.get_point_cloud_callback, 10)
 
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
@@ -165,20 +159,10 @@ class YoloPoseNode(Node):
             response = future.result()
             self.post_receiving_pcloud(response.coords)
             self.waiting_for_pcloud = False
-            # self.get_logger().info(str(response.success) + " - " + str(response.message))
-            # self.speech_sucess = response.success
-             #self.speech_message = response.message
-            # time.sleep(3)
-            # self.waited_for_end_of_speaking = True
             print("Recived Back")
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
-
-
-
-
-            
 
     def get_only_detect_person_legs_visible_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE
@@ -369,11 +353,7 @@ class YoloPoseNode(Node):
                 req2.append(aux)
 
             self.waiting_for_pcloud = True
-            # self.request_point_cloud_publisher.publish(req)
-            
-            
             self.call_point_cloud_server(req2)
-        
         
 
     def post_receiving_pcloud(self, new_pcloud):
@@ -723,8 +703,8 @@ class YoloPoseNode(Node):
         # print('tempo parcial = ', tf - ti)
         print('tempo total = ', time.perf_counter() - self.tempo_total)   # imprime o tempo de calculo em segundos
 
-    def get_aligned_depth_image_callback(self, img: Image):
-        pass
+    # def get_aligned_depth_image_callback(self, img: Image):
+    #     pass
 
         # print(img.height, img.width)
         # current_frame = self.br.imgmsg_to_cv2(img, desired_encoding="passthrough")
@@ -752,13 +732,6 @@ class YoloPoseNode(Node):
         cv2.imshow("Intel RealSense Depth Alligned", current_frame)
         cv2.waitKey(1) 
         """       
-
-    # def get_point_cloud_callback(self, ret: RetrievePointCloud):
-    #     
-    #     if self.waiting_for_pcloud:
-    #         self.waiting_for_pcloud = False
-    #         self.new_pcloud = ret
-    #         self.post_receiving_pcloud()
 
 
     def odom_robot_callback(self, loc: Odometry):
@@ -922,7 +895,6 @@ class YoloPoseNode(Node):
                 cv2.line(current_frame_draw, p1, p2, (0,0,255), 2) 
 
 
-
     def person_position_to_house_rooms(self, person_pos):
         
         location = "Outside"
@@ -940,6 +912,7 @@ class YoloPoseNode(Node):
                 location = room['name'] 
 
         return location
+
 
 def main(args=None):
     rclpy.init(args=args)

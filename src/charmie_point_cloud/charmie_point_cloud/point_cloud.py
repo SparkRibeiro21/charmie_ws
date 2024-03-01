@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import NeckPosition, RequestPointCloud, RetrievePointCloud, PointCloudCoordinates
+from charmie_interfaces.msg import NeckPosition, PointCloudCoordinates
 from charmie_interfaces.srv import GetPointCloud
 from geometry_msgs.msg import Point, Pose2D
 from cv_bridge import CvBridge, CvBridgeError
@@ -560,17 +560,10 @@ class PointCloudNode(Node):
         
         # Intel Realsense Subscribers
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        # self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
         self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
         
         # Neck Position
         self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
-
-        # RequestPointCloud
-        # self.request_point_cloud_subscriber = self.create_subscription(RequestPointCloud, "ask_point_cloud", self.get_request_point_cloud_callback, 10)
-
-        # RetrievePointCloud
-        # self.retrieve_point_cloud_publisher = self.create_publisher(RetrievePointCloud, "get_point_cloud", 10)
 
         # SERVICES:
         # Main receive commads 
@@ -604,10 +597,9 @@ class PointCloudNode(Node):
         self.pcloud.teta[1] = 190 - neck_pos.tilt ###### ALTERAR PARA 180
         # print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[1], ",", self.pcloud.teta[2], ")")
 
-
     def callback_point_cloud(self, request, response):
 
-        print(request)
+        # print(request)
 
         # Type of service received:
         # BoundingBoxAndPoints[] data # bounding box and specific points inside the bounding box  
@@ -615,14 +607,6 @@ class PointCloudNode(Node):
         # ---
         # PointCloudCoordinates[] coords # returns the selected 3D points (the bounding box center, the custom ones and the full bounding box)
       
-        # print("IN boy")
-        # pass
-
-        # return response
-
-
-    # def get_request_point_cloud_callback(self, req: RequestPointCloud): #, req: RequestPointCloud):
-
         global WIDTH, HEIGHT, flag_show_rgb_depth
         
         if self.depth_img.height > 0 and self.rgb_img.height > 0: # prevents doing this code before receiving images
@@ -759,7 +743,7 @@ class PointCloudNode(Node):
             if GRAF3D == 1:
                 self.pcloud.graficos() # mostra os graficos
 
-        print(response)
+        # print(response)
         return response
 
 
