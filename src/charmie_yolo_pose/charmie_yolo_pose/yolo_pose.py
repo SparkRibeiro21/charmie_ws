@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, Float32, Int16
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, RequestPointCloud, RetrievePointCloud, BoundingBox, BoundingBoxAndPoints, PointCloudCoordinates
+from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, BoundingBox, BoundingBoxAndPoints
 from charmie_interfaces.srv import GetPointCloud
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
@@ -316,7 +316,6 @@ class YoloPoseNode(Node):
 
             self.center_torso_person_list = []
 
-            req = RequestPointCloud()
             req2 = []
             # retrieve_bbox = False
             
@@ -349,7 +348,6 @@ class YoloPoseNode(Node):
                 aux.requested_point_coords.append(nose_point)
                 aux.requested_point_coords.append(torso_center_point)
 
-                req.data.append(aux)
                 req2.append(aux)
 
             self.waiting_for_pcloud = True

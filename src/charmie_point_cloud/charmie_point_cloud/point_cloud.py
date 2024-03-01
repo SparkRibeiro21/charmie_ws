@@ -563,7 +563,7 @@ class PointCloudNode(Node):
         self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
         
         # Neck Position
-        self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
+        self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
 
         # SERVICES:
         # Main receive commads 
@@ -574,7 +574,7 @@ class PointCloudNode(Node):
         self.br = CvBridge()
         self.rgb_img = Image()
         self.depth_img = Image()
-        self.neck_position = NeckPosition()
+        # self.neck_position = NeckPosition()
         self.pcloud = PointCloud()
 
         if DEBUG_DRAW:
@@ -592,10 +592,16 @@ class PointCloudNode(Node):
         # print("Received Depth Image")
 
     def get_neck_position_callback(self, neck_pos: NeckPosition):
-        self.neck_position = neck_pos
-        self.pcloud.teta[0] = 180 - neck_pos.pan
-        self.pcloud.teta[1] = 190 - neck_pos.tilt ###### ALTERAR PARA 180
-        # print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[1], ",", self.pcloud.teta[2], ")")
+        # self.neck_position = neck_pos
+        # self.pcloud.teta[0] = 180 - neck_pos.pan
+        # self.pcloud.teta[1] = 190 - neck_pos.tilt ###### ALTERAR PARA 180
+        
+        ##### this was updated in March 2024 needs to be tested
+        self.pcloud.teta[0] = - neck_pos.pan
+        self.pcloud.teta[1] = - neck_pos.tilt 
+        
+        ##### porque é que estamos a imprimir o [2] ???
+        print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[1], ",", self.pcloud.teta[2], ")")
 
     def callback_point_cloud(self, request, response):
 

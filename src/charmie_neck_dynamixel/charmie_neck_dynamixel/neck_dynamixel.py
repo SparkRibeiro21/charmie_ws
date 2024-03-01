@@ -6,7 +6,7 @@ from geometry_msgs.msg import Pose2D
 from example_interfaces.msg import Bool
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import TrackObject, TrackPerson
+from charmie_interfaces.msg import TrackObject, TrackPerson, NeckPosition
 from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates
 
 import math
@@ -143,7 +143,7 @@ class NeckNode(Node):
         self.neck_follow_object_subscriber = self.create_subscription(TrackObject, "neck_follow_object", self.neck_follow_object_callback, 10)
 
         # sends the current position of the servos after every change made on the publisher topics
-        ########### self.neck_get_position_publisher = self.create_publisher(NeckPosition, "get_neck_pos", 10)
+        self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
 
         # subscribes to robot position, to allow neck_to_coords
         self.odom_subscriber = self.create_subscription(Odometry, "odom", self.odom_callback, 10)
@@ -454,18 +454,20 @@ class NeckNode(Node):
         
         print("read (closed loop):", read_pan_closed_loop*SERVO_TICKS_TO_DEGREES_CONST, read_tilt_closed_loop*SERVO_TICKS_TO_DEGREES_CONST)
 
-        ########## self.publish_get_neck_pos(read_pan_closed_loop, read_tilt_closed_loop)
+        # self.publish_get_neck_pos(read_pan_closed_loop, read_tilt_closed_loop)
 
         return read_pan_closed_loop, read_tilt_closed_loop
 
 
-    # def publish_get_neck_pos(self, p, t):
-    # 
-    #     pose = NeckPosition()
-    #     pose.pan  = float(int(p*SERVO_TICKS_TO_DEGREES_CONST + 0.5))
-    #     pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5))
-    #     self.neck_get_position_publisher.publish(pose)
+    def publish_get_neck_pos(self, p, t):
 
+        # this function is used for nodes that need to keep the latest neck position value saved, so when new data comes
+        # these need to compute, they don't have to request the position, therefore not wasting time...
+        pose = NeckPosition()
+        pose.pan  = float(int(p*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
+        pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
+        self.neck_get_position_topic_publisher.publish(pose)
+        
 
     def move_neck(self, p, t):
         global read_pan_open_loop, read_tilt_open_loop
@@ -556,7 +558,7 @@ class NeckNode(Node):
         read_pan_open_loop = p
         read_tilt_open_loop = t  
 
-        ########## self.publish_get_neck_pos(read_pan_open_loop, read_tilt_open_loop)
+        self.publish_get_neck_pos(read_pan_open_loop, read_tilt_open_loop)
         
         dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_GOAL_POSITION, p)
         if dxl_comm_result != COMM_SUCCESS:
