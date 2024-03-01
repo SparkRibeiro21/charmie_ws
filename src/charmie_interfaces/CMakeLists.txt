@@ -49,6 +49,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Yolov8Pose.msg"
   "srv/FirstTRService.srv"
   "srv/GetNeckPosition.srv"
+  "srv/GetPointCloud.srv"
   "srv/SetNeckCoordinates.srv"
   "srv/SetNeckPosition.srv"
   "srv/SpeechCommand.srv"
