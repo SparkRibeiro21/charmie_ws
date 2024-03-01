@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		"point_cloud = charmie_point_cloud.point_cloud:main"
+		"point_cloud = charmie_point_cloud.point_cloud:main",
+		"save_images_test_point_cloud = charmie_point_cloud.save_images_test_point_cloud:main"
         ],
     },
 )
