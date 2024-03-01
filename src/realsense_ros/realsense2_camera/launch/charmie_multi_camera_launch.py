@@ -35,15 +35,9 @@ import rs_launch
 
 import launch.logging
 
+### THIS IS THE FILE THAT SHOULD BE RUN IN ORDER TO LAUNCH BOTH CAMERAS AUTOMATICALLY.
 
-# tenho de criar um parâmetro que vê se ativo camera head = true e / ou camera hand = true.
-# Com isto ativo ou desativo nr da serial camera
-
-### Para ativar o brilho da câmera da mão, 
-### ros2 param set /CHARMIE/D405_hand depth_module.enable_auto_exposure true 
-### na linha de comandos em runtime
-
-
+### TODO: If one of the cameras is not connected, make the serial_no of that camera equal to an empty string
 
 local_parameters = [{'name': 'camera_name1', 'default': 'D455_head', 'description': 'camera1 unique name'},
                     {'name': 'camera_name2', 'default': 'D405_hand', 'description': 'camera2 unique name'},
