@@ -25,13 +25,15 @@
 import copy
 from launch import LaunchDescription, LaunchContext
 import launch_ros.actions
-from launch.actions import IncludeLaunchDescription, OpaqueFunction
-from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
+from launch.actions import IncludeLaunchDescription, OpaqueFunction, ExecuteProcess, DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir, TextSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 import sys
 import pathlib
 sys.path.append(str(pathlib.Path(__file__).parent.absolute()))
 import rs_launch
+
+import launch.logging
 
 
 # tenho de criar um parâmetro que vê se ativo camera head = true e / ou camera hand = true.
@@ -49,8 +51,8 @@ local_parameters = [{'name': 'camera_name1', 'default': 'D455_head', 'descriptio
                     {'name': 'camera_namespace2', 'default': 'CHARMIE', 'description': 'camera2 namespace'},
                     {'name': 'serial_no1', 'default': "'053122251067'", 'description': 'choose device by serial number'},
                     {'name': 'serial_no2', 'default': "'230322276953'", 'description': 'choose device by serial number'},
-                    {'name': 'camera_head_active', 'default': 'true', 'description': 'activate / desactivate head camera'},
-                    {'name': 'camera_hand_active', 'default': 'true', 'description': 'activate / desactivate hand camera'},
+                    #{'name': 'camera_head_active', 'default': 'true', 'description': 'activate / desactivate head camera'},
+                    #{'name': 'camera_hand_active', 'default': 'true', 'description': 'activate / desactivate hand camera'},
                     ]
 
 def set_configurable_parameters(local_params):
@@ -62,6 +64,15 @@ def duplicate_params(general_params, posix):
         param['original_name'] = param['name']
         param['name'] += posix
     return local_params
+
+def set_camera_exposure(context):
+    # Command to set exposure for D405_hand camera
+    set_exposure_command = ExecuteProcess(
+        cmd=['ros2', 'param', 'set', '/CHARMIE/D405_hand', 'depth_module.enable_auto_exposure', 'true'],
+        shell=False,
+        output='screen'
+    )
+    return [set_exposure_command]
 
 def launch_static_transform_publisher_node(context : LaunchContext):
     # dummy static transformation from camera1 to camera2
@@ -78,22 +89,18 @@ def generate_launch_description():
     params1 = duplicate_params(rs_launch.configurable_parameters, '1')
     params2 = duplicate_params(rs_launch.configurable_parameters, '2')
 
-    if LaunchConfiguration('camera_head_active') == 'false':
-        # Setting serial number of hand camera to empty if head camera is active
-        params1[2]['default'] = "''"
-    if LaunchConfiguration('camera_hand_active') == 'false':
-        # Setting serial number of hand camera to empty if head camera is active
-        params2[2]['default'] = "''"
     return LaunchDescription(
         rs_launch.declare_configurable_parameters(local_parameters) +
         rs_launch.declare_configurable_parameters(params1) +
         rs_launch.declare_configurable_parameters(params2) +
         [
+            
         OpaqueFunction(function=rs_launch.launch_setup,
                        kwargs = {'params'           : set_configurable_parameters(params1),
                                  'param_name_suffix': '1'}),
         OpaqueFunction(function=rs_launch.launch_setup,
                        kwargs = {'params'           : set_configurable_parameters(params2),
                                  'param_name_suffix': '2'}),
-        OpaqueFunction(function=launch_static_transform_publisher_node)
+        OpaqueFunction(function=launch_static_transform_publisher_node),
+        OpaqueFunction(function=set_camera_exposure)
     ])

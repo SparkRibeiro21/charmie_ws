@@ -182,9 +182,14 @@ def generate_launch_description():
                      name='diagnostics',
                      )
 
-    #start recording bag
-    rosbag = ExecuteProcess(cmd=['ros2', 'bag', 'record', '-o', bag_path, '-a'], #<----- change me if you want to record just some specific topics (-a)
+    # start recording bag
+    # The exclude is to avoid crashes while using intel rs cameras. 
+    # If you're not using them in your launch file, you can just delete thatr part
+    rosbag = ExecuteProcess(cmd=['ros2', 'bag', 'record', '-o', bag_path, '-a', '--exclude', "(/CHARMIE/D455_head/aligned_depth_to_color/image_raw/theora|/CHARMIE/D455_head/aligned_depth_to_color/image_raw/compressedDepth|/CHARMIE/D455_head/aligned_depth_to_color/image_raw/compressed|/CHARMIE/D455_head/color/image_raw/compressed|/CHARMIE/D455_head/color/image_raw/compressedDepth|/CHARMIE/D455_head/color/image_raw/theora|/CHARMIE/D455_head/depth/image_rect_raw/compressed|/CHARMIE/D455_head/depth/image_rect_raw/compressedDepth|/CHARMIE/D455_head/depth/image_rect_raw/theora)"], #<----- change me if you want to record just some specific topics (-a)
                             output= 'screen')
+    
+    # ros2 bag record -a --exclude "(/CHARMIE/D455_head/aligned_depth_to_color/image_raw/theora|/CHARMIE/D455_head/aligned_depth_to_color/image_raw/compressedDepth|/CHARMIE/D455_head/aligned_depth_to_color/image_raw/compressed|/CHARMIE/D455_head/color/image_raw/compressed|/CHARMIE/D455_head/color/image_raw/compressedDepth|/CHARMIE/D455_head/color/image_raw/theora|/CHARMIE/D455_head/depth/image_rect_raw/compressed|/CHARMIE/D455_head/depth/image_rect_raw/compressedDepth|/CHARMIE/D455_head/depth/image_rect_raw/theora)"
+
     
     # Command to launch the map_server node
     map_server_cmd = ExecuteProcess(
@@ -234,8 +239,8 @@ def generate_launch_description():
         #amcl_with_params_cmd,
         #speakers,
         #audio,
-        #rosbag,
-        debug_main
+        rosbag,
+        #debug_main
         #face,
         #camera,
         #yolopose
