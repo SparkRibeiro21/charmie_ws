@@ -7,6 +7,7 @@ from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, RequestPointCloud, RetrievePointCloud, BoundingBox, BoundingBoxAndPoints, PointCloudCoordinates
+from charmie_interfaces.srv import GetPointCloud
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
@@ -75,10 +76,19 @@ class YoloPoseNode(Node):
         
         # Point Cloud
         self.request_point_cloud_publisher = self.create_publisher(RequestPointCloud, 'ask_point_cloud', 10) 
-        self.retrieve_point_cloud_subscriber = self.create_subscription(RetrievePointCloud, "get_point_cloud", self.get_point_cloud_callback, 10)
+        # self.retrieve_point_cloud_subscriber = self.create_subscription(RetrievePointCloud, "get_point_cloud", self.get_point_cloud_callback, 10)
 
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+
+
+        ### Services (Clients) ###
+        # Point Cloud
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+
+        while not self.point_cloud_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud...")
+
 
         # to calculate the FPS
         self.prev_frame_time = 0 # used to record the time when we processed last frame
@@ -90,7 +100,7 @@ class YoloPoseNode(Node):
 
         self.results = []
         self.waiting_for_pcloud = False
-        self.new_pcloud = RetrievePointCloud()
+        # self.new_pcloud = RetrievePointCloud()
         self.tempo_total = time.perf_counter()
         self.center_torso_person_list = []
 
@@ -133,6 +143,42 @@ class YoloPoseNode(Node):
             {'name': 'Kitchen',     'top_left_coords': (-4.65, 9.62), 'bot_right_coords': (0.80, 5.98)},
             {'name': 'Office',      'top_left_coords': (-4.65, 13.12),  'bot_right_coords': ((0.80, 9.62))}
         ]
+
+
+    def call_point_cloud_server(self, req):
+        request = GetPointCloud.Request()
+        request.data = req
+        request.retrieve_bbox = False
+    
+        future = self.point_cloud_client.call_async(request)
+        print("Sent Command")
+
+        future.add_done_callback(self.callback_call_point_cloud)
+
+
+    def callback_call_point_cloud(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.post_receiving_pcloud(response.coords)
+            self.waiting_for_pcloud = False
+            # self.get_logger().info(str(response.success) + " - " + str(response.message))
+            # self.speech_sucess = response.success
+             #self.speech_message = response.message
+            # time.sleep(3)
+            # self.waited_for_end_of_speaking = True
+            print("Recived Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+
+
+
+            
 
     def get_only_detect_person_legs_visible_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE
@@ -184,9 +230,10 @@ class YoloPoseNode(Node):
 
 
     def get_color_image_head_callback(self, img: Image):
-        self.get_logger().info('Receiving color video frame')
         
         if not self.waiting_for_pcloud:
+            
+            self.get_logger().info('Receiving color video frame')
             
             self.tempo_total = time.perf_counter()
             
@@ -284,8 +331,11 @@ class YoloPoseNode(Node):
             print("___START___ num_persons =", num_persons)
 
             self.center_torso_person_list = []
+
             req = RequestPointCloud()
-            req.retrieve_bbox = False
+            req2 = []
+            # retrieve_bbox = False
+            
             for person_idx in range(num_persons):
                 keypoints_id = self.results[0].keypoints[person_idx]
                 boxes_id = self.results[0].boxes[person_idx]
@@ -316,12 +366,17 @@ class YoloPoseNode(Node):
                 aux.requested_point_coords.append(torso_center_point)
 
                 req.data.append(aux)
+                req2.append(aux)
 
             self.waiting_for_pcloud = True
-            self.request_point_cloud_publisher.publish(req)
+            # self.request_point_cloud_publisher.publish(req)
+            
+            
+            self.call_point_cloud_server(req2)
+        
         
 
-    def post_receiving_pcloud(self):
+    def post_receiving_pcloud(self, new_pcloud):
 
 
         # ROS2 Image Bridge for OpenCV
@@ -370,7 +425,7 @@ class YoloPoseNode(Node):
 
             # adds people to "person_pose" without any restriction
             new_person = DetectedPerson()
-            new_person = self.add_person_to_detectedperson_msg(boxes_id, keypoints_id, self.center_torso_person_list[person_idx], self.new_pcloud.coords[person_idx].requested_point_coords[1], hand_raised)
+            new_person = self.add_person_to_detectedperson_msg(boxes_id, keypoints_id, self.center_torso_person_list[person_idx], new_pcloud[person_idx].requested_point_coords[1], hand_raised)
             yolov8_pose.persons.append(new_person)
             
             legs_ctr = 0
@@ -435,9 +490,9 @@ class YoloPoseNode(Node):
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                 print(" - Misses not being with their arm raised")
 
-            # print(self.new_pcloud)
+            # print(new_pcloud)
             # print(person_idx)
-            # print(self.new_pcloud.coords[person_idx].requested_point_coords[1].x) # .requested_point_coords)
+            # print(new_pcloud[person_idx].requested_point_coords[1].x) # .requested_point_coords)
             
             if ALL_CONDITIONS_MET:
                 num_persons_filtered+=1
@@ -614,9 +669,9 @@ class YoloPoseNode(Node):
 
                         cv2.circle(current_frame_draw, self.center_torso_person_list[person_idx], 5, (255, 255, 255), -1)
                         
-                        # cv2.putText(current_frame_draw, '('+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].x/1000,2))+
-                        #             ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].y/1000,2))+
-                        #             ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].z/1000,2))+')',
+                        # cv2.putText(current_frame_draw, '('+str(round(new_pcloud[person_idx].requested_point_coords[1].x/1000,2))+
+                        #             ', '+str(round(new_pcloud[person_idx].requested_point_coords[1].y/1000,2))+
+                        #             ', '+str(round(new_pcloud[person_idx].requested_point_coords[1].z/1000,2))+')',
                         #             self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
                         cv2.putText(current_frame_draw, '('+str(round(new_person.position_relative.x,2))+
@@ -698,12 +753,12 @@ class YoloPoseNode(Node):
         cv2.waitKey(1) 
         """       
 
-    def get_point_cloud_callback(self, ret: RetrievePointCloud):
-        
-        if self.waiting_for_pcloud:
-            self.waiting_for_pcloud = False
-            self.new_pcloud = ret
-            self.post_receiving_pcloud()
+    # def get_point_cloud_callback(self, ret: RetrievePointCloud):
+    #     
+    #     if self.waiting_for_pcloud:
+    #         self.waiting_for_pcloud = False
+    #         self.new_pcloud = ret
+    #         self.post_receiving_pcloud()
 
 
     def odom_robot_callback(self, loc: Odometry):
