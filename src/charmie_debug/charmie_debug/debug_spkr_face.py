@@ -50,14 +50,16 @@ class TestNode(Node):
         self.face_sucess = True
         self.face_message = ""
 
-    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    #### SPEECH SERVER FUNCTIONS #####
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
         request = SpeechCommand.Request()
         request.filename = filename
         request.command = command
         request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
     
         future = self.speech_command_client.call_async(request)
-        print("Sent Command")
+        # print("Sent Command")
 
         if wait_for_end_of:
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
@@ -104,9 +106,9 @@ class RestaurantMain():
         # VARS ...
         self.state = 0
     
-    def set_speech(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
 
-        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
+        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
         
         if wait_for_end_of:
           while not self.node.waited_for_end_of_speaking:
@@ -261,7 +263,7 @@ class RestaurantMain():
                 # time.sleep(2)
 
                 self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
-                self.set_face("help_pick_cu")
+                self.set_face("help_pick_cup")
                 time.sleep(3)
 
 
@@ -275,13 +277,17 @@ class RestaurantMain():
                 # self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
                 # time.sleep(5)
 
-                self.set_speech(filename="introduction_ful", command="", wait_for_end_of=True)
-                self.set_face(custom="clients_temp")
-                time.sleep(3)
+                # self.set_speech(filename="introduction_full", wait_for_end_of=True)
+                
+                # self.set_face(custom="clients_temp")
+                # time.sleep(3)
 
 
                 self.set_face("help_pick_bowl")
                 time.sleep(3)
+
+                self.set_speech(filename="introduction_full", show_in_face=True, wait_for_end_of=True)
+
 
                 self.set_face("demo8")
                 time.sleep(3)
@@ -292,6 +298,9 @@ class RestaurantMain():
                 # self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
                 # time.sleep(2)
 
+
+                self.set_speech(filename="introduction_full", wait_for_end_of=True)
+
                 self.set_face("help_pick_milk")
                 time.sleep(3)
 
@@ -299,6 +308,7 @@ class RestaurantMain():
                 time.sleep(3)
 
 
+                self.set_speech(filename="introduction_full", show_in_face=True, wait_for_end_of=True)
                 # start = time.time()
                 # while time.time() < start + 3: # in seconds
                 #     pass

@@ -60,27 +60,28 @@ class RobotSpeak():
 
 
     # function for pre recorded commands 
-    def play_command(self, filename):
-        
+    def play_command(self, filename, show_in_face):
+                
         # if there is an audio
         if os.path.isfile(self.complete_path+filename+".wav"):
 
         
-            # if there is a txt file corresponding to the audio
-            if os.path.isfile(self.complete_path+filename+".txt"):
+            if show_in_face:
+                # if there is a txt file corresponding to the audio
+                if os.path.isfile(self.complete_path+filename+".txt"):
 
-                string_from_file = open(self.complete_path+filename+".txt", "r")
+                    string_from_file = open(self.complete_path+filename+".txt", "r")
 
-                # send string to face to ease UI
-                str = String()
-                str.data = string_from_file.read()
-                self.node.speech_to_face_publisher.publish(str)
+                    # send string to face to ease UI
+                    str = String()
+                    str.data = string_from_file.read()
+                    self.node.speech_to_face_publisher.publish(str)
 
-                message = "Text Sent to Face Node"
-                # print("File sent to face! - '", str.data, "'")
-            else:
-                message = "Text File not Found. NOT sent to face."
-                # print("File not sent to face!")
+                    message = "Text Sent to Face Node"
+                    # print("File sent to face! - '", str.data, "'")
+                else:
+                    message = "Text File not Found. NOT sent to face."
+                    # print("File not sent to face!")
 
 
             # play the recorded file 
@@ -89,14 +90,16 @@ class RobotSpeak():
             while pygame.mixer.music.get_busy():
                 pass
 
-            # sends empty string to tell face that the audio has finished to be played
-            str = String()
-            str.data = ""
-            # print(str.data)
-            # print("File sent to face! - End of Sentence")
-            self.node.speech_to_face_publisher.publish(str)
+            if show_in_face:
+                # sends empty string to tell face that the audio has finished to be played
+                str = String()
+                str.data = ""
+                # print(str.data)
+                # print("File sent to face! - End of Sentence")
+                self.node.speech_to_face_publisher.publish(str)
 
             success = True
+            message = ""
 
         else:
             success = False
@@ -107,7 +110,7 @@ class RobotSpeak():
 
 
     # function for commands to be created in the moment 
-    def load_and_play_command(self, command, jenny_or_taco):
+    def load_and_play_command(self, command, jenny_or_taco, show_in_face):
         
         temp_filename = "temp.wav"
 
@@ -119,11 +122,12 @@ class RobotSpeak():
             self.syn_taco.save_wav(outputs, self.complete_path+temp_filename)
             print(time.time()-init_time)
 
-            # send string to face to ease UI
-            str = String()
-            str.data = command
-            # print(str.data)
-            self.node.speech_to_face_publisher.publish(str)
+            if show_in_face:
+                # send string to face to ease UI
+                str = String()
+                str.data = command
+                # print(str.data)
+                self.node.speech_to_face_publisher.publish(str)
 
             # plays the created audio file
             pygame.mixer.music.load(self.complete_path+temp_filename)
@@ -131,11 +135,12 @@ class RobotSpeak():
             while pygame.mixer.music.get_busy():
                 pass
 
-            # sends empty string to tell face that the audio has finished to be played
-            str = String()
-            str.data = ""
-            # print(str.data)
-            self.node.speech_to_face_publisher.publish(str)
+            if show_in_face:
+                # sends empty string to tell face that the audio has finished to be played
+                str = String()
+                str.data = ""
+                # print(str.data)
+                self.node.speech_to_face_publisher.publish(str)
         
         else: # jenny synthesizer
 
@@ -145,11 +150,12 @@ class RobotSpeak():
             self.syn_jenny.save_wav(outputs, self.complete_path+temp_filename)
             print(time.time()-init_time)
 
-            # send string to face to ease UI
-            str = String()
-            str.data = command
-            # print(str.data)
-            self.node.speech_to_face_publisher.publish(str)
+            if show_in_face:
+                # send string to face to ease UI
+                str = String()
+                str.data = command
+                # print(str.data)
+                self.node.speech_to_face_publisher.publish(str)
 
             # plays the created audio file
             pygame.mixer.music.load(self.complete_path+temp_filename)
@@ -157,11 +163,12 @@ class RobotSpeak():
             while pygame.mixer.music.get_busy():
                 pass
 
-            # sends empty string to tell face that the audio has finished to be played
-            str = String()
-            str.data = ""
-            # print(str.data)
-            self.node.speech_to_face_publisher.publish(str)
+            if show_in_face:
+                # sends empty string to tell face that the audio has finished to be played
+                str = String()
+                str.data = ""
+                # print(str.data)
+                self.node.speech_to_face_publisher.publish(str)
 
         return True, ""
 
@@ -229,7 +236,7 @@ class SpeakerNode(Node):
         self.speakers_diagnostic_publisher.publish(flag_diagn)
 
         # Initial Speaking "Hello" for debug purposes
-        self.charmie_speech.play_command("introduction_hello") 
+        self.charmie_speech.play_command("introduction_hello", False) 
 
         # Test Function for some quick tests if necessary
         # self.test()
@@ -253,14 +260,17 @@ class SpeakerNode(Node):
         # string message # informational, e.g. for error messages.
 
         # if filename comes empty it is automatically assumed that it is intended to use the load and play mode
+        print("show_in_face:", request.show_in_face)
+
+
         if request.filename == "":
             # speakers mode where received string must be synthesized and played now
             self.get_logger().info("SPEAKERS received (custom) - %s" %request.command)
-            success, message = self.charmie_speech.load_and_play_command(request.command, request.quick_voice)
+            success, message = self.charmie_speech.load_and_play_command(request.command, request.quick_voice, request.show_in_face)
         
         else:
             # speakers mode where received filename must be played
-            success, message = self.charmie_speech.play_command(request.filename)
+            success, message = self.charmie_speech.play_command(request.filename, request.show_in_face)
             if success == False:
                 self.get_logger().error("SPEAKERS received (file) does not exist! - %s" %request.filename)
             else:

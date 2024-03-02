@@ -80,11 +80,12 @@ class ServeBreakfastNode(Node):
         
 
     #### SPEECH SERVER FUNCTIONS #####
-    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
         request = SpeechCommand.Request()
         request.filename = filename
         request.command = command
         request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
     
         future = self.speech_command_client.call_async(request)
         # print("Sent Command")
@@ -241,9 +242,9 @@ class ServeBreakfastMain():
 
     ##### SETS #####
 
-    def set_speech(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
 
-        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
+        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
         
         if wait_for_end_of:
           while not self.node.waited_for_end_of_speaking:
@@ -315,7 +316,6 @@ class ServeBreakfastMain():
 
         return self.node.face_sucess, self.node.face_message
 
-
     ##### GETS #####
     def get_neck(self, wait_for_end_of=True):
     
@@ -332,17 +332,23 @@ class ServeBreakfastMain():
 
     def main(self):
 
+        ########## ADJUST ALL THE WAIT FOR END OF
+        ########## I THINK IT MAKE SENSE TO DO THE DETECTION ONCE AT THE START RATHER THAN AT THE START OF EACH OBJECT, IT SAVES TIME MOVING THE ARM...
+
+
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
 
         while True:
 
-            ##### ADJUST WAIT_FOR_END_OF_SPEAKING
             if self.state == self.Waiting_for_task_start:
 
+                """
                 # p, t = self.get_neck()
                 # self.node.get_logger().info("p, t = %s" %(str(p)+", "+str(t)))
 
-                self.set_face("help_pick_cereal")
+
+
+                # self.set_face("help_pick_cereal")
 
                 # self.set_neck(position=[30, 30], wait_for_end_of=True)
 
@@ -390,7 +396,24 @@ class ServeBreakfastMain():
 
                 while True:
                     pass
-                
+                """
+
+                self.set_face("demo5")
+
+                ##### NECK LOOKS FORWARD
+
+                self.set_speech(filename="sb_ready_start", show_in_face=True, wait_for_end_of=True)
+
+                self.set_speech(filename="waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
+                # self.set_speech(filename="waiting_door_open", wait_for_end_of=False)
+
+                # self.set_rgb(RED+ALTERNATE_QUARTERS)
+                # self.set_face("help_pick_milk")
+
+                ###### WAITS FOR START BUTTON / DOOR OPEN
+
+                time.sleep(2)
+
                 self.state = self.Approach_kitchen_counter
 
             elif self.state == self.Approach_kitchen_counter:
@@ -415,7 +438,7 @@ class ServeBreakfastMain():
 
                 ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
 
-                self.set_speech(filename="sb_found_spoon", wait_for_end_of=True)
+                self.set_speech(filename="sb_found_spoon", show_in_face=True, wait_for_end_of=True)
 
                 self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
 
@@ -432,8 +455,10 @@ class ServeBreakfastMain():
                     ##### NECK LOOK JUDGE
                 
                 self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
-                    
-                    ##### SHOW FACE GRIPPER SPOON 
+
+                self.set_face("help_pick_spoon") 
+
+                time.sleep(2)
                 
                     ##### WHILE OBJECT IS NOT IN GRIPPER:
                 
@@ -446,6 +471,8 @@ class ServeBreakfastMain():
                 self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
                         
                             ##### ARM OPEN GRIPPER
+                
+                self.set_face("demo5")
                         
                 ##### NECK LOOK TRAY
                 
@@ -463,7 +490,7 @@ class ServeBreakfastMain():
 
                 ##### YOLO OBJECTS SEARCH FOR MILK, FOR BOTH CAMERAS
 
-                self.set_speech(filename="sb_found_milk", wait_for_end_of=True)
+                self.set_speech(filename="sb_found_milk", show_in_face=True, wait_for_end_of=True)
 
                 self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
 
@@ -480,8 +507,10 @@ class ServeBreakfastMain():
                     ##### NECK LOOK JUDGE
                 
                 self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
-                    
-                    ##### SHOW FACE GRIPPER MILK 
+
+                self.set_face("help_pick_milk") 
+
+                time.sleep(2)
                 
                     ##### WHILE OBJECT IS NOT IN GRIPPER:
                 
@@ -494,6 +523,8 @@ class ServeBreakfastMain():
                 self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
                         
                             ##### ARM OPEN GRIPPER
+                
+                self.set_face("demo5")
                         
                 ##### NECK LOOK TRAY
                         
@@ -511,7 +542,7 @@ class ServeBreakfastMain():
 
                 ##### YOLO OBJECTS SEARCH FOR CEREAL, FOR BOTH CAMERAS
 
-                self.set_speech(filename="sb_found_cereal", wait_for_end_of=True)
+                self.set_speech(filename="sb_found_cereal", show_in_face=True, wait_for_end_of=True)
 
                 self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
 
@@ -528,8 +559,10 @@ class ServeBreakfastMain():
                     ##### NECK LOOK JUDGE
                 
                 self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
-                    
-                    ##### SHOW FACE GRIPPER SPOON 
+
+                self.set_face("help_pick_cereal") 
+
+                time.sleep(2)
                 
                     ##### WHILE OBJECT IS NOT IN GRIPPER:
                 
@@ -542,7 +575,9 @@ class ServeBreakfastMain():
                 self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
                         
                             ##### ARM OPEN GRIPPER
-                        
+                
+                self.set_face("demo5")
+
                 ##### NECK LOOK TRAY
                         
                 ##### ARM PLACE OBJECT IN TRAY
@@ -559,7 +594,7 @@ class ServeBreakfastMain():
 
                 ##### YOLO OBJECTS SEARCH FOR BOWL, FOR BOTH CAMERAS
 
-                self.set_speech(filename="sb_found_bowl", wait_for_end_of=True)
+                self.set_speech(filename="sb_found_bowl", show_in_face=True, wait_for_end_of=True)
 
                 self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
 
@@ -577,7 +612,9 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
                     
-                    ##### SHOW FACE GRIPPER BOWL 
+                self.set_face("help_pick_bowl") 
+
+                time.sleep(2)
                 
                     ##### WHILE OBJECT IS NOT IN GRIPPER:
                 
@@ -590,7 +627,9 @@ class ServeBreakfastMain():
                 self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
                         
                             ##### ARM OPEN GRIPPER
-                        
+
+                self.set_face("demo5")
+
                 ##### NECK LOOK TRAY
                         
                 ##### ARM PLACE OBJECT IN TRAY
