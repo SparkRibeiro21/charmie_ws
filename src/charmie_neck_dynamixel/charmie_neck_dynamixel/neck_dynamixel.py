@@ -59,14 +59,14 @@ ADDR_MX_I_GAIN = 27  # Control table address is different in Dynamixel model
 ADDR_MX_P_GAIN = 28  # Control table address is different in Dynamixel model
 
 # Different PID gains for each axis
-PAN_D_GAIN = 1
-PAN_I_GAIN = 1
-PAN_P_GAIN = 3 # 6
+PAN_D_GAIN = 2
+PAN_I_GAIN = 2
+PAN_P_GAIN = 6
 
 # Different PID gains for each axis
-TILT_D_GAIN = 2
-TILT_I_GAIN = 5
-TILT_P_GAIN = 6
+TILT_D_GAIN = 4
+TILT_I_GAIN = 10
+TILT_P_GAIN = 12
 
 # Protocol version
 PROTOCOL_VERSION = 1.0  # See which protocol version is used in the Dynamixel
@@ -128,9 +128,9 @@ class NeckNode(Node):
         self.get_logger().info("Initialised CHARMIE Neck Node")
 
         self.declare_parameter("device_name", "USB1") 
-        self.declare_parameter("speed_up", 4) 
+        self.declare_parameter("speed_up", 3) 
         self.declare_parameter("speed_down", 2) 
-        self.declare_parameter("speed_sides", 10) 
+        self.declare_parameter("speed_sides", 5) 
 
         # receives two angles, pan and tilt - used when robot must look at something known in advance (ex: direction of navigation, forward, look right/left)
         ########### self.neck_position_subscriber = self.create_subscription(NeckPosition, "neck_to_pos", self.neck_position_callback ,10)
@@ -438,6 +438,25 @@ class NeckNode(Node):
 
         self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
 
+
+        while True:
+            aaa = 4
+            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180-45, 180-45) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180+45, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180, 180-30) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180-45, 180-45) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(0, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
 
     def read_servo_position(self):
 
