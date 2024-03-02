@@ -152,14 +152,16 @@ class ServeBreakfastNode(Node):
         self.face_sucess = True
         self.face_message = ""
 
-    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    #### SPEECH SERVER FUNCTIONS #####
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
         request = SpeechCommand.Request()
         request.filename = filename
         request.command = command
         request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
     
         future = self.speech_command_client.call_async(request)
-        print("Sent Command")
+        # print("Sent Command")
 
         if wait_for_end_of:
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
@@ -167,7 +169,6 @@ class ServeBreakfastNode(Node):
         else:
             self.speech_sucess = True
             self.speech_message = "Wait for answer not needed"
-    
 
 
     def callback_call_speech_command(self, future): #, a, b):
@@ -222,9 +223,9 @@ class ServeBreakfastMain():
         self.state = self.Waiting_for_task_start
 
 
-    def set_speech(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
 
-        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
+        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
         
         if wait_for_end_of:
           while not self.node.waited_for_end_of_speaking:
