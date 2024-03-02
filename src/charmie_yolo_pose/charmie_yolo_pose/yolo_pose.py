@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 import time
 import math
+import json
 
 from pathlib import Path
 
@@ -49,6 +50,14 @@ class YoloPoseNode(Node):
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_yolo_pose/charmie_yolo_pose"
         self.complete_path = self.home+'/'+self.midpath+'/'
+
+        self.midpath_configuration_files = "charmie_ws/src/configuration_files"
+        self.complete_path_configuration_files = self.home+'/'+self.midpath_configuration_files+'/'
+
+        # Open all configuration files
+        with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
+            self.house_rooms = json.load(json_file)
+        print(self.house_rooms)
 
         # Yolo Model - Yolov8 Pose
         self.model = YOLO(self.complete_path + 'yolov8s-pose.pt')
@@ -121,22 +130,6 @@ class YoloPoseNode(Node):
         self.KNEE_RIGHT_KP = 14
         self.ANKLE_LEFT_KP = 15
         self.ANKLE_RIGHT_KP = 16
-
-        # RoboCup 2023 House
-        # self.house_rooms = [ # house rooms, coordinates of top left point and bottom left point in meters
-        #     {'name': 'Living Room', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (1.45, 0.45)}, 
-        #     {'name': 'Kitchen',     'top_left_coords': (-4.05, 9.45), 'bot_right_coords': (1.45, 4.95)},
-        #     {'name': 'Office',      'top_left_coords': (1.45, 4.95),  'bot_right_coords': ((4.95, 0.45))},
-        #     {'name': 'Bedroom',     'top_left_coords': (1.45, 9.45),  'bot_right_coords': ((4.95, 4.95))}
-        # ]
-        
-        self.house_rooms = [ # house rooms, coordinates of top left point and bottom left point in meters
-            {'name': 'Corridor',     'top_left_coords': (-1.30, 5.98),  'bot_right_coords': ((0.8, 0.70))},
-            {'name': 'Living Room',  'top_left_coords': (-4.65, 3.86),  'bot_right_coords': ((-1.30, 0.70))},
-            {'name': 'Bedroom',     'top_left_coords': (-4.65, 5.98),  'bot_right_coords': ((-1.30, 3.86))},
-            {'name': 'Kitchen',     'top_left_coords': (-4.65, 9.62), 'bot_right_coords': (0.80, 5.98)},
-            {'name': 'Office',      'top_left_coords': (-4.65, 13.12),  'bot_right_coords': ((0.80, 9.62))}
-        ]
 
 
     def call_point_cloud_server(self, req):
