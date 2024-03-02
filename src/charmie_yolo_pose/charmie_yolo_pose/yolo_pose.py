@@ -651,7 +651,7 @@ class YoloPoseNode(Node):
                                     self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
                         
-                        cv2.putText(current_frame_draw, new_person.house_room,
+                        cv2.putText(current_frame_draw, new_person.room_location,
                                     (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
                         # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
@@ -767,6 +767,8 @@ class YoloPoseNode(Node):
 
         new_person.arm_raised = arm_raised
         new_person.body_posture = "None"
+        new_person.pointing_at = "None"
+        new_person.pointing_with_arm = "None"
 
         # print(int(keypoints_id.xy[0][self.NOSE_KP][0]), int(keypoints_id.xy[0][self.NOSE_KP][1]), float(keypoints_id.conf[0][self.NOSE_KP]))
 
@@ -868,7 +870,8 @@ class YoloPoseNode(Node):
         
         new_person.position_absolute = person_abs_pos
 
-        new_person.house_room = self.person_position_to_house_rooms(person_abs_pos)
+        new_person.room_location = self.person_position_to_house_rooms(person_abs_pos)
+        new_person.furniture_location = "None"
 
         return new_person
 

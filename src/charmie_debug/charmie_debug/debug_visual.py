@@ -13,13 +13,11 @@ import cv2
 import numpy as np
 import math
 import threading
-
 from pathlib import Path
-
 import json
-# import pickle
 
 DEBUG_DRAW = False
+
 
 class Robot():
     def __init__(self):

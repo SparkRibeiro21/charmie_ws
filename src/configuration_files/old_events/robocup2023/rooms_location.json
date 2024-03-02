@@ -4,8 +4,3 @@
 {"name": "Office",      "top_left_coords": [ 1.45, 4.95], "bot_right_coords": [4.95, 0.45]},
 {"name": "Bedroom",     "top_left_coords": [ 1.45, 9.45], "bot_right_coords": [4.95, 4.95]}
 ]
-
-
-
-
-
