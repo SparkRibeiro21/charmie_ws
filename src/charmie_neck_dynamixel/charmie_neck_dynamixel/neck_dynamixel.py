@@ -438,7 +438,7 @@ class NeckNode(Node):
 
         self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
 
-
+        """
         while True:
             aaa = 4
             self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
@@ -457,7 +457,9 @@ class NeckNode(Node):
             time.sleep(aaa)
             self.move_neck(0, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
             time.sleep(aaa)
+        """
 
+        
     def read_servo_position(self):
 
         global read_pan_closed_loop, read_tilt_closed_loop
