@@ -58,6 +58,9 @@ class YoloPoseNode(Node):
         with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
             self.house_rooms = json.load(json_file)
         print(self.house_rooms)
+        with open(self.complete_path_configuration_files + 'furniture_location.json', encoding='utf-8') as json_file:
+            self.house_furniture = json.load(json_file)
+        print(self.house_furniture)
 
         # Yolo Model - Yolov8 Pose
         self.model = YOLO(self.complete_path + 'yolov8s-pose.pt')
@@ -620,7 +623,6 @@ class YoloPoseNode(Node):
                         self.line_between_two_keypoints(current_frame_draw, self.KNEE_LEFT_KP, self.ANKLE_LEFT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
                         self.line_between_two_keypoints(current_frame_draw, self.KNEE_RIGHT_KP, self.ANKLE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
 
-
                         for kp in range(self.N_KEYPOINTS):
                             if keypoints_id.conf[0][kp] > MIN_KP_CONF_VALUE:
                                 if kp >= 0 and kp < 5:
@@ -637,7 +639,6 @@ class YoloPoseNode(Node):
                                     center_p = (int(keypoints_id.xy[0][kp][0]), int(keypoints_id.xy[0][kp][1]))
                                     cv2.circle(current_frame_draw, center_p, 5, c, -1)
 
-
                         cv2.circle(current_frame_draw, self.center_torso_person_list[person_idx], 5, (255, 255, 255), -1)
                         
                         # cv2.putText(current_frame_draw, '('+str(round(new_pcloud[person_idx].requested_point_coords[1].x/1000,2))+
@@ -648,11 +649,14 @@ class YoloPoseNode(Node):
                         cv2.putText(current_frame_draw, '('+str(round(new_person.position_relative.x,2))+
                                     ', '+str(round(new_person.position_relative.y,2))+
                                     ', '+str(round(new_person.position_relative.z,2))+')',
-                                    self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                        
+                                    self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
                         
                         cv2.putText(current_frame_draw, new_person.room_location,
                                     (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
+                        cv2.putText(current_frame_draw, new_person.furniture_location,
+                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
                         # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
                         # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
 
@@ -870,8 +874,7 @@ class YoloPoseNode(Node):
         
         new_person.position_absolute = person_abs_pos
 
-        new_person.room_location = self.person_position_to_house_rooms(person_abs_pos)
-        new_person.furniture_location = "None"
+        new_person.room_location, new_person.furniture_location = self.person_position_to_house_rooms_and_furniture(person_abs_pos)
 
         return new_person
 
@@ -889,23 +892,31 @@ class YoloPoseNode(Node):
                 cv2.line(current_frame_draw, p1, p2, (0,0,255), 2) 
 
 
-    def person_position_to_house_rooms(self, person_pos):
+    def person_position_to_house_rooms_and_furniture(self, person_pos):
         
-        location = "Outside"
-
+        room_location = "Outside"
         for room in self.house_rooms:
-            
             min_x = room['top_left_coords'][0]
             max_x = room['bot_right_coords'][0]
             min_y = room['bot_right_coords'][1]
             max_y = room['top_left_coords'][1]
-
             # print(min_x, max_x, min_y, max_y)
-
             if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
-                location = room['name'] 
+                room_location = room['name'] 
 
-        return location
+
+        furniture_location = "None"
+        for furniture in self.house_furniture:
+            min_x = furniture['top_left_coords'][0]
+            max_x = furniture['bot_right_coords'][0]
+            min_y = furniture['bot_right_coords'][1]
+            max_y = furniture['top_left_coords'][1]
+            # print(min_x, max_x, min_y, max_y)
+            if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
+                furniture_location = furniture['name'] 
+
+
+        return room_location, furniture_location
 
 
 def main(args=None):
