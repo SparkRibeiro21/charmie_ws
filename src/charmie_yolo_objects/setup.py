@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-        "yolo_objects = charmie_yolo_objects.yolo_objects:main"
+        "yolo_objects = charmie_yolo_objects.yolo_objects:main",
+        "rosbag_2_video_converter = charmie_yolo_objects.rosbag_2_video_converter:main"
         ],
     },
 )

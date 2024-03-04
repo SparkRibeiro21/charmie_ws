@@ -20,7 +20,7 @@ import time
 
 objects_filename = "m_size_model_300_epochs_after_nandinho.pt"
 # objects_filename = "serve_breakfast_v1.pt"
-shoes_filename = "shoes_socks_v1.pt"
+shoes_filename = "shoes_socks_v1.pt"    
 
 
 
