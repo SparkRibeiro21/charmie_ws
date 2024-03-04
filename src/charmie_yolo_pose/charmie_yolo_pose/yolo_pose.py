@@ -40,6 +40,10 @@ DRAW_LOW_CONF_KP = False
 
 #### ros2 param - yolo pose model (s,n,m,l,x) 
 
+
+ANG1=0.0
+ANG2=0.0
+
 class YoloPoseNode(Node):
     def __init__(self):
         super().__init__("YoloPose")
@@ -657,6 +661,12 @@ class YoloPoseNode(Node):
                         cv2.putText(current_frame_draw, new_person.furniture_location,
                                     (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
+                        cv2.putText(current_frame_draw, new_person.pointing_at+" "+new_person.pointing_with_arm,
+                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
+                        cv2.putText(current_frame_draw, str(int(ANG1))+" "+str(int(ANG2)),
+                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+120), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
                         # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
                         # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
 
@@ -770,9 +780,7 @@ class YoloPoseNode(Node):
         new_person.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
         new_person.arm_raised = arm_raised
-        new_person.body_posture = "None"
-        new_person.pointing_at = "None"
-        new_person.pointing_with_arm = "None"
+        new_person.body_posture = "None" # still missing... (says whether the person is standing up, sitting, laying down, ...)
 
         # print(int(keypoints_id.xy[0][self.NOSE_KP][0]), int(keypoints_id.xy[0][self.NOSE_KP][1]), float(keypoints_id.conf[0][self.NOSE_KP]))
 
@@ -876,6 +884,8 @@ class YoloPoseNode(Node):
 
         new_person.room_location, new_person.furniture_location = self.person_position_to_house_rooms_and_furniture(person_abs_pos)
 
+        new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
+
         return new_person
 
 
@@ -918,6 +928,73 @@ class YoloPoseNode(Node):
 
         return room_location, furniture_location
 
+     
+    def arm_pointing_at(self, person):
+
+        right_shoulder = (person.kp_shoulder_right_x, person.kp_shoulder_right_y)
+        right_wrist = (person.kp_wrist_right_x, person.kp_wrist_right_y)
+        right_hip = (person.kp_hip_right_x, person.kp_hip_right_y)
+
+        left_shoulder = (person.kp_shoulder_left_x, person.kp_shoulder_left_y)
+        left_wrist = (person.kp_wrist_left_x, person.kp_wrist_left_y)
+        left_hip = (person.kp_hip_left_x, person.kp_hip_left_y)
+
+        #ANGLES
+        theta_1 = self.calculate_3angle(right_shoulder, right_wrist, right_hip)
+        theta_2 = self.calculate_3angle(left_shoulder, left_wrist, left_hip)
+
+        global ANG1, ANG2
+
+        ANG1=theta_1
+        ANG2=theta_2
+
+        point_min_angle = 25
+
+        side_pointed = "None"
+        arm_pointed_with = "None"
+
+        print("Sides0:", left_wrist[0], left_hip[0], right_wrist[0], right_hip[0])    
+        print("Sides1:", left_wrist[1], left_hip[1], right_wrist[1], right_hip[1])      
+
+        if theta_2 > point_min_angle:
+            if left_wrist[0] < left_hip[0]:
+                arm_pointed_with = "Left Arm"
+                side_pointed = "Right Side"
+            else:
+                arm_pointed_with = "Left Arm"
+                side_pointed = "Left Side"
+        
+        elif theta_1 > point_min_angle:
+            if right_wrist[0] < right_hip[0]:
+                arm_pointed_with = "Right Arm"
+                side_pointed = "Right Side"
+            else:
+                arm_pointed_with = "Right Arm"
+                side_pointed = "Left Side"
+        
+        return side_pointed, arm_pointed_with
+
+
+    def calculate_3angle(self, p1, p2, p3):
+        vector_1 = (p2[0] - p1[0], p2[1] - p1[1])
+        vector_2 = (p3[0] - p1[0], p3[1] - p1[1])
+
+        dot_product = vector_1[0] * vector_2[0] + vector_1[1] * vector_2[1]
+        
+        try:
+            magnitude_1 = math.sqrt(vector_1[0]**2 + vector_1[1]**2)
+            magnitude_2 = math.sqrt(vector_2[0]**2 + vector_2[1]**2)
+
+            # try catch is here in case any of the magnitudes is = 0, in that case an anle of 0 is returned for safety
+
+            theta = math.acos(dot_product / (magnitude_1 * magnitude_2))
+            theta_degrees = math.degrees(theta)
+            return theta_degrees
+        
+        except:
+            return 0
+
+    
 
 def main(args=None):
     rclpy.init(args=args)
