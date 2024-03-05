@@ -39,7 +39,9 @@ DRAW_PERSON_KP = True
 DRAW_LOW_CONF_KP = False
 DRAW_PERSON_LOCATION_COORDS = True
 DRAW_PERSON_LOCATION_HOUSE_FURNITURE = True
-DRAW_PERSON_POINTING_INFO = False
+DRAW_PERSON_POINTING_INFO = True
+DRAW_PERSON_HAND_RAISED = True
+
 
 #### ros2 param - yolo pose model (s,n,m,l,x) 
 
@@ -443,16 +445,25 @@ class YoloPoseNode(Node):
             # at the current time, we are using the wrist coordinates and somparing with the nose coordinate
             is_hand_raised = False
             hand_raised = "None"
-            if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]) and int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]):
+            if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]) and \
+                int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]) and \
+                keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE and \
+                keypoints_id.conf[0][self.WRIST_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+                keypoints_id.conf[0][self.WRIST_LEFT_KP] > MIN_KP_CONF_VALUE:
+                    
                 # print("Both Arms Up")
                 hand_raised = "Both"
                 is_hand_raised = True
             else:
-                if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]):
+                if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]) and \
+                    keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE and \
+                    keypoints_id.conf[0][self.WRIST_RIGHT_KP] > MIN_KP_CONF_VALUE:
                     # print("Right Arm Up")
                     hand_raised = "Right"
                     is_hand_raised = True
-                elif int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]):
+                elif int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]) and \
+                    keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE and \
+                    keypoints_id.conf[0][self.WRIST_LEFT_KP] > MIN_KP_CONF_VALUE:
                     # print("Left Arm Up")
                     hand_raised = "Left"
                     is_hand_raised = True
@@ -735,7 +746,13 @@ class YoloPoseNode(Node):
                         if new_person.pointing_at != "None":
                             cv2.putText(current_frame_draw, new_person.pointing_at+" "+new_person.pointing_with_arm,
                                         (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                            
+
+                    if DRAW_PERSON_HAND_RAISED:
+                        if hand_raised != "None":
+                            cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
+                                        (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
+                    
                         # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
                         # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
 
@@ -1014,9 +1031,21 @@ class YoloPoseNode(Node):
         left_hip = (person.kp_hip_left_x, person.kp_hip_left_y)
 
         # The sides are relative to the person, so the right side is linked with the person right arm!
-        theta_right = self.calculate_3angle(right_shoulder, right_wrist, right_hip)
-        theta_left = self.calculate_3angle(left_shoulder, left_wrist, left_hip)
+        if person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE and \
+            person.kp_wrist_right_conf > MIN_KP_CONF_VALUE and \
+            person.kp_hip_right_conf > MIN_KP_CONF_VALUE:
+            theta_right = self.calculate_3angle(right_shoulder, right_wrist, right_hip)
+        else:
+            theta_right = 0.0
 
+        # The sides are relative to the person, so the right side is linked with the person right arm!
+        if person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and \
+            person.kp_wrist_left_conf > MIN_KP_CONF_VALUE and \
+            person.kp_hip_left_conf > MIN_KP_CONF_VALUE:
+            theta_left = self.calculate_3angle(left_shoulder, left_wrist, left_hip)
+        else:
+            theta_left = 0.0
+        
         side_pointed = "None"
         arm_pointed_with = "None"
 
