@@ -86,3 +86,6 @@ float32 kp_ankle_right_conf
 
 int32 body_center_x
 int32 body_center_y
+
+int32 head_center_x
+int32 head_center_y
