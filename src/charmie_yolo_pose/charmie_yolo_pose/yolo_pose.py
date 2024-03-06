@@ -41,6 +41,7 @@ DRAW_PERSON_LOCATION_COORDS = True
 DRAW_PERSON_LOCATION_HOUSE_FURNITURE = True
 DRAW_PERSON_POINTING_INFO = True
 DRAW_PERSON_HAND_RAISED = True
+DRAW_PERSON_HEIGHT = True
 
 
 #### ros2 param - yolo pose model (s,n,m,l,x) 
@@ -476,7 +477,7 @@ class YoloPoseNode(Node):
 
             # adds people to "person_pose" without any restriction
             new_person = DetectedPerson()
-            new_person = self.add_person_to_detectedperson_msg(boxes_id, keypoints_id, self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], new_pcloud[person_idx].requested_point_coords[1], hand_raised)
+            new_person = self.add_person_to_detectedperson_msg(boxes_id, keypoints_id, self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], new_pcloud[person_idx].requested_point_coords[1], new_pcloud[person_idx].requested_point_coords[0], hand_raised)
             yolov8_pose.persons.append(new_person)
             
             legs_ctr = 0
@@ -752,7 +753,10 @@ class YoloPoseNode(Node):
                             cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
                                         (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
-                    
+                    if DRAW_PERSON_HEIGHT:
+                        cv2.putText(current_frame_draw, str(round(new_person.height,2)),
+                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+120), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
                         # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
                         # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
 
@@ -848,7 +852,7 @@ class YoloPoseNode(Node):
         # print(self.robot_x, self.robot_y, self.robot_t)
 
 
-    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, center_torso_person, center_head_person, p_localisation, arm_raised):
+    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
@@ -946,9 +950,9 @@ class YoloPoseNode(Node):
 
         # changes the axis of point cloud coordinates to fit with robot axis
         person_rel_pos = Point()
-        person_rel_pos.x = -p_localisation.y/1000
-        person_rel_pos.y =  p_localisation.x/1000
-        person_rel_pos.z =  p_localisation.z/1000
+        person_rel_pos.x = -torso_localisation.y/1000
+        person_rel_pos.y =  torso_localisation.x/1000
+        person_rel_pos.z =  torso_localisation.z/1000
         
         new_person.position_relative = person_rel_pos
         
@@ -967,9 +971,38 @@ class YoloPoseNode(Node):
         person_abs_pos = Point()
         person_abs_pos.x = target_x
         person_abs_pos.y = target_y
-        person_abs_pos.z = p_localisation.z/1000
+        person_abs_pos.z = torso_localisation.z/1000
         
         new_person.position_absolute = person_abs_pos
+
+        # changes the axis of point cloud coordinates to fit with robot axis
+        head_rel_pos = Point()
+        head_rel_pos.x = -head_localisation.y/1000
+        head_rel_pos.y =  head_localisation.x/1000
+        head_rel_pos.z =  head_localisation.z/1000
+
+        new_person.position_relative_head = head_rel_pos
+        
+        # calculate the absolute head position according to the robot localisation
+        angle_head = math.atan2(head_rel_pos.x, head_rel_pos.y)
+        dist_head = math.sqrt(head_rel_pos.x**2 + head_rel_pos.y**2)
+
+        theta_aux = math.pi/2 - (angle_head - self.robot_t)
+
+        target_x = dist_head * math.cos(theta_aux) + self.robot_x
+        target_y = dist_head * math.sin(theta_aux) + self.robot_y
+
+        a_ref = (target_x, target_y)
+        print("Rel:", (head_rel_pos.x, head_rel_pos.y), "Abs:", a_ref)
+
+        head_abs_pos = Point()
+        head_abs_pos.x = target_x
+        head_abs_pos.y = target_y
+        head_abs_pos.z = head_localisation.z/1000
+        
+        new_person.position_absolute_head = head_abs_pos
+
+        new_person.height = head_localisation.z/1000 + 0.15 # average person middle of face to top of head distance
 
         new_person.room_location, new_person.furniture_location = self.person_position_to_house_rooms_and_furniture(person_abs_pos)
 
