@@ -872,8 +872,6 @@ class YoloPoseNode(Node):
         new_person.arm_raised = arm_raised
         new_person.body_posture = "None" # still missing... (says whether the person is standing up, sitting, laying down, ...)
 
-        # print(int(keypoints_id.xy[0][self.NOSE_KP][0]), int(keypoints_id.xy[0][self.NOSE_KP][1]), float(keypoints_id.conf[0][self.NOSE_KP]))
-
         new_person.kp_nose_x = int(keypoints_id.xy[0][self.NOSE_KP][0])
         new_person.kp_nose_y = int(keypoints_id.xy[0][self.NOSE_KP][1])
         new_person.kp_nose_conf = float(keypoints_id.conf[0][self.NOSE_KP])
@@ -1007,6 +1005,9 @@ class YoloPoseNode(Node):
         new_person.room_location, new_person.furniture_location = self.person_position_to_house_rooms_and_furniture(person_abs_pos)
 
         new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
+
+        new_person.shirt_color = "None" # still missing... (says the color of the top clothing from the detected person)
+        new_person.pants_color = "None" # still missing... (says the color of the bottom clothing from the detected person)
 
         return new_person
 

@@ -19,6 +19,9 @@ string pointing_at
 string pointing_with_arm
 float32 height
 
+string shirt_color
+string pants_color
+
 int32 kp_nose_x
 int32 kp_nose_y
 float32 kp_nose_conf
