@@ -1142,7 +1142,7 @@ class YoloPoseNode(Node):
         color_rgb = RGB()
 
         if new_person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and new_person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE:
-            color_name, color_value_rgb, color_value_bgr, color_value_hsv, n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_shoulder_left_x, new_person.kp_shoulder_left_y), (new_person.kp_shoulder_right_x, new_person.kp_shoulder_right_y))
+            color_name, color_value_rgb, n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_shoulder_left_x, new_person.kp_shoulder_left_y), (new_person.kp_shoulder_right_x, new_person.kp_shoulder_right_y))
     
             color_rgb.red = int(color_value_rgb[0])
             color_rgb.green = int(color_value_rgb[1])
