@@ -765,6 +765,9 @@ class YoloPoseNode(Node):
                         cv2.putText(current_frame_draw, new_person.shirt_color,
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.shirt_rgb.blue, new_person.shirt_rgb.green, new_person.shirt_rgb.red), 1, cv2.LINE_AA)
                         
+                        cv2.putText(current_frame_draw, new_person.pants_color,
+                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
+                        
                         # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
                         # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
 
@@ -1017,7 +1020,7 @@ class YoloPoseNode(Node):
 
         new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
                
-        new_person.pants_color = "None" # still missing... (says the color of the bottom clothing from the detected person)
+        new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
 
         return new_person
 
@@ -1141,15 +1144,44 @@ class YoloPoseNode(Node):
         if new_person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and new_person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE:
             color_name, color_value_rgb, color_value_bgr, color_value_hsv, n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_shoulder_left_x, new_person.kp_shoulder_left_y), (new_person.kp_shoulder_right_x, new_person.kp_shoulder_right_y))
     
-
-            print(color_value_rgb[0])
-
             color_rgb.red = int(color_value_rgb[0])
             color_rgb.green = int(color_value_rgb[1])
             color_rgb.blue = int(color_value_rgb[2])
 
         return color_name, color_rgb
 
+
+    def get_pants_color(self, new_person, current_frame, current_frame_draw):
+        left_leg_color_name = "None"
+        left_leg_color_rgb = RGB()
+        left_leg_n_points = 0
+        right_leg_color_name = "None"
+        right_leg_color_rgb = RGB()
+        right_leg_n_points = 0
+        color_name = "None"
+        color_rgb = RGB()
+
+        
+        if new_person.kp_hip_left_conf > MIN_KP_CONF_VALUE and new_person.kp_knee_left_conf > MIN_KP_CONF_VALUE:
+            left_leg_color_name, left_leg_color_rgb, left_leg_n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_hip_left_x, new_person.kp_hip_left_y), (new_person.kp_knee_left_x, new_person.kp_knee_left_y))
+
+        if new_person.kp_hip_right_conf > MIN_KP_CONF_VALUE and new_person.kp_knee_right_conf > MIN_KP_CONF_VALUE:
+            right_leg_color_name, right_leg_color_rgb, right_leg_n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_hip_right_x, new_person.kp_hip_right_y), (new_person.kp_knee_right_x, new_person.kp_knee_right_y))
+
+        if left_leg_n_points > right_leg_n_points:
+            color_name = left_leg_color_name
+            color_rgb.red = int(left_leg_color_rgb[0])
+            color_rgb.green = int(left_leg_color_rgb[1])
+            color_rgb.blue = int(left_leg_color_rgb[2])
+
+        elif left_leg_n_points < right_leg_n_points:
+            color_name = right_leg_color_name
+            color_rgb.red = int(right_leg_color_rgb[0])
+            color_rgb.green = int(right_leg_color_rgb[1])
+            color_rgb.blue = int(right_leg_color_rgb[2])
+        
+        return color_name, color_rgb
+    
 
     def rgb_to_string_tr(self, color_value_rgb):
 
@@ -1263,7 +1295,7 @@ class YoloPoseNode(Node):
 
     def get_color_of_line_between_two_points(self, image, image_draw, p1, p2):
 
-        DEBUG_DRAW_COLOR = True
+        DEBUG_DRAW_COLOR = False
 
         image_h, image_w, image_c = image.shape
         print(image.shape)
@@ -1405,7 +1437,8 @@ class YoloPoseNode(Node):
 
         print("Color:", color_name, "[ RGB:", color_value_rgb, "HSV:", color_value_hsv,"N_P:", n_points, "]")
 
-        return color_name, color_value_rgb, color_value_bgr, color_value_hsv, n_points
+        # return color_name, color_value_rgb, color_value_bgr, color_value_hsv, n_points
+        return color_name, color_value_rgb, n_points
 
 
 
