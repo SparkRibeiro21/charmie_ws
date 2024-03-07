@@ -39,6 +39,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PS4Controller.msg"
   "msg/RequestPointCloud.msg"
   "msg/RetrievePointCloud.msg"
+  "msg/RGB.msg"
   "msg/RobotSpeech.msg"
   "msg/SearchForPerson.msg"
   "msg/SpeechType.msg"

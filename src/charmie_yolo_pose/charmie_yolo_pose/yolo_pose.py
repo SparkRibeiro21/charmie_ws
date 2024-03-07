@@ -230,7 +230,7 @@ class YoloPoseNode(Node):
 
             # ROS2 Image Bridge for OpenCV
             current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
-            # current_frame_draw = current_frame.copy()
+            current_frame_draw = current_frame.copy()
 
             # Getting image dimensions
             self.img_width = self.rgb_img.width
@@ -783,6 +783,7 @@ class YoloPoseNode(Node):
             cv2.putText(current_frame_draw, 'np:' + str(num_persons_filtered) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
             # cv2.imshow("Yolo Pose Detection", annotated_frame)
+            # cv2.imshow("Camera Image", current_frame)
             cv2.waitKey(1)
         
         """

@@ -20,7 +20,9 @@ string pointing_with_arm
 float32 height
 
 string shirt_color
+RGB[] shirt_rgb
 string pants_color
+RGB[] pants_rgb
 
 int32 kp_nose_x
 int32 kp_nose_y
