@@ -19,6 +19,10 @@ string pointing_at
 string pointing_with_arm
 float32 height
 
+string ethnicity
+string age_estimate
+string gender
+
 string shirt_color
 RGB shirt_rgb
 string pants_color

@@ -1032,11 +1032,19 @@ class YoloPoseNode(Node):
             new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
             new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
 
+            new_person.ethnicity = "None" # still missing... (says whether the person white, asian, african descendent, middle eastern, ...)
+            new_person.age_estimate = "None" # still missing... (says an approximate age gap like 25-35 ...)
+            new_person.gender = "None" # still missing... (says whether the person is male or female)
+
         else:
             new_person.pointing_at = "None"
             new_person.pointing_with_arm = "None"
             new_person.shirt_color = "None"
             new_person.pants_color = "None"
+            new_person.ethnicity = "None"
+            new_person.age_estimate = "None"
+            new_person.gender = "None"
+
 
         return new_person
 
