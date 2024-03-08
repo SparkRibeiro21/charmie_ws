@@ -627,7 +627,7 @@ class ControllerNode(Node):
 
                 # in case it is not intended for the robot to speak since it may disturb other packages
                 if self.CONTROL_SPEAKERS:
-                    self.set_speech(filename="motors_locked", wait_for_end_of=False)
+                    self.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
 
         # print(self.watchdog_timer, end='')
         print(".", end='')
@@ -690,10 +690,10 @@ class ControllerNode(Node):
         if self.CONTROL_SPEAKERS:
             # examples of two different speech commands
             if ps4_controller.r3 == 2:
-                success, message = self.set_speech(filename="introduction_full", wait_for_end_of=False)
+                success, message = self.set_speech(filename="generic/introduction_full", wait_for_end_of=False)
                 print(success, message)
             elif ps4_controller.l3 == 2:
-                success, message = self.set_speech(filename="receptionist_question", wait_for_end_of=False)
+                success, message = self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=False)
                 print(success, message)
                 
         if self.CONTROL_NECK:
@@ -743,7 +743,7 @@ class ControllerNode(Node):
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:
-                        self.set_speech(filename="motors_unlocked", wait_for_end_of=False)
+                        self.set_speech(filename="demonstration/motors_unlocked", wait_for_end_of=False)
 
                 else:
 
@@ -764,7 +764,7 @@ class ControllerNode(Node):
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:
-                        self.set_speech(filename="motors_locked", wait_for_end_of=False)
+                        self.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
 
         if self.CONTROL_FACE:
             if ps4_controller.l1 == 2:

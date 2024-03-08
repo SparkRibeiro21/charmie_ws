@@ -273,7 +273,7 @@ class ServeBreakfastMain():
             if self.state == self.Waiting_for_task_start:
 
                 self.set_face("help_pick_cup")
-                self.set_speech(filename="introduction_full", wait_for_end_of=True)
+                self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                 self.set_rgb(RED+ALTERNATE_QUARTERS)
                 self.set_face("help_pick_milk")
                 
@@ -341,7 +341,7 @@ class ServeBreakfastMain():
                 
             elif self.state == self.Final_State:
                 
-                self.set_speech(filename="sb_finished", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
 
                 while True:
                     pass

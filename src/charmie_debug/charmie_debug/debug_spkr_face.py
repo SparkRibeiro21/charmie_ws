@@ -181,103 +181,44 @@ class RestaurantMain():
             # State 6 = Final Speech
 
             if self.state == Waiting_for_start_button:
-                """
-                # a += "a"
-                self.node.call_speech_command_server("ready_serve_breakfast", "", wait_for_end_of=True)
-                self.wait_for_end_of_speaking()
-                print("Test Wait")
-
-                start = time.time()
-                while time.time() < start + 3: # in seconds
-                    print(".", end='')
-                print()
                 
-                self.node.call_speech_command_server("waiting_door_open", "", wait_for_end_of=False)
-                # self.wait_for_end_of_speaking()
-                print("Test Not Wait")
-
-                start = time.time()
-                while time.time() < start + 3: # in seconds
-                    print(",", end='')
-                print()
-                """
-
-                # self.node.call_speech_command_server("receptionist_second_guest", "", wait_for_end_of=True)
-                # self.node.call_speech_command_server(command="Welcome to the serve the breakfast task", wait_for_end_of=True)#, quick_voice=Fa)
-
-                # self.node.call_speech_command_server("introduction_quick", "", wait_for_end_of=True)
-                # self.node.call_speech_command_server(command="I will start in a minute", wait_for_end_of=True)#, quick_voice=True)
-                
-
-                # self.node.call_speech_command_server(filename="receptionist_second_guest_john", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
-                # self.wait_for_end_of_speaking()
-                # print("Test Wait")
-
-                # self.node.call_speech_command_server(filename="recep_drink_red_win", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
-                # self.wait_for_end_of_speaking()
-                # print("Test Wait")
-
-
-
-
-                ### self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
-                # self.set_speech(filename="recep", command="My favourite drink is pleno", wait_for_end_of=True, quick_voice=False)
-                # self.set_speech(filename="receptionist2_1", wait_for_end_of=True)
-                # self.wait_for_end_of_speaking()
-                # print("Test Wait")
-
-
-                # start = time.time()
-                # while time.time() < start + 4: # in seconds
-                #     pass
-                #     print(".", end='')
-                # print()
-
-
-                ### self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)#, quick_voice=Fa)
-                # self.set_speech(filename="", command="The favourite drink of Leia is water.", wait_for_end_of=True, quick_voice=False)
-                # self.wait_for_end_of_speaking()
-                # print("Test Wait")
-
-
-
                 """
                 s, m = self.set_rgb(RED+MOON)
                 print(s, m)
-                success, message = self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                success, message = self.set_speech(filename="arm/arm_close_gripper", command="", wait_for_end_of=True)
                 print(success, message)
                 time.sleep(5)
                 self.set_rgb(BLUE+ROTATE)
-                success, message = self.set_speech(filename="introduction_full", command="", wait_for_end_of=False)
+                success, message = self.set_speech(filename="arm/introduction_full", command="", wait_for_end_of=False)
                 print(success, message)
                 time.sleep(5)
                 self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-                success, message = self.set_speech(filename="arm_close_grippe", command="", wait_for_end_of=True)
+                success, message = self.set_speech(filename="arm/arm_close_grippe", command="", wait_for_end_of=True)
                 print(success, message)
                 time.sleep(5)
 
                 """
 
                 
-                # self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
+                # self.set_speech(filename="generic/introduction_full", command="", wait_for_end_of=True)
                 # time.sleep(2)
 
-                self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_drink_milk", command="", wait_for_end_of=True)
                 self.set_face("help_pick_cup")
                 time.sleep(3)
 
 
-                # self.set_speech(filename="introduction_ful", command="", wait_for_end_of=True)
+                # self.set_speech(filename="generic/introduction_ful", command="", wait_for_end_of=True)
 
 
-                # self.set_speech(command="Hello motherfucker", wait_for_end_of=True)
+                # self.set_speech(command="Hello brother", wait_for_end_of=True)
 
 
                 # self.node.test_custom_image_face_str.data = "clients_temp"
                 # self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
                 # time.sleep(5)
 
-                # self.set_speech(filename="introduction_full", wait_for_end_of=True)
+                # self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                 
                 # self.set_face(custom="clients_temp")
                 # time.sleep(3)
@@ -286,7 +227,7 @@ class RestaurantMain():
                 self.set_face("help_pick_bowl")
                 time.sleep(3)
 
-                self.set_speech(filename="introduction_full", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_drink_orange_juice", show_in_face=True, wait_for_end_of=True)
 
 
                 self.set_face("demo8")
@@ -295,11 +236,11 @@ class RestaurantMain():
                 self.set_face(custom="clients_tem")
                 time.sleep(3)
 
-                # self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                # self.set_speech(filename="arm/arm_close_gripper", command="", wait_for_end_of=True)
                 # time.sleep(2)
 
 
-                self.set_speech(filename="introduction_full", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_drink_red_wine", wait_for_end_of=True)
 
                 self.set_face("help_pick_milk")
                 time.sleep(3)
@@ -308,7 +249,7 @@ class RestaurantMain():
                 time.sleep(3)
 
 
-                self.set_speech(filename="introduction_full", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="generic/introduction_full", show_in_face=True, wait_for_end_of=True)
                 # start = time.time()
                 # while time.time() < start + 3: # in seconds
                 #     pass

@@ -49,12 +49,12 @@ class ServeBreakfastNode(Node):
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Neck 
-        while not self.set_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        while not self.get_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-        while not self.set_neck_coordinates_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        # while not self.set_neck_position_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+        # while not self.get_neck_position_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Get Neck Position Command...")
+        # while not self.set_neck_coordinates_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
@@ -405,13 +405,13 @@ class ServeBreakfastMain():
                     pass
                 """
 
-                self.set_neck(position=self.look_forward) #, wait_for_end_of=True)
+                # self.set_neck(position=self.look_forward) #, wait_for_end_of=True)
 
                 self.set_face("demo5")
 
-                self.set_speech(filename="sb_ready_start", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_ready_start", show_in_face=True, wait_for_end_of=True)
 
-                self.set_speech(filename="waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
+                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
 
                 ###### WAITS FOR START BUTTON / DOOR OPEN
 
@@ -421,47 +421,47 @@ class ServeBreakfastMain():
 
             elif self.state == self.Approach_kitchen_counter:
 
-                self.set_neck(position=self.look_navigation) # , wait_for_end_of=True)
+                # self.set_neck(position=self.look_navigation) # , wait_for_end_of=True)
 
-                self.set_speech(filename="sb_moving_kitchen_counter", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
 
                 ###### MOVEMENT TO THE KITCHEN COUNTER
 
-                self.set_speech(filename="sb_arrived_kitchen_counter", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=True)
                 
                 self.state = self.Picking_up_spoon
 
             elif self.state == self.Picking_up_spoon:
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### MOVES ARM TO TOP OF TABLE POSITION
 
-                self.set_speech(filename="search_objects", wait_for_end_of=True)
+                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
 
                 ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
 
-                self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
 
-                self.set_speech(filename="sb_found_spoon", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_found_spoon", show_in_face=True, wait_for_end_of=True)
 
-                self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
 
                 ##### SHOW FACE DETECTED OBJECT
 
                 ##### MOVE ARM TO PICK UP OBJECT 
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### IF AN ERROR IS DETECTED:
                 
-                self.set_speech(filename="problem_pick_object", wait_for_end_of=True) # False
+                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
                    
                     ##### MOVE ARM TO ERROR POSITION 
                 
-                self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
                 
-                self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 self.set_face("help_pick_spoon") 
 
@@ -469,19 +469,19 @@ class ServeBreakfastMain():
                 
                     ##### WHILE OBJECT IS NOT IN GRIPPER:
                 
-                self.set_speech(filename="arm_close_gripper", wait_for_end_of=True)
+                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
                         ##### ARM CLOSE GRIPPER
 
                         ##### IF OBJECT NOT GRABBED:
                 
-                self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
+                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
                         
                             ##### ARM OPEN GRIPPER
                 
                 self.set_face("demo5")
                         
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
                 
                 ##### ARM PLACE OBJECT IN TRAY
 
@@ -489,35 +489,35 @@ class ServeBreakfastMain():
 
             elif self.state == self.Picking_up_milk:
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### MOVES ARM TO TOP OF TABLE POSITION
 
-                self.set_speech(filename="search_objects", wait_for_end_of=True)
+                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
 
                 ##### YOLO OBJECTS SEARCH FOR MILK, FOR BOTH CAMERAS
 
-                self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
 
-                self.set_speech(filename="sb_found_milk", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_found_milk", show_in_face=True, wait_for_end_of=True)
 
-                self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
 
                 ##### SHOW FACE DETECTED OBJECT
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### MOVE ARM TO PICK UP OBJECT 
 
                 ##### IF AN ERROR IS DETECTED:
                 
-                self.set_speech(filename="problem_pick_object", wait_for_end_of=True) # False
+                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
                    
                     ##### MOVE ARM TO ERROR POSITION 
                 
-                self.set_neck(position=self.look_judge, wait_for_end_of=True)             
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)             
                 
-                self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 self.set_face("help_pick_milk") 
 
@@ -525,19 +525,19 @@ class ServeBreakfastMain():
                 
                     ##### WHILE OBJECT IS NOT IN GRIPPER:
                 
-                self.set_speech(filename="arm_close_gripper", wait_for_end_of=True)
+                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
                         ##### ARM CLOSE GRIPPER
 
                         ##### IF OBJECT NOT GRABBED:
                 
-                self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
+                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
                         
                             ##### ARM OPEN GRIPPER
                 
                 self.set_face("demo5")
                         
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
                         
                 ##### ARM PLACE OBJECT IN TRAY
 
@@ -545,35 +545,35 @@ class ServeBreakfastMain():
            
             elif self.state == self.Picking_up_cereal:
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### MOVES ARM TO TOP OF TABLE POSITION
 
-                self.set_speech(filename="search_objects", wait_for_end_of=True)
+                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
 
                 ##### YOLO OBJECTS SEARCH FOR CEREAL, FOR BOTH CAMERAS
 
-                self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
                 
-                self.set_speech(filename="sb_found_cereal", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_found_cereal", show_in_face=True, wait_for_end_of=True)
 
-                self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
 
                 ##### SHOW FACE DETECTED OBJECT
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### MOVE ARM TO PICK UP OBJECT 
 
                 ##### IF AN ERROR IS DETECTED:
                 
-                self.set_speech(filename="problem_pick_object", wait_for_end_of=True) # False
+                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
                    
                     ##### MOVE ARM TO ERROR POSITION
                 
-                self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
                 
-                self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 self.set_face("help_pick_cereal") 
 
@@ -581,19 +581,19 @@ class ServeBreakfastMain():
                 
                     ##### WHILE OBJECT IS NOT IN GRIPPER:
                 
-                self.set_speech(filename="arm_close_gripper", wait_for_end_of=True)
+                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
                         ##### ARM CLOSE GRIPPER
 
                         ##### IF OBJECT NOT GRABBED:
                 
-                self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
+                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
                         
                             ##### ARM OPEN GRIPPER
                 
                 self.set_face("demo5")
 
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
                         
                 ##### ARM PLACE OBJECT IN TRAY
 
@@ -601,35 +601,35 @@ class ServeBreakfastMain():
 
             elif self.state == self.Picking_up_bowl:
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### MOVES ARM TO TOP OF TABLE POSITION
 
-                self.set_speech(filename="search_objects", wait_for_end_of=True)
+                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
 
                 ##### YOLO OBJECTS SEARCH FOR BOWL, FOR BOTH CAMERAS
 
-                self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
 
-                self.set_speech(filename="sb_found_bowl", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_found_bowl", show_in_face=True, wait_for_end_of=True)
 
-                self.set_speech(filename="check_face_object_detected", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
 
                 ##### SHOW FACE DETECTED OBJECT
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### MOVE ARM TO PICK UP OBJECT 
 
                 ##### IF AN ERROR IS DETECTED:
                 
-                self.set_speech(filename="problem_pick_object", wait_for_end_of=True) # False
+                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
                    
                     ##### MOVE ARM TO ERROR POSITION 
                 
-                self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
 
-                self.set_speech(filename="check_face_put_object_hand", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
                     
                 self.set_face("help_pick_bowl") 
 
@@ -637,19 +637,19 @@ class ServeBreakfastMain():
                 
                     ##### WHILE OBJECT IS NOT IN GRIPPER:
                 
-                self.set_speech(filename="arm_close_gripper", wait_for_end_of=True)
+                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
                         ##### ARM CLOSE GRIPPER
 
                         ##### IF OBJECT NOT GRABBED:
                 
-                self.set_speech(filename="arm_error_receive_object", wait_for_end_of=True)
+                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
                         
                             ##### ARM OPEN GRIPPER
 
                 self.set_face("demo5")
 
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
                         
                 ##### ARM PLACE OBJECT IN TRAY
 
@@ -657,44 +657,44 @@ class ServeBreakfastMain():
 
             elif self.state == self.Approach_kitchen_table:
 
-                self.set_speech(filename="objects_all_collected", wait_for_end_of=True)
+                self.set_speech(filename="generic/objects_all_collected", wait_for_end_of=True)
 
-                self.set_neck(position=[0, -30], wait_for_end_of=True)
+                # self.set_neck(position=[0, -30], wait_for_end_of=True)
 
-                self.set_speech(filename="sb_moving_kitchen_table", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=True)
 
                 ###### MOVEMENT TO THE KITCHEN TABLE
 
-                self.set_speech(filename="sb_arrived_kitchen_table", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
 
-                self.set_speech(filename="place_object_table", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_table", wait_for_end_of=True)
 
-                self.set_speech(filename="place_stay_clear", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
 
                 self.state = self.Placing_bowl
 
             elif self.state == self.Placing_bowl:
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
                 time.sleep(1)
 
                 ##### ARM MOVE TO TABLE
 
                 ##### ARM PLACE OBJECT
 
-                self.set_speech(filename="place_object_placed", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Placing_cereal 
 
             elif self.state == self.Placing_cereal:
 
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
                 time.sleep(1)
                 ##### ARM MOVE TRAY
 
                 ##### ARM PICK OBJECT 
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### ARM MOVE TO TABLE
 
@@ -702,20 +702,20 @@ class ServeBreakfastMain():
 
                 ##### ARM PLACE OBJECT
 
-                self.set_speech(filename="place_object_placed", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Placing_milk
            
             elif self.state == self.Placing_milk:
 
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
                 time.sleep(1)
 
                 ##### ARM MOVE TRAY
 
                 ##### ARM PICK OBJECT 
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### ARM MOVE TO TABLE
 
@@ -723,34 +723,34 @@ class ServeBreakfastMain():
 
                 ##### ARM PLACE OBJECT
 
-                self.set_speech(filename="place_object_placed", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Placing_spoon
 
             elif self.state == self.Placing_spoon:
 
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
                 time.sleep(1)
 
                 ##### ARM MOVE TRAY
 
                 ##### ARM PICK OBJECT 
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### ARM MOVE TO TABLE
 
                 ##### ARM PLACE OBJECT
 
-                self.set_speech(filename="place_object_placed", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Final_State 
                 
             elif self.state == self.Final_State:
 
-                self.set_neck(position=self.look_judge) # , wait_for_end_of=True)
+                # self.set_neck(position=self.look_judge) # , wait_for_end_of=True)
 
-                self.set_speech(filename="sb_finished", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
 
                 while True:
                     pass
