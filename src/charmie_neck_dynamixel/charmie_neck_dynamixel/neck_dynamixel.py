@@ -485,8 +485,8 @@ class NeckNode(Node):
         # this function is used for nodes that need to keep the latest neck position value saved, so when new data comes
         # these need to compute, they don't have to request the position, therefore not wasting time...
         pose = NeckPosition()
-        pose.pan  = float(int(p*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
-        pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
+        pose.pan  = float(int(p*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) # - 180.0
+        pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) # - 180.0
         self.neck_get_position_topic_publisher.publish(pose)
         
 

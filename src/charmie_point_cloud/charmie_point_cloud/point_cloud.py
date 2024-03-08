@@ -44,7 +44,8 @@ DIM = 6000
 # according to the kinematics at the moment, the origin is the actuation of the pan servo, therefore to consider the same (x, y, z) as the robot localisation
 # we must shift the axis so the new origin is the center of the robot on the floor
 X_SHIFT = (560//2)    # must configure so the 0 is the center of the robot, 560/2 is the robot radius
-Z_SHIFT = (1245+160) # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
+# Z_SHIFT = (1245+160) # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
+Z_SHIFT = (1325+185) # 151 cm # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
 
 flag_show_rgb_depth = True
 
@@ -596,9 +597,8 @@ class PointCloudNode(Node):
         # self.pcloud.teta[0] = 180 - neck_pos.pan
         # self.pcloud.teta[1] = 190 - neck_pos.tilt ###### ALTERAR PARA 180
         
-        ##### this was updated in March 2024 needs to be tested
-        self.pcloud.teta[0] = - neck_pos.pan
-        self.pcloud.teta[1] = - neck_pos.tilt 
+        self.pcloud.teta[0] = 180 - neck_pos.pan
+        self.pcloud.teta[1] = 180 - neck_pos.tilt
         
         ##### porque é que estamos a imprimir o [2] ???
         print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[1], ",", self.pcloud.teta[2], ")")

@@ -38,10 +38,10 @@ DRAW_PERSON_BOX = True
 DRAW_PERSON_KP = True
 DRAW_LOW_CONF_KP = False
 DRAW_PERSON_LOCATION_COORDS = True
-DRAW_PERSON_LOCATION_HOUSE_FURNITURE = False
-DRAW_PERSON_POINTING_INFO = False
-DRAW_PERSON_HAND_RAISED = False
-DRAW_PERSON_HEIGHT = False
+DRAW_PERSON_LOCATION_HOUSE_FURNITURE = True
+DRAW_PERSON_POINTING_INFO = True
+DRAW_PERSON_HAND_RAISED = True
+DRAW_PERSON_HEIGHT = True
 DRAW_PERSON_CLOTHES_COLOR = True
 
 
@@ -1022,7 +1022,7 @@ class YoloPoseNode(Node):
         
         new_person.position_absolute_head = head_abs_pos
 
-        new_person.height = head_localisation.z/1000 + 0.15 # average person middle of face to top of head distance
+        new_person.height = head_localisation.z/1000 + 0.15 + 0.15# average person middle of face to top of head distance
 
         new_person.room_location, new_person.furniture_location = self.person_position_to_house_rooms_and_furniture(person_abs_pos)
 

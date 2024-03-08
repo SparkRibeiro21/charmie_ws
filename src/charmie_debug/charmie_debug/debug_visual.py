@@ -225,7 +225,7 @@ class DebugVisualNode(Node):
         self.get_logger().info("Initialised CHARMIE Debug Visual Node")
 
         # get neck position
-        self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
+        self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
         
         # get yolo pose person detection filtered
         self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
