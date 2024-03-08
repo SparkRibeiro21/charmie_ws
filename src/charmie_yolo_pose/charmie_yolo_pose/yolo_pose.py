@@ -52,6 +52,12 @@ class YoloPoseNode(Node):
         super().__init__("YoloPose")
         self.get_logger().info("Initialised YoloPose Node")
 
+        ### ROS2 Parameters ###
+        # when declaring a ros2 parameter the second argument of the function is the default value 
+        self.declare_parameter("yolo_model", "s") 
+        self.declare_parameter("debug_draw", True) 
+        self.declare_parameter("characteristics", True)
+
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
@@ -69,15 +75,20 @@ class YoloPoseNode(Node):
             self.house_furniture = json.load(json_file)
         print(self.house_furniture)
 
-        # Yolo Model - Yolov8 Pose
-        # self.model = YOLO(self.complete_path + 'yolov8s-pose.pt')
-        # If the PC used has lower frame rates switch to:
-        # self.model = YOLO(self.complete_path + 'yolov8n-pose.pt')
-
-        self.model = YOLO(self.complete_path + 'yolov8s-pose.pt')
-
+        # choose the yolo pose model intended to be used (n,s,m,l,...) 
+        self.YOLO_MODEL = self.get_parameter("yolo_model").value
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
-        self.debug_draw = True
+        self.DEBUG_DRAW = self.get_parameter("debug_draw").value
+        # which face should be displayed after initialising the face node (string) 
+        self.GET_CHARACTERISTICS = self.get_parameter("characteristics").value
+
+        yolo_model = "yolov8" + self.YOLO_MODEL.lower() + "-pose.pt"
+        full_yolo_model = self.complete_path + yolo_model
+        print("USING YOLO POSE MODEL:", yolo_model)
+
+        # Yolo Model - Yolov8 Pose:
+        # If the PC used has lower frame rates switch in: self.declare_parameter("yolo_model", "s")
+        self.model = YOLO(full_yolo_model)
 
         # Publisher (Pose of People Detected Filtered and Non Filtered)
         self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10)
@@ -231,7 +242,7 @@ class YoloPoseNode(Node):
 
             # ROS2 Image Bridge for OpenCV
             current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
-            current_frame_draw = current_frame.copy()
+            # current_frame_draw = current_frame.copy()
 
             # Getting image dimensions
             self.img_width = self.rgb_img.width
@@ -557,7 +568,7 @@ class YoloPoseNode(Node):
                 # code here to add to filtered topic
                 yolov8_pose_filtered.persons.append(new_person)
 
-                if self.debug_draw:
+                if self.DEBUG_DRAW:
                     
                     red_yp = (56, 56, 255)
                     lblue_yp = (255,128,0)
@@ -787,8 +798,7 @@ class YoloPoseNode(Node):
         self.fps = str(self.fps)
         print("fps = " + self.fps)
 
-        
-        if self.debug_draw:
+        if self.DEBUG_DRAW:
             # putting the FPS count on the frame
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.putText(current_frame_draw, 'np:' + str(num_persons_filtered) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
@@ -1016,11 +1026,17 @@ class YoloPoseNode(Node):
 
         new_person.room_location, new_person.furniture_location = self.person_position_to_house_rooms_and_furniture(person_abs_pos)
 
-        new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
+        if self.GET_CHARACTERISTICS:
+            new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
 
-        new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
-               
-        new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
+            new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
+            new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
+
+        else:
+            new_person.pointing_at = "None"
+            new_person.pointing_with_arm = "None"
+            new_person.shirt_color = "None"
+            new_person.pants_color = "None"
 
         return new_person
 
@@ -1439,7 +1455,6 @@ class YoloPoseNode(Node):
 
         # return color_name, color_value_rgb, color_value_bgr, color_value_hsv, n_points
         return color_name, color_value_rgb, n_points
-
 
 
 def main(args=None):
