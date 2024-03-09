@@ -8,6 +8,7 @@ from charmie_interfaces.msg import DetectedObject, Yolov8Objects, ListOfImages, 
 from cv_bridge import CvBridge
 import cv2 
 import cvzone
+import json
 
 from pathlib import Path
 
@@ -49,6 +50,14 @@ class Yolo_obj(Node):
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects"
         self.complete_path = self.home+'/'+self.midpath+'/'
+
+        self.midpath_configuration_files = "charmie_ws/src/configuration_files"
+        self.complete_path_configuration_files = self.home+'/'+self.midpath_configuration_files+'/'
+
+        # Opens files with objects names and categories
+        with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            self.objects_file = json.load(json_file)
+        print(self.objects_file)
 
         # self.model = YOLO('/home/utilizador/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + filename)
         self.object_model = YOLO(self.complete_path + objects_filename)
