@@ -19,8 +19,11 @@ drinks_list = ["milk", "orange juice", "red wine"]
 
 MODE = "STANDARD"
 
-COMMAND = "Waiting for start button to be pressed."
-FILENAME = "waiting_start_button"
+COMMANDS = {
+    'waiting_start_button': 'Waiting for start button to be pressed.',
+    'waiting_door_open': 'Waiting for door to be opened.',
+    'recep_start_task': 'I am ready to start my receptionist task'
+}
 
 
 class RobotSpeak():
@@ -50,52 +53,49 @@ class RobotSpeak():
             tts_config_path= config_path,
         )
 
-    def convert_command(self, play_sound):
+    def convert_command(self, commands, play_sound):
 
-        self.filename = FILENAME+".wav"
+        for filename, command in commands.items():
 
-        # create txt file with command for face package 
-        f = open(complete_path+FILENAME+".txt", "w")
-        f.write(COMMAND)
-        f.close()
-        
-        # create wav file for speakers package 
-        print("Initialised synthetisation.")
-        init_time = time.time()
-        outputs = self.syn.tts(COMMAND)
-        self.syn.save_wav(outputs, complete_path+self.filename)
-        print(time.time()-init_time)
+            self.filename = filename+".wav"
 
-        # play wav file in speakers
-        if play_sound:
-            pygame.mixer.music.load(complete_path+self.filename)
-            pygame.mixer.music.play()
-            while pygame.mixer.music.get_busy():
-                pass
+            # create txt file with command for face package 
+            f = open(complete_path+filename+".txt", "w")
+            f.write(command)
+            f.close()
+            
+            # create wav file for speakers package 
+            print("Initialised synthetisation.")
+            init_time = time.time()
+            outputs = self.syn.tts(command)
+            self.syn.save_wav(outputs, complete_path+self.filename)
+            print(time.time()-init_time)
+
+            # play wav file in speakers
+            if play_sound:
+                pygame.mixer.music.load(complete_path+self.filename)
+                pygame.mixer.music.play()
+                while pygame.mixer.music.get_busy():
+                    pass
 
 def main(args=None):
     
     charmie_speech = RobotSpeak()
     
-    global COMMAND, FILENAME
+    global COMMANDS
 
     # select which mode you want to use to save audios:
     # STANDARD is used for all alone sentences. Just edit COMMAND and FILENAME at the top of the code
     # RECEPTIONIST is used for receptionist task. Just edit names_list and drinks_list
     if MODE == "STANDARD":
-        charmie_speech.convert_command(play_sound=True)
+        charmie_speech.convert_command(COMMANDS, play_sound=True)
     elif MODE == "RECEPTIONIST":
+        receptionist_commands = {}
         for name in names_list:
-            COMMAND = "The first guest name is "+name+"."
-            FILENAME = "recep_first_guest_"+name.lower()
-            print(COMMAND, FILENAME)
-            charmie_speech.convert_command(play_sound=True)
-            COMMAND = "The second guest name is "+name+"."
-            FILENAME = "recep_second_guest_"+name.lower()
-            print(COMMAND, FILENAME)
-            charmie_speech.convert_command(play_sound=True)
+            receptionist_commands['receptionist/recep_first_guest_'+name.lower()] = 'The first guest name is '+name+'.'
+            receptionist_commands['receptionist/recep_second_guest_'+name.lower()] = 'The second guest name is '+name+'.'
         for drink in drinks_list:
-            COMMAND = "The favourite drink is "+drink+"."
-            FILENAME = "recep_drink_"+drink.lower().replace(" ", "_")
-            print(COMMAND, FILENAME)
-            charmie_speech.convert_command(play_sound=True)
+            receptionist_commands['receptionist/recep_drink_'+drink.lower().replace(' ', '_')] = 'The favourite drink is '+drink+'.'
+            
+        charmie_speech.convert_command(receptionist_commands, play_sound=True)
+        
