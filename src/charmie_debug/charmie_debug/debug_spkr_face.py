@@ -8,7 +8,7 @@ import threading
 import time
 
 from example_interfaces.msg import String, Int16
-from charmie_interfaces.srv import SpeechCommand
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand
 from sensor_msgs.msg import Image
 
 # Constant Variables to ease RGB_MODE coding
@@ -33,8 +33,11 @@ class TestNode(Node):
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
 
         while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
+        while not self.save_speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
 
         # Variables
@@ -45,6 +48,8 @@ class TestNode(Node):
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
         self.speech_sucess = True
         self.speech_message = ""
+        self.save_speech_sucess = False
+        self.save_speech_message = ""
         self.rgb_sucess = True
         self.rgb_message = ""
         self.face_sucess = True
@@ -86,6 +91,30 @@ class TestNode(Node):
             self.get_logger().error("Service call failed %r" % (e,))
             
 
+    def call_save_speech_command_server(self, filename, command):
+        request = SaveSpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+
+        future = self.save_speech_command_client.call_async(request)
+        # print("Sent Command")
+
+        future.add_done_callback(self.callback_call_save_speech_command)
+
+
+    def callback_call_save_speech_command(self, future): #, a, b):
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.save_speech_sucess = response.success
+            self.save_speech_message = response.message
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
 def main(args=None):
     rclpy.init(args=args)
     node = TestNode()
@@ -116,6 +145,10 @@ class RestaurantMain():
         self.node.waited_for_end_of_speaking = False
 
         return self.node.speech_sucess, self.node.speech_message
+    
+
+    def save_speech(self, filename, command):
+        self.node.call_save_speech_command_server(filename=filename, command=command)
     
     
     def set_rgb(self, command="", wait_for_end_of=True):
@@ -199,6 +232,19 @@ class RestaurantMain():
 
                 """
 
+
+                files = ["recep_characteristic_1", "recep_characteristic_2", "recep_characteristic_3", "recep_characteristic_4"]
+                commands = ["The first guest shirt is black", "Its age is between 23 and 32", "The guest is a bit taller than me", "and its ethnicity is white."]
+                self.save_speech(files, commands)
+                print("...")
+                time.sleep(5)
+                print("...")
+
+
+                self.set_speech(filename="temp/recep_characteristic_1", wait_for_end_of=True)
+                
+
+                # self.set_speech(command="Hello brother", wait_for_end_of=True)
                 
                 # self.set_speech(filename="generic/introduction_full", command="", wait_for_end_of=True)
                 # time.sleep(2)
@@ -211,7 +257,6 @@ class RestaurantMain():
                 # self.set_speech(filename="generic/introduction_ful", command="", wait_for_end_of=True)
 
 
-                # self.set_speech(command="Hello brother", wait_for_end_of=True)
 
 
                 # self.node.test_custom_image_face_str.data = "clients_temp"

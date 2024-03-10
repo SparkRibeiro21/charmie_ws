@@ -1,0 +1,7 @@
+# Service to send commands to charmie speakers about the command to be played
+
+string[] filename   # name of audio file
+string[] command    # speech command string 
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.

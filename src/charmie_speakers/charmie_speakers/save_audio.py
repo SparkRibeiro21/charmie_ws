@@ -6,10 +6,6 @@ import time
 import pygame
 from pathlib import Path
 
-home = str(Path.home())
-midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
-complete_path = home+'/'+midpath+'/'
-
 # MODE can be the following commands:
 # "STANDARD": convert one command into wav and txt 
 # "RECEPTIONIST": reads names and drinks arrays and generates all commands for first guest names, second guest names and favourite drinks
@@ -17,7 +13,7 @@ complete_path = home+'/'+midpath+'/'
 names_list = ["Adam", "Paris", "William"]
 drinks_list = ["milk", "orange juice", "red wine"]
 
-MODE = "STANDARD"
+MODE = "RECEPTIONIST"
 
 COMMANDS = {
     'waiting_start_button': 'Waiting for start button to be pressed.',
@@ -60,7 +56,7 @@ class RobotSpeak():
             self.filename = filename+".wav"
 
             # create txt file with command for face package 
-            f = open(complete_path+filename+".txt", "w")
+            f = open(self.complete_path+filename+".txt", "w")
             f.write(command)
             f.close()
             
@@ -68,12 +64,12 @@ class RobotSpeak():
             print("Initialised synthetisation.")
             init_time = time.time()
             outputs = self.syn.tts(command)
-            self.syn.save_wav(outputs, complete_path+self.filename)
+            self.syn.save_wav(outputs, self.complete_path+self.filename)
             print(time.time()-init_time)
 
             # play wav file in speakers
             if play_sound:
-                pygame.mixer.music.load(complete_path+self.filename)
+                pygame.mixer.music.load(self.complete_path+self.filename)
                 pygame.mixer.music.play()
                 while pygame.mixer.music.get_busy():
                     pass

@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool, String
-from charmie_interfaces.srv import SpeechCommand
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand
 
 from TTS.utils.manage import ModelManager
 from TTS.utils.synthesizer import Synthesizer
@@ -112,7 +112,7 @@ class RobotSpeak():
     # function for commands to be created in the moment 
     def load_and_play_command(self, command, jenny_or_taco, show_in_face):
         
-        temp_filename = "temp.wav"
+        temp_filename = "temp/temp.wav"
 
         if jenny_or_taco: # tacotron synthesizer
 
@@ -213,8 +213,8 @@ class SpeakerNode(Node):
         # SERVICES:
         # Main receive commads 
         self.server_speech_command = self.create_service(SpeechCommand, "speech_command", self.callback_speech_command) 
-        self.get_logger().info("Speech Command Server has been started")
-
+        self.save_server_speech_command = self.create_service(SaveSpeechCommand, "save_speech_command", self.callback_save_speech_command) 
+        self.get_logger().info("Speech Servers have been started")
 
         # Get Information regarding which speakers are being used 
         # print("\nOutput Sound Devices:")
@@ -280,7 +280,45 @@ class SpeakerNode(Node):
         response.success = success
         response.message = message
         return response
-    
+
+    # Main Function regarding saving commands
+    def callback_save_speech_command(self, request, response):
+        # print("Received request")
+
+        # Type of service received: 
+        # string[] filename   # name of audio file
+        # string[] command    # speech command string 
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        commands = {}
+        for i in range(len(request.filename)):
+            commands[request.filename[i]] = request.command[i]
+
+        for filename, command in commands.items():
+
+            filename = "temp/"+filename
+            self.filename = filename+".wav"
+
+            # create txt file with command for face package 
+            f = open(self.charmie_speech.complete_path+filename+".txt", "w")
+            f.write(command)
+            f.close()
+            
+            # create wav file for speakers package 
+            print("Initialised synthetisation.")
+            init_time = time.time()
+            outputs = self.charmie_speech.syn_jenny.tts(command)
+            self.charmie_speech.syn_jenny.save_wav(outputs, self.charmie_speech.complete_path+self.filename)
+            print(time.time()-init_time)
+
+        response.success = True
+        response.message = str(len(request.filename))+" new speech files saved"
+        
+        return response
+
+
 # Standard ROS2 main function
 def main(args=None):
     rclpy.init(args=args)
