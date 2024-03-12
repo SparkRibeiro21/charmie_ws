@@ -3,7 +3,8 @@ import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import NeckPosition, RequestPointCloud, RetrievePointCloud, PointCloudCoordinates
+from charmie_interfaces.msg import NeckPosition, PointCloudCoordinates
+from charmie_interfaces.srv import GetPointCloud
 from geometry_msgs.msg import Point, Pose2D
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -41,9 +42,18 @@ AZIM = -35
 DIM = 6000
 
 # according to the kinematics at the moment, the origin is the actuation of the pan servo, therefore to consider the same (x, y, z) as the robot localisation
-# we must shift the axis so the new origin is the center of the robot on the floor
+# we must shift the axis so the new origin is the center of the robot on the flo
+
+
+# pre-correcao bug zz
 X_SHIFT = (560//2)    # must configure so the 0 is the center of the robot, 560/2 is the robot radius
-Z_SHIFT = (1245+160) # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
+# Z_SHIFT = (1245+160) # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
+Z_SHIFT = (1325+185) # 151 cm # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
+
+
+# pos correcao bug zz
+# X_SHIFT = 50
+# Z_SHIFT = 1260
 
 flag_show_rgb_depth = True
 
@@ -70,11 +80,19 @@ class PointCloud():
         self.cy = 393.705749511718  # Ponto Principal em pixels (y-coordinate)
 
         # cinematica do cabeça do robo
+        # pre-correcao bug zz
+        # self.DOF = 3
+        # self.teta = [  0,   0,   0]
+        # self.alfa = [ 90, -90,   0]
+        # self.d =    [ 25,   0, 145]
+        # self.l =    [ 28,   0, 130]
+
+        # pos correcao bug zz
         self.DOF = 3
-        self.teta = [  0,   0,   0]
-        self.alfa = [ 90, -90,   0]
-        self.d =    [ 25,   0, 145]
-        self.l =    [ 28,   0, 130]
+        self.teta = [    0,    0,     0]
+        self.alfa = [  -90,   90,     0]
+        self.d =    [ 30.0, 90.0,   0.0]
+        self.l =    [ 25.0, 11.5, 195.0]
 
         self.inverse_matrix = np.zeros([4, 4]) 
         # print(self.inverse_matrix)
@@ -558,25 +576,23 @@ class PointCloudNode(Node):
         self.get_logger().info("Initialised CHARMIE PointCloud Node")
         
         # Intel Realsense Subscribers
-        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
-        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
         
         # Neck Position
-        self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
+        self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
 
-        # RequestPointCloud
-        self.request_point_cloud_subscriber = self.create_subscription(RequestPointCloud, "ask_point_cloud", self.get_request_point_cloud_callback, 10)
-
-        # RetrievePointCloud
-        self.retrieve_point_cloud_publisher = self.create_publisher(RetrievePointCloud, "get_point_cloud", 10)
+        # SERVICES:
+        # Main receive commads 
+        self.server_point_cloud = self.create_service(GetPointCloud, "get_point_cloud", self.callback_point_cloud) 
+        self.get_logger().info("Point Cloud Server has been started")
 
         # Point Cloud Instance
         self.br = CvBridge()
         self.rgb_img = Image()
         self.depth_img = Image()
-        self.neck_position = NeckPosition()
+        # self.neck_position = NeckPosition()
         self.pcloud = PointCloud()
-
 
         if DEBUG_DRAW:
             lb=cv2.setMouseCallback(nome, self.pcloud.click_event)      # initiates the mouse debug event detection
@@ -584,7 +600,7 @@ class PointCloudNode(Node):
         self.tempo_calculo = 0
         self.tempo_frame = 0
 
-    def get_color_image_callback(self, img: Image):
+    def get_color_image_head_callback(self, img: Image):
         self.rgb_img = img
         # print("Received RGB Image")
 
@@ -593,13 +609,34 @@ class PointCloudNode(Node):
         # print("Received Depth Image")
 
     def get_neck_position_callback(self, neck_pos: NeckPosition):
-        self.neck_position = neck_pos
-        self.pcloud.teta[0] = 180 - neck_pos.pan
-        self.pcloud.teta[1] = 190 - neck_pos.tilt ###### ALTERAR PARA 180
-        # print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[1], ",", self.pcloud.teta[2], ")")
+        # self.neck_position = neck_pos
+        # self.pcloud.teta[0] = 180 - neck_pos.pan
+        # self.pcloud.teta[1] = 190 - neck_pos.tilt ###### ALTERAR PARA 180
+        
 
-    def get_request_point_cloud_callback(self, req: RequestPointCloud): #, req: RequestPointCloud):
 
+        # pre-correcao bug zz
+        self.pcloud.teta[0] = -neck_pos.pan
+        self.pcloud.teta[1] = neck_pos.tilt
+        
+
+        # pos correcao bug zz
+        # self.pcloud.teta[0] = neck_pos.pan
+        # self.pcloud.teta[1] = -neck_pos.tilt
+        
+        ##### porque é que estamos a imprimir o [2] ???
+        print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[0], ",", self.pcloud.teta[1], ")")
+
+    def callback_point_cloud(self, request, response):
+
+        # print(request)
+
+        # Type of service received:
+        # BoundingBoxAndPoints[] data # bounding box and specific points inside the bounding box  
+        # bool retrieve_bbox # if it is intended to get the full bounding box of 3D points returned, saves data transitions 
+        # ---
+        # PointCloudCoordinates[] coords # returns the selected 3D points (the bounding box center, the custom ones and the full bounding box)
+      
         global WIDTH, HEIGHT, flag_show_rgb_depth
         
         if self.depth_img.height > 0 and self.rgb_img.height > 0: # prevents doing this code before receiving images
@@ -631,13 +668,13 @@ class PointCloudNode(Node):
             print("tetas = ", self.pcloud.teta)
             
             self.pcloud.RECEBO = []
-            for i in range(len(req.data)):
+            for i in range(len(request.data)):
                 aux = []
-                aux.append([req.data[i].bbox.box_top_left_y, req.data[i].bbox.box_top_left_x, req.data[i].bbox.box_height, req.data[i].bbox.box_width])
+                aux.append([request.data[i].bbox.box_top_left_y, request.data[i].bbox.box_top_left_x, request.data[i].bbox.box_height, request.data[i].bbox.box_width])
 
                 a = []
-                for j in range(len(req.data[i].requested_point_coords)):
-                    a.append([int(req.data[i].requested_point_coords[j].y), int(req.data[i].requested_point_coords[j].x)])
+                for j in range(len(request.data[i].requested_point_coords)):
+                    a.append([int(request.data[i].requested_point_coords[j].y), int(request.data[i].requested_point_coords[j].x)])
 
                 aux.append(a)
                 self.pcloud.RECEBO.append(aux)
@@ -665,7 +702,7 @@ class PointCloudNode(Node):
 
                 # calcula todos os pontos
                 resp_todos = []
-                if req.retrieve_bbox or GRAF3D:
+                if request.retrieve_bbox or GRAF3D:
                     resp_todos = self.pcloud.converter_2D_3D(u_inicial, v_inicial, HEIGHT, WIDTH)
 
                 # Guarda todas as respostas na variavel ENVIO
@@ -676,7 +713,7 @@ class PointCloudNode(Node):
                 self.pcloud.ENVIO.append(temp)
 
             # convert ENVIO into RetrievePointCloud ROS Variable
-            ret = RetrievePointCloud()
+            ret = []
             if len(self.pcloud.ENVIO) > 0:
                 for cc in self.pcloud.ENVIO:
                     # print(cc)
@@ -712,9 +749,10 @@ class PointCloudNode(Node):
 
                     pcc.bbox_point_coords = bb_list
 
-                    ret.coords.append(pcc)
+                    ret.append(pcc)
 
-            self.retrieve_point_cloud_publisher.publish(ret)
+            response.coords = ret
+            # self.retrieve_point_cloud_publisher.publish(ret)
             
             # imprime os tempos de processamento e da frame
             print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
@@ -734,6 +772,9 @@ class PointCloudNode(Node):
 
             if GRAF3D == 1:
                 self.pcloud.graficos() # mostra os graficos
+
+        # print(response)
+        return response
 
 
 def main(args=None):

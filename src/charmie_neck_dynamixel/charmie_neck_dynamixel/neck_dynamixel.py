@@ -6,7 +6,7 @@ from geometry_msgs.msg import Pose2D
 from example_interfaces.msg import Bool
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import TrackObject, TrackPerson
+from charmie_interfaces.msg import TrackObject, TrackPerson, NeckPosition
 from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates
 
 import math
@@ -59,14 +59,14 @@ ADDR_MX_I_GAIN = 27  # Control table address is different in Dynamixel model
 ADDR_MX_P_GAIN = 28  # Control table address is different in Dynamixel model
 
 # Different PID gains for each axis
-PAN_D_GAIN = 1
-PAN_I_GAIN = 1
-PAN_P_GAIN = 3 # 6
+PAN_D_GAIN = 2
+PAN_I_GAIN = 2
+PAN_P_GAIN = 6
 
 # Different PID gains for each axis
-TILT_D_GAIN = 2
-TILT_I_GAIN = 5
-TILT_P_GAIN = 6
+TILT_D_GAIN = 4
+TILT_I_GAIN = 10
+TILT_P_GAIN = 12
 
 # Protocol version
 PROTOCOL_VERSION = 1.0  # See which protocol version is used in the Dynamixel
@@ -128,9 +128,9 @@ class NeckNode(Node):
         self.get_logger().info("Initialised CHARMIE Neck Node")
 
         self.declare_parameter("device_name", "USB1") 
-        self.declare_parameter("speed_up", 4) 
+        self.declare_parameter("speed_up", 3) 
         self.declare_parameter("speed_down", 2) 
-        self.declare_parameter("speed_sides", 10) 
+        self.declare_parameter("speed_sides", 5) 
 
         # receives two angles, pan and tilt - used when robot must look at something known in advance (ex: direction of navigation, forward, look right/left)
         ########### self.neck_position_subscriber = self.create_subscription(NeckPosition, "neck_to_pos", self.neck_position_callback ,10)
@@ -143,7 +143,7 @@ class NeckNode(Node):
         self.neck_follow_object_subscriber = self.create_subscription(TrackObject, "neck_follow_object", self.neck_follow_object_callback, 10)
 
         # sends the current position of the servos after every change made on the publisher topics
-        ########### self.neck_get_position_publisher = self.create_publisher(NeckPosition, "get_neck_pos", 10)
+        self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
 
         # subscribes to robot position, to allow neck_to_coords
         self.odom_subscriber = self.create_subscription(Odometry, "odom", self.odom_callback, 10)
@@ -328,10 +328,8 @@ class NeckNode(Node):
 
         global read_pan_open_loop, read_tilt_open_loop
 
-
         img_width = 1280
         img_height = 720
-
 
         target_x = pose.person.kp_nose_x
         target_y = pose.person.kp_nose_y
@@ -438,7 +436,28 @@ class NeckNode(Node):
 
         self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
 
+        """
+        while True:
+            aaa = 4
+            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180-45, 180-45) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180+45, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180, 180-30) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(180-45, 180-45) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+            self.move_neck(0, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+            time.sleep(aaa)
+        """
 
+        
     def read_servo_position(self):
 
         global read_pan_closed_loop, read_tilt_closed_loop
@@ -454,18 +473,21 @@ class NeckNode(Node):
         
         print("read (closed loop):", read_pan_closed_loop*SERVO_TICKS_TO_DEGREES_CONST, read_tilt_closed_loop*SERVO_TICKS_TO_DEGREES_CONST)
 
-        ########## self.publish_get_neck_pos(read_pan_closed_loop, read_tilt_closed_loop)
+        # self.publish_get_neck_pos(read_pan_closed_loop, read_tilt_closed_loop)
 
         return read_pan_closed_loop, read_tilt_closed_loop
 
 
-    # def publish_get_neck_pos(self, p, t):
-    # 
-    #     pose = NeckPosition()
-    #     pose.pan  = float(int(p*SERVO_TICKS_TO_DEGREES_CONST + 0.5))
-    #     pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5))
-    #     self.neck_get_position_publisher.publish(pose)
+    def publish_get_neck_pos(self, p, t):
 
+        # this function is used for nodes that need to keep the latest neck position value saved, so when new data comes
+        # these need to compute, they don't have to request the position, therefore not wasting time...
+        pose = NeckPosition()
+        pose.pan  = float(int(p*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
+        pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
+        print(pose)
+        self.neck_get_position_topic_publisher.publish(pose)
+        
 
     def move_neck(self, p, t):
         global read_pan_open_loop, read_tilt_open_loop
@@ -556,7 +578,7 @@ class NeckNode(Node):
         read_pan_open_loop = p
         read_tilt_open_loop = t  
 
-        ########## self.publish_get_neck_pos(read_pan_open_loop, read_tilt_open_loop)
+        self.publish_get_neck_pos(read_pan_open_loop, read_tilt_open_loop)
         
         dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_GOAL_POSITION, p)
         if dxl_comm_result != COMM_SUCCESS:

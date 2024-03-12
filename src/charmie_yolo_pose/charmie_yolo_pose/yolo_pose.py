@@ -6,19 +6,21 @@ from example_interfaces.msg import Bool, Float32, Int16
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, RequestPointCloud, RetrievePointCloud, BoundingBox, BoundingBoxAndPoints, PointCloudCoordinates
+from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, BoundingBox, BoundingBoxAndPoints, RGB
+from charmie_interfaces.srv import GetPointCloud
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
 import time
 import math
+import json
 
 from pathlib import Path
 
 # configurable parameters through ros topics
 ONLY_DETECT_PERSON_LEGS_VISIBLE = False              # if True only detects people whose legs are visible 
 MIN_PERSON_CONF_VALUE = 0.5                          # defines the minimum confidence value to be considered a person
-MIN_KP_TO_DETECT_PERSON = 4                          # this parameter does not consider the four legs keypoints 
+MIN_KP_TO_DETECT_PERSON = 7                         # this parameter does not consider the four legs keypoints 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False            # only detects person right in front of the robot both on the x and y axis 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.5
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 1.8
@@ -35,6 +37,12 @@ DRAW_PERSON_ID = True
 DRAW_PERSON_BOX = True
 DRAW_PERSON_KP = True
 DRAW_LOW_CONF_KP = False
+DRAW_PERSON_LOCATION_COORDS = True
+DRAW_PERSON_LOCATION_HOUSE_FURNITURE = True
+DRAW_PERSON_POINTING_INFO = True
+DRAW_PERSON_HAND_RAISED = True
+DRAW_PERSON_HEIGHT = True
+DRAW_PERSON_CLOTHES_COLOR = True
 
 
 class YoloPoseNode(Node):
@@ -42,19 +50,50 @@ class YoloPoseNode(Node):
         super().__init__("YoloPose")
         self.get_logger().info("Initialised YoloPose Node")
 
+        ### ROS2 Parameters ###
+        # when declaring a ros2 parameter the second argument of the function is the default value 
+        self.declare_parameter("yolo_model", "s") 
+        self.declare_parameter("debug_draw", True) 
+        self.declare_parameter("characteristics", True)
+
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_yolo_pose/charmie_yolo_pose"
         self.complete_path = self.home+'/'+self.midpath+'/'
 
-        # Yolo Model - Yolov8 Pose
-        # self.model = YOLO(self.complete_path + 'yolov8s-pose.pt')
-        # If the PC used has lower frame rates switch to:
-        self.model = YOLO(self.complete_path + 'yolov8n-pose.pt')
+        self.midpath_configuration_files = "charmie_ws/src/configuration_files"
+        self.complete_path_configuration_files = self.home+'/'+self.midpath_configuration_files+'/'
 
+        self.house_rooms = {}
+        self.house_furniture = {}
+
+        # Open all configuration files
+        try:
+            with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
+                self.house_rooms = json.load(json_file)
+            # print(self.house_rooms)
+            with open(self.complete_path_configuration_files + 'furniture_location.json', encoding='utf-8') as json_file:
+                self.house_furniture = json.load(json_file)
+            # print(self.house_furniture)
+            self.get_logger().info("Successfully Imported data from json configuration files. (house_rooms and house_furniture)")
+        except:
+            self.get_logger().error("Could NOT import data from json configuration files. (house_rooms and house_furniture)")
+        
+        # choose the yolo pose model intended to be used (n,s,m,l,...) 
+        self.YOLO_MODEL = self.get_parameter("yolo_model").value
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
-        self.debug_draw = True
+        self.DEBUG_DRAW = self.get_parameter("debug_draw").value
+        # which face should be displayed after initialising the face node (string) 
+        self.GET_CHARACTERISTICS = self.get_parameter("characteristics").value
+
+        yolo_model = "yolov8" + self.YOLO_MODEL.lower() + "-pose.pt"
+        full_yolo_model = self.complete_path + yolo_model
+        self.get_logger().info(f"Using YOLO pose model: {yolo_model}")
+
+        # Yolo Model - Yolov8 Pose:
+        # If the PC used has lower frame rates switch in: self.declare_parameter("yolo_model", "s")
+        self.model = YOLO(full_yolo_model)
 
         # Publisher (Pose of People Detected Filtered and Non Filtered)
         self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10)
@@ -68,15 +107,19 @@ class YoloPoseNode(Node):
         self.only_detect_person_arm_raised_subscriber = self.create_subscription(Bool, "only_det_per_arm_raised", self.get_only_detect_person_arm_raised_callback, 10)
 
         # Intel Realsense Subscribers
-        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
-        # self.aligned_depth_image_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
-        
-        # Point Cloud
-        self.request_point_cloud_publisher = self.create_publisher(RequestPointCloud, 'ask_point_cloud', 10) 
-        self.retrieve_point_cloud_subscriber = self.create_subscription(RetrievePointCloud, "get_point_cloud", self.get_point_cloud_callback, 10)
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
 
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+
+
+        ### Services (Clients) ###
+        # Point Cloud
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+
+        while not self.point_cloud_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud...")
+
 
         # to calculate the FPS
         self.prev_frame_time = 0 # used to record the time when we processed last frame
@@ -88,9 +131,9 @@ class YoloPoseNode(Node):
 
         self.results = []
         self.waiting_for_pcloud = False
-        self.new_pcloud = RetrievePointCloud()
         self.tempo_total = time.perf_counter()
         self.center_torso_person_list = []
+        self.center_head_person_list = []
 
         self.robot_x = 0.0
         self.robot_y = 0.0
@@ -116,21 +159,30 @@ class YoloPoseNode(Node):
         self.ANKLE_LEFT_KP = 15
         self.ANKLE_RIGHT_KP = 16
 
-        # RoboCup 2023 House
-        # self.house_rooms = [ # house rooms, coordinates of top left point and bottom left point in meters
-        #     {'name': 'Living Room', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (1.45, 0.45)}, 
-        #     {'name': 'Kitchen',     'top_left_coords': (-4.05, 9.45), 'bot_right_coords': (1.45, 4.95)},
-        #     {'name': 'Office',      'top_left_coords': (1.45, 4.95),  'bot_right_coords': ((4.95, 0.45))},
-        #     {'name': 'Bedroom',     'top_left_coords': (1.45, 9.45),  'bot_right_coords': ((4.95, 4.95))}
-        # ]
-        
-        self.house_rooms = [ # house rooms, coordinates of top left point and bottom left point in meters
-            {'name': 'Corridor',     'top_left_coords': (-1.30, 5.98),  'bot_right_coords': ((0.8, 0.70))},
-            {'name': 'Living Room',  'top_left_coords': (-4.65, 3.86),  'bot_right_coords': ((-1.30, 0.70))},
-            {'name': 'Bedroom',     'top_left_coords': (-4.65, 5.98),  'bot_right_coords': ((-1.30, 3.86))},
-            {'name': 'Kitchen',     'top_left_coords': (-4.65, 9.62), 'bot_right_coords': (0.80, 5.98)},
-            {'name': 'Office',      'top_left_coords': (-4.65, 13.12),  'bot_right_coords': ((0.80, 9.62))}
-        ]
+
+    # request point cloud information from point cloud node
+    def call_point_cloud_server(self, req):
+        request = GetPointCloud.Request()
+        request.data = req
+        request.retrieve_bbox = False
+    
+        future = self.point_cloud_client.call_async(request)
+        #print("Sent Command")
+
+        future.add_done_callback(self.callback_call_point_cloud)
+
+    def callback_call_point_cloud(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.post_receiving_pcloud(response.coords)
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     def get_only_detect_person_legs_visible_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE
@@ -150,7 +202,6 @@ class YoloPoseNode(Node):
         else:
             self.get_logger().info('ERROR SETTING MIN_PERSON_CONF_VALUE')    
 
-
     def get_minimum_keypoints_to_detect_person_callback(self, state: Int16):
         global MIN_KP_TO_DETECT_PERSON
         # print(state.data)
@@ -160,7 +211,6 @@ class YoloPoseNode(Node):
         else:
             self.get_logger().info('ERROR SETTING MIN_KP_TO_DETECT_PERSON')  
 
-
     def get_only_detect_person_right_in_front_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_RIGHT_IN_FRONT
         # print(state.data)
@@ -169,7 +219,6 @@ class YoloPoseNode(Node):
             self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = True')
         else:
             self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False')  
-
 
     def get_only_detect_person_arm_raised_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_ARM_RAISED
@@ -181,13 +230,11 @@ class YoloPoseNode(Node):
             self.get_logger().info('ONLY_DETECT_PERSON_ARM_RAISED = False')  
 
 
-    def get_color_image_callback(self, img: Image):
-        self.get_logger().info('Receiving color video frame')
+    def get_color_image_head_callback(self, img: Image):
         
         if not self.waiting_for_pcloud:
-            
+            # self.get_logger().info('Receiving color video frame')
             self.tempo_total = time.perf_counter()
-            
             self.rgb_img = img
 
             # ROS2 Image Bridge for OpenCV
@@ -200,15 +247,9 @@ class YoloPoseNode(Node):
             # print(self.img_width)
             # print(self.img_height)
 
-
-
-            # Launch Yolov8n-pose
-            # results = self.model(current_frame)
-            # ti = time.perf_counter()
             # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
             # tempo_calculo = time.perf_counter()
             self.results = self.model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-            # annotated_frame = self.results[0].plot()
             # print('tempo calculo = ', time.perf_counter() - tempo_calculo)   # imprime o tempo de calculo em segundos
 
             # tf = time.perf_counter()
@@ -279,28 +320,82 @@ class YoloPoseNode(Node):
             if not self.results[0].keypoints.has_visible:
                 num_persons = 0
 
-            print("___START___ num_persons =", num_persons)
+            # print("Number of people detected =", num_persons)
+            self.get_logger().info(f"People detected: {num_persons}")
 
             self.center_torso_person_list = []
-            req = RequestPointCloud()
-            req.retrieve_bbox = False
+            self.center_head_person_list = []
+
+            req2 = []
+            
             for person_idx in range(num_persons):
+
                 keypoints_id = self.results[0].keypoints[person_idx]
                 boxes_id = self.results[0].boxes[person_idx]
-
+                
                 bb = BoundingBox()
                 bb.box_top_left_x = int(boxes_id.xyxy[0][0])
                 bb.box_top_left_y = int(boxes_id.xyxy[0][1])
                 bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
                 bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
-                person_center_x = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][0] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][0] + keypoints_id.xy[0][self.HIP_LEFT_KP][0] + keypoints_id.xy[0][self.HIP_RIGHT_KP][0]) / 4)
-                person_center_y = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][1] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][1] + keypoints_id.xy[0][self.HIP_LEFT_KP][1] + keypoints_id.xy[0][self.HIP_RIGHT_KP][1]) / 4)
+                # Conditions to safely select the pixel to calculate the person location 
+                if keypoints_id.conf[0][self.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE and \
+                    keypoints_id.conf[0][self.SHOULDER_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+                    keypoints_id.conf[0][self.HIP_LEFT_KP] > MIN_KP_CONF_VALUE and \
+                    keypoints_id.conf[0][self.HIP_RIGHT_KP] > MIN_KP_CONF_VALUE:
+                 
+                    ### After the yolo update, i must check if the conf value of the keypoint
+                    person_center_x = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][0] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][0] + keypoints_id.xy[0][self.HIP_LEFT_KP][0] + keypoints_id.xy[0][self.HIP_RIGHT_KP][0]) / 4)
+                    person_center_y = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][1] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][1] + keypoints_id.xy[0][self.HIP_LEFT_KP][1] + keypoints_id.xy[0][self.HIP_RIGHT_KP][1]) / 4)
+
+                else:
+                    person_center_x = int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2
+                    person_center_y = int(boxes_id.xyxy[0][1]+boxes_id.xyxy[0][3])//2
+
                 self.center_torso_person_list.append((person_center_x, person_center_y))
 
-                nose_point = Pose2D()
-                nose_point.x = float(int(keypoints_id.xy[0][self.NOSE_KP][0]))
-                nose_point.y = float(int(keypoints_id.xy[0][self.NOSE_KP][1]))
+                # head center position 
+                head_ctr = 0
+                head_center_x = 0
+                head_center_y = 0
+                if keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE:
+                    head_center_x += int(keypoints_id.xy[0][self.NOSE_KP][0])
+                    head_center_y += int(keypoints_id.xy[0][self.NOSE_KP][1])
+                    head_ctr +=1
+                if keypoints_id.conf[0][self.EYE_LEFT_KP] > MIN_KP_CONF_VALUE:
+                    head_center_x += int(keypoints_id.xy[0][self.EYE_LEFT_KP][0])
+                    head_center_y += int(keypoints_id.xy[0][self.EYE_LEFT_KP][1])
+                    head_ctr +=1
+                if keypoints_id.conf[0][self.EYE_RIGHT_KP] > MIN_KP_CONF_VALUE:
+                    head_center_x += int(keypoints_id.xy[0][self.EYE_RIGHT_KP][0])
+                    head_center_y += int(keypoints_id.xy[0][self.EYE_RIGHT_KP][1])
+                    head_ctr +=1
+                if keypoints_id.conf[0][self.EAR_LEFT_KP] > MIN_KP_CONF_VALUE:
+                    head_center_x += int(keypoints_id.xy[0][self.EAR_LEFT_KP][0])
+                    head_center_y += int(keypoints_id.xy[0][self.EAR_LEFT_KP][1])
+                    head_ctr +=1
+                if keypoints_id.conf[0][self.EAR_RIGHT_KP] > MIN_KP_CONF_VALUE:
+                    head_center_x += int(keypoints_id.xy[0][self.EAR_RIGHT_KP][0])
+                    head_center_y += int(keypoints_id.xy[0][self.EAR_RIGHT_KP][1])
+                    head_ctr +=1
+
+                if head_ctr > 0:
+                    head_center_x /= head_ctr
+                    head_center_y /= head_ctr
+                else:
+                    head_center_x = int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2
+                    head_center_y = int(boxes_id.xyxy[0][1]*3+boxes_id.xyxy[0][3])//4
+
+
+                head_center_x = int(head_center_x)
+                head_center_y = int(head_center_y)
+
+                self.center_head_person_list.append((head_center_x, head_center_y))
+
+                head_center_point = Pose2D()
+                head_center_point.x = float(head_center_x)
+                head_center_point.y = float(head_center_y)
 
                 torso_center_point = Pose2D()
                 torso_center_point.x = float(person_center_x)
@@ -310,23 +405,25 @@ class YoloPoseNode(Node):
 
                 aux = BoundingBoxAndPoints()
                 aux.bbox = bb
-                aux.requested_point_coords.append(nose_point)
+                aux.requested_point_coords.append(head_center_point)
                 aux.requested_point_coords.append(torso_center_point)
 
-                req.data.append(aux)
+                req2.append(aux)
 
             self.waiting_for_pcloud = True
-            self.request_point_cloud_publisher.publish(req)
+            self.call_point_cloud_server(req2)
         
 
-    def post_receiving_pcloud(self):
+    def post_receiving_pcloud(self, new_pcloud):
 
+        # print("points")
+        # print(new_pcloud)
 
         # ROS2 Image Bridge for OpenCV
         current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
         current_frame_draw = current_frame.copy()
 
-        annotated_frame = self.results[0].plot()
+        # annotated_frame = self.results[0].plot()
 
         # Calculate the number of persons detected
         num_persons = len(self.results[0].keypoints)
@@ -346,16 +443,25 @@ class YoloPoseNode(Node):
             # at the current time, we are using the wrist coordinates and somparing with the nose coordinate
             is_hand_raised = False
             hand_raised = "None"
-            if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]) and int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]):
+            if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]) and \
+                int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]) and \
+                keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE and \
+                keypoints_id.conf[0][self.WRIST_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+                keypoints_id.conf[0][self.WRIST_LEFT_KP] > MIN_KP_CONF_VALUE:
+                    
                 # print("Both Arms Up")
                 hand_raised = "Both"
                 is_hand_raised = True
             else:
-                if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]):
+                if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]) and \
+                    keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE and \
+                    keypoints_id.conf[0][self.WRIST_RIGHT_KP] > MIN_KP_CONF_VALUE:
                     # print("Right Arm Up")
                     hand_raised = "Right"
                     is_hand_raised = True
-                elif int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]):
+                elif int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]) and \
+                    keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE and \
+                    keypoints_id.conf[0][self.WRIST_LEFT_KP] > MIN_KP_CONF_VALUE:
                     # print("Left Arm Up")
                     hand_raised = "Left"
                     is_hand_raised = True
@@ -364,11 +470,14 @@ class YoloPoseNode(Node):
                     hand_raised = "None"
                     is_hand_raised = False
 
-            print("Hand Raised:", hand_raised, is_hand_raised)
+            # print("Hand Raised:", hand_raised, is_hand_raised)
 
             # adds people to "person_pose" without any restriction
             new_person = DetectedPerson()
-            new_person = self.add_person_to_detectedperson_msg(boxes_id, keypoints_id, self.center_torso_person_list[person_idx], self.new_pcloud.coords[person_idx].requested_point_coords[1], hand_raised)
+            new_person = self.add_person_to_detectedperson_msg(current_frame, current_frame_draw, boxes_id, keypoints_id, \
+                                                               self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], \
+                                                               new_pcloud[person_idx].requested_point_coords[1], new_pcloud[person_idx].requested_point_coords[0], \
+                                                               hand_raised)
             yolov8_pose.persons.append(new_person)
             
             legs_ctr = 0
@@ -385,15 +494,15 @@ class YoloPoseNode(Node):
             if boxes_id.id == None:
                 person_id = 0 
 
-            print("id = ", person_id)
-            print("conf", boxes_id.conf)
-            print("legs_ctr = ", legs_ctr)
+            # print("id = ", person_id)
+            # print("conf", boxes_id.conf)
+            # print("legs_ctr = ", legs_ctr)
 
             body_kp_high_conf_counter = 0
             for kp in range(self.N_KEYPOINTS - self.NUMBER_OF_LEGS_KP): # all keypoints without the legs
                 if keypoints_id.conf[0][kp] > MIN_KP_CONF_VALUE:
                     body_kp_high_conf_counter+=1
-            print("body_kp_high_conf_counter = ", body_kp_high_conf_counter)
+            # print("body_kp_high_conf_counter = ", body_kp_high_conf_counter)
 
 
             # changed this condition from:
@@ -411,32 +520,28 @@ class YoloPoseNode(Node):
             # checks whether the person confidence is above a defined level
             if not boxes_id.conf >= MIN_PERSON_CONF_VALUE:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print("- Misses minimum person confidence level")
+                # print("- Misses minimum person confidence level")
 
             # checks if flag to detect people whose legs are visible 
             if not legs_ctr >= NUMBER_OF_LEG_KP_TO_BE_DETECTED and ONLY_DETECT_PERSON_LEGS_VISIBLE:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print("- Misses legs visible flag")
+                # print("- Misses legs visible flag")
             
             # checks whether the minimum number if body keypoints (excluding legs) has high confidence
             if not body_kp_high_conf_counter >= MIN_KP_TO_DETECT_PERSON:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print("- Misses minimum number of body keypoints")
+                # print("- Misses minimum number of body keypoints")
 
             # checks if flag to detect people right in front of the robot 
             if not center_comm_position and ONLY_DETECT_PERSON_RIGHT_IN_FRONT:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print(" - Misses not being right in front of the robot")
+                # print(" - Misses not being right in front of the robot")
             
             # checks if flag to detect people with their arm raised or waving (requesting assistance)
             if not is_hand_raised and ONLY_DETECT_PERSON_ARM_RAISED:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print(" - Misses not being with their arm raised")
+                # print(" - Misses not being with their arm raised")
 
-            # print(self.new_pcloud)
-            # print(person_idx)
-            # print(self.new_pcloud.coords[person_idx].requested_point_coords[1].x) # .requested_point_coords)
-            
             if ALL_CONDITIONS_MET:
                 num_persons_filtered+=1
 
@@ -444,13 +549,14 @@ class YoloPoseNode(Node):
                 # code here to add to filtered topic
                 yolov8_pose_filtered.persons.append(new_person)
 
-                if self.debug_draw:
+                if self.DEBUG_DRAW:
                     
                     red_yp = (56, 56, 255)
                     lblue_yp = (255,128,0)
                     green_yp = (0,255,0)
                     orange_yp = (51,153,255)
                     magenta_yp = (255, 51, 255)
+                    white_yp = (255, 255, 255)
 
                     # /*** BOXES ***/
 
@@ -568,6 +674,8 @@ class YoloPoseNode(Node):
                     # print(keypoints_id.conf)        
                     
                     if DRAW_PERSON_KP:
+
+
                     
                         self.line_between_two_keypoints(current_frame_draw, self.NOSE_KP, self.EYE_LEFT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
                         self.line_between_two_keypoints(current_frame_draw, self.NOSE_KP, self.EYE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
@@ -583,6 +691,10 @@ class YoloPoseNode(Node):
                         self.line_between_two_keypoints(current_frame_draw, self.ELBOW_LEFT_KP, self.WRIST_LEFT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
                         self.line_between_two_keypoints(current_frame_draw, self.ELBOW_RIGHT_KP, self.WRIST_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
 
+
+                        self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_RIGHT_KP, self.HIP_LEFT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
+                        self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_LEFT_KP, self.HIP_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
+
                         self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_LEFT_KP, self.HIP_LEFT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
                         self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_RIGHT_KP, self.HIP_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
                         self.line_between_two_keypoints(current_frame_draw, self.HIP_LEFT_KP, self.HIP_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
@@ -591,7 +703,6 @@ class YoloPoseNode(Node):
                         self.line_between_two_keypoints(current_frame_draw, self.HIP_RIGHT_KP, self.KNEE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
                         self.line_between_two_keypoints(current_frame_draw, self.KNEE_LEFT_KP, self.ANKLE_LEFT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
                         self.line_between_two_keypoints(current_frame_draw, self.KNEE_RIGHT_KP, self.ANKLE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
-
 
                         for kp in range(self.N_KEYPOINTS):
                             if keypoints_id.conf[0][kp] > MIN_KP_CONF_VALUE:
@@ -609,26 +720,44 @@ class YoloPoseNode(Node):
                                     center_p = (int(keypoints_id.xy[0][kp][0]), int(keypoints_id.xy[0][kp][1]))
                                     cv2.circle(current_frame_draw, center_p, 5, c, -1)
 
-
+                        center_p_ = (int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2), (int(boxes_id.xyxy[0][1]+boxes_id.xyxy[0][3])//2)
+                        cv2.circle(current_frame_draw, center_p_, 5, (128, 128, 128), -1)
+                        cv2.circle(current_frame_draw, self.center_head_person_list[person_idx], 5, (255, 255, 255), -1)
                         cv2.circle(current_frame_draw, self.center_torso_person_list[person_idx], 5, (255, 255, 255), -1)
-                        
-                        # cv2.putText(current_frame_draw, '('+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].x/1000,2))+
-                        #             ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].y/1000,2))+
-                        #             ', '+str(round(self.new_pcloud.coords[person_idx].requested_point_coords[1].z/1000,2))+')',
-                        #             self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                        
+                       
+                    if DRAW_PERSON_LOCATION_COORDS:
                         cv2.putText(current_frame_draw, '('+str(round(new_person.position_relative.x,2))+
                                     ', '+str(round(new_person.position_relative.y,2))+
                                     ', '+str(round(new_person.position_relative.z,2))+')',
-                                    self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                        
-                        
-                        cv2.putText(current_frame_draw, new_person.house_room,
+                                    self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
+                    
+                    if DRAW_PERSON_LOCATION_HOUSE_FURNITURE:
+                        cv2.putText(current_frame_draw, new_person.room_location+" - "+new_person.furniture_location,
                                     (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                        # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
-                        # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
+                    
+                    if DRAW_PERSON_POINTING_INFO:
+                        if new_person.pointing_at != "None":
+                            cv2.putText(current_frame_draw, new_person.pointing_at+" "+new_person.pointing_with_arm,
+                                        (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
 
-            print("===")
+                    if DRAW_PERSON_HAND_RAISED:
+                        if hand_raised != "None":
+                            cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
+                                        (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
+                    if DRAW_PERSON_HEIGHT:
+                        cv2.putText(current_frame_draw, str(round(new_person.height,2)),
+                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+120), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
+                    if DRAW_PERSON_CLOTHES_COLOR:
+                        cv2.putText(current_frame_draw, new_person.shirt_color,
+                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.shirt_rgb.blue, new_person.shirt_rgb.green, new_person.shirt_rgb.red), 1, cv2.LINE_AA)
+                        
+                        cv2.putText(current_frame_draw, new_person.pants_color,
+                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
+                        
+
+            # print("===")
 
         yolov8_pose.num_person = num_persons
         self.person_pose_publisher.publish(yolov8_pose)
@@ -636,72 +765,26 @@ class YoloPoseNode(Node):
         yolov8_pose_filtered.num_person = num_persons_filtered
         self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
-        print("____END____")
+        # print("____END____")
 
         self.new_frame_time = time.time()
         self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
         self.prev_frame_time = self.new_frame_time
         self.fps = str(self.fps)
-        print("fps = " + self.fps)
+        # print("fps = " + self.fps)
 
-        
-        if self.debug_draw:
+        if self.DEBUG_DRAW:
             # putting the FPS count on the frame
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.putText(current_frame_draw, 'np:' + str(num_persons_filtered) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
             # cv2.imshow("Yolo Pose Detection", annotated_frame)
+            # cv2.imshow("Camera Image", current_frame)
             cv2.waitKey(1)
         
-        """
-        cv2.imshow("Intel RealSense Current Frame", current_frame)
-        cv2.waitKey(1)
-        with open("charmie_color_yp.raw", "wb") as f:
-            f.write(current_frame.tobytes())
-        height, width, channels = current_frame.shape
-        print(height, width, channels)
-        cv2.imwrite("charmie_color_yp.jpg", current_frame) 
-        time.sleep(1)
-        """
         # print('tempo parcial = ', tf - ti)
-        print('tempo total = ', time.perf_counter() - self.tempo_total)   # imprime o tempo de calculo em segundos
-
-    def get_aligned_depth_image_callback(self, img: Image):
-        pass
-
-        # print(img.height, img.width)
-        # current_frame = self.br.imgmsg_to_cv2(img, desired_encoding="passthrough")
-        # depth_array = np.array(current_frame, dtype=np.float32)
-        # center_idx = np.array(depth_array.shape) // 2
-        # print ('center depth:', depth_array[center_idx[0], center_idx[1]])
-
-        """
-        if img.height == 720:
-            file_name = "charmie_depth_yp.txt"
-        
-            # Save the NumPy array to a text file
-            with open(file_name, 'w') as file:
-                np.savetxt(file, depth_array, fmt='%d', delimiter='\t')
-        
-            # np.savetxt(file_name, depth_array, fmt='%d', delimiter='\t', mode='a')
-        
-            # Optional: You can also specify formatting options using 'fmt'.
-            # In this example, '%d' specifies integer formatting and '\t' is used as the delimiter.
-
-            print(f"Array saved to {file_name}")
-            time.sleep(1)
-        
-        
-        cv2.imshow("Intel RealSense Depth Alligned", current_frame)
-        cv2.waitKey(1) 
-        """       
-
-    def get_point_cloud_callback(self, ret: RetrievePointCloud):
-        
-        if self.waiting_for_pcloud:
-            self.waiting_for_pcloud = False
-            self.new_pcloud = ret
-            self.post_receiving_pcloud()
+        # print('tempo total = ', time.perf_counter() - self.tempo_total)   # imprime o tempo de calculo em segundos
+        self.get_logger().info(f"Time Yolo_Pose: {round(time.perf_counter() - self.tempo_total,2)}")
 
 
     def odom_robot_callback(self, loc: Odometry):
@@ -727,7 +810,7 @@ class YoloPoseNode(Node):
         # print(self.robot_x, self.robot_y, self.robot_t)
 
 
-    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, center_person, p_localisation, arm_raised):
+    def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
@@ -745,9 +828,7 @@ class YoloPoseNode(Node):
         new_person.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
         new_person.arm_raised = arm_raised
-        new_person.body_posture = "None"
-
-        # print(int(keypoints_id.xy[0][self.NOSE_KP][0]), int(keypoints_id.xy[0][self.NOSE_KP][1]), float(keypoints_id.conf[0][self.NOSE_KP]))
+        new_person.body_posture = "None" # still missing... (says whether the person is standing up, sitting, laying down, ...)
 
         new_person.kp_nose_x = int(keypoints_id.xy[0][self.NOSE_KP][0])
         new_person.kp_nose_y = int(keypoints_id.xy[0][self.NOSE_KP][1])
@@ -817,14 +898,19 @@ class YoloPoseNode(Node):
         new_person.kp_ankle_right_y = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][1])
         new_person.kp_ankle_right_conf = float(keypoints_id.conf[0][self.ANKLE_RIGHT_KP])
 
-        new_person.body_center_x = center_person[0]
-        new_person.body_center_y = center_person[1]
+        new_person.body_center_x = center_torso_person[0]
+        new_person.body_center_y = center_torso_person[1]
+
+        new_person.head_center_x = center_head_person[0]
+        new_person.head_center_y = center_head_person[1]
 
         # changes the axis of point cloud coordinates to fit with robot axis
         person_rel_pos = Point()
-        person_rel_pos.x = -p_localisation.y/1000
-        person_rel_pos.y =  p_localisation.x/1000
-        person_rel_pos.z =  p_localisation.z/1000
+        # person_rel_pos.x = -torso_localisation.y/1000
+        # person_rel_pos.y =  torso_localisation.x/1000
+        person_rel_pos.x =  -torso_localisation.y/1000
+        person_rel_pos.y =  torso_localisation.x/1000
+        person_rel_pos.z =  torso_localisation.z/1000
         
         new_person.position_relative = person_rel_pos
         
@@ -838,16 +924,67 @@ class YoloPoseNode(Node):
         target_y = dist_person * math.sin(theta_aux) + self.robot_y
 
         a_ref = (target_x, target_y)
-        print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
+        # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
 
         person_abs_pos = Point()
         person_abs_pos.x = target_x
         person_abs_pos.y = target_y
-        person_abs_pos.z = p_localisation.z/1000
+        person_abs_pos.z = torso_localisation.z/1000
         
         new_person.position_absolute = person_abs_pos
 
-        new_person.house_room = self.person_position_to_house_rooms(person_abs_pos)
+        # changes the axis of point cloud coordinates to fit with robot axis
+        head_rel_pos = Point()
+        # head_rel_pos.x = -head_localisation.y/1000
+        # head_rel_pos.y =  head_localisation.x/1000
+        head_rel_pos.x =  head_localisation.x/1000
+        head_rel_pos.y =  head_localisation.y/1000
+        head_rel_pos.z =  head_localisation.z/1000
+
+        new_person.position_relative_head = head_rel_pos
+        
+        # calculate the absolute head position according to the robot localisation
+        angle_head = math.atan2(head_rel_pos.x, head_rel_pos.y)
+        dist_head = math.sqrt(head_rel_pos.x**2 + head_rel_pos.y**2)
+
+        theta_aux = math.pi/2 - (angle_head - self.robot_t)
+
+        target_x = dist_head * math.cos(theta_aux) + self.robot_x
+        target_y = dist_head * math.sin(theta_aux) + self.robot_y
+
+        a_ref = (target_x, target_y)
+        # print("Rel:", (head_rel_pos.x, head_rel_pos.y), "Abs:", a_ref)
+
+        head_abs_pos = Point()
+        head_abs_pos.x = target_x
+        head_abs_pos.y = target_y
+        head_abs_pos.z = head_localisation.z/1000
+        
+        new_person.position_absolute_head = head_abs_pos
+
+        new_person.height = head_localisation.z/1000 + 0.15 # average person middle of face to top of head distance
+
+        new_person.room_location, new_person.furniture_location = self.person_position_to_house_rooms_and_furniture(person_abs_pos)
+
+        if self.GET_CHARACTERISTICS:
+            new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
+
+            new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
+            new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
+
+            new_person.ethnicity = "None" # still missing... (says whether the person white, asian, african descendent, middle eastern, ...)
+            new_person.age_estimate = "None" # still missing... (says an approximate age gap like 25-35 ...)
+            new_person.gender = "None" # still missing... (says whether the person is male or female)
+
+        else:
+            new_person.pointing_at = "None"
+            new_person.pointing_with_arm = "None"
+            new_person.shirt_color = "None"
+            new_person.pants_color = "None"
+            new_person.ethnicity = "None"
+            new_person.age_estimate = "None"
+            new_person.gender = "None"
+
 
         return new_person
 
@@ -865,24 +1002,405 @@ class YoloPoseNode(Node):
                 cv2.line(current_frame_draw, p1, p2, (0,0,255), 2) 
 
 
-
-    def person_position_to_house_rooms(self, person_pos):
+    def person_position_to_house_rooms_and_furniture(self, person_pos):
         
-        location = "Outside"
-
+        room_location = "Outside"
         for room in self.house_rooms:
-            
             min_x = room['top_left_coords'][0]
             max_x = room['bot_right_coords'][0]
             min_y = room['bot_right_coords'][1]
             max_y = room['top_left_coords'][1]
-
             # print(min_x, max_x, min_y, max_y)
-
             if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
-                location = room['name'] 
+                room_location = room['name'] 
 
-        return location
+        furniture_location = "None"
+        for furniture in self.house_furniture:
+            min_x = furniture['top_left_coords'][0]
+            max_x = furniture['bot_right_coords'][0]
+            min_y = furniture['bot_right_coords'][1]
+            max_y = furniture['top_left_coords'][1]
+            # print(min_x, max_x, min_y, max_y)
+            if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
+                furniture_location = furniture['name'] 
+
+        return room_location, furniture_location
+
+     
+    def arm_pointing_at(self, person):
+
+        MIN_ANGLE_POINTING = 25
+
+        right_shoulder = (person.kp_shoulder_right_x, person.kp_shoulder_right_y)
+        right_wrist = (person.kp_wrist_right_x, person.kp_wrist_right_y)
+        right_hip = (person.kp_hip_right_x, person.kp_hip_right_y)
+
+        left_shoulder = (person.kp_shoulder_left_x, person.kp_shoulder_left_y)
+        left_wrist = (person.kp_wrist_left_x, person.kp_wrist_left_y)
+        left_hip = (person.kp_hip_left_x, person.kp_hip_left_y)
+
+        # The sides are relative to the person, so the right side is linked with the person right arm!
+        if person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE and \
+            person.kp_wrist_right_conf > MIN_KP_CONF_VALUE and \
+            person.kp_hip_right_conf > MIN_KP_CONF_VALUE:
+            theta_right = self.calculate_3angle(right_shoulder, right_wrist, right_hip)
+        else:
+            theta_right = 0.0
+
+        # The sides are relative to the person, so the right side is linked with the person right arm!
+        if person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and \
+            person.kp_wrist_left_conf > MIN_KP_CONF_VALUE and \
+            person.kp_hip_left_conf > MIN_KP_CONF_VALUE:
+            theta_left = self.calculate_3angle(left_shoulder, left_wrist, left_hip)
+        else:
+            theta_left = 0.0
+        
+        side_pointed = "None"
+        arm_pointed_with = "None"
+
+        # print("Sides0:", left_wrist[0], left_hip[0], right_wrist[0], right_hip[0])    
+        # print("Sides1:", left_wrist[1], left_hip[1], right_wrist[1], right_hip[1])      
+
+        if theta_left > MIN_ANGLE_POINTING:
+            if left_wrist[0] < left_hip[0]:
+                arm_pointed_with = "Left Arm"
+                side_pointed = "Right Side"
+            else:
+                arm_pointed_with = "Left Arm"
+                side_pointed = "Left Side"
+        
+        elif theta_right > MIN_ANGLE_POINTING:
+            if right_wrist[0] < right_hip[0]:
+                arm_pointed_with = "Right Arm"
+                side_pointed = "Right Side"
+            else:
+                arm_pointed_with = "Right Arm"
+                side_pointed = "Left Side"
+        
+        return side_pointed, arm_pointed_with
+
+
+    def calculate_3angle(self, p1, p2, p3):
+        vector_1 = (p2[0] - p1[0], p2[1] - p1[1])
+        vector_2 = (p3[0] - p1[0], p3[1] - p1[1])
+
+        dot_product = vector_1[0] * vector_2[0] + vector_1[1] * vector_2[1]
+        
+        try:
+            magnitude_1 = math.sqrt(vector_1[0]**2 + vector_1[1]**2)
+            magnitude_2 = math.sqrt(vector_2[0]**2 + vector_2[1]**2)
+
+            # try catch is here in case any of the magnitudes is = 0, in that case an anle of 0 is returned for safety
+            theta = math.acos(dot_product / (magnitude_1 * magnitude_2))
+            theta_degrees = math.degrees(theta)
+            return theta_degrees
+        
+        except:
+            return 0
+        
+
+    def get_shirt_color(self, new_person, current_frame, current_frame_draw):
+        color_name = "None"
+        color_rgb = RGB()
+
+        if new_person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and new_person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE:
+            color_name, color_value_rgb, n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_shoulder_left_x, new_person.kp_shoulder_left_y), (new_person.kp_shoulder_right_x, new_person.kp_shoulder_right_y))
+    
+            color_rgb.red = int(color_value_rgb[0])
+            color_rgb.green = int(color_value_rgb[1])
+            color_rgb.blue = int(color_value_rgb[2])
+
+        return color_name, color_rgb
+
+
+    def get_pants_color(self, new_person, current_frame, current_frame_draw):
+        left_leg_color_name = "None"
+        left_leg_color_rgb = RGB()
+        left_leg_n_points = 0
+        right_leg_color_name = "None"
+        right_leg_color_rgb = RGB()
+        right_leg_n_points = 0
+        color_name = "None"
+        color_rgb = RGB()
+
+        if new_person.kp_hip_left_conf > MIN_KP_CONF_VALUE and new_person.kp_knee_left_conf > MIN_KP_CONF_VALUE:
+            left_leg_color_name, left_leg_color_rgb, left_leg_n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_hip_left_x, new_person.kp_hip_left_y), (new_person.kp_knee_left_x, new_person.kp_knee_left_y))
+
+        if new_person.kp_hip_right_conf > MIN_KP_CONF_VALUE and new_person.kp_knee_right_conf > MIN_KP_CONF_VALUE:
+            right_leg_color_name, right_leg_color_rgb, right_leg_n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_hip_right_x, new_person.kp_hip_right_y), (new_person.kp_knee_right_x, new_person.kp_knee_right_y))
+
+        if left_leg_n_points >= right_leg_n_points and left_leg_n_points > 0:
+            color_name = left_leg_color_name
+            color_rgb.red = int(left_leg_color_rgb[0])
+            color_rgb.green = int(left_leg_color_rgb[1])
+            color_rgb.blue = int(left_leg_color_rgb[2])
+
+        elif left_leg_n_points < right_leg_n_points and right_leg_n_points > 0:
+            color_name = right_leg_color_name
+            color_rgb.red = int(right_leg_color_rgb[0])
+            color_rgb.green = int(right_leg_color_rgb[1])
+            color_rgb.blue = int(right_leg_color_rgb[2])
+        
+        return color_name, color_rgb
+    
+
+    def rgb_to_string_tr(self, color_value_rgb):
+
+        # Convert the RGB to BGR
+        color_value_bgr = (color_value_rgb[2], color_value_rgb[1], color_value_rgb[0])
+
+        # Define the RGB pixel value
+        bgr_pixel = np.array([[color_value_bgr]], dtype=np.uint8)
+
+        # Convert the BGR pixel to HSV
+        hsv_pixel = cv2.cvtColor(bgr_pixel, cv2.COLOR_BGR2HSV)
+
+        # Extract the HSV values
+        h, s, vv = hsv_pixel[0][0]
+        hsv_info = (h, s, vv)
+        # print("HSV values:", h, s, vv)
+
+        ### Step 1: Define Color using HSV: Hue
+
+        # Boundaries between colors
+        red_orange_border     = 9
+        orange_yellow_border  = 20
+        yellow_green_border   = 31
+        green_cyan_border     = 78
+        cyan_blue_border      = 100
+        blue_purple_border    = 131
+        purple_magenta_border = 150
+        magenta_red_border    = 172
+
+        # Averages and Standard Deviations for White, Grey and Black colors
+        MIN_AVG_FOR_BLACK = 30 
+        MIN_AVG_FOR_WHITE = 220 
+        MIN_STD_DEV_FOR_GREY = 8.0 
+        MIN_STD_DEV_FOR_BW = 15.0 
+
+        color_ranges = {
+            "Red":     (0,                      red_orange_border),
+            "Orange":  (red_orange_border,      orange_yellow_border),
+            "Yellow":  (orange_yellow_border,   yellow_green_border),
+            "Green":   (yellow_green_border,    green_cyan_border),
+            "Cyan":    (green_cyan_border,      cyan_blue_border),
+            "Blue":    (cyan_blue_border,       blue_purple_border),
+            "Purple":  (blue_purple_border,     purple_magenta_border),
+            "Magenta": (purple_magenta_border,  magenta_red_border),
+            "Red2":    (magenta_red_border,     180),
+        }
+
+        # color thresholds to choose whether it is a light color, a normal color or a dark color
+        color_thresholds = {
+            "Red":     (30,  138),
+            "Orange":  (100, 170),
+            "Yellow":  (120, 210),
+            "Green":   (30,  138),
+            "Cyan":    (120, 210),
+            "Blue":    (30,  138),
+            "Purple":  (100, 170),
+            "Magenta": (120, 210),
+            "Red2":    (30,  138),
+        }
+
+        # Function to get color name from HSV values
+        color_name = "None"
+        hsv_ = (h, s, vv) 
+        hue = hsv_[0]
+        for color, (lower, upper) in color_ranges.items():
+            if lower <= hue < upper:
+                color_name = color
+        
+        ### Step 2: Calculate RGB mean and std_dev to calaulate grey, white and black
+
+        avg_rgb_values = sum(color_value_rgb)/len(color_value_rgb)
+        std_dev = math.sqrt(sum((x - avg_rgb_values) ** 2 for x in color_value_rgb) / len(color_value_rgb))
+        # print("Avg:", round(avg_rgb_values, 2), "Std_dev:", round(std_dev, 2))
+
+        if avg_rgb_values >= MIN_AVG_FOR_WHITE and std_dev < MIN_STD_DEV_FOR_BW:
+            color_name = "White" 
+        elif avg_rgb_values <= MIN_AVG_FOR_BLACK and std_dev < MIN_STD_DEV_FOR_BW:
+            color_name = "Black"
+        elif std_dev< MIN_STD_DEV_FOR_GREY:
+            color_name = "Grey"
+        else:
+
+        ### Step 3 - transform a colour in light, normal and dark (ie. Light Red, Red, Dark Red)
+            
+            if color_name != "None":
+                if avg_rgb_values < color_thresholds[color_name][0]:
+                    color_name = "Dark "+color_name
+                elif avg_rgb_values > color_thresholds[color_name][1]:
+                    color_name = "Light "+color_name
+                    
+        # removes the 2 from Red2 color, basically it is red but is on the other side of the spectrum
+        color_name = color_name.replace("2", "")
+
+        ### Step 4 - rename some colors for a better day-to-day name (i.e. Dark Orange -> Brown)
+
+        if color_name == "Light Red":
+            color_name = "Pink"
+        elif color_name == "Dark Yellow":
+            color_name = "Olive"
+        elif color_name == "Light Yellow":
+            color_name = "Beige"
+        elif color_name == "Light Magenta":
+            color_name = "Pink"
+        elif color_name == "Dark Cyan":
+            color_name = "Blue"
+        elif color_name == "Dark Orange":
+            color_name = "Brown"
+
+        return color_name, hsv_info
+
+
+    def get_color_of_line_between_two_points(self, image, image_draw, p1, p2):
+
+        DEBUG_DRAW_COLOR = False
+
+        image_h, image_w, image_c = image.shape
+        # print(image.shape)
+
+        color_name = "None"
+        color_value_rgb = (0, 0, 0)
+        color_value_bgr = (0, 0, 0)
+        color_value_hsv = (0, 0, 0) 
+        n_points = 0
+
+        if 0 <= p1[0] < image_w and 0 <= p2[0] < image_w and 0 <= p1[1] < image_h and 0 <= p2[1] < image_h:
+
+            # if DEBUG_DRAW_COLOR:
+                # cv2.line(image_draw, p1, p2, (255, 255, 255), 1)
+
+            if p2[0] != p1[0]:
+
+                m = (p2[1] - p1[1])/(p2[0] - p1[0])
+                b = p2[1] - m* p2[0]
+                # print("m:", m)
+
+                if -1.0 <= m <= 1.0 :
+
+                    # print("CASE 1")
+
+                    t__ = [0,0,0] 
+                    ctr = 0
+                    for x in range(abs(p1[0]-p2[0])+1):
+                        n_points = abs(p1[0]-p2[0])+1
+                        y = m*(min(p2[0],p1[0])+x) + b
+                        ctr+=1
+                        t__ += image[int(y+0.5), min(p2[0],p1[0])+x] 
+                        # print(ctr, image[int(y+0.5), min(p2[0],p1[0])+x])
+                        if DEBUG_DRAW_COLOR:
+                            image_draw[int(y+0.5), min(p2[0],p1[0])+x] = (0, 255, 0)
+
+                    if ctr > 0:
+
+                        final_avg_color_bgr = (t__/ctr)+0.5
+                        final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
+                        # print(final_avg_color_bgr)
+                        # print(final_avg_color_int_bgr)
+
+                        # convert from BGR to RGB
+                        final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
+
+                        # calls the rgb_to_string function
+                        color_name, color_value_hsv = self.rgb_to_string_tr(final_avg_color_int_rgb)
+                        color_value_rgb = final_avg_color_int_rgb
+                        color_value_bgr = final_avg_color_int_bgr
+
+                    else:
+                        color_name = "None"
+                        color_value_rgb = (0, 0, 0)
+                        color_value_bgr = (0, 0, 0)
+
+                else: # by turning the axis system, what happens is that i can have more than one point in each yy coordinates od the line
+
+                    m = (p2[0] - p1[0])/(p2[1] - p1[1])
+                    b = p2[0] - m* p2[1]
+
+                    # print("CASE 2")
+
+                    t__ = [0,0,0] 
+                    ctr = 0
+
+                    for x in range(abs(p1[1]-p2[1])+1):
+                        n_points = abs(p1[1]-p2[1])+1
+                        y = m*(min(p2[1], p1[1])+x) + b
+                        ctr+=1
+                        t__ += image[min(p2[1], p1[1])+x, int(y)] 
+                        # print(ctr, image[min(p2[1], p1[1])+x, int(y)])
+                        if DEBUG_DRAW_COLOR:
+                            image_draw[min(p2[1],p1[1])+x, int(y)] = (0, 255, 0)
+
+                    if ctr > 0:
+
+                        final_avg_color_bgr = (t__/ctr)+0.5
+                        final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
+                        # print(final_avg_color_bgr)
+                        # print(final_avg_color_int_bgr)
+
+                        # convert from BGR to RGB
+                        final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
+
+                        # calls the rgb_to_string function
+                        color_name, color_value_hsv = self.rgb_to_string_tr(final_avg_color_int_rgb)
+                        color_value_rgb = final_avg_color_int_rgb
+                        color_value_bgr = final_avg_color_int_bgr
+
+
+                    else:
+                        color_name = "None"
+                        color_value_rgb = (0, 0, 0)
+                        color_value_bgr = (0, 0, 0)
+
+            elif p2[1] != p1[1]: # division by zero error when calculating m 
+                
+                m = (p2[0] - p1[0])/(p2[1] - p1[1])
+                b = p2[0] - m* p2[1]
+
+                # print("CASE 3")
+                
+                t__ = [0,0,0] 
+                ctr = 0
+
+                for x in range(abs(p1[1]-p2[1])+1):
+                    n_points = abs(p1[1]-p2[1])+1
+                    y = m*(min(p2[1], p1[1])+x) + b
+                    ctr+=1
+                    t__ += image[min(p2[1],p1[1])+x, int(y+0.5)] 
+                    # print(ctr, image[min(p2[1], p1[1])+x, int(y+0.5)])
+                    if DEBUG_DRAW_COLOR:
+                        image_draw[min(p2[1],p1[1])+x, int(y+0.5)] = (0, 255, 0)
+
+                if ctr > 0:
+
+                    final_avg_color_bgr = (t__/ctr)+0.5
+                    final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
+                    # print(final_avg_color_bgr)
+                    # print(final_avg_color_int_bgr)
+
+                    # convert from BGR to RGB
+                    final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
+
+                    # calls the rgb_to_string function
+                    color_name, color_value_hsv = self.rgb_to_string_tr(final_avg_color_int_rgb)
+                    color_value_rgb = final_avg_color_int_rgb
+                    color_value_bgr = final_avg_color_int_bgr
+
+                else:
+                    color_name = "None"
+                    color_value_rgb = (0, 0, 0)
+                    color_value_bgr = (0, 0, 0)
+
+            if DEBUG_DRAW_COLOR:
+                image_draw[p2[1], p2[0]] = (0, 0, 255)
+                image_draw[p1[1], p1[0]] = (0, 0, 255)
+
+        # print("Color:", color_name, "[ RGB:", color_value_rgb, "HSV:", color_value_hsv,"N_P:", n_points, "]")
+
+        # return color_name, color_value_rgb, color_value_bgr, color_value_hsv, n_points
+        return color_name, color_value_rgb, n_points
+
 
 def main(args=None):
     rclpy.init(args=args)

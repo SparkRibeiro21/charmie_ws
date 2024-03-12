@@ -8,7 +8,7 @@ import threading
 import time
 
 from example_interfaces.msg import String, Int16
-from charmie_interfaces.srv import SpeechCommand
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand
 from sensor_msgs.msg import Image
 
 # Constant Variables to ease RGB_MODE coding
@@ -33,8 +33,11 @@ class TestNode(Node):
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
 
         while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
+        while not self.save_speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
 
         # Variables
@@ -45,19 +48,23 @@ class TestNode(Node):
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
         self.speech_sucess = True
         self.speech_message = ""
+        self.save_speech_sucess = False
+        self.save_speech_message = ""
         self.rgb_sucess = True
         self.rgb_message = ""
         self.face_sucess = True
         self.face_message = ""
 
-    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    #### SPEECH SERVER FUNCTIONS #####
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
         request = SpeechCommand.Request()
         request.filename = filename
         request.command = command
         request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
     
         future = self.speech_command_client.call_async(request)
-        print("Sent Command")
+        # print("Sent Command")
 
         if wait_for_end_of:
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
@@ -84,6 +91,30 @@ class TestNode(Node):
             self.get_logger().error("Service call failed %r" % (e,))
             
 
+    def call_save_speech_command_server(self, filename, command):
+        request = SaveSpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+
+        future = self.save_speech_command_client.call_async(request)
+        # print("Sent Command")
+
+        future.add_done_callback(self.callback_call_save_speech_command)
+
+
+    def callback_call_save_speech_command(self, future): #, a, b):
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.save_speech_sucess = response.success
+            self.save_speech_message = response.message
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
 def main(args=None):
     rclpy.init(args=args)
     node = TestNode()
@@ -104,9 +135,9 @@ class RestaurantMain():
         # VARS ...
         self.state = 0
     
-    def set_speech(self, filename="", command="", quick_voice=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
 
-        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice)
+        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
         
         if wait_for_end_of:
           while not self.node.waited_for_end_of_speaking:
@@ -114,6 +145,10 @@ class RestaurantMain():
         self.node.waited_for_end_of_speaking = False
 
         return self.node.speech_sucess, self.node.speech_message
+    
+
+    def save_speech(self, filename, command):
+        self.node.call_save_speech_command_server(filename=filename, command=command)
     
     
     def set_rgb(self, command="", wait_for_end_of=True):
@@ -179,109 +214,66 @@ class RestaurantMain():
             # State 6 = Final Speech
 
             if self.state == Waiting_for_start_button:
-                """
-                # a += "a"
-                self.node.call_speech_command_server("ready_serve_breakfast", "", wait_for_end_of=True)
-                self.wait_for_end_of_speaking()
-                print("Test Wait")
-
-                start = time.time()
-                while time.time() < start + 3: # in seconds
-                    print(".", end='')
-                print()
                 
-                self.node.call_speech_command_server("waiting_door_open", "", wait_for_end_of=False)
-                # self.wait_for_end_of_speaking()
-                print("Test Not Wait")
-
-                start = time.time()
-                while time.time() < start + 3: # in seconds
-                    print(",", end='')
-                print()
-                """
-
-                # self.node.call_speech_command_server("receptionist_second_guest", "", wait_for_end_of=True)
-                # self.node.call_speech_command_server(command="Welcome to the serve the breakfast task", wait_for_end_of=True)#, quick_voice=Fa)
-
-                # self.node.call_speech_command_server("introduction_quick", "", wait_for_end_of=True)
-                # self.node.call_speech_command_server(command="I will start in a minute", wait_for_end_of=True)#, quick_voice=True)
-                
-
-                # self.node.call_speech_command_server(filename="receptionist_second_guest_john", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
-                # self.wait_for_end_of_speaking()
-                # print("Test Wait")
-
-                # self.node.call_speech_command_server(filename="recep_drink_red_win", command="hey", wait_for_end_of=True)#, quick_voice=Fa)
-                # self.wait_for_end_of_speaking()
-                # print("Test Wait")
-
-
-
-
-                ### self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
-                # self.set_speech(filename="recep", command="My favourite drink is pleno", wait_for_end_of=True, quick_voice=False)
-                # self.set_speech(filename="receptionist2_1", wait_for_end_of=True)
-                # self.wait_for_end_of_speaking()
-                # print("Test Wait")
-
-
-                # start = time.time()
-                # while time.time() < start + 4: # in seconds
-                #     pass
-                #     print(".", end='')
-                # print()
-
-
-                ### self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)#, quick_voice=Fa)
-                # self.set_speech(filename="", command="The favourite drink of Leia is water.", wait_for_end_of=True, quick_voice=False)
-                # self.wait_for_end_of_speaking()
-                # print("Test Wait")
-
-
-
                 """
                 s, m = self.set_rgb(RED+MOON)
                 print(s, m)
-                success, message = self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                success, message = self.set_speech(filename="arm/arm_close_gripper", command="", wait_for_end_of=True)
                 print(success, message)
                 time.sleep(5)
                 self.set_rgb(BLUE+ROTATE)
-                success, message = self.set_speech(filename="introduction_full", command="", wait_for_end_of=False)
+                success, message = self.set_speech(filename="arm/introduction_full", command="", wait_for_end_of=False)
                 print(success, message)
                 time.sleep(5)
                 self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-                success, message = self.set_speech(filename="arm_close_grippe", command="", wait_for_end_of=True)
+                success, message = self.set_speech(filename="arm/arm_close_grippe", command="", wait_for_end_of=True)
                 print(success, message)
                 time.sleep(5)
 
                 """
 
+
+                files = ["recep_characteristic_1", "recep_characteristic_2", "recep_characteristic_3", "recep_characteristic_4"]
+                commands = ["The first guest shirt is black", "Its age is between 23 and 32", "The guest is a bit taller than me", "and its ethnicity is white."]
+                self.save_speech(files, commands)
+                print("...")
+                time.sleep(5)
+                print("...")
+
+
+                self.set_speech(filename="temp/recep_characteristic_1", wait_for_end_of=True)
                 
-                # self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
+
+                # self.set_speech(command="Hello brother", wait_for_end_of=True)
+                
+                # self.set_speech(filename="generic/introduction_full", command="", wait_for_end_of=True)
                 # time.sleep(2)
 
-                self.set_speech(filename="introduction_full", command="", wait_for_end_of=True)
-                self.set_face("help_pick_cu")
+                self.set_speech(filename="receptionist/recep_drink_milk", command="", wait_for_end_of=True)
+                self.set_face("help_pick_cup")
                 time.sleep(3)
 
 
-                # self.set_speech(filename="introduction_ful", command="", wait_for_end_of=True)
+                # self.set_speech(filename="generic/introduction_ful", command="", wait_for_end_of=True)
 
 
-                # self.set_speech(command="Hello motherfucker", wait_for_end_of=True)
 
 
                 # self.node.test_custom_image_face_str.data = "clients_temp"
                 # self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
                 # time.sleep(5)
 
-                self.set_speech(filename="introduction_ful", command="", wait_for_end_of=True)
-                self.set_face(custom="clients_temp")
-                time.sleep(3)
+                # self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
+                
+                # self.set_face(custom="clients_temp")
+                # time.sleep(3)
 
 
                 self.set_face("help_pick_bowl")
                 time.sleep(3)
+
+                self.set_speech(filename="receptionist/recep_drink_orange_juice", show_in_face=True, wait_for_end_of=True)
+
 
                 self.set_face("demo8")
                 time.sleep(3)
@@ -289,8 +281,11 @@ class RestaurantMain():
                 self.set_face(custom="clients_tem")
                 time.sleep(3)
 
-                # self.set_speech(filename="arm_close_gripper", command="", wait_for_end_of=True)
+                # self.set_speech(filename="arm/arm_close_gripper", command="", wait_for_end_of=True)
                 # time.sleep(2)
+
+
+                self.set_speech(filename="receptionist/recep_drink_red_wine", wait_for_end_of=True)
 
                 self.set_face("help_pick_milk")
                 time.sleep(3)
@@ -299,6 +294,7 @@ class RestaurantMain():
                 time.sleep(3)
 
 
+                self.set_speech(filename="generic/introduction_full", show_in_face=True, wait_for_end_of=True)
                 # start = time.time()
                 # while time.time() < start + 3: # in seconds
                 #     pass

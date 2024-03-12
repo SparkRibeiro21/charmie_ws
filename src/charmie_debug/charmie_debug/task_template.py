@@ -157,9 +157,9 @@ class GpsrMain():
                 # your code here ...
 
                 # send speech command to speakers voice, intrucing the robot 
-                self.set_speech(filename="introduction_full", wait_for_end_of=True)
+                self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                 # if you want to have some information regarding the the set_speech you just sent you can try the following:
-                success, message = self.set_speech(filename="introduction_full", wait_for_end_of=True)
+                success, message = self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                 # THIS CAN BE DONE FOR ALL set_(something) functions
                 print(success, message)
                 

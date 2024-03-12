@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 
 from charmie_interfaces.msg import PS4Controller, NeckPosition
-from charmie_interfaces.srv import SpeechCommand
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, String
 
@@ -351,9 +351,6 @@ class ControllerNode(Node):
         # Disgnostic
         self.ps4_diagnostic_publisher = self.create_publisher(Bool, "ps4_diagnostic", 10)
 
-        # Neck
-        self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
-
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         
@@ -364,6 +361,10 @@ class ControllerNode(Node):
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+
+        # Neck
+        self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
+
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
         self.CONTROL_ARM = self.get_parameter("control_arm").value
@@ -418,10 +419,16 @@ class ControllerNode(Node):
             self.rgb_mode_publisher.publish(self.rgb_mode)
 
         if self.CONTROL_NECK:
-            self.neck_pos = NeckPosition()
-            self.neck_pos.pan = 180.0
-            self.neck_pos.tilt = 180.0
-            self.neck_position_publisher.publish(self.neck_pos)
+            self.neck_pos = SetNeckPosition.Request()
+            self.neck_pos.pan = float(0)
+            self.neck_pos.tilt = float(0)
+            self.set_neck_position_client.call_async(self.neck_pos)
+
+            # self.neck_pos = NeckPosition()
+            # self.neck_pos.pan = 180.0
+            # self.neck_pos.tilt = 180.0
+            # self.neck_position_publisher.publish(self.neck_pos)
+            pass
 
         if self.CONTROL_FACE:
             self.face_mode = String()
@@ -620,7 +627,7 @@ class ControllerNode(Node):
 
                 # in case it is not intended for the robot to speak since it may disturb other packages
                 if self.CONTROL_SPEAKERS:
-                    self.set_speech(filename="motors_locked", wait_for_end_of=False)
+                    self.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
 
         # print(self.watchdog_timer, end='')
         print(".", end='')
@@ -683,10 +690,10 @@ class ControllerNode(Node):
         if self.CONTROL_SPEAKERS:
             # examples of two different speech commands
             if ps4_controller.r3 == 2:
-                success, message = self.set_speech(filename="introduction_full", wait_for_end_of=False)
+                success, message = self.set_speech(filename="generic/introduction_full", wait_for_end_of=False)
                 print(success, message)
             elif ps4_controller.l3 == 2:
-                success, message = self.set_speech(filename="receptionist_question", wait_for_end_of=False)
+                success, message = self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=False)
                 print(success, message)
                 
         if self.CONTROL_NECK:
@@ -695,30 +702,30 @@ class ControllerNode(Node):
             neck_inc = 5.0
             if ps4_controller.circle >= 2:
                 self.neck_pos.pan -= neck_inc
-                if self.neck_pos.pan < 0.0:
-                    self.neck_pos.pan = 0.0
-                self.neck_position_publisher.publish(self.neck_pos)
+                if self.neck_pos.pan < -180.0:
+                    self.neck_pos.pan = -180.0
+                self.set_neck_position_client.call_async(self.neck_pos)
                 # print(self.neck_pos)
 
             elif ps4_controller.square >= 2:
                 self.neck_pos.pan += neck_inc
-                if self.neck_pos.pan > 359.0:
-                    self.neck_pos.pan = 359.0
-                self.neck_position_publisher.publish(self.neck_pos)
+                if self.neck_pos.pan > 180.0:
+                    self.neck_pos.pan = 180.0
+                self.set_neck_position_client.call_async(self.neck_pos)
                 # print(self.neck_pos)
 
             if ps4_controller.cross >= 2:
                 self.neck_pos.tilt -= neck_inc
-                if self.neck_pos.tilt < 120.0:
-                    self.neck_pos.tilt = 120.0
-                self.neck_position_publisher.publish(self.neck_pos)
+                if self.neck_pos.tilt < -60.0:
+                    self.neck_pos.tilt = -60.0
+                self.set_neck_position_client.call_async(self.neck_pos)
                 # print(self.neck_pos)
 
             elif ps4_controller.triangle >= 2:
                 self.neck_pos.tilt += neck_inc
-                if self.neck_pos.tilt > 235.0:
-                    self.neck_pos.tilt = 235.0
-                self.neck_position_publisher.publish(self.neck_pos)
+                if self.neck_pos.tilt > 45.0:
+                    self.neck_pos.tilt = 45.0
+                self.set_neck_position_client.call_async(self.neck_pos)
                 # print(self.neck_pos)
 
         if self.CONTROL_SET_MOVEMENT:
@@ -736,7 +743,7 @@ class ControllerNode(Node):
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:
-                        self.set_speech(filename="motors_unlocked", wait_for_end_of=False)
+                        self.set_speech(filename="demonstration/motors_unlocked", wait_for_end_of=False)
 
                 else:
 
@@ -757,7 +764,7 @@ class ControllerNode(Node):
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:
-                        self.set_speech(filename="motors_locked", wait_for_end_of=False)
+                        self.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
 
         if self.CONTROL_FACE:
             if ps4_controller.l1 == 2:

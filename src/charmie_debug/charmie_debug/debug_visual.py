@@ -13,8 +13,11 @@ import cv2
 import numpy as np
 import math
 import threading
+from pathlib import Path
+import json
 
 DEBUG_DRAW = False
+
 
 class Robot():
     def __init__(self):
@@ -26,7 +29,7 @@ class Robot():
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
         self.scale = 0.057*1000
         self.xx_shift = -110
-        self.yy_shift = -300 # -370
+        self.yy_shift = -370
 
         self.xc_adj = self.xc - self.xx_shift
         self.yc_adj = self.yc - self.yy_shift
@@ -50,53 +53,25 @@ class Robot():
         self.x_ant = 0.0
         self.y_ant = 0.0
 
-        # self.house_doors_robocup23 = [ # house rooms, coordinates of top left point and bottom left point in meters
-            # {'name': 'Living Room', 'top_left_coords': (-4.05, 4.95), 'bot_right_coords': (1.45, 0.45)}, 
-            # {'name': 'Kitchen',     'top_left_coords': (-4.05, 9.45), 'bot_right_coords': (1.45, 4.95)},
-            # {'name': 'Office',      'top_left_coords': (1.45, 4.95),  'bot_right_coords': ((4.95, 0.45))},
-            # {'name': 'Bedroom',     'top_left_coords': (1.45, 9.45),  'bot_right_coords': ((4.95, 4.95))}
-        # ]
+        # info regarding the paths for the recorded files intended to be played
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.home = str(Path.home())
+        self.midpath = "charmie_ws/src/configuration_files"
+        self.complete_path = self.home+'/'+self.midpath+'/'
 
-        self.house_rooms = [ # house rooms, coordinates of top left point and bottom left point in meters
-            {'name': 'Corridor',     'top_left_coords': (-1.30, 5.98),  'bot_right_coords': ((0.8, 0.70))},
-            {'name': 'Living Room',  'top_left_coords': (-4.65, 3.86),  'bot_right_coords': ((-1.30, 0.70))},
-            {'name': 'Bedroom',     'top_left_coords': (-4.65, 5.98),  'bot_right_coords': ((-1.30, 3.86))},
-            {'name': 'Kitchen',     'top_left_coords': (-4.65, 9.62), 'bot_right_coords': (0.80, 5.98)},
-            {'name': 'Office',      'top_left_coords': (-4.65, 13.12),  'bot_right_coords': ((0.80, 9.62))}
-        ]
+        # Open all configuration files
+        
+        with open(self.complete_path + 'rooms_location.json', encoding='utf-8') as json_file:
+            self.house_rooms = json.load(json_file)
+        print(self.house_rooms)
 
-        self.house_furniture = [ # house furniture, coordinates of top left point and bottom left point in meters
-            {'name': 'Shelf', 'top_left_coords': (-1.30, 1.03), 'bot_right_coords': (-0.53, 0.70)}, 
-            {'name': 'Side Table Corridor', 'top_left_coords': (0.10, 5.22), 'bot_right_coords': (0.80, 3.42)},
-            {'name': 'Side Table Corridor', 'top_left_coords': (0.10, 3.42), 'bot_right_coords': (0.80, 1.62)},
-            {'name': 'Couch', 'top_left_coords': (-3.20, 3.86), 'bot_right_coords': (-1.30, 3.03)},
-            {'name': 'Chair', 'top_left_coords': (-3.95, 3.86), 'bot_right_coords': (-3.35, 3.03)},
-            {'name': 'Side Table Liv_Room', 'top_left_coords': (-4.65, 3.50), 'bot_right_coords': (-4.05, 2.10)},
-            {'name': 'Side Table Liv_Room', 'top_left_coords': (-4.65, 2.10), 'bot_right_coords': (-4.05, 0.70)},
-            {'name': 'Bed', 'top_left_coords': (-4.65, 5.98), 'bot_right_coords': (-3.55, 3.86)},
-            {'name': 'Side Table Bed', 'top_left_coords': (-2.70, 5.98), 'bot_right_coords': (-1.30, 5.36)},
-            {'name': 'Shelf', 'top_left_coords': (0.49, 6.90), 'bot_right_coords': (0.80, 5.98)}, 
-            {'name': 'Sink', 'top_left_coords': (0.03, 7.90), 'bot_right_coords': (0.80, 6.90)},
-            {'name': 'Fridge', 'top_left_coords': (0.29, 8.40), 'bot_right_coords': (0.80, 7.90)}, 
-            {'name': 'Washing Machine', 'top_left_coords': (0.17, 9.00), 'bot_right_coords': (0.80, 8.40)},
-            {'name': 'Table Kitchen', 'top_left_coords': (-2.70, 8.78), 'bot_right_coords': (-0.90, 7.58)},
-            {'name': 'Side Table Kitchen', 'top_left_coords': (-4.65, 7.38), 'bot_right_coords': (-4.05, 5.98)},
-            {'name': 'Side Table Kitchen', 'top_left_coords': (-4.65, 8.78), 'bot_right_coords': (-4.05, 7.38)},
-            {'name': 'Cabinet', 'top_left_coords': (-3.10, 10.02), 'bot_right_coords': (0.80, 9.62)},
-            {'name': 'Table Office', 'top_left_coords': (-3.70, 12.32), 'bot_right_coords': (-1.90, 11.12)},
-            {'name': 'Side Table Office', 'top_left_coords': (-1.10, 13.12), 'bot_right_coords': (-0.30, 11.92)},
-            {'name': 'Side Table Office', 'top_left_coords': (-1.10, 11.22), 'bot_right_coords': (-0.30, 10.02)},
-            {'name': 'Cabinet', 'top_left_coords': (0.33, 13.12), 'bot_right_coords': (0.80, 10.02)}
-        ]
+        with open(self.complete_path + 'furniture_location.json', encoding='utf-8') as json_file:
+            self.house_furniture = json.load(json_file)
+        print(self.house_furniture)
 
-        self.house_doors = [ # house doors, coordinates of top left point and bottom left point in meters
-            {'name': 'Entrance_Door', 'top_left_coords': (-0.42, 0.70), 'bot_right_coords': (0.42, 0.70)},
-            {'name': 'Living_Room_Door', 'top_left_coords': (-1.3, 2.56), 'bot_right_coords': (-1.3, 0.70)}, 
-            {'name': 'Bedroom_Door', 'top_left_coords': (-1.3, 4.68), 'bot_right_coords': (-1.3, 3.86)},
-            {'name': 'Bedroom_Kitchen_Door', 'top_left_coords': (-3.51, 5.98), 'bot_right_coords': (-2.7, 5.98)},
-            {'name': 'Kitchen_Door', 'top_left_coords': (-1.3, 5.98), 'bot_right_coords': (-0.48, 5.98)},
-            {'name': 'Office_Door', 'top_left_coords': (-4.05, 9.62), 'bot_right_coords': (-3.15, 9.62)},             
-        ]
+        with open(self.complete_path + 'doors_location.json', encoding='utf-8') as json_file:
+            self.house_doors = json.load(json_file)
+        print(self.house_doors)
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
@@ -217,8 +192,8 @@ class Robot():
                 #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
            
 
-                cv2.circle(self.test_image, (int(self.xc_adj + person.position_absolute.x*self.scale),
-                    int(self.yc_adj - person.position_absolute.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
+                cv2.circle(self.test_image, (int(self.xc_adj + person.position_relative.x*self.scale),
+                    int(self.yc_adj - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
                 
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
                 #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
@@ -250,7 +225,7 @@ class DebugVisualNode(Node):
         self.get_logger().info("Initialised CHARMIE Debug Visual Node")
 
         # get neck position
-        self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
+        self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
         
         # get yolo pose person detection filtered
         self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
@@ -270,8 +245,8 @@ class DebugVisualNode(Node):
 
     def get_neck_position_callback(self, pose: NeckPosition):
         # print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
-        self.robot.neck_pan = -math.radians(180 - pose.pan)
-        self.robot.neck_tilt = -math.radians(180 - pose.tilt)
+        self.robot.neck_pan = -math.radians(- pose.pan)
+        self.robot.neck_tilt = -math.radians(- pose.tilt)
 
 
     def get_person_pose_callback(self, pose: Yolov8Pose):
