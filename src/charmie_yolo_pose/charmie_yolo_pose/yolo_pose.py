@@ -45,8 +45,6 @@ DRAW_PERSON_HEIGHT = True
 DRAW_PERSON_CLOTHES_COLOR = True
 
 
-#### ros2 param - yolo pose model (s,n,m,l,x) 
-
 class YoloPoseNode(Node):
     def __init__(self):
         super().__init__("YoloPose")
@@ -126,7 +124,6 @@ class YoloPoseNode(Node):
 
         self.results = []
         self.waiting_for_pcloud = False
-        # self.new_pcloud = RetrievePointCloud()
         self.tempo_total = time.perf_counter()
         self.center_torso_person_list = []
         self.center_head_person_list = []
@@ -156,6 +153,7 @@ class YoloPoseNode(Node):
         self.ANKLE_RIGHT_KP = 16
 
 
+    # request point cloud information from point cloud node
     def call_point_cloud_server(self, req):
         request = GetPointCloud.Request()
         request.data = req
@@ -166,20 +164,18 @@ class YoloPoseNode(Node):
 
         future.add_done_callback(self.callback_call_point_cloud)
 
-
     def callback_call_point_cloud(self, future):
 
         try:
             # in this function the order of the line of codes matter
             # it seems that when using future variables, it creates some type of threading system
-            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.post_receiving_pcloud(response.coords)
             self.waiting_for_pcloud = False
             print("Received Back")
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
-
 
     def get_only_detect_person_legs_visible_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE
@@ -199,7 +195,6 @@ class YoloPoseNode(Node):
         else:
             self.get_logger().info('ERROR SETTING MIN_PERSON_CONF_VALUE')    
 
-
     def get_minimum_keypoints_to_detect_person_callback(self, state: Int16):
         global MIN_KP_TO_DETECT_PERSON
         # print(state.data)
@@ -209,7 +204,6 @@ class YoloPoseNode(Node):
         else:
             self.get_logger().info('ERROR SETTING MIN_KP_TO_DETECT_PERSON')  
 
-
     def get_only_detect_person_right_in_front_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_RIGHT_IN_FRONT
         # print(state.data)
@@ -218,7 +212,6 @@ class YoloPoseNode(Node):
             self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = True')
         else:
             self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False')  
-
 
     def get_only_detect_person_arm_raised_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_ARM_RAISED
@@ -233,11 +226,8 @@ class YoloPoseNode(Node):
     def get_color_image_head_callback(self, img: Image):
         
         if not self.waiting_for_pcloud:
-            
             self.get_logger().info('Receiving color video frame')
-            
             self.tempo_total = time.perf_counter()
-            
             self.rgb_img = img
 
             # ROS2 Image Bridge for OpenCV
@@ -250,17 +240,9 @@ class YoloPoseNode(Node):
             # print(self.img_width)
             # print(self.img_height)
 
-
-
-            # Launch Yolov8n-pose
-            # self.results = self.model.predict(current_frame, conf=0.5, show_labels=True, show_conf=True, show=True, show_boxes=False, save=True)
-            # self.results = self.model.predict(current_frame, stream=True)
-            
-            # ti = time.perf_counter()
             # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
             # tempo_calculo = time.perf_counter()
             self.results = self.model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-            # annotated_frame = self.results[0].plot()
             # print('tempo calculo = ', time.perf_counter() - tempo_calculo)   # imprime o tempo de calculo em segundos
 
             # tf = time.perf_counter()
@@ -337,8 +319,6 @@ class YoloPoseNode(Node):
             self.center_head_person_list = []
 
             req2 = []
-            # retrieve_bbox = False
-
             
             for person_idx in range(num_persons):
 
@@ -438,7 +418,7 @@ class YoloPoseNode(Node):
         current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
         current_frame_draw = current_frame.copy()
 
-        annotated_frame = self.results[0].plot()
+        # annotated_frame = self.results[0].plot()
 
         # Calculate the number of persons detected
         num_persons = len(self.results[0].keypoints)
@@ -557,10 +537,6 @@ class YoloPoseNode(Node):
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                 print(" - Misses not being with their arm raised")
 
-            # print(new_pcloud)
-            # print(person_idx)
-            # print(new_pcloud[person_idx].requested_point_coords[1].x) # .requested_point_coords)
-            
             if ALL_CONDITIONS_MET:
                 num_persons_filtered+=1
 
@@ -743,10 +719,6 @@ class YoloPoseNode(Node):
                         cv2.circle(current_frame_draw, center_p_, 5, (128, 128, 128), -1)
                         cv2.circle(current_frame_draw, self.center_head_person_list[person_idx], 5, (255, 255, 255), -1)
                         cv2.circle(current_frame_draw, self.center_torso_person_list[person_idx], 5, (255, 255, 255), -1)
-
-                        # hcx = int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2
-                        # hcy = int(boxes_id.xyxy[0][1]*3+boxes_id.xyxy[0][3])//4
-                        # cv2.circle(current_frame_draw, (hcx, hcy), 5, (0, 0, 0), -1)
                        
                     if DRAW_PERSON_LOCATION_COORDS:
                         cv2.putText(current_frame_draw, '('+str(round(new_person.position_relative.x,2))+
@@ -779,8 +751,6 @@ class YoloPoseNode(Node):
                         cv2.putText(current_frame_draw, new_person.pants_color,
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
                         
-                        # center_p = (int(keypoints_id.xy[0][self.EYE_LEFT_KP][0]), int(keypoints_id.xy[0][self.EYE_LEFT_KP][1]))
-                        # cv2.circle(current_frame_draw, center_p, 7, (255,255,255), -1)
 
             print("===")
 
@@ -807,48 +777,8 @@ class YoloPoseNode(Node):
             # cv2.imshow("Camera Image", current_frame)
             cv2.waitKey(1)
         
-        """
-        cv2.imshow("Intel RealSense Current Frame", current_frame)
-        cv2.waitKey(1)
-        with open("charmie_color_yp.raw", "wb") as f:
-            f.write(current_frame.tobytes())
-        height, width, channels = current_frame.shape
-        print(height, width, channels)
-        cv2.imwrite("charmie_color_yp.jpg", current_frame) 
-        time.sleep(1)
-        """
         # print('tempo parcial = ', tf - ti)
         print('tempo total = ', time.perf_counter() - self.tempo_total)   # imprime o tempo de calculo em segundos
-
-    # def get_aligned_depth_image_callback(self, img: Image):
-    #     pass
-
-        # print(img.height, img.width)
-        # current_frame = self.br.imgmsg_to_cv2(img, desired_encoding="passthrough")
-        # depth_array = np.array(current_frame, dtype=np.float32)
-        # center_idx = np.array(depth_array.shape) // 2
-        # print ('center depth:', depth_array[center_idx[0], center_idx[1]])
-
-        """
-        if img.height == 720:
-            file_name = "charmie_depth_yp.txt"
-        
-            # Save the NumPy array to a text file
-            with open(file_name, 'w') as file:
-                np.savetxt(file, depth_array, fmt='%d', delimiter='\t')
-        
-            # np.savetxt(file_name, depth_array, fmt='%d', delimiter='\t', mode='a')
-        
-            # Optional: You can also specify formatting options using 'fmt'.
-            # In this example, '%d' specifies integer formatting and '\t' is used as the delimiter.
-
-            print(f"Array saved to {file_name}")
-            time.sleep(1)
-        
-        
-        cv2.imshow("Intel RealSense Depth Alligned", current_frame)
-        cv2.waitKey(1) 
-        """       
 
 
     def odom_robot_callback(self, loc: Odometry):
@@ -1022,7 +952,7 @@ class YoloPoseNode(Node):
         
         new_person.position_absolute_head = head_abs_pos
 
-        new_person.height = head_localisation.z/1000 + 0.15 + 0.15# average person middle of face to top of head distance
+        new_person.height = head_localisation.z/1000 + 0.15 # average person middle of face to top of head distance
 
         new_person.room_location, new_person.furniture_location = self.person_position_to_house_rooms_and_furniture(person_abs_pos)
 
@@ -1074,7 +1004,6 @@ class YoloPoseNode(Node):
             if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
                 room_location = room['name'] 
 
-
         furniture_location = "None"
         for furniture in self.house_furniture:
             min_x = furniture['top_left_coords'][0]
@@ -1084,7 +1013,6 @@ class YoloPoseNode(Node):
             # print(min_x, max_x, min_y, max_y)
             if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
                 furniture_location = furniture['name'] 
-
 
         return room_location, furniture_location
 
@@ -1185,20 +1113,19 @@ class YoloPoseNode(Node):
         color_name = "None"
         color_rgb = RGB()
 
-        
         if new_person.kp_hip_left_conf > MIN_KP_CONF_VALUE and new_person.kp_knee_left_conf > MIN_KP_CONF_VALUE:
             left_leg_color_name, left_leg_color_rgb, left_leg_n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_hip_left_x, new_person.kp_hip_left_y), (new_person.kp_knee_left_x, new_person.kp_knee_left_y))
 
         if new_person.kp_hip_right_conf > MIN_KP_CONF_VALUE and new_person.kp_knee_right_conf > MIN_KP_CONF_VALUE:
             right_leg_color_name, right_leg_color_rgb, right_leg_n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_hip_right_x, new_person.kp_hip_right_y), (new_person.kp_knee_right_x, new_person.kp_knee_right_y))
 
-        if left_leg_n_points > right_leg_n_points:
+        if left_leg_n_points >= right_leg_n_points and left_leg_n_points > 0:
             color_name = left_leg_color_name
             color_rgb.red = int(left_leg_color_rgb[0])
             color_rgb.green = int(left_leg_color_rgb[1])
             color_rgb.blue = int(left_leg_color_rgb[2])
 
-        elif left_leg_n_points < right_leg_n_points:
+        elif left_leg_n_points < right_leg_n_points and right_leg_n_points > 0:
             color_name = right_leg_color_name
             color_rgb.red = int(right_leg_color_rgb[0])
             color_rgb.green = int(right_leg_color_rgb[1])
