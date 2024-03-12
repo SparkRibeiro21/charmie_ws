@@ -17,7 +17,6 @@ class ImageToFileConverter(Node):
             self.image_callback,
             10)
         self.image_count = 0
-        self.ex_image_count = -1
         self.output_directory = 'output_images'
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
@@ -25,17 +24,17 @@ class ImageToFileConverter(Node):
     def image_callback(self, msg):
         print("Image callback")
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-        print("Image shape:", cv_image.shape)
+        #print("Image shape:", cv_image.shape)
+        print(self.image_count)
         image_filename = os.path.join(self.output_directory, f'image_{self.image_count:04d}.jpg')
         cv2.imwrite(image_filename, cv_image)
         self.image_count += 1
         print(self.image_count)
 
         # Check if all images are processed
-        if self.image_count >= 1200:  # Modify this value according to your needs
+        if self.image_count >= 3000:  # Modify this value according to your needs
             self.convert_images_to_video()
 
-        #self.ex_image_count = self.image_count
     def convert_images_to_video(self):
         output_video_file = 'output_video.avi'
         images_to_video(self.output_directory, output_video_file)

@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
         "yolo_objects = charmie_yolo_objects.yolo_objects:main",
-        "rosbag_2_video_converter = charmie_yolo_objects.rosbag_2_video_converter:main"
+        "Bruno_yolo_objects = charmie_yolo_objects.yolo_objects_Bruno:main"
         ],
     },
 )
