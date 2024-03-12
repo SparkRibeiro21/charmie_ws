@@ -53,7 +53,7 @@ class YoloPoseNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("yolo_model", "s") 
-        self.declare_parameter("debug_draw", True) 
+        self.declare_parameter("debug_draw", False) 
         self.declare_parameter("characteristics", True)
 
         # info regarding the paths for the recorded files intended to be played
@@ -65,14 +65,21 @@ class YoloPoseNode(Node):
         self.midpath_configuration_files = "charmie_ws/src/configuration_files"
         self.complete_path_configuration_files = self.home+'/'+self.midpath_configuration_files+'/'
 
-        # Open all configuration files
-        with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
-            self.house_rooms = json.load(json_file)
-        print(self.house_rooms)
-        with open(self.complete_path_configuration_files + 'furniture_location.json', encoding='utf-8') as json_file:
-            self.house_furniture = json.load(json_file)
-        print(self.house_furniture)
+        self.house_rooms = {}
+        self.house_furniture = {}
 
+        # Open all configuration files
+        try:
+            with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
+                self.house_rooms = json.load(json_file)
+            # print(self.house_rooms)
+            with open(self.complete_path_configuration_files + 'furniture_location.json', encoding='utf-8') as json_file:
+                self.house_furniture = json.load(json_file)
+            # print(self.house_furniture)
+            self.get_logger().info("Successfully Imported data from json configuration files. (house_rooms and house_furniture)")
+        except:
+            self.get_logger().error("Could NOT import data from json configuration files. (house_rooms and house_furniture)")
+        
         # choose the yolo pose model intended to be used (n,s,m,l,...) 
         self.YOLO_MODEL = self.get_parameter("yolo_model").value
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
@@ -82,7 +89,7 @@ class YoloPoseNode(Node):
 
         yolo_model = "yolov8" + self.YOLO_MODEL.lower() + "-pose.pt"
         full_yolo_model = self.complete_path + yolo_model
-        print("USING YOLO POSE MODEL:", yolo_model)
+        self.get_logger().info(f"Using YOLO pose model: {yolo_model}")
 
         # Yolo Model - Yolov8 Pose:
         # If the PC used has lower frame rates switch in: self.declare_parameter("yolo_model", "s")
@@ -160,7 +167,7 @@ class YoloPoseNode(Node):
         request.retrieve_bbox = False
     
         future = self.point_cloud_client.call_async(request)
-        print("Sent Command")
+        #print("Sent Command")
 
         future.add_done_callback(self.callback_call_point_cloud)
 
@@ -173,7 +180,7 @@ class YoloPoseNode(Node):
             response = future.result()
             self.post_receiving_pcloud(response.coords)
             self.waiting_for_pcloud = False
-            print("Received Back")
+            # print("Received Back")
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -226,7 +233,7 @@ class YoloPoseNode(Node):
     def get_color_image_head_callback(self, img: Image):
         
         if not self.waiting_for_pcloud:
-            self.get_logger().info('Receiving color video frame')
+            # self.get_logger().info('Receiving color video frame')
             self.tempo_total = time.perf_counter()
             self.rgb_img = img
 
@@ -313,7 +320,8 @@ class YoloPoseNode(Node):
             if not self.results[0].keypoints.has_visible:
                 num_persons = 0
 
-            print("___START___ num_persons =", num_persons)
+            # print("Number of people detected =", num_persons)
+            self.get_logger().info(f"People detected: {num_persons}")
 
             self.center_torso_person_list = []
             self.center_head_person_list = []
@@ -324,9 +332,6 @@ class YoloPoseNode(Node):
 
                 keypoints_id = self.results[0].keypoints[person_idx]
                 boxes_id = self.results[0].boxes[person_idx]
-
-                print("testing bug white dot:")
-                print(keypoints_id)
                 
                 bb = BoundingBox()
                 bb.box_top_left_x = int(boxes_id.xyxy[0][0])
@@ -465,7 +470,7 @@ class YoloPoseNode(Node):
                     hand_raised = "None"
                     is_hand_raised = False
 
-            print("Hand Raised:", hand_raised, is_hand_raised)
+            # print("Hand Raised:", hand_raised, is_hand_raised)
 
             # adds people to "person_pose" without any restriction
             new_person = DetectedPerson()
@@ -489,15 +494,15 @@ class YoloPoseNode(Node):
             if boxes_id.id == None:
                 person_id = 0 
 
-            print("id = ", person_id)
-            print("conf", boxes_id.conf)
-            print("legs_ctr = ", legs_ctr)
+            # print("id = ", person_id)
+            # print("conf", boxes_id.conf)
+            # print("legs_ctr = ", legs_ctr)
 
             body_kp_high_conf_counter = 0
             for kp in range(self.N_KEYPOINTS - self.NUMBER_OF_LEGS_KP): # all keypoints without the legs
                 if keypoints_id.conf[0][kp] > MIN_KP_CONF_VALUE:
                     body_kp_high_conf_counter+=1
-            print("body_kp_high_conf_counter = ", body_kp_high_conf_counter)
+            # print("body_kp_high_conf_counter = ", body_kp_high_conf_counter)
 
 
             # changed this condition from:
@@ -515,27 +520,27 @@ class YoloPoseNode(Node):
             # checks whether the person confidence is above a defined level
             if not boxes_id.conf >= MIN_PERSON_CONF_VALUE:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print("- Misses minimum person confidence level")
+                # print("- Misses minimum person confidence level")
 
             # checks if flag to detect people whose legs are visible 
             if not legs_ctr >= NUMBER_OF_LEG_KP_TO_BE_DETECTED and ONLY_DETECT_PERSON_LEGS_VISIBLE:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print("- Misses legs visible flag")
+                # print("- Misses legs visible flag")
             
             # checks whether the minimum number if body keypoints (excluding legs) has high confidence
             if not body_kp_high_conf_counter >= MIN_KP_TO_DETECT_PERSON:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print("- Misses minimum number of body keypoints")
+                # print("- Misses minimum number of body keypoints")
 
             # checks if flag to detect people right in front of the robot 
             if not center_comm_position and ONLY_DETECT_PERSON_RIGHT_IN_FRONT:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print(" - Misses not being right in front of the robot")
+                # print(" - Misses not being right in front of the robot")
             
             # checks if flag to detect people with their arm raised or waving (requesting assistance)
             if not is_hand_raised and ONLY_DETECT_PERSON_ARM_RAISED:
                 ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                print(" - Misses not being with their arm raised")
+                # print(" - Misses not being with their arm raised")
 
             if ALL_CONDITIONS_MET:
                 num_persons_filtered+=1
@@ -752,7 +757,7 @@ class YoloPoseNode(Node):
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
                         
 
-            print("===")
+            # print("===")
 
         yolov8_pose.num_person = num_persons
         self.person_pose_publisher.publish(yolov8_pose)
@@ -760,13 +765,13 @@ class YoloPoseNode(Node):
         yolov8_pose_filtered.num_person = num_persons_filtered
         self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
-        print("____END____")
+        # print("____END____")
 
         self.new_frame_time = time.time()
         self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
         self.prev_frame_time = self.new_frame_time
         self.fps = str(self.fps)
-        print("fps = " + self.fps)
+        # print("fps = " + self.fps)
 
         if self.DEBUG_DRAW:
             # putting the FPS count on the frame
@@ -778,7 +783,8 @@ class YoloPoseNode(Node):
             cv2.waitKey(1)
         
         # print('tempo parcial = ', tf - ti)
-        print('tempo total = ', time.perf_counter() - self.tempo_total)   # imprime o tempo de calculo em segundos
+        # print('tempo total = ', time.perf_counter() - self.tempo_total)   # imprime o tempo de calculo em segundos
+        self.get_logger().info(f"Time Yolo_Pose: {round(time.perf_counter() - self.tempo_total,2)}")
 
 
     def odom_robot_callback(self, loc: Odometry):
@@ -916,7 +922,7 @@ class YoloPoseNode(Node):
         target_y = dist_person * math.sin(theta_aux) + self.robot_y
 
         a_ref = (target_x, target_y)
-        print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
+        # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
 
         person_abs_pos = Point()
         person_abs_pos.x = target_x
@@ -943,7 +949,7 @@ class YoloPoseNode(Node):
         target_y = dist_head * math.sin(theta_aux) + self.robot_y
 
         a_ref = (target_x, target_y)
-        print("Rel:", (head_rel_pos.x, head_rel_pos.y), "Abs:", a_ref)
+        # print("Rel:", (head_rel_pos.x, head_rel_pos.y), "Abs:", a_ref)
 
         head_abs_pos = Point()
         head_abs_pos.x = target_x
@@ -1048,8 +1054,8 @@ class YoloPoseNode(Node):
         side_pointed = "None"
         arm_pointed_with = "None"
 
-        print("Sides0:", left_wrist[0], left_hip[0], right_wrist[0], right_hip[0])    
-        print("Sides1:", left_wrist[1], left_hip[1], right_wrist[1], right_hip[1])      
+        # print("Sides0:", left_wrist[0], left_hip[0], right_wrist[0], right_hip[0])    
+        # print("Sides1:", left_wrist[1], left_hip[1], right_wrist[1], right_hip[1])      
 
         if theta_left > MIN_ANGLE_POINTING:
             if left_wrist[0] < left_hip[0]:
@@ -1249,7 +1255,7 @@ class YoloPoseNode(Node):
         DEBUG_DRAW_COLOR = False
 
         image_h, image_w, image_c = image.shape
-        print(image.shape)
+        # print(image.shape)
 
         color_name = "None"
         color_value_rgb = (0, 0, 0)
@@ -1270,7 +1276,7 @@ class YoloPoseNode(Node):
 
                 if -1.0 <= m <= 1.0 :
 
-                    print("CASE 1")
+                    # print("CASE 1")
 
                     t__ = [0,0,0] 
                     ctr = 0
@@ -1288,7 +1294,7 @@ class YoloPoseNode(Node):
                         final_avg_color_bgr = (t__/ctr)+0.5
                         final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
                         # print(final_avg_color_bgr)
-                        print(final_avg_color_int_bgr)
+                        # print(final_avg_color_int_bgr)
 
                         # convert from BGR to RGB
                         final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
@@ -1308,7 +1314,7 @@ class YoloPoseNode(Node):
                     m = (p2[0] - p1[0])/(p2[1] - p1[1])
                     b = p2[0] - m* p2[1]
 
-                    print("CASE 2")
+                    # print("CASE 2")
 
                     t__ = [0,0,0] 
                     ctr = 0
@@ -1327,7 +1333,7 @@ class YoloPoseNode(Node):
                         final_avg_color_bgr = (t__/ctr)+0.5
                         final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
                         # print(final_avg_color_bgr)
-                        print(final_avg_color_int_bgr)
+                        # print(final_avg_color_int_bgr)
 
                         # convert from BGR to RGB
                         final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
@@ -1348,7 +1354,7 @@ class YoloPoseNode(Node):
                 m = (p2[0] - p1[0])/(p2[1] - p1[1])
                 b = p2[0] - m* p2[1]
 
-                print("CASE 3")
+                # print("CASE 3")
                 
                 t__ = [0,0,0] 
                 ctr = 0
@@ -1367,7 +1373,7 @@ class YoloPoseNode(Node):
                     final_avg_color_bgr = (t__/ctr)+0.5
                     final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
                     # print(final_avg_color_bgr)
-                    print(final_avg_color_int_bgr)
+                    # print(final_avg_color_int_bgr)
 
                     # convert from BGR to RGB
                     final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
@@ -1386,7 +1392,7 @@ class YoloPoseNode(Node):
                 image_draw[p2[1], p2[0]] = (0, 0, 255)
                 image_draw[p1[1], p1[0]] = (0, 0, 255)
 
-        print("Color:", color_name, "[ RGB:", color_value_rgb, "HSV:", color_value_hsv,"N_P:", n_points, "]")
+        # print("Color:", color_name, "[ RGB:", color_value_rgb, "HSV:", color_value_hsv,"N_P:", n_points, "]")
 
         # return color_name, color_value_rgb, color_value_bgr, color_value_hsv, n_points
         return color_name, color_value_rgb, n_points
