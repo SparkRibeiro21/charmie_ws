@@ -53,7 +53,7 @@ class YoloPoseNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("yolo_model", "s") 
-        self.declare_parameter("debug_draw", False) 
+        self.declare_parameter("debug_draw", True) 
         self.declare_parameter("characteristics", True)
 
         # info regarding the paths for the recorded files intended to be played
@@ -906,7 +906,9 @@ class YoloPoseNode(Node):
 
         # changes the axis of point cloud coordinates to fit with robot axis
         person_rel_pos = Point()
-        person_rel_pos.x = -torso_localisation.y/1000
+        # person_rel_pos.x = -torso_localisation.y/1000
+        # person_rel_pos.y =  torso_localisation.x/1000
+        person_rel_pos.x =  -torso_localisation.y/1000
         person_rel_pos.y =  torso_localisation.x/1000
         person_rel_pos.z =  torso_localisation.z/1000
         
@@ -933,8 +935,10 @@ class YoloPoseNode(Node):
 
         # changes the axis of point cloud coordinates to fit with robot axis
         head_rel_pos = Point()
-        head_rel_pos.x = -head_localisation.y/1000
-        head_rel_pos.y =  head_localisation.x/1000
+        # head_rel_pos.x = -head_localisation.y/1000
+        # head_rel_pos.y =  head_localisation.x/1000
+        head_rel_pos.x =  head_localisation.x/1000
+        head_rel_pos.y =  head_localisation.y/1000
         head_rel_pos.z =  head_localisation.z/1000
 
         new_person.position_relative_head = head_rel_pos

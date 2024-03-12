@@ -42,10 +42,18 @@ AZIM = -35
 DIM = 6000
 
 # according to the kinematics at the moment, the origin is the actuation of the pan servo, therefore to consider the same (x, y, z) as the robot localisation
-# we must shift the axis so the new origin is the center of the robot on the floor
+# we must shift the axis so the new origin is the center of the robot on the flo
+
+
+# pre-correcao bug zz
 X_SHIFT = (560//2)    # must configure so the 0 is the center of the robot, 560/2 is the robot radius
 # Z_SHIFT = (1245+160) # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
 Z_SHIFT = (1325+185) # 151 cm # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
+
+
+# pos correcao bug zz
+# X_SHIFT = 50
+# Z_SHIFT = 1260
 
 flag_show_rgb_depth = True
 
@@ -72,11 +80,19 @@ class PointCloud():
         self.cy = 393.705749511718  # Ponto Principal em pixels (y-coordinate)
 
         # cinematica do cabeça do robo
+        # pre-correcao bug zz
+        # self.DOF = 3
+        # self.teta = [  0,   0,   0]
+        # self.alfa = [ 90, -90,   0]
+        # self.d =    [ 25,   0, 145]
+        # self.l =    [ 28,   0, 130]
+
+        # pos correcao bug zz
         self.DOF = 3
-        self.teta = [  0,   0,   0]
-        self.alfa = [ 90, -90,   0]
-        self.d =    [ 25,   0, 145]
-        self.l =    [ 28,   0, 130]
+        self.teta = [    0,    0,     0]
+        self.alfa = [  -90,   90,     0]
+        self.d =    [ 30.0, 90.0,   0.0]
+        self.l =    [ 25.0, 11.5, 195.0]
 
         self.inverse_matrix = np.zeros([4, 4]) 
         # print(self.inverse_matrix)
@@ -597,11 +613,19 @@ class PointCloudNode(Node):
         # self.pcloud.teta[0] = 180 - neck_pos.pan
         # self.pcloud.teta[1] = 190 - neck_pos.tilt ###### ALTERAR PARA 180
         
-        self.pcloud.teta[0] = 180 - neck_pos.pan
-        self.pcloud.teta[1] = 180 - neck_pos.tilt
+
+
+        # pre-correcao bug zz
+        self.pcloud.teta[0] = -neck_pos.pan
+        self.pcloud.teta[1] = neck_pos.tilt
+        
+
+        # pos correcao bug zz
+        # self.pcloud.teta[0] = neck_pos.pan
+        # self.pcloud.teta[1] = -neck_pos.tilt
         
         ##### porque é que estamos a imprimir o [2] ???
-        print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[1], ",", self.pcloud.teta[2], ")")
+        print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[0], ",", self.pcloud.teta[1], ")")
 
     def callback_point_cloud(self, request, response):
 

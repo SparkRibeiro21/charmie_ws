@@ -328,10 +328,8 @@ class NeckNode(Node):
 
         global read_pan_open_loop, read_tilt_open_loop
 
-
         img_width = 1280
         img_height = 720
-
 
         target_x = pose.person.kp_nose_x
         target_y = pose.person.kp_nose_y
@@ -485,8 +483,9 @@ class NeckNode(Node):
         # this function is used for nodes that need to keep the latest neck position value saved, so when new data comes
         # these need to compute, they don't have to request the position, therefore not wasting time...
         pose = NeckPosition()
-        pose.pan  = float(int(p*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) # - 180.0
-        pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) # - 180.0
+        pose.pan  = float(int(p*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
+        pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
+        print(pose)
         self.neck_get_position_topic_publisher.publish(pose)
         
 
