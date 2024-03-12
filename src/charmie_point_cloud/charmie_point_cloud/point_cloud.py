@@ -617,7 +617,7 @@ class PointCloudNode(Node):
 
         # pre-correcao bug zz
         self.pcloud.teta[0] = -neck_pos.pan
-        self.pcloud.teta[1] = neck_pos.tilt
+        self.pcloud.teta[1] = -neck_pos.tilt
         
 
         # pos correcao bug zz
