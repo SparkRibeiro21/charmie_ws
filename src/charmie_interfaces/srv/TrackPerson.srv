@@ -1,0 +1,7 @@
+# Service to send a position to the servos to center with a part of the body of the sent detected person
+
+DetectedPerson person # The person it is intended to be followed by the neck
+string body_part # body part the robot must look at
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.

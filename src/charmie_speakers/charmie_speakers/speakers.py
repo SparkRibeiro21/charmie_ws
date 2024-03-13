@@ -236,7 +236,7 @@ class SpeakerNode(Node):
         self.speakers_diagnostic_publisher.publish(flag_diagn)
 
         # Initial Speaking "Hello" for debug purposes
-        self.charmie_speech.play_command("introduction_hello", False) 
+        self.charmie_speech.play_command("generic/introduction_hello", False) 
 
         # Test Function for some quick tests if necessary
         # self.test()

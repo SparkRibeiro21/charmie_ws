@@ -6,8 +6,8 @@ from geometry_msgs.msg import Pose2D
 from example_interfaces.msg import Bool
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import TrackObject, TrackPerson, NeckPosition
-from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates
+from charmie_interfaces.msg import NeckPosition
+from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackPerson, TrackObject
 
 import math
 import tty
@@ -138,9 +138,9 @@ class NeckNode(Node):
         # self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.neck_to_coords_callback, 10)
 
         # receives a person and the keypoint it must follow (ex: constantly looking at the person face, look at body center  to check hands and feet)
-        self.neck_follow_person_subscriber = self.create_subscription(TrackPerson, "neck_follow_person", self.neck_follow_person_callback ,10)
+        # self.neck_follow_person_subscriber = self.create_subscription(TrackPerson, "neck_follow_person", self.neck_follow_person_callback ,10)
         # receives an object and it follows it, keeping it centered in the image (ex: constantly looking at a cup, plate, cereal box)
-        self.neck_follow_object_subscriber = self.create_subscription(TrackObject, "neck_follow_object", self.neck_follow_object_callback, 10)
+        # self.neck_follow_object_subscriber = self.create_subscription(TrackObject, "neck_follow_object", self.neck_follow_object_callback, 10)
 
         # sends the current position of the servos after every change made on the publisher topics
         self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
@@ -155,6 +155,8 @@ class NeckNode(Node):
         self.server_set_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_set_neck_position) 
         self.server_get_neck_position = self.create_service(GetNeckPosition, "get_neck_pos", self.callback_get_neck_position) 
         self.server_set_neck_to_coordinates = self.create_service(SetNeckCoordinates, "neck_to_coords", self.callback_set_neck_to_coordinates) 
+        self.server_neck_track_person = self.create_service(TrackPerson, "neck_track_person", self.callback_neck_track_person)
+        self.server_neck_track_object = self.create_service(TrackObject, "neck_track_object", self.callback_neck_track_object)
         self.get_logger().info("Neck Servers have been started")
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
@@ -210,7 +212,7 @@ class NeckNode(Node):
 
         # returns whether the message was played and some informations regarding status
         response.success = True
-        response.message = "neck test"
+        response.message = "set neck position"
         return response
 
     def callback_get_neck_position(self, request, response):
@@ -273,9 +275,65 @@ class NeckNode(Node):
 
         # returns whether the message was played and some informations regarding status
         response.success = True
-        response.message = "neck test"
+        response.message = "set to coordinates"
         return response
-        
+    
+
+    def callback_neck_track_person(self, request, response):
+
+        # Type of service received: 
+        # DetectedPerson person # The person it is intended to be followed by the neck
+        # string body_part # body part the robot must look at
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        # these are the only two points that will always exist independentely if the confidence of a keypoint is > MIN_CONFIDENCE_VALUE
+        if request.body_part == "Head":
+            target_x = request.head_center_x
+            target_y = request.head_center_y
+        elif request.body_part == "Torso":
+            target_x = request.head_center_x
+            target_y = request.head_center_y        
+            
+        global read_pan_open_loop, read_tilt_open_loop
+
+        img_width = 1280
+        img_height = 720
+
+        target_x = request.person.kp_nose_x
+        target_y = request.person.kp_nose_y
+
+        hor_fov = 91.2
+        ver_fov = 65.5
+
+        print(target_x, target_y)
+
+        error_x = -int(img_width/2 - request.person.kp_nose_x)
+        error_y = -int(img_height/2 - request.person.kp_nose_y)
+
+        perc_x = error_x/(img_width/2)
+        perc_y = error_y/(img_height/2)
+
+        new_a_x = (-perc_x*(hor_fov/2))
+        new_a_y = (-perc_y*(ver_fov/2))*0.75 # on the 'yes movement' axis, it tended to always overshoot a bit, the 0.75 factor fixes it
+
+        print("angs: ", new_a_x, new_a_y)
+
+        # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
+        self.send_neck_move(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
+    
+        response.success = True
+        response.message = "neck track person"
+        return response
+
+    
+    def callback_neck_track_object(self, request, response):
+
+        response.success = True
+        response.message = "neck track object"
+        return response
+
 
     ########## CALLBACKS ##########
     # def neck_position_callback(self, neck_pos: NeckPosition):
@@ -322,10 +380,18 @@ class NeckNode(Node):
         
         # print(self.robot_x, self.robot_y, self.robot_t)
 
-
-    def neck_follow_person_callback(self, pose: TrackPerson):
+    """
+    def callback_neck_track_person(self, pose: TrackPerson):
         print("Folow person received")
 
+        # these are the only two points that will always exist independentely if the confidence of a keypoint is > MIN_CONFIDENCE_VALUE
+        if pose.body_part == "Head":
+            target_x = pose.head_center_x
+            target_y = pose.head_center_y
+        elif pose.body_part == "Torso":
+            target_x = pose.head_center_x
+            target_y = pose.head_center_y        
+            
         global read_pan_open_loop, read_tilt_open_loop
 
         img_width = 1280
@@ -366,9 +432,10 @@ class NeckNode(Node):
         # 
         #     cv2.imshow("Neck Debug", current_frame)
         #     cv2.waitKey(1)
+    """
 
-    def neck_follow_object_callback(self, pose: TrackObject):
-        pass
+    # def neck_follow_object_callback(self, pose: TrackObject):
+    #     pass
 
     # def get_color_image_callback(self, img: Image):
         # self.get_logger().info('Receiving color video frame')

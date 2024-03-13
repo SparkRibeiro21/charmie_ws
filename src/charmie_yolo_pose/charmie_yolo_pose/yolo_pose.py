@@ -38,10 +38,10 @@ DRAW_PERSON_BOX = True
 DRAW_PERSON_KP = True
 DRAW_LOW_CONF_KP = False
 DRAW_PERSON_LOCATION_COORDS = True
-DRAW_PERSON_LOCATION_HOUSE_FURNITURE = True
-DRAW_PERSON_POINTING_INFO = True
-DRAW_PERSON_HAND_RAISED = True
-DRAW_PERSON_HEIGHT = True
+DRAW_PERSON_LOCATION_HOUSE_FURNITURE = False
+DRAW_PERSON_POINTING_INFO = False
+DRAW_PERSON_HAND_RAISED = False
+DRAW_PERSON_HEIGHT = False
 DRAW_PERSON_CLOTHES_COLOR = True
 
 
@@ -937,8 +937,8 @@ class YoloPoseNode(Node):
         head_rel_pos = Point()
         # head_rel_pos.x = -head_localisation.y/1000
         # head_rel_pos.y =  head_localisation.x/1000
-        head_rel_pos.x =  head_localisation.x/1000
-        head_rel_pos.y =  head_localisation.y/1000
+        head_rel_pos.x =  -head_localisation.y/1000
+        head_rel_pos.y =  head_localisation.x/1000
         head_rel_pos.z =  head_localisation.z/1000
 
         new_person.position_relative_head = head_rel_pos

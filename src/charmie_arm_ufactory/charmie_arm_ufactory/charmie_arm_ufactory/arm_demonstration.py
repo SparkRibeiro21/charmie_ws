@@ -137,29 +137,29 @@ class ArmUfactory(Node):
 		
 		#define key positions and keypoints
 
-		self.initial_position = [-215.0, 83.4, -65.0, -0.5, 74.9, -90.0] 
-		self.restaurant_initial_position = [-224.8, 83.4, -65.0, -0.5, 74.9, -90.0] 
-		self.pre_get_order_position = [-149.0, 2.0, -78.0, 245.0, 32.5, -331.0]
-		self.get_order_position = [-158.0, 33.0, -118.0, 255.0, 22.0, -343.0]
-		self.orient_to_table = [-195.4, 40.2, -52.7, 163.4, 77.8, -264.2]
-		#self.pre_pick_coke_tray = [-30.0, 69.0, -116.0, -37.0, 91.0, -110.0]
-		self.place_coke_tray = [-233.0, 45.0, -74.0, -35.0, 57.0, -116.0]
-		self.pre_place_coke_tray = [-229.0, 39.0, -63.0, -35.0, 53.0, -110.0]
-		#self.pick_coke_tray = [-40.0, 68.0, -98.0, -46.0, 74.0, -107.0]
-		self.place_juice_tray = [-243.0, 22.0, -81.0, 184.0, -56.0, -335.0]
-		#self.pick_juice_tray = [-48.0, 22.0, -76.0, -185.0, -49.0, 35.0]
-		self.pre_place_juice_tray = [-237.0, 2.0, -92.0, 182.0, -87.0, -324.0]
-		self.pre2_place_juice_tray = [-235.0, 9.0, -63.0, 184.0, -50.0, -325.0]
-		self.place_milk_table = [-203.0, 26.0, -113.0, 159.0, 51.0, -239.0]
-		self.pre_place_milk_table = [-196.0, 22.0, -108.0, 164.0, 50.0, -245.0]
-		self.place_juice_table = [-207.0, -8.0, -77.0, 151.0, 51.0, -231.0]
-		self.pre_place_juice_table = [-197.0, -14.0, -72.0, 159.0, 46.0, -242.0]
-		self.place_coke_table = [-194.0, 54.0, -117.0, 170.0, 72.0, -255.0]
-		self.pre_place_coke_table = [-185.0, 49.0, -110.0, 177.0, 73.0, -264.0]
-		#self.check_object = [51.0, 17.0, -114.0, 5.0, 112.0, -44.0]
+		self.initial_position = [-215.0, 83.4, -65.0, -0.5, 74.9, 270.0] 
+		self.restaurant_initial_position = [-224.8, 83.4, -65.0, -0.5, 74.9, 270.0] 
+		self.pre_get_order_position = [-149.0, 2.0, -78.0, 245.0, 32.5, 29.0]
+		self.get_order_position = [-158.0, 33.0, -118.0, 255.0, 22.0, 17.0]
+		self.orient_to_table = [-195.4, 40.2, -52.7, 163.4, 77.8, 96.2]
+		#self.pre_pick_coke_tray = [-30.0, 69.0, -116.0, -37.0, 91.0, 250.0]
+		self.place_coke_tray = [-233.0, 45.0, -74.0, -35.0, 57.0, 244.0]
+		self.pre_place_coke_tray = [-229.0, 39.0, -63.0, -35.0, 53.0, 250.0]
+		#self.pick_coke_tray = [-40.0, 68.0, -98.0, -46.0, 74.0, 253.0]
+		self.place_juice_tray = [-243.0, 22.0, -81.0, 184.0, -56.0, 25.0]
+		#self.pick_juice_tray = [-48.0, 22.0, -76.0, -185.0, -49.0, 395.0]
+		self.pre_place_juice_tray = [-237.0, 2.0, -92.0, 182.0, -87.0, 36.0]
+		self.pre2_place_juice_tray = [-235.0, 9.0, -63.0, 184.0, -50.0, 35.0]
+		self.place_milk_table = [-203.0, 26.0, -113.0, 159.0, 51.0, 121.0]
+		self.pre_place_milk_table = [-196.0, 22.0, -108.0, 164.0, 50.0, 115.0]
+		self.place_juice_table = [-207.0, -8.0, -77.0, 151.0, 51.0, 129.0]
+		self.pre_place_juice_table = [-197.0, -14.0, -72.0, 159.0, 46.0, 118.0]
+		self.place_coke_table = [-194.0, 54.0, -117.0, 170.0, 72.0, 105.0]
+		self.pre_place_coke_table = [-185.0, 49.0, -110.0, 177.0, 73.0, 96.0]
+		#self.check_object = [51.0, 17.0, -114.0, 5.0, 112.0, 316.0]
 		
 		#define key positions and keypoints
-		#self.restaurant_initial_position = [6.0, 90.0, -90.0, 0.0, 90.0, 0.0] 
+		#self.restaurant_initial_position = [6.0, 90.0, -90.0, 0.0, 90.0, 360.0] 
 		print('Nada')
 
 		########### EXPLANATION OF EACH MODE: ########### 
@@ -661,7 +661,7 @@ class ArmUfactory(Node):
 			print('ee')
 
 		elif self.estado_tr == 4: 
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, 41.0, -109.0, -23.0, 97.0, -124.0])
+			self.joint_values_req.angles = self.deg_to_rad([-218.0, 41.0, -109.0, -23.0, 97.0, 236.0])
 			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -747,7 +747,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			#waypoints
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, 31.0, -46.0, -31.0, 48.0, -100.0])
+			self.joint_values_req.angles = self.deg_to_rad([-218.0, 31.0, -46.0, -31.0, 48.0, 260.0])
 			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -962,7 +962,7 @@ class ArmUfactory(Node):
 	def go_grab_third_object(self):
 		if self.estado_tr == 0:
 			###POS JUICE TRAY
-			self.joint_values_req.angles = self.deg_to_rad([-244.0, 16.0, -97.0, 183.0, -78.1, -334.0])
+			self.joint_values_req.angles = self.deg_to_rad([-244.0, 16.0, -97.0, 183.0, -78.1, 26.0])
 			self.joint_values_req.speed = 0.15 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -970,7 +970,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad([-244.0, 16.0, -97.0, 183.0, -78.1, -334.0])
+			self.joint_values_req.angles = self.deg_to_rad([-244.0, 16.0, -97.0, 183.0, -78.1, 26.0])
 			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1125,7 +1125,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, -2.0, -40.0, 154.0, 98.0, -242.0])
+			self.joint_values_req.angles = self.deg_to_rad([-218.0, -2.0, -40.0, 154.0, 98.0, 118.0])
 			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1214,7 +1214,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 12:
 			#Waypoints
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, -2.0, -40.0, 154.0, 98.0, -242.0])
+			self.joint_values_req.angles = self.deg_to_rad([-218.0, -2.0, -40.0, 154.0, 98.0, 118.0])
 			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1303,7 +1303,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 23:
-			self.joint_values_req.angles = self.deg_to_rad([-243.0, -58.0, -5.0, 135.0, 88.0, -214.0])
+			self.joint_values_req.angles = self.deg_to_rad([-243.0, -58.0, -5.0, 135.0, 88.0, 146.0])
 			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1394,7 +1394,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 34:
 			#Waypoints
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, -27.0, -45.0, 148.0, 68.0, -228.0])
+			self.joint_values_req.angles = self.deg_to_rad([-218.0, -27.0, -45.0, 148.0, 68.0, 132.0])
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1402,7 +1402,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 35:
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, 41.0, -109.0, -23.0, 97.0, -124.0])
+			self.joint_values_req.angles = self.deg_to_rad([-218.0, 41.0, -109.0, -23.0, 97.0, 236.0])
 			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1457,7 +1457,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 42:
-			self.joint_values_req.angles = self.deg_to_rad([-202.0, 47.0, -63.0, 163.0, 119.0, -259.0])
+			self.joint_values_req.angles = self.deg_to_rad([-202.0, 47.0, -63.0, 163.0, 119.0, 101.0])
 			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1537,7 +1537,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 52:
 			#waypoints
-			self.joint_values_req.angles = self.deg_to_rad([-212.0, 53.0, -66.0, 155.0, 123.0, -257.0])
+			self.joint_values_req.angles = self.deg_to_rad([-212.0, 53.0, -66.0, 155.0, 123.0, 103.0])
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1579,7 +1579,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, -2.0, -40.0, 154.0, 98.0, -242.0])
+			self.joint_values_req.angles = self.deg_to_rad([-218.0, -2.0, -40.0, 154.0, 98.0, 118.0])
 			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1661,7 +1661,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, -2.0, -40.0, 154.0, 98.0, -242.0])
+			self.joint_values_req.angles = self.deg_to_rad([-218.0, -2.0, -40.0, 154.0, 98.0, 118.0])
 			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1724,7 +1724,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 9:
-			self.joint_values_req.angles = self.deg_to_rad([-243.0, -58.0, -5.0, 135.0, 88.0, -214.0])
+			self.joint_values_req.angles = self.deg_to_rad([-243.0, -58.0, -5.0, 135.0, 88.0, 146.0])
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1795,7 +1795,7 @@ class ArmUfactory(Node):
 	def place_third_object_table(self):
 		if self.estado_tr == 0:
 			#Waypoints
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, -27.0, -45.0, 148.0, 68.0, -228.0])
+			self.joint_values_req.angles = self.deg_to_rad([-218.0, -27.0, -45.0, 148.0, 68.0, 132.0])
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1803,7 +1803,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, 41.0, -109.0, -23.0, 97.0, -124.0])
+			self.joint_values_req.angles = self.deg_to_rad([-218.0, 41.0, -109.0, -23.0, 97.0, 236.0])
 			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1849,7 +1849,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 7:
-			self.joint_values_req.angles = self.deg_to_rad([-202.0, 47.0, -63.0, 163.0, 119.0, -259.0])
+			self.joint_values_req.angles = self.deg_to_rad([-202.0, 47.0, -63.0, 163.0, 119.0, 101.0])
 			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1925,7 +1925,7 @@ class ArmUfactory(Node):
 			print('ll')
 
 		elif self.estado_tr == 2:
-			self.joint_values_req.angles = self.deg_to_rad([-30.0, 90.0, -90.0, 0.0, 90.0, 10.0] )
+			self.joint_values_req.angles = self.deg_to_rad([-30.0, 90.0, -90.0, 0.0, 90.0, 370.0] )
 			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -1964,7 +1964,7 @@ class ArmUfactory(Node):
 	def go_rest_arm(self):
 		if self.estado_tr == 0:
 			#waypoints
-			self.joint_values_req.angles = self.deg_to_rad([-212.0, 53.0, -66.0, 155.0, 123.0, -257.0])
+			self.joint_values_req.angles = self.deg_to_rad([-212.0, 53.0, -66.0, 155.0, 123.0, 103.0])
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
@@ -2057,7 +2057,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			#waypoints
 			print('1')
-			self.joint_values_req.angles = self.deg_to_rad([90.0, -60.0, -35.0, 0.0, -20.0, 90.0])
+			self.joint_values_req.angles = self.deg_to_rad([90.0, -60.0, -35.0, 0.0, -20.0, 450.0])
 			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 5.0
@@ -2066,7 +2066,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			print('2')
-			self.joint_values_req.angles = self.deg_to_rad([90.0, -60.0, -35.0, 0.0, 0.0, 90.0])
+			self.joint_values_req.angles = self.deg_to_rad([90.0, -60.0, -35.0, 0.0, 0.0, 450.0])
 			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 5.0
@@ -2075,7 +2075,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 2:
 			print('3') 
-			self.joint_values_req.angles = self.deg_to_rad([90.0, -60.0, -35.0, 0.0, 20.0, 90.0])
+			self.joint_values_req.angles = self.deg_to_rad([90.0, -60.0, -35.0, 0.0, 20.0, 450.0])
 			self.joint_values_req.speed = 0.35 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 5.0
@@ -2088,7 +2088,7 @@ class ArmUfactory(Node):
 	
 		if self.estado_tr == 0:
       
-			""" self.joint_plan_req.target = self.deg_to_rad([40.0, 29.0, -113.0, -110.0, 31.0, 15.0])
+			""" self.joint_plan_req.target = self.deg_to_rad([40.0, 29.0, -113.0, -110.0, 31.0, 375.0])
 
 			self.future = self.joint_plan_client.call_async(self.joint_plan_req)
 			self.future.add_done_callback(partial(self.callback_service_tr)) """			

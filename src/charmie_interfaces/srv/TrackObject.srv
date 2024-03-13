@@ -1,0 +1,6 @@
+# Service to send a position to the servos to center with a detected object
+
+DetectedObject object # The object it is intended to be followed by the neck
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.
