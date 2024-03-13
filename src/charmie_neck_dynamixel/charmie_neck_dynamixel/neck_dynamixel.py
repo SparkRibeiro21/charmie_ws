@@ -290,27 +290,29 @@ class NeckNode(Node):
 
         # these are the only two points that will always exist independentely if the confidence of a keypoint is > MIN_CONFIDENCE_VALUE
         if request.body_part == "Head":
-            target_x = request.head_center_x
-            target_y = request.head_center_y
+            target_x = request.person.head_center_x
+            target_y = request.person.head_center_y
         elif request.body_part == "Torso":
-            target_x = request.head_center_x
-            target_y = request.head_center_y        
+            target_x = request.person.body_center_x
+            target_y = request.person.body_center_y        
             
         global read_pan_open_loop, read_tilt_open_loop
+
+        print(target_x, target_y)
 
         img_width = 1280
         img_height = 720
 
-        target_x = request.person.kp_nose_x
-        target_y = request.person.kp_nose_y
+        # target_x = request.person.kp_nose_x
+        # target_y = request.person.kp_nose_y
 
         hor_fov = 91.2
         ver_fov = 65.5
 
         print(target_x, target_y)
 
-        error_x = -int(img_width/2 - request.person.kp_nose_x)
-        error_y = -int(img_height/2 - request.person.kp_nose_y)
+        error_x = -int(img_width/2 - target_x)
+        error_y = -int(img_height/2 - target_y)
 
         perc_x = error_x/(img_width/2)
         perc_y = error_y/(img_height/2)
@@ -321,7 +323,7 @@ class NeckNode(Node):
         print("angs: ", new_a_x, new_a_y)
 
         # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
-        self.send_neck_move(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
+        self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
     
         response.success = True
         response.message = "neck track person"
