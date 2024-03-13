@@ -46,14 +46,14 @@ DIM = 6000
 
 
 # pre-correcao bug zz
-X_SHIFT = (560//2)    # must configure so the 0 is the center of the robot, 560/2 is the robot radius
+# X_SHIFT = (560//2)   # must configure so the 0 is the center of the robot, 560/2 is the robot radius
 # Z_SHIFT = (1245+160) # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
-Z_SHIFT = (1325+185) # 151 cm # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
+# Z_SHIFT = (1325+185) # 151 cm # height of the servos from the floor + height from the servos to the camera (altura pescoco+ dist. pescoço-camara)
 
 
 # pos correcao bug zz
-# X_SHIFT = 50
-# Z_SHIFT = 1260
+X_SHIFT = 50
+Z_SHIFT = 1260
 
 flag_show_rgb_depth = True
 
@@ -84,17 +84,18 @@ class PointCloud():
         # self.DOF = 3
         # self.teta = [  0,   0,   0]
         # self.alfa = [ 90, -90,   0]
-        # self.d =    [ 25,   0, 145]
-        # self.l =    [ 28,   0, 130]
+        # self.l =    [ 25,   0, 145]
+        # self.d =    [ 28,   0, 130]
 
         # pos correcao bug zz
         self.DOF = 3
-        self.teta = [    0,    0,     0]
-        self.alfa = [  -90,   90,     0]
-        self.d =    [ 30.0, 90.0,   0.0]
-        self.l =    [ 25.0, 11.5, 195.0]
+        self.teta = [    0,     0,     0]
+        self.alfa = [  -90,    90,     0]
+        self.l =    [ 30.0,  90.0,   0.0]
+        self.d =    [ 25.0, -11.5, 195.0]
 
-        self.inverse_matrix = np.zeros([4, 4]) 
+        # pos correcao bug zz
+        self.inverse_matrix = np.identity(4) 
         # print(self.inverse_matrix)
 
         self.rgb_img_pc = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
@@ -129,10 +130,13 @@ class PointCloud():
                 self.ax5 = self.fig2.add_subplot(111, projection='3d')
                 self.ax5.mouse_init()
 
-
+        # pos correcao bug zz
         self.actualiza_tetas(' ')
         self.robo()      # calculates the kinematics so the inverse matrix has initial values
         self.converter_2D_3D(0, 0, self.linhas, self.colunas)
+
+        # print(self.inverse_matrix)
+
 
         if GRAF3D == 1:
             self.graficos()
@@ -218,7 +222,12 @@ class PointCloud():
         for i in range(self.DOF):
             T=np.dot(T,self.braco(self.alfa[i], self.teta[i], self.d[i], self.l[i]))
         self.inverse_matrix = np.linalg.inv(T)
-        # return self.inverse_matrix
+        print(T)
+        # pos correcao do bug
+        # return T
+        # print(T)
+        # print(self.inverse_matrix)
+        return self.inverse_matrix
 
     def actualiza_tetas(self, tecla):
         global ELEV, AZIM, inc, DIM, Z_MIN_A_VER, WIDTH, HEIGHT, x1, y1
@@ -616,8 +625,13 @@ class PointCloudNode(Node):
 
 
         # pre-correcao bug zz
-        self.pcloud.teta[0] = -neck_pos.pan
+        self.pcloud.teta[0] = neck_pos.pan
         self.pcloud.teta[1] = -neck_pos.tilt
+        # print(self.pcloud.teta)
+        # print(self.pcloud.alfa)
+        # print(self.pcloud.d)
+        # print(self.pcloud.l)
+        # self.pcloud.robo() # TEMP # calcula a matris inversa da cabeça toda
         
 
         # pos correcao bug zz
@@ -655,9 +669,10 @@ class PointCloudNode(Node):
             self.pcloud.rgb_img_pc = rgb_frame
             self.pcloud.depth_img_pc = depth_frame_res
         
-            tecla = cv2.waitKey(1)  # le uma tecla
-            if tecla != 27:         # se não for a tecla de ESCAPE, faz todo o processamento
-                self.pcloud.actualiza_tetas(tecla)  # actualiza as variaveis Theta da cinematica
+            # tecla = cv2.waitKey(1)  # le uma tecla
+            # if tecla != 27:         # se não for a tecla de ESCAPE, faz todo o processamento
+            # self.pcloud.actualiza_tetas(tecla)  # actualiza as variaveis Theta da cinematica
+
 
             # imprime as variaveis todas apenas para DEBUG no terminal
             print("[ ", end=' ')

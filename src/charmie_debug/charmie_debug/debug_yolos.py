@@ -9,7 +9,7 @@ import time
 
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from charmie_interfaces.msg import Yolov8Pose
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, TrackObject, TrackPerson
 from sensor_msgs.msg import Image
 
 # Constant Variables to ease RGB_MODE coding
@@ -37,11 +37,11 @@ class TestNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
 
         ### Services (Clients) ###
-        # Speakers
-        # self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        # Neck
+        # self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
         
-        # while not self.speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Speech Command...")
+        # while not self.neck_track_person_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Neck Track Person ...")
         
         # Variables
         self.waited_for_end_of_speaking = False
