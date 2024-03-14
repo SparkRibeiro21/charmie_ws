@@ -1,5 +1,6 @@
 string name
 string class
+int32 index
 float32 confidence
 
 geometry_msgs/Point position_relative
