@@ -21,7 +21,7 @@ objects_filename = "m_size_model_300_epochs_after_nandinho.pt"
 shoes_filename = "shoes_socks_v1.pt"    
 
 
-MIN_OBJECT_CONF_VALUE = 0.5
+MIN_OBJECT_CONF_VALUE = 0.8
 LIST_OF_OBJECTS_OF_TASK = [""]
 
 
@@ -75,7 +75,8 @@ class Yolo_obj(Node):
         self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
  
         # Publish Results
-        ### self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
+        self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
+        self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
         
         ### Services (Clients) ###
         # Point Cloud
@@ -129,9 +130,9 @@ class Yolo_obj(Node):
         # print(state.data)
         if 0.0 <= state.data <= 1.0:
             MIN_OBJECT_CONF_VALUE = state.data
-            self.get_logger().info('NEW MIN_PERSON_CONF_VALUE RECEIVED')    
+            self.get_logger().info('NEW MIN_OBJECT_CONF_VALUE RECEIVED')    
         else:
-            self.get_logger().info('ERROR SETTING MIN_PERSON_CONF_VALUE')   
+            self.get_logger().info('ERROR SETTING MIN_OBJECT_CONF_VALUE')   
 
 
     def get_color_image_head_callback(self, img: Image):
@@ -185,7 +186,7 @@ class Yolo_obj(Node):
             # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
 
             num_obj = len(self.object_results[0])
-            self.get_logger().info(f"People detected: {num_obj}")
+            # self.get_logger().info(f"Objects detected: {num_obj}")
 
             requested_objects = []
             for object_idx in range(num_obj):
@@ -223,9 +224,9 @@ class Yolo_obj(Node):
         yolov8_obj_filtered = Yolov8Objects()
         num_objects_filtered = 0
 
-        print(num_obj)
-        print(self.object_results[0])
-        print(self.object_results[0].boxes)
+        # print(num_obj)
+        # print(self.object_results[0])
+        # print(self.object_results[0].boxes)
 
         for object_idx in range(num_obj):
             boxes_id = self.object_results[0].boxes[object_idx]
@@ -262,21 +263,27 @@ class Yolo_obj(Node):
                     else:
                         pass
             """
-            #### checks whether the person confidence is above a defined level
-            ###if not boxes_id.conf >= MIN_PERSON_CONF_VALUE:
-            ###    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-            ###    # print("- Misses minimum person confidence level")
 
-
+            # checks whether the person confidence is above a defined level
+            if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
+                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                # print("- Misses minimum person confidence level")
 
             if ALL_CONDITIONS_MET:
                 num_objects_filtered+=1
 
+                yolov8_obj_filtered.objects.append(new_person)
+
+                if self.DEBUG_DRAW:
+                    pass
+                    ### DRAW THE RESULTS
+
+
         yolov8_obj.num_objects = num_obj
-        ###self.person_pose_publisher.publish(yolov8_obj)
+        self.objects_publisher.publish(yolov8_obj)
 
         yolov8_obj_filtered.num_objects = num_objects_filtered
-        ###self.person_pose_filtered_publisher.publish(yolov8_obj_filtered)
+        self.objects_filtered_publisher.publish(yolov8_obj_filtered)
         
         self.new_frame_time = time.time()
         self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
@@ -286,15 +293,24 @@ class Yolo_obj(Node):
 
         if self.DEBUG_DRAW:
             # putting the FPS count on the frame
-            cv2.putText(current_frame, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-            cv2.imshow('Output_head', current_frame) # Exibir a imagem capturada
-            cv2.imshow("Yolo Detection", annotated_frame)
+            cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.putText(current_frame_draw, 'np:' + str(num_objects_filtered) + '/' + str(num_obj), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
+            cv2.imshow("Yolo Object Detection", annotated_frame)
+            # cv2.imshow("Camera Image", current_frame)
             cv2.waitKey(1)
+        
+        ### TEM QUE PASSAR PARA A FUNCAO do Point Cloud
         self.waiting_for_pcloud = False
+
+        self.get_logger().info(f"Objects detected: {num_obj}/{num_objects_filtered}")
+        self.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
 
 
     def add_object_to_detectedobject_msg(self):
         pass
+        p = DetectedObject()
+        return p
 
     """
     def get_color_image_head_callback(self, img: Image):
