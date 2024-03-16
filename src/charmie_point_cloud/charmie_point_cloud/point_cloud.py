@@ -798,7 +798,52 @@ class PointCloudNode(Node):
 
                 # print("CENTER")
                 # calcula o ponto do centro
-                resp_centro = self.pcloud.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2)
+                # this is still a change in progess. Rather than returning the x,y,z of the center point of the bounding box, 
+                # we are trying to compute the mean of the points that interest us, since the center point of the bounding box may
+                # be in the object/person we are tryng to get the position
+                # old version - using the center of the bounding box:
+                # resp_centro = self.pcloud.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2)
+                # new version:
+
+                resp_todos = []
+                resp_todos = self.pcloud.converter_2D_3D(u_inicial, v_inicial, HEIGHT, WIDTH)
+                uteis = [row for row in resp_todos if (row[0]!=0 or row[1]!=0 or row[2]!=0)] # limpa os elementos [0, 0, 0]
+                x_coord = np.array(uteis)[:, 0]                             # Extrai a coordenada X
+                y_coord = np.array(uteis)[:, 1]  # Extrai a coordenada X
+                z_coord = np.array(uteis)[:, 2]  # Extrai a coordenada X
+                x_min, x_max, _, _ = cv2.minMaxLoc(x_coord)
+                y_min, y_max, _, _ = cv2.minMaxLoc(y_coord)
+                z_min, z_max, _, _ = cv2.minMaxLoc(z_coord)
+                y_min = y_min + (y_max-y_min)*0.05
+                y_max = y_max - (y_max-y_min)*0.05
+                z_min = z_min + (z_max-z_min)*0.05
+                z_max = z_max - (z_max-z_min)*0.05
+                uteis = [row for row in uteis if ((row[1]>y_min and row[1]<y_max) and (row[2]>z_min and row[2]<z_max))] # limpa os elementos [0, 0, 0]
+                
+                bin_edges = np.arange(min(x_coord), max(x_coord) + 100, 100)    # Cria a lista de limites para o histograma
+                hist, bin_edges = np.histogram(x_coord, bins=bin_edges)     # Usa np.histogram para contar as ocorrencias
+                _, maior, _, posicao = cv2.minMaxLoc(hist)                  # calcula o máximo
+                #Xmin = cv2.max(x_min, bin_edges[posicao[1]-1])                                # calcula a coordenada X ao objeto
+                #Xmax = cv2.min(x_max, bin_edges[posicao[1] + 2])
+                if posicao[1]>0:
+                    Xmin = bin_edges[posicao[1] - 1]  # calcula a coordenada X ao objeto
+                else:
+                    Xmin = bin_edges[posicao[1]    ]  # calcula a coordenada X ao objeto
+                # print('len posicao', len(bin_edges))
+                if posicao[1]<len(bin_edges)-2:
+                    Xmax = bin_edges[posicao[1] + 2]
+                else:
+                    Xmax = bin_edges[posicao[1] + 1]
+                uteis_uteis = [row for row in uteis if (row[0]>=Xmin and row[0]<=Xmax)] # filtro apenas os elementos no pico do histograma
+                # for i in uteis_uteis:
+                    # print(i[0], '\t', i[1], '\t', i[2])
+                centroid = np.mean(uteis_uteis, axis=0)
+
+                if np.isnan(centroid).any():
+                    resp_centro = self.pcloud.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2) 
+                else:
+                    resp_centro = centroid
+                print("centroid:", centroid)
 
                 # print("REQUESTED")
                 # calcula a lista de pontos
@@ -808,9 +853,7 @@ class PointCloudNode(Node):
                     resp_outros.append(temp)
 
                 # calcula todos os pontos
-                resp_todos = []
-                if request.retrieve_bbox: # or GRAF3D:
-                    resp_todos = self.pcloud.converter_2D_3D(u_inicial, v_inicial, HEIGHT, WIDTH)
+                # if request.retrieve_bbox: # or GRAF3D:
 
 
                 # Guarda todas as respostas na variavel ENVIO
@@ -829,6 +872,7 @@ class PointCloudNode(Node):
                     pcc = PointCloudCoordinates()
 
                     point_c = Point()
+                    print(point_c)
                     point_c.x = float(cc[0][0])
                     point_c.y = float(cc[0][1])
                     point_c.z = float(cc[0][2])
@@ -847,13 +891,14 @@ class PointCloudNode(Node):
                     pcc.requested_point_coords = kp_list
 
                     bb_list = []
-                    for bb in cc[2]:
-                        # print("bb:", bb)
-                        point_bb = Point()
-                        point_bb.x = float(bb[0])
-                        point_bb.y = float(bb[1])
-                        point_bb.z = float(bb[2])
-                        bb_list.append(point_bb)
+                    if request.retrieve_bbox:
+                        for bb in cc[2]:
+                            # print("bb:", bb)
+                            point_bb = Point()
+                            point_bb.x = float(bb[0])
+                            point_bb.y = float(bb[1])
+                            point_bb.z = float(bb[2])
+                            bb_list.append(point_bb)
 
                     pcc.bbox_point_coords = bb_list
 
