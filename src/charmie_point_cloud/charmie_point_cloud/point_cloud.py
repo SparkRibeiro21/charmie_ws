@@ -11,22 +11,22 @@ from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 import cv2
 import math
-import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize
+# import matplotlib.pyplot as plt
+# from matplotlib.colors import Normalize
 import time
 
 # x increases from the back of the robot to the front of the robot
 # y increases from the robot left to the robot right
 # z increases from the floor to the ceiling
 
-DEBUG_DRAW = False
+# DEBUG_DRAW = False
 
-GRAF3D = False
-GRAF1 = False
-GRAF2 = True
+# GRAF3D = False
+# GRAF1 = False
+# GRAF2 = True
 
-x1 = -1     # mouse coordinate
-y1 = -1     # mouse coordinate
+# x1 = -1     # mouse coordinate
+# y1 = -1     # mouse coordinate
 WIDTH = 100 # width of bounding box for debug
 HEIGHT = 100 # height of ounding box for debug
 
@@ -58,16 +58,16 @@ Z_SHIFT = 1260
 flag_show_rgb_depth = True
 
 # Create a named window
-if DEBUG_DRAW:
-    nome = "Image Debug"
-    cv2.namedWindow(nome)
+# if DEBUG_DRAW:
+#     nome = "Image Debug"
+#     cv2.namedWindow(nome)
 
 
 class PointCloud():
     def __init__(self):
         print("New PointCloud Class Initialised")
 
-        global nome
+        # global nome
 
         self.linhas = 720
         self.colunas = 1280
@@ -82,20 +82,20 @@ class PointCloud():
         # cinematica do cabeça do robo
         # pre-correcao bug zz
         # self.DOF = 3
-        # self.teta = [  0,   0,   0]
+        self.teta = [  0,   0,   0]
         # self.alfa = [ 90, -90,   0]
         # self.l =    [ 25,   0, 145]
         # self.d =    [ 28,   0, 130]
 
         # pos correcao bug zz
-        self.DOF = 3
-        self.teta = [    0,     0,     0]
-        self.alfa = [  -90,    90,     0]
-        self.l =    [ 30.0,  90.0,   0.0]
-        self.d =    [ 25.0, -11.5, 195.0]
+        # self.DOF = 3
+        # self.teta = [    0,     0,     0]
+        # self.alfa = [  -90,    90,     0]
+        # self.l =    [ 30.0,  90.0,   0.0]
+        # self.d =    [ 25.0, -11.5, 195.0]
 
         # pos correcao bug zz
-        self.inverse_matrix = np.identity(4) 
+        # self.inverse_matrix = np.identity(4) 
         # print(self.inverse_matrix)
 
         self.rgb_img_pc = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
@@ -108,40 +108,53 @@ class PointCloud():
         self.RECEBO = []
         self.ENVIO = []
 
-        if GRAF3D:
-            if GRAF1:
-                # inicializações necessárias para desenhar graficos com o MatPlotLib
-                self.fig = plt.figure()
-                # fig_manager = plt.get_current_fig_manager()
-                # fig_manager.full_screen_toggle()           # para maximizar a janela do grafico 3D
-                # fig_manager.window.wm_geometry(f"+{50}+{50}")
-                
-                #fig_manager = plt.get_current_fig_manager()
-                #fig_manager.full_screen_toggle()
-                plt.ion()  # Enable interactive mode
-                self.ax1 = self.fig.add_subplot(221)
-                self.ax2 = self.fig.add_subplot(222)
-                self.ax3 = self.fig.add_subplot(223)
-                self.ax4 = self.fig.add_subplot(224, projection='3d')
-                self.ax4.mouse_init()
+        self.T = np.identity(4)
+        self.robo()
 
-            if GRAF2:
-                self.fig2 = plt.figure()
-                self.ax5 = self.fig2.add_subplot(111, projection='3d')
-                self.ax5.mouse_init()
+
+        # if GRAF3D:
+        #     if GRAF1:
+        #         # inicializações necessárias para desenhar graficos com o MatPlotLib
+        #         self.fig = plt.figure()
+        #         # fig_manager = plt.get_current_fig_manager()
+        #         # fig_manager.full_screen_toggle()           # para maximizar a janela do grafico 3D
+        #         # fig_manager.window.wm_geometry(f"+{50}+{50}")
+        #         
+        #         #fig_manager = plt.get_current_fig_manager()
+        #         #fig_manager.full_screen_toggle()
+        #         plt.ion()  # Enable interactive mode
+        #         self.ax1 = self.fig.add_subplot(221)
+        #         self.ax2 = self.fig.add_subplot(222)
+        #         self.ax3 = self.fig.add_subplot(223)
+        #         self.ax4 = self.fig.add_subplot(224, projection='3d')
+        #         self.ax4.mouse_init()
+        # 
+        #     if GRAF2:
+        #         self.fig2 = plt.figure()
+        #         self.ax5 = self.fig2.add_subplot(111, projection='3d')
+        #         self.ax5.mouse_init()
 
         # pos correcao bug zz
-        self.actualiza_tetas(' ')
-        self.robo()      # calculates the kinematics so the inverse matrix has initial values
-        self.converter_2D_3D(0, 0, self.linhas, self.colunas)
+        # self.actualiza_tetas(' ')
+        # calculates the kinematics so the inverse matrix has initial values
+
+
+
+
+
+        # self.robo()                                             # ???????? precisa de estar aqui isto ????    
+        # self.converter_2D_3D(0, 0, self.linhas, self.colunas)   # ???????? precisa de estar aqui isto ????
+
+
+
 
         # print(self.inverse_matrix)
 
 
-        if GRAF3D == 1:
-            self.graficos()
+        # if GRAF3D == 1:
+        #     self.graficos()
 
-    
+    """
     def click_event(self, event, x, y, flags, param):
         global x1, y1, flag_show_rgb_depth    #, WIDTH, HEIGHT
 
@@ -150,12 +163,12 @@ class PointCloud():
             x1=x
             y1=y
             flag_show_rgb_depth = True
-            '''
-            # retirei esta opção porque agora as janelas já estão definidas por variável
-            nova = jpg.copy()       # quando clico no rato devo mostrar o rectangulo da bounding box
-            cv2.rectangle(nova, (x1, y1), (x1+WIDTH, y1+HEIGHT), 255, 2)
-            cv2.imshow(nome, nova)
-            '''
+            
+            # # retirei esta opção porque agora as janelas já estão definidas por variável
+            # nova = jpg.copy()       # quando clico no rato devo mostrar o rectangulo da bounding box
+            # cv2.rectangle(nova, (x1, y1), (x1+WIDTH, y1+HEIGHT), 255, 2)
+            # cv2.imshow(nome, nova)
+            
         if event == cv2.EVENT_MBUTTONDOWN:          # MOSTRA a janela DEPTH
             # cv2.imshow(nome, self.depth_img_pc)
             flag_show_rgb_depth = False
@@ -181,7 +194,7 @@ class PointCloud():
                     t_ = t_ / maximo * 255 
                     t_ = t_.astype(np.uint8)
                     cv2.imshow(nome, t_)
-            
+    """
             
     def Trans(self, tx, ty, tz):
         M = np.identity(4)
@@ -209,14 +222,26 @@ class PointCloud():
             M[1][0] = s
         return M
 
-    def braco(self, talfa, tteta, td, tl):
-        a=self.Rot('z', tteta)
-        b=self.Trans(tl, 0, td)
-        c=self.Rot('x', talfa)
-        temp = np.dot(a,b)
-        T = np.dot(temp,c)
-        return T
+    def robo(self):
+        A4 = self.Trans(90, 11.5, 195)
+        A3 = self.Rot('y', self.teta[1])
+        A2 = self.Trans(30, 0, 25)
+        A1 = self.Rot('z', self.teta[0])
+        T = np.dot(A1, A2)
+        T = np.dot(T, A3)
+        T = np.dot(T, A4)
+        self.T = T
+        # return T
+
+    # def braco(self, talfa, tteta, td, tl):
+    #     a=self.Rot('z', tteta)
+    #     b=self.Trans(tl, 0, td)
+    #     c=self.Rot('x', talfa)
+    #     temp = np.dot(a,b)
+    #     T = np.dot(temp,c)
+    #     return T
     
+    """ OLD ROBO
     def robo(self):
         T=np.identity(4)
         for i in range(self.DOF):
@@ -228,7 +253,8 @@ class PointCloud():
         # print(T)
         # print(self.inverse_matrix)
         return self.inverse_matrix
-
+    """
+    """
     def actualiza_tetas(self, tecla):
         global ELEV, AZIM, inc, DIM, Z_MIN_A_VER, WIDTH, HEIGHT, x1, y1
 
@@ -290,8 +316,71 @@ class PointCloud():
         elif tecla==ord('.'):
             for i in range(self.DOF):
                 self.teta[i] = 0
+    """
+    
+    def converter_2D_3D_unico(self, u, v):
+        
+        # this is to prevent 'bug' regarding maximum values on each axis
+        if u >= self.linhas:
+            u = self.linhas-1
+        
+        if v >= self.colunas:
+            v = self.colunas-1
 
+        # print(u, v)
 
+        depth = self.depth_img_pc[u][v]
+        if depth == 0:      # Só faz os cálculos de o ponto for válido (OPTIMIZAÇÃO)
+            result = np.dot(np.identity(4), [0, 0, 0, 1]) ### ISTO NÃO É BOM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        else:
+            Z = depth
+            X = (v - self.cx) * depth / self.fx
+            Y = (u - self.cy) * depth / self.fy
+
+            xn = Z
+            yn = -X
+            zn = -Y
+            result = np.dot(self.T, [xn, yn, zn, 1])
+            result[0] += X_SHIFT
+            result[2] += Z_SHIFT  # Z=0 is the floor
+
+        result = result[0:3].astype(np.int16)
+        result = result.tolist()
+        return result
+
+    
+    def converter_2D_3D(self, u, v, height, width):
+        
+        points = []
+
+        # print(self.inverse_matrix)
+        # calcula toda a bounding box        
+        # if self.retrieve_bbox: # ver no futuro se faz sentido
+        for u1 in range(u, u+height, self.ESCALA):
+            for v1 in range(v, v+width, self.ESCALA):
+                depth = self.depth_img_pc[u1][v1]
+                if depth == 0:      # Só faz os cálculos se o ponto for válido (OPTIMIZAÇÃO)
+                    result = np.dot(np.identity(4), [0, 0, 0, 1]) ### ISTO NÃO É BOM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                else:
+                    X = (v1 - self.cx) * depth / self.fx
+                    Y = (u1 - self.cy) * depth / self.fy
+                    Z = depth
+
+                    xn = Z
+                    yn = -X
+                    zn = -Y
+
+                    result = np.dot(self.T, [xn, yn, zn, 1])
+                    result[0] += X_SHIFT
+                    result[2] += Z_SHIFT  # Z=0 is the floor
+
+                    result = result[0:3].astype(np.int16)
+                    result = result.tolist()
+
+                points.append(result)
+        return points
+    
+    """ OLD VERSION 
     def converter_2D_3D_unico(self, u, v):
         
         # this is to prevent 'bug' regarding maximum values on each axis
@@ -361,7 +450,11 @@ class PointCloud():
                 points.append(result)
         return points
     
-    
+        
+    """
+
+
+    """
     def graficos(self):
 
         global DIM
@@ -545,8 +638,9 @@ class PointCloud():
                 self.ax5.view_init(elev=ELEV, azim=AZIM)
 
             plt.pause(0.1)
+    """
 
-
+    """
     def update_imagem(self):
         global nome
         nova = self.rgb_img_pc
@@ -576,7 +670,7 @@ class PointCloud():
         texto = "( {}, {} )".format(x1, y1)
         cv2.putText(nova, texto, (65, 50), self.font, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
         cv2.imshow(nome, nova)
-
+    """
 
 class PointCloudNode(Node):
 
@@ -603,8 +697,8 @@ class PointCloudNode(Node):
         # self.neck_position = NeckPosition()
         self.pcloud = PointCloud()
 
-        if DEBUG_DRAW:
-            lb=cv2.setMouseCallback(nome, self.pcloud.click_event)      # initiates the mouse debug event detection
+        # if DEBUG_DRAW:
+        #     lb=cv2.setMouseCallback(nome, self.pcloud.click_event)      # initiates the mouse debug event detection
         
         self.tempo_calculo = 0
         self.tempo_frame = 0
@@ -625,8 +719,8 @@ class PointCloudNode(Node):
 
 
         # pre-correcao bug zz
-        self.pcloud.teta[0] = neck_pos.pan
-        self.pcloud.teta[1] = -neck_pos.tilt
+        # self.pcloud.teta[0] = neck_pos.pan
+        # self.pcloud.teta[1] = -neck_pos.tilt
         # print(self.pcloud.teta)
         # print(self.pcloud.alfa)
         # print(self.pcloud.d)
@@ -635,10 +729,8 @@ class PointCloudNode(Node):
         
 
         # pos correcao bug zz
-        # self.pcloud.teta[0] = neck_pos.pan
-        # self.pcloud.teta[1] = -neck_pos.tilt
-        
-        ##### porque é que estamos a imprimir o [2] ???
+        self.pcloud.teta[0] = neck_pos.pan
+        self.pcloud.teta[1] = -neck_pos.tilt
         print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[0], ",", self.pcloud.teta[1], ")")
 
     def callback_point_cloud(self, request, response):
@@ -675,12 +767,12 @@ class PointCloudNode(Node):
 
 
             # imprime as variaveis todas apenas para DEBUG no terminal
-            print("[ ", end=' ')
-            for i in self.pcloud.teta[0:2]:
-                print("{:>3.0f}".format(i), end=' ')
-            print("]  -> ", end=' ')
-            print('inc=', inc, '  ELEV=', ELEV, '  AZIM=', AZIM, ' DIM=', DIM, ' Z_MIN_A_VER=', Z_MIN_A_VER, ' WIDTH=', WIDTH, ' HEIGHT=', HEIGHT, ' ESCALA=', self.pcloud.ESCALA)
-            print("tetas = ", self.pcloud.teta)
+            # print("[ ", end=' ')
+            # for i in self.pcloud.teta[0:2]:
+            #     print("{:>3.0f}".format(i), end=' ')
+            # print("]  -> ", end=' ')
+            # print('inc=', inc, '  ELEV=', ELEV, '  AZIM=', AZIM, ' DIM=', DIM, ' Z_MIN_A_VER=', Z_MIN_A_VER, ' WIDTH=', WIDTH, ' HEIGHT=', HEIGHT, ' ESCALA=', self.pcloud.ESCALA)
+            # print("tetas = ", self.pcloud.teta)
             
             self.pcloud.RECEBO = []
             for i in range(len(request.data)):
@@ -717,8 +809,9 @@ class PointCloudNode(Node):
 
                 # calcula todos os pontos
                 resp_todos = []
-                if request.retrieve_bbox or GRAF3D:
+                if request.retrieve_bbox: # or GRAF3D:
                     resp_todos = self.pcloud.converter_2D_3D(u_inicial, v_inicial, HEIGHT, WIDTH)
+
 
                 # Guarda todas as respostas na variavel ENVIO
                 temp = []
@@ -775,18 +868,18 @@ class PointCloudNode(Node):
             self.tempo_frame = time.perf_counter()
 
             # desenha tudo na janela da imagem 2D
-            if DEBUG_DRAW:
-                if flag_show_rgb_depth:
-                    self.pcloud.update_imagem()
-                else:
-                    t_ = self.pcloud.depth_img_pc.copy()
-                    _, maximo, _, _= cv2.minMaxLoc(t_)
-                    t_ = t_ / maximo * 255 
-                    t_ = t_.astype(np.uint8)
-                    cv2.imshow(nome, t_)
+            # if DEBUG_DRAW:
+            #     if flag_show_rgb_depth:
+            #         self.pcloud.update_imagem()
+            #     else:
+            #         t_ = self.pcloud.depth_img_pc.copy()
+            #         _, maximo, _, _= cv2.minMaxLoc(t_)
+            #         t_ = t_ / maximo * 255 
+            #         t_ = t_.astype(np.uint8)
+            #         cv2.imshow(nome, t_)
 
-            if GRAF3D == 1:
-                self.pcloud.graficos() # mostra os graficos
+            # if GRAF3D == 1:
+            #     self.pcloud.graficos() # mostra os graficos
 
         # print(response)
         return response
