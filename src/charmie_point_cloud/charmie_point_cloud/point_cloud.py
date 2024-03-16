@@ -331,18 +331,26 @@ class PointCloud():
 
         depth = self.depth_img_pc[u][v]
         if depth == 0:      # Só faz os cálculos de o ponto for válido (OPTIMIZAÇÃO)
-            result = np.dot(np.identity(4), [0, 0, 0, 1]) ### ISTO NÃO É BOM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        else:
-            Z = depth
-            X = (v - self.cx) * depth / self.fx
-            Y = (u - self.cy) * depth / self.fy
 
-            xn = Z
-            yn = -X
-            zn = -Y
-            result = np.dot(self.T, [xn, yn, zn, 1])
-            result[0] += X_SHIFT
-            result[2] += Z_SHIFT  # Z=0 is the floor
+            # casos especiais, mas só em coordenadas especificas (não faz para a bounding box toda)
+            # procuro a distancia mais próxima nos pixeis vizinhos
+            raio = 1
+            while np.all(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0):
+                raio += 1
+            nao_zeros = (self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
+            depth = np.min(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
+            #print('u, v, min ', u, v, depth)
+
+        Z = depth
+        X = (v - self.cx) * depth / self.fx
+        Y = (u - self.cy) * depth / self.fy
+
+        xn = Z
+        yn = -X
+        zn = -Y
+        result = np.dot(self.T, [xn, yn, zn, 1])
+        result[0] += X_SHIFT
+        result[2] += Z_SHIFT  # Z=0 is the floor
 
         result = result[0:3].astype(np.int16)
         result = result.tolist()
@@ -380,6 +388,7 @@ class PointCloud():
                 points.append(result)
         return points
     
+
     """ OLD VERSION 
     def converter_2D_3D_unico(self, u, v):
         
