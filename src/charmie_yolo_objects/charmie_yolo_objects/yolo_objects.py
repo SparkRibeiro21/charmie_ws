@@ -22,7 +22,20 @@ shoes_filename = "shoes_socks_v1.pt"
 
 
 MIN_OBJECT_CONF_VALUE = 0.8
-LIST_OF_OBJECTS_OF_TASK = [""]
+# LIST_OF_OBJECTS_OF_TASK = [""]
+
+
+DRAW_OBJECT_CONF = True
+DRAW_OBJECT_ID = True
+DRAW_OBJECT_BOX = True
+# DRAW_PERSON_KP = True
+# DRAW_LOW_CONF_KP = False
+# DRAW_PERSON_LOCATION_COORDS = True
+# DRAW_PERSON_LOCATION_HOUSE_FURNITURE = False
+# DRAW_PERSON_POINTING_INFO = False
+# DRAW_PERSON_HAND_RAISED = False
+# DRAW_PERSON_HEIGHT = True
+# DRAW_PERSON_CLOTHES_COLOR = True
 
 
 class Yolo_obj(Node):
@@ -263,6 +276,9 @@ class Yolo_obj(Node):
                     else:
                         pass
             """
+            object_id = boxes_id.id
+            if boxes_id.id == None:
+                object_id = 0 
 
             # checks whether the person confidence is above a defined level
             if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
@@ -275,9 +291,114 @@ class Yolo_obj(Node):
                 yolov8_obj_filtered.objects.append(new_person)
 
                 if self.DEBUG_DRAW:
-                    pass
-                    ### DRAW THE RESULTS
 
+                    red_yp = (56, 56, 255)
+                    lblue_yp = (255,128,0)
+                    green_yp = (0,255,0)
+                    orange_yp = (51,153,255)
+                    magenta_yp = (255, 51, 255)
+                    white_yp = (255, 255, 255)
+                    
+                    # creates the points for alternative TR visual representation 
+                    start_point = (int(boxes_id.xyxy[0][0]), int(boxes_id.xyxy[0][1]))
+                    end_point = (int(boxes_id.xyxy[0][2]), int(boxes_id.xyxy[0][3]))
+                    start_point_text_rect = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]))
+
+                    if int(boxes_id.xyxy[0][1]) < 30: # depending on the height of the box, so it is either inside or outside
+                        start_point_text = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]+25))
+                        # end_point_text_rect = (int(per.xyxy[0][0]+75), int(per.xyxy[0][1]+30)) # if '0.95'
+                        end_point_text_rect = (int(boxes_id.xyxy[0][0]+50), int(boxes_id.xyxy[0][1]+30)) # if '.95'
+                    else:
+                        start_point_text = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]-5))
+                        # end_point_text_rect = (int(per.xyxy[0][0]+75), int(per.xyxy[0][1]-30)) # if '0.95'
+                        end_point_text_rect = (int(boxes_id.xyxy[0][0]+50), int(boxes_id.xyxy[0][1]-30)) # if '.95'
+
+                    if DRAW_OBJECT_BOX:
+                        # draws the bounding box around the person
+                        cv2.rectangle(current_frame_draw, start_point, end_point, red_yp , 4) 
+                    
+                    if DRAW_OBJECT_CONF and not DRAW_OBJECT_ID:
+                        # draws the background for the confidence of each person
+                        cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, red_yp , -1) 
+                        
+                        # draws the confidence next to each person, without the initial '0' for easier visualization
+                        current_frame_draw = cv2.putText(
+                            current_frame_draw,
+                            # f"{round(float(per.conf),2)}",
+                            f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
+                            (start_point_text[0], start_point_text[1]),
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1,
+                            (255, 255, 255),
+                            1,
+                            cv2.LINE_AA
+                        ) 
+                    elif not DRAW_OBJECT_CONF and DRAW_OBJECT_ID:
+                        if object_id != 0:
+
+                            # draws the background for the confidence of each person
+                            cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+10, end_point_text_rect[1]) , red_yp , -1) 
+                            
+                            current_frame_draw = cv2.putText(
+                                current_frame_draw,
+                                # f"{round(float(per.conf),2)}",
+                                f"{str(int(object_id))}",
+                                (start_point_text[0], start_point_text[1]),
+                                cv2.FONT_HERSHEY_DUPLEX,
+                                1,
+                                (0, 0, 0),
+                                1,
+                                cv2.LINE_AA
+                            ) 
+
+                    elif DRAW_OBJECT_CONF and DRAW_OBJECT_ID:
+                        if object_id != 0:
+
+                            # draws the background for the confidence of each person
+                            cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+70, end_point_text_rect[1]) , red_yp , -1) 
+                            
+                            current_frame_draw = cv2.putText(
+                                current_frame_draw,
+                                # f"{round(float(per.conf),2)}",
+                                f"{str(int(object_id))}",
+                                (start_point_text[0], start_point_text[1]),
+                                cv2.FONT_HERSHEY_DUPLEX,
+                                1,
+                                (0, 0, 0),
+                                1,
+                                cv2.LINE_AA
+                            ) 
+
+                            # draws the confidence next to each person, without the initial '0' for easier visualization
+                            current_frame_draw = cv2.putText(
+                                current_frame_draw,
+                                # f"{round(float(per.conf),2)}",
+                                f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
+                                (start_point_text[0]+70, start_point_text[1]),
+                                cv2.FONT_HERSHEY_DUPLEX,
+                                1,
+                                (255, 255, 255),
+                                1,
+                                cv2.LINE_AA
+                            ) 
+
+                        else:
+                            # draws the background for the confidence of each person
+                            cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, red_yp , -1) 
+                            
+                            # draws the confidence next to each person, without the initial '0' for easier visualization
+                            current_frame_draw = cv2.putText(
+                                current_frame_draw,
+                                # f"{round(float(per.conf),2)}",
+                                f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
+                                (start_point_text[0], start_point_text[1]),
+                                cv2.FONT_HERSHEY_DUPLEX,
+                                1,
+                                (255, 255, 255),
+                                1,
+                                cv2.LINE_AA
+                            ) 
+                    
 
         yolov8_obj.num_objects = num_obj
         self.objects_publisher.publish(yolov8_obj)

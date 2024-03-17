@@ -213,8 +213,6 @@ class PointCloudNode(Node):
         # bool retrieve_bbox # if it is intended to get the full bounding box of 3D points returned, saves data transitions 
         # ---
         # PointCloudCoordinates[] coords # returns the selected 3D points (the bounding box center, the custom ones and the full bounding box)
-      
-        global flag_show_rgb_depth
         
         if self.depth_img.height > 0 and self.rgb_img.height > 0: # prevents doing this code before receiving images
 
@@ -267,7 +265,7 @@ class PointCloudNode(Node):
                 resp_todos = []
                 resp_todos = self.pcloud.converter_2D_3D(u_inicial, v_inicial, bb_height, bb_width)
                 uteis = [row for row in resp_todos if (row[0]!=0 or row[1]!=0 or row[2]!=0)] # limpa os elementos [0, 0, 0]
-                print(uteis, len(uteis))
+                # print(uteis, len(uteis))
                 
                 if len(uteis) == 0:
                     resp_centro = self.pcloud.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
