@@ -28,14 +28,9 @@ MIN_OBJECT_CONF_VALUE = 0.8
 DRAW_OBJECT_CONF = True
 DRAW_OBJECT_ID = True
 DRAW_OBJECT_BOX = True
-# DRAW_PERSON_KP = True
-# DRAW_LOW_CONF_KP = False
-# DRAW_PERSON_LOCATION_COORDS = True
-# DRAW_PERSON_LOCATION_HOUSE_FURNITURE = False
-# DRAW_PERSON_POINTING_INFO = False
-# DRAW_PERSON_HAND_RAISED = False
-# DRAW_PERSON_HEIGHT = True
-# DRAW_PERSON_CLOTHES_COLOR = True
+DRAW_OBJECT_CLASS = True
+DRAW_OBJECT_LOCATION_COORDS = True
+DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = False
 
 
 class Yolo_obj(Node):
@@ -124,7 +119,15 @@ class Yolo_obj(Node):
                                       'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
                                       'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
                                       'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
-                
+        
+        self.lar_v_final_classname = ['7up', 'Strawberry_jello', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
+                                      'Coffe_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
+                                      'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
+                                      'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
+                                      'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        
+
+        self.objects_classNames_dict = {}
         # self.serve_breakfast_classname = ['bowl', 'spoon', "milk", "cereal"]
 
         self.shoes_socks_classname = ['shoe', 'sock']      
@@ -132,11 +135,22 @@ class Yolo_obj(Node):
         # depending on the filename selected, the class names change
         if objects_filename == 'vfinal.pt' or objects_filename == 'M_300epochs.pt' or objects_filename == "m_size_model_300_epochs_after_nandinho.pt":
             self.objects_classNames = self.lar_v_final_classname
+
+
         # elif objects_filename == 'serve_breakfast_v1.pt':
         #     self.objects_classNames = self.serve_breakfast_classname
         else:
             print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
             
+        # self.objects_classNames_dict = {}
+        # for item in self.objects_classNames:
+        #     self.objects_classNames_dict[item["name"]]=item["class"]
+        
+        self.objects_classNames_dict = {item["name"]: item["class"] for item in self.objects_file}
+        
+        print(self.objects_classNames_dict)
+
+
 
     def get_minimum_object_confidence_callback(self, state: Float32):
         global MIN_OBJECT_CONF_VALUE
@@ -243,13 +257,42 @@ class Yolo_obj(Node):
 
         for object_idx in range(num_obj):
             boxes_id = self.object_results[0].boxes[object_idx]
+
+            # print(self.object_results[0].boxes)
+
             ALL_CONDITIONS_MET = 1
 
-            # adds people to "person_pose" without any restriction
+            # adds object to "object_pose" without any restriction
             new_person = DetectedObject()
             new_person = self.add_object_to_detectedobject_msg()
             yolov8_obj.objects.append(new_person)
 
+
+
+            # cls = int(boxes_id.cls[0])
+            # object_name = self.objects_classNames[cls]
+            # object_name_adjusted = object_name.replace("_", " ").title()
+            object_name = self.objects_classNames[int(boxes_id.cls[0])].replace("_", " ").title()
+
+
+
+            object_class = self.objects_classNames_dict[object_name]
+            # print("name", object_name, object_name_adjusted)
+            
+            
+            # for item in self.objects_file:
+            #     print("for", item["name"])
+            #     if item["name"] == object_name:
+            #         # print(item["class"])
+            #         object_class = item["class"]
+            #         break
+
+
+
+            # object_class = 
+            
+            
+            
             # threshold = self.object_threshold
             # classNames = self.objects_classNames
             """
@@ -313,6 +356,7 @@ class Yolo_obj(Node):
                         # end_point_text_rect = (int(per.xyxy[0][0]+75), int(per.xyxy[0][1]-30)) # if '0.95'
                         end_point_text_rect = (int(boxes_id.xyxy[0][0]+50), int(boxes_id.xyxy[0][1]-30)) # if '.95'
 
+                    ### CHANGE COLOR ACCORDING TO CLASS NAME
                     if DRAW_OBJECT_BOX:
                         # draws the bounding box around the person
                         cv2.rectangle(current_frame_draw, start_point, end_point, red_yp , 4) 
@@ -398,8 +442,22 @@ class Yolo_obj(Node):
                                 1,
                                 cv2.LINE_AA
                             ) 
-                    
 
+                    cv2.putText(current_frame_draw, object_name+object_class, (start_point_text[0], start_point_text[1]), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
+                    
+                    
+                    
+                    # if DRAW_OBJECT_LOCATION_COORDS:
+                    #     cv2.putText(current_frame_draw, '('+str(round(new_person.position_relative.x,2))+
+                    #                 ', '+str(round(new_person.position_relative.y,2))+
+                    #                 ', '+str(round(new_person.position_relative.z,2))+')',
+                    #                 self.center_torso_person_list[object_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
+                    
+                    # if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
+                    #     cv2.putText(current_frame_draw, new_person.room_location+" - "+new_person.furniture_location,
+                    #                 (self.center_torso_person_list[object_idx][0], self.center_torso_person_list[object_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                    
+                    
         yolov8_obj.num_objects = num_obj
         self.objects_publisher.publish(yolov8_obj)
 
@@ -429,6 +487,10 @@ class Yolo_obj(Node):
 
 
     def add_object_to_detectedobject_msg(self):
+
+
+
+        # COMPUTE CLASS NAME
         pass
         p = DetectedObject()
         return p

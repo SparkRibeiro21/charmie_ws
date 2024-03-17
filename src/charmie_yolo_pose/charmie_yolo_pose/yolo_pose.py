@@ -58,7 +58,6 @@ class YoloPoseNode(Node):
 
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
-        global flag_show_rgb_depth
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_yolo_pose/charmie_yolo_pose"
         self.complete_path = self.home+'/'+self.midpath+'/'
