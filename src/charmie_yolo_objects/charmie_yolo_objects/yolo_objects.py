@@ -20,14 +20,12 @@ import time
 objects_filename = "m_size_model_300_epochs_after_nandinho.pt"
 shoes_filename = "shoes_socks_v1.pt"    
 
-
-MIN_OBJECT_CONF_VALUE = 0.8
-# LIST_OF_OBJECTS_OF_TASK = [""]
-
+MIN_OBJECT_CONF_VALUE = 0.5
 
 DRAW_OBJECT_CONF = True
 DRAW_OBJECT_ID = True
 DRAW_OBJECT_BOX = True
+DRAW_OBJECT_NAME = True
 DRAW_OBJECT_CLASS = True
 DRAW_OBJECT_LOCATION_COORDS = True
 DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = False
@@ -120,11 +118,11 @@ class Yolo_obj(Node):
                                       'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
                                       'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
         
-        self.lar_v_final_classname = ['7up', 'Strawberry_jello', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
-                                      'Coffe_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
-                                      'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
-                                      'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
-                                      'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        # self.lar_v_final_classname = ['7up', 'Strawberry_jello', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
+        #                               'Coffe_grounds', 'Cola', 'Cheezit', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
+        #                               'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Sponge', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
+        #                               'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
+        #                               'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
         
 
         self.objects_classNames_dict = {}
@@ -242,7 +240,7 @@ class Yolo_obj(Node):
 
         current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
         current_frame_draw = current_frame.copy()
-        annotated_frame = self.object_results[0].plot()
+        # annotated_frame = self.object_results[0].plot()
 
         # Calculate the number of persons detected
         num_obj = len(self.object_results[0])
@@ -257,42 +255,19 @@ class Yolo_obj(Node):
 
         for object_idx in range(num_obj):
             boxes_id = self.object_results[0].boxes[object_idx]
-
             # print(self.object_results[0].boxes)
 
             ALL_CONDITIONS_MET = 1
+
+            object_name = self.objects_classNames[int(boxes_id.cls[0])].replace("_", " ").title()
+            object_class = self.objects_classNames_dict[object_name]
 
             # adds object to "object_pose" without any restriction
             new_person = DetectedObject()
             new_person = self.add_object_to_detectedobject_msg()
             yolov8_obj.objects.append(new_person)
 
-
-
-            # cls = int(boxes_id.cls[0])
-            # object_name = self.objects_classNames[cls]
-            # object_name_adjusted = object_name.replace("_", " ").title()
-            object_name = self.objects_classNames[int(boxes_id.cls[0])].replace("_", " ").title()
-
-
-
-            object_class = self.objects_classNames_dict[object_name]
-            # print("name", object_name, object_name_adjusted)
-            
-            
-            # for item in self.objects_file:
-            #     print("for", item["name"])
-            #     if item["name"] == object_name:
-            #         # print(item["class"])
-            #         object_class = item["class"]
-            #         break
-
-
-
-            # object_class = 
-            
-            
-            
+          
             # threshold = self.object_threshold
             # classNames = self.objects_classNames
             """
@@ -339,24 +314,27 @@ class Yolo_obj(Node):
                     lblue_yp = (255,194,0)
                     blue_yp = (255,0,0)
                     green_yp = (0,255,0)
+                    dgreen_yp = (50,204,50)
                     orange_yp = (51,153,255)
                     magenta_yp = (255, 51, 255)
+                    purple_yp = (255, 56, 132)
                     white_yp = (255, 255, 255)
+                    grey_yp = (190,190,190)
 
-
-                    # MISS ADDING:
-                    # Cleaning Supplies
-                    # Drinks
-                    # Foods
-                    # Fruits
-                    # Toys
-                    # Snacks
-                    # Dishes
-
-                    if object_class == "Foods":
+                    if object_class == "Cleaning Supplies":
+                        bb_color = dgreen_yp
+                    elif object_class == "Drinks":
+                        bb_color = purple_yp
+                    elif object_class == "Foods":
                         bb_color = lblue_yp
-                    elif object_class == "Toys":
+                    elif object_class == "Fruits":
                         bb_color = orange_yp
+                    elif object_class == "Toys":
+                        bb_color = blue_yp
+                    elif object_class == "Snacks":
+                        bb_color = magenta_yp
+                    elif object_class == "Dishes":
+                        bb_color = grey_yp
                     else:
                         bb_color = red_yp
                     
@@ -395,6 +373,7 @@ class Yolo_obj(Node):
                             1,
                             cv2.LINE_AA
                         ) 
+                        
                     elif not DRAW_OBJECT_CONF and DRAW_OBJECT_ID:
                         if object_id != 0:
 
@@ -461,9 +440,20 @@ class Yolo_obj(Node):
                                 cv2.LINE_AA
                             ) 
 
-                    cv2.putText(current_frame_draw, object_name+object_class, (start_point_text[0], start_point_text[1]), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
-                    
-                    
+                    if DRAW_OBJECT_NAME:
+
+                        ### draws the name of the object
+                        current_frame_draw = cv2.putText(
+                            current_frame_draw,
+                            # f"{round(float(per.conf),2)}",
+                            f"{object_name}",
+                            (start_point[0], end_point[1]),
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1,
+                            (0,0,0),
+                            1,
+                            cv2.LINE_AA
+                        ) 
                     
                     # if DRAW_OBJECT_LOCATION_COORDS:
                     #     cv2.putText(current_frame_draw, '('+str(round(new_person.position_relative.x,2))+
@@ -493,7 +483,7 @@ class Yolo_obj(Node):
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.putText(current_frame_draw, 'np:' + str(num_objects_filtered) + '/' + str(num_obj), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
-            cv2.imshow("Yolo Object Detection", annotated_frame)
+            # cv2.imshow("Yolo Object Detection", annotated_frame)
             # cv2.imshow("Camera Image", current_frame)
             cv2.waitKey(1)
         
