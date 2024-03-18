@@ -17,12 +17,11 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 
-
-class StoringGroceriesNode(Node):
+class OpenDoorsDemoNode(Node):
 
     def __init__(self):
-        super().__init__("StoringGroceries")
-        self.get_logger().info("Initialised CHARMIE StoringGroceries Node")
+        super().__init__("OpenDoorsDemo")
+        self.get_logger().info("Initialised CHARMIE OpenDoorsDemo Node")
 
         ### Topics (Publisher and Subscribers) ###  
         # Face
@@ -111,7 +110,6 @@ class StoringGroceriesNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
-
     #### SET NECK POSITION SERVER FUNCTIONS #####
     def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
         request = SetNeckPosition.Request()
@@ -142,7 +140,6 @@ class StoringGroceriesNode(Node):
             self.waited_for_end_of_neck_pos = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
-
 
     #### SET NECK COORDINATES SERVER FUNCTIONS #####
     def call_neck_coordinates_server(self, x, y, z, tilt, flag, wait_for_end_of=True):
@@ -178,7 +175,6 @@ class StoringGroceriesNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
-
     #### GET NECK POSITION SERVER FUNCTIONS #####
     def call_get_neck_position_server(self):
         request = GetNeckPosition.Request()
@@ -207,38 +203,32 @@ class StoringGroceriesNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = StoringGroceriesNode()
-    th_main = threading.Thread(target=thread_main_storing_groceries, args=(node,), daemon=True)
+    node = OpenDoorsDemoNode()
+    th_main = threading.Thread(target=thread_main_open_doors_demo, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-def thread_main_storing_groceries(node: StoringGroceriesNode):
-    main = StoringGroceriesMain(node)
+def thread_main_open_doors_demo(node: OpenDoorsDemoNode):
+    main = OpenDoorsDemoMain(node)
     main.main()
 
-class StoringGroceriesMain():
+class OpenDoorsDemoMain():
 
-    def __init__(self, node: StoringGroceriesNode):
+    def __init__(self, node: OpenDoorsDemoNode):
         self.node = node
         
         # Task Related Variables
         self.Waiting_for_task_start = 0
-        self.Approach_tables_first_time = 1
-        self.Picking_first_object = 2
-        self.Picking_second_object = 3
-        self.Picking_third_object = 4
-        self.Approach_cabinet_first_time = 5
-        self.Placing_third_object = 6
-        self.Placing_second_object = 7
-        self.Placing_first_object = 8
-        self.Approach_tables_second_time = 9
-        self.Picking_fourth_object = 10
-        self.Picking_fifth_object = 11
-        self.Approach_cabinet_second_time = 12
-        self.Placing_fifth_object = 13
-        self.Placing_fourth_object = 14
-        self.Final_State = 15
+        self.Open_door_start = 1
+        self.Approaching_cabinet_1 = 2
+        self.Approaching_table = 3
+        self.Picking_first_object = 4
+        self.Approaching_cabinet_2 = 5
+        self.Placing_first_object = 6
+        self.Approaching_dishwasher = 7
+        self.Open_dishwasher = 8
+        self.Final_state = 9
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -353,7 +343,7 @@ class StoringGroceriesMain():
 
                 self.set_face("demo5")
 
-                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="open_doors_demo/od_ready_start", show_in_face=True, wait_for_end_of=True)
 
                 self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
 
@@ -362,24 +352,79 @@ class StoringGroceriesMain():
                 time.sleep(2)
                                 
                 # next state
-                self.state = self.Approach_tables_first_time
+                self.state = self.Open_door_start
+            
+            elif self.state == self.Open_door_start:
+                #print('State 1 = Open door start')
 
-            elif self.state == self.Approach_tables_first_time:
-                #print('State 1 = Approaching table for the first time')
+                	### IF DOOR AND HANDLER WERE IDENTIFIED:
+                self.set_speech(filename="open_doors_demo/door_detection", show_in_face=True, wait_for_end_of=True)
+                
+                ### SHOW IMAGE WITH DETECTION IN FACE
+                
+                self.set_speech(filename="open_doors_demo/door_opening", show_in_face=True, wait_for_end_of=True)
+                
+                ### MOVE TO THE DOOR
+                
+                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
+                
+                ### ARM IN POSITION OF OPENING DOOR
+                
+                ### OPEN DOOR
+                
+                ### ELSE: KEEP MOVING NECK TO SEARCH DOOR
+                
+                ### I MUST FIND THE BEST PLACE TO VERIFY IF THE DOOR WAS REALLY OPENED
+                
+                # next state
+                self.state = self.Approaching_cabinet_1
+            
+            elif self.state == self.Approaching_cabinet_1:
+                #print('State 2 = Approaching cabinet for the first time')
+                
+                ###### NAVIGATE TO THE CABINET
+                
+                elf.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
+                
+                ### NECK TO CABINET
+                
+                	### IF CABINET DOOR IS DETECTED:
+
+                self.set_speech(filename="open_doors_demo/cabinet_detection", show_in_face=True, wait_for_end_of=True)
+                
+                ### SHOW IMAGE WITH DETECTION IN FACE
+                
+                self.set_speech(filename="open_doors_demo/cabinet_opening", show_in_face=True, wait_for_end_of=True)
+                
+                	### ELSE: KEEP MOVING NECK
+                
+                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
+                
+                ### ARM IN POSITION OF OPENING CABINET
+                
+                ### OPEN CABINET
+                
+					### IF DOOR IS OPENED:                         
+                self.state = self.Approaching_table
+                
+					### ELSE: STATE = CURRENT
+                
+            elif self.state == self.Approaching_table:
+                #print('State 3 = Approaching table')
 
                 # self.set_neck(position=self.look_navigation) # , wait_for_end_of=True)
 
                 self.set_speech(filename="generic/moving_table", wait_for_end_of=True)
 
-                ###### MOVEMENT TO THE KITCHEN COUNTER
+                ###### MOVEMENT TO THE TABLE 
 
                 self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
-                
+                                
                 # next state
                 self.state = self.Picking_first_object
                 
             elif self.state == self.Picking_first_object:
-                #print('State 2 = Picking first object from table')
+                #print('State 4 = Picking first object')
 
                 # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
@@ -387,13 +432,13 @@ class StoringGroceriesMain():
 
                 self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
 
-                ##### YOLO OBJECTS SEARCH FOR THE FIVE OBJECTS WITH HIGHER CONFIDENCE, FOR BOTH CAMERAS
+                ##### YOLO OBJECTS SEARCH FOR THE OBJECTS PREDETERMINED, FOR BOTH CAMERAS
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
 
-                self.set_speech(filename="storing_groceries/sg_found_five_objects", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="open_doors_demo/found_object", show_in_face=True, wait_for_end_of=True)
 
-                self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_objects_detected", wait_for_end_of=True)
 
                 ##### SHOW FACE DETECTED OBJECTS
 
@@ -434,333 +479,73 @@ class StoringGroceriesMain():
                 ##### ARM PLACE FIRST OBJECT IN TRAY
                                 
                 # next state
-                self.state = self.Picking_second_object
+                self.state = self.Approaching_cabinet_2
                 
-            elif self.state == self.Picking_second_object:
-                #print('State 3 = Picking second object from table')
+            """ elif self.state == self.Approaching_cabinet_2:
+                #print('State 0 = Initial')
 
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                self.set_face("demo5")
 
-                ##### MOVE ARM TO PICK UP OBJECT 
+                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
 
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
 
-                ##### IF AN ERROR IS DETECTED:
-                
-                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-                   
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_face("help_pick_spoon") #change to the object detected...
+                ###### WAITS FOR START BUTTON / DOOR OPEN
 
                 time.sleep(2)
-                
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-                
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                        ##### ARM CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED:
-                
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
-                        
-                            ##### ARM OPEN GRIPPER
-                
-                self.set_face("demo5")
-                        
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                
-                ##### ARM PLACE SECOND OBJECT IN TRAY
-                                
-                # next state
-                self.state = self.Picking_third_object
-                
-            elif self.state == self.Picking_third_object:
-                #print('State 4 = Picking third object from table')
-
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-
-                ##### IF AN ERROR IS DETECTED:
-                
-                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-                   
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_face("help_pick_spoon") #change to the object detected...
-
-                time.sleep(2)
-                
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-                
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                        ##### ARM CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED:
-                
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
-                        
-                            ##### ARM OPEN GRIPPER
-                
-                self.set_face("demo5")
-                        
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                
-                ##### ARM PLACE THIRD OBJECT IN HAND - REST POSITION
-                                
-                # next state
-                self.state = self.Approach_cabinet_first_time
-                
-            elif self.state == self.Approach_cabinet_first_time:
-                #print('State 5 = Approaching cabinet for the first time')
-
-                self.set_speech(filename="storing_groceries/sg_collected_objects_1st_round", wait_for_end_of=True)
-                
-                # self.set_neck(position=[0, -30], wait_for_end_of=True)
-
-                ###### MOVEMENT TO THE CABINET
-
-                self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
-                
-                self.set_speech(filename="storing_groceries/sg_analysing_cabinet", wait_for_end_of=True)
-                
-                self.set_speech(filename="storing_groceries/sg_finished_analise_cabinet", wait_for_end_of=True) 
-                
-                self.set_speech(filename="storing_groceries/sg_check_face_cabinet_distribution", wait_for_end_of=True) 
-                
-                ####### SHOW IMAGE OF CABINET DIVIDED INTO ZONES /  CLASSES
-                
-                self.set_speech(filename="generic/place_object_cabinet", wait_for_end_of=True)
-
-                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
-                
-                # next state
-                self.state = self.Placing_third_object
-                
-            elif self.state == self.Placing_third_object:
-                #print('State 6 = Placing third object grabbed in the cabinet')
-
-                # self.set_neck(position=self.look_cabinet_objects, wait_for_end_of=True)
-                
-                ##### SET SPEECH - VOU POUSAR O OBJETO TAL NA PRATELEIRA AO LADO DA CLASSE TAL
-                
-                time.sleep(1)
-
-                ##### ARM MOVE TO CABINET
-
-                ##### ARM PLACE OBJECT
-
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Placing_second_object
-                
-            elif self.state == self.Placing_second_object:
-                #print('State 7 = Placing second object grabbed in the cabinet')
-
-                # self.set_neck(position=self.look_cabinet_objects, wait_for_end_of=True)
-                
-                ##### SET SPEECH - VOU POUSAR O OBJETO TAL NA PRATELEIRA AO LADO DA CLASSE TAL
-                
-                time.sleep(1)
-
-                ##### ARM MOVE TO CABINET
-
-                ##### ARM PLACE OBJECT
-
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
                                 
                 # next state
                 self.state = self.Placing_first_object
                 
             elif self.state == self.Placing_first_object:
-                #print('State 8 = Placing first object grabbed in the cabinet')
+                #print('State 0 = Initial')
 
-                # self.set_neck(position=self.look_cabinet_objects, wait_for_end_of=True)
-                
-                ##### SET SPEECH - VOU POUSAR O OBJETO TAL NA PRATELEIRA AO LADO DA CLASSE TAL
-                
-                time.sleep(1)
+                self.set_face("demo5")
 
-                ##### ARM MOVE TO CABINET
+                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
 
-                ##### ARM PLACE OBJECT
+                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Approach_tables_second_time
-                
-            elif self.state == self.Approach_tables_second_time:
-                #print('State 9 = Approaching table for the second time to grab rest of the objects')
-
-                # self.set_neck(position=self.look_navigation) # , wait_for_end_of=True)
-
-                self.set_speech(filename="generic/moving_table", wait_for_end_of=True)
-
-                ###### MOVEMENT TO THE KITCHEN COUNTER
-
-                self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Picking_fourth_object
-                
-            elif self.state == self.Picking_fourth_object:
-                #print('State 10 = Picking fourth object from table')
-
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-
-                ##### IF AN ERROR IS DETECTED:
-                
-                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-                   
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_face("help_pick_spoon") #change to the object detected...
+                ###### WAITS FOR START BUTTON / DOOR OPEN
 
                 time.sleep(2)
-                
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-                
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                        ##### ARM CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED:
-                
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
-                        
-                            ##### ARM OPEN GRIPPER
-                
-                self.set_face("demo5")
-                        
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                
-                ##### ARM PLACE FOURTH OBJECT IN TRAY
                                 
                 # next state
-                self.state = self.Picking_fifth_object
+                self.state = self.Approaching_dishwasher
                 
-            elif self.state == self.Picking_fifth_object:
-                #print('State 11 = Picking fifth object from table')
+            elif self.state == self.Approaching_dishwasher:
+                #print('State 0 = Initial')
 
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                self.set_face("demo5")
 
-                ##### MOVE ARM TO PICK UP OBJECT 
+                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
 
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
 
-                ##### IF AN ERROR IS DETECTED:
-                
-                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-                   
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_face("help_pick_spoon") #change to the object detected...
+                ###### WAITS FOR START BUTTON / DOOR OPEN
 
                 time.sleep(2)
+                                
+                # next state
+                self.state = self.Open_dishwasher
                 
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-                
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+            elif self.state == self.Open_dishwasher:
+                #print('State 0 = Initial')
 
-                        ##### ARM CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED:
-                
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
-                        
-                            ##### ARM OPEN GRIPPER
-                
                 self.set_face("demo5")
-                        
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                
-                ##### ARM PLACE FIFTH OBJECT IN TRAY
+
+                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
+
+                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
+
+                ###### WAITS FOR START BUTTON / DOOR OPEN
+
+                time.sleep(2)
                                 
                 # next state
-                self.state = self.Approach_cabinet_second_time
-                
-            elif self.state == self.Approach_cabinet_second_time:
-                #print('State 12 = Approaching cabinet door for the second time')
-
-                self.set_speech(filename="storing_groceries/sg_collected_objects_2nd_round", wait_for_end_of=True)
-                
-                # self.set_neck(position=[0, -30], wait_for_end_of=True)
-
-                ###### MOVEMENT TO THE CABINET
-
-                self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/place_object_cabinet", wait_for_end_of=True)
-
-                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Placing_fifth_object
-                
-            elif self.state == self.Placing_fifth_object:
-                #print('State 13 = Placing fifth object grabbed')
-
-                # self.set_neck(position=self.look_cabinet_objects, wait_for_end_of=True)
-                
-                ##### SET SPEECH - VOU POUSAR O OBJETO TAL NA PRATELEIRA AO LADO DA CLASSE TAL
-                
-                time.sleep(1)
-
-                ##### ARM MOVE TO CABINET
-
-                ##### ARM PLACE OBJECT
-
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Placing_fourth_object
-                
-            elif self.state == self.Placing_fourth_object:
-                #print('State 14 = Placing forth object grabbed')
-
-                # self.set_neck(position=self.look_cabinet_objects, wait_for_end_of=True)
-                
-                ##### SET SPEECH - VOU POUSAR O OBJETO TAL NA PRATELEIRA AO LADO DA CLASSE TAL
-                
-                time.sleep(1)
-
-                ##### ARM MOVE TO CABINET
-
-                ##### ARM PLACE OBJECT
-
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Final_State
+                self.state = self.Final_state
             
-            elif self.state == self.Final_State:
+            elif self.state == self.Final_state:
                 #print('State 15 = Finished task')
                 # self.node.speech_str.command = "I have finished my storing groceries task." 
                 # self.node.speaker_publisher.publish(self.node.speech_str)
@@ -770,10 +555,9 @@ class StoringGroceriesMain():
                 
                 # self.set_neck(position=self.look_judge) # , wait_for_end_of=True)
 
-                self.set_speech(filename="storing_groceries/sg_finished", wait_for_end_of=True)
+                self.set_speech(filename="open_doors_demo/od_finished", wait_for_end_of=True)
 
                 while True:
-                    pass
-
+                    pass 
             else:
-                pass
+                pass"""

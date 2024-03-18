@@ -24,7 +24,8 @@ setup(
     entry_points={
         'console_scripts': [
 		"welcome_demonstration = charmie_demonstration.welcome_demonstration:main",
-		"pick_place_demonstration = charmie_demonstration.pick_place_demonstration:main"
+		"pick_place_demonstration = charmie_demonstration.pick_place_demonstration:main",
+        "opening_doors_demonstration = charmie_demonstration.Opening_doors_demonstration:main"
         ],
     },
 )
