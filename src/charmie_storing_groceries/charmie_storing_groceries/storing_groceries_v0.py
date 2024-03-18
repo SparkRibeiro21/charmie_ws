@@ -224,6 +224,7 @@ class StoringGroceriesMain():
         
         # Task Related Variables
         self.Waiting_for_task_start = 0
+        # self.Open_cabinet_door = 1
         self.Approach_tables_first_time = 1
         self.Picking_first_object = 2
         self.Picking_second_object = 3
@@ -246,6 +247,9 @@ class StoringGroceriesMain():
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45]
         self.look_tray = [0, -60]
+        self.look_cabinet_top = [-45, 45]
+        self.look_cabinet_center = [-45, 0]
+        self.look_cabinet_bottom = [-45, -45]
 
         # to debug just a part of the task you can just change the initial state, example:
         # self.state = self.Approach_kitchen_table
@@ -337,7 +341,6 @@ class StoringGroceriesMain():
             pass
         self.node.waited_for_end_of_get_neck = False
 
-
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
 
 
@@ -396,6 +399,7 @@ class StoringGroceriesMain():
                 self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
 
                 ##### SHOW FACE DETECTED OBJECTS
+                # self.set_face("objects_detected")
 
                 ##### MOVE ARM TO PICK UP OBJECT 
 
@@ -529,15 +533,21 @@ class StoringGroceriesMain():
 
                 self.set_speech(filename="storing_groceries/sg_collected_objects_1st_round", wait_for_end_of=True)
                 
-                # self.set_neck(position=[0, -30], wait_for_end_of=True)
+                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
                 ###### MOVEMENT TO THE CABINET
 
                 self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
+
+                # self.set_neck(position=self.look_cabinet_top, wait_for_end_of=True)
+                # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
+                # self.set_neck(position=self.look_cabinet_bottom, wait_for_end_of=True)
                 
                 self.set_speech(filename="storing_groceries/sg_analysing_cabinet", wait_for_end_of=True)
                 
                 self.set_speech(filename="storing_groceries/sg_finished_analise_cabinet", wait_for_end_of=True) 
+
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
                 
                 self.set_speech(filename="storing_groceries/sg_check_face_cabinet_distribution", wait_for_end_of=True) 
                 
@@ -553,10 +563,10 @@ class StoringGroceriesMain():
             elif self.state == self.Placing_third_object:
                 #print('State 6 = Placing third object grabbed in the cabinet')
 
-                # self.set_neck(position=self.look_cabinet_objects, wait_for_end_of=True)
-                
-                ##### SET SPEECH - VOU POUSAR O OBJETO TAL NA PRATELEIRA AO LADO DA CLASSE TAL
-                
+                self.set_speech(filename="storing_groceries/sg_place_object_shown_face", wait_for_end_of=True) 
+
+                # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
+
                 time.sleep(1)
 
                 ##### ARM MOVE TO CABINET
@@ -571,10 +581,8 @@ class StoringGroceriesMain():
             elif self.state == self.Placing_second_object:
                 #print('State 7 = Placing second object grabbed in the cabinet')
 
-                # self.set_neck(position=self.look_cabinet_objects, wait_for_end_of=True)
-                
-                ##### SET SPEECH - VOU POUSAR O OBJETO TAL NA PRATELEIRA AO LADO DA CLASSE TAL
-                
+                self.set_speech(filename="storing_groceries/sg_place_object_shown_face", wait_for_end_of=True) 
+                                
                 time.sleep(1)
 
                 ##### ARM MOVE TO CABINET
@@ -589,10 +597,8 @@ class StoringGroceriesMain():
             elif self.state == self.Placing_first_object:
                 #print('State 8 = Placing first object grabbed in the cabinet')
 
-                # self.set_neck(position=self.look_cabinet_objects, wait_for_end_of=True)
-                
-                ##### SET SPEECH - VOU POUSAR O OBJETO TAL NA PRATELEIRA AO LADO DA CLASSE TAL
-                
+                self.set_speech(filename="storing_groceries/sg_place_object_shown_face", wait_for_end_of=True) 
+                                
                 time.sleep(1)
 
                 ##### ARM MOVE TO CABINET
@@ -611,7 +617,7 @@ class StoringGroceriesMain():
 
                 self.set_speech(filename="generic/moving_table", wait_for_end_of=True)
 
-                ###### MOVEMENT TO THE KITCHEN COUNTER
+                ###### MOVEMENT TO THE TABLE
 
                 self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
                                 
@@ -711,11 +717,13 @@ class StoringGroceriesMain():
 
                 self.set_speech(filename="storing_groceries/sg_collected_objects_2nd_round", wait_for_end_of=True)
                 
-                # self.set_neck(position=[0, -30], wait_for_end_of=True)
+                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
                 ###### MOVEMENT TO THE CABINET
 
                 self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
+
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
                 
                 self.set_speech(filename="generic/place_object_cabinet", wait_for_end_of=True)
 
@@ -727,10 +735,8 @@ class StoringGroceriesMain():
             elif self.state == self.Placing_fifth_object:
                 #print('State 13 = Placing fifth object grabbed')
 
-                # self.set_neck(position=self.look_cabinet_objects, wait_for_end_of=True)
-                
-                ##### SET SPEECH - VOU POUSAR O OBJETO TAL NA PRATELEIRA AO LADO DA CLASSE TAL
-                
+                # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
+                                
                 time.sleep(1)
 
                 ##### ARM MOVE TO CABINET
@@ -745,10 +751,8 @@ class StoringGroceriesMain():
             elif self.state == self.Placing_fourth_object:
                 #print('State 14 = Placing forth object grabbed')
 
-                # self.set_neck(position=self.look_cabinet_objects, wait_for_end_of=True)
-                
-                ##### SET SPEECH - VOU POUSAR O OBJETO TAL NA PRATELEIRA AO LADO DA CLASSE TAL
-                
+                # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
+                                
                 time.sleep(1)
 
                 ##### ARM MOVE TO CABINET

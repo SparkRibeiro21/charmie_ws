@@ -361,10 +361,18 @@ class OpenDoorsDemoMain():
                 self.set_speech(filename="open_doors_demo/door_detection", show_in_face=True, wait_for_end_of=True)
                 
                 ### SHOW IMAGE WITH DETECTION IN FACE
+
+                # self.set_neck(position=self.look_navigation) # , wait_for_end_of=True)
                 
-                self.set_speech(filename="open_doors_demo/door_opening", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="generic/moving_door", show_in_face=True, wait_for_end_of=True)
                 
                 ### MOVE TO THE DOOR
+
+                self.set_speech(filename="generic/arrived_door", show_in_face=True, wait_for_end_of=True)
+
+                # self.set_neck(position=self.look_forward) # , wait_for_end_of=True)
+
+                self.set_speech(filename="open_doors_demo/door_opening", show_in_face=True, wait_for_end_of=True)
                 
                 self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
                 
@@ -373,6 +381,8 @@ class OpenDoorsDemoMain():
                 ### OPEN DOOR
                 
                 ### ELSE: KEEP MOVING NECK TO SEARCH DOOR
+
+                self.set_speech(filename="open_doors_demo/door_opened", wait_for_end_of=True)
                 
                 ### I MUST FIND THE BEST PLACE TO VERIFY IF THE DOOR WAS REALLY OPENED
                 
@@ -381,12 +391,16 @@ class OpenDoorsDemoMain():
             
             elif self.state == self.Approaching_cabinet_1:
                 #print('State 2 = Approaching cabinet for the first time')
+
+                # self.set_neck(position=self.look_navigation) # , wait_for_end_of=True)
+
+                self.set_speech(filename="generic/moving_cabinet", show_in_face=True, wait_for_end_of=True)
                 
                 ###### NAVIGATE TO THE CABINET
                 
-                self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
-                
-                ### NECK TO CABINET
+                self.set_speech(filename="generic/arrived_cabinet", show_in_face=True, wait_for_end_of=True)
+
+                # self.set_neck(position=self.look_cabinet) # , wait_for_end_of=True)
                 
                 	### IF CABINET DOOR IS DETECTED:
 
@@ -403,8 +417,10 @@ class OpenDoorsDemoMain():
                 ### ARM IN POSITION OF OPENING CABINET
                 
                 ### OPEN CABINET
+                self.set_speech(filename="open_doors_demo/door_opened", wait_for_end_of=True)
                 
 					### IF DOOR IS OPENED:                         
+                ### ARM IN REST POSITION
                 self.state = self.Approaching_table
                 
 					### ELSE: STATE = CURRENT
@@ -438,7 +454,7 @@ class OpenDoorsDemoMain():
 
                 self.set_speech(filename="open_doors_demo/found_object", show_in_face=True, wait_for_end_of=True)
 
-                self.set_speech(filename="generic/check_face_objects_detected", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
 
                 ##### SHOW FACE DETECTED OBJECTS
 
@@ -481,64 +497,66 @@ class OpenDoorsDemoMain():
                 # next state
                 self.state = self.Approaching_cabinet_2
                 
-            """ elif self.state == self.Approaching_cabinet_2:
-                #print('State 0 = Initial')
+            elif self.state == self.Approaching_cabinet_2:
+                #print('State 5 = Approaching cabinet second time')
 
-                self.set_face("demo5")
+                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
-                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
-
-                ###### WAITS FOR START BUTTON / DOOR OPEN
-
-                time.sleep(2)
+                ###### NAVIGATE TO THE CABINET
+                
+                self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
+                
+                # self.set_neck(position=self.look_cabinet, wait_for_end_of=True)
                                 
                 # next state
                 self.state = self.Placing_first_object
                 
             elif self.state == self.Placing_first_object:
-                #print('State 0 = Initial')
+                #print('State 6 = Placing object in cabinet')
 
-                self.set_face("demo5")
+                # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
+                                
+                time.sleep(1)
 
-                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
+                ##### ARM MOVE TO CABINET
 
-                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
+                self.set_speech(filename="generic/place_object_cabinet", wait_for_end_of=True)
 
-                ###### WAITS FOR START BUTTON / DOOR OPEN
+                ##### ARM PLACE OBJECT
 
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
+                                
                 time.sleep(2)
                                 
                 # next state
                 self.state = self.Approaching_dishwasher
                 
             elif self.state == self.Approaching_dishwasher:
-                #print('State 0 = Initial')
+                #print('State 7 = Approaching dishwasher')
 
-                self.set_face("demo5")
+                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
-                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="generic/moving_dishwasher", show_in_face=True, wait_for_end_of=True)
 
-                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
-
-                ###### WAITS FOR START BUTTON / DOOR OPEN
-
-                time.sleep(2)
-                                
+                ###### NAVIGATE TO THE DISHWASHER
+                
+                self.set_speech(filename="generic/arrived_dishwasher", wait_for_end_of=True)
+                
+                # self.set_neck(position=self.look_dishwasher, wait_for_end_of=True)
+                                                                
                 # next state
                 self.state = self.Open_dishwasher
                 
             elif self.state == self.Open_dishwasher:
-                #print('State 0 = Initial')
+                #print('State 8 = Open Dishwasher')
 
-                self.set_face("demo5")
+                self.set_speech(filename="generic/open_dishwasher", wait_for_end_of=True)
 
-                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
-
-                ###### WAITS FOR START BUTTON / DOOR OPEN
+                ##### ARM MOVE TO OPEN DISHWASHER
 
                 time.sleep(2)
                                 
@@ -560,4 +578,4 @@ class OpenDoorsDemoMain():
                 while True:
                     pass 
             else:
-                pass"""
+                pass
