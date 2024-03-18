@@ -117,7 +117,11 @@ class FaceNode(Node):
         # a1 representa a rotação sobre o eixo coordenadas x em -90º para alinhar os eixos coordenados
         # a0 representa a rotação sobre o eixo coordenadas z em 180º para alinhar o eixo dos x 
         # c representa o ponto (x,y,z) em relação ao centro do braço
+
+        ### x representa a frente do robô. y positivo vai para a esquerda do robô. z vai para cima no robô
         c = np.dot(np.identity(4), [0, 0, 0, 1])
+        c = np.dot(np.identity(4), [35, -40, 100, 1])
+        print('Psição em relação ao solo:', )
         a2 = self.Trans(3, -6, -110)
         a1 = self.Rot('x', -90)
         a0 = self.Rot('z', 180)

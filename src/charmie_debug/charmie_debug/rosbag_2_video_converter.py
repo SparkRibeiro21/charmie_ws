@@ -13,7 +13,7 @@ class ImageToFileConverter(Node):
         self.bridge = CvBridge()
         self.subscription = self.create_subscription(
             Image,
-            '/CHARMIE/D405_hand/color/image_rect_raw',
+            '/CHARMIE/D455_head/color/image_raw',
             self.image_callback,
             10)
         self.image_count = 0
@@ -32,7 +32,7 @@ class ImageToFileConverter(Node):
         print(self.image_count)
 
         # Check if all images are processed
-        if self.image_count >= 3000:  # Modify this value according to your needs
+        if self.image_count >= 4000:  # Modify this value according to your needs
             self.convert_images_to_video()
 
     def convert_images_to_video(self):

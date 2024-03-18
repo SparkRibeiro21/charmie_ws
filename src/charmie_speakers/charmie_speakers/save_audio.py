@@ -15,10 +15,14 @@ drinks_list = ["milk", "orange juice", "red wine"]
 
 MODE = "RECEPTIONIST"
 
+#COMMANDS = {
+#    'waiting_start_button': 'Waiting for start button to be pressed.',
+#    'waiting_door_open': 'Waiting for door to be opened.',
+#    'recep_start_task': 'I am ready to start my receptionist task'
+#}
+
 COMMANDS = {
-    'waiting_start_button': 'Waiting for start button to be pressed.',
-    'waiting_door_open': 'Waiting for door to be opened.',
-    'recep_start_task': 'I am ready to start my receptionist task'
+    
 }
 
 

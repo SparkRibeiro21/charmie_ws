@@ -384,7 +384,7 @@ class OpenDoorsDemoMain():
                 
                 ###### NAVIGATE TO THE CABINET
                 
-                elf.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
+                self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
                 
                 ### NECK TO CABINET
                 
