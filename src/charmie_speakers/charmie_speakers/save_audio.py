@@ -13,7 +13,7 @@ from pathlib import Path
 names_list = ["Adam", "Paris", "William"]
 drinks_list = ["milk", "orange juice", "red wine"]
 
-MODE = "RECEPTIONIST"
+MODE = "STANDARD"
 
 COMMANDS = {
     'waiting_start_button': 'Waiting for start button to be pressed.',
