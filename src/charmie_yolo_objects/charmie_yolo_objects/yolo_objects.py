@@ -336,11 +336,29 @@ class Yolo_obj(Node):
                 if self.DEBUG_DRAW:
 
                     red_yp = (56, 56, 255)
-                    lblue_yp = (255,128,0)
+                    lblue_yp = (255,194,0)
+                    blue_yp = (255,0,0)
                     green_yp = (0,255,0)
                     orange_yp = (51,153,255)
                     magenta_yp = (255, 51, 255)
                     white_yp = (255, 255, 255)
+
+
+                    # MISS ADDING:
+                    # Cleaning Supplies
+                    # Drinks
+                    # Foods
+                    # Fruits
+                    # Toys
+                    # Snacks
+                    # Dishes
+
+                    if object_class == "Foods":
+                        bb_color = lblue_yp
+                    elif object_class == "Toys":
+                        bb_color = orange_yp
+                    else:
+                        bb_color = red_yp
                     
                     # creates the points for alternative TR visual representation 
                     start_point = (int(boxes_id.xyxy[0][0]), int(boxes_id.xyxy[0][1]))
@@ -359,11 +377,11 @@ class Yolo_obj(Node):
                     ### CHANGE COLOR ACCORDING TO CLASS NAME
                     if DRAW_OBJECT_BOX:
                         # draws the bounding box around the person
-                        cv2.rectangle(current_frame_draw, start_point, end_point, red_yp , 4) 
+                        cv2.rectangle(current_frame_draw, start_point, end_point, bb_color , 4) 
                     
                     if DRAW_OBJECT_CONF and not DRAW_OBJECT_ID:
                         # draws the background for the confidence of each person
-                        cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, red_yp , -1) 
+                        cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, bb_color , -1) 
                         
                         # draws the confidence next to each person, without the initial '0' for easier visualization
                         current_frame_draw = cv2.putText(
@@ -381,7 +399,7 @@ class Yolo_obj(Node):
                         if object_id != 0:
 
                             # draws the background for the confidence of each person
-                            cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+10, end_point_text_rect[1]) , red_yp , -1) 
+                            cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+10, end_point_text_rect[1]) , bb_color , -1) 
                             
                             current_frame_draw = cv2.putText(
                                 current_frame_draw,
@@ -399,7 +417,7 @@ class Yolo_obj(Node):
                         if object_id != 0:
 
                             # draws the background for the confidence of each person
-                            cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+70, end_point_text_rect[1]) , red_yp , -1) 
+                            cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+70, end_point_text_rect[1]) , bb_color , -1) 
                             
                             current_frame_draw = cv2.putText(
                                 current_frame_draw,
@@ -428,7 +446,7 @@ class Yolo_obj(Node):
 
                         else:
                             # draws the background for the confidence of each person
-                            cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, red_yp , -1) 
+                            cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, bb_color , -1) 
                             
                             # draws the confidence next to each person, without the initial '0' for easier visualization
                             current_frame_draw = cv2.putText(
