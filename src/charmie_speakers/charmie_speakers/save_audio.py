@@ -42,7 +42,8 @@ class RobotSpeak():
         self.complete_path = self.home+'/'+self.midpath+'/'
 
         # TTS synthetiser models path 
-        self.voice_models_path = "/home/utilizador/.local/lib/python3.10/site-packages/TTS/.models.json"
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.voice_models_path = self.home+"/.local/lib/python3.10/site-packages/TTS/.models.json"
         self.model_manager = ModelManager(self.voice_models_path)
 
         # good quality but slow render voice
