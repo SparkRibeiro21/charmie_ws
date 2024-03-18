@@ -264,7 +264,7 @@ class Yolo_obj(Node):
 
             # adds object to "object_pose" without any restriction
             new_person = DetectedObject()
-            new_person = self.add_object_to_detectedobject_msg()
+            new_person = self.add_object_to_detectedobject_msg(boxes_id, object_name, object_class)
             yolov8_obj.objects.append(new_person)
 
           
@@ -464,11 +464,14 @@ class Yolo_obj(Node):
                     # if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
                     #     cv2.putText(current_frame_draw, new_person.room_location+" - "+new_person.furniture_location,
                     #                 (self.center_torso_person_list[object_idx][0], self.center_torso_person_list[object_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                    
-                    
+        
+        # must add also for hand 
+        yolov8_obj.image_rgb = self.head_rgb
         yolov8_obj.num_objects = num_obj
         self.objects_publisher.publish(yolov8_obj)
 
+        # must add also for hand
+        yolov8_obj_filtered.image_rgb = self.head_rgb
         yolov8_obj_filtered.num_objects = num_objects_filtered
         self.objects_filtered_publisher.publish(yolov8_obj_filtered)
         
@@ -494,14 +497,38 @@ class Yolo_obj(Node):
         self.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
 
 
-    def add_object_to_detectedobject_msg(self):
+    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class):
 
 
+        object_id = boxes_id.id
+        if boxes_id.id == None:
+            object_id = 0 
 
-        # COMPUTE CLASS NAME
-        pass
-        p = DetectedObject()
-        return p
+        new_object = DetectedObject()
+
+        new_object.object_name = object_name
+        new_object.object_class = object_class
+        new_object.index = int(object_id)
+        new_object.confidence = float(boxes_id.conf)
+
+        # geometry_msgs/Point position_relative
+        # geometry_msgs/Point position_absolute
+
+        new_object.box_top_left_x = int(boxes_id.xyxy[0][0])
+        new_object.box_top_left_y = int(boxes_id.xyxy[0][1])
+        new_object.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
+        new_object.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+
+        # string room_location
+        # string furniture_location
+
+        # int32 box_center_x
+        # int32 box_center_y
+
+        # float32 orientation
+        # string camera
+
+        return new_object
 
     """
     def get_color_image_head_callback(self, img: Image):
