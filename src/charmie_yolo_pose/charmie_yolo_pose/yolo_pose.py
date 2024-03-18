@@ -41,7 +41,7 @@ DRAW_PERSON_LOCATION_COORDS = True
 DRAW_PERSON_LOCATION_HOUSE_FURNITURE = False
 DRAW_PERSON_POINTING_INFO = False
 DRAW_PERSON_HAND_RAISED = False
-DRAW_PERSON_HEIGHT = False
+DRAW_PERSON_HEIGHT = True
 DRAW_PERSON_CLOTHES_COLOR = True
 
 
@@ -91,6 +91,7 @@ class YoloPoseNode(Node):
         full_yolo_model = self.complete_path + yolo_model
         self.get_logger().info(f"Using YOLO pose model: {yolo_model}")
 
+        ### Topics ###
         # Yolo Model - Yolov8 Pose:
         # If the PC used has lower frame rates switch in: self.declare_parameter("yolo_model", "s")
         self.model = YOLO(full_yolo_model)
@@ -112,7 +113,6 @@ class YoloPoseNode(Node):
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
 
-
         ### Services (Clients) ###
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
@@ -120,7 +120,7 @@ class YoloPoseNode(Node):
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
 
-
+        ### Variables ###
         # to calculate the FPS
         self.prev_frame_time = 0 # used to record the time when we processed last frame
         self.new_frame_time = 0 # used to record the time at which we processed current frame
@@ -422,7 +422,6 @@ class YoloPoseNode(Node):
         # ROS2 Image Bridge for OpenCV
         current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
         current_frame_draw = current_frame.copy()
-
         # annotated_frame = self.results[0].plot()
 
         # Calculate the number of persons detected
@@ -473,6 +472,7 @@ class YoloPoseNode(Node):
             # print("Hand Raised:", hand_raised, is_hand_raised)
 
             # adds people to "person_pose" without any restriction
+            print(new_pcloud)
             new_person = DetectedPerson()
             new_person = self.add_person_to_detectedperson_msg(current_frame, current_frame_draw, boxes_id, keypoints_id, \
                                                                self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], \
@@ -962,7 +962,7 @@ class YoloPoseNode(Node):
         
         new_person.position_absolute_head = head_abs_pos
 
-        new_person.height = head_localisation.z/1000 + 0.15 # average person middle of face to top of head distance
+        new_person.height = head_localisation.z/1000 + 0.08 # average person middle of face to top of head distance
 
         new_person.room_location, new_person.furniture_location = self.person_position_to_house_rooms_and_furniture(person_abs_pos)
 

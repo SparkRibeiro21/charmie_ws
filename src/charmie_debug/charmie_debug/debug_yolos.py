@@ -8,8 +8,8 @@ import threading
 import time
 
 from example_interfaces.msg import Bool, Float32, Int16, String 
-from charmie_interfaces.msg import Yolov8Pose
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, TrackObject, TrackPerson
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson
+from charmie_interfaces.srv import TrackObject, TrackPerson
 from sensor_msgs.msg import Image
 
 # Constant Variables to ease RGB_MODE coding
@@ -38,53 +38,39 @@ class TestNode(Node):
 
         ### Services (Clients) ###
         # Neck
-        # self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
+        self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
         
-        # while not self.neck_track_person_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Neck Track Person ...")
+        while not self.neck_track_person_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Neck Track Person ...")
         
         # Variables
-        self.waited_for_end_of_speaking = False
-        self.test_image_face_str = String()
-        self.test_custom_image_face_str = String()
+        self.waited_for_end_of_track_person = False
 
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
-        self.speech_sucess = True
-        self.speech_message = ""
-        self.save_speech_sucess = False
-        self.save_speech_message = ""
-        self.rgb_sucess = True
-        self.rgb_message = ""
-        self.face_sucess = True
-        self.face_message = ""
+        self.track_person_success = True
+        self.track_person_message = ""
 
         self.detected_people = Yolov8Pose()
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
-
     #### SPEECH SERVER FUNCTIONS #####
-    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
-        request = SpeechCommand.Request()
-        request.filename = filename
-        request.command = command
-        request.quick_voice = quick_voice
-        request.show_in_face = show_in_face
-    
-        future = self.speech_command_client.call_async(request)
+    def call_neck_track_person_server(self, person, body_part="Head", wait_for_end_of=True):
+        request = TrackPerson.Request()
+        request.person = person
+        request.body_part = body_part
+
+        future = self.neck_track_person_client.call_async(request)
         # print("Sent Command")
 
         if wait_for_end_of:
-            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
-            future.add_done_callback(self.callback_call_speech_command)
+            future.add_done_callback(self.callback_call_neck_track_person)
         else:
-            self.speech_sucess = True
-            self.speech_message = "Wait for answer not needed"
+            self.track_person_success = True
+            self.track_person_message = "Wait for answer not needed"
     
-
-
-    def callback_call_speech_command(self, future): #, a, b):
+    def callback_call_neck_track_person(self, future):
 
         try:
             # in this function the order of the line of codes matter
@@ -92,34 +78,10 @@ class TestNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
-            self.speech_message = response.message
+            self.track_person_success = response.success
+            self.track_person_message = response.message
             # time.sleep(3)
-            self.waited_for_end_of_speaking = True
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
-            
-
-    def call_save_speech_command_server(self, filename, command):
-        request = SaveSpeechCommand.Request()
-        request.filename = filename
-        request.command = command
-
-        future = self.save_speech_command_client.call_async(request)
-        # print("Sent Command")
-
-        future.add_done_callback(self.callback_call_save_speech_command)
-
-
-    def callback_call_save_speech_command(self, future): #, a, b):
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.save_speech_sucess = response.success
-            self.save_speech_message = response.message
+            self.waited_for_end_of_track_person = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -144,22 +106,6 @@ class RestaurantMain():
         # VARS ...
         self.state = 0
     
-    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
-
-        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
-        
-        if wait_for_end_of:
-          while not self.node.waited_for_end_of_speaking:
-            pass
-        self.node.waited_for_end_of_speaking = False
-
-        return self.node.speech_sucess, self.node.speech_message
-    
-
-    def save_speech(self, filename, command):
-        self.node.call_save_speech_command_server(filename=filename, command=command)
-    
-    
     def set_rgb(self, command="", wait_for_end_of=True):
         
         temp = Int16()
@@ -170,23 +116,19 @@ class RestaurantMain():
         self.node.rgb_message = "Value Sucessfully Sent"
 
         return self.node.rgb_sucess, self.node.rgb_message
-    
-    
-    def set_face(self, command="", custom="", wait_for_end_of=True):
+
+    def track_person(self, person, body_part="Head", wait_for_end_of=True):
+        pass
+
+        self.node.call_neck_track_person_server(person=person, body_part=body_part, wait_for_end_of=wait_for_end_of)
         
-        if custom == "":
-            temp = String()
-            temp.data = command
-            self.node.image_to_face_publisher.publish(temp)
-        else:
-            temp = String()
-            temp.data = custom
-            self.node.custom_image_to_face_publisher.publish(temp)
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_track_person:
+            pass
+        self.node.waited_for_end_of_track_person = False
 
-        self.node.face_sucess = True
-        self.node.face_message = "Value Sucessfully Sent"
-
-        return self.node.face_sucess, self.node.face_message
+        return self.node.track_person_success, self.node.track_person_message
+    
 
     def main(self):
         Waiting_for_start_button = 0
@@ -201,6 +143,9 @@ class RestaurantMain():
         print("IN NEW MAIN")
         time.sleep(2)
 
+
+        p_ = DetectedPerson()
+
         while True:
 
             # State Machine
@@ -214,9 +159,14 @@ class RestaurantMain():
 
             if self.state == Waiting_for_start_button:
 
+                if self.node.detected_people.num_person > 0:
+                    p_=self.node.detected_people.persons[0]
 
-                
 
+                    print(p_.head_center_x, p_.head_center_y)
+                    self.track_person(p_, body_part="Head", wait_for_end_of=True)
+                    print(".")
+                    time.sleep(5)
 
 
 
