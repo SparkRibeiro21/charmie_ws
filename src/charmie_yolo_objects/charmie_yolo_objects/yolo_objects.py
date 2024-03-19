@@ -3,7 +3,9 @@ from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Float32
+from geometry_msgs.msg import Point
 from sensor_msgs.msg import Image
+from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import DetectedObject, Yolov8Objects, ListOfImages, ListOfStrings, PointCloudCoordinates, BoundingBox, BoundingBoxAndPoints
 from charmie_interfaces.srv import GetPointCloud
 from cv_bridge import CvBridge
@@ -12,7 +14,6 @@ import cvzone
 import json
 
 from pathlib import Path
-# import numpy as np
 
 import math
 import time
@@ -84,6 +85,10 @@ class Yolo_obj(Node):
         self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
         self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
         
+        # get robot_localisation
+        self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+
+
         ### Services (Clients) ###
         # Point Cloud
         ### self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
@@ -92,6 +97,11 @@ class Yolo_obj(Node):
         ###     self.get_logger().warn("Waiting for Server Point Cloud...")
         
         ### Variables ###
+
+        # robot localization
+        self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_t = 0.0 # math.pi/2
 
         # to calculate the FPS
         self.prev_frame_time = 0 # used to record the time when we processed last frame
@@ -133,21 +143,14 @@ class Yolo_obj(Node):
         # depending on the filename selected, the class names change
         if objects_filename == 'vfinal.pt' or objects_filename == 'M_300epochs.pt' or objects_filename == "m_size_model_300_epochs_after_nandinho.pt":
             self.objects_classNames = self.lar_v_final_classname
-
-
         # elif objects_filename == 'serve_breakfast_v1.pt':
         #     self.objects_classNames = self.serve_breakfast_classname
         else:
             print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
             
-        # self.objects_classNames_dict = {}
-        # for item in self.objects_classNames:
-        #     self.objects_classNames_dict[item["name"]]=item["class"]
-        
         self.objects_classNames_dict = {item["name"]: item["class"] for item in self.objects_file}
         
-        print(self.objects_classNames_dict)
-
+        # print(self.objects_classNames_dict
 
 
     def get_minimum_object_confidence_callback(self, state: Float32):
@@ -236,6 +239,7 @@ class Yolo_obj(Node):
             new_pcloud = PointCloudCoordinates()
             self.post_receiving_pcloud(new_pcloud)
             
+
     def post_receiving_pcloud(self, new_pcloud):
 
         current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
@@ -499,7 +503,6 @@ class Yolo_obj(Node):
 
     def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class):
 
-
         object_id = boxes_id.id
         if boxes_id.id == None:
             object_id = 0 
@@ -511,22 +514,44 @@ class Yolo_obj(Node):
         new_object.index = int(object_id)
         new_object.confidence = float(boxes_id.conf)
 
-        # geometry_msgs/Point position_relative
-        # geometry_msgs/Point position_absolute
+        # changes the axis of point cloud coordinates to fit with robot axis
+        object_rel_pos = Point()
+        object_rel_pos.x =  0.0 # -torso_localisation.y/1000 # still missing...
+        object_rel_pos.y =  0.0 # torso_localisation.x/1000  # still missing...
+        object_rel_pos.z =  0.0 # torso_localisation.z/1000  # still missing...
+        new_object.position_relative = object_rel_pos
+        
+        # calculate the absolute position according to the robot localisation
+        angle_person = math.atan2(object_rel_pos.x, object_rel_pos.y)
+        dist_person = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
+
+        theta_aux = math.pi/2 - (angle_person - self.robot_t)
+
+        target_x = dist_person * math.cos(theta_aux) + self.robot_x
+        target_y = dist_person * math.sin(theta_aux) + self.robot_y
+
+        a_ref = (target_x, target_y)
+        # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
+
+        object_abs_pos = Point()
+        object_abs_pos.x = 0.0 # target_x                   # still missing...
+        object_abs_pos.y = 0.0 # target_y                   # still missing...
+        object_abs_pos.z = 0.0 # torso_localisation.z/1000  # still missing...
+        new_object.position_absolute = object_abs_pos
 
         new_object.box_top_left_x = int(boxes_id.xyxy[0][0])
         new_object.box_top_left_y = int(boxes_id.xyxy[0][1])
         new_object.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
         new_object.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
-        # string room_location
-        # string furniture_location
+        new_object.room_location = "None"      # still missing... (says on which room a detected object is)
+        new_object.furniture_location = "None" # still missing... (says if an object location is associated with some furniture, on a table, sofa, counter, ...)
 
-        # int32 box_center_x
-        # int32 box_center_y
+        new_object.box_center_x = new_object.box_top_left_x + new_object.box_width//2
+        new_object.box_center_y = new_object.box_top_left_y + new_object.box_height//2
 
-        # float32 orientation
-        # string camera
+        new_object.orientation = 0.0 # still missing... (says the object angle so the gripper can adjust to correctly pick up the object)
+        new_object.camera = "Head"   # still missing... (says which camera is being used)
 
         return new_object
 
@@ -781,6 +806,30 @@ class Yolo_obj(Node):
 
         print("----------")
         self.cropped_image_object_detected_publisher.publish(list_of_strings)
+    
+    
+    def odom_robot_callback(self, loc: Odometry):
+        self.odometry_msg_to_position(loc)
+
+
+    def odometry_msg_to_position(self, odom: Odometry):
+        
+        self.robot_x = odom.pose.pose.position.x
+        self.robot_y = odom.pose.pose.position.y
+
+        qx = odom.pose.pose.orientation.x
+        qy = odom.pose.pose.orientation.y
+        qz = odom.pose.pose.orientation.z
+        qw = odom.pose.pose.orientation.w
+
+        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
+        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
+        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        # print(yaw, pitch, roll)
+
+        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        # print(self.robot_x, self.robot_y, self.robot_t)
+
         
 def main(args=None):
     rclpy.init(args=args)

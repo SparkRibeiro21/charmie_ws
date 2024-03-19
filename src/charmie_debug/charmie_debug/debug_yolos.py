@@ -94,12 +94,22 @@ class TestNode(Node):
                     if object.box_top_left_y+object.box_height > y_max:
                         y_max = object.box_top_left_y+object.box_height
 
-
-
                     start_point = (object.box_top_left_x, object.box_top_left_y)
                     end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
                     cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
 
+                    cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
+                    
+            
+            for object in self.detected_objects.objects:      
+                
+                if object.object_class == "Dishes":
+                
+                    if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
+                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
+                    else:
+                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
+                        
                     # just to test for the "serve the breakfast" task...
                     aux_name = object.object_name
                     if object.object_name == "Fork" or object.object_name == "Knife":
@@ -107,33 +117,21 @@ class TestNode(Node):
                     elif object.object_name == "Plate" or object.object_name == "Cup":
                         aux_name = "Bowl"
 
-                    ### draws the name of the object
-                    current_frame_draw = cv2.putText(
-                        current_frame_draw,
-                        # f"{round(float(per.conf),2)}",
-                        f"{aux_name}",
-                        (start_point[0], end_point[1]),
-                        cv2.FONT_HERSHEY_DUPLEX,
-                        1,
-                        (255,255,255),
-                        1,
-                        cv2.LINE_AA
-                    ) 
-
-            print(current_frame_draw.shape)
-            print(y_min, y_max, x_min, x_max)
-            # cv2.rectangle(current_frame_draw, (x_min, y_min), (x_max, y_max), (255,255,255) , 4) 
+                    text_size, _ = cv2.getTextSize(f"{aux_name}", cv2.FONT_HERSHEY_DUPLEX, 1, 1)
+                    text_w, text_h = text_size
+                    cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
+                    cv2.putText(current_frame_draw, f"{aux_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1, cv2.LINE_AA)
 
         if corr_image:
             # current_frame_draw = current_frame_draw[x_min:y_min, x_max,y_max]
             # img = current_frame_draw[y_min:y_max, x_min,x_max]
             cv2.imshow("c", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)])
+            cv2.waitKey(1)
+        # cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
+        # cv2.waitKey(10)
 
-        cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
-        cv2.waitKey(10)
-
-        cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
-        cv2.waitKey(10)
+        # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
+        # cv2.waitKey(10)
 
     #### SPEECH SERVER FUNCTIONS #####
     def call_neck_track_person_server(self, person, body_part="Head", wait_for_end_of=True):
