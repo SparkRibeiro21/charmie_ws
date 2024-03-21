@@ -1,5 +1,6 @@
 int32 index_person
 float32 conf_person
+
 geometry_msgs/Point position_relative
 geometry_msgs/Point position_absolute
 geometry_msgs/Point position_relative_head
