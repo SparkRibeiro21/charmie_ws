@@ -148,16 +148,16 @@ class ArmUfactory(Node):
 		self.pre_grab_second_object_tray = [-198.0, 350.0, 170.0, -1.57, 0.0, -1.57]
 		self.grab_second_object_tray = [-198.0, 420.0, 170.0, -1.57, 0.0, -1.57]
 		self.pos_grab_second_object_tray = [-198.0, 300.0, 170.0, -1.57, 0.0, -1.57]
-		self.pre_place_cereal_table = [-649.9, 219.0, 786.7, 0.687, 0.0069, -1.56]
-		self.place_cereal_table = [-650.2, 247.4, 786.9, 0.69115, 0.0069, -1.56]
+		self.pre_place_cereal_table = [-649.9, 199.0, 786.7, 0.687, 0.0069, -1.56]
+		self.place_cereal_table = [-650.2, 210.4, 786.9, 0.69115, 0.0069, -1.56]
 		self.pre_grab_milk_tray = [-320.9, 430.0, 49.3, -2.2689, 0.0, -1.57]
 		self.grab_milk_tray = [-230.0, 430.0, -27.0, -2.2689, 0.0, -1.57]
 		self.pre_place_milk_tray = [-230.0, 380.0, -27.0, -2.2689, 0.0, -1.57]
 		self.pos_grab_milk = [-230.0, 300.0, -27.0, -2.2689, 0.0, -1.57]
-		self.place_milk_table = [-650.2, 247.4, 786.9, 0.69115, 0.0069, -1.56]
+		self.place_milk_table = [-650.2, 210.4, 786.9, 0.69115, 0.0069, -1.56]
 		self.grab_funilocopo = [-131.5, 430.0, -155.8, -2.2689, 0.0, -1.57]
 		self.lift_funilocopo = [-135.0, 345.0, -160.0, -2.2689, 0.0, -1.57]
-		self.place_cuttlery_table = [-489.1, 275.5, 593.5, 1.97, -0.808, 2.595]
+		self.place_cuttlery_table = [-489.1, 199.5, 593.5, 1.97, -0.808, 2.595]
 
 
 

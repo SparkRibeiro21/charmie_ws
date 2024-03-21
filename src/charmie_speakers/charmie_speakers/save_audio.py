@@ -22,7 +22,7 @@ MODE = "STANDARD"
 #}
 
 COMMANDS = {
-    'cabinet_opening': 'I will open the cabinet door.'
+    'welcome_roboparty': 'Welcome to RoboParty.'
 }
 
 

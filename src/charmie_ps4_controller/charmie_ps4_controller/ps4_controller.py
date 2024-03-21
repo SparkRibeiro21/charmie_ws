@@ -693,10 +693,16 @@ class ControllerNode(Node):
             if ps4_controller.r3 == 2:
                 self.i += 1
                 if self.i == 1:
-                    success, message = self.set_speech(filename="generic/introduction_full", wait_for_end_of=False)
+                    #success, message = self.set_speech(filename="generic/introduction_full", wait_for_end_of=False)
+                    success, message = self.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
+
+                    print(success, message)
+                elif self.i == 2:
+                    success, message = self.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
                     print(success, message)
                 else: 
-                    success, message = self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=False)
+                    #success, message = self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=False)
+                    success, message = self.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
                     print(success, message)
                     self.i = 0
             # elif ps4_controller.l3 == 2:
