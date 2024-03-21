@@ -141,14 +141,15 @@ class ArmUfactory(Node):
 		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0, 110.0] 
 
 
-		self.pre_place_bowl = [-649.9, 219.0, 786.7, 0.69, 0.007, -1.56]
-		self.place_bowl = [-553.7, 272.3, 671.6, 1.520, -0.8796, -3.0927]
+		self.pre_place_bowl = [-649.9, 199.0, 786.7, 0.69, 0.007, -1.56]
+		self.place_bowl = [-553.7, 199.3, 671.6, 1.520, -0.8796, -3.0927]
+		self.pos_place_bowl = [-553.7, 132.3, 671.6, 1.520, -0.8796, -3.0927]
 		self.orient_to_table_linear = [-357.3, 224.5, 433.0, 0.689, 0.0506, -1.614]
 		self.pre_pre_grab_second_object_tray = [-434.3, 105.1, 51.0, 3.017, 0.0069, -1.56]
 		self.pre_grab_second_object_tray = [-198.0, 350.0, 170.0, -1.57, 0.0, -1.57]
 		self.grab_second_object_tray = [-198.0, 420.0, 170.0, -1.57, 0.0, -1.57]
 		self.pos_grab_second_object_tray = [-198.0, 300.0, 170.0, -1.57, 0.0, -1.57]
-		self.pre_place_cereal_table = [-649.9, 199.0, 786.7, 0.687, 0.0069, -1.56]
+		self.pre_place_cereal_table = [-649.9, 179.0, 786.7, 0.687, 0.0069, -1.56]
 		self.place_cereal_table = [-650.2, 210.4, 786.9, 0.69115, 0.0069, -1.56]
 		self.pre_grab_milk_tray = [-320.9, 430.0, 49.3, -2.2689, 0.0, -1.57]
 		self.grab_milk_tray = [-230.0, 430.0, -27.0, -2.2689, 0.0, -1.57]
@@ -157,7 +158,10 @@ class ArmUfactory(Node):
 		self.place_milk_table = [-650.2, 210.4, 786.9, 0.69115, 0.0069, -1.56]
 		self.grab_funilocopo = [-131.5, 430.0, -155.8, -2.2689, 0.0, -1.57]
 		self.lift_funilocopo = [-135.0, 345.0, -160.0, -2.2689, 0.0, -1.57]
-		self.place_cuttlery_table = [-489.1, 199.5, 593.5, 1.97, -0.808, 2.595]
+		self.place_cuttlery_table = [-489.1, 179.5, 593.5, 1.97, -0.808, 2.595]
+		self.last_movement = [-572.3, -14.3, -45.4, 3.019, 0.0069, -1.56]
+		self.pos_place_cereal_table = [-489.1, 150.5, 593.5, 1.97, -0.808, 2.595]
+		self.place_cuttlery_table_up = [-489.1, 150.5, 593.5, 1.97, -0.808, 2.595]
 
 
 
@@ -547,7 +551,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 6:
-			self.position_values_req.pose = self.orient_to_table_linear
+			self.position_values_req.pose = self.pos_place_bowl
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -556,93 +560,6 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 7:
-			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			self.position_values_req.pose = self.pre_grab_second_object_tray
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 9:
-			self.position_values_req.pose = self.grab_second_object_tray
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 10:
-			self.set_gripper_req.pos = 200.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 11:
-			self.position_values_req.pose = self.pos_grab_second_object_tray
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 12:
-			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 13:
-			self.position_values_req.pose = self.pre_place_cereal_table
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 14:
-			self.position_values_req.pose = self.place_cereal_table
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 15:
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-
-		elif self.estado_tr == 16:
-			self.position_values_req.pose = self.pre_place_cereal_table
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 17:
 			self.position_values_req.pose = self.orient_to_table_linear
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
@@ -651,8 +568,95 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 18:
+		elif self.estado_tr == 8:
 			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 9:
+			self.position_values_req.pose = self.pre_grab_second_object_tray
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 10:
+			self.position_values_req.pose = self.grab_second_object_tray
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 11:
+			self.set_gripper_req.pos = 200.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 12:
+			self.position_values_req.pose = self.pos_grab_second_object_tray
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 13:
+			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 14:
+			self.position_values_req.pose = self.pre_place_cereal_table
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 15:
+			self.position_values_req.pose = self.place_cereal_table
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 16:
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+
+		elif self.estado_tr == 17:
+			self.position_values_req.pose = self.pre_place_cereal_table
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 18:
+			self.position_values_req.pose = self.orient_to_table_linear
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -661,7 +665,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 19:
-			self.position_values_req.pose = self.pre_grab_milk_tray
+			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -670,7 +674,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 20:
-			self.position_values_req.pose = self.grab_milk_tray
+			self.position_values_req.pose = self.pre_grab_milk_tray
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -679,13 +683,22 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 21:
+			self.position_values_req.pose = self.grab_milk_tray
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 22:
 			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 22:
+		elif self.estado_tr == 23:
 			self.position_values_req.pose = self.pos_grab_milk
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
@@ -694,17 +707,8 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 23:
-			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
 		elif self.estado_tr == 24:
-			self.position_values_req.pose = self.pre_place_cereal_table
+			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -713,22 +717,6 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 25:
-			self.position_values_req.pose = self.place_milk_table
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 26:
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 27:
 			self.position_values_req.pose = self.pre_place_cereal_table
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
@@ -737,8 +725,24 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
+		elif self.estado_tr == 26:
+			self.position_values_req.pose = self.place_milk_table
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 27:
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
 		elif self.estado_tr == 28:
-			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
+			self.position_values_req.pose = self.pre_place_cereal_table
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -747,6 +751,15 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 29:
+			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 30:
 			self.position_values_req.pose = self.grab_funilocopo
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
@@ -756,14 +769,14 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 
-		elif self.estado_tr == 30:
+		elif self.estado_tr == 31:
 			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 31:
+		elif self.estado_tr == 32:
 			self.position_values_req.pose = self.lift_funilocopo
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
@@ -772,17 +785,8 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 32:
-			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
 		elif self.estado_tr == 33:
-			self.position_values_req.pose = self.pre_place_cereal_table
+			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -791,22 +795,6 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 34:
-			self.position_values_req.pose = self.place_cuttlery_table
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 35:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 36:
 			self.position_values_req.pose = self.pre_place_cereal_table
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
@@ -815,8 +803,24 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
+		elif self.estado_tr == 35:
+			self.position_values_req.pose = self.place_cuttlery_table
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 36:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
 		elif self.estado_tr == 37:
-			self.position_values_req.pose = self.pre_pre_grab_second_object_tray
+			self.position_values_req.pose = self.place_cuttlery_table_up 
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -825,6 +829,24 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 38:
+			self.position_values_req.pose = self.pos_place_cereal_table 
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 39:
+			self.position_values_req.pose = self.last_movement
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 40:
 			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
 			self.joint_values_req.speed = 0.4 
 			self.joint_values_req.wait = True
@@ -832,7 +854,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 39:
+		elif self.estado_tr == 41:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
