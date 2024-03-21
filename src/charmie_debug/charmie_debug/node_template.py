@@ -51,7 +51,7 @@ class FaceNode(Node):
         self.waited_for_end_of_speaking = False
         self.flag_navigation_done = False
 
-
+    
     # Subscriber to get the start button status     
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
