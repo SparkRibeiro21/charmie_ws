@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "restaurant = charmie_restaurant.restaurant:main"
+            "restaurant = charmie_restaurant.restaurant:main",
+            "restaurant_qualification_24 = charmie_restaurant.restaurant_qualification_24:main"
         ],
     },
 )
