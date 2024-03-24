@@ -130,7 +130,7 @@ class Yolo_obj(Node):
         
         # self.lar_v_final_classname = ['7up', 'Strawberry_jello', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
         #                               'Coffe_grounds', 'Cola', 'Cheezit', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
-        #                               'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Sponge', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
+        #                               'Juice_pack', 'Knife', 'Lemon', 'Milk', '7up', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
         #                               'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
         #                               'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
         
