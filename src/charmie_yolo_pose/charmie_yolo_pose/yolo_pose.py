@@ -474,7 +474,7 @@ class YoloPoseNode(Node):
             # adds people to "person_pose" without any restriction
             print(new_pcloud)
             new_person = DetectedPerson()
-            new_person = self.add_person_to_detectedperson_msg(current_frame, current_frame_draw, boxes_id, keypoints_id, \
+            new_person = self.add_person_to_detectedperson_msg(current_frame, current_frame_draw, boxes_id, keypoints_id, new_pcloud[person_idx].center_coords, \
                                                                self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], \
                                                                new_pcloud[person_idx].requested_point_coords[1], new_pcloud[person_idx].requested_point_coords[0], \
                                                                hand_raised)
@@ -759,9 +759,11 @@ class YoloPoseNode(Node):
 
             # print("===")
 
+        yolov8_pose.image_rgb = self.rgb_img
         yolov8_pose.num_person = num_persons
         self.person_pose_publisher.publish(yolov8_pose)
 
+        yolov8_pose_filtered.image_rgb = self.rgb_img
         yolov8_pose_filtered.num_person = num_persons_filtered
         self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
@@ -810,7 +812,7 @@ class YoloPoseNode(Node):
         # print(self.robot_x, self.robot_y, self.robot_t)
 
 
-    def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
+    def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
@@ -908,9 +910,9 @@ class YoloPoseNode(Node):
         person_rel_pos = Point()
         # person_rel_pos.x = -torso_localisation.y/1000
         # person_rel_pos.y =  torso_localisation.x/1000
-        person_rel_pos.x =  -torso_localisation.y/1000
-        person_rel_pos.y =  torso_localisation.x/1000
-        person_rel_pos.z =  torso_localisation.z/1000
+        person_rel_pos.x =  -center_person_filtered.y/1000
+        person_rel_pos.y =  center_person_filtered.x/1000
+        person_rel_pos.z =  center_person_filtered.z/1000
         
         new_person.position_relative = person_rel_pos
         
@@ -929,7 +931,7 @@ class YoloPoseNode(Node):
         person_abs_pos = Point()
         person_abs_pos.x = target_x
         person_abs_pos.y = target_y
-        person_abs_pos.z = torso_localisation.z/1000
+        person_abs_pos.z = center_person_filtered.z/1000
         
         new_person.position_absolute = person_abs_pos
 

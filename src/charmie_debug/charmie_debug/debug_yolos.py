@@ -60,6 +60,14 @@ class TestNode(Node):
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
+        current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        current_frame_draw = current_frame.copy()
+        
+        cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
+        cv2.waitKey(10)
+
+
+
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
 
