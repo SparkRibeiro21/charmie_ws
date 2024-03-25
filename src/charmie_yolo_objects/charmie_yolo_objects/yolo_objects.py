@@ -475,7 +475,7 @@ class Yolo_obj(Node):
         self.objects_publisher.publish(yolov8_obj)
 
         # must add also for hand
-        yolov8_obj.image_rgb = self.head_rgb
+        yolov8_obj_filtered.image_rgb = self.head_rgb
         yolov8_obj_filtered.num_objects = num_objects_filtered
         self.objects_filtered_publisher.publish(yolov8_obj_filtered)
         
