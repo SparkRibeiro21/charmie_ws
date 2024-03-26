@@ -229,7 +229,6 @@ class DebugVisualNode(Node):
         
         # get yolo pose person detection filtered
         self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
-        # self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.get_person_pose_callback, 10)
 
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)

@@ -95,7 +95,6 @@ class TRNode(Node):
         # self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
         
         
-        # self.yolov8_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose", self.yolov8_pose_callback, 10)
 
 
         # self.yolo_poses = Yolov8Pose()

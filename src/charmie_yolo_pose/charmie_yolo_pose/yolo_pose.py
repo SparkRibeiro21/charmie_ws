@@ -87,7 +87,7 @@ class YoloPoseNode(Node):
         self.DEBUG_DRAW = self.get_parameter("debug_draw").value
         # which face should be displayed after initialising the face node (string) 
         self.GET_CHARACTERISTICS = self.get_parameter("characteristics").value
-
+        # whether the activate flag starts as ON or OFF 
         self.ACTIVATE_YOLO_POSE = self.get_parameter("activate").value
 
         yolo_model = "yolov8" + self.YOLO_MODEL.lower() + "-pose.pt"
@@ -100,7 +100,7 @@ class YoloPoseNode(Node):
         self.model = YOLO(full_yolo_model)
 
         # Publisher (Pose of People Detected Filtered and Non Filtered)
-        self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10)
+        # self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10) # test removed person_pose (non-filtered)
         self.person_pose_filtered_publisher = self.create_publisher(Yolov8Pose, "person_pose_filtered", 10)
 
         # Subscriber (Yolov8_Pose TR Parameters)
@@ -197,7 +197,7 @@ class YoloPoseNode(Node):
         self.ACTIVATE_YOLO_POSE = request.activate
 
 
-
+        # pending adding filters to activate server
 
         # self.get_logger().info("Received Neck Position %s" %("("+str(request.pan)+", "+str(request.tilt)+")"))
         # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
@@ -476,7 +476,7 @@ class YoloPoseNode(Node):
         if not self.results[0].keypoints.has_visible:
             num_persons = 0
 
-        yolov8_pose = Yolov8Pose()
+        # yolov8_pose = Yolov8Pose()  # test removed person_pose (non-filtered)
         yolov8_pose_filtered = Yolov8Pose()
         num_persons_filtered = 0
 
@@ -515,17 +515,17 @@ class YoloPoseNode(Node):
                     # print("Both Arms Down")
                     hand_raised = "None"
                     is_hand_raised = False
-
             # print("Hand Raised:", hand_raised, is_hand_raised)
 
-            # adds people to "person_pose" without any restriction
             # print(new_pcloud)
             new_person = DetectedPerson()
             new_person = self.add_person_to_detectedperson_msg(current_frame, current_frame_draw, boxes_id, keypoints_id, new_pcloud[person_idx].center_coords, \
                                                                self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], \
                                                                new_pcloud[person_idx].requested_point_coords[1], new_pcloud[person_idx].requested_point_coords[0], \
                                                                hand_raised)
-            yolov8_pose.persons.append(new_person)
+            
+            # adds people to "person_pose" without any restriction
+            # yolov8_pose.persons.append(new_person) # test removed person_pose (non-filtered)
             
             legs_ctr = 0
             if keypoints_id.conf[0][self.KNEE_LEFT_KP] > MIN_KP_CONF_VALUE:
@@ -592,8 +592,7 @@ class YoloPoseNode(Node):
             if ALL_CONDITIONS_MET:
                 num_persons_filtered+=1
 
-                # adds people to "person_pose" without any restriction
-                # code here to add to filtered topic
+                # adds people to "person_pose_filtered" with selected filters
                 yolov8_pose_filtered.persons.append(new_person)
 
                 if self.DEBUG_DRAW:
@@ -806,9 +805,9 @@ class YoloPoseNode(Node):
 
             # print("===")
 
-        yolov8_pose.image_rgb = self.rgb_img
-        yolov8_pose.num_person = num_persons
-        self.person_pose_publisher.publish(yolov8_pose)
+        # yolov8_pose.image_rgb = self.rgb_img  # test removed person_pose (non-filtered)
+        # yolov8_pose.num_person = num_persons  # test removed person_pose (non-filtered)
+        # self.person_pose_publisher.publish(yolov8_pose) # test removed person_pose (non-filtered)
 
         yolov8_pose_filtered.image_rgb = self.rgb_img
         yolov8_pose_filtered.num_person = num_persons_filtered
