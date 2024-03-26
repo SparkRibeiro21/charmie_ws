@@ -1,0 +1,10 @@
+# Service to activate the yolo pose detection, thus publishing it on the topic
+
+bool activate                               # activate or deactivate yolo pose detection
+bool only_detect_person_legs_visible        # only detects persons with visible legs (filters all people outside @home house)
+float64 minimum_person_confidence           # adjust the minimum accuracy to assume as a person
+int32 minimum_keypoints_to_detect_person    # minimum necessary keypoints to detect as a person
+bool only_detect_person_right_in_front      # only detects people who are right in front of the robot (easier to interact)
+---
+bool success    # indicate successful run of triggered service
+string message  # informational, e.g. for error messages.

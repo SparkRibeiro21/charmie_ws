@@ -73,7 +73,7 @@ class FaceNode(Node):
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
         self.declare_parameter("after_speech_timer", 0.0) 
-        self.declare_parameter("initial_face", "object_detected_test4") 
+        self.declare_parameter("initial_face", "demo5") 
 
         ### Topics (Subscribers) ###   
         # Receive speech strings to show in face
@@ -97,6 +97,10 @@ class FaceNode(Node):
         first_face.data = self.INITIAL_FACE
         self.image_to_face_callback(first_face)
 
+        # easier debug when testing custom faces 
+        # custom_face_debug = String()
+        # custom_face_debug.data = "object_detected_test4"
+        # self.custom_image_to_face_callback(custom_face_debug)
         
     # Receive speech strings to show in face  
     def speech_to_face_callback(self, command: String):
