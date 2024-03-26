@@ -133,7 +133,7 @@ class ArmUfactory(Node):
 
 
 		# INITIAL DEBUG MOVEMENT
-		self.secondary_initial_position_debug = [-214.8, 83.4, -65.0, -0.5, 74.9, 270.0]  
+		self.secondary_initial_position_debug = [-214.8, 83.4, -65.0, -0.5, 74.9, 270.0] 
 
 		# HELLO WAVING MOVEMENT
 		self.initial_position =       [-224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 

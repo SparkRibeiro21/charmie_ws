@@ -32,7 +32,7 @@ class ImageToFileConverter(Node):
         print(self.image_count)
 
         # Check if all images are processed
-        if self.image_count >= 4000:  # Modify this value according to your needs
+        if self.image_count >= 1000:  # Modify this value according to your needs
             self.convert_images_to_video()
 
     def convert_images_to_video(self):

@@ -22,7 +22,7 @@ MODE = "STANDARD"
 #}
 
 COMMANDS = {
-    'welcome_roboparty': 'Welcome to RoboParty.'
+    'lets_race_roboparty': 'Lets race.'
 }
 
 
