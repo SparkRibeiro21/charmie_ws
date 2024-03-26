@@ -11,7 +11,7 @@
 {"name": "Milk",           	"class": "Drinks"},
 {"name": "Iced Tea",       	"class": "Drinks"},
 {"name": "Orange Juice",   	"class": "Drinks"},
-{"name": "Seven Up",	   	"class": "Drinks"},
+{"name": "7Up",	   		"class": "Drinks"},
 {"name": "Water",	   	"class": "Drinks"},
 
 {"name": "Tuna", 		"class": "Foods"},

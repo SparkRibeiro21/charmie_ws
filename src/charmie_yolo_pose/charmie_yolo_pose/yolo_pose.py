@@ -7,7 +7,7 @@ from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, BoundingBox, BoundingBoxAndPoints, RGB
-from charmie_interfaces.srv import GetPointCloud
+from charmie_interfaces.srv import GetPointCloud, ActivateYoloPose
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
@@ -55,6 +55,7 @@ class YoloPoseNode(Node):
         self.declare_parameter("yolo_model", "s") 
         self.declare_parameter("debug_draw", True) 
         self.declare_parameter("characteristics", True)
+        self.declare_parameter("activate", True)
 
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -86,6 +87,8 @@ class YoloPoseNode(Node):
         self.DEBUG_DRAW = self.get_parameter("debug_draw").value
         # which face should be displayed after initialising the face node (string) 
         self.GET_CHARACTERISTICS = self.get_parameter("characteristics").value
+        # whether the activate flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_POSE = self.get_parameter("activate").value
 
         yolo_model = "yolov8" + self.YOLO_MODEL.lower() + "-pose.pt"
         full_yolo_model = self.complete_path + yolo_model
@@ -97,7 +100,7 @@ class YoloPoseNode(Node):
         self.model = YOLO(full_yolo_model)
 
         # Publisher (Pose of People Detected Filtered and Non Filtered)
-        self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10)
+        # self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10) # test removed person_pose (non-filtered)
         self.person_pose_filtered_publisher = self.create_publisher(Yolov8Pose, "person_pose_filtered", 10)
 
         # Subscriber (Yolov8_Pose TR Parameters)
@@ -113,6 +116,9 @@ class YoloPoseNode(Node):
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
 
+        ### Services ###
+        self.activate_yolo_pose_service = self.create_service(ActivateYoloPose, "activate_yolo_pose", self.callback_activate_yolo_pose)
+        
         ### Services (Clients) ###
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
@@ -170,6 +176,44 @@ class YoloPoseNode(Node):
         #print("Sent Command")
 
         future.add_done_callback(self.callback_call_point_cloud)
+
+    def callback_activate_yolo_pose(self, request, response):
+        
+        # Type of service received: 
+        # bool activate                               # activate or deactivate yolo pose detection
+        # bool only_detect_person_legs_visible        # only detects persons with visible legs (filters all people outside @home house)
+        # float64 minimum_person_confidence           # adjust the minimum accuracy to assume as a person
+        # int32 minimum_keypoints_to_detect_person    # minimum necessary keypoints to detect as a person
+        # bool only_detect_person_right_in_front      # only detects people who are right in front of the robot (easier to interact)
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+
+        if request.activate:
+            self.get_logger().info("Activated Yolo Pose %s" %("("+str(request.only_detect_person_legs_visible)+", "+str(request.minimum_person_confidence)+", "+str(request.minimum_keypoints_to_detect_person)+", "+str(request.only_detect_person_right_in_front)+")"))
+        else: 
+            self.get_logger().info("Deactivated Yolo Pose")
+
+        self.ACTIVATE_YOLO_POSE = request.activate
+
+
+        # pending adding filters to activate server
+
+        # self.get_logger().info("Received Neck Position %s" %("("+str(request.pan)+", "+str(request.tilt)+")"))
+        # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
+        
+        # +180.0 on both values since for calculations (180, 180) is the middle position but is easier UI for center to be (0,0)
+        # self.move_neck(request.pan+180.0, request.tilt+180.0)
+
+
+
+
+
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Activated with selected parameters"
+        return response
 
     def callback_call_point_cloud(self, future):
 
@@ -231,187 +275,190 @@ class YoloPoseNode(Node):
 
 
     def get_color_image_head_callback(self, img: Image):
-        
-        if not self.waiting_for_pcloud:
-            # self.get_logger().info('Receiving color video frame')
-            self.tempo_total = time.perf_counter()
-            self.rgb_img = img
 
-            # ROS2 Image Bridge for OpenCV
-            current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
-            # current_frame_draw = current_frame.copy()
+        # only when activated via service, the model computes the person detection
+        if self.ACTIVATE_YOLO_POSE:
 
-            # Getting image dimensions
-            self.img_width = self.rgb_img.width
-            self.img_height = self.rgb_img.height
-            # print(self.img_width)
-            # print(self.img_height)
+            if not self.waiting_for_pcloud:
+                # self.get_logger().info('Receiving color video frame')
+                self.tempo_total = time.perf_counter()
+                self.rgb_img = img
 
-            # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
-            # tempo_calculo = time.perf_counter()
-            self.results = self.model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-            # print('tempo calculo = ', time.perf_counter() - tempo_calculo)   # imprime o tempo de calculo em segundos
+                # ROS2 Image Bridge for OpenCV
+                current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
+                # current_frame_draw = current_frame.copy()
 
-            # tf = time.perf_counter()
+                # Getting image dimensions
+                self.img_width = self.rgb_img.width
+                self.img_height = self.rgb_img.height
+                # print(self.img_width)
+                # print(self.img_height)
 
-            # type(results) = <class 'list'>
-            # type(results[0]) = <class 'ultralytics.engine.results.Results'>
-            # type(results[0].keypoints) = <class 'ultralytics.engine.results.Keypoints'>
-            # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
-            
-            # /*** ultralytics.engine.results.Results ***/
-            # A class for storing and manipulating inference results.
-            # Attributes:
-            # Name 	        Type 	    Description
-            # orig_img 	    ndarray 	The original image as a numpy array.
-            # orig_shape 	tuple 	    The original image shape in (height, width) format.
-            # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
-            # masks 	    Masks 	    A Masks object containing the detection masks.
-            # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
-            # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
-            # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
-            # names 	    dict 	    A dictionary of class names.
-            # path 	        str 	    The path to the image file.
-            # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
-            
-            # /*** ultralytics.engine.results.Keypoints ***/
-            # A class for storing and   manipulating detection keypoints.
-            # Attributes:
-            # Name 	Type 	Description
-            # xy 	Tensor 	A collection of keypoints containing x, y coordinates for each detection.
-            # xyn 	Tensor 	A normalized version of xy with coordinates in the range [0, 1].
-            # conf 	Tensor 	Confidence values associated with keypoints if available, otherwise None.
+                # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
+                # tempo_calculo = time.perf_counter()
+                self.results = self.model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+                # print('tempo calculo = ', time.perf_counter() - tempo_calculo)   # imprime o tempo de calculo em segundos
 
-            # /*** ultralytics.engine.results.Boxes ***/
-            # A class for storing and manipulating detection boxes.
-            # Attributes:
-            # Name      Type                Description
-            # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
-            # conf 	    Tensor | ndarray 	The confidence values of the boxes.
-            # cls 	    Tensor | ndarray 	The class values of the boxes.
-            # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
-            # xywh 	    Tensor | ndarray 	The boxes in xywh format.
-            # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
-            # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
-            # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
+                # tf = time.perf_counter()
 
-
-            # Index     Keypoint
-            # 0         Nose                              2   1
-            # 1         Left Eye                         / \ / \ 
-            # 2         Right Eye                       4   0   3 
-            # 3         Left Ear                        
-            # 4         Right Ear                              
-            # 5         Left Shoulder                  6---------5 
-            # 6         Right Shoulder                / |       | \  
-            # 7         Left Elbow                   /  |       |  \  
-            # 8         Right Elbow                8/   |       |   \7  
-            # 9         Left Wrist                  \   |       |   /
-            # 10        Right Wrist                10\  |       |  /9 
-            # 11        Left Hip                        ---------
-            # 12        Right Hip                     12|       |11  
-            # 13        Left Knee                       |       |
-            # 14        Right Knee                    14|       |13  
-            # 15        Left Ankle                      |       |
-            # 16        Right Ankle                   16|       |15  
-
-            # Calculate the number of persons detected
-            num_persons = len(self.results[0].keypoints)
-            if not self.results[0].keypoints.has_visible:
-                num_persons = 0
-
-            # print("Number of people detected =", num_persons)
-            self.get_logger().info(f"People detected: {num_persons}")
-
-            self.center_torso_person_list = []
-            self.center_head_person_list = []
-
-            req2 = []
-            
-            for person_idx in range(num_persons):
-
-                keypoints_id = self.results[0].keypoints[person_idx]
-                boxes_id = self.results[0].boxes[person_idx]
+                # type(results) = <class 'list'>
+                # type(results[0]) = <class 'ultralytics.engine.results.Results'>
+                # type(results[0].keypoints) = <class 'ultralytics.engine.results.Keypoints'>
+                # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
                 
-                bb = BoundingBox()
-                bb.box_top_left_x = int(boxes_id.xyxy[0][0])
-                bb.box_top_left_y = int(boxes_id.xyxy[0][1])
-                bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
-                bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+                # /*** ultralytics.engine.results.Results ***/
+                # A class for storing and manipulating inference results.
+                # Attributes:
+                # Name 	        Type 	    Description
+                # orig_img 	    ndarray 	The original image as a numpy array.
+                # orig_shape 	tuple 	    The original image shape in (height, width) format.
+                # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
+                # masks 	    Masks 	    A Masks object containing the detection masks.
+                # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
+                # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
+                # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
+                # names 	    dict 	    A dictionary of class names.
+                # path 	        str 	    The path to the image file.
+                # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
+                
+                # /*** ultralytics.engine.results.Keypoints ***/
+                # A class for storing and   manipulating detection keypoints.
+                # Attributes:
+                # Name 	Type 	Description
+                # xy 	Tensor 	A collection of keypoints containing x, y coordinates for each detection.
+                # xyn 	Tensor 	A normalized version of xy with coordinates in the range [0, 1].
+                # conf 	Tensor 	Confidence values associated with keypoints if available, otherwise None.
 
-                # Conditions to safely select the pixel to calculate the person location 
-                if keypoints_id.conf[0][self.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE and \
-                    keypoints_id.conf[0][self.SHOULDER_RIGHT_KP] > MIN_KP_CONF_VALUE and \
-                    keypoints_id.conf[0][self.HIP_LEFT_KP] > MIN_KP_CONF_VALUE and \
-                    keypoints_id.conf[0][self.HIP_RIGHT_KP] > MIN_KP_CONF_VALUE:
-                 
-                    ### After the yolo update, i must check if the conf value of the keypoint
-                    person_center_x = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][0] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][0] + keypoints_id.xy[0][self.HIP_LEFT_KP][0] + keypoints_id.xy[0][self.HIP_RIGHT_KP][0]) / 4)
-                    person_center_y = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][1] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][1] + keypoints_id.xy[0][self.HIP_LEFT_KP][1] + keypoints_id.xy[0][self.HIP_RIGHT_KP][1]) / 4)
-
-                else:
-                    person_center_x = int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2
-                    person_center_y = int(boxes_id.xyxy[0][1]+boxes_id.xyxy[0][3])//2
-
-                self.center_torso_person_list.append((person_center_x, person_center_y))
-
-                # head center position 
-                head_ctr = 0
-                head_center_x = 0
-                head_center_y = 0
-                if keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE:
-                    head_center_x += int(keypoints_id.xy[0][self.NOSE_KP][0])
-                    head_center_y += int(keypoints_id.xy[0][self.NOSE_KP][1])
-                    head_ctr +=1
-                if keypoints_id.conf[0][self.EYE_LEFT_KP] > MIN_KP_CONF_VALUE:
-                    head_center_x += int(keypoints_id.xy[0][self.EYE_LEFT_KP][0])
-                    head_center_y += int(keypoints_id.xy[0][self.EYE_LEFT_KP][1])
-                    head_ctr +=1
-                if keypoints_id.conf[0][self.EYE_RIGHT_KP] > MIN_KP_CONF_VALUE:
-                    head_center_x += int(keypoints_id.xy[0][self.EYE_RIGHT_KP][0])
-                    head_center_y += int(keypoints_id.xy[0][self.EYE_RIGHT_KP][1])
-                    head_ctr +=1
-                if keypoints_id.conf[0][self.EAR_LEFT_KP] > MIN_KP_CONF_VALUE:
-                    head_center_x += int(keypoints_id.xy[0][self.EAR_LEFT_KP][0])
-                    head_center_y += int(keypoints_id.xy[0][self.EAR_LEFT_KP][1])
-                    head_ctr +=1
-                if keypoints_id.conf[0][self.EAR_RIGHT_KP] > MIN_KP_CONF_VALUE:
-                    head_center_x += int(keypoints_id.xy[0][self.EAR_RIGHT_KP][0])
-                    head_center_y += int(keypoints_id.xy[0][self.EAR_RIGHT_KP][1])
-                    head_ctr +=1
-
-                if head_ctr > 0:
-                    head_center_x /= head_ctr
-                    head_center_y /= head_ctr
-                else:
-                    head_center_x = int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2
-                    head_center_y = int(boxes_id.xyxy[0][1]*3+boxes_id.xyxy[0][3])//4
+                # /*** ultralytics.engine.results.Boxes ***/
+                # A class for storing and manipulating detection boxes.
+                # Attributes:
+                # Name      Type                Description
+                # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
+                # conf 	    Tensor | ndarray 	The confidence values of the boxes.
+                # cls 	    Tensor | ndarray 	The class values of the boxes.
+                # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
+                # xywh 	    Tensor | ndarray 	The boxes in xywh format.
+                # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
+                # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
+                # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
 
 
-                head_center_x = int(head_center_x)
-                head_center_y = int(head_center_y)
+                # Index     Keypoint
+                # 0         Nose                              2   1
+                # 1         Left Eye                         / \ / \ 
+                # 2         Right Eye                       4   0   3 
+                # 3         Left Ear                        
+                # 4         Right Ear                              
+                # 5         Left Shoulder                  6---------5 
+                # 6         Right Shoulder                / |       | \  
+                # 7         Left Elbow                   /  |       |  \  
+                # 8         Right Elbow                8/   |       |   \7  
+                # 9         Left Wrist                  \   |       |   /
+                # 10        Right Wrist                10\  |       |  /9 
+                # 11        Left Hip                        ---------
+                # 12        Right Hip                     12|       |11  
+                # 13        Left Knee                       |       |
+                # 14        Right Knee                    14|       |13  
+                # 15        Left Ankle                      |       |
+                # 16        Right Ankle                   16|       |15  
 
-                self.center_head_person_list.append((head_center_x, head_center_y))
+                # Calculate the number of persons detected
+                num_persons = len(self.results[0].keypoints)
+                if not self.results[0].keypoints.has_visible:
+                    num_persons = 0
 
-                head_center_point = Pose2D()
-                head_center_point.x = float(head_center_x)
-                head_center_point.y = float(head_center_y)
+                # print("Number of people detected =", num_persons)
+                self.get_logger().info(f"People detected: {num_persons}")
 
-                torso_center_point = Pose2D()
-                torso_center_point.x = float(person_center_x)
-                torso_center_point.y = float(person_center_y)
+                self.center_torso_person_list = []
+                self.center_head_person_list = []
 
-                # more points can be added here...
+                req2 = []
+                
+                for person_idx in range(num_persons):
 
-                aux = BoundingBoxAndPoints()
-                aux.bbox = bb
-                aux.requested_point_coords.append(head_center_point)
-                aux.requested_point_coords.append(torso_center_point)
+                    keypoints_id = self.results[0].keypoints[person_idx]
+                    boxes_id = self.results[0].boxes[person_idx]
+                    
+                    bb = BoundingBox()
+                    bb.box_top_left_x = int(boxes_id.xyxy[0][0])
+                    bb.box_top_left_y = int(boxes_id.xyxy[0][1])
+                    bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
+                    bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
-                req2.append(aux)
+                    # Conditions to safely select the pixel to calculate the person location 
+                    if keypoints_id.conf[0][self.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE and \
+                        keypoints_id.conf[0][self.SHOULDER_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+                        keypoints_id.conf[0][self.HIP_LEFT_KP] > MIN_KP_CONF_VALUE and \
+                        keypoints_id.conf[0][self.HIP_RIGHT_KP] > MIN_KP_CONF_VALUE:
+                    
+                        ### After the yolo update, i must check if the conf value of the keypoint
+                        person_center_x = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][0] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][0] + keypoints_id.xy[0][self.HIP_LEFT_KP][0] + keypoints_id.xy[0][self.HIP_RIGHT_KP][0]) / 4)
+                        person_center_y = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][1] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][1] + keypoints_id.xy[0][self.HIP_LEFT_KP][1] + keypoints_id.xy[0][self.HIP_RIGHT_KP][1]) / 4)
 
-            self.waiting_for_pcloud = True
-            self.call_point_cloud_server(req2)
+                    else:
+                        person_center_x = int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2
+                        person_center_y = int(boxes_id.xyxy[0][1]+boxes_id.xyxy[0][3])//2
+
+                    self.center_torso_person_list.append((person_center_x, person_center_y))
+
+                    # head center position 
+                    head_ctr = 0
+                    head_center_x = 0
+                    head_center_y = 0
+                    if keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE:
+                        head_center_x += int(keypoints_id.xy[0][self.NOSE_KP][0])
+                        head_center_y += int(keypoints_id.xy[0][self.NOSE_KP][1])
+                        head_ctr +=1
+                    if keypoints_id.conf[0][self.EYE_LEFT_KP] > MIN_KP_CONF_VALUE:
+                        head_center_x += int(keypoints_id.xy[0][self.EYE_LEFT_KP][0])
+                        head_center_y += int(keypoints_id.xy[0][self.EYE_LEFT_KP][1])
+                        head_ctr +=1
+                    if keypoints_id.conf[0][self.EYE_RIGHT_KP] > MIN_KP_CONF_VALUE:
+                        head_center_x += int(keypoints_id.xy[0][self.EYE_RIGHT_KP][0])
+                        head_center_y += int(keypoints_id.xy[0][self.EYE_RIGHT_KP][1])
+                        head_ctr +=1
+                    if keypoints_id.conf[0][self.EAR_LEFT_KP] > MIN_KP_CONF_VALUE:
+                        head_center_x += int(keypoints_id.xy[0][self.EAR_LEFT_KP][0])
+                        head_center_y += int(keypoints_id.xy[0][self.EAR_LEFT_KP][1])
+                        head_ctr +=1
+                    if keypoints_id.conf[0][self.EAR_RIGHT_KP] > MIN_KP_CONF_VALUE:
+                        head_center_x += int(keypoints_id.xy[0][self.EAR_RIGHT_KP][0])
+                        head_center_y += int(keypoints_id.xy[0][self.EAR_RIGHT_KP][1])
+                        head_ctr +=1
+
+                    if head_ctr > 0:
+                        head_center_x /= head_ctr
+                        head_center_y /= head_ctr
+                    else:
+                        head_center_x = int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2
+                        head_center_y = int(boxes_id.xyxy[0][1]*3+boxes_id.xyxy[0][3])//4
+
+
+                    head_center_x = int(head_center_x)
+                    head_center_y = int(head_center_y)
+
+                    self.center_head_person_list.append((head_center_x, head_center_y))
+
+                    head_center_point = Pose2D()
+                    head_center_point.x = float(head_center_x)
+                    head_center_point.y = float(head_center_y)
+
+                    torso_center_point = Pose2D()
+                    torso_center_point.x = float(person_center_x)
+                    torso_center_point.y = float(person_center_y)
+
+                    # more points can be added here...
+
+                    aux = BoundingBoxAndPoints()
+                    aux.bbox = bb
+                    aux.requested_point_coords.append(head_center_point)
+                    aux.requested_point_coords.append(torso_center_point)
+
+                    req2.append(aux)
+
+                self.waiting_for_pcloud = True
+                self.call_point_cloud_server(req2)
         
 
     def post_receiving_pcloud(self, new_pcloud):
@@ -429,7 +476,7 @@ class YoloPoseNode(Node):
         if not self.results[0].keypoints.has_visible:
             num_persons = 0
 
-        yolov8_pose = Yolov8Pose()
+        # yolov8_pose = Yolov8Pose()  # test removed person_pose (non-filtered)
         yolov8_pose_filtered = Yolov8Pose()
         num_persons_filtered = 0
 
@@ -468,17 +515,17 @@ class YoloPoseNode(Node):
                     # print("Both Arms Down")
                     hand_raised = "None"
                     is_hand_raised = False
-
             # print("Hand Raised:", hand_raised, is_hand_raised)
 
-            # adds people to "person_pose" without any restriction
-            print(new_pcloud)
+            # print(new_pcloud)
             new_person = DetectedPerson()
-            new_person = self.add_person_to_detectedperson_msg(current_frame, current_frame_draw, boxes_id, keypoints_id, \
+            new_person = self.add_person_to_detectedperson_msg(current_frame, current_frame_draw, boxes_id, keypoints_id, new_pcloud[person_idx].center_coords, \
                                                                self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], \
                                                                new_pcloud[person_idx].requested_point_coords[1], new_pcloud[person_idx].requested_point_coords[0], \
                                                                hand_raised)
-            yolov8_pose.persons.append(new_person)
+            
+            # adds people to "person_pose" without any restriction
+            # yolov8_pose.persons.append(new_person) # test removed person_pose (non-filtered)
             
             legs_ctr = 0
             if keypoints_id.conf[0][self.KNEE_LEFT_KP] > MIN_KP_CONF_VALUE:
@@ -545,8 +592,7 @@ class YoloPoseNode(Node):
             if ALL_CONDITIONS_MET:
                 num_persons_filtered+=1
 
-                # adds people to "person_pose" without any restriction
-                # code here to add to filtered topic
+                # adds people to "person_pose_filtered" with selected filters
                 yolov8_pose_filtered.persons.append(new_person)
 
                 if self.DEBUG_DRAW:
@@ -759,9 +805,11 @@ class YoloPoseNode(Node):
 
             # print("===")
 
-        yolov8_pose.num_person = num_persons
-        self.person_pose_publisher.publish(yolov8_pose)
+        # yolov8_pose.image_rgb = self.rgb_img  # test removed person_pose (non-filtered)
+        # yolov8_pose.num_person = num_persons  # test removed person_pose (non-filtered)
+        # self.person_pose_publisher.publish(yolov8_pose) # test removed person_pose (non-filtered)
 
+        yolov8_pose_filtered.image_rgb = self.rgb_img
         yolov8_pose_filtered.num_person = num_persons_filtered
         self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
@@ -810,7 +858,7 @@ class YoloPoseNode(Node):
         # print(self.robot_x, self.robot_y, self.robot_t)
 
 
-    def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
+    def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
@@ -908,9 +956,9 @@ class YoloPoseNode(Node):
         person_rel_pos = Point()
         # person_rel_pos.x = -torso_localisation.y/1000
         # person_rel_pos.y =  torso_localisation.x/1000
-        person_rel_pos.x =  -torso_localisation.y/1000
-        person_rel_pos.y =  torso_localisation.x/1000
-        person_rel_pos.z =  torso_localisation.z/1000
+        person_rel_pos.x =  -center_person_filtered.y/1000
+        person_rel_pos.y =  center_person_filtered.x/1000
+        person_rel_pos.z =  center_person_filtered.z/1000
         
         new_person.position_relative = person_rel_pos
         
@@ -929,7 +977,7 @@ class YoloPoseNode(Node):
         person_abs_pos = Point()
         person_abs_pos.x = target_x
         person_abs_pos.y = target_y
-        person_abs_pos.z = torso_localisation.z/1000
+        person_abs_pos.z = center_person_filtered.z/1000
         
         new_person.position_absolute = person_abs_pos
 
