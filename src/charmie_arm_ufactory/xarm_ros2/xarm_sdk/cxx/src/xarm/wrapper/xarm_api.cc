@@ -8,7 +8,14 @@
  * @author Vinman <vinman.wen@ufactory.cc> <vinman.cub@gmail.com>
  */
 
+#define _CRT_SECURE_NO_WARNINGS 1
+// #pragma warning(disable:4996)
+
+#include <random>
 #include "xarm/wrapper/xarm_api.h"
+
+const int FEEDBACK_QUE_SIZE = 256;
+const int FEEDBACK_DATA_MAX_LEN = 256;
 
 fp32 to_radian(fp32 val) {
   return (fp32)(val / RAD_DEGREE);
@@ -17,6 +24,8 @@ fp32 to_radian(fp32 val) {
 fp32 to_degree(fp32 val) {
   return (fp32)(val * RAD_DEGREE);
 }
+
+static std::default_random_engine engine;
 
 XArmAPI::XArmAPI(
   const std::string &port,
@@ -40,8 +49,10 @@ XArmAPI::XArmAPI(
   check_is_ready_(check_is_ready), check_is_pause_(check_is_pause), baud_checkset_flag_(baud_checkset) {
   // default_is_radian = is_radian;
   // check_tcp_limit_ = check_tcp_limit;
-  pool_.set_max_thread_count(max_callback_thread_count);
-  callback_in_thread_ = max_callback_thread_count != 0;
+  max_callback_thread_count_ = max_callback_thread_count;
+  if (max_callback_thread_count_ < 0) max_callback_thread_count_ = 100;
+  pool_.set_max_thread_count(max_callback_thread_count_);
+  callback_in_thread_ = max_callback_thread_count_ != 0;
   max_cmdnum_ = max_cmdnum > 0 ? max_cmdnum : 256;
   axis = init_axis;
   report_type_ = report_type;
@@ -55,6 +66,138 @@ XArmAPI::XArmAPI(
 
 XArmAPI::~XArmAPI() {
   disconnect();
+  _destroy();
+}
+
+void XArmAPI::_destroy(void) {
+  if (version_number != NULL) {
+    delete[] version_number;
+    version_number = NULL;
+  }
+  if (angles != NULL) {
+    delete[] angles;
+    angles = NULL;
+  }
+  if (last_used_angles != NULL) {
+    delete[] last_used_angles;
+    last_used_angles = NULL;
+  }
+  if (tcp_offset != NULL) {
+    delete[] tcp_offset;
+    tcp_offset = NULL;
+  }
+  if (joint_speed_limit != NULL) {
+    delete[] joint_speed_limit;
+    joint_speed_limit = NULL;
+  }
+  if (joint_acc_limit != NULL) {
+    delete[] joint_acc_limit;
+    joint_acc_limit = NULL;
+  }
+  if (position != NULL) {
+    delete[] position;
+    position = NULL;
+  }
+  if (position_aa != NULL) {
+    delete[] position_aa;
+    position_aa = NULL;
+  }
+  if (last_used_position != NULL) {
+    delete[] last_used_position;
+    last_used_position = NULL;
+  }
+  if (joints_torque != NULL) {
+    delete[] joints_torque;
+    joints_torque = NULL;
+  }
+  if (motor_brake_states != NULL) {
+    delete[] motor_brake_states;
+    motor_brake_states = NULL;
+  }
+  if (motor_enable_states != NULL) {
+    delete[] motor_enable_states;
+    motor_enable_states = NULL;
+  }
+  if (tcp_load != NULL) {
+    delete[] tcp_load;
+    tcp_load = NULL;
+  }
+  if (tcp_speed_limit != NULL) {
+    delete[] tcp_speed_limit;
+    tcp_speed_limit = NULL;
+  }
+  if (tcp_acc_limit != NULL) {
+    delete[] tcp_acc_limit;
+    tcp_acc_limit = NULL;
+  }
+  if (gravity_direction != NULL) {
+    delete[] gravity_direction;
+    gravity_direction = NULL;
+  }
+  if (realtime_joint_speeds != NULL) {
+    delete[] realtime_joint_speeds;
+    realtime_joint_speeds = NULL;
+  }
+  if (world_offset != NULL) {
+    delete[] world_offset;
+    world_offset = NULL;
+  }
+  if (temperatures != NULL) {
+    delete[] temperatures;
+    temperatures = NULL;
+  }
+  if (gpio_reset_config != NULL) {
+    delete[] gpio_reset_config;
+    gpio_reset_config = NULL;
+  }
+  if (ft_ext_force != NULL) {
+    delete[] ft_ext_force;
+    ft_ext_force = NULL;
+  }
+  if (ft_raw_force != NULL) {
+    delete[] ft_raw_force;
+    ft_raw_force = NULL;
+  }
+  if (voltages != NULL) {
+    delete[] voltages;
+    voltages = NULL;
+  }
+  if (currents != NULL) {
+    delete[] currents;
+    currents = NULL;
+  }
+  if (collision_model_params != NULL) {
+    delete[] collision_model_params;
+    collision_model_params = NULL;
+  }
+  if (cgpio_input_digitals != NULL) {
+    delete[] cgpio_input_digitals;
+    cgpio_input_digitals = NULL;
+  }
+  if (cgpio_output_digitals != NULL) {
+    delete[] cgpio_output_digitals;
+    cgpio_output_digitals = NULL;
+  }
+  if (cgpio_intput_anglogs != NULL) {
+    delete[] cgpio_intput_anglogs;
+    cgpio_intput_anglogs = NULL;
+  }
+  if (cgpio_output_anglogs != NULL) {
+    delete[] cgpio_output_anglogs;
+    cgpio_output_anglogs = NULL;
+  }
+  if (cgpio_input_conf != NULL) {
+    delete[] cgpio_input_conf;
+    cgpio_input_conf = NULL;
+  }
+  if (cgpio_output_conf != NULL) {
+    delete[] cgpio_output_conf;
+    cgpio_output_conf = NULL;
+  }
+  if (report_rich_data_ptr_ != NULL) {
+    delete report_rich_data_ptr_;
+    report_rich_data_ptr_ = NULL;
+  }
 }
 
 void XArmAPI::_init(void) {
@@ -194,6 +337,13 @@ void XArmAPI::_init(void) {
 
   only_check_type_ = 0;
   only_check_result = 0;
+  support_feedback_ = false;
+
+  is_reduced_mode = false;
+  is_fence_mode = false;
+  is_report_current = false;
+  is_approx_motion = false;
+  is_cart_continuous = false;
 
   report_rich_data_ptr_ = new XArmReportData("rich");
   if (report_type_ != "rich") {
@@ -202,7 +352,6 @@ void XArmAPI::_init(void) {
   else {
     report_data_ptr_ = report_rich_data_ptr_;
   }
-  
 }
 
 int XArmAPI::set_baud_checkset_enable(bool enable)
@@ -277,6 +426,10 @@ bool XArmAPI::is_lite6(void) {
   return axis == 6 && device_type == 9;
 }
 
+bool XArmAPI::is_850(void) {
+  return axis == 6 && device_type == 12;
+}
+
 bool XArmAPI::is_reported(void) {
   return is_tcp_ ? (stream_tcp_report_ == NULL ? false : stream_tcp_report_->is_ok() == 0) : false;
 }
@@ -285,14 +438,19 @@ bool XArmAPI::_is_rich_reported(void) {
   return is_tcp_ ? (stream_tcp_rich_report_ == NULL ? false : stream_tcp_rich_report_->is_ok() == 0) : false;
 }
 
-static void report_rich_thread_handle_(void *arg) {
+static void report_rich_thread_handle(void *arg) {
   XArmAPI *my_this = (XArmAPI *)arg;
   my_this->_handle_report_rich_data();
 }
 
-static void report_thread_handle_(void *arg) {
+static void report_thread_handle(void *arg) {
   XArmAPI *my_this = (XArmAPI *)arg;
   my_this->_handle_report_data();
+}
+
+static void feedback_thread_handle(void *arg) {
+  XArmAPI *my_this = (XArmAPI *)arg;
+  my_this->_handle_feedback_data();
 }
 
 void XArmAPI::_sync(void) {
@@ -348,7 +506,7 @@ void XArmAPI::_check_version(void) {
   }
   else {
     std::vector<std::string> tmpList = split(v, "-");
-    int size = tmpList.size();
+    size_t size = tmpList.size();
     if (size >= 3) {
       int year = atoi(tmpList[size - 3].c_str());
       int month = atoi(tmpList[size - 2].c_str());
@@ -476,7 +634,7 @@ bool XArmAPI::_version_is_ge(int major, int minor, int revision) {
     }
     else {
       std::vector<std::string> tmpList = split(v, "-");
-      int size = tmpList.size();
+      size_t size = tmpList.size();
       if (size >= 3) {
         int year = atoi(tmpList[size - 3].c_str());
         int month = atoi(tmpList[size - 2].c_str());
@@ -520,17 +678,22 @@ int XArmAPI::connect(const std::string &port) {
   is_ready_ = true;
   if (port_ == "localhost" || std::regex_match(port_, pattern)) {
     is_tcp_ = true;
-    stream_tcp_ = new SocketPort((char *)port_.data(), XARM_CONF::TCP_PORT_CONTROL, 3, 320);
+    stream_tcp_ = new SocketPort((char *)port_.data(), XARM_CONF::TCP_PORT_CONTROL, 3, 320, 0, FEEDBACK_QUE_SIZE, FEEDBACK_DATA_MAX_LEN);
     if (stream_tcp_->is_ok() != 0) {
       fprintf(stderr, "Error: Tcp control connection failed\n");
       return -2;
     }
-    core = new UxbusCmdTcp((SocketPort *)stream_tcp_);
+    feedback_thread_ = std::thread(feedback_thread_handle, this);
+    feedback_thread_.detach();
+
+    core = new UxbusCmdTcp((SocketPort *)stream_tcp_, std::bind(&XArmAPI::_set_feedback_key_transid, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     printf("Tcp control connection successful\n");
-    core->set_prot_flag();
+    core->set_protocol_identifier(2);
 
     sleep_milliseconds(200);
     _check_version();
+
+    support_feedback_ = _version_is_ge(2, 0, 102);
 
     stream_tcp_rich_report_ = connect_tcp_report((char *)port_.data(), "rich");
     if (report_type_ == "rich") {
@@ -538,14 +701,14 @@ int XArmAPI::connect(const std::string &port) {
       _report_connect_changed_callback();
     }
     if (!_is_rich_reported()) { return -3; }
-    report_rich_thread_ = std::thread(report_rich_thread_handle_, this);
+    report_rich_thread_ = std::thread(report_rich_thread_handle, this);
     report_rich_thread_.detach();
 
     if (report_type_ != "rich") {
       stream_tcp_report_ = connect_tcp_report((char *)port_.data(), report_type_);
       _report_connect_changed_callback();
       if (!is_reported()) { return -3; }
-      report_thread_ = std::thread(report_thread_handle_, this);
+      report_thread_ = std::thread(report_thread_handle, this);
       report_thread_.detach();
     }
   }
@@ -569,7 +732,7 @@ int XArmAPI::_connect_503(void)
   if (stream_tcp503_->is_ok() != 0) {
     return -2;
   }
-  core503_ = new UxbusCmdTcp((SocketPort *)stream_tcp503_);
+  core503_ = new UxbusCmdTcp((SocketPort *)stream_tcp503_, std::bind(&XArmAPI::_set_feedback_key_transid, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
   return 0;
 }
 
@@ -626,16 +789,20 @@ int XArmAPI::get_robot_sn(unsigned char robot_sn[40]) {
       sscanf(std::string(control_box_sn).substr(2, 4).data(), "%d", &control_type);
     arm_type_is_1300_ = arm_type >= 1300;
     control_box_type_is_1300_ = control_type >= 1300;
-    memcpy(robot_sn, sn, 40);
+    memcpy(robot_sn, str, 14);
     memcpy(sn, robot_sn, 40);
   }
   return ret;
 }
 
-int XArmAPI::shutdown_system(int value) {
+int XArmAPI::system_control(int value) {
   if (!is_connected()) return API_CODE::NOT_CONNECTED;
-  int ret = core->shutdown_system(value);
+  int ret = core->system_control(value);
   return _check_code(ret);
+}
+
+int XArmAPI::shutdown_system(int value) {
+  return system_control(value);
 }
 
 int XArmAPI::get_state(int *state_) {
@@ -826,24 +993,100 @@ int XArmAPI::set_pause_time(fp32 sltime) {
   return ret;
 }
 
-int XArmAPI::_wait_move(fp32 timeout) {
+std::string XArmAPI::_gen_feedback_key(bool wait)
+{
+  std::string feedback_key = (wait && support_feedback_) ? (std::to_string(get_us()) + std::to_string(engine())) : "";
+  fb_key_transid_map_[feedback_key != "" ? feedback_key : "no_use"] = -1;
+  return feedback_key;
+}
+
+int XArmAPI::_get_feedback_transid(std::string feedback_key)
+{
+  int trans_id = -1;
+  if (feedback_key != "" && fb_key_transid_map_.count(feedback_key)) {
+    trans_id = fb_key_transid_map_[feedback_key];
+    fb_key_transid_map_.erase(feedback_key);
+  }
+  return trans_id;
+}
+
+void XArmAPI::_set_feedback_key_transid(std::string feedback_key, int trans_id, unsigned char feedback_type) {
+  fb_key_transid_map_[feedback_key] = trans_id;
+  fb_transid_type_map_[trans_id] = feedback_type;
+  if (fb_transid_result_map_.count(trans_id)) {
+    fb_transid_result_map_.erase(trans_id);
+  }
+}
+
+int XArmAPI::_wait_feedback(fp32 timeout, int trans_id, int *feedback_code) {
   long long start_time = get_system_time();
   long long expired = timeout <= 0 ? 0 : (get_system_time() + (long long)(timeout * 1000) + (sleep_finish_time_ > start_time ? sleep_finish_time_ : 0));
-  int cnt = 0;
   int state_ = state;
   int ret = get_state(&state_);
-  int max_cnt = (ret == 0 && state_ == 1) ? 1 : 10;
+  int state5_cnt = 0;
   while (timeout <= 0 || get_system_time() < expired) {
-    if (!is_connected()) return API_CODE::NOT_CONNECTED;
-    if (error_code != 0) return API_CODE::HAS_ERROR;
-    // only wait in position mode
-    if (mode != 0) return 0;
+    if (!is_connected()) {
+      fb_transid_result_map_.clear();
+      return API_CODE::NOT_CONNECTED;
+    }
+    if (error_code != 0) {
+      fb_transid_result_map_.clear();
+      return API_CODE::HAS_ERROR;
+    }
+
     ret = get_state(&state_);
     if (ret != 0) return ret;
 
     if (state_ >= 4) {
       sleep_finish_time_ = 0;
-      return API_CODE::EMERGENCY_STOP;
+      if (state_ == 5) state5_cnt++;
+      if (state_ != 5 || state5_cnt >= 20) {
+        fb_transid_result_map_.clear();
+        return API_CODE::EMERGENCY_STOP;
+      }
+    }
+    else {
+      state5_cnt = 0;
+    }
+
+    if (fb_transid_result_map_.count(trans_id)) {
+      if (feedback_code != NULL) *feedback_code = fb_transid_result_map_[trans_id];
+      fb_transid_result_map_.erase(trans_id);
+      return 0;
+    }
+    sleep_milliseconds(50);
+  }
+  return API_CODE::WAIT_FINISH_TIMEOUT;
+}
+
+int XArmAPI::_wait_move(fp32 timeout, int trans_id) {
+  if (support_feedback_ && trans_id > 0) {
+    return _wait_feedback(timeout, trans_id);
+  }
+  long long start_time = get_system_time();
+  long long expired = timeout <= 0 ? 0 : (get_system_time() + (long long)(timeout * 1000) + (sleep_finish_time_ > start_time ? sleep_finish_time_ : 0));
+  int cnt = 0;
+  int state5_cnt = 0;
+  int state_ = state;
+  int ret = get_state(&state_);
+  int max_cnt = (ret == 0 && state_ == 1) ? 2 : 10;
+  while (timeout <= 0 || get_system_time() < expired) {
+    if (!is_connected()) return API_CODE::NOT_CONNECTED;
+    if (error_code != 0) return API_CODE::HAS_ERROR;
+    // only wait in position mode or traj playback mode
+    if (mode != 0 && mode != 11) return 0;
+    ret = get_state(&state_);
+    if (ret != 0) return ret;
+
+    if (state_ >= 4) {
+      sleep_finish_time_ = 0;
+      if (state_ == 5) state5_cnt++;
+      if (state_ != 5 || state5_cnt >= 20) {
+        return API_CODE::EMERGENCY_STOP;
+      }
+    }
+    else {
+      state5_cnt = 0;
     }
     if (get_system_time() < sleep_finish_time_ || state_ == 3) {
       cnt = 0;
@@ -866,60 +1109,6 @@ int XArmAPI::_wait_move(fp32 timeout) {
   }
   return API_CODE::WAIT_FINISH_TIMEOUT;
 }
-
-// int XArmAPI::_wait_move(fp32 timeout) {
-// 	long long start_time = get_system_time();
-// 	long long expired = timeout <= 0 ? 0 : (get_system_time() + (long long)(timeout * 1000) + (sleep_finish_time_ > start_time ? sleep_finish_time_ : 0));
-// 	int cnt = 0;
-// 	int state_;
-// 	int err_warn[2];
-// 	int ret = get_state(&state_);
-// 	int max_cnt = (ret == 0 && state_ == 1) ? 4 : 10;
-// 	while (timeout <= 0 || get_system_time() < expired) {
-// 		if (!is_connected()) return API_CODE::NOT_CONNECTED;
-// 		if (get_system_time() - last_report_time_ > 400) {
-// 			get_state(&state_);
-// 			get_err_warn_code(err_warn);
-// 		}
-// 		if (error_code != 0) {
-// 			return API_CODE::HAS_ERROR;
-// 		}
-// 		// only wait in position mode
-// 		if (mode != 0) return 0;
-// 		if (state == 4 || state == 5) {
-// 			ret = get_state(&state_);
-// 			if (ret != 0 || (state_ != 4 && state_ != 5)) {
-// 				sleep_milliseconds(20);
-// 				continue;
-// 			}
-// 			sleep_finish_time_ = 0;
-// 			return API_CODE::EMERGENCY_STOP;
-// 		}
-// 		if (get_system_time() < sleep_finish_time_ || state == 3) {
-// 			sleep_milliseconds(20);
-// 			cnt = 0;
-// 			continue;
-// 		}
-// 		if (state != 1) {
-// 			cnt += 1;
-// 			if (cnt >= max_cnt) {
-// 				ret = get_state(&state_);
-// 				get_err_warn_code(err_warn);
-// 				if (ret == 0 && state_ != 1) {
-// 					return 0;
-// 				}
-// 				else {
-// 					cnt = 0;
-// 				}
-// 			}
-// 		}
-// 		else {
-// 			cnt = 0;
-// 		}
-// 		sleep_milliseconds(50);
-// 	}
-// 	return API_CODE::WAIT_FINISH_TIMEOUT;
-// }
 
 void XArmAPI::emergency_stop(void) {
   long long start_time = get_system_time();
@@ -1137,6 +1326,32 @@ int XArmAPI::set_dh_params(fp32 dh_params[28], unsigned char flag)
   if (!is_connected()) return API_CODE::NOT_CONNECTED;
   int ret = core->set_dh_params(dh_params, flag);
   return _check_code(ret);
+}
+
+int XArmAPI::set_feedback_type(unsigned char feedback_type)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  if (!support_feedback_) return API_CODE::CMD_NOT_EXIST;
+  int ret = core->set_feedback_type(feedback_type);
+  return _check_code(ret);
+}
+
+void XArmAPI::_handle_feedback_data(void)
+{
+  int ret;
+  int feedback_maxcount = std::max(max_callback_thread_count_ + 1, 1);
+  unsigned char (*feedback_datas)[FEEDBACK_DATA_MAX_LEN] = new unsigned char[feedback_maxcount][FEEDBACK_DATA_MAX_LEN];
+  int cnt = 0;
+  while (is_connected()) {
+    ret = stream_tcp_->read_feedback_frame(feedback_datas[cnt]);
+    if (ret == 0) {
+      _feedback_callback(feedback_datas[cnt]);
+      cnt = (cnt + 1) % feedback_maxcount;
+      memset(feedback_datas[cnt], 0, FEEDBACK_DATA_MAX_LEN);
+    }
+    sleep_ms(5);
+  }
+  delete[] feedback_datas;
 }
 
 

@@ -11,21 +11,39 @@
 #include "xarm/wrapper/xarm_api.h"
 
 
-int XArmAPI::set_collision_sensitivity(int sensitivity) {
+int XArmAPI::set_collision_sensitivity(int sensitivity, bool wait) {
   _wait_until_not_pause();
   if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  if (wait) {
+    if (support_feedback_)
+      _wait_all_task_finish(NO_TIMEOUT);
+    else
+      _wait_move(NO_TIMEOUT);
+  }
   return core->set_collis_sens(sensitivity);
 }
 
-int XArmAPI::set_teach_sensitivity(int sensitivity) {
+int XArmAPI::set_teach_sensitivity(int sensitivity, bool wait) {
   _wait_until_not_pause();
   if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  if (wait) {
+    if (support_feedback_)
+      _wait_all_task_finish(NO_TIMEOUT);
+    else
+      _wait_move(NO_TIMEOUT);
+  }
   return core->set_teach_sens(sensitivity);
 }
 
-int XArmAPI::set_gravity_direction(fp32 gravity_dir[3]) {
+int XArmAPI::set_gravity_direction(fp32 gravity_dir[3], bool wait) {
   _wait_until_not_pause();
   if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  if (wait) {
+    if (support_feedback_)
+      _wait_all_task_finish(NO_TIMEOUT);
+    else
+      _wait_move(NO_TIMEOUT);
+  }
   return core->set_gravity_dir(gravity_dir);
 }
 
@@ -47,12 +65,15 @@ int XArmAPI::set_tcp_offset(fp32 pose_offset[6], bool wait) {
     offset[i] = (float)(default_is_radian || i < 3 ? pose_offset[i] : to_radian(pose_offset[i]));
   }
   if (wait) {
-    _wait_move(NO_TIMEOUT);
+    if (support_feedback_)
+      _wait_all_task_finish(NO_TIMEOUT);
+    else
+      _wait_move(NO_TIMEOUT);
   }
   return core->set_tcp_offset(offset);
 }
 
-int XArmAPI::set_tcp_load(fp32 weight, fp32 center_of_gravity[3]) {
+int XArmAPI::set_tcp_load(fp32 weight, fp32 center_of_gravity[3], bool wait) {
   _wait_until_not_pause();
   _wait_until_cmdnum_lt_max();
   int code = _xarm_is_ready();
@@ -68,7 +89,15 @@ int XArmAPI::set_tcp_load(fp32 weight, fp32 center_of_gravity[3]) {
     _gravity[1] = (float)(center_of_gravity[1] / 1000.0);
     _gravity[2] = (float)(center_of_gravity[2] / 1000.0);
   }
-  return core->set_tcp_load(weight, _gravity);
+  std::string feedback_key = _gen_feedback_key(wait);
+  int ret = core->set_tcp_load(weight, _gravity, feedback_key);
+  int trans_id = _get_feedback_transid(feedback_key);
+  ret = _check_code(ret, true);
+  if (wait && ret == 0) {
+    ret = _wait_move(NO_TIMEOUT, trans_id);
+  }
+
+  return ret;
 }
 
 int XArmAPI::set_tcp_jerk(fp32 jerk) {
@@ -164,12 +193,18 @@ int XArmAPI::set_collision_rebound(bool on) {
   return core->set_collis_reb(int(on));
 }
 
-int XArmAPI::set_world_offset(float pose_offset[6]) {
+int XArmAPI::set_world_offset(float pose_offset[6], bool wait) {
   _wait_until_not_pause();
   if (!is_connected()) return API_CODE::NOT_CONNECTED;
   fp32 offset[6];
   for (int i = 0; i < 6; i++) {
     offset[i] = default_is_radian || i < 3 ? pose_offset[i] : to_radian(pose_offset[i]);
+  }
+  if (wait) {
+    if (support_feedback_)
+      _wait_all_task_finish(NO_TIMEOUT);
+    else
+      _wait_move(NO_TIMEOUT);
   }
   return core->set_world_offset(offset);
 }
@@ -219,5 +254,124 @@ int XArmAPI::set_collision_tool_model(int tool_type, int n, ...) {
   va_end(args);
   int ret = core->set_collision_tool_model(tool_type, n, params);
   delete[] params;
+  return ret;
+}
+
+int XArmAPI::_wait_all_task_finish(fp32 timeout)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  if (!support_feedback_) return API_CODE::CMD_NOT_EXIST;
+  std::string feedback_key = _gen_feedback_key(true);
+  int ret = core->check_feedback(feedback_key);
+  int trans_id = _get_feedback_transid(feedback_key);
+  ret = _check_code(ret);
+  if (ret == 0) {
+    ret = _wait_feedback(timeout, trans_id);
+    if (ret == 0)
+      sleep_milliseconds(500);
+  }
+  return ret;
+}
+
+int XArmAPI::set_linear_spd_limit_factor(float factor)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  return core->set_common_param(1, factor);
+}
+
+int XArmAPI::set_cmd_mat_history_num(int num)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  return core->set_common_param(2, num);
+}
+
+int XArmAPI::set_fdb_mat_history_num(int num)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  return core->set_common_param(3, num);
+}
+
+int XArmAPI::get_linear_spd_limit_factor(float *factor)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  return core->get_common_param(1, factor);
+}
+
+int XArmAPI::get_cmd_mat_history_num(int *num)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  return core->get_common_param(2, num);
+}
+
+int XArmAPI::get_fdb_mat_history_num(int *num)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  return core->get_common_param(3, num);
+}
+
+int XArmAPI::get_tgpio_modbus_timeout(int *timeout, bool is_transparent_transmission)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  if (is_transparent_transmission)
+    return core->get_common_param(5, timeout);
+  else
+    return core->get_common_param(4, timeout);
+}
+
+int XArmAPI::get_poe_status(int *status)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  return core->get_poe_status(status);
+}
+
+int XArmAPI::get_c31_error_info(int *servo_id, float *theoretical_tau, float *actual_tau)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  return core->get_c31_error_info(servo_id, theoretical_tau, actual_tau);
+}
+
+int XArmAPI::get_c37_error_info(int *servo_id, float *diff_angle)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  int ret = core->get_c37_error_info(servo_id, diff_angle);
+  if (ret == 0 && !default_is_radian) {
+    *diff_angle = to_degree(*diff_angle);
+  }
+  return ret;
+}
+
+int XArmAPI::get_c23_error_info(int *servo_id, float *angle)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  int ret = core->get_c23_error_info(servo_id, angle);
+  if (ret == 0 && !default_is_radian) {
+    *angle = to_degree(*angle);
+  }
+  return ret;
+}
+
+int XArmAPI::get_c24_error_info(int *servo_id, float *speed)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  int ret = core->get_c24_error_info(servo_id, speed);
+  if (ret == 0 && !default_is_radian) {
+    *speed = to_degree(*speed);
+  }
+  return ret;
+}
+
+int XArmAPI::get_c60_error_info(float *max_velo, float *curr_velo)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  return core->get_c60_error_info(max_velo, curr_velo);
+}
+
+int XArmAPI::get_c38_error_info(int *servo_id, float *angle)
+{
+  if (!is_connected()) return API_CODE::NOT_CONNECTED;
+  int ret = core->get_c38_error_info(servo_id, angle);
+  if (ret == 0 && !default_is_radian) {
+    *angle = to_degree(*angle);
+  }
   return ret;
 }

@@ -51,11 +51,11 @@ namespace XArmWrapper {
   extern "C" __declspec(dllexport) int __stdcall set_servo_attach(int servo_id);
   extern "C" __declspec(dllexport) int __stdcall set_servo_detach(int servo_id);
   extern "C" __declspec(dllexport) int __stdcall set_pause_time(fp32 sltime);
-  extern "C" __declspec(dllexport) int __stdcall set_collision_sensitivity(int sensitivity);
-  extern "C" __declspec(dllexport) int __stdcall set_teach_sensitivity(int sensitivity);
-  extern "C" __declspec(dllexport) int __stdcall set_gravity_direction(fp32 gravity_dir[3]);
-  extern "C" __declspec(dllexport) int __stdcall set_tcp_offset(fp32 pose_offset[6]);
-  extern "C" __declspec(dllexport) int __stdcall set_tcp_load(fp32 weight, fp32 center_of_gravity[3]);
+  extern "C" __declspec(dllexport) int __stdcall set_collision_sensitivity(int sensitivity, bool wait = true);
+  extern "C" __declspec(dllexport) int __stdcall set_teach_sensitivity(int sensitivity, bool wait = true);
+  extern "C" __declspec(dllexport) int __stdcall set_gravity_direction(fp32 gravity_dir[3], bool wait = true);
+  extern "C" __declspec(dllexport) int __stdcall set_tcp_offset(fp32 pose_offset[6], bool wait = true);
+  extern "C" __declspec(dllexport) int __stdcall set_tcp_load(fp32 weight, fp32 center_of_gravity[3], bool wait = false);
   extern "C" __declspec(dllexport) int __stdcall set_tcp_jerk(fp32 jerk);
   extern "C" __declspec(dllexport) int __stdcall set_tcp_maxacc(fp32 acc);
   extern "C" __declspec(dllexport) int __stdcall set_joint_jerk(fp32 jerk);
@@ -84,6 +84,7 @@ namespace XArmWrapper {
   extern "C" __declspec(dllexport) int __stdcall get_version(unsigned char version[40]);
   extern "C" __declspec(dllexport) int __stdcall get_robot_sn(unsigned char robot_sn[40]);
   extern "C" __declspec(dllexport) int __stdcall get_state(int *state);
+  extern "C" __declspec(dllexport) int __stdcall system_control(int value = 1);
   extern "C" __declspec(dllexport) int __stdcall shutdown_system(int value = 1);
   extern "C" __declspec(dllexport) int __stdcall get_cmdnum(int *cmdnum);
   extern "C" __declspec(dllexport) int __stdcall get_err_warn_code(int err_warn[2]);
@@ -109,7 +110,7 @@ namespace XArmWrapper {
   extern "C" __declspec(dllexport) int __stdcall set_fense_mode(bool on);
   extern "C" __declspec(dllexport) int __stdcall set_fence_mode(bool on);
   extern "C" __declspec(dllexport) int __stdcall set_collision_rebound(bool on);
-  extern "C" __declspec(dllexport) int __stdcall set_world_offset(float pose_offset[6]);
+  extern "C" __declspec(dllexport) int __stdcall set_world_offset(float pose_offset[6], bool wait = true);
   extern "C" __declspec(dllexport) int __stdcall start_record_trajectory(void);
   extern "C" __declspec(dllexport) int __stdcall stop_record_trajectory(char* filename = NULL);
   extern "C" __declspec(dllexport) int __stdcall save_record_trajectory(char* filename, float timeout = 10);
@@ -192,4 +193,41 @@ namespace XArmWrapper {
 
   extern "C" __declspec(dllexport) int __stdcall get_dh_params(fp32 dh_params[28]);
   extern "C" __declspec(dllexport) int __stdcall set_dh_params(fp32 dh_params[28], unsigned char flag = 0);
+  extern "C" __declspec(dllexport) int __stdcall set_feedback_type(unsigned char feedback_type);
+
+  extern "C" __declspec(dllexport) int __stdcall set_linear_spd_limit_factor(float factor);
+  extern "C" __declspec(dllexport) int __stdcall set_cmd_mat_history_num(int num);
+  extern "C" __declspec(dllexport) int __stdcall set_fdb_mat_history_num(int num);
+  extern "C" __declspec(dllexport) int __stdcall get_linear_spd_limit_factor(float *factor);
+  extern "C" __declspec(dllexport) int __stdcall get_cmd_mat_history_num(int *num);
+  extern "C" __declspec(dllexport) int __stdcall get_fdb_mat_history_num(int *num);
+  extern "C" __declspec(dllexport) int __stdcall get_tgpio_modbus_timeout(int *timeout, bool is_transparent_transmission = false);
+  extern "C" __declspec(dllexport) int __stdcall get_poe_status(int *status);
+  extern "C" __declspec(dllexport) int __stdcall get_c31_error_info(int *servo_id, float *theoretical_tau, float *actual_tau);
+  extern "C" __declspec(dllexport) int __stdcall get_c37_error_info(int *servo_id, float *diff_angle);
+  extern "C" __declspec(dllexport) int __stdcall get_c23_error_info(int *servo_id, float *angle);
+  extern "C" __declspec(dllexport) int __stdcall get_c24_error_info(int *servo_id, float *speed);
+  extern "C" __declspec(dllexport) int __stdcall get_c60_error_info(float *max_velo, float *curr_velo);
+  extern "C" __declspec(dllexport) int __stdcall get_c38_error_info(int *servo_id, float *angle);
+
+  /* modbus tcp func_code: 0x01 */
+  extern "C" __declspec(dllexport) int __stdcall read_coil_bits(unsigned short addr, unsigned short quantity, unsigned char *bits);
+  /* modbus tcp func_code: 0x02 */
+  extern "C" __declspec(dllexport) int __stdcall read_input_bits(unsigned short addr, unsigned short quantity, unsigned char *bits);
+  /* modbus tcp func_code: 0x03 */
+  extern "C" __declspec(dllexport) int __stdcall read_holding_registers(unsigned short addr, unsigned short quantity, int *regs, bool is_signed = false);
+  /* modbus tcp func_code: 0x04 */
+  extern "C" __declspec(dllexport) int __stdcall read_input_registers(unsigned short addr, unsigned short quantity, int *regs, bool is_signed = false);
+  /* modbus tcp func_code: 0x05 */
+  extern "C" __declspec(dllexport) int __stdcall write_single_coil_bit(unsigned short addr, unsigned char bit_val);
+  /* modbus tcp func_code: 0x06 */
+  extern "C" __declspec(dllexport) int __stdcall write_single_holding_register(unsigned short addr, int reg_val);
+  /* modbus tcp func_code: 0x0F */
+  extern "C" __declspec(dllexport) int __stdcall write_multiple_coil_bits(unsigned short addr, unsigned short quantity, unsigned char *bits);
+  /* modbus tcp func_code: 0x10 */
+  extern "C" __declspec(dllexport) int __stdcall write_multiple_holding_registers(unsigned short addr, unsigned short quantity, int *regs);
+  /* modbus tcp func_code: 0x16 */
+  extern "C" __declspec(dllexport) int __stdcall mask_write_holding_register(unsigned short addr, unsigned short and_mask, unsigned short or_mask);
+  /* modbus tcp func_code: 0x17 */
+  extern "C" __declspec(dllexport) int __stdcall write_and_read_holding_registers(unsigned short r_addr, unsigned short r_quantity, int *r_regs, unsigned short w_addr, unsigned short w_quantity, int *w_regs, bool is_signed = false);
 }

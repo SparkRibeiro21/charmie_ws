@@ -11,8 +11,6 @@
 #ifndef WRAPPER_XARM_API_H_
 #define WRAPPER_XARM_API_H_
 
-#define _CRT_SECURE_NO_WARNINGS
-
 #include <iostream>
 #include <functional>
 #include <algorithm>
@@ -21,6 +19,7 @@
 #include <assert.h>
 #include <cmath>
 #include <regex>
+#include <map>
 #include <string>
 #include <stdarg.h>
 #include <string.h>
@@ -42,7 +41,7 @@
 #define RAD_DEGREE 57.295779513082320876798154814105
 #define TIMEOUT_10 10
 #define NO_TIMEOUT -1
-#define SDK_VERSION "1.11.8"
+#define SDK_VERSION "1.13.21"
 
 typedef unsigned int u32;
 typedef float fp32;
@@ -91,7 +90,7 @@ public:
    *  Note: greater than 0 means the maximum number of threads that can be used to process callbacks
    *  Note: equal to 0 means no thread is used to process the callback
    *  Note: less than 0 means no limit on the number of threads used for callback
-   * @param max_cmdnum: max cmdnum, default is 256
+   * @param max_cmdnum: max cmdnum, default is 512
    *	Note: only available in the param `check_cmdnum_limit` is true
    */
   XArmAPI(const std::string &port = "",
@@ -156,6 +155,12 @@ public:
   fp32 realtime_tcp_speed;
   fp32 *realtime_joint_speeds;
 
+  bool is_reduced_mode;
+  bool is_fence_mode;
+  bool is_report_current;
+  bool is_approx_motion;
+  bool is_cart_continuous;
+
   fp32 *world_offset; // fp32[6]{x, y, z, roll, pitch, yaw}
   fp32 *temperatures;
   int count;
@@ -215,6 +220,11 @@ public:
   bool is_lite6(void);
 
   /**
+   * @brief Robot is UF850 or not
+   */
+  bool is_850(void);
+
+  /**
    * @brief xArm is reported or not, only available in socket way
    */
   bool is_reported(void);
@@ -241,6 +251,7 @@ public:
 
   /* no use please */
   void _handle_report_data(void);
+  void _handle_feedback_data(void);
 
   /**
    * @brief Get the xArm version
@@ -271,12 +282,14 @@ public:
   int get_state(int *state);
 
   /**
-   * @brief Shutdown the xArm controller system
+   * @brief Control the xArm controller system
    * 
    * @param value:
-   *  1: remote shutdown
+   *  1: shutdown
+   *  2: reboot
    * @return: see the [API Code Documentation](./xarm_api_code.md#api-code) for details.
    */
+  int system_control(int value = 1);
   int shutdown_system(int value = 1);
 
   /**
@@ -412,25 +425,28 @@ public:
    * @brief Set the sensitivity of collision
    * 
    * @param sensitivity: sensitivity value, 0~5
+   * @param wait: whether to wait for the robotic arm to stop or all previous queue commands to be executed or cleared before setting
    * @return: see the [API Code Documentation](./xarm_api_code.md#api-code) for details.
    */
-  int set_collision_sensitivity(int sensitivity);
+  int set_collision_sensitivity(int sensitivity, bool wait = true);
 
   /**
    * @brief Set the sensitivity of drag and teach
    * 
    * @param sensitivity: sensitivity value, 1~5
+   * @param wait: whether to wait for the robotic arm to stop or all previous queue commands to be executed or cleared before setting
    * @return: see the [API Code Documentation](./xarm_api_code.md#api-code) for details.
    */
-  int set_teach_sensitivity(int sensitivity);
+  int set_teach_sensitivity(int sensitivity, bool wait = true);
 
   /**
    * @brief Set the direction of gravity
    * 
    * @param gravity_dir: direction of gravity, such as [x(mm), y(mm), z(mm)]
+   * @param wait: whether to wait for the robotic arm to stop or all previous queue commands to be executed or cleared before setting
    * @return: see the [API Code Documentation](./xarm_api_code.md#api-code) for details.
    */
-  int set_gravity_direction(fp32 gravity_dir[3]);
+  int set_gravity_direction(fp32 gravity_dir[3], bool wait = true);
 
   /**
    * @brief Clean current config and restore system default settings
@@ -634,6 +650,7 @@ public:
    * @param pose_offset: tcp offset, like [x(mm), y(mm), z(mm), roll(rad or °), pitch(rad or °), yaw(rad or °)]
    *  if default_is_radian is true, the value of roll/pitch/yaw should be in radians
    *  if default_is_radian is false, The value of roll/pitch/yaw should be in degrees
+   * @param wait: whether to wait for the robotic arm to stop or all previous queue commands to be executed or cleared before setting
    * @return: see the [API Code Documentation](./xarm_api_code.md#api-code) for details.
    */
   int set_tcp_offset(fp32 pose_offset[6], bool wait = true);
@@ -643,9 +660,10 @@ public:
    * 
    * @param weight: load weight (unit: kg)
    * @param center_of_gravity: tcp load center of gravity, like [x(mm), y(mm), z(mm)]
+   * @param wait: whether to wait for the command to be executed or the robotic arm to stop
    * @return: see the [API Code Documentation](./xarm_api_code.md#api-code) for details.
    */
-  int set_tcp_load(fp32 weight, fp32 center_of_gravity[3]);
+  int set_tcp_load(fp32 weight, fp32 center_of_gravity[3], bool wait = false);
 
   /**
    * @brief Set the translational jerk of Cartesian space
@@ -985,6 +1003,29 @@ public:
   int register_iden_progress_changed_callback(std::function<void (int)> callback);
 
   /**
+   * @brief Register the feedback data callback
+   *  Note:
+   *    1. only available if firmware_version >= 2.1.0
+   * 
+   *  feedback_data: unsigned char data[]
+   *    feedback_data[0:2]: transaction id, (Big-endian conversion to unsigned 16-bit integer data), command ID corresponding to the feedback, consistent with issued instructions
+   *      Note: this can be used to distinguish which instruction the feedback belongs to
+   *    feedback_data[4:6]: feedback_length, feedback_length == len(data) - 6, (Big-endian conversion to unsigned 16-bit integer data)
+   *    feedback_data[8]: feedback type
+   *      1: the motion task starts executing
+   *      2: the motion task execution ends or motion task is discarded(usually when the distance is too close to be planned)
+   *      4: the non-motion task is triggered
+   *    feedback_data[9]: feedback funcode, command code corresponding to feedback, consistent with issued instructions
+   *      Note: this can be used to distinguish what instruction the feedback belongs to
+   *    feedback_data[10:12]: feedback taskid, (Big-endian conversion to unsigned 16-bit integer data)
+   *    feedback_data[12]: feedback code, execution status code, generally only meaningful when the feedback type is end, normally 0, 2 means motion task is discarded
+   *    feedback_data[13:21]: feedback us, (Big-endian conversion to unsigned 64-bit integer data), time when feedback triggers (microseconds)
+   *      Note: this time is the corresponding controller system time when the feedback is triggered
+   */
+  int register_feedback_callback(void(*callback)(unsigned char *feedback_data));
+  int register_feedback_callback(std::function<void (unsigned char *feedback_data)> callback);
+
+  /**
    * @brief Release the report data callback
    * 
    * @param callback: NULL means to release all callbacks;
@@ -1071,6 +1112,14 @@ public:
    */
   int release_iden_progress_changed_callback(void(*callback)(int progress) = NULL);
   int release_iden_progress_changed_callback(bool clear_all);
+
+  /**
+   * @brief Release the feedback data callback
+   * 
+   * @param callback: NULL means to release all callbacks for the same event
+   */
+  int release_feedback_callback(void(*callback)(unsigned char *feedback_data) = NULL);
+  int release_feedback_callback(bool clear_all);
 
   /**
    * @brief Get suction cup state
@@ -1224,9 +1273,10 @@ public:
    * @param pose_offset: tcp offset, like [x(mm), y(mm), z(mm), roll(rad or °), pitch(rad or °), yaw(rad or °)]
    *  if default_is_radian is true, the value of roll/pitch/yaw should be in radians
    *  if default_is_radian is false, The value of roll/pitch/yaw should be in degrees
+   * @param wait: whether to wait for the robotic arm to stop or all previous queue commands to be executed or cleared before setting
    * @return: see the [API Code Documentation](./xarm_api_code.md#api-code) for details.
    */
-  int set_world_offset(float pose_offset[6]);
+  int set_world_offset(float pose_offset[6], bool wait = true);
 
   /**
    * @brief Start trajectory recording, only in teach mode, so you need to set joint teaching mode before.
@@ -1256,7 +1306,7 @@ public:
    *  empty the trajectory in memory after saving, so repeated calls will cause the recorded trajectory to be covered by an empty trajectory.
    * @return: see the [API Code Documentation](./xarm_api_code.md#api-code) for details.
    */
-  int save_record_trajectory(char* filename, float timeout = 10);
+  int save_record_trajectory(char* filename, float timeout = 5);
 
   /**
    * @brief Load the trajectory
@@ -1265,7 +1315,7 @@ public:
    * @param timeout: the maximum timeout waiting for loading to complete, default is 10 seconds.
    * @return: see the [API Code Documentation](./xarm_api_code.md#api-code) for details.
    */
-  int load_trajectory(char* filename, float timeout = 10);
+  int load_trajectory(char* filename, float timeout = NO_TIMEOUT);
 
   /**
    * @brief Playback trajectory
@@ -1570,6 +1620,14 @@ public:
   int get_bio_gripper_status(int *status);
 
   /**
+   * @brief Get the target pos of the bio gripper (not real-time pos)
+   * 
+   * @param err: the target pos of the bio gripper
+   * @return: See the code documentation for details.
+   */
+  int get_bio_gripper_position(fp32 *pos);
+
+  /**
    * @brief Get the error code of the bio gripper
    * 
    * @param err: the result of the bio gripper error code
@@ -1869,7 +1927,7 @@ public:
    *  if true, the value of tcp load will be modified
    * @return: See the code documentation for details.
    */
-  int ft_sensor_cali_load(float load[10], bool association_setting_tcp_load = false, float m = 0.325, float x = -17, float y = 9, float z = 11.8);
+  int ft_sensor_cali_load(float load[10], bool association_setting_tcp_load = false, float m = 0.270, float x = -17, float y = 9, float z = 11.8);
 
   /**
    * @brief Used for enabling and disabling the use of the Six-axis Force Torque Sensor measurements in the controller.
@@ -2289,8 +2347,290 @@ public:
    */
   int set_dh_params(fp32 dh_params[28], unsigned char flag = 0);
 
+  /**
+   * @brief Set the feedback type
+   *  Note:
+   *    1. only available if firmware_version >= 2.1.0
+   *    2. only works in position mode
+   *    3. the setting will only affect subsequent tasks and will not affect previously cached tasks
+   *    4. only valid for the current connection
+   * 
+   * @param feedback_type:
+   *  0: disable feedback
+   *  1: feedback when the motion task starts executing
+   *  2: feedback when the motion task execution ends or motion task is discarded(usually when the distance is too close to be planned)
+   *  4: feedback when the non-motion task is triggered
+   * return: See the code documentation for details.
+   */
+  int set_feedback_type(unsigned char feedback_type);
+
+  /**
+   * @brief Set linear speed limit factor (default is 1.2)
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   *    2. only available in mode 1
+   * 
+   * @param factor: speed limit factor
+   * return: See the code documentation for details.
+   */
+  int set_linear_spd_limit_factor(float factor);
+
+  /**
+   * @brief Set cmd mat history num
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param num: history num
+   * return: See the code documentation for details.
+   */
+  int set_cmd_mat_history_num(int num);
+  
+  /**
+   * @brief Set fdb mat history num
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param num: history num
+   * return: See the code documentation for details.
+   */
+  int set_fdb_mat_history_num(int num);
+
+  /**
+   * @brief Get linear speed limit factor
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param factor: speed limit factor
+   * return: See the code documentation for details.
+   */
+  int get_linear_spd_limit_factor(float *factor);
+
+  /**
+   * @brief Get cmd mat history num
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param num: history num
+   * return: See the code documentation for details.
+   */
+  int get_cmd_mat_history_num(int *num);
+
+  /**
+   * @brief Get fdb mat history num
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param num: history num
+   * return: See the code documentation for details.
+   */
+  int get_fdb_mat_history_num(int *num);
+
+  /**
+   * @brief Get tgpio modbus timeout
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param timeout: timeout, milliseconds
+   * @param is_transparent_transmission: is transparent transmission or not
+   * return: See the code documentation for details.
+   */
+  int get_tgpio_modbus_timeout(int *timeout, bool is_transparent_transmission = false);
+
+  /**
+   * @brief Get poe status
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param status: poe status, 1 means poe vaild, 0 means poe invalid
+   * return: See the code documentation for details.
+   */
+  int get_poe_status(int *status);
+
+  /**
+   * @brief Get collision error (C31) info
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param servo_id: servo id
+   * @param theoretical_tau: theoretical tau
+   * @param actual_tau: actual tau
+   * return: See the code documentation for details.
+   */
+  int get_c31_error_info(int *servo_id, float *theoretical_tau, float *actual_tau);
+
+  /**
+   * @brief Get payload error (C37) info
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param servo_id: servo id
+   * @param diff_angle: diff angle
+   * return: See the code documentation for details.
+   */
+  int get_c37_error_info(int *servo_id, float *diff_angle);
+
+  /**
+   * @brief Get joint angle limit error (C23) info
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param servo_id: servo id
+   * @param angle: current angle
+   * return: See the code documentation for details.
+   */
+  int get_c23_error_info(int *servo_id, float *angle);
+  
+  /**
+   * @brief Get joint angle speed limit (C24) error info
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   * 
+   * @param servo_id: servo id
+   * @param speed: current speed
+   * return: See the code documentation for details.
+   */
+  int get_c24_error_info(int *servo_id, float *speed);
+
+  /**
+   * @brief Get linear angle speed limit (C60) error info
+   *  Note:
+   *    1. only available if firmware_version >= 2.3.0
+   *    2. only available in mode 1
+   * 
+   * @param max_velo: max limit linear speed
+   * @param curr_velo: current linear speed
+   * return: See the code documentation for details.
+   */
+  int get_c60_error_info(float *max_velo, float *curr_velo);
+
+  /**
+   * @brief Get joint hard angle limit error (C38) info
+   *  Note:
+   *    1. only available if firmware_version >= 2.4.0
+   * 
+   * @param servo_id: servo id
+   * @param angle: current angle
+   * return: See the code documentation for details.
+   */
+  int get_c38_error_info(int *servo_id, float *angle);
+
+  /**
+   * @brief (Standard Modbus TCP) Read Coils (0x01)
+   * 
+   * @param addr: the starting address of the register to be read
+   * @param quantity: number of registers
+   * @param bits: store result
+   * @return: See the code documentation for details.
+   *  Note: code 129~144 means modbus tcp exception, the actual modbus tcp exception code is (code-0x80)
+   */
+  int read_coil_bits(unsigned short addr, unsigned short quantity, unsigned char *bits);
+
+  /**
+   * @brief (Standard Modbus TCP) Read Discrete Inputs (0x02)
+   * 
+   * @param addr: the starting address of the register to be read
+   * @param quantity: number of registers
+   * @param bits: store result
+   * @return: See the code documentation for details.
+   *  Note: code 129~144 means modbus tcp exception, the actual modbus tcp exception code is (code-0x80)
+   */
+  int read_input_bits(unsigned short addr, unsigned short quantity, unsigned char *bits);
+  
+  /**
+   * @brief (Standard Modbus TCP) Read Holding Registers (0x03) 
+   * 
+   * @param addr: the starting address of the register to be read
+   * @param quantity: number of registers
+   * @param regs: store result
+   * @param is_signed: whether to convert the read register value into a signed form
+   * @return: See the code documentation for details.
+   *  Note: code 129~144 means modbus tcp exception, the actual modbus tcp exception code is (code-0x80)
+   */
+  int read_holding_registers(unsigned short addr, unsigned short quantity, int *regs, bool is_signed = false);
+  
+  /**
+   * @brief (Standard Modbus TCP) Read Input Registers (0x04)
+   * 
+   * @param addr: the starting address of the register to be read
+   * @param quantity: number of registers
+   * @param regs: store result
+   * @param is_signed: whether to convert the read register value into a signed form
+   * @return: See the code documentation for details.
+   *  Note: code 129~144 means modbus tcp exception, the actual modbus tcp exception code is (code-0x80)
+   */
+  int read_input_registers(unsigned short addr, unsigned short quantity, int *regs, bool is_signed = false);
+  
+  /**
+   * @brief (Standard Modbus TCP) Write Single Coil (0x05) 
+   * 
+   * @param addr: register address 
+   * @param bit_val: the value to write (0/1)
+   * @return: See the code documentation for details.
+   *  Note: code 129~144 means modbus tcp exception, the actual modbus tcp exception code is (code-0x80)
+   */
+  int write_single_coil_bit(unsigned short addr, unsigned char bit_val);
+  
+  /**
+   * @brief (Standard Modbus TCP) Write Single Holding Register (0x06) 
+   * 
+   * @param addr: register address 
+   * @param reg_val: the value to write
+   * @return: See the code documentation for details.
+   *  Note: code 129~144 means modbus tcp exception, the actual modbus tcp exception code is (code-0x80)
+   */
+  int write_single_holding_register(unsigned short addr, int reg_val);
+  
+  /**
+   * @brief (Standard Modbus TCP) Write Multiple Coils (0x0F) 
+   * 
+   * @param addr: the starting address of the register to be written
+   * @param quantity: the number of registers to be written
+   * @param bits: array of values to write
+   * @return: See the code documentation for details.
+   *  Note: code 129~144 means modbus tcp exception, the actual modbus tcp exception code is (code-0x80)
+   */
+  int write_multiple_coil_bits(unsigned short addr, unsigned short quantity, unsigned char *bits);
+  
+  /**
+   * @brief (Standard Modbus TCP) Write Multiple Holding Registers (0x10) 
+   * 
+   * @param addr: the starting address of the register to be written
+   * @param quantity: the number of registers to be written
+   * @param regs: array of values to write
+   * @return: See the code documentation for details.
+   *  Note: code 129~144 means modbus tcp exception, the actual modbus tcp exception code is (code-0x80)
+   */
+  int write_multiple_holding_registers(unsigned short addr, unsigned short quantity, int *regs);
+  
+  /**
+   * @brief (Standard Modbus TCP) Mask Write Holding Register (0x16) 
+   * 
+   * @param addr: register address 
+   * @param and_mask: mask to be AND with
+   * @param or_mask: mask to be OR with
+   * @return: See the code documentation for details.
+   *  Note: code 129~144 means modbus tcp exception, the actual modbus tcp exception code is (code-0x80)
+   */
+  int mask_write_holding_register(unsigned short addr, unsigned short and_mask, unsigned short or_mask);
+  
+  /**
+   * @brief (Standard Modbus TCP) Write and Read Holding Registers (0x17) 
+   * 
+   * @param r_addr: the starting address of the register to be read
+   * @param r_quantity: number of registers to read
+   * @param r_regs: store result
+   * @param w_addr: the starting address of the register to be written
+   * @param w_quantity: number of registers to write
+   * @param w_regs: array of values to write to the register
+   * @param is_signed: whether to convert the read register value into a signed form
+   * @return: See the code documentation for details.
+   *  Note: code 129~144 means modbus tcp exception, the actual modbus tcp exception code is (code-0x80)
+   */
+  int write_and_read_holding_registers(unsigned short r_addr, unsigned short r_quantity, int *r_regs, unsigned short w_addr, unsigned short w_quantity, int *w_regs, bool is_signed = false);
+
 private:
   void _init(void);
+  void _destroy(void);
   void _sync(void);
   void _check_version(void);
   bool _version_is_ge(int major = 1, int minor = 2, int revision = 11);
@@ -2298,7 +2638,11 @@ private:
   void _wait_until_cmdnum_lt_max(void);
   int _xarm_is_ready(void);
   int _check_code(int code, bool is_move_cmd = false, int mode = -1);
-  int _wait_move(fp32 timeout);
+  int _wait_move(fp32 timeout, int trans_id = -1);
+  int _wait_feedback(fp32 timeout, int trans_id = -1, int *feedback_code = NULL);
+  void _set_feedback_key_transid(std::string feedback_key, int trans_id, unsigned char feedback_type);
+  std::string _gen_feedback_key(bool wait);
+  int _get_feedback_transid(std::string feedback_key);
   void _update_old(unsigned char *data);
   void _update(unsigned char *data);	
   template<typename CallableVector, typename Callable>
@@ -2324,6 +2668,7 @@ private:
   void _report_temperature_changed_callback(void);
   void _report_count_changed_callback(void);
   void _report_iden_progress_changed_callback(void);
+  void _feedback_callback(unsigned char *feedback_data);
   int _check_modbus_code(int ret, unsigned char *rx_data = NULL, unsigned char host_id = UXBUS_CONF::TGPIO_HOST_ID);
   int _get_modbus_baudrate(int *baud_inx, unsigned char host_id = UXBUS_CONF::TGPIO_HOST_ID);
   int _checkset_modbus_baud(int baudrate, bool check = true, unsigned char host_id = UXBUS_CONF::TGPIO_HOST_ID);
@@ -2352,6 +2697,14 @@ private:
 
   int _connect_503(void);
   bool _is_connected_503(void);
+
+  int _check_traj_status(int status, std::string filename = "unknown");
+  int _wait_traj_op(fp32 timeout, int trans_id, std::string filename = "unknown", std::string op = "Load");
+  int _wait_load_traj(fp32 timeout, int trans_id, std::string filename = "unknown");
+  int _wait_save_traj(fp32 timeout, int trans_id, std::string filename = "unknown");
+  int _wait_play_traj(fp32 timeout, int trans_id, int times = 1);
+
+  int _wait_all_task_finish(fp32 timeout = NO_TIMEOUT);
 private:
   std::string port_;
   bool check_tcp_limit_;
@@ -2362,6 +2715,8 @@ private:
   bool check_is_pause_;
   bool callback_in_thread_;
   int max_cmdnum_;
+  int max_callback_thread_count_;
+  std::thread feedback_thread_;
   std::thread report_thread_;
   std::thread report_rich_thread_;
   std::mutex mutex_;
@@ -2435,6 +2790,10 @@ private:
 
   bool keep_heart_;
   unsigned char only_check_type_;
+  bool support_feedback_;
+  std::map<std::string, int> fb_key_transid_map_;
+  std::map<int, unsigned char> fb_transid_type_map_;
+  std::map<int, unsigned char> fb_transid_result_map_;
 
   std::vector<std::function<void (XArmReportData *)>> report_data_functions_;
   std::vector<std::function<void (const fp32*, const fp32*)>> report_location_functions_;
@@ -2447,6 +2806,7 @@ private:
   std::vector<std::function<void (const fp32*)>> temperature_changed_functions_;
   std::vector<std::function<void (int)>> count_changed_functions_;
   std::vector<std::function<void (int)>> iden_progress_changed_functions_;
+  std::vector<std::function<void (unsigned char *)>> feedback_functions_;
 
   std::vector<void(*)(XArmReportData *report_data_ptr)> report_data_callbacks_;
   std::vector<void(*)(const fp32*, const fp32*)> report_location_callbacks_;
@@ -2459,6 +2819,7 @@ private:
   std::vector<void(*)(const fp32*)> temperature_changed_callbacks_;
   std::vector<void(*)(int)> count_changed_callbacks_;
   std::vector<void(*)(int)> iden_progress_changed_callbacks_;
+  std::vector<void(*)(unsigned char *)> feedback_callbacks_;
 };
 
 #endif

@@ -27,6 +27,7 @@ def launch_setup(context, *args, **kwargs):
     velocity_control = LaunchConfiguration('velocity_control', default=False)
     add_gripper = LaunchConfiguration('add_gripper', default=False)
     add_vacuum_gripper = LaunchConfiguration('add_vacuum_gripper', default=False)
+    add_bio_gripper = LaunchConfiguration('add_bio_gripper', default=False)
     dof = LaunchConfiguration('dof', default=7)
     robot_type = LaunchConfiguration('robot_type', default='xarm')
     no_gui_ctrl = LaunchConfiguration('no_gui_ctrl', default=False)
@@ -35,7 +36,7 @@ def launch_setup(context, *args, **kwargs):
     moveit_controller_manager_key = LaunchConfiguration('moveit_controller_manager_key', default='moveit_fake_controller_manager')
     moveit_controller_manager_value = LaunchConfiguration('moveit_controller_manager_value', default='moveit_fake_controller_manager/MoveItFakeControllerManager')
 
-    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=False)
+    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=True)
     add_d435i_links = LaunchConfiguration('add_d435i_links', default=True)
     model1300 = LaunchConfiguration('model1300', default=False)
 
@@ -61,7 +62,7 @@ def launch_setup(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration('use_sim_time', default=False)
 
     moveit_config_package_name = 'xarm_moveit_config'
-    xarm_type = '{}{}'.format(robot_type.perform(context), '' if robot_type.perform(context) == 'uf850' else dof.perform(context))
+    xarm_type = '{}{}'.format(robot_type.perform(context), dof.perform(context) if robot_type.perform(context) in ('xarm', 'lite') else '')
 
     # robot_description_parameters
     # xarm_moveit_config/launch/lib/robot_moveit_config_lib.py
@@ -78,6 +79,7 @@ def launch_setup(context, *args, **kwargs):
             'velocity_control': velocity_control,
             'add_gripper': add_gripper,
             'add_vacuum_gripper': add_vacuum_gripper,
+            'add_bio_gripper': add_bio_gripper,
             'dof': dof,
             'robot_type': robot_type,
             'ros2_control_plugin': ros2_control_plugin,
@@ -107,6 +109,7 @@ def launch_setup(context, *args, **kwargs):
             'robot_type': robot_type,
             'add_gripper': add_gripper,
             'add_vacuum_gripper': add_vacuum_gripper,
+            'add_bio_gripper': add_bio_gripper,
             'add_other_geometry': add_other_geometry,
         },
         arguments={
@@ -136,6 +139,21 @@ def launch_setup(context, *args, **kwargs):
             ompl_planning_yaml.update(gripper_ompl_planning_yaml)
         if joint_limits_yaml and gripper_joint_limits_yaml:
             joint_limits_yaml['joint_limits'].update(gripper_joint_limits_yaml['joint_limits'])
+    elif add_bio_gripper.perform(context) in ('True', 'true'):
+        gripper_controllers_yaml = load_yaml(moveit_config_package_name, 'config', 'bio_gripper', '{}.yaml'.format(controllers_name.perform(context)))
+        gripper_ompl_planning_yaml = load_yaml(moveit_config_package_name, 'config', 'bio_gripper', 'ompl_planning.yaml')
+        gripper_joint_limits_yaml = load_yaml(moveit_config_package_name, 'config', 'bio_gripper', 'joint_limits.yaml')
+
+        if gripper_controllers_yaml and 'controller_names' in gripper_controllers_yaml:
+            for name in gripper_controllers_yaml['controller_names']:
+                if name in gripper_controllers_yaml:
+                    if name not in controllers_yaml['controller_names']:
+                        controllers_yaml['controller_names'].append(name)
+                    controllers_yaml[name] = gripper_controllers_yaml[name]
+        if gripper_ompl_planning_yaml:
+            ompl_planning_yaml.update(gripper_ompl_planning_yaml)
+        if joint_limits_yaml and gripper_joint_limits_yaml:
+            joint_limits_yaml['joint_limits'].update(gripper_joint_limits_yaml['joint_limits'])
 
     add_prefix_to_moveit_params = getattr(mod, 'add_prefix_to_moveit_params')
     add_prefix_to_moveit_params(
@@ -150,7 +168,7 @@ def launch_setup(context, *args, **kwargs):
         'ompl': {
             'planning_plugin': 'ompl_interface/OMPLPlanner',
             'request_adapters': """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
-            'start_state_max_bounds_error': 0.1,
+            'start_state_max_bounds_error': 1.1,
         }
     }
     ompl_planning_pipeline_config['ompl'].update(ompl_planning_yaml)
@@ -190,6 +208,33 @@ def launch_setup(context, *args, **kwargs):
         # },
     }
 
+    # Change point cloud topic name accordingly
+    sensor_manager_hand_camera_parameters = {
+        'sensors': ['hand_camera'],
+        'octomap_resolution': 0.03, #tamanho de cada pixel (ou voxel). Quanto maior, mais lento todo o processo
+        'hand_camera.sensor_plugin': 'occupancy_map_monitor/PointCloudOctomapUpdater',
+        'hand_camera.point_cloud_topic': '/CHARMIE/D405_hand/depth/color/points',
+        'hand_camera.max_range': 0.6, #distância máxima considerada
+        'hand_camera.point_subsample': 3, #em teoria só escolhe 1 em cada 2 pontos, o que torna mais rápida a resposta
+        'hand_camera.padding_offset': 0.1,
+        'hand_camera.padding_scale': 1.0,
+        'hand_camera.max_update_rate': 50.0, #frequência de update da imagem
+        'hand_camera.filtered_cloud_topic': 'filtered_cloud',
+    }
+
+    """ sensor_manager_head_camera_parameters = {
+        'sensors': ['head_camera'],
+        'octomap_resolution': 0.03, #tamanho de cada pixel (ou voxel). Quanto maior, mais lento todo o processo
+        'head_camera.sensor_plugin': 'occupancy_map_monitor/PointCloudOctomapUpdater',
+        'head_camera.point_cloud_topic': '/CHARMIE/D455_head/depth/color/points',
+        'head_camera.max_range': 3.6, #distância máxima considerada
+        'head_camera.point_subsample': 3, #em teoria só escolhe 1 em cada 2 pontos, o que torna mais rápida a resposta
+        'head_camera.padding_offset': 0.1,
+        'head_camera.padding_scale': 1.0,
+        'head_camera.max_update_rate': 50.0, #frequência de update da imagem
+        'head_camera.filtered_cloud_topic': 'filtered_cloud_head',
+    } """
+
     # Start the actual move_group node/action server
     move_group_node = Node(
         package='moveit_ros_move_group',
@@ -202,6 +247,8 @@ def launch_setup(context, *args, **kwargs):
             plan_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
+            sensor_manager_hand_camera_parameters,
+            #sensor_manager_head_camera_parameters,
             {'use_sim_time': use_sim_time},
         ],
     )
