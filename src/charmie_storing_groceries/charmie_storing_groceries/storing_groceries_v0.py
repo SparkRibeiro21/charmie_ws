@@ -251,6 +251,10 @@ class StoringGroceriesMain():
         self.look_cabinet_center = [-45, 0]
         self.look_cabinet_bottom = [-45, -45]
 
+        self.shelf_1_height = 0.97
+        self.shelf_2_height = 1.39
+        self.shelf_3_height = 1.81
+
         # to debug just a part of the task you can just change the initial state, example:
         # self.state = self.Approach_kitchen_table
         self.state = self.Waiting_for_task_start
@@ -342,6 +346,17 @@ class StoringGroceriesMain():
         self.node.waited_for_end_of_get_neck = False
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
+    
+
+    ##### ANALYSE CABINET #####
+
+    def analysis_cabinet(self):
+        pass
+        # Quero fazer if objeto está entre self.shelf_1_height e self.shelf_2_height então está na primeira prateleira
+        # elif objetos entre self.shelf_2_height e self.shelf_3_height então objetos estão na segunda prateleira
+        # Importante robô estar bem centrado com armário, e verificar se a posição relativa em x (ou y não sei) está para direita ou esquerda do centro
+        # Depois vou agrupar estes objetos que estejam em cada uma das 4 divisões (prateleira 1 esq /drt + prateleira 2 esq/drt)
+        # Depois verifico se esses objetos pertencem à mesma classe e guardo essas classes com essas divisões que fiz
 
 
     def main(self):
