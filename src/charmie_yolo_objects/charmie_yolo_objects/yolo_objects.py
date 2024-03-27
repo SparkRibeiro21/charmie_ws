@@ -20,6 +20,7 @@ import time
 
 objects_filename = "m_size_model_300_epochs_after_nandinho.pt"
 shoes_filename = "shoes_socks_v1.pt"    
+doors_filename = "door_bruno.pt"    
 
 MIN_OBJECT_CONF_VALUE = 0.5
 
@@ -41,6 +42,8 @@ class Yolo_obj(Node):
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("debug_draw", True) 
         self.declare_parameter("activate_objects", True)
+        self.declare_parameter("activate_shoes", False)
+        self.declare_parameter("activate_doors", False)
     
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -68,8 +71,12 @@ class Yolo_obj(Node):
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.DEBUG_DRAW = self.get_parameter("debug_draw").value
-        # whether the activate flag starts as ON or OFF 
+        # whether the activate objects flag starts as ON or OFF 
         self.ACTIVATE_YOLO_OBJECTS = self.get_parameter("activate_objects").value
+        # whether the activate shoes flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_SHOES = self.get_parameter("activate_shoes").value
+        # whether the activate doors flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_DOORS = self.get_parameter("activate_doors").value
 
         # Import the models, one for each category
         self.object_model = YOLO(self.complete_path + objects_filename)
@@ -85,7 +92,7 @@ class Yolo_obj(Node):
         self.cropped_image_object_detected_publisher = self.create_publisher(ListOfStrings, '/cropped_image_object_detected', 10)
 
         # Subscriber (Yolov8_Objects TR Parameters)
-        self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_obj_conf", self.get_minimum_object_confidence_callback, 10)
+        # self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_obj_conf", self.get_minimum_object_confidence_callback, 10)
         
         # Diagnostics        
         self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
@@ -198,6 +205,7 @@ class Yolo_obj(Node):
         # ---
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages.
+        global MIN_OBJECT_CONF_VALUE
 
         self.get_logger().info("Received Activate Yolo Objects %s" %("("+str(request.activate_objects)+", "
                                                                         +str(request.activate_shoes)+", "
@@ -205,34 +213,31 @@ class Yolo_obj(Node):
                                                                         +str(request.minimum_object_confidence)+")"))
 
         self.ACTIVATE_YOLO_OBJECTS = request.activate_objects
-
-
-        # pending adding filters to activate server
-
-        # self.get_logger().info("Received Neck Position %s" %("("+str(request.pan)+", "+str(request.tilt)+")"))
-        # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
-        
-        # +180.0 on both values since for calculations (180, 180) is the middle position but is easier UI for center to be (0,0)
-        # self.move_neck(request.pan+180.0, request.tilt+180.0)
-
-
+        self.ACTIVATE_YOLO_SHOES = request.activate_shoes
+        self.ACTIVATE_YOLO_DOORS = request.activate_doors
+        MIN_OBJECT_CONF_VALUE = request.minimum_object_confidence
 
         # returns whether the message was played and some informations regarding status
         response.success = True
         response.message = "Activated with selected parameters"
         return response
 
-    def get_minimum_object_confidence_callback(self, state: Float32):
-        global MIN_OBJECT_CONF_VALUE
-        # print(state.data)
-        if 0.0 <= state.data <= 1.0:
-            MIN_OBJECT_CONF_VALUE = state.data
-            self.get_logger().info('NEW MIN_OBJECT_CONF_VALUE RECEIVED')    
-        else:
-            self.get_logger().info('ERROR SETTING MIN_OBJECT_CONF_VALUE')   
+    # def get_minimum_object_confidence_callback(self, state: Float32):
+    #     global MIN_OBJECT_CONF_VALUE
+    #     # print(state.data)
+    #     if 0.0 <= state.data <= 1.0:
+    #         MIN_OBJECT_CONF_VALUE = state.data
+    #         self.get_logger().info('NEW MIN_OBJECT_CONF_VALUE RECEIVED')    
+    #     else:
+    #         self.get_logger().info('ERROR SETTING MIN_OBJECT_CONF_VALUE')   
 
 
     def get_color_image_head_callback(self, img: Image):
+        
+        if self.ACTIVATE_YOLO_SHOES:
+            print("Shoes Activated - Debug")
+        if self.ACTIVATE_YOLO_DOORS:
+            print("Doors Activated - Debug")
         
         # only when activated via service, the model computes the person detection
         if self.ACTIVATE_YOLO_OBJECTS:

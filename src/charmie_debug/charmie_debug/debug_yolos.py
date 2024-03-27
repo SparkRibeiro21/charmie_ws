@@ -298,13 +298,17 @@ class RestaurantMain():
 
 
 
-                self.activate_yolo_pose(activate=True)
-                self.activate_yolo_objects(activate_objects=False)
-                print("activated yolo pose")
+                # self.activate_yolo_pose(activate=True)
+                # self.activate_yolo_objects(activate_objects=False)
+                # print("activated yolo pose")
+                # time.sleep(10)
+                self.activate_yolo_pose(activate=False)
+                self.activate_yolo_objects(activate_objects=True, minimum_object_confidence=0.3)
+                print("deactivated yolo pose - 0.3")
                 time.sleep(10)
                 self.activate_yolo_pose(activate=False)
-                self.activate_yolo_objects(activate_objects=True)
-                print("deactivated yolo pose")
+                self.activate_yolo_objects(activate_objects=True, minimum_object_confidence=0.8)
+                print("deactivated yolo pose - 0.8")
                 time.sleep(10)
 
 
