@@ -7,7 +7,7 @@ from geometry_msgs.msg import Point
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import DetectedObject, Yolov8Objects, ListOfImages, ListOfStrings, PointCloudCoordinates, BoundingBox, BoundingBoxAndPoints
-from charmie_interfaces.srv import GetPointCloud
+from charmie_interfaces.srv import GetPointCloud, ActivateYoloObjects
 from cv_bridge import CvBridge
 import cv2 
 import cvzone
@@ -40,6 +40,7 @@ class Yolo_obj(Node):
          ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("debug_draw", True) 
+        self.declare_parameter("activate_objects", True)
     
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -67,6 +68,8 @@ class Yolo_obj(Node):
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.DEBUG_DRAW = self.get_parameter("debug_draw").value
+        # whether the activate flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_OBJECTS = self.get_parameter("activate_objects").value
 
         # Import the models, one for each category
         self.object_model = YOLO(self.complete_path + objects_filename)
@@ -93,6 +96,9 @@ class Yolo_obj(Node):
         
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+
+        ### Services ###
+        self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
 
         ### Services (Clients) ###
         # Point Cloud
@@ -182,6 +188,40 @@ class Yolo_obj(Node):
             self.get_logger().error("Service call failed %r" % (e,))
 
 
+    def callback_activate_yolo_objects(self, request, response):
+        
+        # Type of service received: 
+        # bool activate_objects                       # activate or deactivate yolo object detection
+        # bool activate_shoes                         # activate or deactivate yolo shoes detection
+        # bool activate_doors                         # activate or deactivate yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
+        # float64 minimum_object_confidence           # adjust the minimum accuracy to assume as an object
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+
+        self.get_logger().info("Received Activate Yolo Objects %s" %("("+str(request.activate_objects)+", "
+                                                                        +str(request.activate_shoes)+", "
+                                                                        +str(request.activate_doors)+", "
+                                                                        +str(request.minimum_object_confidence)+")"))
+
+        self.ACTIVATE_YOLO_OBJECTS = request.activate_objects
+
+
+        # pending adding filters to activate server
+
+        # self.get_logger().info("Received Neck Position %s" %("("+str(request.pan)+", "+str(request.tilt)+")"))
+        # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
+        
+        # +180.0 on both values since for calculations (180, 180) is the middle position but is easier UI for center to be (0,0)
+        # self.move_neck(request.pan+180.0, request.tilt+180.0)
+
+
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Activated with selected parameters"
+        return response
+
     def get_minimum_object_confidence_callback(self, state: Float32):
         global MIN_OBJECT_CONF_VALUE
         # print(state.data)
@@ -193,80 +233,83 @@ class Yolo_obj(Node):
 
 
     def get_color_image_head_callback(self, img: Image):
+        
+        # only when activated via service, the model computes the person detection
+        if self.ACTIVATE_YOLO_OBJECTS:
 
-        if not self.waiting_for_pcloud:
-            # self.get_logger().info('Receiving color video frame head')
-            self.tempo_total = time.perf_counter()
-            self.head_rgb = img
+            if not self.waiting_for_pcloud:
+                # self.get_logger().info('Receiving color video frame head')
+                self.tempo_total = time.perf_counter()
+                self.head_rgb = img
 
-            # ROS2 Image Bridge for OpenCV
-            current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
-            
-            # Getting image dimensions
-            self.img_width = img.width
-            self.img_height = img.height
-
-            # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
-            # results = self.object_model(current_frame, stream = True)
-            self.object_results = self.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-
-            # type(results) = <class 'list'>
-            # type(results[0]) = <class 'ultralytics.engine.results.Results'>
-            # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
-            
-            # /*** ultralytics.engine.results.Results ***/
-            # A class for storing and manipulating inference results.
-            # Attributes:
-            # Name 	        Type 	    Description
-            # orig_img 	    ndarray 	The original image as a numpy array.
-            # orig_shape 	tuple 	    The original image shape in (height, width) format.
-            # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
-            # masks 	    Masks 	    A Masks object containing the detection masks.
-            # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
-            # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
-            # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
-            # names 	    dict 	    A dictionary of class names.
-            # path 	        str 	    The path to the image file.
-            # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
-
-            # /*** ultralytics.engine.results.Boxes ***/
-            # A class for storing and manipulating detection boxes.
-            # Attributes:
-            # Name      Type                Description
-            # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
-            # conf 	    Tensor | ndarray 	The confidence values of the boxes.
-            # cls 	    Tensor | ndarray 	The class values of the boxes.
-            # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
-            # xywh 	    Tensor | ndarray 	The boxes in xywh format.
-            # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
-            # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
-            # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
-
-            num_obj = len(self.object_results[0])
-            # self.get_logger().info(f"Objects detected: {num_obj}")
-
-            requested_objects = []
-            for object_idx in range(num_obj):
-
-                boxes_id = self.object_results[0].boxes[object_idx]
+                # ROS2 Image Bridge for OpenCV
+                current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
                 
-                bb = BoundingBox()
-                bb.box_top_left_x = int(boxes_id.xyxy[0][0])
-                bb.box_top_left_y = int(boxes_id.xyxy[0][1])
-                bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
-                bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+                # Getting image dimensions
+                self.img_width = img.width
+                self.img_height = img.height
 
-                get_pc = BoundingBoxAndPoints()
-                get_pc.bbox = bb
+                # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
+                # results = self.object_model(current_frame, stream = True)
+                self.object_results = self.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
 
-                requested_objects.append(get_pc)
+                # type(results) = <class 'list'>
+                # type(results[0]) = <class 'ultralytics.engine.results.Results'>
+                # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
+                
+                # /*** ultralytics.engine.results.Results ***/
+                # A class for storing and manipulating inference results.
+                # Attributes:
+                # Name 	        Type 	    Description
+                # orig_img 	    ndarray 	The original image as a numpy array.
+                # orig_shape 	tuple 	    The original image shape in (height, width) format.
+                # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
+                # masks 	    Masks 	    A Masks object containing the detection masks.
+                # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
+                # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
+                # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
+                # names 	    dict 	    A dictionary of class names.
+                # path 	        str 	    The path to the image file.
+                # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
 
-            self.waiting_for_pcloud = True
-            self.call_point_cloud_server(requested_objects)
+                # /*** ultralytics.engine.results.Boxes ***/
+                # A class for storing and manipulating detection boxes.
+                # Attributes:
+                # Name      Type                Description
+                # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
+                # conf 	    Tensor | ndarray 	The confidence values of the boxes.
+                # cls 	    Tensor | ndarray 	The class values of the boxes.
+                # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
+                # xywh 	    Tensor | ndarray 	The boxes in xywh format.
+                # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
+                # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
+                # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
 
-            ### TEMP: MUST DELETE LATER
-            # new_pcloud = PointCloudCoordinates()
-            # self.post_receiving_pcloud(new_pcloud)
+                num_obj = len(self.object_results[0])
+                # self.get_logger().info(f"Objects detected: {num_obj}")
+
+                requested_objects = []
+                for object_idx in range(num_obj):
+
+                    boxes_id = self.object_results[0].boxes[object_idx]
+                    
+                    bb = BoundingBox()
+                    bb.box_top_left_x = int(boxes_id.xyxy[0][0])
+                    bb.box_top_left_y = int(boxes_id.xyxy[0][1])
+                    bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
+                    bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+
+                    get_pc = BoundingBoxAndPoints()
+                    get_pc.bbox = bb
+
+                    requested_objects.append(get_pc)
+
+                self.waiting_for_pcloud = True
+                self.call_point_cloud_server(requested_objects)
+
+                ### TEMP: MUST DELETE LATER
+                # new_pcloud = PointCloudCoordinates()
+                # self.post_receiving_pcloud(new_pcloud)
             
 
     def post_receiving_pcloud(self, new_pcloud):

@@ -1,0 +1,9 @@
+# Service to activate the yolo object detection, thus publishing it on the topic
+
+bool activate_objects                       # activate or deactivate yolo object detection
+bool activate_shoes                         # activate or deactivate yolo shoes detection
+bool activate_doors                         # activate or deactivate yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
+float64 minimum_object_confidence           # adjust the minimum accuracy to assume as an object
+---
+bool success    # indicate successful run of triggered service
+string message  # informational, e.g. for error messages.

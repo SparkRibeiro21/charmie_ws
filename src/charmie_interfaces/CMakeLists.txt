@@ -48,6 +48,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TrackPerson.msg"
   "msg/Yolov8Objects.msg"
   "msg/Yolov8Pose.msg"
+  "srv/ActivateYoloObjects.srv"
   "srv/ActivateYoloPose.srv"
   "srv/GetNeckPosition.srv"
   "srv/GetPointCloud.srv"

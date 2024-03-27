@@ -5,7 +5,7 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects
 from sensor_msgs.msg import Image
 
 import cv2 
@@ -43,6 +43,7 @@ class TestNode(Node):
         # Neck
         self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
+        self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         
         # while not self.neck_track_person_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Neck Track Person ...")
@@ -57,6 +58,8 @@ class TestNode(Node):
         self.track_person_message = ""
         self.activate_yolo_pose_sucess = True
         self.activate_yolo_pose_message = ""
+        self.activate_yolo_objects_sucess = True
+        self.activate_yolo_objects_message = ""
 
         self.br = CvBridge()
         self.detected_people = Yolov8Pose()
@@ -186,6 +189,16 @@ class TestNode(Node):
 
         self.activate_yolo_pose_client.call_async(request)
 
+    ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
+    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_object_confidence=0.5):
+        request = ActivateYoloObjects.Request()
+        request.activate_objects = activate_objects
+        request.activate_shoes = activate_shoes
+        request.activate_doors = activate_doors
+        request.minimum_object_confidence = minimum_object_confidence
+
+        self.activate_yolo_objects_client.call_async(request)
+
 def main(args=None):
     rclpy.init(args=args)
     node = TestNode()
@@ -226,7 +239,16 @@ class RestaurantMain():
         self.node.activate_yolo_pose_message = "Activated with selected parameters"
 
         return self.node.activate_yolo_pose_sucess, self.node.activate_yolo_pose_message
-    
+
+    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_object_confidence=0.5, wait_for_end_of=True):
+        
+        # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_object_confidence=minimum_object_confidence)
+
+        self.node.activate_yolo_objects_sucess = True
+        self.node.activate_yolo_objects_message = "Activated with selected parameters"
+
+        return self.node.activate_yolo_pose_sucess, self.node.activate_yolo_pose_message
 
     def track_person(self, person, body_part="Head", wait_for_end_of=True):
         pass
@@ -277,9 +299,11 @@ class RestaurantMain():
 
 
                 self.activate_yolo_pose(activate=True)
+                self.activate_yolo_objects(activate_objects=False)
                 print("activated yolo pose")
                 time.sleep(10)
                 self.activate_yolo_pose(activate=False)
+                self.activate_yolo_objects(activate_objects=True)
                 print("deactivated yolo pose")
                 time.sleep(10)
 
