@@ -54,7 +54,6 @@ class YoloPoseNode(Node):
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("yolo_model", "s") 
         self.declare_parameter("debug_draw", True) 
-        self.declare_parameter("characteristics", True)
         self.declare_parameter("activate", True)
 
         # info regarding the paths for the recorded files intended to be played
@@ -86,7 +85,7 @@ class YoloPoseNode(Node):
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.DEBUG_DRAW = self.get_parameter("debug_draw").value
         # which face should be displayed after initialising the face node (string) 
-        self.GET_CHARACTERISTICS = self.get_parameter("characteristics").value
+        self.GET_CHARACTERISTICS = True 
         # whether the activate flag starts as ON or OFF 
         self.ACTIVATE_YOLO_POSE = self.get_parameter("activate").value
 
@@ -177,6 +176,20 @@ class YoloPoseNode(Node):
 
         future.add_done_callback(self.callback_call_point_cloud)
 
+    def callback_call_point_cloud(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.post_receiving_pcloud(response.coords)
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
     def callback_activate_yolo_pose(self, request, response):
         
         # Type of service received: 
@@ -215,18 +228,6 @@ class YoloPoseNode(Node):
         response.message = "Activated with selected parameters"
         return response
 
-    def callback_call_point_cloud(self, future):
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            self.post_receiving_pcloud(response.coords)
-            self.waiting_for_pcloud = False
-            # print("Received Back")
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
 
     def get_only_detect_person_legs_visible_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE
@@ -1012,7 +1013,7 @@ class YoloPoseNode(Node):
 
         new_person.height = head_localisation.z/1000 + 0.08 # average person middle of face to top of head distance
 
-        new_person.room_location, new_person.furniture_location = self.person_position_to_house_rooms_and_furniture(person_abs_pos)
+        new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
 
         if self.GET_CHARACTERISTICS:
             new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
@@ -1050,7 +1051,7 @@ class YoloPoseNode(Node):
                 cv2.line(current_frame_draw, p1, p2, (0,0,255), 2) 
 
 
-    def person_position_to_house_rooms_and_furniture(self, person_pos):
+    def position_to_house_rooms_and_furniture(self, person_pos):
         
         room_location = "Outside"
         for room in self.house_rooms:

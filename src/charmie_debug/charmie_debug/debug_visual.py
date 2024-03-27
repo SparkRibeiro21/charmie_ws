@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import  Yolov8Pose, DetectedPerson, NeckPosition, ListOfPoints
+from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, DetectedPerson, NeckPosition, ListOfPoints
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -77,6 +77,7 @@ class Robot():
         self.neck_tilt = 0.0
 
         self.person_pose = Yolov8Pose()
+        self.object_detected = Yolov8Objects()
         self.search_for_person = ListOfPoints()
 
         self.linhas = 720
@@ -198,6 +199,24 @@ class Robot():
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
                 #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
 
+            for object in self.object_detected.objects:
+                # print(person.position_relative.x/1000, person.position_relative.y/1000)
+
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
+           
+
+                cv2.rectangle(self.test_image, 
+                              (int(self.xc_adj + object.position_relative.x*self.scale + self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_relative.y*self.scale + self.lidar_radius*2*self.scale)),
+                              (int(self.xc_adj + object.position_relative.x*self.scale - self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_relative.y*self.scale - self.lidar_radius*2*self.scale)),
+                              (255, 0, 0), -1)
+                               
+                # cv2.circle(self.test_image, (int(self.xc_adj + object.position_relative.x*self.scale),
+                #     int(self.yc_adj - object.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 0, 0), -1)
+                
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
+                #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
+
 
             if DEBUG_DRAW:
                 cv2.imshow("Debug Visual - RGB", self.current_frame)
@@ -230,6 +249,8 @@ class DebugVisualNode(Node):
         # get yolo pose person detection filtered
         self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
 
+        self.object_detected_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.get_object_detected_callback, 10)
+
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
 
@@ -251,6 +272,11 @@ class DebugVisualNode(Node):
     def get_person_pose_callback(self, pose: Yolov8Pose):
         # print("Received new yolo pose. Number of people = ", pose.num_person)
         self.robot.person_pose = pose
+
+    def get_object_detected_callback(self, obj: Yolov8Objects):
+        # print("Received new yolo objects. Number of objects = ", obj.num_person)
+        self.robot.object_detected = obj
+
 
 
     def odom_robot_callback(self, loc: Odometry):

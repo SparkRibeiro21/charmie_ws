@@ -175,13 +175,14 @@ class TestNode(Node):
             self.get_logger().error("Service call failed %r" % (e,))
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
-    def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False):
+    def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, characteristics=False):
         request = ActivateYoloPose.Request()
         request.activate = activate
         request.only_detect_person_legs_visible = only_detect_person_legs_visible
         request.minimum_person_confidence = minimum_person_confidence
         request.minimum_keypoints_to_detect_person = minimum_keypoints_to_detect_person
         request.only_detect_person_right_in_front = only_detect_person_right_in_front
+        request.characteristics = characteristics
 
         self.activate_yolo_pose_client.call_async(request)
 
@@ -217,9 +218,9 @@ class RestaurantMain():
         return self.node.rgb_sucess, self.node.rgb_message
 
 
-    def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, wait_for_end_of=True):
+    def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, characteristics=False, wait_for_end_of=True):
         
-        self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front)
+        self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
 
         self.node.activate_yolo_pose_sucess = True
         self.node.activate_yolo_pose_message = "Activated with selected parameters"

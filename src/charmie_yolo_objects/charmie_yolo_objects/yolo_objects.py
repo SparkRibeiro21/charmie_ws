@@ -55,9 +55,15 @@ class Yolo_obj(Node):
             with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
             # print(self.objects_file)
-            self.get_logger().info("Successfully Imported data from json configuration files. (objects_list)")
+            with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
+                self.house_rooms = json.load(json_file)
+            # print(self.house_rooms)
+            with open(self.complete_path_configuration_files + 'furniture_location.json', encoding='utf-8') as json_file:
+                self.house_furniture = json.load(json_file)
+            # print(self.house_furniture)
+            self.get_logger().info("Successfully Imported data from json configuration files. (objects_list, house_rooms and house_furniture)")
         except:
-            self.get_logger().error("Could NOT import data from json configuration files. (objects_list)")
+            self.get_logger().error("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.DEBUG_DRAW = self.get_parameter("debug_draw").value
@@ -82,20 +88,19 @@ class Yolo_obj(Node):
         self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
  
         # Publish Results
-        self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
+        # self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10) # test removed person_pose (non-filtered)
         self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
         
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
 
-
         ### Services (Clients) ###
         # Point Cloud
-        ### self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
-        ###
-        ### while not self.point_cloud_client.wait_for_service(1.0):
-        ###     self.get_logger().warn("Waiting for Server Point Cloud...")
-        
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+
+        while not self.point_cloud_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud...")
+
         ### Variables ###
 
         # robot localization
@@ -151,6 +156,30 @@ class Yolo_obj(Node):
         self.objects_classNames_dict = {item["name"]: item["class"] for item in self.objects_file}
         
         # print(self.objects_classNames_dict
+
+    # request point cloud information from point cloud node
+    def call_point_cloud_server(self, req):
+        request = GetPointCloud.Request()
+        request.data = req
+        request.retrieve_bbox = False
+    
+        future = self.point_cloud_client.call_async(request)
+        #print("Sent Command")
+
+        future.add_done_callback(self.callback_call_point_cloud)
+
+    def callback_call_point_cloud(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.post_receiving_pcloud(response.coords)
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
 
     def get_minimum_object_confidence_callback(self, state: Float32):
@@ -233,11 +262,11 @@ class Yolo_obj(Node):
                 requested_objects.append(get_pc)
 
             self.waiting_for_pcloud = True
-            ### self.call_point_cloud_server(req2)
+            self.call_point_cloud_server(requested_objects)
 
             ### TEMP: MUST DELETE LATER
-            new_pcloud = PointCloudCoordinates()
-            self.post_receiving_pcloud(new_pcloud)
+            # new_pcloud = PointCloudCoordinates()
+            # self.post_receiving_pcloud(new_pcloud)
             
 
     def post_receiving_pcloud(self, new_pcloud):
@@ -249,7 +278,7 @@ class Yolo_obj(Node):
         # Calculate the number of persons detected
         num_obj = len(self.object_results[0])
 
-        yolov8_obj = Yolov8Objects()
+        # yolov8_obj = Yolov8Objects() # test removed person_pose (non-filtered)
         yolov8_obj_filtered = Yolov8Objects()
         num_objects_filtered = 0
 
@@ -267,9 +296,9 @@ class Yolo_obj(Node):
             object_class = self.objects_classNames_dict[object_name]
 
             # adds object to "object_pose" without any restriction
-            new_person = DetectedObject()
-            new_person = self.add_object_to_detectedobject_msg(boxes_id, object_name, object_class)
-            yolov8_obj.objects.append(new_person)
+            new_object = DetectedObject()
+            new_object = self.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, new_pcloud[object_idx].center_coords)
+            # yolov8_obj.objects.append(new_object) # test removed person_pose (non-filtered)
 
           
             # threshold = self.object_threshold
@@ -310,7 +339,7 @@ class Yolo_obj(Node):
             if ALL_CONDITIONS_MET:
                 num_objects_filtered+=1
 
-                yolov8_obj_filtered.objects.append(new_person)
+                yolov8_obj_filtered.objects.append(new_object)
 
                 if self.DEBUG_DRAW:
 
@@ -459,20 +488,20 @@ class Yolo_obj(Node):
                             cv2.LINE_AA
                         ) 
                     
-                    # if DRAW_OBJECT_LOCATION_COORDS:
-                    #     cv2.putText(current_frame_draw, '('+str(round(new_person.position_relative.x,2))+
-                    #                 ', '+str(round(new_person.position_relative.y,2))+
-                    #                 ', '+str(round(new_person.position_relative.z,2))+')',
-                    #                 self.center_torso_person_list[object_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
-                    
+                    if DRAW_OBJECT_LOCATION_COORDS:
+                        cv2.putText(current_frame_draw, '('+str(round(new_object.position_relative.x,2))+
+                                    ', '+str(round(new_object.position_relative.y,2))+
+                                    ', '+str(round(new_object.position_relative.z,2))+')',
+                                    (new_object.box_center_x, new_object.box_center_y), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
+                        
                     # if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
                     #     cv2.putText(current_frame_draw, new_person.room_location+" - "+new_person.furniture_location,
                     #                 (self.center_torso_person_list[object_idx][0], self.center_torso_person_list[object_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
         
         # must add also for hand 
-        yolov8_obj.image_rgb = self.head_rgb
-        yolov8_obj.num_objects = num_obj
-        self.objects_publisher.publish(yolov8_obj)
+        # yolov8_obj.image_rgb = self.head_rgb # test removed person_pose (non-filtered)
+        # yolov8_obj.num_objects = num_obj # test removed person_pose (non-filtered)
+        # self.objects_publisher.publish(yolov8_obj) # test removed person_pose (non-filtered)
 
         # must add also for hand
         yolov8_obj_filtered.image_rgb = self.head_rgb
@@ -501,7 +530,7 @@ class Yolo_obj(Node):
         self.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
 
 
-    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class):
+    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates):
 
         object_id = boxes_id.id
         if boxes_id.id == None:
@@ -514,11 +543,13 @@ class Yolo_obj(Node):
         new_object.index = int(object_id)
         new_object.confidence = float(boxes_id.conf)
 
+        # print(center_object_coordinates)
+
         # changes the axis of point cloud coordinates to fit with robot axis
         object_rel_pos = Point()
-        object_rel_pos.x =  0.0 # -torso_localisation.y/1000 # still missing...
-        object_rel_pos.y =  0.0 # torso_localisation.x/1000  # still missing...
-        object_rel_pos.z =  0.0 # torso_localisation.z/1000  # still missing...
+        object_rel_pos.x =  -center_object_coordinates.y/1000
+        object_rel_pos.y =  center_object_coordinates.x/1000
+        object_rel_pos.z =  center_object_coordinates.z/1000
         new_object.position_relative = object_rel_pos
         
         # calculate the absolute position according to the robot localisation
@@ -534,9 +565,9 @@ class Yolo_obj(Node):
         # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
 
         object_abs_pos = Point()
-        object_abs_pos.x = 0.0 # target_x                   # still missing...
-        object_abs_pos.y = 0.0 # target_y                   # still missing...
-        object_abs_pos.z = 0.0 # torso_localisation.z/1000  # still missing...
+        object_abs_pos.x = target_x
+        object_abs_pos.y = target_y
+        object_abs_pos.z = center_object_coordinates.z/1000
         new_object.position_absolute = object_abs_pos
 
         new_object.box_top_left_x = int(boxes_id.xyxy[0][0])
@@ -547,6 +578,8 @@ class Yolo_obj(Node):
         new_object.room_location = "None"      # still missing... (says on which room a detected object is)
         new_object.furniture_location = "None" # still missing... (says if an object location is associated with some furniture, on a table, sofa, counter, ...)
 
+        new_object.room_location, new_object.furniture_location = self.position_to_house_rooms_and_furniture(object_abs_pos)
+
         new_object.box_center_x = new_object.box_top_left_x + new_object.box_width//2
         new_object.box_center_y = new_object.box_top_left_y + new_object.box_height//2
 
@@ -554,6 +587,33 @@ class Yolo_obj(Node):
         new_object.camera = "Head"   # still missing... (says which camera is being used)
 
         return new_object
+
+
+    def position_to_house_rooms_and_furniture(self, person_pos):
+        
+        room_location = "Outside"
+        for room in self.house_rooms:
+            min_x = room['top_left_coords'][0]
+            max_x = room['bot_right_coords'][0]
+            min_y = room['bot_right_coords'][1]
+            max_y = room['top_left_coords'][1]
+            # print(min_x, max_x, min_y, max_y)
+            if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
+                room_location = room['name'] 
+
+        furniture_location = "None"
+        for furniture in self.house_furniture:
+            min_x = furniture['top_left_coords'][0]
+            max_x = furniture['bot_right_coords'][0]
+            min_y = furniture['bot_right_coords'][1]
+            max_y = furniture['top_left_coords'][1]
+            # print(min_x, max_x, min_y, max_y)
+            if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
+                furniture_location = furniture['name'] 
+
+        return room_location, furniture_location
+    
+
 
     """
     def get_color_image_head_callback(self, img: Image):
