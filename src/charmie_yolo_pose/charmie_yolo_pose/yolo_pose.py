@@ -84,8 +84,6 @@ class YoloPoseNode(Node):
         self.YOLO_MODEL = self.get_parameter("yolo_model").value
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.DEBUG_DRAW = self.get_parameter("debug_draw").value
-        # which face should be displayed after initialising the face node (string) 
-        self.GET_CHARACTERISTICS = True 
         # whether the activate flag starts as ON or OFF 
         self.ACTIVATE_YOLO_POSE = self.get_parameter("activate").value
 
@@ -103,11 +101,11 @@ class YoloPoseNode(Node):
         self.person_pose_filtered_publisher = self.create_publisher(Yolov8Pose, "person_pose_filtered", 10)
 
         # Subscriber (Yolov8_Pose TR Parameters)
-        self.only_detect_person_legs_visible_subscriber = self.create_subscription(Bool, "only_det_per_legs_vis", self.get_only_detect_person_legs_visible_callback, 10)
-        self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_per_conf", self.get_minimum_person_confidence_callback, 10)
-        self.minimum_keypoints_to_detect_person_subscriber = self.create_subscription(Int16, "min_kp_det_per", self.get_minimum_keypoints_to_detect_person_callback, 10)
-        self.only_detect_person_right_in_front_subscriber = self.create_subscription(Bool, "only_det_per_right_in_front", self.get_only_detect_person_right_in_front_callback, 10)
-        self.only_detect_person_arm_raised_subscriber = self.create_subscription(Bool, "only_det_per_arm_raised", self.get_only_detect_person_arm_raised_callback, 10)
+        # self.only_detect_person_legs_visible_subscriber = self.create_subscription(Bool, "only_det_per_legs_vis", self.get_only_detect_person_legs_visible_callback, 10)
+        # self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_per_conf", self.get_minimum_person_confidence_callback, 10)
+        # self.minimum_keypoints_to_detect_person_subscriber = self.create_subscription(Int16, "min_kp_det_per", self.get_minimum_keypoints_to_detect_person_callback, 10)
+        # self.only_detect_person_right_in_front_subscriber = self.create_subscription(Bool, "only_det_per_right_in_front", self.get_only_detect_person_right_in_front_callback, 10)
+        # self.only_detect_person_arm_raised_subscriber = self.create_subscription(Bool, "only_det_per_arm_raised", self.get_only_detect_person_arm_raised_callback, 10)
 
         # Intel Realsense Subscribers
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
@@ -202,35 +200,32 @@ class YoloPoseNode(Node):
         # ---
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages.
+        global ONLY_DETECT_PERSON_LEGS_VISIBLE, MIN_PERSON_CONF_VALUE, MIN_KP_TO_DETECT_PERSON, ONLY_DETECT_PERSON_RIGHT_IN_FRONT, ONLY_DETECT_PERSON_ARM_RAISED
 
         if request.activate:
             self.get_logger().info("Activated Yolo Pose %s" %("("+str(request.only_detect_person_legs_visible)+", "
                                                                  +str(request.minimum_person_confidence)+", "
                                                                  +str(request.minimum_keypoints_to_detect_person)+", "
                                                                  +str(request.only_detect_person_right_in_front)+", "
+                                                                 +str(request.only_detect_person_arm_raised)+", "
                                                                  +str(request.characteristics)+")"))
         else: 
             self.get_logger().info("Deactivated Yolo Pose")
 
         self.ACTIVATE_YOLO_POSE = request.activate
-
-
-        # pending adding filters to activate server
-
-        # self.get_logger().info("Received Neck Position %s" %("("+str(request.pan)+", "+str(request.tilt)+")"))
-        # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
-        
-        # +180.0 on both values since for calculations (180, 180) is the middle position but is easier UI for center to be (0,0)
-        # self.move_neck(request.pan+180.0, request.tilt+180.0)
-
-
+        ONLY_DETECT_PERSON_LEGS_VISIBLE = request.only_detect_person_legs_visible
+        MIN_PERSON_CONF_VALUE = request.minimum_person_confidence
+        MIN_KP_TO_DETECT_PERSON = request.minimum_keypoints_to_detect_person
+        ONLY_DETECT_PERSON_RIGHT_IN_FRONT = request.only_detect_person_right_in_front
+        ONLY_DETECT_PERSON_ARM_RAISED = request.only_detect_person_arm_raised
+        self.GET_CHARACTERISTICS = request.characteristics
 
         # returns whether the message was played and some informations regarding status
         response.success = True
         response.message = "Activated with selected parameters"
         return response
 
-
+    """
     def get_only_detect_person_legs_visible_callback(self, state: Bool):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE
         # print(state.data)
@@ -275,7 +270,7 @@ class YoloPoseNode(Node):
             self.get_logger().info('ONLY_DETECT_PERSON_ARM_RAISED = True')
         else:
             self.get_logger().info('ONLY_DETECT_PERSON_ARM_RAISED = False')  
-
+    """
 
     def get_color_image_head_callback(self, img: Image):
 
