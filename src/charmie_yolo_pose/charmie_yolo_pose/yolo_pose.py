@@ -142,6 +142,8 @@ class YoloPoseNode(Node):
         self.robot_y = 0.0
         self.robot_t = 0.0 # math.pi/2
 
+        self.GET_CHARACTERISTICS = True
+
         self.N_KEYPOINTS = 17
         self.NUMBER_OF_LEGS_KP = 4
         self.NOSE_KP = 0
