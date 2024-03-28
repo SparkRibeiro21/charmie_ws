@@ -8,6 +8,7 @@ import threading
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D
 from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates
+from charmie_interfaces.msg import Yolov8Objects
 
 import time
 
@@ -46,6 +47,8 @@ class StoringGroceriesNode(Node):
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
 
+        # Objects detected
+        self.objects_filtered_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered', self.get_objects_callback, 10)
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Neck 
@@ -77,6 +80,11 @@ class StoringGroceriesNode(Node):
         self.face_message = ""
 
         self.get_neck_position = [1.0, 1.0]
+
+    def get_objects_callback(self, objects: Yolov8Objects):
+        #print(objects.objects)
+        self.nr_objects = objects.num_objects
+        self.objects = objects.objects
         
     #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
@@ -371,16 +379,18 @@ class StoringGroceriesMain():
 
                 self.set_face("demo5")
 
-                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
+                # self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
 
-                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
+                # self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
 
                 ###### WAITS FOR START BUTTON / DOOR OPEN
 
                 time.sleep(2)
                                 
                 # next state
-                self.state = self.Approach_tables_first_time
+                # self.state = self.Approach_tables_first_time
+                j = 0
+                self.state = 16
 
             elif self.state == self.Approach_tables_first_time:
                 #print('State 1 = Approaching table for the first time')
@@ -795,4 +805,20 @@ class StoringGroceriesMain():
                     pass
 
             else:
-                pass
+                i = 0
+                if self.node.objects:
+                    print(self.node.nr_objects)
+                    print(len(self.node.objects))
+                    while i < self.node.nr_objects:
+                        for detected_object in self.node.objects:
+                            object_name = detected_object.object_name
+                            print("Object Name:", object_name)
+                            print(i)
+                            print(self.node.objects[i])
+                            print('\n')
+                            i += 1
+                            if i == self.node.nr_objects:
+                                break
+                            #time.sleep(2)
+                    print('Image read \n\n')            
+                #pass
