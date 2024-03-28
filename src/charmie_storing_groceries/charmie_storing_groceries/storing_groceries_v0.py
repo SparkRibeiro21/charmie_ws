@@ -8,6 +8,7 @@ import threading
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D
 from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates
+from charmie_interfaces.msg import Yolov8Objects
 
 import time
 
@@ -46,6 +47,8 @@ class StoringGroceriesNode(Node):
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
 
+        # Objects detected
+        self.objects_filtered_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered', self.get_objects_callback, 10)
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Neck 
@@ -77,6 +80,11 @@ class StoringGroceriesNode(Node):
         self.face_message = ""
 
         self.get_neck_position = [1.0, 1.0]
+
+    def get_objects_callback(self, objects: Yolov8Objects):
+        #print(objects.objects)
+        self.nr_objects = objects.num_objects
+        self.objects = objects.objects
         
     #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
@@ -251,6 +259,10 @@ class StoringGroceriesMain():
         self.look_cabinet_center = [-45, 0]
         self.look_cabinet_bottom = [-45, -45]
 
+        self.shelf_1_height = 0.97
+        self.shelf_2_height = 1.39
+        self.shelf_3_height = 1.81
+
         # to debug just a part of the task you can just change the initial state, example:
         # self.state = self.Approach_kitchen_table
         self.state = self.Waiting_for_task_start
@@ -342,6 +354,17 @@ class StoringGroceriesMain():
         self.node.waited_for_end_of_get_neck = False
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
+    
+
+    ##### ANALYSE CABINET #####
+
+    def analysis_cabinet(self):
+        pass
+        # Quero fazer if objeto está entre self.shelf_1_height e self.shelf_2_height então está na primeira prateleira
+        # elif objetos entre self.shelf_2_height e self.shelf_3_height então objetos estão na segunda prateleira
+        # Importante robô estar bem centrado com armário, e verificar se a posição relativa em x (ou y não sei) está para direita ou esquerda do centro
+        # Depois vou agrupar estes objetos que estejam em cada uma das 4 divisões (prateleira 1 esq /drt + prateleira 2 esq/drt)
+        # Depois verifico se esses objetos pertencem à mesma classe e guardo essas classes com essas divisões que fiz
 
 
     def main(self):
@@ -356,16 +379,18 @@ class StoringGroceriesMain():
 
                 self.set_face("demo5")
 
-                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
+                # self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
 
-                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
+                # self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
 
                 ###### WAITS FOR START BUTTON / DOOR OPEN
 
                 time.sleep(2)
                                 
                 # next state
-                self.state = self.Approach_tables_first_time
+                # self.state = self.Approach_tables_first_time
+                j = 0
+                self.state = 16
 
             elif self.state == self.Approach_tables_first_time:
                 #print('State 1 = Approaching table for the first time')
@@ -780,4 +805,20 @@ class StoringGroceriesMain():
                     pass
 
             else:
-                pass
+                i = 0
+                if self.node.objects:
+                    print(self.node.nr_objects)
+                    print(len(self.node.objects))
+                    while i < self.node.nr_objects:
+                        for detected_object in self.node.objects:
+                            object_name = detected_object.object_name
+                            print("Object Name:", object_name)
+                            print(i)
+                            print(self.node.objects[i])
+                            print('\n')
+                            i += 1
+                            if i == self.node.nr_objects:
+                                break
+                            #time.sleep(2)
+                    print('Image read \n\n')            
+                #pass

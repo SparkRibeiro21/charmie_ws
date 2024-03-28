@@ -19,7 +19,7 @@
 
     <xacro:if value="${add_d435i_links}">
 
-      <link name="${prefix}camera_link"></link>
+      <!-- <link name="${prefix}camera_link"></link>
 
       <link name="${prefix}camera_depth_frame"></link>
 
@@ -27,7 +27,17 @@
 
       <link name="${prefix}camera_color_frame"></link>
 
-      <link name="${prefix}camera_color_optical_frame"></link>
+      <link name="${prefix}camera_color_optical_frame"></link> -->
+
+      <link name="${prefix}D405_hand_link"></link>
+
+      <link name="${prefix}D405_hand_depth_frame"></link>
+
+      <link name="${prefix}D405_hand_depth_optical_frame"></link>
+
+      <link name="${prefix}D405_hand_color_frame"></link>
+
+      <link name="${prefix}D405_hand_color_optical_frame"></link>
 
       <link name="${prefix}camera_left_ir_frame"></link>
 
@@ -39,36 +49,36 @@
 
       <joint name="${prefix}camera_link_joint" type="fixed">
         <parent link="${prefix}link_eef" />
-        <child link="${prefix}camera_link" />
+        <child link="${prefix}D405_hand_link" />
         <origin xyz="0.06746 -0.0175 0.0237" rpy="${M_PI} ${-M_PI/2} 0" />
       </joint>
 
       <joint name="${prefix}camera_depth_joint" type="fixed">
-        <parent link="${prefix}camera_link" />
-        <child link="${prefix}camera_depth_frame" />
+        <parent link="${prefix}D405_hand_link" />
+        <child link="${prefix}D405_hand_depth_frame" />
         <origin xyz="0 0 0" rpy="0 0 0" />
       </joint>
 
       <joint name="${prefix}camera_depth_optical_joint" type="fixed">
-        <parent link="${prefix}camera_depth_frame" />
-        <child link="${prefix}camera_depth_optical_frame" />
+        <parent link="${prefix}D405_hand_depth_frame" />
+        <child link="${prefix}D405_hand_depth_optical_frame" />
         <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
       </joint>
 
       <joint name="${prefix}camera_color_joint" type="fixed">
-        <parent link="${prefix}camera_link" />
-        <child link="${prefix}camera_color_frame" />
+        <parent link="${prefix}D405_hand_link" />
+        <child link="${prefix}D405_hand_color_frame" />
         <origin xyz="0 0.015 0" rpy="0 0 0" />
       </joint>
 
       <joint name="${prefix}camera_color_optical_joint" type="fixed">
-        <parent link="${prefix}camera_color_frame" />
-        <child link="${prefix}camera_color_optical_frame" />
+        <parent link="${prefix}D405_hand_color_frame" />
+        <child link="${prefix}D405_hand_color_optical_frame" />
         <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
       </joint>
 
       <joint name="${prefix}camera_left_ir_joint" type="fixed">
-        <parent link="${prefix}camera_link" />
+        <parent link="${prefix}D405_hand_link" />
         <child link="${prefix}camera_left_ir_frame" />
         <origin xyz="0 0 0" rpy="0 0 0" />
       </joint>
@@ -80,7 +90,7 @@
       </joint>
 
       <joint name="${prefix}camera_right_ir_joint" type="fixed">
-        <parent link="${prefix}camera_link" />
+        <parent link="${prefix}D405_hand_link" />
         <child link="${prefix}camera_right_ir_frame" />
         <origin xyz="0 -0.050 0" rpy="0 0 0" />
       </joint>

@@ -19,10 +19,10 @@ def generate_launch_description():
     limited = LaunchConfiguration('limited', default=True)
     effort_control = LaunchConfiguration('effort_control', default=False)
     velocity_control = LaunchConfiguration('velocity_control', default=False)
-    add_gripper = LaunchConfiguration('add_gripper', default=False)
+    add_gripper = LaunchConfiguration('add_gripper', default=True)
     add_vacuum_gripper = LaunchConfiguration('add_vacuum_gripper', default=False)
 
-    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=False)
+    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=True)
     model1300 = LaunchConfiguration('model1300', default=False)
 
     add_other_geometry = LaunchConfiguration('add_other_geometry', default=False)

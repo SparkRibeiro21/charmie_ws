@@ -149,20 +149,20 @@ namespace XArmWrapper
   int __stdcall set_pause_time(fp32 sltime) {
     return arm->set_pause_time(sltime);
   }
-  int __stdcall set_collision_sensitivity(int sensitivity) {
-    return arm->set_collision_sensitivity(sensitivity);
+  int __stdcall set_collision_sensitivity(int sensitivity, bool wait) {
+    return arm->set_collision_sensitivity(sensitivity, wait);
   }
-  int __stdcall set_teach_sensitivity(int sensitivity) {
-    return arm->set_teach_sensitivity(sensitivity);
+  int __stdcall set_teach_sensitivity(int sensitivity, bool wait) {
+    return arm->set_teach_sensitivity(sensitivity, wait);
   }
-  int __stdcall set_gravity_direction(fp32 gravity_dir[3]) {
-    return arm->set_gravity_direction(gravity_dir);
+  int __stdcall set_gravity_direction(fp32 gravity_dir[3], bool wait) {
+    return arm->set_gravity_direction(gravity_dir, wait);
   }
-  int __stdcall set_tcp_offset(fp32 pose_offset[6]) {
-    return arm->set_tcp_offset(pose_offset);
+  int __stdcall set_tcp_offset(fp32 pose_offset[6], bool wait) {
+    return arm->set_tcp_offset(pose_offset, wait);
   }
-  int __stdcall set_tcp_load(fp32 weight, fp32 center_of_gravity[3]) {
-    return arm->set_tcp_load(weight, center_of_gravity);
+  int __stdcall set_tcp_load(fp32 weight, fp32 center_of_gravity[3], bool wait) {
+    return arm->set_tcp_load(weight, center_of_gravity, wait);
   }
   int __stdcall set_tcp_jerk(fp32 jerk) {
     return arm->set_tcp_jerk(jerk);
@@ -244,6 +244,9 @@ namespace XArmWrapper
   int __stdcall get_state(int *state) {
     return arm->get_state(state);
   }
+  int __stdcall system_control(int value) {
+    return arm->system_control(value);
+  }
   int __stdcall shutdown_system(int value) {
     return arm->shutdown_system(value);
   }
@@ -302,8 +305,8 @@ namespace XArmWrapper
   int __stdcall set_collision_rebound(bool on) {
     return arm->set_collision_rebound(on);
   }
-  int __stdcall set_world_offset(float pose_offset[6]) {
-    return arm->set_world_offset(pose_offset);
+  int __stdcall set_world_offset(float pose_offset[6], bool wait) {
+    return arm->set_world_offset(pose_offset, wait);
   }
   int __stdcall start_record_trajectory(void) {
     return arm->start_record_trajectory();
@@ -559,5 +562,131 @@ namespace XArmWrapper
   int __stdcall set_dh_params(fp32 dh_params[28], unsigned char flag)
   {
     return arm->set_dh_params(dh_params, flag);
+  }
+
+  int __stdcall set_feedback_type(unsigned char feedback_type)
+  {
+    return arm->set_feedback_type(feedback_type);
+  }
+
+  int __stdcall set_linear_spd_limit_factor(float factor)
+  {
+    return arm->set_linear_spd_limit_factor(factor);
+  }
+
+  int __stdcall set_cmd_mat_history_num(int num)
+  {
+    return arm->set_cmd_mat_history_num(num);
+  }
+
+  int __stdcall set_fdb_mat_history_num(int num)
+  {
+    return arm->set_fdb_mat_history_num(num);
+  }
+
+  int __stdcall get_linear_spd_limit_factor(float *factor)
+  {
+    return arm->get_linear_spd_limit_factor(factor);
+  }
+
+  int __stdcall get_cmd_mat_history_num(int *num)
+  {
+    return arm->get_cmd_mat_history_num(num);
+  }
+
+  int __stdcall get_fdb_mat_history_num(int *num)
+  {
+    return arm->get_fdb_mat_history_num(num);
+  }
+
+  int __stdcall get_tgpio_modbus_timeout(int *timeout, bool is_transparent_transmission)
+  {
+    return arm->get_tgpio_modbus_timeout(timeout, is_transparent_transmission);
+  }
+
+  int __stdcall get_poe_status(int *status)
+  {
+    return arm->get_poe_status(status);
+  }
+
+  int __stdcall get_c31_error_info(int *servo_id, float *theoretical_tau, float *actual_tau)
+  {
+    return arm->get_c31_error_info(servo_id, theoretical_tau, actual_tau);
+  }
+
+  int __stdcall get_c37_error_info(int *servo_id, float *diff_angle)
+  {
+    return arm->get_c37_error_info(servo_id, diff_angle);
+  }
+
+  int __stdcall get_c23_error_info(int *servo_id, float *angle)
+  {
+    return arm->get_c23_error_info(servo_id, angle);
+  }
+
+  int __stdcall get_c24_error_info(int *servo_id, float *speed)
+  {
+    return arm->get_c24_error_info(servo_id, speed);
+  }
+
+  int __stdcall get_c60_error_info(float *max_velo, float *curr_velo)
+  {
+    return arm->get_c60_error_info(max_velo, curr_velo);
+  }
+
+  int __stdcall get_c38_error_info(int *servo_id, float *angle)
+  {
+    return arm->get_c38_error_info(servo_id, angle);
+  }
+
+  /* modbus tcp func_code: 0x01 */
+  int __stdcall read_coil_bits(unsigned short addr, unsigned short quantity, unsigned char *bits)
+  {
+    return arm->read_coil_bits(addr, quantity, bits);
+  }
+  /* modbus tcp func_code: 0x02 */
+  int __stdcall read_input_bits(unsigned short addr, unsigned short quantity, unsigned char *bits)
+  {
+    return arm->read_input_bits(addr, quantity, bits);
+  }
+  /* modbus tcp func_code: 0x03 */
+  int __stdcall read_holding_registers(unsigned short addr, unsigned short quantity, int *regs, bool is_signed)
+  {
+    return arm->read_holding_registers(addr, quantity, regs, is_signed);
+  }
+  /* modbus tcp func_code: 0x04 */
+  int __stdcall read_input_registers(unsigned short addr, unsigned short quantity, int *regs, bool is_signed)
+  {
+    return arm->read_input_registers(addr, quantity, regs, is_signed);
+  }
+  /* modbus tcp func_code: 0x05 */
+  int __stdcall write_single_coil_bit(unsigned short addr, unsigned char bit_val)
+  {
+    return arm->write_single_coil_bit(addr, bit_val);
+  }
+  /* modbus tcp func_code: 0x06 */
+  int __stdcall write_single_holding_register(unsigned short addr, int reg_val)
+  {
+    return arm->write_single_holding_register(addr, reg_val);
+  }
+  /* modbus tcp func_code: 0x0F */
+  int __stdcall write_multiple_coil_bits(unsigned short addr, unsigned short quantity, unsigned char *bits)
+  {
+    return arm->write_multiple_coil_bits(addr, quantity, bits);
+  }
+  /* modbus tcp func_code: 0x10 */
+  int __stdcall write_multiple_holding_registers(unsigned short addr, unsigned short quantity, int *regs)
+  {
+    return arm->write_multiple_holding_registers(addr, quantity, regs);
+  }
+  /* modbus tcp func_code: 0x16 */
+  int __stdcall mask_write_holding_register(unsigned short addr, unsigned short and_mask, unsigned short or_mask)
+  {
+    return arm->mask_write_holding_register(addr, and_mask, or_mask);
+  }
+  /* modbus tcp func_code: 0x17 */
+  int __stdcall write_and_read_holding_registers(unsigned short r_addr, unsigned short r_quantity, int *r_regs, unsigned short w_addr, unsigned short w_quantity, int *w_regs, bool is_signed)
+  {
+    return arm->write_and_read_holding_registers(r_addr, r_quantity, r_regs, w_addr, w_quantity, w_regs, is_signed);
   }
 }

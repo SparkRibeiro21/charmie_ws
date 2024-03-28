@@ -14,17 +14,17 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    robot_ip = LaunchConfiguration('robot_ip')
+    robot_ip = LaunchConfiguration('robot_ip', default='192.168.1.219')
     report_type = LaunchConfiguration('report_type', default='normal')
     prefix = LaunchConfiguration('prefix', default='')
     hw_ns = LaunchConfiguration('hw_ns', default='xarm')
     limited = LaunchConfiguration('limited', default=True)
     effort_control = LaunchConfiguration('effort_control', default=False)
     velocity_control = LaunchConfiguration('velocity_control', default=False)
-    add_gripper = LaunchConfiguration('add_gripper', default=False)
+    add_gripper = LaunchConfiguration('add_gripper', default=True)
     add_vacuum_gripper = LaunchConfiguration('add_vacuum_gripper', default=False)
 
-    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=False)
+    add_realsense_d435i = LaunchConfiguration('add_realsense_d435i', default=True)
     model1300 = LaunchConfiguration('model1300', default=False)
 
     add_other_geometry = LaunchConfiguration('add_other_geometry', default=False)

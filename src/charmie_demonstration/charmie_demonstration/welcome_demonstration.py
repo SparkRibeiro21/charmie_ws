@@ -82,6 +82,7 @@ class DemonstrationNode(Node):
 		self.joint_values_req = MoveJoint.Request()
 		self.get_gripper_req = GetFloat32.Request()
 		self.set_pause_time = SetFloat32.Request()
+		self.position_values_req = MoveCartesian.Request()
 		#self.plan_pose_req = PlanPose.Request()
 		#self.plan_exec_req = PlanExec.Request()
 		#self.plan_pose_resp = PlanPose.Response()

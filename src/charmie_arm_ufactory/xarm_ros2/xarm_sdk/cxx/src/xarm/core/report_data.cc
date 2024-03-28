@@ -333,6 +333,8 @@ XArmReportData::XArmReportData(std::string report_type_)
 
   memset(pose_aa, 0, sizeof(pose_aa));
 
+  switch_status = 0;
+
   debug_data = NULL;
   debug_size = 0;
 }
@@ -455,7 +457,7 @@ int XArmReportData::_flush_rich_data(unsigned char *rx_data)
   for (int i = 0; i < 17; i++) { sv3msg[i] = data_fp[229 + i]; }
 
   if (total_num >= 252) {
-    for (int i = 0; i < 17; i++) { temperatures[i] = data_fp[245 + i]; }
+    for (int i = 0; i < 17; i++) { temperatures[i] = (char)data_fp[245 + i]; }
   }
   if (total_num >= 284) {
     float tcp_spd[1];
@@ -515,7 +517,10 @@ int XArmReportData::_flush_rich_data(unsigned char *rx_data)
       memcpy(pose_aa, pose, sizeof(float) * 3);
       hex_to_nfp32(&data_fp[482], pose_aa, 3);
     }
-    __flush_debug_data(494);
+    if (total_num >= 495) {
+      switch_status = data_fp[494];
+    }
+    __flush_debug_data(495);
   }
   return ret;
 }

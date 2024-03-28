@@ -120,8 +120,8 @@ class FaceNode(Node):
 
         ### x representa a frente do robô. y positivo vai para a esquerda do robô. z vai para cima no robô
         c = np.dot(np.identity(4), [0, 0, 0, 1])
-        c = np.dot(np.identity(4), [35, -40, 100, 1])
-        print('Psição em relação ao solo:', )
+        c = np.dot(np.identity(4), [90, -30, 105, 1])
+        print('Posição em relação ao solo:', )
         a2 = self.Trans(3, -6, -110)
         a1 = self.Rot('x', -90)
         a0 = self.Rot('z', 180)

@@ -24,12 +24,13 @@ int XArmAPI::set_position(fp32 pose[6], fp32 radius, fp32 speed, fp32 acc, fp32 
   int ret = 0;
   last_used_tcp_speed = speed > 0 ? speed : last_used_tcp_speed;
   last_used_tcp_acc = acc > 0 ? acc : last_used_tcp_acc;
+  std::string feedback_key = _gen_feedback_key(wait);
   if (relative) {
     fp32 mvpose[7] = {0.0};
     for (int i = 0; i < 6; i++) {
       mvpose[i] = (float)(default_is_radian || i < 3 ? pose[i] : to_radian(pose[i]));
     }
-    ret = core->move_relative(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, radius, 0, 0, only_check_type_, &only_check_result, motion_type);
+    ret = core->move_relative(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, radius, 0, 0, only_check_type_, &only_check_result, motion_type, feedback_key);
   } 
   else {
     fp32 mvpose[6];
@@ -39,7 +40,7 @@ int XArmAPI::set_position(fp32 pose[6], fp32 radius, fp32 speed, fp32 acc, fp32 
     }
     int ret = 0;
     if (_version_is_ge(1, 11, 100)) {
-      ret = core->move_line_common(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, radius, 0, false, only_check_type_, &only_check_result, motion_type);
+      ret = core->move_line_common(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, radius, 0, false, only_check_type_, &only_check_result, motion_type, feedback_key);
     }
     else {
       if (radius >= 0) {
@@ -50,6 +51,7 @@ int XArmAPI::set_position(fp32 pose[6], fp32 radius, fp32 speed, fp32 acc, fp32 
       }
     }
   }
+  int trans_id = _get_feedback_transid(feedback_key);
   ret = _check_code(ret, true);
   if (ret == 0 && only_check_type_ > 0) {
     return only_check_result != 0 ? API_CODE::HAS_ERROR : ret;
@@ -58,7 +60,7 @@ int XArmAPI::set_position(fp32 pose[6], fp32 radius, fp32 speed, fp32 acc, fp32 
     only_check_result = 0;
   }
   if (wait && ret == 0) {
-    ret = _wait_move(timeout);
+    ret = _wait_move(timeout, trans_id);
     _sync();
   }
 
@@ -90,12 +92,14 @@ int XArmAPI::set_tool_position(fp32 pose[6], fp32 speed, fp32 acc, fp32 mvtime, 
     mvpose[i] = (float)(default_is_radian || i < 3 ? pose[i] : to_radian(pose[i]));
   }
   int ret = 0;
+  std::string feedback_key = _gen_feedback_key(wait);
   if (_version_is_ge(1, 11, 100)) {
-    ret = core->move_line_common(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, radius, 1, false, only_check_type_, &only_check_result, motion_type);
+    ret = core->move_line_common(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, radius, 1, false, only_check_type_, &only_check_result, motion_type, feedback_key);
   }
   else {
     ret = core->move_line_tool(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, only_check_type_, &only_check_result, motion_type);
   }
+  int trans_id = _get_feedback_transid(feedback_key);
 
   ret = _check_code(ret, true);
   if (ret == 0 && only_check_type_ > 0) {
@@ -105,7 +109,7 @@ int XArmAPI::set_tool_position(fp32 pose[6], fp32 speed, fp32 acc, fp32 mvtime, 
     only_check_result = 0;
   }
   if (wait && ret == 0) {
-    ret = _wait_move(timeout);
+    ret = _wait_move(timeout, trans_id);
     _sync();
   }
 
@@ -133,24 +137,26 @@ int XArmAPI::set_servo_angle(fp32 angs[7], fp32 speed, fp32 acc, fp32 mvtime, bo
   fp32 acc_ = (float)(default_is_radian ? last_used_joint_acc : to_radian(last_used_joint_acc));
   fp32 mvjoint[7];
   int ret = 0;
+  std::string feedback_key = _gen_feedback_key(wait);
   if (relative) {
     for (int i = 0; i < 7; i++) {
-      mvjoint[i] = (float)(default_is_radian ? angs[i] : to_radian(angs[i]));
+      mvjoint[i] = i >= axis ? 0 : (float)(default_is_radian ? angs[i] : to_radian(angs[i]));
     }
-    ret = core->move_relative(mvjoint, speed_, acc_, mvtime, radius, 1, 0, only_check_type_, &only_check_result);
+    ret = core->move_relative(mvjoint, speed_, acc_, mvtime, radius, 1, 0, only_check_type_, &only_check_result, 0, feedback_key);
   }
   else {
     for (int i = 0; i < 7; i++) {
       last_used_angles[i] = angs[i];
-      mvjoint[i] = (float)(default_is_radian ? last_used_angles[i] : to_radian(last_used_angles[i]));
+      mvjoint[i] =  i >= axis ? 0 : (float)(default_is_radian ? last_used_angles[i] : to_radian(last_used_angles[i]));
     }
     if (_version_is_ge(1, 5, 20) && radius >= 0) {
-      ret = core->move_jointb(mvjoint, speed_, acc_, radius, only_check_type_, &only_check_result);
+      ret = core->move_jointb(mvjoint, speed_, acc_, radius, only_check_type_, &only_check_result, feedback_key);
     }
     else {
-      ret = core->move_joint(mvjoint, speed_, acc_, mvtime, only_check_type_, &only_check_result);
+      ret = core->move_joint(mvjoint, speed_, acc_, mvtime, only_check_type_, &only_check_result, feedback_key);
     }
   }
+  int trans_id = _get_feedback_transid(feedback_key);
   ret = _check_code(ret, true);
   if (ret == 0 && only_check_type_ > 0) {
     return only_check_result != 0 ? API_CODE::HAS_ERROR : ret;
@@ -159,7 +165,7 @@ int XArmAPI::set_servo_angle(fp32 angs[7], fp32 speed, fp32 acc, fp32 mvtime, bo
     only_check_result = 0;
   }
   if (wait && ret == 0) {
-    ret = _wait_move(timeout);
+    ret = _wait_move(timeout, trans_id);
     _sync();
   }
   return ret;
@@ -170,7 +176,7 @@ int XArmAPI::set_servo_angle(fp32 angs[7], bool wait, fp32 timeout, fp32 radius,
 }
 
 int XArmAPI::set_servo_angle(int servo_id, fp32 angle, fp32 speed, fp32 acc, fp32 mvtime, bool wait, fp32 timeout, fp32 radius, bool relative) {
-  if (servo_id <= 0 || servo_id > 7) return API_CODE::PARAM_ERROR;
+  if (servo_id <= 0 || servo_id > axis) return API_CODE::PARAM_ERROR;
   last_used_angles[servo_id - 1] = angle;
   return set_servo_angle(last_used_angles, speed, acc, mvtime, wait, timeout, radius), relative;
 }
@@ -183,7 +189,7 @@ int XArmAPI::set_servo_angle_j(fp32 angs[7], fp32 speed, fp32 acc, fp32 mvtime) 
   if (!is_connected()) return API_CODE::NOT_CONNECTED;
   fp32 mvjoint[7];
   for (int i = 0; i < 7; i++) {
-    mvjoint[i] = (float)(default_is_radian ? angs[i] : to_radian(angs[i]));
+    mvjoint[i] =  i >= axis ? 0 : (float)(default_is_radian ? angs[i] : to_radian(angs[i]));
   }
   int ret = core->move_servoj(mvjoint, last_used_joint_speed, last_used_joint_acc, mvtime);
   ret = _check_code(ret, true, 1);
@@ -221,12 +227,14 @@ int XArmAPI::move_circle(fp32 pose1[6], fp32 pose2[6], fp32 percent, fp32 speed,
     pose_2[i] = (float)(default_is_radian || i < 3 ? pose2[i] : to_radian(pose2[i]));
   }
   int ret = 0;
+  std::string feedback_key = _gen_feedback_key(wait);
   if (_version_is_ge(1, 11, 100)) {
-    ret = core->move_circle_common(pose_1, pose_2, last_used_tcp_speed, last_used_tcp_acc, mvtime, percent, is_tool_coord ? 1 : 0, is_axis_angle, only_check_type_, &only_check_result);
+    ret = core->move_circle_common(pose_1, pose_2, last_used_tcp_speed, last_used_tcp_acc, mvtime, percent, is_tool_coord ? 1 : 0, is_axis_angle, only_check_type_, &only_check_result, feedback_key);
   }
   else {
     ret = core->move_circle(pose_1, pose_2, last_used_tcp_speed, last_used_tcp_acc, mvtime, percent, only_check_type_, &only_check_result);
   }
+  int trans_id = _get_feedback_transid(feedback_key);
   ret = _check_code(ret, true);
   if (ret == 0 && only_check_type_ > 0) {
     return only_check_result != 0 ? API_CODE::HAS_ERROR : ret;
@@ -235,7 +243,7 @@ int XArmAPI::move_circle(fp32 pose1[6], fp32 pose2[6], fp32 percent, fp32 speed,
     only_check_result = 0;
   }
   if (wait && ret == 0) {
-    ret = _wait_move(timeout);
+    ret = _wait_move(timeout, trans_id);
     _sync();
   }
 
@@ -256,7 +264,9 @@ int XArmAPI::move_gohome(fp32 speed, fp32 acc, fp32 mvtime, bool wait, fp32 time
   fp32 acc_ = (float)(default_is_radian ? acc : to_radian(acc));
   speed_ = speed_ > 0 ? speed_ : (float)0.8726646259971648; // 50 °/s
   acc_ = acc_ > 0 ? acc_ : (float)17.453292519943297; // 1000 °/s^2
-  int ret = core->move_gohome(speed_, acc_, mvtime, only_check_type_, &only_check_result);
+  std::string feedback_key = _gen_feedback_key(wait);
+  int ret = core->move_gohome(speed_, acc_, mvtime, only_check_type_, &only_check_result, feedback_key);
+  int trans_id = _get_feedback_transid(feedback_key);
   ret = _check_code(ret, true);
   if (ret == 0 && only_check_type_ > 0) {
     return only_check_result != 0 ? API_CODE::HAS_ERROR : ret;
@@ -265,7 +275,7 @@ int XArmAPI::move_gohome(fp32 speed, fp32 acc, fp32 mvtime, bool wait, fp32 time
     only_check_result = 0;
   }
   if (wait && ret == 0) {
-    ret = _wait_move(timeout);
+    ret = _wait_move(timeout, trans_id);
     _sync();
   }
 
@@ -317,17 +327,19 @@ int XArmAPI::set_position_aa(fp32 pose[6], fp32 speed, fp32 acc, fp32 mvtime, bo
     mvpose[i] = (float)(default_is_radian || i < 3 ? pose[i] : to_radian(pose[i]));
   }
   int ret = 0;
+  std::string feedback_key = _gen_feedback_key(wait);
   if (_version_is_ge(1, 11, 100)) {
     if (!is_tool_coord && relative) {
-      ret = core->move_relative(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, radius, 0, true, only_check_type_, &only_check_result, motion_type);
+      ret = core->move_relative(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, radius, 0, true, only_check_type_, &only_check_result, motion_type, feedback_key);
     }
     else {
-      ret = core->move_line_common(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, radius, 0, true, only_check_type_, &only_check_result, motion_type);
+      ret = core->move_line_common(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, radius, 0, true, only_check_type_, &only_check_result, motion_type, feedback_key);
     }
   }
   else {
     ret = core->move_line_aa(mvpose, last_used_tcp_speed, last_used_tcp_acc, mvtime, (int)is_tool_coord, (int)relative, only_check_type_, &only_check_result, motion_type);
   }
+  int trans_id = _get_feedback_transid(feedback_key);
   ret = _check_code(ret, true);
   if (ret == 0 && only_check_type_ > 0) {
     return only_check_result != 0 ? API_CODE::HAS_ERROR : ret;
@@ -336,7 +348,7 @@ int XArmAPI::set_position_aa(fp32 pose[6], fp32 speed, fp32 acc, fp32 mvtime, bo
     only_check_result = 0;
   }
   if (wait && ret == 0) {
-    ret = _wait_move(timeout);
+    ret = _wait_move(timeout, trans_id);
     _sync();
   }
 
@@ -375,7 +387,7 @@ int XArmAPI::vc_set_joint_velocity(fp32 speeds[7], bool is_sync, fp32 duration) 
   if (!is_connected()) return API_CODE::NOT_CONNECTED;
   fp32 jnt_v[7];
   for (int i = 0; i < 7; i++) {
-    jnt_v[i] = (float)(default_is_radian ? speeds[i] : to_radian(speeds[i]));
+    jnt_v[i] =  i >= axis ? 0 : (float)(default_is_radian ? speeds[i] : to_radian(speeds[i]));
   }
   return core->vc_set_jointv(jnt_v, is_sync ? 1 : 0, _version_is_ge(1, 8, 0) ? duration : (fp32)-1.0);
 }

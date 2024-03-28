@@ -22,7 +22,7 @@ public:
   static const unsigned char CHECK_VERIFY = 3;
   static const unsigned char RELOAD_DYNAMICS = 4;
   static const unsigned char GET_REPORT_TAU_OR_I = 5;
-  static const unsigned char SHUTDOWN_SYSTEM = 10;
+  static const unsigned char SYSTEM_CONTROL = 10;
 
   static const unsigned char MOTION_EN = 11;
   static const unsigned char SET_STATE = 12;
@@ -153,23 +153,29 @@ public:
 
   static const unsigned char FTSENSOR_GET_DATA_OLD = 150;  // only available in firmware version < 1.8.3
   static const unsigned char FTSENSOR_GET_DATA = 200;
-    static const unsigned char FTSENSOR_ENABLE = 201;
-    static const unsigned char FTSENSOR_SET_APP = 202;
-    static const unsigned char FTSENSOR_GET_APP = 203;
-    static const unsigned char IDEN_LOAD = 204;
-    static const unsigned char FTSENSOR_CALI_LOAD_OFFSET = 205;
-    static const unsigned char FTSENSOR_SET_ZERO = 206;
-    static const unsigned char IMPEDANCE_CONFIG = 207;
-    static const unsigned char FORCE_CTRL_PID = 208;
-    static const unsigned char FORCE_CTRL_CONFIG = 209;
-    static const unsigned char IMPEDANCE_CTRL_MBK = 210;
-    static const unsigned char IMPEDANCE_CTRL_CONFIG = 211;
+  static const unsigned char FTSENSOR_ENABLE = 201;
+  static const unsigned char FTSENSOR_SET_APP = 202;
+  static const unsigned char FTSENSOR_GET_APP = 203;
+  static const unsigned char IDEN_LOAD = 204;
+  static const unsigned char FTSENSOR_CALI_LOAD_OFFSET = 205;
+  static const unsigned char FTSENSOR_SET_ZERO = 206;
+  static const unsigned char IMPEDANCE_CONFIG = 207;
+  static const unsigned char FORCE_CTRL_PID = 208;
+  static const unsigned char FORCE_CTRL_CONFIG = 209;
+  static const unsigned char IMPEDANCE_CTRL_MBK = 210;
+  static const unsigned char IMPEDANCE_CTRL_CONFIG = 211;
   static const unsigned char FTSENSOR_GET_CONFIG = 212;
 
   static const unsigned char GET_MAX_JOINT_VELOCITY = 231;
+  static const unsigned char SET_COMMON_PARAM = 232;
+  static const unsigned char GET_COMMON_PARAM = 233;
+  static const unsigned char GET_COMMON_INFO = 234;
 
   static const unsigned char TGPIO_COM_TIOUT = 240;
   static const unsigned char TGPIO_COM_DATA = 241;
+
+  static const unsigned char FEEDBACK_CHECK = 253;
+  static const unsigned char SET_FEEDBACK_TYPE = 254;
 };
 
 class UXBUS_STATE {
@@ -283,6 +289,7 @@ public:
   static const int TRAJ_RW_FAILED = 31;
   static const int TRAJ_RW_TOUT = 32;
   static const int TRAJ_PLAYBACK_TOUT = 33;
+  static const int TRAJ_PLAYBACK_FAILED = 34;
   static const int SUCTION_CUP_TOUT = 41;
 
   static const int MODE_IS_NOT_CORRECT = 51;
@@ -295,6 +302,8 @@ public:
   static const int CHECK_FAILED = 101;
   static const int END_EFFECTOR_HAS_FAULT = 102;
   static const int END_EFFECTOR_NOT_ENABLED = 103;
+
+  // 129 ~ 144: Standard ModbusTCP exception, the actual exception code is (api_code-0x80)
 };
 
 class BIO_STATE {
@@ -325,6 +334,28 @@ public:
   static const int USE_PRIMITIVES = 20;
   static const int CYLINDER = 21;
   static const int BOX = 22;
+};
+
+class FeedbackType {
+public:
+  FeedbackType(void) {}
+  ~FeedbackType(void) {}
+
+  static const unsigned char MOTION_START = 1;
+  static const unsigned char MOTION_FINISH = 2;
+  static const unsigned char TRIGGER = 4;
+  static const unsigned char OTHER_START = 32;
+  static const unsigned char OTHER_FINISH = 64;
+};
+
+class FeedbackCode {
+public:
+  FeedbackCode(void) {}
+  ~FeedbackCode(void) {}
+
+  static const unsigned char SUCCESS = 0;
+  static const unsigned char FAILURE = 1;
+  static const unsigned char DISCARD = 2;
 };
 
 #endif

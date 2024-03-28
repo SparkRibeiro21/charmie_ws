@@ -386,6 +386,8 @@ class ControllerNode(Node):
         self.waited_for_end_of_arm = False # not used, but here to be in conformity with other uses
         self.arm_ready = True
 
+        self.i = 0
+
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
         self.speech_sucess = True
         self.speech_message = ""
@@ -635,7 +637,6 @@ class ControllerNode(Node):
 
     # control code to send commands to other nodes if CONTROL variables are set to true (ros2 params)
     def control_robot(self, ps4_controller):
-
         if self.CONTROL_TORSO:
             if ps4_controller.arrow_up >= 2:
                 self.torso_pos.x = 1.0
@@ -653,10 +654,10 @@ class ControllerNode(Node):
 
             self.torso_test_publisher.publish(self.torso_pos)
 
-        if self.CONTROL_WAIT_FOR_END_OF_NAVIGATION:
+        """ if self.CONTROL_WAIT_FOR_END_OF_NAVIGATION:
             self.wfeon.data = True
             if ps4_controller.options:
-                self.flag_pos_reached_publisher.publish(self.wfeon)
+                self.flag_pos_reached_publisher.publish(self.wfeon) """
 
         if self.CONTROL_MOTORS:
             # left joy stick to control x and y movement (direction and linear speed) 
@@ -690,11 +691,23 @@ class ControllerNode(Node):
         if self.CONTROL_SPEAKERS:
             # examples of two different speech commands
             if ps4_controller.r3 == 2:
-                success, message = self.set_speech(filename="generic/introduction_full", wait_for_end_of=False)
-                print(success, message)
-            elif ps4_controller.l3 == 2:
-                success, message = self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=False)
-                print(success, message)
+                self.i += 1
+                if self.i == 1:
+                    success, message = self.set_speech(filename="generic/introduction_full", wait_for_end_of=False)
+                    # success, message = self.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
+
+                    print(success, message)
+                    """ elif self.i == 2:
+                    success, message = self.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
+                    print(success, message) """
+                else: 
+                    success, message = self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=False)
+                    # success, message = self.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
+                    print(success, message)
+                    self.i = 0
+            # elif ps4_controller.l3 == 2:
+                # success, message = self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=False)
+                # print(success, message)
                 
         if self.CONTROL_NECK:
             # circle and square to move neck left and right
@@ -779,10 +792,19 @@ class ControllerNode(Node):
         if self.CONTROL_ARM:
             if self.arm_ready: 
                 if ps4_controller.share == 2:
-                    self.arm_ready = False
+                    # self.arm_ready = False
+                    # Command to say hello 
+                    # success, message = self.set_arm(command="hello", wait_for_end_of=False)
+                    # success, message = self.set_arm(command="place_objects", wait_for_end_of=False)
+                    success, message = self.set_arm(command="pick_objects", wait_for_end_of=False)
+                    print(success, message)
+                if ps4_controller.options == 2:
                     # Command to say hello 
                     success, message = self.set_arm(command="hello", wait_for_end_of=False)
-                    print(success, message)
+
+                if ps4_controller.l3 == 2:
+                    # self.arm_ready = False
+                    success, message = self.set_arm(command="place_objects", wait_for_end_of=False)
 
 
 def thread_controller(node):

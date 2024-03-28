@@ -34,6 +34,9 @@ def launch_setup(context, *args, **kwargs):
     add_vacuum_gripper = LaunchConfiguration('add_vacuum_gripper', default=False)
     add_vacuum_gripper_1 = LaunchConfiguration('add_vacuum_gripper_1', default=add_vacuum_gripper)
     add_vacuum_gripper_2 = LaunchConfiguration('add_vacuum_gripper_2', default=add_vacuum_gripper)
+    add_bio_gripper = LaunchConfiguration('add_bio_gripper', default=False)
+    add_bio_gripper_1 = LaunchConfiguration('add_bio_gripper_1', default=add_bio_gripper)
+    add_bio_gripper_2 = LaunchConfiguration('add_bio_gripper_2', default=add_bio_gripper)
     hw_ns = LaunchConfiguration('hw_ns', default='xarm')
     limited = LaunchConfiguration('limited', default=True)
     effort_control = LaunchConfiguration('effort_control', default=False)
@@ -115,7 +118,7 @@ def launch_setup(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration('use_sim_time', default=False)
 
     moveit_config_package_name = 'xarm_moveit_config'
-    xarm_type = '{}{}'.format(robot_type_1.perform(context), '' if robot_type_1.perform(context) == 'uf850' else dof_1.perform(context))
+    xarm_type = '{}{}'.format(robot_type_1.perform(context), dof_1.perform(context) if robot_type_1.perform(context) in ('xarm', 'lite') else '')
 
     # robot_description_parameters
     # xarm_moveit_config/launch/lib/robot_moveit_config_lib.py
@@ -135,6 +138,8 @@ def launch_setup(context, *args, **kwargs):
             'add_gripper_2': add_gripper_2,
             'add_vacuum_gripper_1': add_vacuum_gripper_1,
             'add_vacuum_gripper_2': add_vacuum_gripper_2,
+            'add_bio_gripper_1': add_bio_gripper_1,
+            'add_bio_gripper_2': add_bio_gripper_2,
             'hw_ns': hw_ns.perform(context).strip('/'),
             'limited': limited,
             'effort_control': effort_control,
@@ -186,6 +191,8 @@ def launch_setup(context, *args, **kwargs):
             'add_gripper_2': add_gripper_2,
             'add_vacuum_gripper_1': add_vacuum_gripper_1,
             'add_vacuum_gripper_2': add_vacuum_gripper_2,
+            'add_bio_gripper_1': add_bio_gripper_1,
+            'add_bio_gripper_2': add_bio_gripper_2,
             'add_other_geometry_1': add_other_geometry_1,
             'add_other_geometry_2': add_other_geometry_2,
         },
@@ -202,7 +209,7 @@ def launch_setup(context, *args, **kwargs):
     kinematics_yaml_1 = load_yaml(moveit_config_package_name, 'config', xarm_type, 'kinematics.yaml')
     joint_limits_yaml_1 = load_yaml(moveit_config_package_name, 'config', xarm_type, 'joint_limits.yaml')
     
-    xarm_type = '{}{}'.format(robot_type_2.perform(context), '' if robot_type_2.perform(context) == 'uf850' else dof_2.perform(context))
+    xarm_type = '{}{}'.format(robot_type_2.perform(context), dof_2.perform(context) if robot_type_2.perform(context) in ('xarm', 'lite') else '')
     controllers_yaml_2 = load_yaml(moveit_config_package_name, 'config', xarm_type, '{}.yaml'.format(controllers_name.perform(context)))
     ompl_planning_yaml_2 = load_yaml(moveit_config_package_name, 'config', xarm_type, 'ompl_planning.yaml')
     kinematics_yaml_2 = load_yaml(moveit_config_package_name, 'config', xarm_type, 'kinematics.yaml')
@@ -214,6 +221,24 @@ def launch_setup(context, *args, **kwargs):
         gripper_ompl_planning_yaml_1 = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type_1.perform(context)), 'ompl_planning.yaml')
         # gripper_kinematics_yaml_1 = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type_1.perform(context)), 'kinematics.yaml')
         gripper_joint_limits_yaml_1 = load_yaml(moveit_config_package_name, 'config', '{}_gripper'.format(robot_type_1.perform(context)), 'joint_limits.yaml')
+
+        if gripper_controllers_yaml_1 and 'controller_names' in gripper_controllers_yaml_1:
+            for name in gripper_controllers_yaml_1['controller_names']:
+                if name not in gripper_controllers_yaml_1:
+                    continue
+                if name not in controllers_yaml_1['controller_names']:
+                    controllers_yaml_1['controller_names'].append(name)
+                controllers_yaml_1[name] = gripper_controllers_yaml_1[name]
+        if gripper_ompl_planning_yaml_1:
+            ompl_planning_yaml_1.update(gripper_ompl_planning_yaml_1)
+        # kinematics_yaml_1.update(gripper_kinematics_yaml_1)
+        if joint_limits_yaml_1 and gripper_joint_limits_yaml_1:
+            joint_limits_yaml_1['joint_limits'].update(gripper_joint_limits_yaml_1['joint_limits'])
+    elif add_bio_gripper_1.perform(context) in ('True', 'true'):
+        gripper_controllers_yaml_1 = load_yaml(moveit_config_package_name, 'config', 'bio_gripper', '{}.yaml'.format(controllers_name.perform(context)))
+        gripper_ompl_planning_yaml_1 = load_yaml(moveit_config_package_name, 'config', 'bio_gripper', 'ompl_planning.yaml')
+        # gripper_kinematics_yaml_1 = load_yaml(moveit_config_package_name, 'config', 'bio_gripper', 'kinematics.yaml')
+        gripper_joint_limits_yaml_1 = load_yaml(moveit_config_package_name, 'config', 'bio_gripper', 'joint_limits.yaml')
 
         if gripper_controllers_yaml_1 and 'controller_names' in gripper_controllers_yaml_1:
             for name in gripper_controllers_yaml_1['controller_names']:
@@ -244,7 +269,22 @@ def launch_setup(context, *args, **kwargs):
             ompl_planning_yaml_2.update(gripper_ompl_planning_yaml_2)
         if joint_limits_yaml_2 and gripper_joint_limits_yaml_2:
             joint_limits_yaml_2['joint_limits'].update(gripper_joint_limits_yaml_2['joint_limits'])
-        
+    elif add_bio_gripper_2.perform(context) in ('True', 'true'):
+        gripper_controllers_yaml_2 = load_yaml(moveit_config_package_name, 'config', 'bio_gripper', '{}.yaml'.format(controllers_name.perform(context)))
+        gripper_ompl_planning_yaml_2 = load_yaml(moveit_config_package_name, 'config', 'bio_gripper', 'ompl_planning.yaml')
+        gripper_joint_limits_yaml_2 = load_yaml(moveit_config_package_name, 'config', 'bio_gripper', 'joint_limits.yaml')
+
+        if gripper_controllers_yaml_2 and 'controller_names' in gripper_controllers_yaml_2:
+            for name in gripper_controllers_yaml_2['controller_names']:
+                if name not in gripper_controllers_yaml_2:
+                    continue
+                if name not in controllers_yaml_2['controller_names']:
+                    controllers_yaml_2['controller_names'].append(name)
+                controllers_yaml_2[name] = gripper_controllers_yaml_2[name]
+        if gripper_ompl_planning_yaml_2:
+            ompl_planning_yaml_2.update(gripper_ompl_planning_yaml_2)
+        if joint_limits_yaml_2 and gripper_joint_limits_yaml_2:
+            joint_limits_yaml_2['joint_limits'].update(gripper_joint_limits_yaml_2['joint_limits'])
 
     add_prefix_to_moveit_params = getattr(mod, 'add_prefix_to_moveit_params')
     add_prefix_to_moveit_params(
