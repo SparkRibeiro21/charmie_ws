@@ -332,6 +332,44 @@ class NeckNode(Node):
     
     def callback_neck_track_object(self, request, response):
 
+        # Type of service received: 
+        # DetectedObject object # The object it is intended to be followed by the neck
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        target_x = request.object.box_center_x
+        target_y = request.object.box_center_y 
+
+        global read_pan_open_loop, read_tilt_open_loop
+
+        print(target_x, target_y)
+
+        img_width = 1280
+        img_height = 720
+
+        # target_x = request.person.kp_nose_x
+        # target_y = request.person.kp_nose_y
+
+        hor_fov = 91.2
+        ver_fov = 65.5
+
+        print(target_x, target_y)
+
+        error_x = -int(img_width/2 - target_x)
+        error_y = -int(img_height/2 - target_y)
+
+        perc_x = error_x/(img_width/2)
+        perc_y = error_y/(img_height/2)
+
+        new_a_x = (-perc_x*(hor_fov/2))
+        new_a_y = (-perc_y*(ver_fov/2))*0.75 # on the 'yes movement' axis, it tended to always overshoot a bit, the 0.75 factor fixes it
+
+        print("angs: ", new_a_x, new_a_y)
+
+        # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
+        self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
+    
         response.success = True
         response.message = "neck track object"
         return response

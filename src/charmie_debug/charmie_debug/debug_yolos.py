@@ -42,6 +42,7 @@ class TestNode(Node):
         ### Services (Clients) ###
         # Neck
         self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
+        self.neck_track_object_client = self.create_client(TrackObject, "neck_track_object")
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         
@@ -50,11 +51,14 @@ class TestNode(Node):
         
         # Variables
         self.waited_for_end_of_track_person = False
+        self.waited_for_end_of_track_object = False
 
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
         self.rgb_sucess = True
         self.rgb_message = ""
         self.track_person_success = True
+        self.track_person_message = ""
+        self.track_object_success = True
         self.track_person_message = ""
         self.activate_yolo_pose_sucess = True
         self.activate_yolo_pose_message = ""
@@ -177,6 +181,36 @@ class TestNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+
+    def call_neck_track_object_server(self, object, wait_for_end_of=True):
+        request = TrackObject.Request()
+        request.object = object
+
+        future = self.neck_track_object_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_neck_track_object)
+        else:
+            self.track_person_success = True
+            self.track_person_message = "Wait for answer not needed"
+    
+    def callback_call_neck_track_object(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.track_object_success = response.success
+            self.track_object_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_track_object = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
         request = ActivateYoloPose.Request()
@@ -252,7 +286,6 @@ class RestaurantMain():
         return self.node.activate_yolo_pose_sucess, self.node.activate_yolo_pose_message
 
     def track_person(self, person, body_part="Head", wait_for_end_of=True):
-        pass
 
         self.node.call_neck_track_person_server(person=person, body_part=body_part, wait_for_end_of=wait_for_end_of)
         
@@ -262,7 +295,17 @@ class RestaurantMain():
         self.node.waited_for_end_of_track_person = False
 
         return self.node.track_person_success, self.node.track_person_message
-    
+ 
+    def track_object(self, object, wait_for_end_of=True):
+
+        self.node.call_neck_track_object_server(object=object, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_track_object:
+            pass
+        self.node.waited_for_end_of_track_object = False
+
+        return self.node.track_object_success, self.node.track_object_message   
 
     def main(self):
         Waiting_for_start_button = 0
@@ -293,34 +336,37 @@ class RestaurantMain():
 
             if self.state == Waiting_for_start_button:
 
+                ### EXAMPLE TO TRACK PERSON
                 # if self.node.detected_people.num_person > 0:
-                #     p_=self.node.detected_people.persons[0]
+                    # p_=self.node.detected_people.persons[0]
+                    # print(p_.head_center_x, p_.head_center_y)
+                    # self.track_person(p_, body_part="Head", wait_for_end_of=True)
+                    # print(".")
+                    # time.sleep(5)
+                
+                ### EXAMPLE TO TRACK OBJECT
+                if self.node.detected_objects.num_objects > 0:
+                    p_=self.node.detected_objects.objects[0]
+                    print(p_.object_name)
+                    self.track_object(p_,wait_for_end_of=True)
+                    print(".")
+                    time.sleep(5)
 
-
-
-
+                ### EXAMPLES TO ACTIVATE/DEACTIVATE AND CONFIGURE YOLO POSE AND TOLO OBJECTS 
                 # self.activate_yolo_pose(activate=True)
                 # self.activate_yolo_objects(activate_objects=False)
                 # print("activated yolo pose")
                 # time.sleep(10)
-                self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=7)
+                # self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=7)
                 # self.activate_yolo_objects(activate_objects=True, minimum_object_confidence=0.3)
-                print("deactivated yolo pose - 0.8")
-                time.sleep(5)
-                self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=10)
+                # print("deactivated yolo pose - 0.8")
+                # time.sleep(5)
+                # self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=10)
                 # self.activate_yolo_objects(activate_objects=True, minimum_object_confidence=0.8)
-                print("deactivated yolo pose - right in front")
-                time.sleep(5)
-
-
-                # print(p_.head_center_x, p_.head_center_y)
-                # self.track_person(p_, body_part="Head", wait_for_end_of=True)
-                # print(".")
+                # print("deactivated yolo pose - right in front")
                 # time.sleep(5)
 
 
-
-                
                 """
                 s, m = self.set_rgb(RED+MOON)
                 print(s, m)
