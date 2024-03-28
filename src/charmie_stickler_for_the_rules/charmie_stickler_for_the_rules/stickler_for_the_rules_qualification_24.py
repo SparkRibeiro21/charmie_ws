@@ -10,7 +10,7 @@ import cv2
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge,  CvBridgeError
-from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL, Yolov8Pose, NeckPosition, SearchForPerson, ListOfPoints, TrackPerson, DetectedPerson, ListOfStrings
+from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL, Yolov8Pose, NeckPosition, SearchForPerson, ListOfPoints, DetectedPerson, ListOfStrings
 
 import time
 
@@ -27,7 +27,7 @@ class SFTRNode(Node):
         
         # Neck Topics
         self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
-        self.neck_follow_person_publisher = self.create_publisher(TrackPerson, "neck_follow_person", 10)
+        # self.neck_follow_person_publisher = self.create_publisher(TrackPerson, "neck_follow_person", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
         #self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
 
@@ -407,11 +407,12 @@ class SFTRMain():
 
             ### FAzer eye contact com o guest
             
-            track = TrackPerson()
-            track.is_center = False
-            track.kp_number = 0 # 0 is for nose
-            track.person = self.node.yolo_poses.persons[0]
-            self.node.neck_follow_person_publisher.publish(track)
+            ### MUST CHANGE TRACK PERSON TO NEW SERVICE
+            # track = TrackPerson()
+            # track.is_center = False
+            # track.kp_number = 0 # 0 is for nose
+            # track.person = self.node.yolo_poses.persons[0]
+            # self.node.neck_follow_person_publisher.publish(track)
 
             time.sleep(1) #para dar tempo de pescoço fazer movimento
 
@@ -458,12 +459,14 @@ class SFTRMain():
             time.sleep(0.5) # this is just so the looking at customers is not oo quick """
 
             ### FAzer eye contact com o guest
-            track = TrackPerson()
-            track.is_center = False
-            track.kp_number = 0 # 0 is for nose
-            track.person = self.node.yolo_poses.persons[0]
-            self.node.neck_follow_person_publisher.publish(track)
-            time.sleep(1)
+            
+            ### MUST CHANGE TRACK PERSON TO NEW SERVICE
+            # track = TrackPerson()
+            # track.is_center = False
+            # track.kp_number = 0 # 0 is for nose
+            # track.person = self.node.yolo_poses.persons[0]
+            # self.node.neck_follow_person_publisher.publish(track)
+            # time.sleep(1)
 
             self.node.speech_str.command = "Hello there guest. You are breaking the no garbage on the floor rule. "               
             self.node.speaker_publisher.publish(self.node.speech_str)
@@ -510,11 +513,13 @@ class SFTRMain():
             self.wait_for_end_of_speaking()
             time.sleep(0.5) # this is just so the looking at customers is not oo quick """
 
-            track = TrackPerson()
-            track.is_center = False
-            track.kp_number = 0 # 0 is for nose
-            track.person = self.node.yolo_poses.persons[0]
-            self.node.neck_follow_person_publisher.publish(track)
+            
+            ### MUST CHANGE TRACK PERSON TO NEW SERVICE
+            # track = TrackPerson()
+            # track.is_center = False
+            # track.kp_number = 0 # 0 is for nose
+            # track.person = self.node.yolo_poses.persons[0]
+            # self.node.neck_follow_person_publisher.publish(track)
 
             time.sleep(1) #para dar tempo de pescoço fazer movimento
 
@@ -770,12 +775,13 @@ class SFTRMain():
 
 
                     """ ### FAzer eye contact com o guest
-                    track = TrackPerson()
-                    track.is_center = False
-                    track.kp_number = 0 # 0 is for nose
-                    track.person = self.node.yolo_poses.persons[0]
-                    self.node.neck_follow_person_publisher.publish(track)
-                    time.sleep(1) """
+                    ### MUST CHANGE TRACK PERSON TO NEW SERVICE
+                    # track = TrackPerson()
+                    # track.is_center = False
+                    # track.kp_number = 0 # 0 is for nose
+                    # track.person = self.node.yolo_poses.persons[0]
+                    # self.node.neck_follow_person_publisher.publish(track)
+                    # time.sleep(1) """
 
                     self.node.speech_str.command = "I am looking at the detected guest breaking the forbidden room rule." 
                     self.node.speaker_publisher.publish(self.node.speech_str)
@@ -995,11 +1001,12 @@ class SFTRMain():
                             self.wait_for_end_of_speaking()
 
 
-                        track = TrackPerson()
-                        track.is_center = False
-                        track.kp_number = 0 # 0 is for nose
-                        track.person = self.node.yolo_poses.persons[0]
-                        self.node.neck_follow_person_publisher.publish(track)
+                        ### MUST CHANGE TRACK PERSON TO NEW SERVICE
+                        # track = TrackPerson()
+                        # track.is_center = False
+                        # track.kp_number = 0 # 0 is for nose
+                        # track.person = self.node.yolo_poses.persons[0]
+                        # self.node.neck_follow_person_publisher.publish(track)
 
                         pose = Bool()
                         pose.data = False
@@ -1165,11 +1172,12 @@ class SFTRMain():
                                 self.node.speaker_publisher.publish(self.node.speech_str)
                                 self.wait_for_end_of_speaking()
 
-                        track = TrackPerson()
-                        track.is_center = False
-                        track.kp_number = 0 # 0 is for nose
-                        track.person = self.node.yolo_poses.persons[0]
-                        self.node.neck_follow_person_publisher.publish(track)
+                        ### MUST CHANGE TRACK PERSON TO NEW SERVICE
+                        # track = TrackPerson()
+                        # track.is_center = False
+                        # track.kp_number = 0 # 0 is for nose
+                        # track.person = self.node.yolo_poses.persons[0]
+                        # self.node.neck_follow_person_publisher.publish(track)
 
                         pose = Bool()
                         pose.data = False
@@ -1339,11 +1347,12 @@ class SFTRMain():
                                 self.node.speaker_publisher.publish(self.node.speech_str)
                                 self.wait_for_end_of_speaking()
 
-                        track = TrackPerson()
-                        track.is_center = False
-                        track.kp_number = 0 # 0 is for nose
-                        track.person = self.node.yolo_poses.persons[0]
-                        self.node.neck_follow_person_publisher.publish(track)
+                        ### MUST CHANGE TRACK PERSON TO NEW SERVICE
+                        # track = TrackPerson()
+                        # track.is_center = False
+                        # track.kp_number = 0 # 0 is for nose
+                        # track.person = self.node.yolo_poses.persons[0]
+                        # self.node.neck_follow_person_publisher.publish(track)
 
                         pose = Bool()
                         pose.data = False
@@ -1504,11 +1513,13 @@ class SFTRMain():
                                 self.node.speaker_publisher.publish(self.node.speech_str)
                                 self.wait_for_end_of_speaking() """
 
-                        track = TrackPerson()
-                        track.is_center = False
-                        track.kp_number = 0 # 0 is for nose
-                        track.person = self.node.yolo_poses.persons[0]
-                        self.node.neck_follow_person_publisher.publish(track)
+                        
+                        ### MUST CHANGE TRACK PERSON TO NEW SERVICE
+                        # track = TrackPerson()
+                        # track.is_center = False
+                        # track.kp_number = 0 # 0 is for nose
+                        # track.person = self.node.yolo_poses.persons[0]
+                        # self.node.neck_follow_person_publisher.publish(track)
 
                         pose = Bool()
                         pose.data = False

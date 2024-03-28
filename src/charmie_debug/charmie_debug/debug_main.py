@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, String
 from sensor_msgs.msg import LaserScan, Image
-from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL, NeckPosition, TrackPerson, DetectedPerson, Yolov8Pose, RequestPointCloud
+from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL, NeckPosition, DetectedPerson, Yolov8Pose, RequestPointCloud
 
 
 from cv_bridge import CvBridge
@@ -91,7 +91,6 @@ class TRNode(Node):
         # Neck Topics
         # self.neck_to_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         # self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
-        # self.neck_follow_person_publisher = self.create_publisher(TrackPerson, "neck_follow_person",10)
         # self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
         
         
@@ -109,7 +108,6 @@ class TRNode(Node):
         time.sleep(2)
 
         # test track person
-        self.neck_follow_person_publisher = self.create_publisher(TrackPerson, 'neck_follow_person', 10) 
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, 'person_pose_filtered', self.person_pose_filtered_callback, 10) 
         self.person_pose = Yolov8Pose()
 
@@ -432,15 +430,6 @@ class DebugMain():
     def person_pose_filtered_callback(self, pose: Yolov8Pose):        
         self.person_pose = pose
         pass
-
-        # print(pose.num_person)
-        # if pose.num_person > 0:
-        #     aux = TrackPerson()
-        #     aux.person = pose.persons[0]
-        #     aux.kp_number = 5
-        #     aux.is_center = True   
-        #     self.neck_follow_person_publisher.publish(aux)    
-
 
 
 

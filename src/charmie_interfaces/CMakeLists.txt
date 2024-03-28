@@ -44,8 +44,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SearchForPerson.msg"
   "msg/SpeechType.msg"
   "msg/TarNavSDNL.msg"
-  "msg/TrackObject.msg"
-  "msg/TrackPerson.msg"
   "msg/Yolov8Objects.msg"
   "msg/Yolov8Pose.msg"
   "srv/ActivateYoloObjects.srv"

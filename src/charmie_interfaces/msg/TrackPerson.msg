@@ -1,2 +1,0 @@
-DetectedPerson person
-string body_part

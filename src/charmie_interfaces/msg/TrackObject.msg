@@ -1,1 +1,0 @@
-DetectedObject object

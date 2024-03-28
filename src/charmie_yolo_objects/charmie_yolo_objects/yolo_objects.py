@@ -100,6 +100,8 @@ class Yolo_obj(Node):
         # Publish Results
         # self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10) # test removed person_pose (non-filtered)
         self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
+        self.doors_filtered_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered', 10)
+        self.shoes_filtered_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered', 10)
         
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
