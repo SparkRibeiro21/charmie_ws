@@ -1,4 +1,8 @@
-## Welcome to LAR@Home CHARMIE ROS2 Workspace Repository  :mechanical_arm: :portugal:
+## Welcome to LAR@Home CHARMIE ROS2 Workspace Repository  :mechanical_arm: :portugal: 
+
+![GitHub last commit](https://img.shields.io/github/last-commit/SparkRibeiro21/charmie_ws)
+
+##
 
 * [Requirements :rocket:](#rocket-requirements)
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
