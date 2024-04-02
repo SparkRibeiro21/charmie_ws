@@ -1,9 +1,13 @@
-## Welcome to LAR@Home CHARMIE ROS2 Workspace Repository  :mechanical_arm: :portugal:
+## Welcome to LAR@Home CHARMIE ROS2 Workspace Repository  :mechanical_arm: :portugal: 
+
+![GitHub last commit](https://img.shields.io/github/last-commit/SparkRibeiro21/charmie_ws)
+##
 
 * [Requirements :rocket:](#rocket-requirements)
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
   * [RoboCup@Home 2024 :netherlands:](#robocuphome-2024-netherlands)
   * [RoboCup@Home 2023 :fr:](#robocuphome-2023-fr)
+* [Videos of Tasks from Pevious Events :gear:](#gear-videos-of-tasks-from-previous-events)
 * [Results :trophy:](#trophy-results)
 * [Social Media :handshake:](#handshake-connect-with-us)
 
@@ -34,6 +38,18 @@ To setup the realsense package in your workspace, please follow the installation
 [![Video Title](https://img.youtube.com/vi/gNx9OYljlcw/0.jpg)](https://www.youtube.com/watch?v=gNx9OYljlcw)
 
 [Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=gNx9OYljlcw)
+
+## :gear: Videos of Tasks from Previous Events 
+<details>
+  <summary>Click to expand</summary>
+
+  ## Receptionist Task (RoboCup@Home 2023)
+
+  [![Video Title](https://img.youtube.com/vi/rYzFhlLRpxc/0.jpg)](https://www.youtube.com/watch?v=rYzFhlLRpxc)
+
+  [Youtube Link for Receptionist Task from RoboCup@Home 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
+  
+</details>
 
 ## :trophy: Results
 
