@@ -9,6 +9,9 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D
 from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates
 from charmie_interfaces.msg import Yolov8Objects
+from sensor_msgs.msg import Image
+import cv2
+from cv_bridge import CvBridge
 
 import time
 
@@ -60,8 +63,8 @@ class StoringGroceriesNode(Node):
         #     self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         
         # Speakers
-        while not self.speech_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Speech Command...")
+        """ while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...") """
 
         # Variables
         self.waited_for_end_of_speaking = False
@@ -85,6 +88,10 @@ class StoringGroceriesNode(Node):
         #print(objects.objects)
         self.nr_objects = objects.num_objects
         self.objects = objects.objects
+        self.image = objects.image_rgb
+        if self.nr_objects > 3:
+            print('\n\n\n AQUI HÁ GATO \n\n\n', self.nr_objects)
+        #print(self.nr_objects)
         
     #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
@@ -259,13 +266,24 @@ class StoringGroceriesMain():
         self.look_cabinet_center = [-45, 0]
         self.look_cabinet_bottom = [-45, -45]
 
-        self.shelf_1_height = 0.97
-        self.shelf_2_height = 1.39
-        self.shelf_3_height = 1.81
+        self.shelf_1_height = 0.18 #0.97
+        self.shelf_2_height = 0.66 #1.39
+        self.shelf_3_height = 1.17 #1.81
+
+        self.left_limit_shelf = -0.35
+        self.right_limit_shelf = 0.65
+        self.center_shelf = 0.2
+
 
         # to debug just a part of the task you can just change the initial state, example:
         # self.state = self.Approach_kitchen_table
         self.state = self.Waiting_for_task_start
+
+        self.nr_objects_detected_previous = 0
+        self.nr_max_objects_detected = 0
+        self.image_most_obj_detected = Image()
+        self.prev_time = 0.0
+        self.new_time = 0.0
         
     ##### SETS #####
 
@@ -355,11 +373,95 @@ class StoringGroceriesMain():
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
     
+    def get_caracteristics_image(self):
+        i = 0
+        if hasattr(self.node, 'objects') and self.node.objects:
+            objects_stored = self.node.objects
+            print(len(objects_stored))
+            while i < self.node.nr_objects:
+                    if objects_stored and i < len(objects_stored):
+                        #print(self.node.objects[i])
+                        #print('ATÉ AQUI NÃO CRASHOU')
+                        detected_object = objects_stored[i]
+                        object_name = detected_object.object_name
+                        object_height = detected_object.position_relative.z
+                        object_confidence = detected_object.confidence
+                        print("Object Name: ", object_name)
+                        print(f"Object height: {object_height:.2f}")
+                        print(f"Object confidence: {object_confidence:.2f}")
+                        #print(i)
+                        #print(objects_stored[i])
+                        print('\n')
+                        i += 1
 
+                    else:
+                        break
+                    
+                    #time.sleep(2)
+            print('Image read \n\n')
+
+        else:
+            print('No objects detected \n \n')    
+
+    
+    def store_frame_more_detections(self):
+        i = 0
+        #if hasattr(self.node, 'image') and self.node.image:
+        if hasattr(self.node, 'image') and self.node.image:
+            self.current_image = self.node.image
+            if hasattr(self.node, 'objects') and self.node.objects:
+                objects_stored = self.node.objects
+                self.nr_objects_detected = self.node.nr_objects
+                if self.nr_objects_detected > self.nr_objects_detected_previous:
+                    self.nr_max_objects_detected = self.nr_objects_detected
+                    self.nr_objects_detected_previous = self.nr_objects_detected
+
+                    print(self.nr_objects_detected)
+                    
+                    # Create a CvBridge object
+                    bridge = CvBridge()
+                    # Convert ROS Image to OpenCV image
+                    cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="passthrough")
+                    self.image_most_obj_detected = cv_image
+
+                    
+                    while i < self.nr_objects_detected:
+                        if objects_stored and i < len(objects_stored):
+                            #print(self.node.objects[i])
+                            #print('ATÉ AQUI NÃO CRASHOU')
+                            detected_object = objects_stored[i]
+                            object_name = detected_object.object_name
+                            object_height = detected_object.position_relative.z
+                            object_confidence = detected_object.confidence
+                            print("Object Name: ", object_name)
+                            print(f"Object height: {object_height:.2f}")
+                            print(f"Object confidence: {object_confidence:.2f}")
+                            #print(i)
+                            #print(objects_stored[i])
+                            print('\n')
+                            i += 1
+
+                        else:
+                            break
+                
+                
+    
+    
     ##### ANALYSE CABINET #####
 
     def analysis_cabinet(self):
-        pass
+        i = 0
+        #if hasattr(self.node, 'image') and self.node.image:
+        if hasattr(self.node, 'image') and self.node.image:
+            if hasattr(self.node, 'objects') and self.node.objects:
+                objects_stored = self.node.objects
+                self.nr_objects_detected = self.node.nr_objects
+                if self.nr_objects_detected > self.nr_objects_detected_previous:
+                    self.current_image = self.node.image
+                    self.nr_max_objects_detected = self.nr_objects_detected
+                    self.nr_objects_detected_previous = self.nr_objects_detected
+                    self.detected_objects = objects_stored
+
         # Quero fazer if objeto está entre self.shelf_1_height e self.shelf_2_height então está na primeira prateleira
         # elif objetos entre self.shelf_2_height e self.shelf_3_height então objetos estão na segunda prateleira
         # Importante robô estar bem centrado com armário, e verificar se a posição relativa em x (ou y não sei) está para direita ou esquerda do centro
@@ -805,20 +907,159 @@ class StoringGroceriesMain():
                     pass
 
             else:
+                # self.get_caracteristics_image()
+                start_time = time.time()
+
+                while time.time() - start_time < 5.0:
+                    # self.store_frame_more_detections()
+                    self.analysis_cabinet()
+
+
+                print(' ---------------------- ')
+                print('\n\n\n\n\n\n\n\n\n')
+                print('\n\n\n\n\n\n\n\n\n')
+                print('\n\n\n\n\n\n\n\n\n')
+                print('\n\n\n\n\n\n\n\n\n')
+
                 i = 0
-                if self.node.objects:
-                    print(self.node.nr_objects)
-                    print(len(self.node.objects))
-                    while i < self.node.nr_objects:
-                        for detected_object in self.node.objects:
-                            object_name = detected_object.object_name
-                            print("Object Name:", object_name)
-                            print(i)
-                            print(self.node.objects[i])
-                            print('\n')
-                            i += 1
-                            if i == self.node.nr_objects:
-                                break
-                            #time.sleep(2)
-                    print('Image read \n\n')            
+
+                print('Nr of objects detected: ', self.nr_objects_detected)
+
+                # Create a CvBridge object
+                bridge = CvBridge()
+                # Convert ROS Image to OpenCV image
+                cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+                self.image_most_obj_detected = cv_image
+
+                while i < self.nr_objects_detected:
+                    if self.detected_objects and i < len(self.detected_objects):
+                        #print(self.node.objects[i])
+                        #print('ATÉ AQUI NÃO CRASHOU')
+                        
+                        detected_object = self.detected_objects[i]
+                        object_name = detected_object.object_name
+                        object_height = detected_object.position_relative.z
+                        object_confidence = detected_object.confidence
+                        object_x_position = detected_object.position_relative.x
+                        box_top_left_x = detected_object.box_top_left_x
+                        box_top_left_y = detected_object.box_top_left_y
+                        box_width = detected_object.box_width
+                        box_height = detected_object.box_height
+
+                        start_point = (box_top_left_x, box_top_left_y)
+                        end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
+
+                        cv2.rectangle(self.image_most_obj_detected, start_point, end_point, (56, 56, 255) , 4) 
+
+                        print("Object Name: ", object_name)
+                        print(f"Object height: {object_height:.2f}")
+                        print(f"Object x position: {object_x_position:.2f}")
+                        print(f"Object confidence: {object_confidence:.2f}")
+                        #print(i)
+                        #print(objects_stored[i])
+
+                        if object_x_position < self.left_limit_shelf or object_x_position > self.right_limit_shelf:
+                            print(object_name, 'is outside the wardrobe')
+                            self.image_most_obj_detected = cv2.putText(
+                            self.image_most_obj_detected,
+                            # f"{round(float(per.conf),2)}",
+                            'Outside wardrobe',
+                            (box_top_left_x, box_top_left_y + box_height),
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1,
+                            (0, 0, 255),
+                            1,
+                            cv2.LINE_AA
+                        ) 
+                        
+                        elif object_height < self.shelf_1_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                            print(object_name, 'is on the floor')
+                            self.image_most_obj_detected = cv2.putText(
+                            self.image_most_obj_detected,
+                            # f"{round(float(per.conf),2)}",
+                            'Floor',
+                            (box_top_left_x, box_top_left_y + box_height),
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1,
+                            (0, 0, 255),
+                            1,
+                            cv2.LINE_AA
+                        ) 
+                            
+                        elif self.shelf_1_height < object_height < self.shelf_2_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                            print(object_name, 'is in the first shelf')
+                            self.image_most_obj_detected = cv2.putText(
+                            self.image_most_obj_detected,
+                            # f"{round(float(per.conf),2)}",
+                            'First shelf',
+                            (box_top_left_x, box_top_left_y + box_height),
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1,
+                            (0, 0, 255),
+                            1,
+                            cv2.LINE_AA
+                        ) 
+
+                        elif self.shelf_2_height < object_height < self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                            print(object_name, 'is in the second shelf')
+                            self.image_most_obj_detected = cv2.putText(
+                            self.image_most_obj_detected,
+                            # f"{round(float(per.conf),2)}",
+                            'Second shelf',
+                            (box_top_left_x, box_top_left_y + box_height),
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1,
+                            (0, 0, 255),
+                            1,
+                            cv2.LINE_AA
+                        ) 
+
+                        elif object_height > self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                            print(object_name, 'is in the third shelf')
+                            self.image_most_obj_detected = cv2.putText(
+                            self.image_most_obj_detected,
+                            # f"{round(float(per.conf),2)}",
+                            'Third shelf',
+                            (box_top_left_x, box_top_left_y + box_height),
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1,
+                            (0, 0, 255),
+                            1,
+                            cv2.LINE_AA
+                        ) 
+                            
+
+                        self.image_most_obj_detected = cv2.putText(
+                            self.image_most_obj_detected,
+                            # f"{round(float(per.conf),2)}",
+                            f"{object_name}",
+                            (box_top_left_x, box_top_left_y),
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1,
+                            (255, 0, 0),
+                            1,
+                            cv2.LINE_AA
+                        ) 
+
+                        
+
+                        print('\n')
+
+                        i += 1
+
+                    else:
+                        break
+
+                if self.image_most_obj_detected is not None:
+                    print('Mostra imagem')
+                    cv2.imshow('Image with more objects detected', self.image_most_obj_detected)
+                    cv2.waitKey(1)
+                else:
+                    print("Error: self.image_most_obj_detected is None")
+
+
+                self.nr_objects_detected = 0 
+                self.nr_objects_detected_previous = 0
+
+
                 #pass
