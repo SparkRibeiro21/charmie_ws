@@ -39,6 +39,7 @@ from charmie_audio.words_dict import names_dict, drinks_dict, yes_no_dict, charm
 # to run any other node. It is used (mainly in competition) when new words are added to what the robot must be 
 # able to recognise. Check 'words_dict' to see the words the robot must recognise on each category.
 DICT_CALIBRATION = True
+CALIBRATION_PRINTS = True
 
 # post robocup 23 tasks for audio
     # - dois sistemas de audição em paralelo, para que normalmente use o que ouve e pára no fim da frase
@@ -529,6 +530,10 @@ class WhisperAudio():
     def check_keywords(self, speech, command: SpeechType):
 
         speech = speech.lower()
+        speech = speech.replace(",","")
+        speech = speech.replace(".","")
+        speech = speech.replace("?","")
+        speech = speech.replace("!","")
 
         if command.yes_or_no == True:
             print("YES_OR_NO KEYWORDS!")
@@ -790,6 +795,9 @@ class AudioNode(Node):
 
     # similar to audio_command_callback() but without the information sent to the speak module
     def dict_calibration(self, comm):
+
+        global CALIBRATION_PRINTS
+
         self.get_logger().info("Received Audio Command")
         # publish rgb estou a ouvir
         self.charmie_audio.hear_speech()
@@ -806,80 +814,85 @@ class AudioNode(Node):
             print("\n  -->\tYou said: " + speech_heard, end='\n\n')
             self.get_logger().info("Finished Processing")
 
-            CALIB_PRINTS = False
+            if CALIBRATION_PRINTS:
+                speech = speech_heard.lower()
+                speech = speech.replace(",","")
+                speech = speech.replace(".","")
+                speech = speech.replace("?","")
+                speech = speech.replace("!","")
 
-            speech = speech_heard.lower()
+                print("  -->\tPost Filter: " + speech, end='\n\n')
 
-            if speech != "error" and CALIB_PRINTS:
-                name_predicted = ''
-                name_ctr = 0
-                print("NAMES:")
-                for key in names_dict:
-                    res = self.charmie_audio.compare_commands(names_dict, speech, [key])
-                    print('    ', key, end='')
-                    for spaces in range(max_number_of_chars_of_keys-len(key)):
-                        print('.', end='') 
-                    print('->', res)
-                    if res:
-                        name_predicted = key
-                        name_ctr += 1
-                print("Name Detected =", name_predicted, "(", name_ctr, ")")
-                print()
+                if speech != "error":
+                    name_predicted = ''
+                    name_ctr = 0
+                    print("NAMES:")
+                    for key in names_dict:
+                        res = self.charmie_audio.compare_commands(names_dict, speech, [key])
+                        print('    ', key, end='')
+                        for spaces in range(max_number_of_chars_of_keys-len(key)):
+                            print('.', end='') 
+                        print('->', res)
+                        if res:
+                            name_predicted = key
+                            name_ctr += 1
+                    print("Name Detected =", name_predicted, "(", name_ctr, ")")
+                    print()
 
-                foods_predicted = ''
-                foods_ctr = 0
-                print("FOODS:")
-                for key in foods_dict:
-                    res = self.charmie_audio.compare_commands(foods_dict, speech, [key])
-                    print('    ', key, end='')
-                    for spaces in range(max_number_of_chars_of_keys-len(key)):
-                        print('.', end='') 
-                    print('->', res)
-                    if res:
-                        foods_predicted = key
-                        foods_ctr += 1
-                print("Name Detected =", foods_predicted, "(", foods_ctr, ")")
-                print()
+                    foods_predicted = ''
+                    foods_ctr = 0
+                    print("FOODS:")
+                    for key in foods_dict:
+                        res = self.charmie_audio.compare_commands(foods_dict, speech, [key])
+                        print('    ', key, end='')
+                        for spaces in range(max_number_of_chars_of_keys-len(key)):
+                            print('.', end='') 
+                        print('->', res)
+                        if res:
+                            foods_predicted = key
+                            foods_ctr += 1
+                    print("Name Detected =", foods_predicted, "(", foods_ctr, ")")
+                    print()
 
-                drink_predicted = ''
-                drink_ctr = 0
-                print("DRINKS:")
-                for key in drinks_dict:
-                    res = self.charmie_audio.compare_commands(drinks_dict, speech, [key])
-                    print('    ', key, end='')
-                    for spaces in range(max_number_of_chars_of_keys-len(key)):
-                        print('.', end='') 
-                    print('->', res)
-                    if res:
-                        drink_predicted = key
-                        drink_ctr += 1
-                print("Drink Detected =", drink_predicted, "(", drink_ctr, ")") 
-                print()
+                    drink_predicted = ''
+                    drink_ctr = 0
+                    print("DRINKS:")
+                    for key in drinks_dict:
+                        res = self.charmie_audio.compare_commands(drinks_dict, speech, [key])
+                        print('    ', key, end='')
+                        for spaces in range(max_number_of_chars_of_keys-len(key)):
+                            print('.', end='') 
+                        print('->', res)
+                        if res:
+                            drink_predicted = key
+                            drink_ctr += 1
+                    print("Drink Detected =", drink_predicted, "(", drink_ctr, ")") 
+                    print()
 
-                numbers_predicted = ''
-                numbers_ctr = 0
-                print("NUMBERS:")
-                for key in numbers_dict:
-                    res = self.charmie_audio.compare_commands(numbers_dict, speech, [key])
-                    print('    ', key, end='')
-                    for spaces in range(max_number_of_chars_of_keys-len(key)):
-                        print('.', end='') 
-                    print('->', res)
-                    if res:
-                        numbers_predicted = key
-                        numbers_ctr += 1
-                print("Numbers Detected =", numbers_predicted, "(", numbers_ctr, ")") 
-                print()    
+                    numbers_predicted = ''
+                    numbers_ctr = 0
+                    print("NUMBERS:")
+                    for key in numbers_dict:
+                        res = self.charmie_audio.compare_commands(numbers_dict, speech, [key])
+                        print('    ', key, end='')
+                        for spaces in range(max_number_of_chars_of_keys-len(key)):
+                            print('.', end='') 
+                        print('->', res)
+                        if res:
+                            numbers_predicted = key
+                            numbers_ctr += 1
+                    print("Numbers Detected =", numbers_predicted, "(", numbers_ctr, ")") 
+                    print()    
 
-                rgb = Int16()
-                rgb.data = 19 # green same as when checking speech and keywords
-                self.rgb_mode_publisher.publish(rgb)
+                    rgb = Int16()
+                    rgb.data = 19 # green same as when checking speech and keywords
+                    self.rgb_mode_publisher.publish(rgb)
 
-            else:
+                else:
 
-                rgb = Int16()
-                rgb.data = 9
-                self.rgb_mode_publisher.publish(rgb)
+                    rgb = Int16()
+                    rgb.data = 9
+                    self.rgb_mode_publisher.publish(rgb)
         else:
             self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
 
