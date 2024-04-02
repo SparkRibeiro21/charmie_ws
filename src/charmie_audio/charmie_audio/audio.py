@@ -426,9 +426,10 @@ class WhisperAudio():
             audio_clip = AudioSegment.from_file(data)
             audio_clip.export(self.complete_path+"temp.wav", format="wav")
             
+            # if True: # just for debug
             if not DICT_CALIBRATION:
                 current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
-                audio_clip.export(self.complete_path+"list_of_previous_audios/"+current_datetime, format="wav")
+                audio_clip.export(self.complete_path+"list_of_previous_audios/"+current_datetime+".wav", format="wav")
             
             end1 = time.time()
             # print("Create Audio File Time:", end1-start1)
@@ -444,6 +445,7 @@ class WhisperAudio():
             try:
         
                 audio = whisper.load_audio(self.complete_path+"temp.wav")
+                # audio = whisper.load_audio(self.complete_path+"list_of_previous_audios/"+"2024-04-02 22-01-24.wav") # just for debug
                 audio = whisper.pad_or_trim(audio)
                 mel = whisper.log_mel_spectrogram(audio).to(self.audio_model.device)
                 options = whisper.DecodingOptions(language="en", without_timestamps=True, fp16=False)
