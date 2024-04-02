@@ -7,6 +7,7 @@
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
   * [RoboCup@Home 2024 :netherlands:](#robocuphome-2024-netherlands)
   * [RoboCup@Home 2023 :fr:](#robocuphome-2023-fr)
+* [Videos of Tasks from Pevious Events :gear:](#gear-videos-of-tasks-from-previous-events)
 * [Results :trophy:](#trophy-results)
 * [Social Media :handshake:](#handshake-connect-with-us)
 
@@ -38,19 +39,11 @@ To setup the realsense package in your workspace, please follow the installation
 
 [Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=gNx9OYljlcw)
 
-## :gear: Tasks from RoboCup@Home events 
+## :gear: Videos of Tasks from Previous Events 
 <details>
   <summary>Click to expand</summary>
 
-  ## Restaurant (Qualification for RoboCup 2024 @ Universidade do Minho)
-
   ## Receptionist (RoboCup@Home 2023)
-
-  This section contains more details about your project.
-
-  - Point 1
-  - Point 2
-  - ...
 
 </details>
 
