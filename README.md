@@ -47,7 +47,7 @@ To setup the realsense package in your workspace, please follow the installation
 
   [![Video Title](https://img.youtube.com/vi/rYzFhlLRpxc/0.jpg)](https://www.youtube.com/watch?v=rYzFhlLRpxc)
 
-  [Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=rYzFhlLRpxc)
+  [Youtube Link for Receptionist Task from RoboCup@Home 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
   
 </details>
 
