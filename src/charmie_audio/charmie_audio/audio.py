@@ -10,6 +10,7 @@ from pydub import AudioSegment
 import speech_recognition as sr
 import tempfile
 import os 
+from pathlib import Path
 
 # Surpress Deprecation Warnings
 # Some dependencies libraries from Whisper have Deprecation Warnings, this way
@@ -36,7 +37,7 @@ from charmie_audio.words_dict import names_dict, drinks_dict, yes_no_dict, charm
 # this variable when True is used to enter a calibration mode for the dict words, without being necessary
 # to run any other node. It is used (mainly in competition) when new words are added to what the robot must be 
 # able to recognise. Check 'words_dict' to see the words the robot must recognise on each category.
-DICT_CALIBRATION = False
+DICT_CALIBRATION = True
 
 # post robocup 23 tasks for audio
     # - dois sistemas de audição em paralelo, para que normalmente use o que ouve e pára no fim da frase
@@ -96,10 +97,14 @@ class WhisperAudio():
 
         self.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
         print("\tInitilisations [", end='')
-        print("Device:", self.DEVICE, torch.cuda.is_available(), end=',')
+        print("Device:", self.DEVICE, torch.cuda.is_available())
 
-        self.temp_dir = tempfile.mkdtemp()
-        self.save_path = os.path.join(self.temp_dir, "temp.wav")
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.home = str(Path.home())
+        self.midpath = "charmie_ws/src/charmie_audio/charmie_audio"
+        self.complete_path = self.home+'/'+self.midpath+'/'
+        self.save_path = os.path.join(self.complete_path, "temp.wav")
+        # print(self.save_path)
 
         self.flag_new_listening_process = False
         self.MIN_AVG_LOG_PROB = -0.8 # -1.05
