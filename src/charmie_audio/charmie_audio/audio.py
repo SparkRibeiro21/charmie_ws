@@ -11,6 +11,7 @@ import speech_recognition as sr
 import tempfile
 import os 
 from pathlib import Path
+from datetime import datetime
 
 # Surpress Deprecation Warnings
 # Some dependencies libraries from Whisper have Deprecation Warnings, this way
@@ -103,8 +104,11 @@ class WhisperAudio():
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_audio/charmie_audio"
         self.complete_path = self.home+'/'+self.midpath+'/'
-        self.save_path = os.path.join(self.complete_path, "temp.wav")
-        # print(self.save_path)
+        # self.save_temp_path = self.complete_path, "temp.wav"
+        
+        
+        # os.path.join(self.complete_path, "temp.wav")
+        print(self.complete_path+"temp.wav")
 
         self.flag_new_listening_process = False
         self.MIN_AVG_LOG_PROB = -0.8 # -1.05
@@ -115,7 +119,7 @@ class WhisperAudio():
         # @click.option("--english", default=True, help="Whether to use English model",is_flag=True, type=bool)
         # @click.option("--verbose", default=False, help="Whether to print verbose output", is_flag=True,type=bool)
         # @click.option("--energy", default=300, help="Energy level for mic to detect", type=int)
-        # @click.option("--dynamic_energy", default=False,is_flag=True, help="Flag to enable dynamic engergy", type=bool)
+        # @click.option("--dynamic_energy", default=False,is_flag=True, help="Flag to enable dynamic energy", type=bool)
         # @click.option("--pause", default=1.0, help="Pause time before entry ends", type=float)
         self.model = "tiny"
         self.english = True
@@ -419,7 +423,12 @@ class WhisperAudio():
             start1 = time.time()
             data = io.BytesIO(audio.get_wav_data())
             audio_clip = AudioSegment.from_file(data)
-            audio_clip.export(self.save_path, format="wav")
+            audio_clip.export(self.complete_path+"temp.wav", format="wav")
+            
+            if not DICT_CALIBRATION:
+                current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+                audio_clip.export(self.complete_path+"list_of_previous_audios/"+current_datetime, format="wav")
+            
             end1 = time.time()
             # print("Create Audio File Time:", end1-start1)
 
@@ -433,7 +442,7 @@ class WhisperAudio():
 
             try:
         
-                audio = whisper.load_audio(self.save_path)
+                audio = whisper.load_audio(self.complete_path+"temp.wav")
                 audio = whisper.pad_or_trim(audio)
                 mel = whisper.log_mel_spectrogram(audio).to(self.audio_model.device)
                 options = whisper.DecodingOptions(language="en", without_timestamps=True, fp16=False)
