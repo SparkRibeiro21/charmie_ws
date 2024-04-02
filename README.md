@@ -45,10 +45,10 @@ To setup the realsense package in your workspace, please follow the installation
 
   ## Receptionist Task (RoboCup@Home 2023)
 
-  [![Video Title](https://img.youtube.com/vi/gNx9OYljlcw/0.jpg)](https://www.youtube.com/watch?v=gNx9OYljlcw)
+  [![Video Title](https://img.youtube.com/vi/rYzFhlLRpxc/0.jpg)](https://www.youtube.com/watch?v=rYzFhlLRpxc)
 
-  [Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=gNx9OYljlcw)
-
+  [Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=rYzFhlLRpxc)
+  
 </details>
 
 ## :trophy: Results
