@@ -373,82 +373,10 @@ class StoringGroceriesMain():
         self.node.waited_for_end_of_get_neck = False
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
-    
-    def get_caracteristics_image(self):
-        i = 0
-        if hasattr(self.node, 'objects') and self.node.objects:
-            objects_stored = self.node.objects
-            print(len(objects_stored))
-            while i < self.node.nr_objects:
-                    if objects_stored and i < len(objects_stored):
-                        #print(self.node.objects[i])
-                        #print('ATÉ AQUI NÃO CRASHOU')
-                        detected_object = objects_stored[i]
-                        object_name = detected_object.object_name
-                        object_height = detected_object.position_relative.z
-                        object_confidence = detected_object.confidence
-                        print("Object Name: ", object_name)
-                        print(f"Object height: {object_height:.2f}")
-                        print(f"Object confidence: {object_confidence:.2f}")
-                        #print(i)
-                        #print(objects_stored[i])
-                        print('\n')
-                        i += 1
-
-                    else:
-                        break
-                    
-                    #time.sleep(2)
-            print('Image read \n\n')
-
-        else:
-            print('No objects detected \n \n')    
-
-    
-    def store_frame_more_detections(self):
-        i = 0
-        #if hasattr(self.node, 'image') and self.node.image:
-        if hasattr(self.node, 'image') and self.node.image:
-            self.current_image = self.node.image
-            if hasattr(self.node, 'objects') and self.node.objects:
-                objects_stored = self.node.objects
-                self.nr_objects_detected = self.node.nr_objects
-                if self.nr_objects_detected > self.nr_objects_detected_previous:
-                    self.nr_max_objects_detected = self.nr_objects_detected
-                    self.nr_objects_detected_previous = self.nr_objects_detected
-
-                    print(self.nr_objects_detected)
-                    
-                    # Create a CvBridge object
-                    bridge = CvBridge()
-                    # Convert ROS Image to OpenCV image
-                    cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-                    self.image_most_obj_detected = cv_image
-
-                    
-                    while i < self.nr_objects_detected:
-                        if objects_stored and i < len(objects_stored):
-                            #print(self.node.objects[i])
-                            #print('ATÉ AQUI NÃO CRASHOU')
-                            detected_object = objects_stored[i]
-                            object_name = detected_object.object_name
-                            object_height = detected_object.position_relative.z
-                            object_confidence = detected_object.confidence
-                            print("Object Name: ", object_name)
-                            print(f"Object height: {object_height:.2f}")
-                            print(f"Object confidence: {object_confidence:.2f}")
-                            #print(i)
-                            #print(objects_stored[i])
-                            print('\n')
-                            i += 1
-
-                        else:
-                            break
                 
     ##### ANALYSE CABINET #####
 
     def analysis_cabinet(self):
-
         i = 0
         if hasattr(self.node, 'image') and self.node.image:
             if hasattr(self.node, 'objects') and self.node.objects:
@@ -561,7 +489,6 @@ class StoringGroceriesMain():
                             cv2.LINE_AA
                         ) 
 
-
                     i += 1
 
                 #self.objects_names_list.clear()
@@ -654,6 +581,47 @@ class StoringGroceriesMain():
 
 
                     i += 1
+
+    def select_five_objects(self):
+        # Sort objects by confidence in descending order
+        sorted_objects = sorted(self.object_details.items(), key=lambda x: x[1]['confidence'], reverse=True)
+        print('Sorted: ',sorted_objects)
+
+        # Filter objects with confidence higher than 0.5
+        filtered_objects = [(name, details) for name, details in sorted_objects if details['confidence'] > 0.5]
+        print('Filtered: ', filtered_objects)
+
+        # Initialize selected objects list
+        selected_objects = []
+
+        # Select objects with higher confidence and higher priority
+        for name, details in filtered_objects:
+            if len(selected_objects) == 5:
+                break
+            if details.get('priority') == 'High':
+                selected_objects.append((name, details))
+
+        # If there are not enough high priority objects, select from remaining objects
+        if len(selected_objects) < 5:
+            remaining_count = 5 - len(selected_objects)
+            # selected_objects.extend(filtered_objects[len(selected_objects):len(selected_objects) + remaining_count])
+            remaining_objects = [(name, details) for name, details in filtered_objects if details.get('priority') != 'High']
+            selected_objects.extend(remaining_objects[:remaining_count])
+
+        print('Selected: ', selected_objects)
+
+        for name, details in selected_objects:
+            box_top_left_x = details['box_top_left_x']
+            box_top_left_y = details['box_top_left_y']
+            box_width = details['box_width']
+            box_height = details['box_height']
+            
+            # Calculate end point of the rectangle
+            end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
+            
+            # Draw rectangle on the original image
+            cv2.rectangle(self.image_most_obj_detected, (box_top_left_x, box_top_left_y), end_point, (0, 255, 0), 2)
+
 
     def main(self):
 
@@ -1103,64 +1071,15 @@ class StoringGroceriesMain():
                 self.image_most_obj_detected = cv_image
 
                 while time.time() - start_time < 1.0:
-                    # self.store_frame_more_detections()
                     # self.analysis_cabinet()
                     self.choose_priority()
 
                 print(' ---------------------- ')
 
-                # Sort objects by confidence in descending order
-                sorted_objects = sorted(self.object_details.items(), key=lambda x: x[1]['confidence'], reverse=True)
-                print('Sorted: ',sorted_objects)
-
-                # Filter objects with confidence higher than 0.5
-                filtered_objects = [(name, details) for name, details in sorted_objects if details['confidence'] > 0.5]
-                print('Filtered: ', filtered_objects)
-
-                # Initialize selected objects list
-                selected_objects = []
-
-                # Select objects with higher confidence and higher priority
-                for name, details in filtered_objects:
-                    if len(selected_objects) == 5:
-                        break
-                    if details.get('priority') == 'High':
-                        selected_objects.append((name, details))
-
-                
-
-                # If there are not enough high priority objects, select from remaining objects
-                if len(selected_objects) < 5:
-                    remaining_count = 5 - len(selected_objects)
-                    selected_objects.extend(filtered_objects[len(selected_objects):len(selected_objects) + remaining_count])
-
-                print('Selected: ', selected_objects)
-
-                for name, details in selected_objects:
-                    box_top_left_x = details['box_top_left_x']
-                    box_top_left_y = details['box_top_left_y']
-                    box_width = details['box_width']
-                    box_height = details['box_height']
-                    
-                    # Calculate end point of the rectangle
-                    end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
-                    
-                    # Draw rectangle on the original image
-                    cv2.rectangle(cv_image, (box_top_left_x, box_top_left_y), end_point, (0, 255, 0), 2)
-                
-                #print('\n\n\n\n\n\n\n\n\n')
-                #print('\n\n\n\n\n\n\n\n\n')
-                #print('\n\n\n\n\n\n\n\n\n')
-                #print('\n\n\n\n\n\n\n\n\n')
-
-                #print(self.object_details)
-
-                # print(self.objects_names_list)
-
+                self.select_five_objects() #Called with Choose_priority routine. Without it I just comment it
 
                 if self.image_most_obj_detected is not None:
-                    print('Mostra imagem')
-                    cv2.imshow('Image with more objects detected', self.image_most_obj_detected)
+                    cv2.imshow('Image with all objects detected', self.image_most_obj_detected)
                     cv2.waitKey(1)
                 else:
                     print("Error: self.image_most_obj_detected is None")
