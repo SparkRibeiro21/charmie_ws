@@ -285,6 +285,7 @@ class StoringGroceriesMain():
         self.names_counter = 0
         self.objects_names_list = [""]
         self.object_details = {}
+        self.object_position = {}
         
     ##### SETS #####
 
@@ -385,6 +386,7 @@ class StoringGroceriesMain():
                 while i < self.nr_objects_detected:                    
                     detected_object = objects_stored[i]
                     object_name = detected_object.object_name
+                    object_class = detected_object.object_class
                     object_height = detected_object.position_relative.z
                     object_confidence = detected_object.confidence
                     object_x_position = detected_object.position_relative.x
@@ -397,7 +399,7 @@ class StoringGroceriesMain():
                         pass
                     else:
                         self.object_details[object_name] = {'height': object_height, 'confidence': object_confidence, 'object_height': object_height,
-                                                            'x_position': object_x_position, 'box_top_left_x': box_top_left_x,
+                                                            'object_class': object_class, 'x_position': object_x_position, 'box_top_left_x': box_top_left_x,
                                                             'box_top_left_y': box_top_left_y, 'box_width': box_width, 'box_height': box_height}
 
                         print("After updating self.object_details")
@@ -407,7 +409,7 @@ class StoringGroceriesMain():
                         end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
                         cv2.rectangle(self.image_most_obj_detected, start_point, end_point, (56, 56, 255) , 4) 
 
-                        if object_x_position < self.left_limit_shelf or object_x_position > self.right_limit_shelf:
+                        """ if object_x_position < self.left_limit_shelf or object_x_position > self.right_limit_shelf:
                             print(object_name, 'is outside the wardrobe')
                             self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
@@ -433,9 +435,10 @@ class StoringGroceriesMain():
                             (0, 0, 255),
                             1,
                             cv2.LINE_AA
-                        ) 
-                            
-                        elif self.shelf_1_height < object_height < self.shelf_2_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        ) """
+                             
+                        if self.shelf_1_height < object_height < self.shelf_2_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                            position = 'First shelf'
                             print(object_name, 'is in the first shelf')
                             self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
@@ -450,6 +453,7 @@ class StoringGroceriesMain():
                         ) 
 
                         elif self.shelf_2_height < object_height < self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                            position = 'Second shelf'
                             print(object_name, 'is in the second shelf')
                             self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
@@ -464,6 +468,7 @@ class StoringGroceriesMain():
                         ) 
 
                         elif object_height > self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                            position = 'Third shelf'
                             print(object_name, 'is in the third shelf')
                             self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
@@ -477,6 +482,17 @@ class StoringGroceriesMain():
                             cv2.LINE_AA
                         ) 
                             
+                        if  self.center_shelf <= object_x_position <= self.right_limit_shelf :
+                            position += 'Right side'
+                            
+                        elif self.left_limit_shelf <= object_x_position < self.center_shelf :
+                            position += 'Left side'
+                            
+                        else:
+                            position += 'Outside shelf'
+                            
+                        self.object_position[object_class] = position
+                            
                         self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
@@ -487,7 +503,7 @@ class StoringGroceriesMain():
                             (255, 0, 0),
                             1,
                             cv2.LINE_AA
-                        ) 
+                        )
 
                     i += 1
 
@@ -582,6 +598,10 @@ class StoringGroceriesMain():
 
                     i += 1
 
+    def select_voice_audio(self, name):
+        if name == 'Sponge' or name == 'sponge':
+            print('a')
+
     def select_five_objects(self):
         # Sort objects by confidence in descending order
         sorted_objects = sorted(self.object_details.items(), key=lambda x: x[1]['confidence'], reverse=True)
@@ -621,6 +641,8 @@ class StoringGroceriesMain():
             
             # Draw rectangle on the original image
             cv2.rectangle(self.image_most_obj_detected, (box_top_left_x, box_top_left_y), end_point, (0, 255, 0), 2)
+            
+            self.select_voice_audio(name)
 
 
     def main(self):
