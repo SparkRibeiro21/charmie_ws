@@ -20,8 +20,29 @@ RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_4  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
+object_name_mapping = {
+    'Sponge': 'Sponge', 'Cleanser': 'Cleanser', 'Dishwasher Tab': 'Dishwasher Tab', 'Bag': 'Bag', 'Red Wine': 'Red Wine', 'Juice Pack': 'Juice Pack', 'Cola': 'Cola', 'Tropical Juice': 'Tropical Juice',
+    'Milk': 'Milk', 'Iced Tea': 'Iced Tea', 'Orange Juice': 'Orange Juice', 'Seven Up': 'Seven Up', 'Water': 'Water', 'Tuna': 'Tuna', 'Tomato Soup': 'Tomato Soup',
+    'Spam': 'Spam', 'Mustard': 'Mustard', 'Strawberry Jello': 'Strawberry Jello', 'Chocolate Jello': 'Chocolate Jello', 'Coffee Grounds': 'Coffee Grounds', 'Sugar': 'Sugar',
+    'Pear': 'Pear', 'Plum': 'Plum', 'Peach': 'Peach', 'Lemon': 'Lemon', 'Orange': 'Orange', 'Strawberry': 'Strawberry', 'Banana': 'Banana', 'Apple': 'Apple', 'Tennis Ball': 'Tennis Ball', 
+    'Soccer Ball': 'Soccer Ball', 'Rubiks Cube': 'Rubiks Cube', 'Dice': 'Dice', 'Baseball': 'Baseball', 'Pringles': 'Pringles', 'Cornflakes': 'Cornflakes', 'Cheezit': 'Cheezit',
+    'Spoon': 'Spoon', 'Plate': 'Plate', 'Cup': 'Cup', 'Fork': 'Fork', 'Bowl': 'Bowl', 'Knife': 'Knife'
+}
 
+object_class_mapping = {
+    'Cleaning Supplies': 'Cleaning Supplies', 'Drinks': 'Drinks', 'Foods': 'Foods', 'Fruits': 'Fruits', 'Toys': 'Toys', 'Snacks': 'Snacks', 'Dishes': 'Dishes'
+}
 
+object_position_mapping = {
+    ('First', 'Right'): 'First_shelf_rs',
+    ('First', 'Left'): 'First_shelf_ls',
+    ('Second', 'Right'): 'Second_shelf_rs',
+    ('Second', 'Left'): 'Second_shelf_ls',
+    ('Third', 'Right'): 'Third_shelf_rs',
+    ('Third', 'Left'): 'Third_shelf_ls',
+    ('Fourth', 'Right'): 'Fourth_shelf_rs',
+    ('Fourth', 'Left'): 'Fourth_shelf_ls'
+}
 class StoringGroceriesNode(Node):
 
     def __init__(self):
@@ -63,8 +84,8 @@ class StoringGroceriesNode(Node):
         #     self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         
         # Speakers
-        """ while not self.speech_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Speech Command...") """
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
 
         # Variables
         self.waited_for_end_of_speaking = False
@@ -599,8 +620,14 @@ class StoringGroceriesMain():
                     i += 1
 
     def select_voice_audio(self, name):
-        if name == 'Sponge' or name == 'sponge':
-            print('a')
+        print('dentro')
+        if name in object_name_mapping:
+            audio_file = object_name_mapping[name]
+            filename = f"objects_names/{audio_file}"
+            self.set_speech(filename=filename, wait_for_end_of=True)
+            print(f"Playing audio file: {filename}")
+        else:
+            print("Name not found.")
 
     def select_five_objects(self):
         # Sort objects by confidence in descending order
@@ -667,8 +694,49 @@ class StoringGroceriesMain():
                                 
                 # next state
                 # self.state = self.Approach_tables_first_time
-                j = 0
-                self.state = 16
+                
+                
+                """ 
+                Código para dizer 'tal classe está em tal prateleira'
+                
+                position = 'Second shelf '
+                position += 'Left side'
+                
+                object_class_name = 'Drinks'
+                
+                keywords = position.split()
+                
+                self.object_position[object_class_name] = position
+                print(self.object_position)
+                
+                # Initialize filename
+                class_filename = None
+                location_filename = None
+
+                # Iterate over the mapping and check if conditions are met
+                for condition, object_location in object_position_mapping.items():
+                    if all(keyword in keywords for keyword in condition):
+                        location_filename = f"storing_groceries/{object_location}"
+                        class_filename = f"objects_classes/{object_class_name}"
+                        self.set_speech(filename=class_filename, wait_for_end_of=True)
+                        self.set_speech(filename=location_filename, wait_for_end_of=True)
+                        break
+                    
+                # Devo ser capaz de usar as frases ' the fruits are on the left side of the first shelf from the bottom' recebendo os inputs  das strings de cá
+                 """
+
+                """ 
+                Ficheiros de áudio  a dizer  o  que  detetou  na mesa!
+                self.set_speech(filename="storing_groceries/sg_detected", wait_for_end_of=True)
+                name = 'Apple'
+                self.select_voice_audio(name)
+                name = 'Cleanser'
+                self.select_voice_audio(name)
+                name = 'Strawberry'
+                self.select_voice_audio(name)
+                name = 'Spoon'
+                self.select_voice_audio(name) """
+                self.state = 0
 
             elif self.state == self.Approach_tables_first_time:
                 #print('State 1 = Approaching table for the first time')

@@ -21,9 +21,60 @@ MODE = "STANDARD"
 #    'recep_start_task': 'I am ready to start my receptionist task'
 #}
 
+""" COMMANDS = {
+    'Sponge': 'a sponge.',
+    'Cleanser': 'a cleanser.',
+    'Dishwasher Tab': 'a dishwasher tab.',
+    'Bag': 'a bag.',
+    'Red Wine': 'a red wine.',
+    'Juice Pack': 'a juice pack.',
+    'Cola': 'a cola.',
+    'Tropical Juice': 'a tropical juice.',
+    'Milk': 'a milk.',
+    'Iced Tea': 'an iced tea.',
+    'Orange Juice': 'an orange juice.',
+    'Seven Up': 'a seven up.',
+    'Water': 'a water.',
+    'Tuna': 'a tuna.',
+    'Tomato Soup': 'a tomato soup.',
+    'Spam': 'a spam.',
+    'Mustard': 'a mustard.',
+    'Strawberry Jello': 'a strawberry jello.',
+    'Chocolate Jello': 'a chocolate jello.',
+    'Coffee Grounds': 'coffee grounds.',
+    'Sugar': 'a sugar.',
+    'Pear': 'a pear.',
+    'Plum': 'a plum.',
+    'Peach': 'a peach.',
+    'Lemon': 'a lemon.',
+    'Orange': 'an orange.',
+    'Strawberry': 'a strawberry.',
+    'Banana': 'a banana.',
+    'Apple': 'an apple.',
+    'Tennis Ball': 'a tennis ball.',
+    'Soccer Ball': 'a soccer ball.',
+    'Rubiks Cube': 'a rubiks cube.',
+    'Dice': 'a dice.',
+    'Baseball': 'a baseball.',
+    'Pringles': 'pringles.',
+    'Cornflakes': 'cornflakes.',
+    'Cheezit': 'cheezit.',
+    'Spoon': 'a spoon.',
+    'Plate': 'a plate.',
+    'Cup': 'a cup.',
+    'Fork': 'a fork.',
+    'Bowl': 'a bowl.',
+    'Knife': 'a knife.'
+} """
+
 COMMANDS = {
-    'Spam': ' the spam ',
-    'Spoon': ' the spoon ',
+    'Drinks': 'The Drinks are',
+    'Cleaning supplies': 'The Cleaning supplies are',
+    'Foods': 'The Foods are',
+    'Fruits': 'The Fruits are',
+    'Toys': 'The Toys are',
+    'Snacks': 'The Snacks are',
+    'Dishes': 'The Dishes are'    
 }
 
 
