@@ -4,6 +4,7 @@ from rclpy.node import Node
 
 from example_interfaces.msg import Bool, String, Float32, Int16
 from charmie_interfaces.msg import SpeechType, RobotSpeech
+from charmie_interfaces.srv import GetAudio
 
 import io
 from pydub import AudioSegment
@@ -38,7 +39,7 @@ from charmie_audio.words_dict import names_dict, drinks_dict, yes_no_dict, charm
 # this variable when True is used to enter a calibration mode for the dict words, without being necessary
 # to run any other node. It is used (mainly in competition) when new words are added to what the robot must be 
 # able to recognise. Check 'words_dict' to see the words the robot must recognise on each category.
-DICT_CALIBRATION = True
+DICT_CALIBRATION = False
 CALIBRATION_PRINTS = True
 
 # post robocup 23 tasks for audio
@@ -150,9 +151,6 @@ class WhisperAudio():
 
         self.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
         
-        
-        # print(self.node.a)
-
         # TO CHECK INFO REGARDING DEVICES ...
 
         # METHOD 1:
@@ -757,8 +755,8 @@ class AudioNode(Node):
         self.get_logger().info("Initialised CHARMIE Audio v2 Node")
 
         # I publish and subscribe in the same topic so I can request new hearings when errors are received 
-        self.audio_command_subscriber = self.create_subscription(SpeechType, "audio_command", self.audio_command_callback, 10)
-        self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
+        # self.audio_command_subscriber = self.create_subscription(SpeechType, "audio_command", self.audio_command_callback, 10)
+        # self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
 
         # self.flag_listening_publisher = self.create_publisher(Bool, "flag_listening", 10)
         self.get_speech_publisher = self.create_publisher(String, "get_speech", 10)
@@ -772,7 +770,10 @@ class AudioNode(Node):
         # Low Level: RGB
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
 
-        self.a = 10.0
+
+
+        self.server_audio = self.create_service(GetAudio, "audio_command", self.callback_audio)
+        self.get_logger().info("Audio Servers have been started")
 
 
         self.charmie_audio = WhisperAudio(self)
@@ -962,9 +963,32 @@ class AudioNode(Node):
         if self.audio_error:
             self.audio_error = False
             print("Stopped Waiting until CHARMIE speaking is over")
-            self.audio_command_publisher.publish(self.latest_command)
+            ### MUST CHANGE TO SERVICES
+            # self.audio_command_publisher.publish(self.latest_command)
 
 
+
+
+    def callback_audio(self, request, response):
+        
+        # Type of service received: 
+        # bool yes_or_no      # if just want to receive a yes or no answer
+        # bool receptionist   # receptionist info: a name of a person and a drinnk
+        # bool gpsr           # gpsr info: the full command
+        # bool restaurant     # restaurant info: the 2 or 3 items from drinks, fruits, foods and snacks to be served
+        # ---
+        # string command      # the items requested separated by a space (' ')
+
+        self.get_logger().info("Received Get Audio %s" %("("+str(request.yes_or_no)+", "+str(request.receptionist)+", "+str(request.gpsr)+", "+str(request.restaurant)+")"))
+        
+
+        response.command = "Hello Audio Test"
+        return response
+
+
+
+
+    ### MUST CHANGE TO SERVICES
     def audio_command_callback(self, comm: SpeechType):
         print(comm)
 
