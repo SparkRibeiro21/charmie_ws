@@ -4,7 +4,7 @@ max_number_of_chars_of_keys = 16
 
 names_dict = {
     "Adel":     ["adel", "adele", "adam", "avel"],
-    "Angel":    ["angel", "anjo", "hell", "ahil", "anjou", "anjal", "hong kong", "zangal", "enzo" ],
+    "Angel":    ["angel", "anjo", "ahil", "anjou", "anjal", "hong kong", "zangal", "enzo" ], # removed "hell" because of possible "hello" people may say
     "Axel":     ["axel", "oxford", "aksal", "hotel", "axo", "oxel, oxyl", "axil", "unhail", "oxo", "axle", "oxley", "excellent"],
     "Charlie":  ["charlie", "shire lee", "sean", "shoutily", "chorley", "cherry"],
     "Jane":     ["jane", "jan", "jain", "jame", "jani", "jainie"],
@@ -19,7 +19,8 @@ names_dict = {
 drinks_dict = {
     "RedWine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
     "JuicePack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
-                      "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag"],
+                      "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
+                      "peck"],
     "Cola":          [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold"],
     "TropicalJuice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
     "Milk":          ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok"],

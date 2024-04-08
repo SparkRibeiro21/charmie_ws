@@ -198,10 +198,14 @@ class RestaurantMain():
 
                 # your code here ...
                 print("Started")
-                # command = self.get_audio(receptionist=True, wait_for_end_of=True)
-                s, m = self.calibrate_audio(wait_for_end_of=True)
-                print("Finished:", s, m)#, command)
-                time.sleep(3)
+                # Test Audio Task Commands
+                command = self.get_audio(receptionist=True, wait_for_end_of=True)
+                print("Finished:", command)
+
+                # Test Calibration
+                # s, m = self.calibrate_audio(wait_for_end_of=True)
+                # print("Finished:", s, m)
+                time.sleep(5)
                 
                 pass
                                 

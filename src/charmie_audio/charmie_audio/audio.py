@@ -39,8 +39,8 @@ from charmie_audio.words_dict import names_dict, drinks_dict, yes_no_dict, charm
 # this variable when True is used to enter a calibration mode for the dict words, without being necessary
 # to run any other node. It is used (mainly in competition) when new words are added to what the robot must be 
 # able to recognise. Check 'words_dict' to see the words the robot must recognise on each category.
-DICT_CALIBRATION = True
-CALIBRATION_PRINTS = False
+DICT_CALIBRATION = False
+CALIBRATION_PRINTS = True
 FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in-depth audio keywords detected
 
 # post robocup 23 tasks for audio
@@ -528,7 +528,7 @@ class WhisperAudio():
         return final_text
 
 
-    def check_keywords(self, speech, command: SpeechType):
+    def check_keywords(self, speech, command_type):
 
         speech = speech.lower()
         speech = speech.replace(",","")
@@ -536,7 +536,7 @@ class WhisperAudio():
         speech = speech.replace("?","")
         speech = speech.replace("!","")
 
-        if command.yes_or_no == True:
+        if command_type == "yes_or_no":
             print("YES_OR_NO KEYWORDS!")
             yn_predicted = ''
             yn_ctr = 0
@@ -568,8 +568,7 @@ class WhisperAudio():
                 self.node.rgb_mode_publisher.publish(rgb) 
                 return "ERROR"
 
-
-        elif command.receptionist == True:
+        elif command_type == "receptionist":
             print("RECEPTIONIST KEYWORDS!")
             name_predicted = ''
             name_ctr = 0
@@ -616,7 +615,7 @@ class WhisperAudio():
                 self.node.rgb_mode_publisher.publish(rgb) 
                 return "ERROR"
             
-        elif command.restaurant == True:
+        elif command_type == "restaurant":
             print("RESTAURANT KEYWORDS!")
             foods_predicted = ''
             foods_ctr = 0
@@ -692,7 +691,7 @@ class WhisperAudio():
                 return "ERROR"
         
 
-        elif command.gpsr == True:
+        elif command_type == "gpsr":
             print("GPSR KEYWORDS!")
             rgb = Int16()
             rgb.data = 19
@@ -764,6 +763,7 @@ class AudioNode(Node):
         self.get_speech_publisher = self.create_publisher(String, "get_speech", 10)
 
         self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
+        
         self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
         
         # self.calibrate_ambient_noise_subscriber = self.create_subscription(Bool, "calib_ambient_noise", self.calibrate_ambient_noise_callback, 10)
@@ -785,7 +785,7 @@ class AudioNode(Node):
         self.speech_str = RobotSpeech()
         self.flag_speech_done = False
         self.audio_error = False
-        self.latest_command = SpeechType()
+        # self.latest_command = SpeechType()
 
         self.check_diagnostics()
 
@@ -1016,20 +1016,71 @@ class AudioNode(Node):
         # ---
         # string command      # the items requested separated by a space (' ')
 
-        self.get_logger().info("Received Get Audio %s" %("("+str(request.yes_or_no)+", "+str(request.receptionist)+", "+str(request.gpsr)+", "+str(request.restaurant)+")"))
+        # self.get_logger().info("Received Get Audio %s" %("("+str(request.yes_or_no)+", "+str(request.receptionist)+", "+str(request.gpsr)+", "+str(request.restaurant)+")"))
         
+        command_type = ""
+        if request.yes_or_no:
+            command_type = "yes_or_no"
+        elif request.receptionist:
+            command_type = "receptionist"
+        elif request.restaurant:
+            command_type = "restaurant"
+        elif request.gpsr:
+            command_type = "gpsr"
+        keywords = ""
 
-        response.command = "Hello Audio Test"
+        # self.latest_command = comm
+        self.get_logger().info("Received Audio Command")
+        # publish rgb estou a ouvir
+        
+        while keywords=="" or keywords=="ERROR" or keywords==None:
+            
+            self.charmie_audio.hear_speech()
+            self.get_logger().info("Finished Hearing, Start Processing")
+            
+            if not self.charmie_audio.ERRO_MAXIMO: # temp var unltil i fix the timeout when no speak start is detected
+                # publish rgb estou a criar o speech
+                speech_heard = self.charmie_audio.check_speech()
+                print("\tYou said: " + speech_heard)
+                self.get_logger().info("Finished Processing")
+                
+                # publish rgb estou a calcular as keywords
+                keywords = self.charmie_audio.check_keywords(speech_heard, command_type)
+                # print("Keywords:", keywords)
+            else:
+                self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
+                keywords = None
+            
+            
+            if keywords=="" or keywords=="ERROR" or keywords==None:
+                self.get_logger().info("Got error, gonna retry the hearing")
+                # self.speech_str.command = "I did not understand what you said. Could you please repeat?"
+                # self.flag_speech_done = False # to prevent that flag may be true from other speak moments that have nothing to do with this node 
+                # self.speaker_publisher.publish(self.speech_str)
+                
+                # activates the flag that puts everything on hold waiting for the end of sentece said
+                # self.audio_error = True
+                # response.command = "Error"
+
+            ### POR ISTO AUTOMATICO
+
+            # else:
+                # self.get_logger().info("Success Hearing")
+                # speech = String()
+                # speech.data = keywords
+                # self.get_speech_publisher.publish(speech)
+
+        response.command = keywords
+
         return response
 
 
-
-
+    """
     ### MUST CHANGE TO SERVICES
     def audio_command_callback(self, comm: SpeechType):
         print(comm)
 
-        self.latest_command = comm
+        # self.latest_command = comm
         self.get_logger().info("Received Audio Command")
         # publish rgb estou a ouvir
         self.charmie_audio.hear_speech()
@@ -1069,7 +1120,7 @@ class AudioNode(Node):
             self.get_speech_publisher.publish(speech)
 
     # def wait_for_end_of_speaking()
-        
+    """
         
 def main(args=None):
     rclpy.init(args=args)
