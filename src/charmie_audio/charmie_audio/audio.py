@@ -36,6 +36,11 @@ import wave
 # it is necessary to state the package before the import since it executes from the install file and not here
 from charmie_audio.words_dict import names_dict, drinks_dict, yes_no_dict, charmie_dict, foods_dict, numbers_dict, max_number_of_chars_of_keys
 
+# Constant Variables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8 = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+
 # this variable when True is used to enter a calibration mode for the dict words, without being necessary
 # to run any other node. It is used (mainly in competition) when new words are added to what the robot must be 
 # able to recognise. Check 'words_dict' to see the words the robot must recognise on each category.
@@ -203,11 +208,8 @@ class WhisperAudio():
 
     
     def adjust_ambient_noise(self):
-        
-        rgb = Int16()
-        rgb.data = 55
-        self.node.rgb_mode_publisher.publish(rgb)
-        # ||||| add rgb protocol
+
+        self.node.set_rgb(CYAN+ALTERNATE_QUARTERS)
 
         print("\tCalibrating energy for ambient noise levels...", end='', flush=True)
         # print("Ready to Start")
@@ -218,17 +220,7 @@ class WhisperAudio():
             self.check_threshold = round(self.r.energy_threshold, 3)
             print(" ENERGY THRESHOLD =", self.check_threshold)
             
-            
-            # print(type(self.check_threshold))
-            # print(type(self.r.energy_threshold))
-            # temp_threshold = "{:.2f}".format(self.charmie_audio.check_threshold)
-            # now when we listen, the energy threshold is already set to a good value, and we can reliably catch speech right away
-            # print("\tReady to Start")
-
-        rgb = Int16()
-        rgb.data = 255
-        self.node.rgb_mode_publisher.publish(rgb)
-        # ||||| add rgb protocol
+        self.node.set_rgb(CLEAR)
 
 
     """
@@ -356,11 +348,8 @@ class WhisperAudio():
         # record_thread = threading.Thread(target=self.record_audio_timeout)
         # record_thread.start()
 
-        rgb = Int16()
-        rgb.data = 53
-        self.node.rgb_mode_publisher.publish(rgb)
-        # ||||| add rgb protocol
 
+        self.node.set_rgb(CYAN+ROTATE)
             
         print("TEST SOUNDDEVICE")
         with sr.Microphone(sample_rate=16000) as source:
@@ -373,14 +362,9 @@ class WhisperAudio():
                 # rec_thread.terminate()
                 # self.audio_rec = None
                 print(" MESSAGE HEARD :)")
-            
                 # self.record_thread_active = False
                 # sd.stop()
-
-                rgb = Int16()
-                rgb.data = 56
-                self.node.rgb_mode_publisher.publish(rgb) 
-                # ||||| add rgb protocol
+                self.node.set_rgb(CYAN+HALF_ROTATE)
                 
                 
             except sr.WaitTimeoutError as e:
@@ -390,10 +374,7 @@ class WhisperAudio():
                 # self.record_thread_active = False
                 # record_thread.join()
                 # self.audio = self.audio_rec
-                rgb = Int16()
-                rgb.data = 3
-                self.node.rgb_mode_publisher.publish(rgb) 
-                # ||||| add rgb protocol
+                self.node.set_rgb(RED+ROTATE)
                 
 
         # time.sleep(10)
@@ -485,32 +466,18 @@ class WhisperAudio():
                     # print("\tYou said: " + predicted_text)
                     # return predicted_text
                     final_text = predicted_text
-                    
-
-                    rgb = Int16()
-                    rgb.data = 59
-                    self.node.rgb_mode_publisher.publish(rgb)
-                    # ||||| add rgb protocol
+                    self.node.set_rgb(CYAN+BACK_AND_FORTH_8)
                 
                 else:
                     # print("\tI THINK WHAT I HEARD WAS NOISE.")
                     # return "ERROR"
                     final_text = "ERROR"
-
-
-                    rgb = Int16()
-                    rgb.data = 6
-                    self.node.rgb_mode_publisher.publish(rgb)
-                    # ||||| add rgb protocol
+                    self.node.set_rgb(RED+HALF_ROTATE)
                     
             except TimeoutException:        
                 print("Requested task, took too Long")
                 final_text = "ERROR"
-
-                rgb = Int16()
-                rgb.data = 46
-                self.node.rgb_mode_publisher.publish(rgb)
-                # ||||| add rgb protocol
+                self.node.set_rgb(MAGENTA+HALF_ROTATE)
             
             # else:
             #     print("Requested task, ran within expected time")
@@ -519,11 +486,7 @@ class WhisperAudio():
         else: 
             # return "ERROR"
             final_text = "ERROR"
-
-            rgb = Int16()
-            rgb.data = 3
-            self.node.rgb_mode_publisher.publish(rgb) 
-            # ||||| add rgb protocol
+            self.node.set_rgb(RED+ROTATE)
 
         return final_text
 
@@ -557,15 +520,11 @@ class WhisperAudio():
             if yn_ctr == 1:
                 final_str=yn_predicted
                 print("INFO SENT:'%s'" %  final_str)
-                rgb = Int16()
-                rgb.data = 19
-                self.node.rgb_mode_publisher.publish(rgb) 
+                self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
                 return final_str
             else:
                 print("SENT YES_NO ERROR")
-                rgb = Int16()
-                rgb.data = 9
-                self.node.rgb_mode_publisher.publish(rgb) 
+                self.node.set_rgb(RED+BACK_AND_FORTH_8)
                 return "ERROR"
 
         elif command_type == "receptionist":
@@ -604,15 +563,11 @@ class WhisperAudio():
             if name_ctr == 1 and drink_ctr == 1:
                 final_str=name_predicted + ' ' + drink_predicted
                 print("INFO SENT:'%s'" %  final_str)
-                rgb = Int16()
-                rgb.data = 19
-                self.node.rgb_mode_publisher.publish(rgb) 
+                self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
                 return final_str
             else:
                 print("SENT RECEPTIONIST ERROR")
-                rgb = Int16()
-                rgb.data = 9
-                self.node.rgb_mode_publisher.publish(rgb) 
+                self.node.set_rgb(RED+BACK_AND_FORTH_8)
                 return "ERROR"
             
         elif command_type == "restaurant":
@@ -676,16 +631,11 @@ class WhisperAudio():
     
             if final_str != '':
                 print("INFO SENT:'%s'" %  final_str)
-                rgb = Int16()
-                rgb.data = 19
-                self.node.rgb_mode_publisher.publish(rgb) 
-                # ||||| add rgb protocol
+                self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
                 return final_str
             else:
                 print("SENT RESTAURANT ERROR")
-                rgb = Int16()
-                rgb.data = 9
-                self.node.rgb_mode_publisher.publish(rgb) 
+                self.node.set_rgb(RED+BACK_AND_FORTH_8)
                 # ||||| add rgb protocol - acho melhor se der erro ficar o rgb de cima que assim sabemos qual o erro
                 # tenho de ver com calma porque isto tambem é erro 
                 return "ERROR"
@@ -693,15 +643,11 @@ class WhisperAudio():
 
         elif command_type == "gpsr":
             print("GPSR KEYWORDS!")
-            rgb = Int16()
-            rgb.data = 19
-            self.node.rgb_mode_publisher.publish(rgb) 
+            self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
             pass
         else:
             print("ERROR SELECTING AUDIO MODE!")
-            rgb = Int16()
-            rgb.data = 9
-            self.node.rgb_mode_publisher.publish(rgb) 
+            self.node.set_rgb(RED+BACK_AND_FORTH_8)
             return "ERROR"
 
 
@@ -911,15 +857,10 @@ class AudioNode(Node):
                     print("Yes_No Detected  =", "(", yn_ctr, ")", yn_predicted)
                     print()
 
-                    rgb = Int16()
-                    rgb.data = 19 # green same as when checking speech and keywords
-                    self.rgb_mode_publisher.publish(rgb)
+                    self.set_rgb(GREEN+BACK_AND_FORTH_8) # green same as when checking speech and keywords
 
                 else:
-
-                    rgb = Int16()
-                    rgb.data = 9
-                    self.rgb_mode_publisher.publish(rgb)
+                    self.set_rgb(RED+BACK_AND_FORTH_8)
         else:
             self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
 
@@ -1073,6 +1014,13 @@ class AudioNode(Node):
         response.command = keywords
 
         return response
+
+    def set_rgb(self, command):
+        
+        rgb = Int16()
+        rgb.data = command
+        self.rgb_mode_publisher.publish(rgb)
+        print("Published RGB:", command)
 
 
     """
