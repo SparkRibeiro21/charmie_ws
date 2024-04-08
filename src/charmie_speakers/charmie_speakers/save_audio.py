@@ -22,7 +22,7 @@ MODE = "STANDARD"
 #}
 
 COMMANDS = {
-    'lets_race_roboparty': 'Lets race.'
+    'not_understand_please_repeat': 'I did not understand what you said. Could you please repeat?'
 }
 
 

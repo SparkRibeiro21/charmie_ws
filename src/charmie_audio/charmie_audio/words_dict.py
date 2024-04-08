@@ -17,43 +17,43 @@ names_dict = {
 }
 
 drinks_dict = {
-    "RedWine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
-    "JuicePack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
-                      "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
-                      "peck"],
-    "Cola":          [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold"],
-    "TropicalJuice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
-    "Milk":          ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok"],
-	"IceTea":        [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
-                    "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
-                    "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict", " icy ", "nice t"],
-    "OrangeJuice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order", "or in", "our enjour", "northern juice"],
-    "7up": ["seven", "up", "7", "nope", "devanab", "savannah", "sabona"], # removed o "simon" cause it conflicts with th name Simon
-    "Water": ["water"]
+    "Red_Wine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
+    "Juice_Pack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
+                       "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
+                       "peck"],
+    "Cola":           [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold"],
+    "Tropical_Juice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
+    "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
+	"Ice_Tea":        [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
+                       "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
+                       "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict", " icy ", "nice t"],
+    "Orange_Juice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order", "or in", "our enjour", "northern juice"],
+    "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona"], # removed o "simon" cause it conflicts with th name Simon
+    "Water":          ["water"]
 }
 
 foods_dict = {
-    "Tuna":            ["tuna"],
-    "TomatoSoup":      ["tomato"],
-    "Spam":            ["spam"],
-    "Mustard":         ["mustard"],    
-    "StrawberryJello": ["strawberry jello"],
-    "ChocolateJello":  ["chocolat jello"],
-    "CofeeGrounds":    ["coffee", "grounds"],
-    "Sugar":           ["sugar"],
+    "Tuna":             ["tuna"],
+    "Tomato_Soup":      ["tomato"],
+    "Spam":             ["spam"],
+    "Mustard":          ["mustard"],    
+    "Strawberry_Jello": ["strawberry jello"],
+    "Chocolate_Jello":  ["chocolat jello"],
+    "Cofee_Grounds":    ["coffee", "grounds"],
+    "Sugar":            ["sugar"],
 
-    "Pear":            ["pear", "pair", "pier", "beer"],
-    "Plum":            ["plum", "clump"],
-    "Peach":           ["peach"],
-    "Lemon":           ["lemon"],
-    "Orange":          ["orange"],
-    "Strawberry":      ["strawberr"],
-    "Banana":          ["banana"],
-    "Apple":           ["apple"],
+    "Pear":             ["pear", "pair", "pier", "beer"],
+    "Plum":             ["plum", "clump"],
+    "Peach":            ["peach"],
+    "Lemon":            ["lemon"],
+    "Orange":           ["orange"],
+    "Strawberry":       ["strawberr"],
+    "Banana":           ["banana"],
+    "Apple":            ["apple"],
 
-    "Pringles":        ["pringles", "sprinkles", "wrinkles", "bringles", "friendos"],
-    "Cornflakes":      ["cornflakes"],
-    "Cheezit":         ["cheese", "cheezit"]
+    "Pringles":         ["pringles", "sprinkles", "wrinkles", "bringles", "friendos"],
+    "Cornflakes":       ["cornflakes"],
+    "Cheezit":          ["cheese", "cheezit"]
 }
 
 numbers_dict = {

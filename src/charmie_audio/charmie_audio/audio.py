@@ -706,27 +706,23 @@ class AudioNode(Node):
         # self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
 
         # self.flag_listening_publisher = self.create_publisher(Bool, "flag_listening", 10)
-        self.get_speech_publisher = self.create_publisher(String, "get_speech", 10)
+        # self.get_speech_publisher = self.create_publisher(String, "get_speech", 10)
 
-        self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
+        # self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
         
-        self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
+        # self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
         
         # self.calibrate_ambient_noise_subscriber = self.create_subscription(Bool, "calib_ambient_noise", self.calibrate_ambient_noise_callback, 10)
         self.audio_diagnostic_publisher = self.create_publisher(Bool, "audio_diagnostic", 10)
 
         # Low Level: RGB
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-
         
         self.charmie_audio = WhisperAudio(self)
-
 
         self.server_audio = self.create_service(GetAudio, "audio_command", self.callback_audio)
         self.server_calibrate_ambient_noise = self.create_service(CalibrateAudio, "calibrate_audio", self.callback_calibrate_audio)
         self.get_logger().info("Audio Servers have been started")
-
-
 
         self.speech_str = RobotSpeech()
         self.flag_speech_done = False
@@ -921,15 +917,15 @@ class AudioNode(Node):
     #     self.charmie_audio.adjust_ambient_noise()
 
 
-    def get_speech_done_callback(self, state: Bool):
-        print("Received Speech Flag:", state.data)
-        self.get_logger().info("Received Speech Flag")
-        self.flag_speech_done = True
-        if self.audio_error:
-            self.audio_error = False
-            print("Stopped Waiting until CHARMIE speaking is over")
-            ### MUST CHANGE TO SERVICES
-            # self.audio_command_publisher.publish(self.latest_command)
+    # def get_speech_done_callback(self, state: Bool):
+    #     print("Received Speech Flag:", state.data)
+    #     self.get_logger().info("Received Speech Flag")
+    #     self.flag_speech_done = True
+    #     if self.audio_error:
+    #         self.audio_error = False
+    #         print("Stopped Waiting until CHARMIE speaking is over")
+    #         ### MUST CHANGE TO SERVICES
+    #         # self.audio_command_publisher.publish(self.latest_command)
 
 
     def callback_calibrate_audio(self, request, response):
@@ -974,45 +970,45 @@ class AudioNode(Node):
         self.get_logger().info("Received Audio Command")
         # publish rgb estou a ouvir
         
-        while keywords=="" or keywords=="ERROR" or keywords==None:
+        # while keywords=="" or keywords=="ERROR" or keywords==None:
             
-            self.charmie_audio.hear_speech()
-            self.get_logger().info("Finished Hearing, Start Processing")
+        self.charmie_audio.hear_speech()
+        self.get_logger().info("Finished Hearing, Start Processing")
+        
+        if not self.charmie_audio.ERRO_MAXIMO: # temp var unltil i fix the timeout when no speak start is detected
+            # publish rgb estou a criar o speech
+            speech_heard = self.charmie_audio.check_speech()
+            print("\tYou said: " + speech_heard)
+            self.get_logger().info("Finished Processing")
             
-            if not self.charmie_audio.ERRO_MAXIMO: # temp var unltil i fix the timeout when no speak start is detected
-                # publish rgb estou a criar o speech
-                speech_heard = self.charmie_audio.check_speech()
-                print("\tYou said: " + speech_heard)
-                self.get_logger().info("Finished Processing")
-                
-                # publish rgb estou a calcular as keywords
-                keywords = self.charmie_audio.check_keywords(speech_heard, command_type)
-                # print("Keywords:", keywords)
-            else:
-                self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
-                keywords = None
+            # publish rgb estou a calcular as keywords
+            keywords = self.charmie_audio.check_keywords(speech_heard, command_type)
+            # print("Keywords:", keywords)
+        else:
+            self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
+            keywords = None
+        
+        
+        if keywords=="" or keywords=="ERROR" or keywords==None:
+            self.get_logger().info("Got error, have to retry the hearing")
+            keywords = "ERROR"
+            # self.speech_str.command = "I did not understand what you said. Could you please repeat?"
+            # self.flag_speech_done = False # to prevent that flag may be true from other speak moments that have nothing to do with this node 
+            # self.speaker_publisher.publish(self.speech_str)
             
-            
-            if keywords=="" or keywords=="ERROR" or keywords==None:
-                self.get_logger().info("Got error, gonna retry the hearing")
-                # self.speech_str.command = "I did not understand what you said. Could you please repeat?"
-                # self.flag_speech_done = False # to prevent that flag may be true from other speak moments that have nothing to do with this node 
-                # self.speaker_publisher.publish(self.speech_str)
-                
-                # activates the flag that puts everything on hold waiting for the end of sentece said
-                # self.audio_error = True
-                # response.command = "Error"
+            # activates the flag that puts everything on hold waiting for the end of sentece said
+            # self.audio_error = True
+            # response.command = "Error"
 
-            ### POR ISTO AUTOMATICO
+        ### POR ISTO AUTOMATICO
 
-            # else:
-                # self.get_logger().info("Success Hearing")
-                # speech = String()
-                # speech.data = keywords
-                # self.get_speech_publisher.publish(speech)
+        # else:
+            # self.get_logger().info("Success Hearing")
+            # speech = String()
+            # speech.data = keywords
+            # self.get_speech_publisher.publish(speech)
 
         response.command = keywords
-
         return response
 
     def set_rgb(self, command):

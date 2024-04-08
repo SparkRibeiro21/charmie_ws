@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Int16
-from charmie_interfaces.srv import GetAudio, CalibrateAudio
+from charmie_interfaces.srv import GetAudio, CalibrateAudio, SpeechCommand
 
 import threading
 import time
@@ -26,17 +26,25 @@ class TestNode(Node):
         # Audio
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
+
+        # Speakers
+        self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         
         while not self.get_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Audio Server...")
         while not self.calibrate_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
 
         # Variables
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
+        self.waited_for_end_of_speaking = False
 
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_sucess = True
+        self.speech_message = ""
         self.rgb_sucess = True
         self.rgb_message = ""
         self.calibrate_audio_sucess = True
@@ -109,6 +117,42 @@ class TestNode(Node):
             self.get_logger().error("Service call failed %r" % (e,))
 
 
+    #### SPEECH SERVER FUNCTIONS #####
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
+        request = SpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+        request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
+    
+        future = self.speech_command_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_speech_command)
+        else:
+            self.speech_sucess = True
+            self.speech_message = "Wait for answer not needed"
+    
+
+
+    def callback_call_speech_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_sucess = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_speaking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
 def main(args=None):
     rclpy.init(args=args)
     node = TestNode()
@@ -143,12 +187,23 @@ class RestaurantMain():
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
-            self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
-            
-            if wait_for_end_of:
-                while not self.node.waited_for_end_of_audio:
-                    pass
-            self.node.waited_for_end_of_audio = False
+
+            # this code continuously asks for new audio info eveytime it gets an error for mishearing
+            keywords = "ERROR"
+            while keywords=="ERROR":
+                
+                self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
+                
+                if wait_for_end_of:
+                    while not self.node.waited_for_end_of_audio:
+                        pass
+                self.node.waited_for_end_of_audio = False
+
+                keywords = self.node.audio_command  
+                
+                if keywords=="ERROR":
+                    self.set_speech(filename="generic/not_understand_please_repeat", wait_for_end_of=True)
+                    self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=True)
 
             return self.node.audio_command  
 
@@ -166,7 +221,17 @@ class RestaurantMain():
         self.node.waited_for_end_of_calibrate_audio = False
 
         return self.node.calibrate_audio_sucess, self.node.calibrate_audio_message 
+    
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
 
+        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_speaking:
+            pass
+        self.node.waited_for_end_of_speaking = False
+
+        return self.node.speech_sucess, self.node.speech_message
 
     def main(self):
         Waiting_for_start_button = 0
@@ -195,6 +260,12 @@ class RestaurantMain():
 
             if self.state == Waiting_for_start_button:
                 #print('State 0 = Initial')
+
+
+                time.sleep(3)
+                self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=True)
+
+
 
                 # your code here ...
                 print("Started")
