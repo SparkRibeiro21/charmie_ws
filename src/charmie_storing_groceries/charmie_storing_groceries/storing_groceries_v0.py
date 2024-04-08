@@ -326,6 +326,7 @@ class StoringGroceriesMain():
         self.objects_names_list = [""]
         self.object_details = {}
         self.object_position = {}
+        self.priority_dict = {}
 
         self.classes_detected_wardrobe = []
         
@@ -437,17 +438,18 @@ class StoringGroceriesMain():
                     box_top_left_y = detected_object.box_top_left_y
                     box_width = detected_object.box_width
                     box_height = detected_object.box_height
+                    position = ' '
                     #print(f"Object: {object_name}, Height: {object_height}, Confidence: {object_confidence}")
                     if object_name in self.object_details:
                         pass
                     else:
-                        self.object_details[object_name] = {'confidence': object_confidence, 'object_height': object_height,
+                        """ self.object_details[object_name] = {'confidence': object_confidence, 'object_height': object_height,
                                                             'object_class': object_class, 'x_position': object_x_position, 'box_top_left_x': box_top_left_x,
                                                             'box_top_left_y': box_top_left_y, 'box_width': box_width, 'box_height': box_height}
 
                         start_point = (box_top_left_x, box_top_left_y)
                         end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
-                        cv2.rectangle(self.image_most_obj_detected, start_point, end_point, (56, 56, 255) , 4) 
+                        cv2.rectangle(self.image_most_obj_detected, start_point, end_point, (56, 56, 255) , 4)  """
 
                         """ if object_x_position < self.left_limit_shelf or object_x_position > self.right_limit_shelf:
                             print(object_name, 'is outside the wardrobe')
@@ -480,7 +482,7 @@ class StoringGroceriesMain():
                         if self.shelf_1_height < object_height < self.shelf_2_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'First shelf '
                             print(object_name, 'is in the first shelf ')
-                            self.image_most_obj_detected = cv2.putText(
+                            """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
                             'First shelf ',
@@ -490,12 +492,12 @@ class StoringGroceriesMain():
                             (0, 0, 255),
                             1,
                             cv2.LINE_AA
-                        ) 
+                        )  """
 
                         elif self.shelf_2_height < object_height < self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Second shelf '
                             print(object_name, 'is in the second shelf ')
-                            self.image_most_obj_detected = cv2.putText(
+                            """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
                             'Second shelf ',
@@ -505,12 +507,12 @@ class StoringGroceriesMain():
                             (0, 0, 255),
                             1,
                             cv2.LINE_AA
-                        ) 
+                        )  """
 
                         elif object_height > self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Third shelf '
                             print(object_name, 'is in the third shelf ')
-                            self.image_most_obj_detected = cv2.putText(
+                            """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
                             'Third shelf ',
@@ -520,7 +522,7 @@ class StoringGroceriesMain():
                             (0, 0, 255),
                             1,
                             cv2.LINE_AA
-                        ) 
+                        )  """
                             
                         if  self.center_shelf <= object_x_position <= self.right_limit_shelf :
                             position += 'Right side '
@@ -533,7 +535,7 @@ class StoringGroceriesMain():
                             
                         self.object_position[object_class] = position
                             
-                        self.image_most_obj_detected = cv2.putText(
+                        """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
                             f"{object_name}",
@@ -543,7 +545,7 @@ class StoringGroceriesMain():
                             (255, 0, 0),
                             1,
                             cv2.LINE_AA
-                        )
+                        ) """
 
                     i += 1
 
@@ -551,7 +553,7 @@ class StoringGroceriesMain():
                 # ----------------------------------
                 # Código para dizer 'tal classe está em tal prateleira'
 
-                print(self.object_position)
+                print('a', self.object_position)
 
                 position = []
                 object_class_name= []
@@ -581,17 +583,109 @@ class StoringGroceriesMain():
                             location_filename = f"storing_groceries/{object_location}"
                             class_filename = f"objects_classes/{class_name}"
                             self.classes_detected_wardrobe.append(class_name)
-                            #self.set_speech(filename=class_filename, wait_for_end_of=True)
-                            #self.set_speech(filename=location_filename, wait_for_end_of=True)
+                            self.set_speech(filename=class_filename, wait_for_end_of=True)
+                            self.set_speech(filename=location_filename, wait_for_end_of=True)
                             break
                     
-                print(self.classes_detected_wardrobe)
+                print('b', self.classes_detected_wardrobe)
                 # ----------------------------------
+
+    def analysis_table(self):
+        i = 0
+
+        for name, class_name in self.node.objects_classNames_dict.items():
+            if class_name in self.classes_detected_wardrobe:
+                self.priority_dict[class_name] = 'High'
+                print(class_name + ' High')
+            else:
+                self.priority_dict[class_name] = 'Low'
+                print(class_name + ' Low')
+
+        if hasattr(self.node, 'image') and self.node.image:
+            if hasattr(self.node, 'objects') and self.node.objects:
+                objects_stored = self.node.objects
+                self.nr_objects_detected = self.node.nr_objects
+                print('Will iterate for: ', self.nr_objects_detected)
+                while i < self.nr_objects_detected:                    
+                    detected_object = objects_stored[i]
+                    object_name = detected_object.object_name
+                    object_class = detected_object.object_class
+                    object_height = detected_object.position_relative.z
+                    object_confidence = detected_object.confidence
+                    object_x_position = detected_object.position_relative.x
+                    box_top_left_x = detected_object.box_top_left_x
+                    box_top_left_y = detected_object.box_top_left_y
+                    box_width = detected_object.box_width
+                    box_height = detected_object.box_height
+                    #print(f"Object: {object_name}, Height: {object_height}, Confidence: {object_confidence}")
+                    if object_name in self.object_details:
+                        pass
+                    else:
+                        self.object_details[object_name] = {'confidence': object_confidence, 'object_height': object_height,
+                                                            'object_class': object_class,'x_position': object_x_position, 'box_top_left_x': box_top_left_x,
+                                                            'box_top_left_y': box_top_left_y, 'box_width': box_width, 'box_height': box_height, 
+                                                            'priority': self.priority_dict[object_class]}
+
+                        """ start_point = (box_top_left_x, box_top_left_y)
+                        end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
+                        cv2.rectangle(self.image_most_obj_detected, start_point, end_point, (56, 56, 255) , 4) 
+                                                        
+                        self.image_most_obj_detected = cv2.putText(
+                            self.image_most_obj_detected,
+                            # f"{round(float(per.conf),2)}",
+                            f"{object_name}",
+                            (box_top_left_x, box_top_left_y),
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1,
+                            (255, 0, 0),
+                            1,
+                            cv2.LINE_AA
+                        ) """
+
+                        print('Object ' + object_name + ' from class ' + object_class + ' has ' + self.priority_dict[object_class] + 'priority')
+
+                    i += 1
+
+                #self.objects_names_list.clear()
+                # ----------------------------------
+
+
+    def choose_place_object_wardrobe(self):
+        for obj_name, obj_data in self.selected_objects:
+            obj_class = obj_data['object_class']
+            keywords = []
+            print(obj_name)
+            # print(obj_class)
+            # print(self.selected_objects)
+            # print(self.object_position.keys())
+            if obj_class in self.object_position.keys():
+                # print(self.object_position.items())
+                position = self.object_position[obj_class]
+                print(position)
+                self.set_speech(filename='storing_groceries/Place_the_object_sg', wait_for_end_of=True)
+                keywords = position.strip().split() # Split each position string into words and extend the keywords list
+
+                location_filename = None
+                class_filename = None
+                # print(keywords)
+                for condition, object_location in object_position_mapping.items():
+                    if all(keyword in keywords for keyword in condition):
+                        # If conditions are met, relate the class name to the position
+                        location_filename = f"storing_groceries/{object_location}"
+                        class_filename = f"objects_classes/_{obj_class}"
+                        # print(object_location)
+                        self.set_speech(filename=location_filename, wait_for_end_of=True)
+                        self.set_speech(filename='generic/Near', wait_for_end_of=True)
+                        self.set_speech(filename=class_filename, wait_for_end_of=True)
+
+            else:
+                # eventualmente terei de colocar aqui algo caso o objeto escolhido não estivesse na prateleira
+                pass
 
     def choose_priority(self):
         # Este nível fica para a versão 1. Para a versão 0 faço ver o que está na prateleira, guardar essas classes e ficam essas como high
         
-        i = 0
+        """ i = 0
         if hasattr(self.node, 'image') and self.node.image:
             if hasattr(self.node, 'objects') and self.node.objects:
                 objects_stored = self.node.objects
@@ -609,49 +703,6 @@ class StoringGroceriesMain():
                     box_height = detected_object.box_height
                     #print(f"Object: {object_name}, Height: {object_height}, Confidence: {object_confidence}")
 
-                    """ if object_class == 'Drinks' or object_class == 'Foods' or object_class == 'Snacks':
-                        object_priority = 'High'
-                        self.image_most_obj_detected = cv2.putText(
-                        self.image_most_obj_detected,
-                        # f"{round(float(per.conf),2)}",
-                        'High priority',
-                        (box_top_left_x, box_top_left_y + box_height),
-                        cv2.FONT_HERSHEY_DUPLEX,
-                        1,
-                        (0, 0, 255),
-                        1,
-                        cv2.LINE_AA
-                    )
-                        
-                    elif object_class == 'Toys' or object_class == 'Cleaning Supplies':
-                        object_priority = 'Medium'
-                        self.image_most_obj_detected = cv2.putText(
-                        self.image_most_obj_detected,
-                        # f"{round(float(per.conf),2)}",
-                        'Medium priority',
-                        (box_top_left_x, box_top_left_y + box_height),
-                        cv2.FONT_HERSHEY_DUPLEX,
-                        1,
-                        (0, 0, 255),
-                        1,
-                        cv2.LINE_AA
-                    )
-                    
-                    elif object_class == 'Dishes' or object_class == 'Fruits':
-                        object_priority = 'Low'
-                        self.image_most_obj_detected = cv2.putText(
-                        self.image_most_obj_detected,
-                        # f"{round(float(per.conf),2)}",
-                        'Low priority',
-                        (box_top_left_x, box_top_left_y + box_height),
-                        cv2.FONT_HERSHEY_DUPLEX,
-                        1,
-                        (0, 0, 255),
-                        1,
-                        cv2.LINE_AA
-                    ) """
-
-                
                     if object_class in self.classes_detected_wardrobe:
                         object_priority = 'High'
                         
@@ -664,8 +715,17 @@ class StoringGroceriesMain():
                                                         'object_class': object_class,'x_position': object_x_position, 'box_top_left_x': box_top_left_x,
                                                         'box_top_left_y': box_top_left_y, 'box_width': box_width, 'box_height': box_height, 'priority': object_priority}
 
-                    i += 1
+                    i += 1 """
+        
+        for name, class_name in self.node.objects_classNames_dict.items():
+            if class_name in self.classes_detected_wardrobe:
+                self.priority_dict[class_name] = 'High'
+                print(class_name + ' High')
+            else:
+                self.priority_dict[class_name] = 'Low'
+                print(class_name + ' Low')
 
+            
     def select_voice_audio(self, name):
         print('dentro')
         if name in self.node.objects_classNames_dict:
@@ -677,6 +737,8 @@ class StoringGroceriesMain():
             print("Name not found.")
 
     def select_five_objects(self):
+        sorted_objects = []
+        filtered_objects = []
         # Sort objects by confidence in descending order
         sorted_objects = sorted(self.object_details.items(), key=lambda x: x[1]['confidence'], reverse=True)
         # print('Sorted: ', sorted_objects)
@@ -686,25 +748,25 @@ class StoringGroceriesMain():
         # print('Filtered: ', filtered_objects)
 
         # Initialize selected objects list
-        selected_objects = []
+        self.selected_objects = []
 
         # Select objects with higher confidence and higher priority
         for name, details in filtered_objects:
-            if len(selected_objects) == 5:
+            if len(self.selected_objects) == 5:
                 break
             if details.get('priority') == 'High':
-                selected_objects.append((name, details))
+                self.selected_objects.append((name, details))
 
         # If there are not enough high priority objects, select from remaining objects
-        if len(selected_objects) < 5:
-            remaining_count = 5 - len(selected_objects)
+        if len(self.selected_objects) < 5:
+            remaining_count = 5 - len(self.selected_objects)
             # selected_objects.extend(filtered_objects[len(selected_objects):len(selected_objects) + remaining_count])
             remaining_objects = [(name, details) for name, details in filtered_objects if details.get('priority') != 'High']
-            selected_objects.extend(remaining_objects[:remaining_count])
+            self.selected_objects.extend(remaining_objects[:remaining_count])
 
-        print('Selected: ', selected_objects)
+        print('Selected: ', self.selected_objects)
 
-        for name, details in selected_objects:
+        for name, details in self.selected_objects:
             box_top_left_x = details['box_top_left_x']
             box_top_left_y = details['box_top_left_y']
             box_width = details['box_width']
@@ -741,15 +803,14 @@ class StoringGroceriesMain():
                                 
                 # next state
                 # self.state = self.Approach_tables_first_time
-                
 
-                
+                # self.state = 0 
                 self.state = self.Approach_cabinet_first_time
 
             elif self.state == self.Approach_cabinet_first_time:
                 #print('State 5 = Approaching cabinet for the first time')
 
-                self.set_speech(filename="storing_groceries/sg_collected_objects_1st_round", wait_for_end_of=True)
+                # self.set_speech(filename="storing_groceries/sg_collected_objects_1st_round", wait_for_end_of=True)
                 
                 # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
@@ -763,19 +824,24 @@ class StoringGroceriesMain():
                 
                 self.set_speech(filename="storing_groceries/sg_analysing_cabinet", wait_for_end_of=True)
 
-                
+                self.current_image = self.node.image
+                bridge = CvBridge()
+                # Convert ROS Image to OpenCV image
+                cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+                self.image_most_obj_detected = cv_image
+
+                self.analysis_cabinet()
+                self.choose_priority()
                 
                 self.set_speech(filename="storing_groceries/sg_finished_analise_cabinet", wait_for_end_of=True) 
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
                 
-                self.set_speech(filename="storing_groceries/sg_check_face_cabinet_distribution", wait_for_end_of=True) 
+                # self.set_speech(filename="storing_groceries/sg_check_face_cabinet_distribution", wait_for_end_of=True) 
                 
-                ####### SHOW IMAGE OF CABINET DIVIDED INTO ZONES /  CLASSES
-                
-                self.set_speech(filename="generic/place_object_cabinet", wait_for_end_of=True)
+                # self.set_speech(filename="generic/place_object_cabinet", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
+                # self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
                 
                 # next state
                 self.state = self.Approach_tables_first_time
@@ -790,6 +856,9 @@ class StoringGroceriesMain():
                 ###### MOVEMENT TO THE KITCHEN COUNTER
 
                 self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
+
+                self.analysis_table()
+
                 
                 # next state
                 self.state = self.Picking_first_object
@@ -807,7 +876,11 @@ class StoringGroceriesMain():
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
 
-                self.set_speech(filename="storing_groceries/sg_found_five_objects", show_in_face=True, wait_for_end_of=True)
+                # self.set_speech(filename="storing_groceries/sg_found_five_objects", show_in_face=True, wait_for_end_of=True)
+
+                self.select_five_objects()
+                
+                self.choose_place_object_wardrobe()
 
                 self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
 
@@ -1163,13 +1236,9 @@ class StoringGroceriesMain():
 
             else:
                 # self.get_caracteristics_image()
-                start_time = time.time()
+                # start_time = time.time()
 
-                self.current_image = self.node.image
-                bridge = CvBridge()
-                # Convert ROS Image to OpenCV image
-                cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-                self.image_most_obj_detected = cv_image
+                
                 
                 print(' ---------------------- ')
 

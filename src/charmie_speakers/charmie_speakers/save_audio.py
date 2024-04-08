@@ -68,13 +68,14 @@ MODE = "STANDARD"
 } """
 
 COMMANDS = {
-    'Drinks': 'The Drinks are',
-    'Cleaning supplies': 'The Cleaning supplies are',
-    'Foods': 'The Foods are',
-    'Fruits': 'The Fruits are',
-    'Toys': 'The Toys are',
-    'Snacks': 'The Snacks are',
-    'Dishes': 'The Dishes are'    
+    '_Drinks': 'The Drinks ',
+    '_Cleaning supplies': 'The Cleaning supplies ',
+    '_Foods': 'The Foods ',
+    '_Fruits': 'The Fruits ',
+    '_Toys': 'The Toys ',
+    '_Snacks': 'The Snacks ',
+    '_Dishes': 'The Dishes ',
+    'Near': 'Near'
 }
 
 
