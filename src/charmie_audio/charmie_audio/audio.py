@@ -4,7 +4,7 @@ from rclpy.node import Node
 
 from example_interfaces.msg import Bool, String, Float32, Int16
 from charmie_interfaces.msg import SpeechType, RobotSpeech
-from charmie_interfaces.srv import GetAudio
+from charmie_interfaces.srv import GetAudio, CalibrateAudio
 
 import io
 from pydub import AudioSegment
@@ -292,7 +292,7 @@ class WhisperAudio():
     Neste momento estou a analisar qual das opções a melhor...  
     """
 
-    def record_audio_timeout(self):#self, source):
+    def record_audio_timeout(self): #self, source):
 
         # sistema que usa RECORD em vez de listen, funciona a 100%
         # with sr.Microphone(sample_rate=16000) as source_:
@@ -754,6 +754,7 @@ class AudioNode(Node):
         super().__init__("Audio")
         self.get_logger().info("Initialised CHARMIE Audio v2 Node")
 
+
         # I publish and subscribe in the same topic so I can request new hearings when errors are received 
         # self.audio_command_subscriber = self.create_subscription(SpeechType, "audio_command", self.audio_command_callback, 10)
         # self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
@@ -764,19 +765,21 @@ class AudioNode(Node):
         self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
         self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
         
-        self.calibrate_ambient_noise_subscriber = self.create_subscription(Bool, "calib_ambient_noise", self.calibrate_ambient_noise_callback, 10)
+        # self.calibrate_ambient_noise_subscriber = self.create_subscription(Bool, "calib_ambient_noise", self.calibrate_ambient_noise_callback, 10)
         self.audio_diagnostic_publisher = self.create_publisher(Bool, "audio_diagnostic", 10)
 
         # Low Level: RGB
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
 
+        
+        self.charmie_audio = WhisperAudio(self)
 
 
         self.server_audio = self.create_service(GetAudio, "audio_command", self.callback_audio)
+        self.server_calibrate_ambient_noise = self.create_service(CalibrateAudio, "calibrate_audio", self.callback_calibrate_audio)
         self.get_logger().info("Audio Servers have been started")
 
 
-        self.charmie_audio = WhisperAudio(self)
 
         self.speech_str = RobotSpeech()
         self.flag_speech_done = False
@@ -952,8 +955,8 @@ class AudioNode(Node):
 
 
 
-    def calibrate_ambient_noise_callback(self, flag: Bool):
-        self.charmie_audio.adjust_ambient_noise()
+    # def calibrate_ambient_noise_callback(self, flag: Bool):
+    #     self.charmie_audio.adjust_ambient_noise()
 
 
     def get_speech_done_callback(self, state: Bool):
@@ -967,6 +970,19 @@ class AudioNode(Node):
             # self.audio_command_publisher.publish(self.latest_command)
 
 
+    def callback_calibrate_audio(self, request, response):
+        
+        # Type of service received: 
+        # (nothing)
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages
+
+        self.charmie_audio.adjust_ambient_noise()
+    
+        response.success = True
+        response.message = "Calibrated Audio Ambient Noise"
+        return response
 
 
     def callback_audio(self, request, response):

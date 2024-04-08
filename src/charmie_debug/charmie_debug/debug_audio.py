@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Int16
-from charmie_interfaces.srv import GetAudio
+from charmie_interfaces.srv import GetAudio, CalibrateAudio
 
 import threading
 import time
@@ -25,16 +25,22 @@ class TestNode(Node):
         ### Services (Clients) ###
         # Audio
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
+        self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
         
         while not self.get_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Audio Server...")
-        
+        while not self.calibrate_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Calibrate Audio Server...")
+
         # Variables
         self.waited_for_end_of_audio = False
+        self.waited_for_end_of_calibrate_audio = False
 
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
         self.rgb_sucess = True
         self.rgb_message = ""
+        self.calibrate_audio_sucess = True
+        self.calibrate_audio_message = ""
         # self.audio_success = True
         # self.audio_message = ""
         self.audio_command = ""
@@ -61,7 +67,7 @@ class TestNode(Node):
         try:
             # in this function the order of the line of codes matter
             # it seems that when using future variables, it creates some type of threading system
-            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.command))
             self.audio_command = response.command
@@ -69,6 +75,36 @@ class TestNode(Node):
             # self.track_object_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_audio = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+    def call_calibrate_audio_server(self, wait_for_end_of=True):
+        request = CalibrateAudio.Request()
+
+        future = self.calibrate_audio_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_calibrate_audio)
+        else:
+            self.track_person_success = True
+            self.track_person_message = "Wait for answer not needed"
+    
+    def callback_call_calibrate_audio(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.track_person_success = response.success
+            self.track_person_message = response.message
+            # self.track_object_success = response.success
+            # self.track_object_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_calibrate_audio = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -120,6 +156,18 @@ class RestaurantMain():
             self.node.get_logger().error("ERROR: No audio type selected")
             return "ERROR: No audio type selected" 
 
+    def calibrate_audio(self, wait_for_end_of=True):
+            
+        self.node.call_calibrate_audio_server(wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_calibrate_audio:
+                pass
+        self.node.waited_for_end_of_calibrate_audio = False
+
+        return self.node.calibrate_audio_sucess, self.node.calibrate_audio_message 
+
+
     def main(self):
         Waiting_for_start_button = 0
         Searching_for_clients = 1
@@ -150,8 +198,9 @@ class RestaurantMain():
 
                 # your code here ...
                 print("Started")
-                command = self.get_audio(receptionist=True, wait_for_end_of=True)
-                print("Finished:", command)
+                # command = self.get_audio(receptionist=True, wait_for_end_of=True)
+                s, m = self.calibrate_audio(wait_for_end_of=True)
+                print("Finished:", s, m)#, command)
                 time.sleep(3)
                 
                 pass

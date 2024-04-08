@@ -1,0 +1,5 @@
+# Service to calibrate the ambient noise for the audio
+
+---
+bool success    # indicate successful run of triggered service
+string message  # informational, e.g. for error messages.

@@ -833,7 +833,7 @@ class Yolo_obj(Node):
                 threshold = self.object_threshold
             else:
                 results = self.shoes_model(img)
-                classNames = self.objects_class_names
+                classNames = self.shoes_class_names
                 threshold = self.shoes_threshold
             
             msg = String()
