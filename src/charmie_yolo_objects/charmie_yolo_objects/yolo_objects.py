@@ -88,8 +88,8 @@ class Yolo_obj(Node):
         ### self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
 
         # For individual images
-        self.cropped_image_subscription = self.create_subscription(ListOfImages, '/cropped_image', self.cropped_image_callback, 10)
-        self.cropped_image_object_detected_publisher = self.create_publisher(ListOfStrings, '/cropped_image_object_detected', 10)
+        # self.cropped_image_subscription = self.create_subscription(ListOfImages, '/cropped_image', self.cropped_image_callback, 10)
+        # self.cropped_image_object_detected_publisher = self.create_publisher(ListOfStrings, '/cropped_image_object_detected', 10)
 
         # Subscriber (Yolov8_Objects TR Parameters)
         # self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_obj_conf", self.get_minimum_object_confidence_callback, 10)
@@ -142,34 +142,33 @@ class Yolo_obj(Node):
         flag_diagn.data = True
         self.yolo_object_diagnostic_publisher.publish(flag_diagn)
 
-        self.lar_v_final_classname = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
-                                      'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
-                                      'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
-                                      'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
-                                      'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
+                                   'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
+                                   'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
+                                   'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
+                                   'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
         
-        # self.lar_v_final_classname = ['7up', 'Strawberry_jello', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
-        #                               'Coffe_grounds', 'Cola', 'Cheezit', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
-        #                               'Juice_pack', 'Knife', 'Lemon', 'Milk', '7up', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
-        #                               'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
-        #                               'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        # Secondary declaration used for debug
+        # self.objects_class_names = ['7up', 'Strawberry_jello', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
+        #                             'Coffe_grounds', 'Cola', 'Cheezit', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
+        #                             'Juice_pack', 'Knife', 'Lemon', 'Milk', '7up', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
+        #                             'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
+        #                             'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
         
+        self.shoes_class_names = ['shoe', 'sock']    
+        
+        self.door_class_names = ['Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
 
-        self.objects_classNames_dict = {}
-        # self.serve_breakfast_classname = ['bowl', 'spoon', "milk", "cereal"]
-
-        self.shoes_socks_classname = ['shoe', 'sock']      
+        self.objects_class_names_dict = {}
+        self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
         
         # depending on the filename selected, the class names change
-        if objects_filename == 'vfinal.pt' or objects_filename == 'M_300epochs.pt' or objects_filename == "m_size_model_300_epochs_after_nandinho.pt":
-            self.objects_classNames = self.lar_v_final_classname
+        # if objects_filename == 'vfinal.pt' or objects_filename == 'M_300epochs.pt' or objects_filename == "m_size_model_300_epochs_after_nandinho.pt":
+        #     self.objects_classNames = self.lar_v_final_classname
         # elif objects_filename == 'serve_breakfast_v1.pt':
         #     self.objects_classNames = self.serve_breakfast_classname
-        else:
-            print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
-            
-        self.objects_classNames_dict = {item["name"]: item["class"] for item in self.objects_file}
-        
+        # else:
+        #     print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
         # print(self.objects_classNames_dict
 
     # request point cloud information from point cloud node
@@ -203,7 +202,9 @@ class Yolo_obj(Node):
         # bool activate_objects                       # activate or deactivate yolo object detection
         # bool activate_shoes                         # activate or deactivate yolo shoes detection
         # bool activate_doors                         # activate or deactivate yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
-        # float64 minimum_object_confidence           # adjust the minimum accuracy to assume as an object
+        # float64 minimum_objects_confidence          # adjust the minimum accuracy to assume as an object
+        # float64 minimum_shoes_confidence            # adjust the minimum accuracy to assume as a shoe
+        # float64 minimum_doors_confidence            # adjust the minimum accuracy to assume as a door or handle
         # ---
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages.
@@ -212,12 +213,12 @@ class Yolo_obj(Node):
         self.get_logger().info("Received Activate Yolo Objects %s" %("("+str(request.activate_objects)+", "
                                                                         +str(request.activate_shoes)+", "
                                                                         +str(request.activate_doors)+", "
-                                                                        +str(request.minimum_object_confidence)+")"))
+                                                                        +str(request.minimum_objects_confidence)+")"))
 
         self.ACTIVATE_YOLO_OBJECTS = request.activate_objects
         self.ACTIVATE_YOLO_SHOES = request.activate_shoes
         self.ACTIVATE_YOLO_DOORS = request.activate_doors
-        MIN_OBJECT_CONF_VALUE = request.minimum_object_confidence
+        MIN_OBJECT_CONF_VALUE = request.minimum_objects_confidence
 
         # returns whether the message was played and some informations regarding status
         response.success = True
@@ -313,10 +314,6 @@ class Yolo_obj(Node):
 
                 self.waiting_for_pcloud = True
                 self.call_point_cloud_server(requested_objects)
-
-                ### TEMP: MUST DELETE LATER
-                # new_pcloud = PointCloudCoordinates()
-                # self.post_receiving_pcloud(new_pcloud)
             
 
     def post_receiving_pcloud(self, new_pcloud):
@@ -342,41 +339,14 @@ class Yolo_obj(Node):
 
             ALL_CONDITIONS_MET = 1
 
-            object_name = self.objects_classNames[int(boxes_id.cls[0])].replace("_", " ").title()
-            object_class = self.objects_classNames_dict[object_name]
+            object_name = self.objects_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
+            object_class = self.objects_class_names_dict[object_name]
 
             # adds object to "object_pose" without any restriction
             new_object = DetectedObject()
             new_object = self.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, new_pcloud[object_idx].center_coords)
             # yolov8_obj.objects.append(new_object) # test removed person_pose (non-filtered)
 
-          
-            # threshold = self.object_threshold
-            # classNames = self.objects_classNames
-            """
-            # this for only does 1 time ...
-            for r in self.object_results:
-                boxes = r.boxes
-
-                for box in boxes:
-                    cls = int(box.cls[0])
-                    conf = math.ceil(box.conf[0] * 100) / 100
-                    
-                    if self.DEBUG_DRAW:
-                        x1, y1, x2, y2 = box.xyxy[0]
-                        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-                        #center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
-
-                        w, h = x2 - x1, y2 - y1
-                        if conf >= threshold:
-                            cvzone.cornerRect(current_frame, (x1, y1, w, h), l=15)    
-                            cvzone.putTextRect(current_frame, f"{classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
-                        
-                            print(classNames[cls], 'confidence = ' + str(conf))
-                    
-                    else:
-                        pass
-            """
             object_id = boxes_id.id
             if boxes_id.id == None:
                 object_id = 0 
@@ -574,7 +544,7 @@ class Yolo_obj(Node):
             cv2.waitKey(1)
         
         ### TEM QUE PASSAR PARA A FUNCAO do Point Cloud
-        self.waiting_for_pcloud = False
+        # self.waiting_for_pcloud = False
 
         self.get_logger().info(f"Objects detected: {num_obj}/{num_objects_filtered}")
         self.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
@@ -840,7 +810,7 @@ class Yolo_obj(Node):
             # cv2.imwrite("yolo_objects.jpg", current_frame) 
             # time.sleep(1)
         """
-
+    """
     def cropped_image_callback(self, msg_list_of_images: ListOfImages):
         #convert msg to useful image 
 
@@ -859,11 +829,11 @@ class Yolo_obj(Node):
 
             if img_ctr > 0 and img_ctr < 4:
                 results = self.object_model(img)
-                classNames = self.lar_v_final_classname
+                classNames = self.objects_class_names
                 threshold = self.object_threshold
             else:
                 results = self.shoes_model(img)
-                classNames = self.shoes_socks_classname
+                classNames = self.objects_class_names
                 threshold = self.shoes_threshold
             
             msg = String()
@@ -916,7 +886,7 @@ class Yolo_obj(Node):
 
         print("----------")
         self.cropped_image_object_detected_publisher.publish(list_of_strings)
-    
+    """
     
     def odom_robot_callback(self, loc: Odometry):
         self.odometry_msg_to_position(loc)
