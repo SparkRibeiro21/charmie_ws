@@ -39,8 +39,9 @@ from charmie_audio.words_dict import names_dict, drinks_dict, yes_no_dict, charm
 # this variable when True is used to enter a calibration mode for the dict words, without being necessary
 # to run any other node. It is used (mainly in competition) when new words are added to what the robot must be 
 # able to recognise. Check 'words_dict' to see the words the robot must recognise on each category.
-DICT_CALIBRATION = False
-CALIBRATION_PRINTS = True
+DICT_CALIBRATION = True
+CALIBRATION_PRINTS = False
+FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in-depth audio keywords detected
 
 # post robocup 23 tasks for audio
     # - dois sistemas de audição em paralelo, para que normalmente use o que ouve e pára no fim da frase
@@ -129,7 +130,7 @@ class WhisperAudio():
         self.energy = 300
         self.dynamic_energy = False # already tested, turn pout to be quite unstable
         self.pause = 1.0
-        self.hearing_timeout = 10.0 # time in seconds for audio listening timeout
+        self.hearing_timeout = 8.0 # time in seconds for audio listening timeout
         self.processing_timeout = 5 # must be integer
         self.record_thread_active = True
         self.audio_data = None
@@ -791,16 +792,11 @@ class AudioNode(Node):
         if DICT_CALIBRATION:
             print("\tCALIBRATION MODE ACTIVATED!")
             while True:
-                aux_com = SpeechType()
-                aux_com.restaurant = True
-                self.dict_calibration(aux_com) 
-
-                # print("Time for calibration")
-                # time.sleep(1)
+                self.dict_calibration() 
 
 
     # similar to audio_command_callback() but without the information sent to the speak module
-    def dict_calibration(self, comm):
+    def dict_calibration(self):
 
         global CALIBRATION_PRINTS
 
@@ -832,63 +828,88 @@ class AudioNode(Node):
                 if speech != "error":
                     name_predicted = ''
                     name_ctr = 0
-                    print("NAMES:")
+                    if FULL_CALIBRATION_PRINTS:
+                        print("NAMES:")
                     for key in names_dict:
                         res = self.charmie_audio.compare_commands(names_dict, speech, [key])
-                        print('    ', key, end='')
-                        for spaces in range(max_number_of_chars_of_keys-len(key)):
-                            print('.', end='') 
-                        print('->', res)
+                        if FULL_CALIBRATION_PRINTS:
+                            print('    ', key, end='')
+                            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                                print('.', end='') 
+                            print('->', res)
                         if res:
-                            name_predicted = key
+                            name_predicted += key+" "
                             name_ctr += 1
-                    print("Name Detected =", name_predicted, "(", name_ctr, ")")
-                    print()
+                    print("Name Detected    =", "(", name_ctr, ")", name_predicted)
+                    # print()
 
                     foods_predicted = ''
                     foods_ctr = 0
-                    print("FOODS:")
+                    if FULL_CALIBRATION_PRINTS:
+                        print("FOODS:")
                     for key in foods_dict:
                         res = self.charmie_audio.compare_commands(foods_dict, speech, [key])
-                        print('    ', key, end='')
-                        for spaces in range(max_number_of_chars_of_keys-len(key)):
-                            print('.', end='') 
-                        print('->', res)
+                        if FULL_CALIBRATION_PRINTS:
+                            print('    ', key, end='')
+                            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                                print('.', end='') 
+                            print('->', res)
                         if res:
-                            foods_predicted = key
+                            foods_predicted += key+" "
                             foods_ctr += 1
-                    print("Name Detected =", foods_predicted, "(", foods_ctr, ")")
-                    print()
+                    print("Foods Detected   =", "(", foods_ctr, ")", foods_predicted)
+                    # print()
 
                     drink_predicted = ''
                     drink_ctr = 0
-                    print("DRINKS:")
+                    if FULL_CALIBRATION_PRINTS:
+                        print("DRINKS:")
                     for key in drinks_dict:
                         res = self.charmie_audio.compare_commands(drinks_dict, speech, [key])
-                        print('    ', key, end='')
-                        for spaces in range(max_number_of_chars_of_keys-len(key)):
-                            print('.', end='') 
-                        print('->', res)
+                        if FULL_CALIBRATION_PRINTS:
+                            print('    ', key, end='')
+                            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                                print('.', end='') 
+                            print('->', res)
                         if res:
-                            drink_predicted = key
+                            drink_predicted += key+" "
                             drink_ctr += 1
-                    print("Drink Detected =", drink_predicted, "(", drink_ctr, ")") 
-                    print()
+                    print("Drink Detected   =", "(", drink_ctr, ")", drink_predicted) 
+                    # print()
 
                     numbers_predicted = ''
                     numbers_ctr = 0
-                    print("NUMBERS:")
+                    if FULL_CALIBRATION_PRINTS:
+                        print("NUMBERS:")
                     for key in numbers_dict:
                         res = self.charmie_audio.compare_commands(numbers_dict, speech, [key])
-                        print('    ', key, end='')
-                        for spaces in range(max_number_of_chars_of_keys-len(key)):
-                            print('.', end='') 
-                        print('->', res)
+                        if FULL_CALIBRATION_PRINTS:
+                            print('    ', key, end='')
+                            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                                print('.', end='') 
+                            print('->', res)
                         if res:
-                            numbers_predicted = key
+                            numbers_predicted += key+" "
                             numbers_ctr += 1
-                    print("Numbers Detected =", numbers_predicted, "(", numbers_ctr, ")") 
-                    print()    
+                    print("Numbers Detected =", "(", numbers_ctr, ")", numbers_predicted) 
+                    # print()    
+
+                    yn_predicted = ''
+                    yn_ctr = 0         
+                    if FULL_CALIBRATION_PRINTS:           
+                        print("YES OR NO:")
+                    for key in yes_no_dict:
+                        res = self.charmie_audio.compare_commands(yes_no_dict, speech, [key])
+                        if FULL_CALIBRATION_PRINTS:
+                            print('    ', key, end='')
+                            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                                print('.', end='') 
+                            print('->', res)
+                        if res:
+                            yn_predicted += key+" "
+                            yn_ctr += 1
+                    print("Yes_No Detected  =", "(", yn_ctr, ")", yn_predicted)
+                    print()
 
                     rgb = Int16()
                     rgb.data = 19 # green same as when checking speech and keywords

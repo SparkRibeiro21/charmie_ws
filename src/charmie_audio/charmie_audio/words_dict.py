@@ -5,10 +5,10 @@ max_number_of_chars_of_keys = 16
 names_dict = {
     "Adel":     ["adel", "adele", "adam", "avel"],
     "Angel":    ["angel", "anjo", "hell", "ahil", "anjou", "anjal", "hong kong", "zangal", "enzo" ],
-    "Axel":     ["axel", "oxford", "aksal", "hotel", "axo", "oxel, oxyl", "axil", "unhail", "oxo"],
+    "Axel":     ["axel", "oxford", "aksal", "hotel", "axo", "oxel, oxyl", "axil", "unhail", "oxo", "axle", "oxley", "excellent"],
     "Charlie":  ["charlie", "shire lee", "sean", "shoutily", "chorley", "cherry"],
     "Jane":     ["jane", "jan", "jain", "jame", "jani", "jainie"],
-    "John":     ["john", "jhong", "joe", "jopne", "joan"],
+    "John":     ["john", "jhong", "joe", "jopne", "joan", "chiang"],
     "Jules":    ["jules", "jews", "drews", "jewels", "julie"],
     "Morgan":   ["morgan", "modern", "mardigan", "morgana", "mokkan", "maud", "modogan"],
     "Paris":    ["paris", "berries", "ferries", "parish", "pari", "hari", "barry", "patrice", "paix"],
@@ -27,7 +27,7 @@ drinks_dict = {
                     "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
                     "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict", " icy ", "nice t"],
     "OrangeJuice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order", "or in", "our enjour", "northern juice"],
-    "7up": ["seven", "up", "7", "simon", "nope", "devanab", "savannah", "sabona"],
+    "7up": ["seven", "up", "7", "nope", "devanab", "savannah", "sabona"], # removed o "simon" cause it conflicts with th name Simon
     "Water": ["water"]
 }
 
