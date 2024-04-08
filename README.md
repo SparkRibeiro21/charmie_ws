@@ -2,6 +2,8 @@
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/SparkRibeiro21/charmie_ws)
 ![GitHub repo size](https://img.shields.io/github/repo-size/SparkRibeiro21/charmie_ws)
+![GitHub contributors](https://img.shields.io/github/contributors/SparkRibeiro21/charmie_ws)
+![GitHub](https://img.shields.io/github/license/SparkRibeiro21/charmie_ws)
 ##
 
 * [Requirements :rocket:](#rocket-requirements)
