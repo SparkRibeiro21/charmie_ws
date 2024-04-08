@@ -68,14 +68,7 @@ MODE = "STANDARD"
 } """
 
 COMMANDS = {
-    '_Drinks': 'The Drinks ',
-    '_Cleaning supplies': 'The Cleaning supplies ',
-    '_Foods': 'The Foods ',
-    '_Fruits': 'The Fruits ',
-    '_Toys': 'The Toys ',
-    '_Snacks': 'The Snacks ',
-    '_Dishes': 'The Dishes ',
-    'Near': 'Near'
+    'not_understand_please_repeat': 'I did not understand what you said. Could you please repeat?'
 }
 
 

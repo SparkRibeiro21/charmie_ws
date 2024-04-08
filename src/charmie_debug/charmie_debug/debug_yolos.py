@@ -15,7 +15,7 @@ from cv_bridge import CvBridge
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
-SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_4  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 class TestNode(Node):
@@ -225,12 +225,12 @@ class TestNode(Node):
         self.activate_yolo_pose_client.call_async(request)
 
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_object_confidence=0.5):
+    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
         request = ActivateYoloObjects.Request()
         request.activate_objects = activate_objects
         request.activate_shoes = activate_shoes
         request.activate_doors = activate_doors
-        request.minimum_object_confidence = minimum_object_confidence
+        request.minimum_objects_confidence = minimum_objects_confidence
 
         self.activate_yolo_objects_client.call_async(request)
 
@@ -275,10 +275,10 @@ class RestaurantMain():
 
         return self.node.activate_yolo_pose_sucess, self.node.activate_yolo_pose_message
 
-    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_object_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
         
         # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
-        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_object_confidence=minimum_object_confidence)
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_objects_confidence=minimum_objects_confidence)
 
         self.node.activate_yolo_objects_sucess = True
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
@@ -345,26 +345,26 @@ class RestaurantMain():
                     # time.sleep(5)
                 
                 ### EXAMPLE TO TRACK OBJECT
-                if self.node.detected_objects.num_objects > 0:
-                    p_=self.node.detected_objects.objects[0]
-                    print(p_.object_name)
-                    self.track_object(p_,wait_for_end_of=True)
-                    print(".")
-                    time.sleep(5)
+                # if self.node.detected_objects.num_objects > 0:
+                #     p_=self.node.detected_objects.objects[0]
+                #     print(p_.object_name)
+                #     self.track_object(p_,wait_for_end_of=True)
+                #     print(".")
+                #     time.sleep(5)
 
                 ### EXAMPLES TO ACTIVATE/DEACTIVATE AND CONFIGURE YOLO POSE AND TOLO OBJECTS 
-                # self.activate_yolo_pose(activate=True)
-                # self.activate_yolo_objects(activate_objects=False)
-                # print("activated yolo pose")
-                # time.sleep(10)
-                # self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=7)
-                # self.activate_yolo_objects(activate_objects=True, minimum_object_confidence=0.3)
-                # print("deactivated yolo pose - 0.8")
-                # time.sleep(5)
-                # self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=10)
-                # self.activate_yolo_objects(activate_objects=True, minimum_object_confidence=0.8)
-                # print("deactivated yolo pose - right in front")
-                # time.sleep(5)
+                self.activate_yolo_pose(activate=True)
+                self.activate_yolo_objects(activate_objects=False)
+                print("activated yolo pose")
+                time.sleep(10)
+                self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=7)
+                self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.3)
+                print("deactivated yolo pose - 0.8")
+                time.sleep(5)
+                self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=10)
+                self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.8)
+                print("deactivated yolo pose - right in front")
+                time.sleep(5)
 
 
                 """

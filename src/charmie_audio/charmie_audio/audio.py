@@ -4,12 +4,15 @@ from rclpy.node import Node
 
 from example_interfaces.msg import Bool, String, Float32, Int16
 from charmie_interfaces.msg import SpeechType, RobotSpeech
+from charmie_interfaces.srv import GetAudio, CalibrateAudio
 
 import io
 from pydub import AudioSegment
 import speech_recognition as sr
 import tempfile
 import os 
+from pathlib import Path
+from datetime import datetime
 
 # Surpress Deprecation Warnings
 # Some dependencies libraries from Whisper have Deprecation Warnings, this way
@@ -33,10 +36,17 @@ import wave
 # it is necessary to state the package before the import since it executes from the install file and not here
 from charmie_audio.words_dict import names_dict, drinks_dict, yes_no_dict, charmie_dict, foods_dict, numbers_dict, max_number_of_chars_of_keys
 
+# Constant Variables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8 = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+
 # this variable when True is used to enter a calibration mode for the dict words, without being necessary
 # to run any other node. It is used (mainly in competition) when new words are added to what the robot must be 
 # able to recognise. Check 'words_dict' to see the words the robot must recognise on each category.
 DICT_CALIBRATION = False
+CALIBRATION_PRINTS = True
+FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in-depth audio keywords detected
 
 # post robocup 23 tasks for audio
     # - dois sistemas de audição em paralelo, para que normalmente use o que ouve e pára no fim da frase
@@ -96,10 +106,17 @@ class WhisperAudio():
 
         self.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
         print("\tInitilisations [", end='')
-        print("Device:", self.DEVICE, torch.cuda.is_available(), end=',')
+        print("Device:", self.DEVICE, torch.cuda.is_available())
 
-        self.temp_dir = tempfile.mkdtemp()
-        self.save_path = os.path.join(self.temp_dir, "temp.wav")
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.home = str(Path.home())
+        self.midpath = "charmie_ws/src/charmie_audio/charmie_audio"
+        self.complete_path = self.home+'/'+self.midpath+'/'
+        # self.save_temp_path = self.complete_path, "temp.wav"
+        
+        
+        # os.path.join(self.complete_path, "temp.wav")
+        print(self.complete_path+"temp.wav")
 
         self.flag_new_listening_process = False
         self.MIN_AVG_LOG_PROB = -0.8 # -1.05
@@ -110,7 +127,7 @@ class WhisperAudio():
         # @click.option("--english", default=True, help="Whether to use English model",is_flag=True, type=bool)
         # @click.option("--verbose", default=False, help="Whether to print verbose output", is_flag=True,type=bool)
         # @click.option("--energy", default=300, help="Energy level for mic to detect", type=int)
-        # @click.option("--dynamic_energy", default=False,is_flag=True, help="Flag to enable dynamic engergy", type=bool)
+        # @click.option("--dynamic_energy", default=False,is_flag=True, help="Flag to enable dynamic energy", type=bool)
         # @click.option("--pause", default=1.0, help="Pause time before entry ends", type=float)
         self.model = "tiny"
         self.english = True
@@ -118,7 +135,7 @@ class WhisperAudio():
         self.energy = 300
         self.dynamic_energy = False # already tested, turn pout to be quite unstable
         self.pause = 1.0
-        self.hearing_timeout = 10.0 # time in seconds for audio listening timeout
+        self.hearing_timeout = 8.0 # time in seconds for audio listening timeout
         self.processing_timeout = 5 # must be integer
         self.record_thread_active = True
         self.audio_data = None
@@ -140,9 +157,6 @@ class WhisperAudio():
 
         self.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
         
-        
-        # print(self.node.a)
-
         # TO CHECK INFO REGARDING DEVICES ...
 
         # METHOD 1:
@@ -194,11 +208,8 @@ class WhisperAudio():
 
     
     def adjust_ambient_noise(self):
-        
-        rgb = Int16()
-        rgb.data = 55
-        self.node.rgb_mode_publisher.publish(rgb)
-        # ||||| add rgb protocol
+
+        self.node.set_rgb(CYAN+ALTERNATE_QUARTERS)
 
         print("\tCalibrating energy for ambient noise levels...", end='', flush=True)
         # print("Ready to Start")
@@ -209,17 +220,7 @@ class WhisperAudio():
             self.check_threshold = round(self.r.energy_threshold, 3)
             print(" ENERGY THRESHOLD =", self.check_threshold)
             
-            
-            # print(type(self.check_threshold))
-            # print(type(self.r.energy_threshold))
-            # temp_threshold = "{:.2f}".format(self.charmie_audio.check_threshold)
-            # now when we listen, the energy threshold is already set to a good value, and we can reliably catch speech right away
-            # print("\tReady to Start")
-
-        rgb = Int16()
-        rgb.data = 255
-        self.node.rgb_mode_publisher.publish(rgb)
-        # ||||| add rgb protocol
+        self.node.set_rgb(CLEAR)
 
 
     """
@@ -284,7 +285,7 @@ class WhisperAudio():
     Neste momento estou a analisar qual das opções a melhor...  
     """
 
-    def record_audio_timeout(self):#self, source):
+    def record_audio_timeout(self): #self, source):
 
         # sistema que usa RECORD em vez de listen, funciona a 100%
         # with sr.Microphone(sample_rate=16000) as source_:
@@ -347,11 +348,8 @@ class WhisperAudio():
         # record_thread = threading.Thread(target=self.record_audio_timeout)
         # record_thread.start()
 
-        rgb = Int16()
-        rgb.data = 53
-        self.node.rgb_mode_publisher.publish(rgb)
-        # ||||| add rgb protocol
 
+        self.node.set_rgb(CYAN+ROTATE)
             
         print("TEST SOUNDDEVICE")
         with sr.Microphone(sample_rate=16000) as source:
@@ -364,14 +362,9 @@ class WhisperAudio():
                 # rec_thread.terminate()
                 # self.audio_rec = None
                 print(" MESSAGE HEARD :)")
-            
                 # self.record_thread_active = False
                 # sd.stop()
-
-                rgb = Int16()
-                rgb.data = 56
-                self.node.rgb_mode_publisher.publish(rgb) 
-                # ||||| add rgb protocol
+                self.node.set_rgb(CYAN+HALF_ROTATE)
                 
                 
             except sr.WaitTimeoutError as e:
@@ -381,10 +374,7 @@ class WhisperAudio():
                 # self.record_thread_active = False
                 # record_thread.join()
                 # self.audio = self.audio_rec
-                rgb = Int16()
-                rgb.data = 3
-                self.node.rgb_mode_publisher.publish(rgb) 
-                # ||||| add rgb protocol
+                self.node.set_rgb(RED+ROTATE)
                 
 
         # time.sleep(10)
@@ -414,7 +404,13 @@ class WhisperAudio():
             start1 = time.time()
             data = io.BytesIO(audio.get_wav_data())
             audio_clip = AudioSegment.from_file(data)
-            audio_clip.export(self.save_path, format="wav")
+            audio_clip.export(self.complete_path+"temp.wav", format="wav")
+            
+            # if True: # just for debug
+            if not DICT_CALIBRATION:
+                current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+                audio_clip.export(self.complete_path+"list_of_previous_audios/"+current_datetime+".wav", format="wav")
+            
             end1 = time.time()
             # print("Create Audio File Time:", end1-start1)
 
@@ -428,7 +424,8 @@ class WhisperAudio():
 
             try:
         
-                audio = whisper.load_audio(self.save_path)
+                audio = whisper.load_audio(self.complete_path+"temp.wav")
+                # audio = whisper.load_audio(self.complete_path+"list_of_previous_audios/"+"2024-04-02 22-01-24.wav") # just for debug
                 audio = whisper.pad_or_trim(audio)
                 mel = whisper.log_mel_spectrogram(audio).to(self.audio_model.device)
                 options = whisper.DecodingOptions(language="en", without_timestamps=True, fp16=False)
@@ -469,32 +466,18 @@ class WhisperAudio():
                     # print("\tYou said: " + predicted_text)
                     # return predicted_text
                     final_text = predicted_text
-                    
-
-                    rgb = Int16()
-                    rgb.data = 59
-                    self.node.rgb_mode_publisher.publish(rgb)
-                    # ||||| add rgb protocol
+                    self.node.set_rgb(CYAN+BACK_AND_FORTH_8)
                 
                 else:
                     # print("\tI THINK WHAT I HEARD WAS NOISE.")
                     # return "ERROR"
                     final_text = "ERROR"
-
-
-                    rgb = Int16()
-                    rgb.data = 6
-                    self.node.rgb_mode_publisher.publish(rgb)
-                    # ||||| add rgb protocol
+                    self.node.set_rgb(RED+HALF_ROTATE)
                     
             except TimeoutException:        
                 print("Requested task, took too Long")
                 final_text = "ERROR"
-
-                rgb = Int16()
-                rgb.data = 46
-                self.node.rgb_mode_publisher.publish(rgb)
-                # ||||| add rgb protocol
+                self.node.set_rgb(MAGENTA+HALF_ROTATE)
             
             # else:
             #     print("Requested task, ran within expected time")
@@ -503,20 +486,20 @@ class WhisperAudio():
         else: 
             # return "ERROR"
             final_text = "ERROR"
-
-            rgb = Int16()
-            rgb.data = 3
-            self.node.rgb_mode_publisher.publish(rgb) 
-            # ||||| add rgb protocol
+            self.node.set_rgb(RED+ROTATE)
 
         return final_text
 
 
-    def check_keywords(self, speech, command: SpeechType):
+    def check_keywords(self, speech, command_type):
 
         speech = speech.lower()
+        speech = speech.replace(",","")
+        speech = speech.replace(".","")
+        speech = speech.replace("?","")
+        speech = speech.replace("!","")
 
-        if command.yes_or_no == True:
+        if command_type == "yes_or_no":
             print("YES_OR_NO KEYWORDS!")
             yn_predicted = ''
             yn_ctr = 0
@@ -537,19 +520,14 @@ class WhisperAudio():
             if yn_ctr == 1:
                 final_str=yn_predicted
                 print("INFO SENT:'%s'" %  final_str)
-                rgb = Int16()
-                rgb.data = 19
-                self.node.rgb_mode_publisher.publish(rgb) 
+                self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
                 return final_str
             else:
                 print("SENT YES_NO ERROR")
-                rgb = Int16()
-                rgb.data = 9
-                self.node.rgb_mode_publisher.publish(rgb) 
+                self.node.set_rgb(RED+BACK_AND_FORTH_8)
                 return "ERROR"
 
-
-        elif command.receptionist == True:
+        elif command_type == "receptionist":
             print("RECEPTIONIST KEYWORDS!")
             name_predicted = ''
             name_ctr = 0
@@ -585,18 +563,14 @@ class WhisperAudio():
             if name_ctr == 1 and drink_ctr == 1:
                 final_str=name_predicted + ' ' + drink_predicted
                 print("INFO SENT:'%s'" %  final_str)
-                rgb = Int16()
-                rgb.data = 19
-                self.node.rgb_mode_publisher.publish(rgb) 
+                self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
                 return final_str
             else:
                 print("SENT RECEPTIONIST ERROR")
-                rgb = Int16()
-                rgb.data = 9
-                self.node.rgb_mode_publisher.publish(rgb) 
+                self.node.set_rgb(RED+BACK_AND_FORTH_8)
                 return "ERROR"
             
-        elif command.restaurant == True:
+        elif command_type == "restaurant":
             print("RESTAURANT KEYWORDS!")
             foods_predicted = ''
             foods_ctr = 0
@@ -657,32 +631,23 @@ class WhisperAudio():
     
             if final_str != '':
                 print("INFO SENT:'%s'" %  final_str)
-                rgb = Int16()
-                rgb.data = 19
-                self.node.rgb_mode_publisher.publish(rgb) 
-                # ||||| add rgb protocol
+                self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
                 return final_str
             else:
                 print("SENT RESTAURANT ERROR")
-                rgb = Int16()
-                rgb.data = 9
-                self.node.rgb_mode_publisher.publish(rgb) 
+                self.node.set_rgb(RED+BACK_AND_FORTH_8)
                 # ||||| add rgb protocol - acho melhor se der erro ficar o rgb de cima que assim sabemos qual o erro
                 # tenho de ver com calma porque isto tambem é erro 
                 return "ERROR"
         
 
-        elif command.gpsr == True:
+        elif command_type == "gpsr":
             print("GPSR KEYWORDS!")
-            rgb = Int16()
-            rgb.data = 19
-            self.node.rgb_mode_publisher.publish(rgb) 
+            self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
             pass
         else:
             print("ERROR SELECTING AUDIO MODE!")
-            rgb = Int16()
-            rgb.data = 9
-            self.node.rgb_mode_publisher.publish(rgb) 
+            self.node.set_rgb(RED+BACK_AND_FORTH_8)
             return "ERROR"
 
 
@@ -735,47 +700,48 @@ class AudioNode(Node):
         super().__init__("Audio")
         self.get_logger().info("Initialised CHARMIE Audio v2 Node")
 
+
         # I publish and subscribe in the same topic so I can request new hearings when errors are received 
-        self.audio_command_subscriber = self.create_subscription(SpeechType, "audio_command", self.audio_command_callback, 10)
-        self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
+        # self.audio_command_subscriber = self.create_subscription(SpeechType, "audio_command", self.audio_command_callback, 10)
+        # self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
 
         # self.flag_listening_publisher = self.create_publisher(Bool, "flag_listening", 10)
-        self.get_speech_publisher = self.create_publisher(String, "get_speech", 10)
+        # self.get_speech_publisher = self.create_publisher(String, "get_speech", 10)
 
-        self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
-        self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
+        # self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
         
-        self.calibrate_ambient_noise_subscriber = self.create_subscription(Bool, "calib_ambient_noise", self.calibrate_ambient_noise_callback, 10)
+        # self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
+        
+        # self.calibrate_ambient_noise_subscriber = self.create_subscription(Bool, "calib_ambient_noise", self.calibrate_ambient_noise_callback, 10)
         self.audio_diagnostic_publisher = self.create_publisher(Bool, "audio_diagnostic", 10)
 
         # Low Level: RGB
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-
-        self.a = 10.0
-
-
+        
         self.charmie_audio = WhisperAudio(self)
+
+        self.server_audio = self.create_service(GetAudio, "audio_command", self.callback_audio)
+        self.server_calibrate_ambient_noise = self.create_service(CalibrateAudio, "calibrate_audio", self.callback_calibrate_audio)
+        self.get_logger().info("Audio Servers have been started")
 
         self.speech_str = RobotSpeech()
         self.flag_speech_done = False
         self.audio_error = False
-        self.latest_command = SpeechType()
+        # self.latest_command = SpeechType()
 
         self.check_diagnostics()
 
         if DICT_CALIBRATION:
             print("\tCALIBRATION MODE ACTIVATED!")
             while True:
-                aux_com = SpeechType()
-                aux_com.restaurant = True
-                self.dict_calibration(aux_com) 
-
-                # print("Time for calibration")
-                # time.sleep(1)
+                self.dict_calibration() 
 
 
     # similar to audio_command_callback() but without the information sent to the speak module
-    def dict_calibration(self, comm):
+    def dict_calibration(self):
+
+        global CALIBRATION_PRINTS
+
         self.get_logger().info("Received Audio Command")
         # publish rgb estou a ouvir
         self.charmie_audio.hear_speech()
@@ -792,80 +758,105 @@ class AudioNode(Node):
             print("\n  -->\tYou said: " + speech_heard, end='\n\n')
             self.get_logger().info("Finished Processing")
 
-            CALIB_PRINTS = False
+            if CALIBRATION_PRINTS:
+                speech = speech_heard.lower()
+                speech = speech.replace(",","")
+                speech = speech.replace(".","")
+                speech = speech.replace("?","")
+                speech = speech.replace("!","")
 
-            speech = speech_heard.lower()
+                print("  -->\tPost Filter: " + speech, end='\n\n')
 
-            if speech != "error" and CALIB_PRINTS:
-                name_predicted = ''
-                name_ctr = 0
-                print("NAMES:")
-                for key in names_dict:
-                    res = self.charmie_audio.compare_commands(names_dict, speech, [key])
-                    print('    ', key, end='')
-                    for spaces in range(max_number_of_chars_of_keys-len(key)):
-                        print('.', end='') 
-                    print('->', res)
-                    if res:
-                        name_predicted = key
-                        name_ctr += 1
-                print("Name Detected =", name_predicted, "(", name_ctr, ")")
-                print()
+                if speech != "error":
+                    name_predicted = ''
+                    name_ctr = 0
+                    if FULL_CALIBRATION_PRINTS:
+                        print("NAMES:")
+                    for key in names_dict:
+                        res = self.charmie_audio.compare_commands(names_dict, speech, [key])
+                        if FULL_CALIBRATION_PRINTS:
+                            print('    ', key, end='')
+                            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                                print('.', end='') 
+                            print('->', res)
+                        if res:
+                            name_predicted += key+" "
+                            name_ctr += 1
+                    print("Name Detected    =", "(", name_ctr, ")", name_predicted)
+                    # print()
 
-                foods_predicted = ''
-                foods_ctr = 0
-                print("FOODS:")
-                for key in foods_dict:
-                    res = self.charmie_audio.compare_commands(foods_dict, speech, [key])
-                    print('    ', key, end='')
-                    for spaces in range(max_number_of_chars_of_keys-len(key)):
-                        print('.', end='') 
-                    print('->', res)
-                    if res:
-                        foods_predicted = key
-                        foods_ctr += 1
-                print("Name Detected =", foods_predicted, "(", foods_ctr, ")")
-                print()
+                    foods_predicted = ''
+                    foods_ctr = 0
+                    if FULL_CALIBRATION_PRINTS:
+                        print("FOODS:")
+                    for key in foods_dict:
+                        res = self.charmie_audio.compare_commands(foods_dict, speech, [key])
+                        if FULL_CALIBRATION_PRINTS:
+                            print('    ', key, end='')
+                            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                                print('.', end='') 
+                            print('->', res)
+                        if res:
+                            foods_predicted += key+" "
+                            foods_ctr += 1
+                    print("Foods Detected   =", "(", foods_ctr, ")", foods_predicted)
+                    # print()
 
-                drink_predicted = ''
-                drink_ctr = 0
-                print("DRINKS:")
-                for key in drinks_dict:
-                    res = self.charmie_audio.compare_commands(drinks_dict, speech, [key])
-                    print('    ', key, end='')
-                    for spaces in range(max_number_of_chars_of_keys-len(key)):
-                        print('.', end='') 
-                    print('->', res)
-                    if res:
-                        drink_predicted = key
-                        drink_ctr += 1
-                print("Drink Detected =", drink_predicted, "(", drink_ctr, ")") 
-                print()
+                    drink_predicted = ''
+                    drink_ctr = 0
+                    if FULL_CALIBRATION_PRINTS:
+                        print("DRINKS:")
+                    for key in drinks_dict:
+                        res = self.charmie_audio.compare_commands(drinks_dict, speech, [key])
+                        if FULL_CALIBRATION_PRINTS:
+                            print('    ', key, end='')
+                            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                                print('.', end='') 
+                            print('->', res)
+                        if res:
+                            drink_predicted += key+" "
+                            drink_ctr += 1
+                    print("Drink Detected   =", "(", drink_ctr, ")", drink_predicted) 
+                    # print()
 
-                numbers_predicted = ''
-                numbers_ctr = 0
-                print("NUMBERS:")
-                for key in numbers_dict:
-                    res = self.charmie_audio.compare_commands(numbers_dict, speech, [key])
-                    print('    ', key, end='')
-                    for spaces in range(max_number_of_chars_of_keys-len(key)):
-                        print('.', end='') 
-                    print('->', res)
-                    if res:
-                        numbers_predicted = key
-                        numbers_ctr += 1
-                print("Numbers Detected =", numbers_predicted, "(", numbers_ctr, ")") 
-                print()    
+                    numbers_predicted = ''
+                    numbers_ctr = 0
+                    if FULL_CALIBRATION_PRINTS:
+                        print("NUMBERS:")
+                    for key in numbers_dict:
+                        res = self.charmie_audio.compare_commands(numbers_dict, speech, [key])
+                        if FULL_CALIBRATION_PRINTS:
+                            print('    ', key, end='')
+                            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                                print('.', end='') 
+                            print('->', res)
+                        if res:
+                            numbers_predicted += key+" "
+                            numbers_ctr += 1
+                    print("Numbers Detected =", "(", numbers_ctr, ")", numbers_predicted) 
+                    # print()    
 
-                rgb = Int16()
-                rgb.data = 19 # green same as when checking speech and keywords
-                self.rgb_mode_publisher.publish(rgb)
+                    yn_predicted = ''
+                    yn_ctr = 0         
+                    if FULL_CALIBRATION_PRINTS:           
+                        print("YES OR NO:")
+                    for key in yes_no_dict:
+                        res = self.charmie_audio.compare_commands(yes_no_dict, speech, [key])
+                        if FULL_CALIBRATION_PRINTS:
+                            print('    ', key, end='')
+                            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                                print('.', end='') 
+                            print('->', res)
+                        if res:
+                            yn_predicted += key+" "
+                            yn_ctr += 1
+                    print("Yes_No Detected  =", "(", yn_ctr, ")", yn_predicted)
+                    print()
 
-            else:
+                    self.set_rgb(GREEN+BACK_AND_FORTH_8) # green same as when checking speech and keywords
 
-                rgb = Int16()
-                rgb.data = 9
-                self.rgb_mode_publisher.publish(rgb)
+                else:
+                    self.set_rgb(RED+BACK_AND_FORTH_8)
         else:
             self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
 
@@ -922,24 +913,118 @@ class AudioNode(Node):
 
 
 
-    def calibrate_ambient_noise_callback(self, flag: Bool):
+    # def calibrate_ambient_noise_callback(self, flag: Bool):
+    #     self.charmie_audio.adjust_ambient_noise()
+
+
+    # def get_speech_done_callback(self, state: Bool):
+    #     print("Received Speech Flag:", state.data)
+    #     self.get_logger().info("Received Speech Flag")
+    #     self.flag_speech_done = True
+    #     if self.audio_error:
+    #         self.audio_error = False
+    #         print("Stopped Waiting until CHARMIE speaking is over")
+    #         ### MUST CHANGE TO SERVICES
+    #         # self.audio_command_publisher.publish(self.latest_command)
+
+
+    def callback_calibrate_audio(self, request, response):
+        
+        # Type of service received: 
+        # (nothing)
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages
+
         self.charmie_audio.adjust_ambient_noise()
+    
+        response.success = True
+        response.message = "Calibrated Audio Ambient Noise"
+        return response
 
 
-    def get_speech_done_callback(self, state: Bool):
-        print("Received Speech Flag:", state.data)
-        self.get_logger().info("Received Speech Flag")
-        self.flag_speech_done = True
-        if self.audio_error:
-            self.audio_error = False
-            print("Stopped Waiting until CHARMIE speaking is over")
-            self.audio_command_publisher.publish(self.latest_command)
+    def callback_audio(self, request, response):
+        
+        # Type of service received: 
+        # bool yes_or_no      # if just want to receive a yes or no answer
+        # bool receptionist   # receptionist info: a name of a person and a drinnk
+        # bool gpsr           # gpsr info: the full command
+        # bool restaurant     # restaurant info: the 2 or 3 items from drinks, fruits, foods and snacks to be served
+        # ---
+        # string command      # the items requested separated by a space (' ')
+
+        # self.get_logger().info("Received Get Audio %s" %("("+str(request.yes_or_no)+", "+str(request.receptionist)+", "+str(request.gpsr)+", "+str(request.restaurant)+")"))
+        
+        command_type = ""
+        if request.yes_or_no:
+            command_type = "yes_or_no"
+        elif request.receptionist:
+            command_type = "receptionist"
+        elif request.restaurant:
+            command_type = "restaurant"
+        elif request.gpsr:
+            command_type = "gpsr"
+        keywords = ""
+
+        # self.latest_command = comm
+        self.get_logger().info("Received Audio Command")
+        # publish rgb estou a ouvir
+        
+        # while keywords=="" or keywords=="ERROR" or keywords==None:
+            
+        self.charmie_audio.hear_speech()
+        self.get_logger().info("Finished Hearing, Start Processing")
+        
+        if not self.charmie_audio.ERRO_MAXIMO: # temp var unltil i fix the timeout when no speak start is detected
+            # publish rgb estou a criar o speech
+            speech_heard = self.charmie_audio.check_speech()
+            print("\tYou said: " + speech_heard)
+            self.get_logger().info("Finished Processing")
+            
+            # publish rgb estou a calcular as keywords
+            keywords = self.charmie_audio.check_keywords(speech_heard, command_type)
+            # print("Keywords:", keywords)
+        else:
+            self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
+            keywords = None
+        
+        
+        if keywords=="" or keywords=="ERROR" or keywords==None:
+            self.get_logger().info("Got error, have to retry the hearing")
+            keywords = "ERROR"
+            # self.speech_str.command = "I did not understand what you said. Could you please repeat?"
+            # self.flag_speech_done = False # to prevent that flag may be true from other speak moments that have nothing to do with this node 
+            # self.speaker_publisher.publish(self.speech_str)
+            
+            # activates the flag that puts everything on hold waiting for the end of sentece said
+            # self.audio_error = True
+            # response.command = "Error"
+
+        ### POR ISTO AUTOMATICO
+
+        # else:
+            # self.get_logger().info("Success Hearing")
+            # speech = String()
+            # speech.data = keywords
+            # self.get_speech_publisher.publish(speech)
+
+        response.command = keywords
+        return response
+
+    def set_rgb(self, command):
+        
+        rgb = Int16()
+        rgb.data = command
+        self.rgb_mode_publisher.publish(rgb)
+        print("Published RGB:", command)
 
 
+    """
+    ### MUST CHANGE TO SERVICES
     def audio_command_callback(self, comm: SpeechType):
         print(comm)
 
-        self.latest_command = comm
+        # self.latest_command = comm
         self.get_logger().info("Received Audio Command")
         # publish rgb estou a ouvir
         self.charmie_audio.hear_speech()
@@ -979,7 +1064,7 @@ class AudioNode(Node):
             self.get_speech_publisher.publish(speech)
 
     # def wait_for_end_of_speaking()
-        
+    """
         
 def main(args=None):
     rclpy.init(args=args)

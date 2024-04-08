@@ -4,11 +4,11 @@ max_number_of_chars_of_keys = 16
 
 names_dict = {
     "Adel":     ["adel", "adele", "adam", "avel"],
-    "Angel":    ["angel", "anjo", "hell", "ahil", "anjou", "anjal", "hong kong", "zangal", "enzo" ],
-    "Axel":     ["axel", "oxford", "aksal", "hotel", "axo", "oxel, oxyl", "axil", "unhail", "oxo"],
+    "Angel":    ["angel", "anjo", "ahil", "anjou", "anjal", "hong kong", "zangal", "enzo" ], # removed "hell" because of possible "hello" people may say
+    "Axel":     ["axel", "oxford", "aksal", "hotel", "axo", "oxel, oxyl", "axil", "unhail", "oxo", "axle", "oxley", "excellent"],
     "Charlie":  ["charlie", "shire lee", "sean", "shoutily", "chorley", "cherry"],
     "Jane":     ["jane", "jan", "jain", "jame", "jani", "jainie"],
-    "John":     ["john", "jhong", "joe", "jopne", "joan"],
+    "John":     ["john", "jhong", "joe", "jopne", "joan", "chiang"],
     "Jules":    ["jules", "jews", "drews", "jewels", "julie"],
     "Morgan":   ["morgan", "modern", "mardigan", "morgana", "mokkan", "maud", "modogan"],
     "Paris":    ["paris", "berries", "ferries", "parish", "pari", "hari", "barry", "patrice", "paix"],
@@ -17,42 +17,43 @@ names_dict = {
 }
 
 drinks_dict = {
-    "RedWine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
-    "JuicePack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
-                      "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag"],
-    "Cola":          [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold"],
-    "TropicalJuice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
-    "Milk":          ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok"],
-	"IceTea":        [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
-                    "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
-                    "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict", " icy ", "nice t"],
-    "OrangeJuice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order", "or in", "our enjour", "northern juice"],
-    "7up": ["seven", "up", "7", "simon", "nope", "devanab", "savannah", "sabona"],
-    "Water": ["water"]
+    "Red_Wine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
+    "Juice_Pack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
+                       "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
+                       "peck"],
+    "Cola":           [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold"],
+    "Tropical_Juice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
+    "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
+	"Ice_Tea":        [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
+                       "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
+                       "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict", " icy ", "nice t"],
+    "Orange_Juice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order", "or in", "our enjour", "northern juice"],
+    "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona"], # removed o "simon" cause it conflicts with th name Simon
+    "Water":          ["water"]
 }
 
 foods_dict = {
-    "Tuna":            ["tuna"],
-    "TomatoSoup":      ["tomato"],
-    "Spam":            ["spam"],
-    "Mustard":         ["mustard"],    
-    "StrawberryJello": ["strawberry"],
-    "ChocolateJello":  ["chocolat", "jello"],
-    "CofeeGrounds":    ["coffee", "grounds"],
-    "Sugar":           ["sugar"],
+    "Tuna":             ["tuna"],
+    "Tomato_Soup":      ["tomato"],
+    "Spam":             ["spam"],
+    "Mustard":          ["mustard"],    
+    "Strawberry_Jello": ["strawberry jello"],
+    "Chocolate_Jello":  ["chocolat jello"],
+    "Cofee_Grounds":    ["coffee", "grounds"],
+    "Sugar":            ["sugar"],
 
-    "Pear":            ["pear", "pair", "pier", "beer"],
-    "Plum":            ["plum", "clump"],
-    "Peach":           ["peach"],
-    "Lemon":           ["lemon"],
-    # "Orange":          ["orange"],
-    "Strawberry":      ["strawberr"],
-    "Banana":          ["banana"],
-    "Apple":           ["apple"],
+    "Pear":             ["pear", "pair", "pier", "beer"],
+    "Plum":             ["plum", "clump"],
+    "Peach":            ["peach"],
+    "Lemon":            ["lemon"],
+    "Orange":           ["orange"],
+    "Strawberry":       ["strawberr"],
+    "Banana":           ["banana"],
+    "Apple":            ["apple"],
 
-    "Pringles":        ["pringles", "sprinkles", "wrinkles", "bringles", "friendos"],
-    "Cornflakes":      ["cornflakes"],
-    "Cheezit":         ["cheese", "cheezit"]
+    "Pringles":         ["pringles", "sprinkles", "wrinkles", "bringles", "friendos"],
+    "Cornflakes":       ["cornflakes"],
+    "Cheezit":          ["cheese", "cheezit"]
 }
 
 numbers_dict = {

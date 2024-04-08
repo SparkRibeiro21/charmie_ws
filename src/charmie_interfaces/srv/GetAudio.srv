@@ -1,0 +1,8 @@
+# Service to get the audio information requested by speech from a human user to the robot 
+
+bool yes_or_no      # if just want to receive a yes or no answer
+bool receptionist   # receptionist info: a name of a person and a drinnk
+bool gpsr           # gpsr info: the full command
+bool restaurant     # restaurant info: the 2 or 3 items from drinks, fruits, foods and snacks to be served
+---
+string command      # the items requested separated by a space (' ')

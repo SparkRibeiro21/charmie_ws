@@ -48,6 +48,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Yolov8Pose.msg"
   "srv/ActivateYoloObjects.srv"
   "srv/ActivateYoloPose.srv"
+  "srv/CalibrateAudio.srv"
+  "srv/GetAudio.srv"
   "srv/GetNeckPosition.srv"
   "srv/GetPointCloud.srv"
   "srv/SaveSpeechCommand.srv"
