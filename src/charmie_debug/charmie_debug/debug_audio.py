@@ -189,6 +189,7 @@ class RestaurantMain():
         if yes_or_no or receptionist or gpsr or restaurant:
 
             # this code continuously asks for new audio info eveytime it gets an error for mishearing
+            audio_error_counter = 0
             keywords = "ERROR"
             while keywords=="ERROR":
                 
@@ -202,6 +203,13 @@ class RestaurantMain():
                 keywords = self.node.audio_command  
                 
                 if keywords=="ERROR":
+                    audio_error_counter += 1
+
+                    if audio_error_counter == 2:
+                        self.set_speech(filename="generic/please_wait", wait_for_end_of=True)
+                        self.calibrate_audio(wait_for_end_of=True)
+                        audio_error_counter = 0
+
                     self.set_speech(filename="generic/not_understand_please_repeat", wait_for_end_of=True)
                     self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=True)
 
@@ -262,7 +270,7 @@ class RestaurantMain():
                 #print('State 0 = Initial')
 
 
-                time.sleep(3)
+                # time.sleep(3)
                 self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=True)
 
                 # your code here ...

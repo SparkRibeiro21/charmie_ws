@@ -68,7 +68,7 @@ MODE = "STANDARD"
 } """
 
 COMMANDS = {
-    'recep_drink_7up': 'The favourite drink is seven up.'
+    'please_wait': 'Please wait.'
 }
 
 

@@ -26,7 +26,7 @@ drinks_dict = {
     "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
 	"Ice_Tea":        [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
-                       "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict", " icy ", "nice t"],
+                       "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict", " icy ", "nice t", "oysti"],
     "Orange_Juice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order", "or in", "our enjour", "northern juice"],
     "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona"], # removed o "simon" cause it conflicts with th name Simon
     "Water":          ["water"]
