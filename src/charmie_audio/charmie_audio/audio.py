@@ -612,7 +612,7 @@ class WhisperAudio():
                     print('.', end='') 
                 print('->', res)
                 if res:
-                    drink_predicted = key+" "# different from receptionist so I can see all the different drinks requested
+                    drink_predicted += key+" "# different from receptionist so I can see all the different drinks requested
                     drink_ctr += 1
                     drinks.append(key)
                     drinks_idx.append(idx)
@@ -631,7 +631,17 @@ class WhisperAudio():
             sorted_combined = sorted(combined, key=lambda x: x[1])
             # Extract the sorted names
             sorted_names = [item[0] for item in sorted_combined]
-            print(sorted_names)
+            # print(sorted_names)
+
+            # special case for (strawberry jello & strawberry) and (orange juice & orange)) 
+            # in words_dict we have tried so that the longer word is only detected when two different words are detected
+            # this makes it harder to detect but prevents multiple detections when detection of just the common word (strawberry and orange)
+            # this way, when it detects both strawberry and strawberry jello we know it is intended for strawbeery jello.
+            # it is a simpler solution, however if a person requires both strawberry and strawberry jello in the same order it will not work!
+            if 'Orange' in sorted_names and 'Orange_Juice' in sorted_names:
+                sorted_names.remove('Orange')
+            if 'Strawberry' in sorted_names and 'Strawberry_Jello' in sorted_names:
+                sorted_names.remove('Strawberry')
 
             for names in sorted_names:
                 final_str += names + ' '
