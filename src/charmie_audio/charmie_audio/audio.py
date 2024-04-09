@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 from example_interfaces.msg import Bool, String, Float32, Int16
-from charmie_interfaces.msg import SpeechType, RobotSpeech
+# from charmie_interfaces.msg import SpeechType, RobotSpeech
 from charmie_interfaces.srv import GetAudio, CalibrateAudio
 
 import io
@@ -55,7 +55,6 @@ FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in
 # - mais idiomas (adicionar tambem o portugues)
 # - adicionar a lingua ao speechtype recebido 
 # - solução para palavras iguais
-# - ligacao direta à fala
 # - definir keywords com antecedência (deixar tudo pronto para os objetos do dataset ycb)
 # - define all the error, diferent from each other
 # - recalibrar audios quando der erro X vezes?
@@ -74,6 +73,7 @@ FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in
 # - reestruturar codigo pos robocup
 # - simplificar diagnostic para se ver no terminal
 # - ligação direta aos rgb
+# - ligacao direta à fala
 
 
 """
@@ -724,9 +724,9 @@ class AudioNode(Node):
         self.server_calibrate_ambient_noise = self.create_service(CalibrateAudio, "calibrate_audio", self.callback_calibrate_audio)
         self.get_logger().info("Audio Servers have been started")
 
-        self.speech_str = RobotSpeech()
-        self.flag_speech_done = False
-        self.audio_error = False
+        # self.speech_str = RobotSpeech()
+        # self.flag_speech_done = False
+        # self.audio_error = False
         # self.latest_command = SpeechType()
 
         self.check_diagnostics()

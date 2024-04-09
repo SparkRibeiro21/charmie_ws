@@ -265,13 +265,16 @@ class RestaurantMain():
                 time.sleep(3)
                 self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=True)
 
-
-
                 # your code here ...
                 print("Started")
                 # Test Audio Task Commands
                 command = self.get_audio(receptionist=True, wait_for_end_of=True)
                 print("Finished:", command)
+                keyword_list= command.split(" ")
+                print(keyword_list[0], keyword_list[1])
+                        
+                self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
                 # Test Calibration
                 # s, m = self.calibrate_audio(wait_for_end_of=True)

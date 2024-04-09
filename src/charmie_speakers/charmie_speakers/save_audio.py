@@ -10,8 +10,8 @@ from pathlib import Path
 # "STANDARD": convert one command into wav and txt 
 # "RECEPTIONIST": reads names and drinks arrays and generates all commands for first guest names, second guest names and favourite drinks
 
-names_list = ["Adam", "Paris", "William"]
-drinks_list = ["milk", "orange juice", "red wine"]
+names_list = ["Axel", "John", "Paris", "Robin", "Simone"]
+drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Ice Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
 
 MODE = "STANDARD"
 
@@ -22,7 +22,7 @@ MODE = "STANDARD"
 #}
 
 COMMANDS = {
-    'not_understand_please_repeat': 'I did not understand what you said. Could you please repeat?'
+    'recep_drink_7up': 'The favourite drink is seven up.'
 }
 
 
