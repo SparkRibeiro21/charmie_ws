@@ -44,7 +44,7 @@ foods_dict = {
     "Sugar":            ["sugar"],
 
     "Pear":             ["pear", "pair", "pier", "beer", "bare"],
-    "Plum":             ["plum", "clump", "blam"],
+    "Plum":             ["plum", "clump", "blam", "blum", "plumb"],
     "Peach":            ["peach"],
     "Lemon":            ["lemon"],
     "Orange":           ["orange", "orton"],
@@ -52,8 +52,8 @@ foods_dict = {
     "Banana":           ["banana"],
     "Apple":            ["apple"],
 
-    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos"],
-    "Cornflakes":       ["cornflakes", "corn flakes", "conflicts"],
+    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles"],
+    "Cornflakes":       ["cornflakes", "corn flakes", "conflicts", "gonna flex"],
     "Cheezit":          ["cheese", "cheezit", "she's it", "shisit"]
 }
 

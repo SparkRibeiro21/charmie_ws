@@ -69,9 +69,9 @@ COMMANDS = {
 }
 """
 
-# COMMANDS = {
-#     'order_consists_of': 'Your order consists on the following items.'
-# }
+COMMANDS = {
+    'plum': 'A Plum.'
+}
 
 
 class RobotSpeak():
