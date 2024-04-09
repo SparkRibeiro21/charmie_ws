@@ -68,7 +68,9 @@ MODE = "STANDARD"
 } """
 
 COMMANDS = {
-    'sg_analysing_cabinet': 'I will now analyse the cabinet.'
+    'near_v1': 'neer.',
+    'near_v2': 'nier.',
+    'near_v3': 'niar.'
 }
 
 

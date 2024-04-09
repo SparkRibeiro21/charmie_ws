@@ -586,9 +586,7 @@ class StoringGroceriesMain():
                             self.set_speech(filename=class_filename, wait_for_end_of=True)
                             self.set_speech(filename=location_filename, wait_for_end_of=True)
                             break
-                    
-                print('b', self.classes_detected_wardrobe)
-                # ----------------------------------
+                return self.nr_objects_detected
 
     def analysis_table(self):
         i = 0
@@ -677,10 +675,10 @@ class StoringGroceriesMain():
                     self.set_speech(filename=location_filename, wait_for_end_of=True)
                     self.set_speech(filename='generic/Near', wait_for_end_of=True)
                     self.set_speech(filename=class_filename, wait_for_end_of=True)
-            self.object_counter += 1
         else:
             # eventualmente terei de colocar aqui algo caso o objeto escolhido não estivesse na prateleira
             pass
+        self.object_counter += 1
 
     def choose_priority(self):
         # Este nível fica para a versão 1. Para a versão 0 faço ver o que está na prateleira, guardar essas classes e ficam essas como high
@@ -791,7 +789,7 @@ class StoringGroceriesMain():
             if self.state == self.Waiting_for_task_start:
                 #print('State 0 = Initial')
 
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 # self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
 
@@ -799,8 +797,7 @@ class StoringGroceriesMain():
 
                 ###### WAITS FOR START BUTTON / DOOR OPEN
 
-                time.sleep(2)
-                                
+                         
                 # next state
                 # self.state = self.Approach_tables_first_time
 
@@ -830,7 +827,10 @@ class StoringGroceriesMain():
                 cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
                 self.image_most_obj_detected = cv_image
 
-                self.analysis_cabinet()
+                nr_objects_detected = 0
+                while nr_objects_detected < 5:
+                    nr_objects_detected = self.analysis_cabinet()
+                    # Adicionar ajuste de pescoço ou então depois ajustar dentro do próprio analysis cabinet
                 self.choose_priority()
                 
                 self.set_speech(filename="storing_groceries/sg_finished_analise_cabinet", wait_for_end_of=True) 
@@ -872,9 +872,7 @@ class StoringGroceriesMain():
             elif self.state == self.Picking_first_object:
                 #print('State 2 = Picking first object from table')
             
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True
 
                 obj_name, obj_class = self.selected_objects[self.object_counter]
                 print(obj_name)
@@ -882,8 +880,10 @@ class StoringGroceriesMain():
                 print(obj_name_lower)
 
                 object_help_pick = 'help_pick_' + obj_name_lower
-                self.set_face(object_help_pick)
+                self.set_face(str(object_help_pick))
                 print(object_help_pick)
+
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
                
                 # I will need your help picking the objects from this table and also to place them in the wardrobe
 
@@ -901,7 +901,7 @@ class StoringGroceriesMain():
                         
                             ##### ARM OPEN GRIPPER
                 
-                self.set_face("demo5")
+                # self.set_face("demo5")
                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True)
                 
@@ -925,8 +925,6 @@ class StoringGroceriesMain():
                 # MOVIMENTAR
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 obj_name, obj_class = self.selected_objects[self.object_counter]
                 print(obj_name)
@@ -934,8 +932,10 @@ class StoringGroceriesMain():
                 print(obj_name_lower)
 
                 object_help_pick = 'help_pick_' + obj_name_lower
-                self.set_face(object_help_pick)
+                self.set_face(str(object_help_pick))
                 print(object_help_pick)
+
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
                
                 # I will need your help picking the objects from this table and also to place them in the wardrobe
 
@@ -953,7 +953,7 @@ class StoringGroceriesMain():
                         
                             ##### ARM OPEN GRIPPER
                 
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 self.state = self.Placing_second_object
 
@@ -972,18 +972,18 @@ class StoringGroceriesMain():
                 # MOVIMENTAR
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
+               
                 obj_name, obj_class = self.selected_objects[self.object_counter]
                 print(obj_name)
                 obj_name_lower = obj_name.lower().replace(" ", "_")
                 print(obj_name_lower)
 
                 object_help_pick = 'help_pick_' + obj_name_lower
-                self.set_face(object_help_pick)
+                self.set_face(str(object_help_pick))
                 print(object_help_pick)
-               
+                 
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
                 # I will need your help picking the objects from this table and also to place them in the wardrobe
 
                 # self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
@@ -1000,7 +1000,7 @@ class StoringGroceriesMain():
                         
                             ##### ARM OPEN GRIPPER
                 
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 self.state = self.Placing_third_object
 
@@ -1019,17 +1019,17 @@ class StoringGroceriesMain():
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
                 
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
                 obj_name, obj_class = self.selected_objects[self.object_counter]
                 print(obj_name)
                 obj_name_lower = obj_name.lower().replace(" ", "_")
                 print(obj_name_lower)
 
                 object_help_pick = 'help_pick_' + obj_name_lower
-                self.set_face(object_help_pick)
+                self.set_face(str(object_help_pick))
                 print(object_help_pick)
-               
+
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
                 # I will need your help picking the objects from this table and also to place them in the wardrobe
 
                 # self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
@@ -1046,7 +1046,7 @@ class StoringGroceriesMain():
                         
                             ##### ARM OPEN GRIPPER
                 
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 self.state = self.Placing_fourth_object
 
@@ -1065,17 +1065,17 @@ class StoringGroceriesMain():
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
                 
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
                 obj_name, obj_class = self.selected_objects[self.object_counter]
                 print(obj_name)
                 obj_name_lower = obj_name.lower().replace(" ", "_")
                 print(obj_name_lower)
 
                 object_help_pick = 'help_pick_' + obj_name_lower
-                self.set_face(object_help_pick)
+                self.set_face(str(object_help_pick))
                 print(object_help_pick)
-               
+
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
                 # I will need your help picking the objects from this table and also to place them in the wardrobe
 
                 # self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
@@ -1092,7 +1092,7 @@ class StoringGroceriesMain():
                         
                             ##### ARM OPEN GRIPPER
                 
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 self.state = self.Placing_fifth_object
 
