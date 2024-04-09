@@ -184,7 +184,7 @@ class RestaurantMain():
 
         return self.node.rgb_sucess, self.node.rgb_message
  
-    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, wait_for_end_of=True):
+    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
 
@@ -193,6 +193,7 @@ class RestaurantMain():
             keywords = "ERROR"
             while keywords=="ERROR":
                 
+                self.set_speech(filename=question, wait_for_end_of=True)
                 self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
                 
                 if wait_for_end_of:
@@ -211,7 +212,6 @@ class RestaurantMain():
                         audio_error_counter = 0
 
                     self.set_speech(filename="generic/not_understand_please_repeat", wait_for_end_of=True)
-                    self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=True)
 
             return self.node.audio_command  
 
@@ -252,7 +252,7 @@ class RestaurantMain():
         Final_State = 7
 
         print("IN NEW MAIN")
-        time.sleep(2)
+        # time.sleep(2)
 
 
         while True:
@@ -270,25 +270,30 @@ class RestaurantMain():
                 #print('State 0 = Initial')
 
 
-                # time.sleep(3)
-                self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=True)
+                ### RESTAURANT EXAMPLE
+                # print("Started")
+                # command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
+                # print("Finished:", command)
+                # keyword_list= command.split(" ")
+                # self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
+                # for kw in keyword_list:
+                #     print(kw)
+                #     self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
 
-                # your code here ...
+                ### RECEPTIONIST EXAMPLE
                 print("Started")
-                # Test Audio Task Commands
-                command = self.get_audio(receptionist=True, wait_for_end_of=True)
+                command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
                 print("Finished:", command)
                 keyword_list= command.split(" ")
                 print(keyword_list[0], keyword_list[1])
-                        
                 self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
                 self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
-                # Test Calibration
+                # CALIBRATION EXAMPLE
                 # s, m = self.calibrate_audio(wait_for_end_of=True)
                 # print("Finished:", s, m)
+
                 time.sleep(5)
-                
                 pass
                                 
                 # next state

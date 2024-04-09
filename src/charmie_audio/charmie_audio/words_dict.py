@@ -24,10 +24,11 @@ drinks_dict = {
     "Cola":           [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold", "kohler"],
     "Tropical_Juice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
     "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
-	"Ice_Tea":        [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
+	"Iced_Tea":       [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
                        "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict", " icy ", "nice t", "oysti"],
-    "Orange_Juice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order", "or in", "our enjour", "northern juice"],
+    # "Orange_Juice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "or in", "our enjour", "northern juice"], # removed 'order'
+    "Orange_Juice":   ["orange juice", "orangous", "orangels", "foreign", "autumn", "orandris", "our enjour", "northern juice"], # removed 'order' and all "just orange" so there is no conflict with orange 
     "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona"], # removed o "simon" cause it conflicts with th name Simon
     "Water":          ["water"]
 }
@@ -35,7 +36,7 @@ drinks_dict = {
 foods_dict = {
     "Tuna":             ["tuna"],
     "Tomato_Soup":      ["tomato"],
-    "Spam":             ["spam"],
+    "Spam":             ["spam", "spum"],
     "Mustard":          ["mustard"],    
     "Strawberry_Jello": ["strawberry jello"],
     "Chocolate_Jello":  ["chocolat jello"],
@@ -43,10 +44,10 @@ foods_dict = {
     "Sugar":            ["sugar"],
 
     "Pear":             ["pear", "pair", "pier", "beer"],
-    "Plum":             ["plum", "clump"],
+    "Plum":             ["plum", "clump", "blam"],
     "Peach":            ["peach"],
     "Lemon":            ["lemon"],
-    "Orange":           ["orange"],
+    "Orange":           ["orange", "orton"],
     "Strawberry":       ["strawberr"],
     "Banana":           ["banana"],
     "Apple":            ["apple"],
