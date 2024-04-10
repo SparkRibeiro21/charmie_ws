@@ -354,18 +354,20 @@ class RestaurantMain():
 
                 ### EXAMPLES TO ACTIVATE/DEACTIVATE AND CONFIGURE YOLO POSE AND TOLO OBJECTS 
                 self.activate_yolo_pose(activate=True)
-                self.activate_yolo_objects(activate_objects=False)
-                print("activated yolo pose")
-                time.sleep(10)
-                self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=7)
-                self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.3)
-                print("deactivated yolo pose - 0.8")
-                time.sleep(5)
-                self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=10)
-                self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.8)
-                print("deactivated yolo pose - right in front")
-                time.sleep(5)
+                # self.activate_yolo_objects(activate_objects=False)
+                # print("activated yolo pose")
+                # time.sleep(10)
+                # self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=7)
+                # self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.3)
+                # print("deactivated yolo pose - 0.8")
+                # time.sleep(5)
+                # self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=10)
+                # self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.8)
+                # print("deactivated yolo pose - right in front")
+                # time.sleep(5)
 
+                while True:
+                    pass
 
                 """
                 s, m = self.set_rgb(RED+MOON)
