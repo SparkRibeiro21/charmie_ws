@@ -1043,13 +1043,16 @@ class YoloPoseNode(Node):
             is_cropped_face, cropped_face = self.crop_face(current_frame, current_frame_draw, new_person)
 
             if is_cropped_face:
-                new_person.ethnicity = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
-                new_person.age_estimate = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
-                new_person.gender = self.get_gender_prediction(cropped_face) # says whether the person is male or female
+                new_person.ethnicity, new_person.ethnicity_probability = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
+                new_person.age_estimate, new_person.age_estimate_probability = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
+                new_person.gender, new_person.gender_probability = self.get_gender_prediction(cropped_face) # says whether the person is male or female
             else:
                 new_person.ethnicity = "None" # says whether the person white, asian, african descendent, middle eastern, ...
+                new_person.ethnicity_probability = 0.0
                 new_person.age_estimate = "None" # says an approximate age gap like 25-35 ...
+                new_person.age_estimate_probability = 0.0
                 new_person.gender = "None" # says whether the person is male or female
+                new_person.gender_probability = 0.0
 
         else:
             new_person.pointing_at = "None"
@@ -1057,8 +1060,11 @@ class YoloPoseNode(Node):
             new_person.shirt_color = "None"
             new_person.pants_color = "None"
             new_person.ethnicity = "None"
+            new_person.ethnicity_probability = 0.0
             new_person.age_estimate = "None"
+            new_person.age_estimate_probability = 0.0
             new_person.gender = "None"
+            new_person.gender_probability = 0.0
 
 
         return new_person
@@ -1102,6 +1108,7 @@ class YoloPoseNode(Node):
         blob = cv2.dnn.blobFromImage(cropped_face, 1.0, (227, 227), (78.4263377603, 87.7689143744, 114.895847746), swapRB=False)
         self.ageNet.setInput(blob)
         agePreds = self.ageNet.forward()
+
         age_index = agePreds[0].argmax()
         age_ranges = ["(0-2)", "(4-6)", "(8-12)", "(15-20)", "(25-32)", "(38-43)", "(48-53)", "(60-100)"]
         age = age_ranges[age_index]
@@ -1112,7 +1119,17 @@ class YoloPoseNode(Node):
         # elif age_index >= 4:
         #     age = "(23 and 32)"
         
-        return age
+        # Verificar se a previsão está disponível
+        if age is not None:
+            age = age
+            age_prob = float(round(max(agePreds[0]),2))
+        else:
+            age = "None"
+            age_prob = 0.0
+
+        # print("age predictions:", age, age_prob, agePreds[0])
+
+        return age, age_prob
 
     def get_gender_prediction(self, cropped_face):
 
@@ -1120,8 +1137,6 @@ class YoloPoseNode(Node):
         img = cv2.resize(color_img, (224, 224))
         normalized_img = img / 255.0
         expanded_img = np.expand_dims(normalized_img, axis=0)
-
-        cv2.imwrite("cropped_face_test_keras.jpg", img)
 
         # Realizar a previsão usando o modelo carregado
         predictions = self.gender_model.predict(expanded_img)
@@ -1133,10 +1148,14 @@ class YoloPoseNode(Node):
         # Verificar se a previsão está disponível
         if gender_predominante is not None:
             gender = gender_predominante
+            gender_prob = float(round(max(predictions[0]),2))
         else:
             gender = "None"
+            gender_prob = 0.0
         
-        return gender
+        # print("gender predictions:", gender, gender_prob, predictions[0])
+
+        return gender, gender_prob
 
     def get_ethnicity_prediction(self, cropped_face):
 
@@ -1144,8 +1163,6 @@ class YoloPoseNode(Node):
         img = cv2.resize(color_img, (224, 224))
         normalized_img = img / 255.0
         expanded_img = np.expand_dims(normalized_img, axis=0)
-
-        # cv2.imwrite("cropped_face_test_keras.jpg", expanded_img)
 
         # Realizar a previsão usando o modelo carregado
         predictions = self.race_model.predict(expanded_img)
@@ -1158,10 +1175,14 @@ class YoloPoseNode(Node):
         # Verificar se a previsão está disponível
         if race_predominante is not None:
             race = race_predominante
+            race_prob = float(round(max(predictions[0]),2))
         else:
             race = "None"
+            race_prob = 0.0
         
-        return race
+        # print("ethnicity predictions:", race, race_prob, predictions[0])
+
+        return race, race_prob
     
     def line_between_two_keypoints(self, current_frame_draw, KP_ONE, KP_TWO, xy, conf, colour):
 

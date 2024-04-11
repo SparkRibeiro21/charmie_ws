@@ -21,8 +21,11 @@ string pointing_with_arm
 float32 height
 
 string ethnicity
+float32 ethnicity_probability
 string age_estimate
+float32 age_estimate_probability
 string gender
+float32 gender_probability
 
 string shirt_color
 RGB shirt_rgb
