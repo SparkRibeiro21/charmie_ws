@@ -43,6 +43,8 @@ DRAW_PERSON_POINTING_INFO = False
 DRAW_PERSON_HAND_RAISED = False
 DRAW_PERSON_HEIGHT = True
 DRAW_PERSON_CLOTHES_COLOR = True
+DRAW_CHARACTERISTICS = True
+DRAW_FACE_RECOGNITION = True
 
 
 class YoloPoseNode(Node):
@@ -64,6 +66,8 @@ class YoloPoseNode(Node):
 
         self.midpath_configuration_files = "charmie_ws/src/configuration_files"
         self.complete_path_configuration_files = self.home+'/'+self.midpath_configuration_files+'/'
+
+        self.complete_characteristics_models = self.home+'/'+self.midpath+'/characteristics_models/'
 
         self.house_rooms = {}
         self.house_furniture = {}
@@ -802,6 +806,10 @@ class YoloPoseNode(Node):
                         cv2.putText(current_frame_draw, new_person.pants_color,
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
                         
+                    if DRAW_CHARACTERISTICS:
+                        cv2.putText(current_frame_draw, new_person.age_estimate,
+                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
 
             # print("===")
 
@@ -1020,9 +1028,17 @@ class YoloPoseNode(Node):
             new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
             new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
 
-            new_person.ethnicity = "None" # still missing... (says whether the person white, asian, african descendent, middle eastern, ...)
-            new_person.age_estimate = "None" # still missing... (says an approximate age gap like 25-35 ...)
-            new_person.gender = "None" # still missing... (says whether the person is male or female)
+            # in order to predict the ethnicity, age and gender, it is necessary to first cut out the face of the detected person
+            is_cropped_face, cropped_face = self.crop_face(current_frame, current_frame_draw, new_person)
+
+            if is_cropped_face:
+                new_person.ethnicity = "None" # still missing... (says whether the person white, asian, african descendent, middle eastern, ...)
+                new_person.age_estimate = self.get_age_prediction(cropped_face) # still missing... (says an approximate age gap like 25-35 ...)
+                new_person.gender = "None" # still missing... (says whether the person is male or female)
+            else:
+                new_person.ethnicity = "None" # still missing... (says whether the person white, asian, african descendent, middle eastern, ...)
+                new_person.age_estimate = "None" # still missing... (says an approximate age gap like 25-35 ...)
+                new_person.gender = "None" # still missing... (says whether the person is male or female)
 
         else:
             new_person.pointing_at = "None"
@@ -1036,6 +1052,62 @@ class YoloPoseNode(Node):
 
         return new_person
 
+    def crop_face(self, current_frame, current_frame_draw, new_person):
+
+        global DRAW_FACE_RECOGNITION
+
+        # y1 = top of bounding box y
+        # y2 = y of lowest height shoulder
+        # x1 = keypoint more to the left
+        # x2 = keypoint more to the right
+        
+        # using all face and shoulders keypoints to make sure face is correctly detected
+        if new_person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_eye_right_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_eye_left_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_nose_conf > MIN_KP_CONF_VALUE:
+            # new_person.kp_ear_right_conf > MIN_KP_CONF_VALUE and \
+            # new_person.kp_ear_left_conf > MIN_KP_CONF_VALUE and \
+            
+            y1 = new_person.box_top_left_y
+            y2 = max(new_person.kp_shoulder_right_y, new_person.kp_shoulder_left_y)
+
+            x1 = min(new_person.kp_shoulder_right_x, new_person.kp_shoulder_left_x, new_person.kp_nose_x, new_person.kp_eye_right_x, new_person.kp_eye_left_x)
+            x2 = max(new_person.kp_shoulder_right_x, new_person.kp_shoulder_left_x, new_person.kp_nose_x, new_person.kp_eye_right_x, new_person.kp_eye_left_x)
+
+            if DRAW_FACE_RECOGNITION:
+                cv2.rectangle(current_frame_draw, (x1, y1), (x2, y2), (0, 255, 255) , 4) 
+                
+            cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
+            
+            return True, current_frame[y1:y2, x1:x2]
+
+        else:
+            return False, current_frame
+        
+    def get_age_prediction(self, cropped_face):
+
+        ageModel = self.complete_characteristics_models+"age_net.caffemodel"
+        ageProto = self.complete_characteristics_models+"deploy_age.prototxt"
+
+        ageNet = cv2.dnn.readNet(ageModel, ageProto)
+        
+        blob = cv2.dnn.blobFromImage(cropped_face, 1.0, (227, 227), (78.4263377603, 87.7689143744, 114.895847746), swapRB=False)
+        ageNet.setInput(blob)
+        agePreds = ageNet.forward()
+        age_index = agePreds[0].argmax()
+        age_ranges = ["(0-2)", "(4-6)", "(8-12)", "(15-20)", "(25-32)", "(38-43)", "(48-53)", "(60-100)"]
+        age = age_ranges[age_index]
+
+        # Filters for the people that are more likely to show up to the robot
+        # if age_index < 2:
+        #     age = "(15 and 22)"
+        # elif age_index >= 4:
+        #     age = "(23 and 32)"
+        
+        return age
+        
 
     def line_between_two_keypoints(self, current_frame_draw, KP_ONE, KP_TWO, xy, conf, colour):
 
