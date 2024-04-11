@@ -4,18 +4,147 @@
 # this is an example of the layout code for a task in our workspace
 # It is used a threading system so the ROS2 functionalities are not blocked when executing the state machine
 # So we create a thread for the main state machine of the task and another for the ROS2 funcitonalities
-# It is being used GPSR as an example, so when changing the code for a specific task Ctrl+F gpsr
-# and replace everything fot the name of your task 
+# It is being used Serve the Breakfast as an example, so when changing the code for a specific task:
+# Ctrl+F "ServeBreakfast" and replace everything for the name of your task 
 
-# Basicamente vocês só mexem da linha de código: "def main(self):" para baixo
+# THE MAIN GOAL IS FOR YOU TO ONLY CHANGE BELOW THE LINE THAT STATES: "def main(self):"
 
+# The following code already has implemnted with examples the following modes:
 # Speakers
 # RGB
-# Start Button - TBD
+# Start Button
 # Audio
 # Face
 # Neck
 # Yolos
+
+# The following modules are still missing:
+# Arm - TBD
+# Nav - TBD
+
+
+"""
+NEXT I PROVIDE AN EXAMPLE ON HOW THE CODE OF A TASK SHOULD BE MADE:
+
+->  ->  ->  ->  ->  HOW TO CREATE A TASK?
+
+1) IMPORT ALL ROS2 TOPICS/SERVICES NECESSARY AND WAIT_FOR_SERVICE (THIS IS TIAGO JOB, ASK HIM TO HELP OR EXPLAIN)
+2) PLAN THE STATES AND SET THE STATES FOR YOUR TASK:
+
+        self.Waiting_for_task_start = 0
+        self.Approach_kitchen_counter = 1
+        self.Picking_up_spoon = 2
+        self.Picking_up_milk = 3
+        self.Picking_up_cereal = 4
+        self.Picking_up_bowl = 5
+        self.Approach_kitchen_table = 6
+        self.Placing_bowl = 7
+        self.Placing_cereal = 8
+        self.Placing_milk = 9
+        self.Placing_spoon = 10
+        self.Final_State = 11
+
+# 3) CREATE THE STATE STRUCTURE:
+        
+        if self.state == self.Waiting_for_task_start:
+                # your code here ...
+                                
+                # next state
+                self.state = self.Approach_kitchen_counter
+
+            elif self.state == self.Approach_kitchen_counter:
+                # your code here ...
+                                
+                # next state
+                self.state = self.Picking_up_spoon
+
+            elif self.state == self.Picking_up_spoon:
+                # your code here ...
+                                
+                # next state
+                self.state = self.Picking_up_milk
+
+            (...)
+
+# 4) CREATE THE PSEUDOCODE OF EACH STATE:
+            
+            elif self.state == self.Picking_up_spoon:
+                
+                ##### NECK LOOKS AT TABLE
+
+                ##### MOVES ARM TO TOP OF TABLE POSITION
+
+                ##### SPEAK: Searching for objects
+
+                ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
+                
+                ##### SPEAK: Found spoon
+                
+                ##### SPEAK: Check face to see object detected
+
+                ##### SHOW FACE DETECTED OBJECT
+
+                ##### MOVE ARM TO PICK UP OBJECT 
+
+                ##### IF AN ERROR IS DETECTED:
+
+                    ##### SPEAK: There is a problem picking up the object
+
+                    ##### MOVE ARM TO ERROR POSITION 
+                
+                    ##### NECK LOOK JUDGE
+
+                    ##### SPEAK: Need help, put object on my hand as it is on my face
+
+                    ##### SHOW FACE GRIPPER SPOON 
+
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+
+                        ##### SPEAK: Close gripper in 3 2 1 
+
+                        ##### ARM: CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED: 
+
+                            ##### SPEAK: There seems to be a problem, please retry.
+
+                            ##### ARM OPEN GRIPPER
+                        
+                ##### NECK LOOK TRAY
+                        
+                ##### ARM PLACE OBJECT IN TRAY
+
+                self.state = self.Picking_up_milk
+
+# 5) REPLACE ALL THE SPEAKS IN PSEUDOCODE WITH self.set_speech(...), CREATE FILES IN ros2 run charmie_speakers save_audio
+
+# 6) TEST ALL SENTENCES ALONE TO SEE IF EVERYTHING IS OK
+
+# 5) REPLACE ALL THE FACE IN PSEUDOCODE WITH self.set_face(...)
+
+# 6) TEST ALL FACES WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# 7) REPLACE ALL THE START_BUTTON AND RGB IN PSEUDOCODE WITH self.set_rgb(...) and self.wait_for_start_button()
+
+# 8) TEST ALL START_BUTTON AND RGB WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# 9) REPLACE ALL THE AUDIO IN PSEUDOCODE WITH self.get_audio(...)
+
+# 10) TEST ALL AUDIO WITH THE PREVIOUS GETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# 11) REPLACE ALL THE NECK IN PSEUDOCODE WITH self.set_neck(...) OR ANY OF ALL THE OTHER FORMS TO SET THE NECK
+
+# 12) TEST ALL NECK WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# 13) REPLACE ALL THE YOLO DETECTIONS IN PSEUDOCODE WITH self.activate_yolo_pose(...) and self.activate_yolo_objects
+
+# 14) TEST ALL YOLOS WITH THE PREVIOUS ACTIVATES ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# MISSING ARM ... (TIAGO)
+
+# MISSING NAVIGATION ... (TIAGO)
+
+"""
 
 import rclpy
 from rclpy.node import Node
@@ -36,15 +165,17 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 
-class GpsrNode(Node):
+class ServeBreakfastNode(Node):
 
     def __init__(self):
-        super().__init__("Gpsr")
-        self.get_logger().info("Initialised CHARMIE GPSR Node")
+        super().__init__("ServeBreakfast")
+        self.get_logger().info("Initialised CHARMIE ServeBreakfast Node")
 
         ### Topics (Publisher and Subscribers) ###   
         # Low Level 
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)    
+        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
+        self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
+        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
@@ -80,6 +211,7 @@ class GpsrNode(Node):
             self.get_logger().warn("Waiting for Audio Server...")
         while not self.calibrate_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        """
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
@@ -96,7 +228,7 @@ class GpsrNode(Node):
             self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         while not self.activate_yolo_objects_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-        
+        """
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
@@ -110,6 +242,7 @@ class GpsrNode(Node):
         self.br = CvBridge()
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
+        self.start_button_state = False
 
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
         self.speech_sucess = True
@@ -214,6 +347,11 @@ class GpsrNode(Node):
 
         # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         # cv2.waitKey(10)
+
+    ### LOW LEVEL START BUTTON ###
+    def get_start_button_callback(self, state: Bool):
+        self.start_button_state = state.data
+        # print("Received Start Button:", state.data)
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
@@ -491,19 +629,19 @@ class GpsrNode(Node):
 # main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
-    node = GpsrNode()
-    th_main = threading.Thread(target=thread_main_gpsr, args=(node,), daemon=True)
+    node = ServeBreakfastNode()
+    th_main = threading.Thread(target=ThreadMainServeBreakfast, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-def thread_main_gpsr(node: GpsrNode):
-    main = GpsrMain(node)
+def ThreadMainServeBreakfast(node: ServeBreakfastNode):
+    main = ServeBreakfastMain(node)
     main.main()
 
-class GpsrMain():
+class ServeBreakfastMain():
 
-    def __init__(self, node: GpsrNode):
+    def __init__(self, node: ServeBreakfastNode):
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
@@ -529,6 +667,20 @@ class GpsrMain():
 
         return self.node.rgb_sucess, self.node.rgb_message
  
+    def wait_for_start_button(self):
+
+        self.node.start_button_state = False
+
+        t = Bool()
+        t.data = True
+        self.node.flag_start_button_publisher.publish(t)
+
+        while not self.node.start_button_state:
+            pass
+
+        t.data = False 
+        self.node.flag_start_button_publisher.publish(t)
+        
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
@@ -676,16 +828,20 @@ class GpsrMain():
 
     # main state-machine function
     def main(self):
-        # examples of names of states
-        # use the names of states rather than just numbers to ease 3rd person code analysis
-        Waiting_for_start_button = 0
-        Searching_for_clients = 1
-        Navigation_to_person = 2
-        Receiving_order_speach = 3
-        Receiving_order_listen_and_confirm = 4
-        Collect_order_from_barman = 5
-        Delivering_order_to_client = 6
-        Final_State = 7
+        
+        # States in ServeBreakfast Task
+        self.Waiting_for_task_start = 0
+        self.Approach_kitchen_counter = 1
+        self.Picking_up_spoon = 2
+        self.Picking_up_milk = 3
+        self.Picking_up_cereal = 4
+        self.Picking_up_bowl = 5
+        self.Approach_kitchen_table = 6
+        self.Placing_bowl = 7
+        self.Placing_cereal = 8
+        self.Placing_milk = 9
+        self.Placing_spoon = 10
+        self.Final_State = 11
         
         # Neck Positions
         self.look_forward = [0, 0]
@@ -695,20 +851,20 @@ class GpsrMain():
         self.look_tray = [0, -60]
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = Waiting_for_start_button
+        self.state = self.Waiting_for_task_start
 
-        # debug print
-        print("IN NEW MAIN")
+        # debug print to know we are on the main start of the task
+        self.node.get_logger().info("In ServeBreakfast Main...")
 
         while True:
 
-            if self.state == Waiting_for_start_button:
-                print('State 0 = Initial')
+            if self.state == self.Waiting_for_task_start:
+                print("State:", self.state, "- Waiting_for_task_start")
 
                 # your code here ...
                 
                 # moves the neck to look down for navigation
-                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                 # send speech command to speakers voice, intrucing the robot 
                 self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
@@ -719,11 +875,16 @@ class GpsrMain():
                 # change face, to face picking up cup
                 self.set_face("help_pick_cup")
                 
+                # waiting for start button
+                self.wait_for_start_button()
+                self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
+
+                print("DONE2 - ", self.node.start_button_state)
                 # calibrate the background noise for better voice recognition
                 # self.calibrate_audio(wait_for_end_of=True)
 
                 # moves the neck to look to absolute cordinates in the map
-                self.set_neck_coords(position=[1.0, 1.0], ang=30, wait_for_end_of=True)
+                # self.set_neck_coords(position=[1.0, 1.0], ang=30, wait_for_end_of=True)
                 
                 ### RECEPTIONIST AUDIO EXAMPLE
                 # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
@@ -737,8 +898,9 @@ class GpsrMain():
                 self.set_face("demo5")
 
                 # moves the neck to look forward
-                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                # self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
+                """
                 ### EXAMPLES TO ACTIVATE/DEACTIVATE AND CONFIGURE YOLO POSE AND TOLO OBJECTS 
                 self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
                 print("activated yolo pose")
@@ -763,23 +925,142 @@ class GpsrMain():
                 # self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.8)
                 # print("deactivated yolo pose - right in front")
                 # time.sleep(5)
-
+                """
                 # next state
-                self.state = Searching_for_clients
+                self.state = self.Approach_kitchen_counter
 
-            elif self.state == Searching_for_clients:
-                print('State 1 = Hand Raising Detect')
-
+            elif self.state == self.Approach_kitchen_counter:
+                print("State:", self.state, "- Approach_kitchen_counter")
                 # your code here ...
                                 
                 # next state
-                self.state = Final_State
-            
-            elif self.state == Final_State:
-                
-                print("Finished task!!!")
+                self.state = self.Picking_up_spoon
 
-                # After finishing the task stays in this loop 
+            elif self.state == self.Picking_up_spoon:
+                print("State:", self.state, "- Picking_up_spoon")
+
+                ##### NECK LOOKS AT TABLE
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+
+                ##### MOVES ARM TO TOP OF TABLE POSITION
+
+                ##### SPEAK: Searching for objects
+                # self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
+
+                ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                
+                ##### SPEAK: Found spoon
+                # self.set_speech(filename="serve_breakfast/sb_found_spoon", show_in_face=True, wait_for_end_of=True)
+                
+                ##### SPEAK: Check face to see object detected
+                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
+
+                ##### SHOW FACE DETECTED OBJECT (CUSTOM)
+
+                ##### MOVE ARM TO PICK UP OBJECT 
+
+                ##### IF AN ERROR IS DETECTED:
+
+                    ##### SPEAK: There is a problem picking up the object
+                    # self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
+
+                    ##### MOVE ARM TO ERROR POSITION 
+                
+                    ##### NECK LOOK JUDGE
+                    # self.set_neck(position=self.look_judge, wait_for_end_of=True)
+
+                    ##### SPEAK: Need help, put object on my hand as it is on my face
+                    # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                    ##### SHOW FACE GRIPPER SPOON 
+                    # self.set_face("help_pick_spoon") 
+
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+
+                        ##### SPEAK: Close gripper in 3 2 1 
+                        # self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                        ##### ARM: CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED: 
+
+                            ##### SPEAK: There seems to be a problem, please retry.
+                            # self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+
+                            ##### ARM OPEN GRIPPER
+                
+                ##### SET FACE TO STANDARD FACE
+                # self.set_face("demo5")
+                        
+                ##### NECK LOOK TRAY
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                        
+                ##### ARM PLACE OBJECT IN TRAY
+
+                self.state = self.Picking_up_milk
+
+            elif self.state == self.Picking_up_milk:
+                print("State:", self.state, "- Picking_up_milk")
+                # your code here ...
+                                
+                # next state
+                self.state = self.Picking_up_cereal
+           
+            elif self.state == self.Picking_up_cereal:
+                print("State:", self.state, "- Picking_up_cereal")
+                # your code here ...
+                                
+                # next state
+                self.state = self.Picking_up_bowl
+
+            elif self.state == self.Picking_up_bowl:
+                print("State:", self.state, "- Picking_up_bowl")
+                # your code here ...
+                                
+                # next state
+                self.state = self.Approach_kitchen_table
+
+            elif self.state == self.Approach_kitchen_table:
+                print("State:", self.state, "- Approach_kitchen_table")
+                # your code here ...
+                                
+                # next state
+                self.state = self.Placing_bowl
+
+            elif self.state == self.Placing_bowl:
+                print("State:", self.state, "- Placing_bowl")
+                # your code here ...
+                                
+                # next state
+                self.state = self.Placing_cereal 
+
+            elif self.state == self.Placing_cereal:
+                print("State:", self.state, "- Placing_cereal")
+                # your code here ...
+                                
+                # next state
+                self.state = self.Placing_milk
+           
+            elif self.state == self.Placing_milk:
+                print("State:", self.state, "- Placing_milk")
+                # your code here ...
+                                
+                # next state
+                self.state = self.Placing_spoon
+
+            elif self.state == self.Placing_spoon:
+                print("State:", self.state, "- Placing_spoon")
+                # your code here ...
+                                
+                # next state
+                self.state = self.Final_State 
+                
+            elif self.state == self.Final_State:
+                
+                self.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
+
+                # Lock after finishing task
                 while True:
                     pass
 
