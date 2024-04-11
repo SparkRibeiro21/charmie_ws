@@ -14,6 +14,7 @@ import numpy as np
 import time
 import math
 import json
+from keras.models import load_model
 
 from pathlib import Path
 
@@ -67,7 +68,7 @@ class YoloPoseNode(Node):
         self.midpath_configuration_files = "charmie_ws/src/configuration_files"
         self.complete_path_configuration_files = self.home+'/'+self.midpath_configuration_files+'/'
 
-        self.complete_characteristics_models = self.home+'/'+self.midpath+'/characteristics_models/'
+        self.complete_path_characteristics_models = self.home+'/'+self.midpath+'/characteristics_models/'
 
         self.house_rooms = {}
         self.house_furniture = {}
@@ -84,6 +85,13 @@ class YoloPoseNode(Node):
         except:
             self.get_logger().error("Could NOT import data from json configuration files. (house_rooms and house_furniture)")
         
+        try:
+            self.race_model = load_model(self.complete_path_characteristics_models+"modelo_raca.h5")
+            self.gender_model = load_model(self.complete_path_characteristics_models+"modelo_gender.h5")
+            self.get_logger().info("Successfully Imported race and gender keras models.")
+        except:
+            self.get_logger().error("Could NOT import race and gender keras models. Please check if the files are in the /characteristics_models folder")
+
         # choose the yolo pose model intended to be used (n,s,m,l,...) 
         self.YOLO_MODEL = self.get_parameter("yolo_model").value
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
@@ -1033,12 +1041,12 @@ class YoloPoseNode(Node):
 
             if is_cropped_face:
                 new_person.ethnicity = "None" # still missing... (says whether the person white, asian, african descendent, middle eastern, ...)
-                new_person.age_estimate = self.get_age_prediction(cropped_face) # still missing... (says an approximate age gap like 25-35 ...)
+                new_person.age_estimate = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
                 new_person.gender = "None" # still missing... (says whether the person is male or female)
             else:
-                new_person.ethnicity = "None" # still missing... (says whether the person white, asian, african descendent, middle eastern, ...)
-                new_person.age_estimate = "None" # still missing... (says an approximate age gap like 25-35 ...)
-                new_person.gender = "None" # still missing... (says whether the person is male or female)
+                new_person.ethnicity = "None" # says whether the person white, asian, african descendent, middle eastern, ...
+                new_person.age_estimate = "None" # says an approximate age gap like 25-35 ...
+                new_person.gender = "None" # says whether the person is male or female
 
         else:
             new_person.pointing_at = "None"
@@ -1088,8 +1096,8 @@ class YoloPoseNode(Node):
         
     def get_age_prediction(self, cropped_face):
 
-        ageModel = self.complete_characteristics_models+"age_net.caffemodel"
-        ageProto = self.complete_characteristics_models+"deploy_age.prototxt"
+        ageModel = self.complete_path_characteristics_models+"age_net.caffemodel"
+        ageProto = self.complete_path_characteristics_models+"deploy_age.prototxt"
 
         ageNet = cv2.dnn.readNet(ageModel, ageProto)
         

@@ -3,3 +3,6 @@ install/
 log/
 **/__pycache__/
 **/.vscode/
+src/charmie_yolo_pose/charmie_yolo_pose/characteristics_models/modelo_gender.h5
+src/charmie_yolo_pose/charmie_yolo_pose/characteristics_models/modelo_raca.h5
+
