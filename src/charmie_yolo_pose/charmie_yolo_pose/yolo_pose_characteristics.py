@@ -1110,7 +1110,8 @@ class YoloPoseNode(Node):
         agePreds = self.ageNet.forward()
 
         age_index = agePreds[0].argmax()
-        age_ranges = ["(0-2)", "(4-6)", "(8-12)", "(15-20)", "(25-32)", "(38-43)", "(48-53)", "(60-100)"]
+        # age_ranges = ["(0-2)", "(4-6)", "(8-12)", "(15-20)", "(25-32)", "(38-43)", "(48-53)", "(60-100)"]
+        age_ranges = ["Under 20", "Under 20", "Under 20", "Under 20", "Between 18 and 32", "Between 28 and 42", "Between 40 and 60", "Over 60"]
         age = age_ranges[age_index]
 
         # Filters for the people that are more likely to show up to the robot
@@ -1168,7 +1169,7 @@ class YoloPoseNode(Node):
         predictions = self.race_model.predict(expanded_img)
 
         # Obter a previsão da raça
-        race_labels = ['Asian', 'Indian', 'Black or African Descendent', 'Caucasian', 'Middle Eastern', 'Latino Hispanic']
+        race_labels = ['Asian', 'Indian', 'Black', 'Caucasian', 'Middle Eastern', 'Hispanic']
         race_predominante_index = np.argmax(predictions, axis=1)
         race_predominante = race_labels[race_predominante_index[0]]
 
