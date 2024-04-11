@@ -43,6 +43,7 @@ class TestNode(Node):
         # Neck
         self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
         self.neck_track_object_client = self.create_client(TrackObject, "neck_track_object")
+        # Yolos
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         

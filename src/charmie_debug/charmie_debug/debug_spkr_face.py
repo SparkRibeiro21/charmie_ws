@@ -42,8 +42,6 @@ class TestNode(Node):
 
         # Variables
         self.waited_for_end_of_speaking = False
-        self.test_image_face_str = String()
-        self.test_custom_image_face_str = String()
 
         # Sucess and Message confirmations for all set_(something) CHARMIE functions
         self.speech_sucess = True
@@ -257,11 +255,6 @@ class RestaurantMain():
                 # self.set_speech(filename="generic/introduction_ful", command="", wait_for_end_of=True)
 
 
-
-
-                # self.node.test_custom_image_face_str.data = "clients_temp"
-                # self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
-                # time.sleep(5)
 
                 # self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                 

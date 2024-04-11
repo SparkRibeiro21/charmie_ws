@@ -49,11 +49,10 @@ class TestNode(Node):
         self.rgb_message = ""
         self.calibrate_audio_sucess = True
         self.calibrate_audio_message = ""
-        # self.audio_success = True
-        # self.audio_message = ""
         self.audio_command = ""
 
 
+    #### AUDIO SERVER FUNCTIONS #####
     def call_audio_server(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, wait_for_end_of=True):
         request = GetAudio.Request()
         request.yes_or_no = yes_or_no
