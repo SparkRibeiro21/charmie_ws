@@ -88,9 +88,12 @@ class YoloPoseNode(Node):
         try:
             self.race_model = load_model(self.complete_path_characteristics_models+"modelo_raca.h5")
             self.gender_model = load_model(self.complete_path_characteristics_models+"modelo_gender.h5")
-            self.get_logger().info("Successfully Imported race and gender keras models.")
+            ageModel = self.complete_path_characteristics_models+"age_net.caffemodel"
+            ageProto = self.complete_path_characteristics_models+"deploy_age.prototxt"
+            self.ageNet = cv2.dnn.readNet(ageModel, ageProto)
+            self.get_logger().info("Successfully Imported race, gender and age models.")
         except:
-            self.get_logger().error("Could NOT import race and gender keras models. Please check if the files are in the /characteristics_models folder")
+            self.get_logger().error("Could NOT import race, gender and age keras models. Please check if the files are in the /characteristics_models folder")
 
         # choose the yolo pose model intended to be used (n,s,m,l,...) 
         self.YOLO_MODEL = self.get_parameter("yolo_model").value
@@ -815,7 +818,7 @@ class YoloPoseNode(Node):
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
                         
                     if DRAW_CHARACTERISTICS:
-                        cv2.putText(current_frame_draw, new_person.age_estimate,
+                        cv2.putText(current_frame_draw, new_person.age_estimate+" / "+new_person.gender+" / "+new_person.ethnicity,
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
 
@@ -1040,9 +1043,9 @@ class YoloPoseNode(Node):
             is_cropped_face, cropped_face = self.crop_face(current_frame, current_frame_draw, new_person)
 
             if is_cropped_face:
-                new_person.ethnicity = "None" # still missing... (says whether the person white, asian, african descendent, middle eastern, ...)
+                new_person.ethnicity = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
                 new_person.age_estimate = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
-                new_person.gender = "None" # still missing... (says whether the person is male or female)
+                new_person.gender = self.get_gender_prediction(cropped_face) # says whether the person is male or female
             else:
                 new_person.ethnicity = "None" # says whether the person white, asian, african descendent, middle eastern, ...
                 new_person.age_estimate = "None" # says an approximate age gap like 25-35 ...
@@ -1095,15 +1098,10 @@ class YoloPoseNode(Node):
             return False, current_frame
         
     def get_age_prediction(self, cropped_face):
-
-        ageModel = self.complete_path_characteristics_models+"age_net.caffemodel"
-        ageProto = self.complete_path_characteristics_models+"deploy_age.prototxt"
-
-        ageNet = cv2.dnn.readNet(ageModel, ageProto)
         
         blob = cv2.dnn.blobFromImage(cropped_face, 1.0, (227, 227), (78.4263377603, 87.7689143744, 114.895847746), swapRB=False)
-        ageNet.setInput(blob)
-        agePreds = ageNet.forward()
+        self.ageNet.setInput(blob)
+        agePreds = self.ageNet.forward()
         age_index = agePreds[0].argmax()
         age_ranges = ["(0-2)", "(4-6)", "(8-12)", "(15-20)", "(25-32)", "(38-43)", "(48-53)", "(60-100)"]
         age = age_ranges[age_index]
@@ -1115,8 +1113,56 @@ class YoloPoseNode(Node):
         #     age = "(23 and 32)"
         
         return age
-        
 
+    def get_gender_prediction(self, cropped_face):
+
+        color_img = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(color_img, (224, 224))
+        normalized_img = img / 255.0
+        expanded_img = np.expand_dims(normalized_img, axis=0)
+
+        cv2.imwrite("cropped_face_test_keras.jpg", img)
+
+        # Realizar a previsão usando o modelo carregado
+        predictions = self.gender_model.predict(expanded_img)
+
+        # Obter a previsão do gênero
+        gender_predominante_index = np.argmax(predictions, axis=1)
+        gender_predominante = ['Female', 'Male'][gender_predominante_index[0]]
+
+        # Verificar se a previsão está disponível
+        if gender_predominante is not None:
+            gender = gender_predominante
+        else:
+            gender = "None"
+        
+        return gender
+
+    def get_ethnicity_prediction(self, cropped_face):
+
+        color_img = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(color_img, (224, 224))
+        normalized_img = img / 255.0
+        expanded_img = np.expand_dims(normalized_img, axis=0)
+
+        # cv2.imwrite("cropped_face_test_keras.jpg", expanded_img)
+
+        # Realizar a previsão usando o modelo carregado
+        predictions = self.race_model.predict(expanded_img)
+
+        # Obter a previsão da raça
+        race_labels = ['Asian', 'Indian', 'Black or African Descendent', 'Caucasian', 'Middle Eastern', 'Latino Hispanic']
+        race_predominante_index = np.argmax(predictions, axis=1)
+        race_predominante = race_labels[race_predominante_index[0]]
+
+        # Verificar se a previsão está disponível
+        if race_predominante is not None:
+            race = race_predominante
+        else:
+            race = "None"
+        
+        return race
+    
     def line_between_two_keypoints(self, current_frame_draw, KP_ONE, KP_TWO, xy, conf, colour):
 
         if conf[0][KP_ONE] > MIN_KP_CONF_VALUE and conf[0][KP_TWO] > MIN_KP_CONF_VALUE:    
