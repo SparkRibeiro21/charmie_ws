@@ -70,7 +70,8 @@ COMMANDS = {
 """
 
 COMMANDS = {
-    'plum': 'A Plum.'
+    'start_receptionist': 'I am ready to start my receptionist task.',
+
 }
 
 

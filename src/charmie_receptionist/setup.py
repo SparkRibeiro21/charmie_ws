@@ -23,7 +23,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "receptionist = charmie_receptionist.receptionist:main"
+            "receptionist = charmie_receptionist.receptionist:main",
+            "receptionist_robocup2023 = charmie_receptionist.receptionist_robocup2023:main"
         ],
     },
 )
