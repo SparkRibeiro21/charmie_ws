@@ -113,15 +113,15 @@ class YoloPoseNode(Node):
         # get robot_localisation
         self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
 
-        ### Services ###
-        self.activate_yolo_pose_service = self.create_service(ActivateYoloPose, "activate_yolo_pose", self.callback_activate_yolo_pose)
-        
         ### Services (Clients) ###
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
+
+        ### Services ###
+        self.activate_yolo_pose_service = self.create_service(ActivateYoloPose, "activate_yolo_pose", self.callback_activate_yolo_pose)
 
         ### Variables ###
         # to calculate the FPS
