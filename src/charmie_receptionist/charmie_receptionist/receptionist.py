@@ -137,7 +137,7 @@ class GpsrMain():
         # examples of names of states
         # use the names of states rather than just numbers to ease 3rd person code analysis
         Waiting_for_start_button = 0
-        Receive_guest = 1 #A renata alterou isto
+        Receive_guest = 1 #Renata changed this
         Navigation_to_person = 2
         Receiving_order_speach = 3
         Receiving_order_listen_and_confirm = 4
