@@ -42,12 +42,12 @@ class TestNode(Node):
         self.waited_for_end_of_calibrate_audio = False
         self.waited_for_end_of_speaking = False
 
-        # Sucess and Message confirmations for all set_(something) CHARMIE functions
-        self.speech_sucess = True
+        # Success and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_success = True
         self.speech_message = ""
-        self.rgb_sucess = True
+        self.rgb_success = True
         self.rgb_message = ""
-        self.calibrate_audio_sucess = True
+        self.calibrate_audio_success = True
         self.calibrate_audio_message = ""
         self.audio_command = ""
 
@@ -131,7 +131,7 @@ class TestNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
         else:
-            self.speech_sucess = True
+            self.speech_success = True
             self.speech_message = "Wait for answer not needed"
     
 
@@ -144,7 +144,7 @@ class TestNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_success = response.success
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
@@ -178,10 +178,10 @@ class RestaurantMain():
         temp.data = command
         self.node.rgb_mode_publisher.publish(temp)
 
-        self.node.rgb_sucess = True
+        self.node.rgb_success = True
         self.node.rgb_message = "Value Sucessfully Sent"
 
-        return self.node.rgb_sucess, self.node.rgb_message
+        return self.node.rgb_success, self.node.rgb_message
  
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", wait_for_end_of=True):
 
@@ -227,7 +227,7 @@ class RestaurantMain():
                 pass
         self.node.waited_for_end_of_calibrate_audio = False
 
-        return self.node.calibrate_audio_sucess, self.node.calibrate_audio_message 
+        return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
     def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
 
@@ -238,7 +238,7 @@ class RestaurantMain():
             pass
         self.node.waited_for_end_of_speaking = False
 
-        return self.node.speech_sucess, self.node.speech_message
+        return self.node.speech_success, self.node.speech_message
 
     def main(self):
         Waiting_for_start_button = 0

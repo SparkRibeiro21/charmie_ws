@@ -54,16 +54,16 @@ class TestNode(Node):
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
 
-        # Sucess and Message confirmations for all set_(something) CHARMIE functions
-        self.rgb_sucess = True
+        # Success and Message confirmations for all set_(something) CHARMIE functions
+        self.rgb_sucecss = True
         self.rgb_message = ""
         self.track_person_success = True
         self.track_person_message = ""
         self.track_object_success = True
         self.track_person_message = ""
-        self.activate_yolo_pose_sucess = True
+        self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
-        self.activate_yolo_objects_sucess = True
+        self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
 
         self.br = CvBridge()
@@ -261,30 +261,30 @@ class RestaurantMain():
         temp.data = command
         self.node.rgb_mode_publisher.publish(temp)
 
-        self.node.rgb_sucess = True
+        self.node.rgb_success = True
         self.node.rgb_message = "Value Sucessfully Sent"
 
-        return self.node.rgb_sucess, self.node.rgb_message
+        return self.node.rgb_success, self.node.rgb_message
 
 
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
         self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, only_detect_person_arm_raised=only_detect_person_arm_raised, characteristics=characteristics)
 
-        self.node.activate_yolo_pose_sucess = True
+        self.node.activate_yolo_pose_success = True
         self.node.activate_yolo_pose_message = "Activated with selected parameters"
 
-        return self.node.activate_yolo_pose_sucess, self.node.activate_yolo_pose_message
+        return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
     def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
         
         # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
         self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_objects_confidence=minimum_objects_confidence)
 
-        self.node.activate_yolo_objects_sucess = True
+        self.node.activate_yolo_objects_success = True
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
 
-        return self.node.activate_yolo_pose_sucess, self.node.activate_yolo_pose_message
+        return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
 
     def track_person(self, person, body_part="Head", wait_for_end_of=True):
 

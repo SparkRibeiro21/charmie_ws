@@ -105,7 +105,7 @@ class RobotSpeak():
             success = False
             message = "File does not exist!!!"
 
-        # retrieves the sucess and message to be returned by the server, so the requester has info on what happened
+        # retrieves the success and message to be returned by the server, so the requester has info on what happened
         return success, message
 
 

@@ -65,14 +65,14 @@ class OpenDoorsDemoNode(Node):
         self.waited_for_end_of_neck_coords = False
         self.waited_for_end_of_get_neck = False
 
-        # Sucess and Message confirmations for all set_(something) CHARMIE functions
-        self.speech_sucess = True
+        # Success and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_success = True
         self.speech_message = ""
-        self.neck_sucess = True
+        self.neck_success = True
         self.neck_message = ""
-        self.rgb_sucess = True
+        self.rgb_success = True
         self.rgb_message = ""
-        self.face_sucess = True
+        self.face_success = True
         self.face_message = ""
 
         self.get_neck_position = [1.0, 1.0]
@@ -92,7 +92,7 @@ class OpenDoorsDemoNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
         else:
-            self.speech_sucess = True
+            self.speech_success = True
             self.speech_message = "Wait for answer not needed"
    
     def callback_call_speech_command(self, future): #, a, b):
@@ -103,7 +103,7 @@ class OpenDoorsDemoNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_success = response.success
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
@@ -123,7 +123,7 @@ class OpenDoorsDemoNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_set_neck_command)
         else:
-            self.neck_sucess = True
+            self.neck_success = True
             self.neck_message = "Wait for answer not needed"
     
     def callback_call_set_neck_command(self, future): #, a, b):
@@ -134,7 +134,7 @@ class OpenDoorsDemoNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_success = response.success
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_neck_pos = True
@@ -157,7 +157,7 @@ class OpenDoorsDemoNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_set_neck_coords_command)
         else:
-            self.neck_sucess = True
+            self.neck_success = True
             self.neck_message = "Wait for answer not needed"
     
     def callback_call_set_neck_coords_command(self, future): #, a, b):
@@ -168,7 +168,7 @@ class OpenDoorsDemoNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_success = response.success
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_neck_coords = True
@@ -252,7 +252,7 @@ class OpenDoorsDemoMain():
             pass
         self.node.waited_for_end_of_speaking = False
 
-        return self.node.speech_sucess, self.node.speech_message
+        return self.node.speech_success, self.node.speech_message
 
     def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
@@ -263,7 +263,7 @@ class OpenDoorsDemoMain():
             pass
         self.node.waited_for_end_of_neck_pos = False
 
-        return self.node.neck_sucess, self.node.neck_message
+        return self.node.neck_success, self.node.neck_message
     
     def set_neck_coords(self, position=[], ang=0.0, wait_for_end_of=True):
 
@@ -288,7 +288,7 @@ class OpenDoorsDemoMain():
         #     pass
         # self.node.waited_for_end_of_neck_coords = False
 
-        return self.node.neck_sucess, self.node.neck_message
+        return self.node.neck_success, self.node.neck_message
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -296,10 +296,10 @@ class OpenDoorsDemoMain():
         temp.data = command
         self.node.rgb_mode_publisher.publish(temp)
 
-        self.node.rgb_sucess = True
+        self.node.rgb_success = True
         self.node.rgb_message = "Value Sucessfully Sent"
 
-        return self.node.rgb_sucess, self.node.rgb_message
+        return self.node.rgb_success, self.node.rgb_message
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
@@ -312,10 +312,10 @@ class OpenDoorsDemoMain():
             temp.data = custom
             self.node.custom_image_to_face_publisher.publish(temp)
 
-        self.node.face_sucess = True
+        self.node.face_success = True
         self.node.face_message = "Value Sucessfully Sent"
 
-        return self.node.face_sucess, self.node.face_message
+        return self.node.face_success, self.node.face_message
 
     ##### GETS #####
     def get_neck(self, wait_for_end_of=True):

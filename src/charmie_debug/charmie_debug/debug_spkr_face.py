@@ -43,14 +43,14 @@ class TestNode(Node):
         # Variables
         self.waited_for_end_of_speaking = False
 
-        # Sucess and Message confirmations for all set_(something) CHARMIE functions
-        self.speech_sucess = True
+        # Success and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_success = True
         self.speech_message = ""
-        self.save_speech_sucess = False
+        self.save_speech_success = False
         self.save_speech_message = ""
-        self.rgb_sucess = True
+        self.rgb_success = True
         self.rgb_message = ""
-        self.face_sucess = True
+        self.face_success = True
         self.face_message = ""
 
     #### SPEECH SERVER FUNCTIONS #####
@@ -68,7 +68,7 @@ class TestNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
         else:
-            self.speech_sucess = True
+            self.speech_success = True
             self.speech_message = "Wait for answer not needed"
     
 
@@ -81,7 +81,7 @@ class TestNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_success = response.success
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
@@ -107,7 +107,7 @@ class TestNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.save_speech_sucess = response.success
+            self.save_speech_success = response.success
             self.save_speech_message = response.message
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
@@ -142,7 +142,7 @@ class RestaurantMain():
             pass
         self.node.waited_for_end_of_speaking = False
 
-        return self.node.speech_sucess, self.node.speech_message
+        return self.node.speech_success, self.node.speech_message
     
 
     def save_speech(self, filename, command):
@@ -155,10 +155,10 @@ class RestaurantMain():
         temp.data = command
         self.node.rgb_mode_publisher.publish(temp)
 
-        self.node.rgb_sucess = True
+        self.node.rgb_success = True
         self.node.rgb_message = "Value Sucessfully Sent"
 
-        return self.node.rgb_sucess, self.node.rgb_message
+        return self.node.rgb_success, self.node.rgb_message
     
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
@@ -172,10 +172,10 @@ class RestaurantMain():
             temp.data = custom
             self.node.custom_image_to_face_publisher.publish(temp)
 
-        self.node.face_sucess = True
+        self.node.face_success = True
         self.node.face_message = "Value Sucessfully Sent"
 
-        return self.node.face_sucess, self.node.face_message
+        return self.node.face_success, self.node.face_message
 
 
     # def wait_for_end_of_speaking(self):

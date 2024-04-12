@@ -46,8 +46,8 @@ class GpsrNode(Node):
         self.waited_for_end_of_speaking = False
         self.flag_navigation_done = False
 
-        # Sucess and Message confirmations for all set_(something) CHARMIE functions
-        self.speech_sucess = True
+        # Success and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_success = True
         self.speech_message = ""
 
     # Function to send commands to speaker module 
@@ -64,7 +64,7 @@ class GpsrNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
         else:
-            self.speech_sucess = True
+            self.speech_success = True
             self.speech_message = "Wait for answer not needed"
 
     # Function that wait for a response from the service (int his case: wait for speech being said to be over)
@@ -76,7 +76,7 @@ class GpsrNode(Node):
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_success = response.success
             self.speech_message = response.message
             self.waited_for_end_of_speaking = True
         except Exception as e:
@@ -121,7 +121,7 @@ class GpsrMain():
             pass
         self.node.waited_for_end_of_speaking = False
 
-        return self.node.speech_sucess, self.node.speech_message
+        return self.node.speech_success, self.node.speech_message
     
 
     # just an example of a wait for end of navigation

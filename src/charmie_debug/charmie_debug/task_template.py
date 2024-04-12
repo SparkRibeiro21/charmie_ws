@@ -244,25 +244,25 @@ class ServeBreakfastNode(Node):
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
 
-        # Sucess and Message confirmations for all set_(something) CHARMIE functions
-        self.speech_sucess = True
+        # Success and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_success = True
         self.speech_message = ""
-        self.rgb_sucess = True
+        self.rgb_success = True
         self.rgb_message = ""
-        self.calibrate_audio_sucess = True
+        self.calibrate_audio_success = True
         self.calibrate_audio_message = ""
         self.audio_command = ""
-        self.face_sucess = True
+        self.face_success = True
         self.face_message = ""
-        self.neck_sucess = True
+        self.neck_success = True
         self.neck_message = ""
         self.track_person_success = True
         self.track_person_message = ""
         self.track_object_success = True
         self.track_person_message = ""
-        self.activate_yolo_pose_sucess = True
+        self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
-        self.activate_yolo_objects_sucess = True
+        self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
@@ -391,7 +391,7 @@ class ServeBreakfastNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
         else:
-            self.speech_sucess = True
+            self.speech_success = True
             self.speech_message = "Wait for answer not needed"
 
     def callback_call_speech_command(self, future): #, a, b):
@@ -402,7 +402,7 @@ class ServeBreakfastNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_success = response.success
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
@@ -486,7 +486,7 @@ class ServeBreakfastNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_set_neck_command)
         else:
-            self.neck_sucess = True
+            self.neck_success = True
             self.neck_message = "Wait for answer not needed"
     
     def callback_call_set_neck_command(self, future): #, a, b):
@@ -497,7 +497,7 @@ class ServeBreakfastNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_success = response.success
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_neck_pos = True
@@ -521,7 +521,7 @@ class ServeBreakfastNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_set_neck_coords_command)
         else:
-            self.neck_sucess = True
+            self.neck_success = True
             self.neck_message = "Wait for answer not needed"
     
     def callback_call_set_neck_coords_command(self, future): #, a, b):
@@ -532,7 +532,7 @@ class ServeBreakfastNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_sucecss = response.success
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_neck_coords = True
@@ -654,7 +654,7 @@ class ServeBreakfastMain():
             pass
         self.node.waited_for_end_of_speaking = False
 
-        return self.node.speech_sucess, self.node.speech_message
+        return self.node.speech_success, self.node.speech_message
 
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -662,10 +662,10 @@ class ServeBreakfastMain():
         temp.data = command
         self.node.rgb_mode_publisher.publish(temp)
 
-        self.node.rgb_sucess = True
+        self.node.rgb_success = True
         self.node.rgb_message = "Value Sucessfully Sent"
 
-        return self.node.rgb_sucess, self.node.rgb_message
+        return self.node.rgb_success, self.node.rgb_message
  
     def wait_for_start_button(self):
 
@@ -725,7 +725,7 @@ class ServeBreakfastMain():
                 pass
         self.node.waited_for_end_of_calibrate_audio = False
 
-        return self.node.calibrate_audio_sucess, self.node.calibrate_audio_message 
+        return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
@@ -738,10 +738,10 @@ class ServeBreakfastMain():
             temp.data = custom
             self.node.custom_image_to_face_publisher.publish(temp)
 
-        self.node.face_sucess = True
+        self.node.face_success = True
         self.node.face_message = "Value Sucessfully Sent"
 
-        return self.node.face_sucess, self.node.face_message
+        return self.node.face_success, self.node.face_message
     
     def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
@@ -752,7 +752,7 @@ class ServeBreakfastMain():
             pass
         self.node.waited_for_end_of_neck_pos = False
 
-        return self.node.neck_sucess, self.node.neck_message
+        return self.node.neck_success, self.node.neck_message
     
     def set_neck_coords(self, position=[], ang=0.0, wait_for_end_of=True):
 
@@ -771,7 +771,7 @@ class ServeBreakfastMain():
             pass
         self.node.waited_for_end_of_neck_coords = False
 
-        return self.node.neck_sucess, self.node.neck_message
+        return self.node.neck_success, self.node.neck_message
     
     def get_neck(self, wait_for_end_of=True):
     
@@ -789,20 +789,20 @@ class ServeBreakfastMain():
         
         self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, only_detect_person_arm_raised=only_detect_person_arm_raised, characteristics=characteristics)
 
-        self.node.activate_yolo_pose_sucess = True
+        self.node.activate_yolo_pose_success = True
         self.node.activate_yolo_pose_message = "Activated with selected parameters"
 
-        return self.node.activate_yolo_pose_sucess, self.node.activate_yolo_pose_message
+        return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
     def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
         
         # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
         self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_objects_confidence=minimum_objects_confidence)
 
-        self.node.activate_yolo_objects_sucess = True
+        self.node.activate_yolo_objects_success = True
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
 
-        return self.node.activate_yolo_pose_sucess, self.node.activate_yolo_pose_message
+        return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
 
     def track_person(self, person, body_part="Head", wait_for_end_of=True):
 
