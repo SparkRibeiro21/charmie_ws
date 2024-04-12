@@ -137,13 +137,12 @@ class GpsrMain():
         # examples of names of states
         # use the names of states rather than just numbers to ease 3rd person code analysis
         Waiting_for_start_button = 0
-        Receive_guest = 1 #Renata changed this
-        Navigation_to_person = 2
-        Receiving_order_speach = 3
-        Receiving_order_listen_and_confirm = 4
-        Collect_order_from_barman = 5
-        Delivering_order_to_client = 6
-        Final_State = 7
+        Receive_guest = 1
+        Characteristics_first_guest = 2
+        Navigation_to_sofa = 3
+        Presentation_host_first_guest = 4
+        Presentation_host_first_second_guest = 5
+        Final_State = 6
 
         self.state = Waiting_for_start_button
 
@@ -156,38 +155,198 @@ class GpsrMain():
                 print('State 0 = Initial')
 
                 # your code here ...
-
-                # send speech command to speakers voice, intrucing the robot 
-                self.set_speech(filename="receptionist/start_receptionist", wait_for_end_of=False)
-                # if you want to have some information regarding the the set_speech you just sent you can try the following:
-                # success, message = self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
-                # THIS CAN BE DONE FOR ALL set_(something) functions
-                # print(success, message)
-                
-                print("Over")
-                # send rgb commands to low level
-                self.rgb_mode.data = CYAN+ROTATE
-                self.node.rgb_mode_publisher.publish(self.rgb_mode)
-
-                                
+                #NECK: LOOKS IN FRONT
+                #SPEAK: Hello! I am ready to start the receptionist task! Waiting for start button to be pressed.
+                #RGB: WAITING MODE
+                #IF BUTTON PRESSED:
+                # RGB: OK MODE
+                # NECK: LOOKS TO THE FLOOR (NAVIGATION POSE)
+                # MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
+                #NEXT STATE 
+                    
                 # next state
-                self.state = Searching_for_clients
+                self.state = Receive_guest
 
-            elif self.state == Searching_for_clients:
-                print('State 1 = Hand Raising Detect')
+            elif self.state == Receive_guest:
+                print('State 1 = Receive guest')
 
                 # your code here ...
+                #NECK: LOOKS IN FRONT 
+                #RGB: WAITING MODE
+                #SPEAK: I am ready to receive a new guest. Please stand in front of me.
+                #if face = exist:
+                # RGB: OK MODE (GREEN)
+                # NECK: LOOKS TO GUEST 1
+                # SPEAK: Hello! My name is Charmie. I will make you some questions. Please speak loud and clear. Answer me after the green light on my face.
+                # SPEAK:What's your name and favourite drink?
+                # AUDIO: RECEIVE NAME AND DRINK OF GUEST 
+                # RGB: OK MODE
+                # CAMARA: SAVE IMAGE FROM GUEST 1
+                # if numero do guest = 1:
+                #  self.state = Characteristics_first_guest
+                # elif numero do guest = 2:
+                #  self.state = Navigation_to_sofa  
+                #else:  
+                # continue searching
+
+            elif self.state == Characteristics_first_guest:
+                print('State 2 = Characteristics first guest')
+                
+                #SAVE IMAGE FROM GUEST WITH NAME: "GUEST1"
+                #SPEAK CHARACTERISTICS: AGE, RACE, GENDER, HEIGHT, SHIRT COLOR, PANTS COLORS
+                #CALL FUNCTION - PROCESS_CHARACTERISTICS - PROCESSING INFORMATION AS IN 2024 CODE
+                #similar like this:
+                #get_caract, characteristics, none_variables = analyze_variables(race, age, gender, height, shirt_color, pant_color)
+
+
+                self.state = Navigation_to_sofa
+                
+            elif self.state == Navigation_to_sofa:
+                print('State 3 = Navigation to sofa')
+                #RGB: OK MODE
+                #SPEAK:Thank you. Please follow me.
+                #NECK: LOOKS TO THE FLOOR (NAVIGATION POSE)
+                #MOVE TO SOFA LOCALISATION
+                #SPEAK:Please stay on my left until I give you instructions on where to sit.
+                #if numero do guest = 1:
+                #self.state = Presentation_host_first_guest
+                #elif numero do guest = 2:
+                #self.state = Presentation_host_first_second_guest 
+
+            elif self.state == Presentation_host_first_guest:
+                print('State 4 = Presentation host and first guest')
+                #NECK: LOOK TO THE SOFA
+                #ACTION: FOUND PERSON (HOST)
+                #NECK: LOOK TO HOST
+                #SPEAK:Hello, I will present everyone in this room.
+                #NECK: LOOK TO THE GUEST
+                #SPEAK:The host is "NAME" and his favorite drink is "DRINK".
+                #NECK: LOOK TO HOST 
+                #SPEAK:The first guest name is "NAME" and the favorite drink is "DRINK"
+                #ACTION: FOUND AN EMPTY SEAT
+                #NECK: LOOK TO AN EMPTY SEAT
+                #SPEAK:Please take a sit on the sofa that I'm looking at.
+                #RGB: OK MODE
+                #NECK: LOOKS TO THE FLOOR (NAVIGATION POSE)
+                #MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
+                self.state = Receive_guest
                                 
-                # next state
+            elif self.state == Presentation_host_first_second_guest:
+                print('State 4 = Presentation host, first and second guest')
+                #NECK: LOOK TO THE GUEST
+                #SPEAK:The host is "NAME" and his favorite drink is "DRINK".
+                #SPEAK:Introduce the first guest - name and drink and characteristics
+                #NECK: LOOK TO THE SOFA/CHAIRS
+                #ACTION: FOUND PERSONS/LOCALISATIONS
+                #ACTION: RECOGNIZE HOST AND GUEST 1 AND ASSOCIATE THEM COORDINATES
+                #NECK: LOOK TO HOST
+                #SPEAK:Hello, I will present everyone in this room.
+                #SPEAK:Dear host
+                #NECK: LOOK TO THE GUEST
+                #SPEAK:Dear guest
+                #SPEAK:The second guest name is "NAME" and the favorite drink is "DRINK"
+                #ACTION: FOUND AN EMPTY SEAT
+                #NECK: LOOK TO AN EMPTY SEAT
+                #SPEAK:Please take a sit on the sofa that I'm looking at.
+                #RGB: OK MODE
+                #NECK: LOOKS TO THE FLOOR (NAVIGATION POSE)
+                #MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
                 self.state = Final_State
-            
+
             elif self.state == Final_State:
                 
                 print("Finished task!!!")
-
+                #NECK: LOOK IN FRONT
+                #SPEAK: Thank you. I finished my receptionist task
+                #NECK: LOOK TO THE FLOOR
                 # After finishing the task stays in this loop 
                 while True:
                     pass
 
             else:
                 pass
+
+    '''def Get_characteristics(race, age, gender, height, shirt_color, pant_color):
+        characteristics = []
+        none_variables = []
+
+        if race is not None:
+            characteristics.append(race)
+        else:
+            none_variables.append("race")
+
+        if age is not None:
+            characteristics.append(age)
+        else:
+            none_variables.append("age")
+
+        if gender is not None:
+            characteristics.append(gender)
+        else:
+            none_variables.append("gender")
+
+        if height is not None:
+            characteristics.append(height)
+        else:
+            none_variables.append("height")
+
+        if shirt_color is not None:
+            characteristics.append(shirt_color)
+        else:
+            none_variables.append("shirt_color")
+
+        if pant_color is not None:
+            characteristics.append(pant_color)
+        else:
+            none_variables.append("pant_color")
+
+        get_caract = len(characteristics)
+
+        return get_caract, characteristics, none_variables
+
+
+    def Process_Info(get_caract, characteristics, none_variables):
+        if get_caract == 5 or get_caract == 6:
+            print("Características:", characteristics)
+        elif get_caract == 4 or get_caract == 3 or get_caract == 2 or get_caract == 1 or get_caract == 0:
+            print(characteristics)
+            if 'age' in none_variables:
+                print('age 25 and 32')
+            if 'gender' in none_variables:
+                print('gender male')
+            if 'race' in none_variables:
+                print('race caucasian')
+            if 'height' in none_variables:
+                print('height taller than me')
+            if 'shirt_color' in none_variables:
+                print('white')
+            if 'pant_color' in none_variables:
+                pass
+            if not none_variables:  # Se não houver variáveis ausentes
+                print("nada")
+
+
+
+    def main():
+        # Variáveis de exemplo para teste
+        race = "Caucasian"
+        age = 18
+        gender = None
+        height = None
+        shirt_color = "Blue"
+        pant_color = None
+
+        # Chamando a função Get_characteristics
+        get_caract, characteristics, none_variables = Get_characteristics(race, age, gender, height, shirt_color, pant_color)
+
+        # Mostrando os resultados
+        print("Número de características:", get_caract)
+        print("Características:", characteristics)
+        print("Variáveis None:", none_variables)
+
+        # Processando as informações
+        Process_Info(get_caract, characteristics, none_variables)
+
+
+    if __name__ == "__main__":
+        main()'''
