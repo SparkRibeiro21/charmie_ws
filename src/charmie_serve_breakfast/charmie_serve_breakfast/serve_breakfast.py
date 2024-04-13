@@ -43,6 +43,8 @@ class ServeBreakfastNode(Node):
         # self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
+        self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered_hand", self.object_detected_filtered_hand_callback, 10)
+
 
 
         ### Services (Clients) ###
@@ -100,8 +102,9 @@ class ServeBreakfastNode(Node):
         self.waited_for_end_of_track_object = False
 
         self.br = CvBridge()
-        self.detected_people = Yolov8Pose()
+        # self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
+        self.detected_objects_hand = Yolov8Objects()
         self.start_button_state = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
@@ -125,11 +128,6 @@ class ServeBreakfastNode(Node):
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
 
-        self.br = CvBridge()
-        self.detected_people = Yolov8Pose()
-        self.detected_objects = Yolov8Objects()
-        self.start_button_state = False
-
         self.get_neck_position = [1.0, 1.0]
         
 
@@ -144,6 +142,9 @@ class ServeBreakfastNode(Node):
 
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
+
+    def object_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
+        self.detected_objects_hand = det_object
 
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
@@ -1142,7 +1143,7 @@ class ServeBreakfastMain():
                 self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
                 time.sleep(1)
 
-                finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0)    
+                finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=False)    
 
                 if finished_detection:
                     break
@@ -1157,6 +1158,8 @@ class ServeBreakfastMain():
                 all_objects_detected = True 
 
             elif all(self.flag_object_total):
+                self.set_neck(position=[-45, 0], wait_for_end_of=True) # temp
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 self.create_image_four_sb_objects_separately() 
                 self.set_speech(filename="serve_breakfast/sb_found_bowl", wait_for_end_of=True)
                 all_objects_detected = True
@@ -1180,7 +1183,7 @@ class ServeBreakfastMain():
                 self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
                 time.sleep(1)
 
-                finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0)    
+                finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=True)    
 
                 if finished_detection:
                     break
@@ -1195,6 +1198,8 @@ class ServeBreakfastMain():
                 all_objects_detected = True 
 
             elif all(self.flag_object_total):
+                self.set_neck(position=[-45, 0], wait_for_end_of=True) # temp
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 self.create_image_four_sb_objects_separately() 
                 self.set_speech(filename="serve_breakfast/sb_found_bowl", wait_for_end_of=True)
                 all_objects_detected = True
@@ -1204,7 +1209,7 @@ class ServeBreakfastMain():
                 break
 
 
-    def detect_four_serve_breakfast_objects(self, delta_t):
+    def detect_four_serve_breakfast_objects(self, delta_t, with_hand):
 
         actual_object = [
             "SPOON", 
@@ -1254,7 +1259,9 @@ class ServeBreakfastMain():
         # flag_cornflakes = False
         # flag_bowl = False
 
-        local_detected_objects = self.node.detected_objects # just so I can use in the return
+        # local_detected_objects = self.node.detected_objects # just so I can use in the return
+        # local_detected_objects_hand = self.node.detected_objects_hand
+        
         start_time = time.time()
         while (time.time() - start_time) < delta_t:        
             local_detected_objects = self.node.detected_objects
@@ -1271,6 +1278,23 @@ class ServeBreakfastMain():
                             self.detect_object_total[obj] = object
                             self.flag_object_total[obj] = True
                             self.images_of_detected_object_total[obj] = local_detected_objects.image_rgb
+
+            local_detected_objects_hand = self.node.detected_objects_hand
+            for object in local_detected_objects_hand.objects:
+                for obj in range(TOTAL_OBJ):
+                    if object.object_name in detect_as[obj]:
+                        # print(object.object_name, "-", object.confidence, "-", object.index)
+
+                        # The hand objects can not be considered for the show the four objects in the same image case since the images are not the same
+                        # if object.confidence > detect_object[obj].confidence:
+                        #     # print(" - ", object.object_name, "-", object.confidence, "-", object.index)
+                        #     detect_object[obj] = object
+                        #     flag_object[obj] = True
+                        
+                        if object.confidence > self.detect_object_total[obj].confidence:
+                            self.detect_object_total[obj] = object
+                            self.flag_object_total[obj] = True
+                            self.images_of_detected_object_total[obj] = local_detected_objects_hand.image_rgb
 
 
 
@@ -1370,8 +1394,8 @@ class ServeBreakfastMain():
         cv2.imwrite(self.node.complete_path_custom_face + current_datetime + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         time.sleep(0.5)
         self.set_face(custom=current_datetime)
-        time.sleep(0.5)
-        self.set_face(custom=current_datetime)
+        # time.sleep(0.5)
+        # self.set_face(custom=current_datetime)
         
         
         
