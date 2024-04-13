@@ -1447,7 +1447,7 @@ class ServeBreakfastMain():
             end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
             cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
 
-                # cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
+            # cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
                     
             
             # for object in serve_breakfast_objects:      
@@ -1485,8 +1485,8 @@ class ServeBreakfastMain():
             cv2.imwrite(self.node.complete_path_custom_face + current_datetime + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
             time.sleep(0.5)
             self.set_face(custom=current_datetime)
-            time.sleep(0.5)
-            self.set_face(custom=current_datetime)
+            # time.sleep(0.5)
+            # self.set_face(custom=current_datetime)
             time.sleep(5)
             
             
