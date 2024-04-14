@@ -71,9 +71,7 @@ COMMANDS = {
 """
 
 COMMANDS = {
-    'start_carry_my_luggage': 'I am ready to start my carry my luggage task.',
-    'finish_carry_my_luggage': 'I have finished my carry my luggage task.',
-
+    'found_all_sb_objects': 'I have found the four objects necessary to serve the breakfast.',
 }
 
 
