@@ -6,14 +6,15 @@ import time
 import pygame
 from pathlib import Path
 
-# MODE can be the following commands:
-# "STANDARD": convert one command into wav and txt 
-# "RECEPTIONIST": reads names and drinks arrays and generates all commands for first guest names, second guest names and favourite drinks
-
 names_list = ["Axel", "John", "Paris", "Robin", "Simone"]
 drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
 
+
+# MODE can be the following commands:
+# "STANDARD": convert one command into wav and txt 
+# "RECEPTIONIST": reads names and drinks arrays and generates all commands for first guest names, second guest names and favourite drinks
 MODE = "STANDARD"
+
 
 #COMMANDS = {
 #    'waiting_start_button': 'Waiting for start button to be pressed.',
@@ -70,7 +71,8 @@ COMMANDS = {
 """
 
 COMMANDS = {
-    'start_receptionist': 'I am ready to start my receptionist task.',
+    'start_carry_my_luggage': 'I am ready to start my carry my luggage task.',
+    'finish_carry_my_luggage': 'I have finished my carry my luggage task.',
 
 }
 
