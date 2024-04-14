@@ -70,8 +70,15 @@ COMMANDS = {
 """
 
 COMMANDS = {
-    'start_receptionist': 'I am ready to start my receptionist task.',
-
+    'finish_receptionist': 'Thank you. I finished my receptionist task',
+    'race_caucasian': 'Caucasian',
+    'race_asian': 'Asian',
+    'race_black': 'African descendant',
+    'race_middleeastern': 'Middle Eastern',
+    'race_indian': 'Indian',
+    'race_hispanic': 'Hispanic',
+    'gender_male':'Male',
+    'gender_female': 'Female'
 }
 
 
