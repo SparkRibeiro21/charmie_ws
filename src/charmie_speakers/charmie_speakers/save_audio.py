@@ -71,7 +71,7 @@ COMMANDS = {
 """
 
 COMMANDS = {
-    'found_all_sb_objects': 'I have found the four objects necessary to serve the breakfast.',
+    'problem_detecting_change_object': 'There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?',
 }
 
 

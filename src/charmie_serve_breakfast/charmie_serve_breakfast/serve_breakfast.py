@@ -629,23 +629,23 @@ class ServeBreakfastMain():
         # Task Related Variables
         self.Waiting_for_task_start = 0
         self.Approach_kitchen_counter = 1
-        self.Detect_all_objects = 10
-        self.Picking_up_spoon = 2
-        self.Picking_up_milk = 3
-        self.Picking_up_cereal = 4
-        self.Picking_up_bowl = 5
-        self.Approach_kitchen_table = 6
-        self.Placing_bowl = 7
-        self.Placing_cereal = 8
-        self.Placing_milk = 9
-        self.Placing_spoon = 10
-        self.Final_State = 11
+        self.Detect_all_objects = 2
+        self.Picking_up_spoon = 3
+        self.Picking_up_milk = 4
+        self.Picking_up_cornflakes = 5
+        self.Picking_up_bowl = 6
+        self.Approach_kitchen_table = 7
+        self.Placing_bowl = 8
+        self.Placing_cornflakes = 9
+        self.Placing_milk = 10
+        self.Placing_spoon = 11
+        self.Final_State = 12
 
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
-        self.look_table_objects = [45, -45] # temp change to: [-45, -45]
+        self.look_table_objects = [45, -45] # temp while debugging! Change to: [-45, -45]
         self.look_tray = [0, -60]
 
         # Detect Objects Variables
@@ -654,7 +654,6 @@ class ServeBreakfastMain():
         self.flag_object_total = [False, False, False, False] 
 
         # to debug just a part of the task you can just change the initial state, example:
-        # self.state = self.Approach_kitchen_table
         self.state = self.Waiting_for_task_start
 
         # MISSING:
@@ -662,6 +661,8 @@ class ServeBreakfastMain():
         # change neck positions to non-temp testing
         # rgb
         # levantar braço para posição de deteção
+        # arm
+        # navigation
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
 
@@ -687,7 +688,6 @@ class ServeBreakfastMain():
 
                 ##### self.wait_for_door_open()
 
-
                 self.state = self.Approach_kitchen_counter
 
             elif self.state == self.Approach_kitchen_counter:
@@ -698,13 +698,11 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=True)
                 
-
                 self.state = self.Detect_all_objects
 
             elif self.state == self.Detect_all_objects:
 
                 self.search_for_serve_breakfast_objects()
-
 
                 self.state = self.Picking_up_spoon
 
@@ -717,11 +715,11 @@ class ServeBreakfastMain():
                 self.set_neck(position=self.look_judge, wait_for_end_of=True)    
                    
                 ##### MOVE ARM TO ERROR POSITION 
-                time.sleep(1.0)                
+                time.sleep(1.0)    
+
+                self.set_face("help_pick_spoon")             
 
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_face("help_pick_spoon") 
 
                 time.sleep(2)
                 
@@ -741,9 +739,6 @@ class ServeBreakfastMain():
                 
                 ##### ARM PLACE OBJECT IN TRAY
 
-                while True:
-                    pass
-
                 self.state = self.Picking_up_milk
 
             elif self.state == self.Picking_up_milk:
@@ -756,10 +751,10 @@ class ServeBreakfastMain():
 
                 ##### MOVE ARM TO ERROR POSITION 
                 time.sleep(1.0)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 self.set_face("help_pick_milk") 
+                
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 time.sleep(2)
                 
@@ -779,9 +774,9 @@ class ServeBreakfastMain():
                         
                 ##### ARM PLACE OBJECT IN TRAY
 
-                self.state = self.Picking_up_cereal
+                self.state = self.Picking_up_cornflakes
            
-            elif self.state == self.Picking_up_cereal:
+            elif self.state == self.Picking_up_cornflakes:
 
                 ##### IF AN ERROR IS DETECTED:
                 
@@ -791,10 +786,10 @@ class ServeBreakfastMain():
 
                 ##### MOVE ARM TO ERROR POSITION
                 time.sleep(1.0)
+
+                self.set_face("help_pick_cornflakes") 
                 
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_face("help_pick_cereal") 
 
                 time.sleep(2)
                 
@@ -826,10 +821,10 @@ class ServeBreakfastMain():
 
                 ##### MOVE ARM TO ERROR POSITION
                 time.sleep(1.0)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
                     
                 self.set_face("help_pick_bowl") 
+                
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 time.sleep(2)
                 
@@ -882,9 +877,9 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
-                self.state = self.Placing_cereal 
+                self.state = self.Placing_cornflakes 
 
-            elif self.state == self.Placing_cereal:
+            elif self.state == self.Placing_cornflakes:
 
                 self.set_neck(position=self.look_tray, wait_for_end_of=True)
                 time.sleep(1)
@@ -961,6 +956,14 @@ class ServeBreakfastMain():
 
         all_objects_detected = False
 
+        TOTAL_OBJ = 4
+        list_sb_objects=[
+            "spoon",
+            "milk",
+            "cornflakes",
+            "bowl"
+        ]
+
         while not all_objects_detected:
 
             # FIRST TYPE OF SEARCH: JUST THE NECK WITH SMALL ADJUSTEMENTS
@@ -1001,7 +1004,7 @@ class ServeBreakfastMain():
                 self.create_image_four_sb_objects_separately() 
                 all_objects_detected = True
 
-            if all_objects_detected: # if the first search works well than we can exit the while loop
+            if all_objects_detected:
                 self.activate_yolo_objects(activate_objects=False)
                 break
 
@@ -1045,9 +1048,17 @@ class ServeBreakfastMain():
                 self.create_image_four_sb_objects_separately() 
                 all_objects_detected = True
 
-            if all_objects_detected: # if the first search works well than we can exit the while loop
+            if all_objects_detected:
                 self.activate_yolo_objects(activate_objects=False)
                 break
+
+            self.set_neck(position=self.look_judge, wait_for_end_of=False)
+            # if i can not detect both times, i will ask the judge to move and rotate the objects I could not detect
+            self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
+            for obj in range(TOTAL_OBJ):
+                if not self.flag_object_total[obj]:
+                    self.set_speech(filename="objects_names/"+list_sb_objects[obj], wait_for_end_of=False)  
+
 
 
     def detect_four_serve_breakfast_objects(self, delta_t, with_hand):
@@ -1065,14 +1076,6 @@ class ServeBreakfastMain():
             "CORNFLAKES", 
             "BOWL      "
             ]
-
-
-
-        # SPOON = 0
-        # MILK = 1
-        # CORNFLAKES = 2
-        # BOWL = 3
-
         TOTAL_OBJ = 4
 
         detect_as = [
@@ -1081,27 +1084,9 @@ class ServeBreakfastMain():
             ["Cornflakes", "Strawberry_jello", "Chocolate_jello"], # detect as 'cornflakes'
             ["Bowl", "Plate", "Cup", "Mustard"] # detect as 'bowl'
         ]
-        
-        # detect_as_spoon = ["Spoon", "Fork", "Knife"]
-        # detect_as_milk = ["Milk"]
-        # detect_as_cornflakes = ["Cornflakes", "Strawberry_jello", "Chocolate_jello"]
-        # detect_as_bowl = ["Bowl", "Plate", "Cup", "Mustard"]
-        
 
-        # spoon_detected_object = DetectedObject()
-        # milk_detected_object = DetectedObject()
-        # cornflakes_detected_object = DetectedObject()
-        # bowl_detected_object = DetectedObject()
         detect_object = [DetectedObject(), DetectedObject(), DetectedObject(), DetectedObject()]
         flag_object = [False, False, False, False] 
-
-        # flag_spoon = False
-        # flag_milk = False
-        # flag_cornflakes = False
-        # flag_bowl = False
-
-        # local_detected_objects = self.node.detected_objects # just so I can use in the return
-        # local_detected_objects_hand = self.node.detected_objects_hand
         
         start_time = time.time()
         while (time.time() - start_time) < delta_t:        
@@ -1109,7 +1094,6 @@ class ServeBreakfastMain():
             for object in local_detected_objects.objects:
                 for obj in range(TOTAL_OBJ):
                     if object.object_name in detect_as[obj]:
-                        # print(object.object_name, "-", object.confidence, "-", object.index)
                         if object.confidence > detect_object[obj].confidence:
                             # print(" - ", object.object_name, "-", object.confidence, "-", object.index)
                             detect_object[obj] = object
@@ -1140,41 +1124,28 @@ class ServeBreakfastMain():
                             self.flag_object_total[obj] = True
                             self.images_of_detected_object_total[obj] = local_detected_objects_hand.image_rgb
 
-
-
         # for obj in range(TOTAL_OBJ):
         #     print(actual_object_with_spaces[obj], "|", detect_object[obj].object_name, "-", detect_object[obj].confidence, "-", detect_object[obj].index, "-", flag_object[obj] )
 
         for obj in range(TOTAL_OBJ):
             print(actual_object_with_spaces[obj], "|", self.detect_object_total[obj].object_name, "-", self.detect_object_total[obj].confidence, "-", self.detect_object_total[obj].index, "-", self.flag_object_total[obj] )
 
-
-        print("FINAL:", all(flag_object))
+        # print("FINAL:", all(flag_object))
 
         if all(flag_object):
             self.create_image_four_sb_objects_same_time(local_detected_objects.image_rgb, detect_object) # sends the last image analysed 
             return True
         else:
             return False
-
-        # print(spoon_detected_object)
-        # print("SPOON:", spoon_detected_object.object_name, "-", spoon_detected_object.confidence, "-", spoon_detected_object.index)
-        # print("MILK:", milk_detected_object.object_name, "-", milk_detected_object.confidence, "-", milk_detected_object.index)
-        # print("CORNFLAKES:", cornflakes_detected_object.object_name, "-", cornflakes_detected_object.confidence, "-", cornflakes_detected_object.index)
-        # print("BOWL:", bowl_detected_object.object_name, "-", bowl_detected_object.confidence, "-", bowl_detected_object.index)
-
+        
 
     def create_image_four_sb_objects_same_time(self, image, serve_breakfast_objects):
 
         current_frame = self.node.br.imgmsg_to_cv2(image, "bgr8")
         current_frame_draw = current_frame.copy()
 
-        # img = [0:720, 0:1280]
-        # corr_image = False
         thresh_h = 80
         thresh_v = 220
-
-        # if self.node.detected_objects.num_objects > 0:
 
         x_min = 1280
         x_max = 0
@@ -1183,9 +1154,6 @@ class ServeBreakfastMain():
 
         for object in serve_breakfast_objects:      
         
-            # if object.object_class == "Dishes":
-            #     corr_image = True
-
             if object.box_top_left_x < x_min:
                 x_min = object.box_top_left_x
             if object.box_top_left_x+object.box_width > x_max:
@@ -1199,62 +1167,29 @@ class ServeBreakfastMain():
             start_point = (object.box_top_left_x, object.box_top_left_y)
             end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
             cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
-
             # cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
-                
         
         for object in serve_breakfast_objects:      
-            
-            # if object.object_class == "Dishes":
-            
+                        
             if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
                 start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
             else:
                 start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
-                
-            # just to test for the "serve the breakfast" task...
-            aux_name = object.object_name
-            # if object.object_name == "Fork" or object.object_name == "Knife":
-            #     aux_name = "Spoon"
-            # elif object.object_name == "Plate" or object.object_name == "Cup":
-            #     aux_name = "Bowl"
 
-            text_size, _ = cv2.getTextSize(f"{aux_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
+            text_size, _ = cv2.getTextSize(f"{object.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
             text_w, text_h = text_size
             cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
-            cv2.putText(current_frame_draw, f"{aux_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
+            cv2.putText(current_frame_draw, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
         
-
-        # if corr_image:
-            # # current_frame_draw = current_frame_draw[x_min:y_min, x_max,y_max]
-            # # img = current_frame_draw[y_min:y_max, x_min,x_max]
-            # cv2.imshow("c", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)])
-            # cv2.waitKey(10)
-            # cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
-        # cv2.waitKey(10)
-
         current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
-        # audio_clip.export(self.complete_path+"list_of_previous_audios/"+current_datetime+".wav", format="wav")
         cv2.imwrite(self.node.complete_path_custom_face + current_datetime + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         time.sleep(0.5)
         self.set_face(custom=current_datetime)
-        # time.sleep(0.5)
-        # self.set_face(custom=current_datetime)
-        
-        
-        
-        
-        # cv2.waitKey(10)
 
 
     def create_image_four_sb_objects_separately(self):
         
-        # self.detect_object_total = [DetectedObject(), DetectedObject(), DetectedObject(), DetectedObject()]
-        # self.images_of_detected_object_total = [Image(), Image(), Image(), Image()]
-        # self.flag_object_total = [False, False, False, False] 
-
         TOTAL_OBJ = 4
-
         list_sb_objects=[
             "spoon",
             "milk",
@@ -1266,22 +1201,14 @@ class ServeBreakfastMain():
             current_frame = self.node.br.imgmsg_to_cv2(self.images_of_detected_object_total[i], "bgr8")
             current_frame_draw = current_frame.copy()
 
-            # img = [0:720, 0:1280]
-            # corr_image = False
             thresh_h = 80
             thresh_v = 220
-
-            # if self.node.detected_objects.num_objects > 0:
 
             x_min = 1280
             x_max = 0
             y_min = 720
             y_max = 0
 
-            # for object in serve_breakfast_objects:      
-            
-            # if object.object_class == "Dishes":
-            #     corr_image = True
             object = self.detect_object_total[i]
 
             if object.box_top_left_x < x_min:
@@ -1297,48 +1224,22 @@ class ServeBreakfastMain():
             start_point = (object.box_top_left_x, object.box_top_left_y)
             end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
             cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
-
             # cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
-                    
-            
-            # for object in serve_breakfast_objects:      
-            
-            # if object.object_class == "Dishes":
             
             if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
                 start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
             else:
                 start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
                 
-            # just to test for the "serve the breakfast" task...
-            aux_name = object.object_name
-            # if object.object_name == "Fork" or object.object_name == "Knife":
-            #     aux_name = "Spoon"
-            # elif object.object_name == "Plate" or object.object_name == "Cup":
-            #     aux_name = "Bowl"
-
-            text_size, _ = cv2.getTextSize(f"{aux_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
+            text_size, _ = cv2.getTextSize(f"{object.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
             text_w, text_h = text_size
             cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
-            cv2.putText(current_frame_draw, f"{aux_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
+            cv2.putText(current_frame_draw, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
         
-
-            # if corr_image:
-                # # current_frame_draw = current_frame_draw[x_min:y_min, x_max,y_max]
-                # # img = current_frame_draw[y_min:y_max, x_min,x_max]
-                # cv2.imshow("c", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)])
-                # cv2.waitKey(10)
-                # cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
-            # cv2.waitKey(10)
-
             current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
-            # audio_clip.export(self.complete_path+"list_of_previous_audios/"+current_datetime+".wav", format="wav")
             cv2.imwrite(self.node.complete_path_custom_face + current_datetime + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
             time.sleep(0.5)
             self.set_face(custom=current_datetime)
             self.set_speech(filename="objects_names/"+list_sb_objects[i], wait_for_end_of=False)  
-
-            # time.sleep(0.5)
-            # self.set_face(custom=current_datetime)
-            time.sleep(2.5)
+            time.sleep(3)
         
