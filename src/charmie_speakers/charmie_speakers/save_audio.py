@@ -78,7 +78,24 @@ COMMANDS = {
     'race_indian': 'Indian',
     'race_hispanic': 'Hispanic',
     'gender_male':'Male',
-    'gender_female': 'Female'
+    'gender_female': 'Female',
+    'height_taller': 'taller than me',
+    'height_smaller': 'smaller than me',
+    'height_equal': 'approximately the same height as me',
+    'under_20':' under 20 years old',
+    'between18_32':' between 18 and 32 years old',
+    'between28_42':'between 28 and 40 years old',
+    'between40_60':' between 40 and 60 years old',
+    'over60':' over 60 years old',
+    'please_follow_me':'Thank you. Please follow me.',
+    'please_Stay_on_my_left':'Please stay on my left until I give you instructions on where to sit.',
+    'present_everyone':'Hello, I will present everyone in this room.',
+    'please_sit_sofa':'Please take a sit on the sofa that I am looking at.',
+    'please_sit_place':'Please take a sit on the place that I am looking at.',
+    'please_sit_chair':'Please take a sit on the chair that I am looking at.',
+    'dear_host':'Dear host',
+    'dear_guest':'Dear guest'
+    
 }
 
 
