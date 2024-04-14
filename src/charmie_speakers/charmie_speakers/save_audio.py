@@ -88,14 +88,15 @@ COMMANDS = {
     'between40_60':' between 40 and 60 years old',
     'over60':' over 60 years old',
     'please_follow_me':'Thank you. Please follow me.',
-    'please_Stay_on_my_left':'Please stay on my left until I give you instructions on where to sit.',
+    'please_stay_on_my_left':'Please stay on my left until I give you instructions on where to sit.',
     'present_everyone':'Hello, I will present everyone in this room.',
     'please_sit_sofa':'Please take a sit on the sofa that I am looking at.',
     'please_sit_place':'Please take a sit on the place that I am looking at.',
     'please_sit_chair':'Please take a sit on the chair that I am looking at.',
     'dear_host':'Dear host',
-    'dear_guest':'Dear guest'
-    
+    'dear_guest':'Dear guest',
+    'ready_receive_guest':'I am ready to receive a new guest. Please stand in front of me.',
+    'presentation_answer_after_green_face':' Hello! My name is Charmie. I will make you some questions. Please speak loud and clear. Answer me after the green light on my face.'
 }
 
 
