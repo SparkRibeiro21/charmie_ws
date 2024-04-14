@@ -145,6 +145,9 @@ class GpsrMain():
         Final_State = 6
 
         self.state = Waiting_for_start_button
+        self.look_forward = [0, 0]
+        self.look_navigation = [0, -30]
+        self.look_left = [-90, 0]
 
         # debug print
         print("IN NEW MAIN")
@@ -156,12 +159,19 @@ class GpsrMain():
 
                 # your code here ...
                 #NECK: LOOKS IN FRONT
+                #self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                #self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
                 #SPEAK: Hello! I am ready to start the receptionist task! Waiting for start button to be pressed.
                 self.set_speech(filename="receptionist/start_receptionist", wait_for_end_of=True)
+                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+                #self.wait_for_start_button()
                 #RGB: WAITING MODE
+                #self.set_rgb(YELLOW+ALTERNATE_QUARTERS)
                 #IF BUTTON PRESSED:
                 # RGB: OK MODE
+                #self.set_rgb(GREEN+BLINK_LONG)
                 # NECK: LOOKS TO THE FLOOR (NAVIGATION POSE)
+                #self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 # MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
                 #NEXT STATE 
                     
@@ -173,11 +183,14 @@ class GpsrMain():
 
                 # your code here ...
                 #NECK: LOOKS IN FRONT 
+                #self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 #RGB: WAITING MODE
+                #self.set_rgb(YELLOW+ALTERNATE_QUARTERS)
                 #SPEAK: I am ready to receive a new guest. Please stand in front of me.
                 self.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
                 #if face = exist:
                 # RGB: OK MODE (GREEN)
+                #self.set_rgb(GREEN+BLINK_LONG)
                 # NECK: LOOKS TO GUEST 1
                 # SPEAK: Hello! My name is Charmie. I will make you some questions. Please speak loud and clear. Answer me after the green light on my face.
                 # SPEAK:What's your name and favourite drink?
@@ -185,6 +198,7 @@ class GpsrMain():
                 self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=True)
                 # AUDIO: RECEIVE NAME AND DRINK OF GUEST 
                 # RGB: OK MODE
+                #self.set_rgb(GREEN+BLINK_LONG)
                 # CAMARA: SAVE IMAGE FROM GUEST 1
                 # if numero do guest = 1:
                 #  self.state = Characteristics_first_guest
@@ -208,9 +222,11 @@ class GpsrMain():
             elif self.state == Navigation_to_sofa:
                 print('State 3 = Navigation to sofa')
                 #RGB: OK MODE
+                #self.set_rgb(GREEN+BLINK_LONG)
                 #SPEAK:Thank you. Please follow me.
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
-                #NECK: LOOKS TO THE FLOOR (NAVIGATION POSE)
+                #NECK: LOOKS TO THE FLOOR (NAVIGATION POSe)
+                #self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 #MOVE TO SOFA LOCALISATION
                 #SPEAK:Please stay on my left until I give you instructions on where to sit.
                 self.set_speech(filename="receptionist/please_stay_on_my_left", wait_for_end_of=True)
@@ -227,6 +243,7 @@ class GpsrMain():
                 #SPEAK:Hello, I will present everyone in this room.
                 self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
                 #NECK: LOOK TO THE GUEST
+                #self.set_neck(position=self.look_left, wait_for_end_of=True)
                 #SPEAK:The host is "NAME" and his favorite drink is "DRINK".
                 #NECK: LOOK TO HOST 
                 #SPEAK:The first guest name is "NAME" and the favorite drink is "DRINK"
@@ -235,13 +252,16 @@ class GpsrMain():
                 #SPEAK:Please take a sit on the sofa that I'm looking at.
                 self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
                 #RGB: OK MODE
+                #self.set_rgb(GREEN+BLINK_LONG)
                 #NECK: LOOKS TO THE FLOOR (NAVIGATION POSE)
+                #self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 #MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
                 self.state = Receive_guest
                                 
             elif self.state == Presentation_host_first_second_guest:
                 print('State 4 = Presentation host, first and second guest')
                 #NECK: LOOK TO THE GUEST
+                #self.set_neck(position=self.look_left, wait_for_end_of=True)
                 #SPEAK:The host is "NAME" and his favorite drink is "DRINK".
                 #SPEAK:Introduce the first guest - name and drink and characteristics
                 #NECK: LOOK TO THE SOFA/CHAIRS
@@ -261,7 +281,9 @@ class GpsrMain():
                 #SPEAK:Please take a sit on the sofa that I'm looking at.
                 self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
                 #RGB: OK MODE
+                #self.set_rgb(GREEN+BLINK_LONG)
                 #NECK: LOOKS TO THE FLOOR (NAVIGATION POSE)
+                #self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 #MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
                 self.state = Final_State
 
@@ -269,9 +291,12 @@ class GpsrMain():
                 
                 print("Finished task!!!")
                 #NECK: LOOK IN FRONT
+                #self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 #SPEAK: Thank you. I finished my receptionist task
                 self.set_speech(filename="receptionist/finish_receptionist", wait_for_end_of=True)
+                #self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 #NECK: LOOK TO THE FLOOR
+                #self.set_rgb(BLUE+ROTATE)
                 # After finishing the task stays in this loop 
                 while True:
                     pass
