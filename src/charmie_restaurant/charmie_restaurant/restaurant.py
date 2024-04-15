@@ -26,7 +26,8 @@ class RestaurantNode(Node):
         super().__init__("Restaurant")
         self.get_logger().info("Initialised CHARMIE Restaurant Node")
         
-        ###         PUBs/SUBs       
+        ###         PUBs/SUBs     
+        # PORTA FEZ AQUI TESTE  
 
         # Arm
         self.flag_arm_finish_subscriber = self.create_subscription(Bool, 'flag_arm_finished_movement', self.flag_arm_finish_callback, 10)  
