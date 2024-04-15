@@ -44,7 +44,9 @@ class ServeBreakfastNode(Node):
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered_hand", self.object_detected_filtered_hand_callback, 10)
-
+        # Arm 
+        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
 
 
         ### Services (Clients) ###
@@ -103,6 +105,7 @@ class ServeBreakfastNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_arm = False
 
         self.br = CvBridge()
         # self.detected_people = Yolov8Pose()
@@ -130,6 +133,8 @@ class ServeBreakfastNode(Node):
         # self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.arm_success = True
+        self.arm_message = ""
 
         self.get_neck_position = [1.0, 1.0]
         
@@ -148,6 +153,18 @@ class ServeBreakfastNode(Node):
 
     def object_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
         self.detected_objects_hand = det_object
+
+    def arm_finished_movement_callback(self, flag: Bool):
+        # self.get_logger().info("Received response from arm finishing movement")
+        self.arm_ready = True
+        self.waited_for_end_of_arm = True
+        self.arm_success = flag.data
+        if flag.data:
+            self.arm_message = "Arm successfully moved"
+        else:
+            self.arm_message = "Wrong Movement Received"
+
+        self.get_logger().info("Received Arm Finished")
 
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
@@ -627,6 +644,26 @@ class ServeBreakfastMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
+    def set_arm(self, command="", wait_for_end_of=True):
+        
+        # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
+        self.waited_for_end_of_arm = False
+        
+        temp = String()
+        temp.data = command
+        self.node.arm_command_publisher.publish(temp)
+
+        if wait_for_end_of:
+            while not self.waited_for_end_of_arm:
+                pass
+            self.waited_for_end_of_arm = False
+        else:
+            self.arm_success = True
+            self.arm_message = "Wait for answer not needed"
+
+        # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
+        return self.arm_success, self.arm_message
+    
     def main(self):
         
         # Task Related Variables
@@ -672,6 +709,16 @@ class ServeBreakfastMain():
         while True:
 
             if self.state == self.Waiting_for_task_start:
+
+
+
+                success, message = self.set_arm(command="place_objects", wait_for_end_of=False)
+
+
+
+
+
+
 
                 self.activate_yolo_objects(activate_objects=False)
 

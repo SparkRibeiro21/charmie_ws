@@ -152,7 +152,7 @@ from rclpy.node import Node
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
 
 import cv2 
 import threading
@@ -183,7 +183,9 @@ class ServeBreakfastNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-
+        # Arm CHARMIE
+        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
 
         ### Services (Clients) ###
         # Speakers
@@ -200,6 +202,8 @@ class ServeBreakfastNode(Node):
         # Yolos
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Arm (CHARMIE)
+        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
 
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
@@ -229,6 +233,10 @@ class ServeBreakfastNode(Node):
         while not self.activate_yolo_objects_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         """
+        # Arm (CHARMIE)
+        # while not self.arm_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
@@ -238,11 +246,13 @@ class ServeBreakfastNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_arm = False # not used, but here to be in conformity with other uses
 
         self.br = CvBridge()
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
+        # self.arm_ready = True
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -264,6 +274,8 @@ class ServeBreakfastNode(Node):
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.arm_success = True
+        self.arm_message = ""
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -347,6 +359,18 @@ class ServeBreakfastNode(Node):
 
         # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         # cv2.waitKey(10)
+
+    def arm_finished_movement_callback(self, flag: Bool):
+        # self.get_logger().info("Received response from arm finishing movement")
+        # self.arm_ready = True
+        self.waited_for_end_of_arm = True
+        self.arm_success = flag.data
+        if flag.data:
+            self.arm_message = "Arm successfully moved"
+        else:
+            self.arm_message = "Wrong Movement Received"
+
+        self.get_logger().info("Received Arm Finished")
 
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
@@ -826,6 +850,26 @@ class ServeBreakfastMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
+    def set_arm(self, command="", wait_for_end_of=True):
+        
+        # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
+        self.waited_for_end_of_arm = False
+        
+        temp = String()
+        temp.data = command
+        self.node.arm_command_publisher.publish(temp)
+
+        if wait_for_end_of:
+            while not self.waited_for_end_of_arm:
+                pass
+            self.waited_for_end_of_arm = False
+        else:
+            self.arm_success = True
+            self.arm_message = "Wait for answer not needed"
+
+        # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
+        return self.arm_success, self.arm_message
+    
     # main state-machine function
     def main(self):
         
