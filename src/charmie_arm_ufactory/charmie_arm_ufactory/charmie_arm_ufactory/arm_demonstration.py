@@ -123,7 +123,7 @@ class ArmUfactory(Node):
         # string message  # informational, e.g. for error messages
 
 		response.success = True
-		response.message = "Ar, Trigger"
+		response.message = "Arm Trigger"
 		return response
 			
 	def go_barman_or_go_client_callback(self, place_to_go: Int16):
