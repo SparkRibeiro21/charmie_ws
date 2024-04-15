@@ -6,7 +6,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from example_interfaces.msg import Bool, String, Int16
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -62,6 +62,8 @@ class ServeBreakfastNode(Node):
         # Yolos
         # self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Arm (CHARMIE)
+        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
 
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
@@ -74,7 +76,6 @@ class ServeBreakfastNode(Node):
         # while not self.calibrate_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # Neck 
-        
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
         while not self.get_neck_position_client.wait_for_service(1.0):
@@ -85,12 +86,14 @@ class ServeBreakfastNode(Node):
             self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         while not self.neck_track_object_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
-        
         # Yolos
         # while not self.activate_yolo_pose_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
-        while not self.activate_yolo_objects_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        ###while not self.activate_yolo_objects_client.wait_for_service(1.0):
+        ###    self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        # Arm (CHARMIE)
+        while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
         
 
         # Variables

@@ -4,6 +4,7 @@ from example_interfaces.msg import Bool, Int16, String
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from geometry_msgs.msg import Pose, Point, Quaternion
 from charmie_interfaces.msg import RobotSpeech
+from charmie_interfaces.srv import ArmTrigger
 from std_srvs.srv import SetBool
 from functools import partial
 import numpy as np 
@@ -68,7 +69,8 @@ class ArmUfactory(Node):
 		while not self.get_gripper_position.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
 
-		self.create_service(SetBool, 'bool_service', self.bool_service_callback)
+		self.create_service(ArmTrigger, 'arm_trigger', self.arm_trigger_callback)
+		
 		print("Bool TR Service is ready")
 
 		self.gripper_reached_target = Bool()
@@ -96,18 +98,15 @@ class ArmUfactory(Node):
 		self.movement_selection()
 
 
-	def bool_service_callback(self, request, response):
+	def arm_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
+        # Type of service received: 
+        # (nothing)
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages
 
-		if request.data:
-			print("Received True. Performing an action.")
-			response.success = True
-			response.message = "Action Performed Sucessfully"
-		else:
-			print("Received False. Performing another action.")
-			response.success = True
-			response.message = "Action Failed"
-
-		self.movement_selection()
+		response.success = True
+		response.message = "Ar, Trigger"
 		return response
 
 
