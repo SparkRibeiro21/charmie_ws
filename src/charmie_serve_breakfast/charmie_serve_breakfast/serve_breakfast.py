@@ -1085,7 +1085,7 @@ class ServeBreakfastMain():
             ["Spoon", "Fork", "Knife"], # detect as 'spoon'
             ["Milk", "Cleanser"], # detect as 'milk'
             ["Cornflakes", "Strawberry_jello", "Chocolate_jello"], # detect as 'cornflakes'
-            ["Bowl", "Plate", "Cup", "Mustard"] # detect as 'bowl'
+            ["Bowl", "Plate", "Cup"] # detect as 'bowl'
         ]
 
         detect_object = [DetectedObject(), DetectedObject(), DetectedObject(), DetectedObject()]
