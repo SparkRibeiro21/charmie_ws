@@ -647,22 +647,22 @@ class ServeBreakfastMain():
     def set_arm(self, command="", wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
-        self.waited_for_end_of_arm = False
+        self.node.waited_for_end_of_arm = False
         
         temp = String()
         temp.data = command
         self.node.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:
-            while not self.waited_for_end_of_arm:
+            while not self.node.waited_for_end_of_arm:
                 pass
-            self.waited_for_end_of_arm = False
+            self.node.waited_for_end_of_arm = False
         else:
-            self.arm_success = True
-            self.arm_message = "Wait for answer not needed"
+            self.node.arm_success = True
+            self.node.arm_message = "Wait for answer not needed"
 
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
-        return self.arm_success, self.arm_message
+        return self.node.arm_success, self.node.arm_message
     
     def main(self):
         
@@ -710,16 +710,6 @@ class ServeBreakfastMain():
 
             if self.state == self.Waiting_for_task_start:
 
-
-
-                success, message = self.set_arm(command="place_objects", wait_for_end_of=False)
-
-
-
-
-
-
-
                 self.activate_yolo_objects(activate_objects=False)
 
                 self.set_face("demo5")
@@ -731,6 +721,9 @@ class ServeBreakfastMain():
                 self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
 
                 self.wait_for_start_button()
+
+                # Temporary, must delete later
+                self.set_arm(command="hello", wait_for_end_of=True)
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 

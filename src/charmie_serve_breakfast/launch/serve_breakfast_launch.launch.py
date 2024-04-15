@@ -111,8 +111,8 @@ def generate_launch_description():
                 )
 
     arm = Node(package='charmie_arm_ufactory',
-                        executable='arm_hello',
-                        name='arm_hello',
+                        executable='arm_serve_breakfast',
+                        name='arm_serve_breakfast',
                         emulate_tty=True
                         )
     

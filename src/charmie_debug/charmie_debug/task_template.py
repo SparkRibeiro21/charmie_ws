@@ -17,9 +17,9 @@
 # Face
 # Neck
 # Yolos
+# Arm
 
 # The following modules are still missing:
-# Arm - TBD
 # Nav - TBD
 
 
@@ -140,7 +140,9 @@ NEXT I PROVIDE AN EXAMPLE ON HOW THE CODE OF A TASK SHOULD BE MADE:
 
 # 14) TEST ALL YOLOS WITH THE PREVIOUS ACTIVATES ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
-# MISSING ARM ... (TIAGO)
+# 15) REPLACE ALL THE ARM MOVE WITH self.set_arm(...)
+
+# 16) TEST ALL ARM MOVE WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
 # MISSING NAVIGATION ... (TIAGO)
 
@@ -853,22 +855,22 @@ class ServeBreakfastMain():
     def set_arm(self, command="", wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
-        self.waited_for_end_of_arm = False
+        self.node.waited_for_end_of_arm = False
         
         temp = String()
         temp.data = command
         self.node.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:
-            while not self.waited_for_end_of_arm:
+            while not self.node.waited_for_end_of_arm:
                 pass
-            self.waited_for_end_of_arm = False
+            self.node.waited_for_end_of_arm = False
         else:
-            self.arm_success = True
-            self.arm_message = "Wait for answer not needed"
+            self.node.arm_success = True
+            self.node.arm_message = "Wait for answer not needed"
 
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
-        return self.arm_success, self.arm_message
+        return self.node.arm_success, self.node.arm_message
     
     # main state-machine function
     def main(self):
@@ -970,6 +972,10 @@ class ServeBreakfastMain():
                 # print("deactivated yolo pose - right in front")
                 # time.sleep(5)
                 """
+
+                # example of arm function to say hello
+                # self.set_arm(command="hello", wait_for_end_of=False)
+
                 # next state
                 self.state = self.Approach_kitchen_counter
 
