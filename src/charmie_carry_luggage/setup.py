@@ -23,7 +23,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "carry_my_luggage = charmie_carry_luggage.carry_my_luggage:main"
+            "carry_my_luggage = charmie_carry_luggage.carry_my_luggage:main",
+            "carry_my_luggage_robocup2023 = charmie_carry_luggage.carry_my_luggage_robocup2023:main",
         ],
     },
 )

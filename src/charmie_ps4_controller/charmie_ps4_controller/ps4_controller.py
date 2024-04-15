@@ -388,10 +388,10 @@ class ControllerNode(Node):
 
         self.i = 0
 
-        # Sucess and Message confirmations for all set_(something) CHARMIE functions
-        self.speech_sucess = True
+        # Success and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_success = True
         self.speech_message = ""
-        self.arm_sucess = True
+        self.arm_success = True
         self.arm_message = ""
 
         self.wfeon = Bool()
@@ -444,9 +444,9 @@ class ControllerNode(Node):
         # self.get_logger().info("Received response from arm finishing movement")
         self.arm_ready = True
         self.waited_for_end_of_arm = True
-        self.arm_sucess = flag.data
+        self.arm_success = flag.data
         if flag.data:
-            self.arm_message = "Arm sucessfully moved"
+            self.arm_message = "Arm successfully moved"
         else:
             self.arm_message = "Wrong Movement Received"
 
@@ -466,7 +466,7 @@ class ControllerNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
         else:
-            self.speech_sucess = True
+            self.speech_success = True
             self.speech_message = "Wait for answer not needed"
 
 
@@ -479,7 +479,7 @@ class ControllerNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_success = response.success
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
@@ -500,7 +500,7 @@ class ControllerNode(Node):
             pass
         self.waited_for_end_of_speaking = False
 
-        return self.speech_sucess, self.speech_message
+        return self.speech_success, self.speech_message
 
     # function to be called in tasks to send commands to arm
     def set_arm(self, command="", wait_for_end_of=True):
@@ -517,13 +517,13 @@ class ControllerNode(Node):
                 pass
             self.waited_for_end_of_arm = False
         else:
-            self.arm_sucess = True
+            self.arm_success = True
             self.arm_message = "Wait for answer not needed"
 
 
-        self.get_logger().info("Set Arm Response: %s" %(str(self.arm_sucess) + " - " + str(self.arm_message)))
+        self.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
 
-        return self.arm_sucess, self.arm_message
+        return self.arm_success, self.arm_message
 
 
     def timer_callback(self):

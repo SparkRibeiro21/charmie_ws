@@ -95,7 +95,7 @@ class RestaurantNode(Node):
 
         self.waited_for_end_of_speaking = False
 
-        self.speech_sucess = True
+        self.speech_success = True
         self.speech_message = ""
         
     def call_service(self):
@@ -113,7 +113,7 @@ class RestaurantNode(Node):
 
         # if future.result() is not None:
         #     response = future.result()
-        #     self.get_logger().info('Service call result: Sucess: {response.sucess}, Message:{response.message}}')
+        #     self.get_logger().info('Service call result: Success: {response.success}, Message:{response.message}}')
         # else:
         #     self.get_logger().error('Service call failed')
 
@@ -218,7 +218,7 @@ class RestaurantNode(Node):
             # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
         else:
-            self.speech_sucess = True
+            self.speech_success = True
             self.speech_message = "Wait for answer not needed"
     
     def callback_call_speech_command(self, future): #, a, b):
@@ -229,7 +229,7 @@ class RestaurantNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucess = response.success
+            self.speech_success = response.success
             self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
@@ -295,7 +295,7 @@ class RestaurantMain():
             pass
         self.node.waited_for_end_of_speaking = False
 
-        return self.node.speech_sucess, self.node.speech_message
+        return self.node.speech_success, self.node.speech_message
     
     def main(self):
         Initial_state = 0

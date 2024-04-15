@@ -506,7 +506,7 @@ class WhisperAudio():
             
             print("YES OR NO:")
             for key in yes_no_dict:
-                res = self.compare_commands(yes_no_dict, speech, [key])
+                res, idx = self.compare_commands(yes_no_dict, speech, [key])
                 print('    ', key, end='')
                 for spaces in range(max_number_of_chars_of_keys-len(key)):
                     print('.', end='') 
@@ -536,7 +536,7 @@ class WhisperAudio():
 
             print("NAMES:")
             for key in names_dict:
-                res = self.compare_commands(names_dict, speech, [key])
+                res, idx = self.compare_commands(names_dict, speech, [key])
                 print('    ', key, end='')
                 for spaces in range(max_number_of_chars_of_keys-len(key)):
                     print('.', end='') 
@@ -544,12 +544,12 @@ class WhisperAudio():
                 if res:
                     name_predicted = key
                     name_ctr += 1
-            print("Name Detected =", name_predicted, "(", name_ctr, ")")
+            print("Name Detected =", "(", name_ctr, ")", name_predicted)
             print()
 
             print("DRINKS:")
             for key in drinks_dict:
-                res = self.compare_commands(drinks_dict, speech, [key])
+                res, idx = self.compare_commands(drinks_dict, speech, [key])
                 print('    ', key, end='')
                 for spaces in range(max_number_of_chars_of_keys-len(key)):
                     print('.', end='') 
@@ -557,7 +557,7 @@ class WhisperAudio():
                 if res:
                     drink_predicted = key
                     drink_ctr += 1
-            print("Drink Detected =", drink_predicted, "(", drink_ctr, ")") 
+            print("Drink Detected =", "(", drink_ctr, ")", drink_predicted) 
             print()
 
             if name_ctr == 1 and drink_ctr == 1:
@@ -580,55 +580,78 @@ class WhisperAudio():
             final_str = ''
 
             foods = []
+            foods_idx = []
             drinks = []
+            drinks_idx = []
+
+            complete_order = []
+            complete_order_idx = []
 
 
             print("FOODS:")
             for key in foods_dict:
-                res = self.compare_commands(foods_dict, speech, [key])
+                res, idx = self.compare_commands(foods_dict, speech, [key])
                 print('    ', key, end='')
                 for spaces in range(max_number_of_chars_of_keys-len(key)):
                     print('.', end='') 
                 print('->', res)
                 if res:
-                    foods_predicted = key
+                    foods_predicted += key+" " # different from receptionist so I can see all the different foods requested
                     foods_ctr += 1
                     foods.append(key)
+                    foods_idx.append(idx)
 
-            print("Name Detected =", foods_predicted, "(", foods_ctr, ")")
+            print("Food Detected =", "(", foods_ctr, ")", foods_predicted)
             print()
 
             print("DRINKS:")
             for key in drinks_dict:
-                res = self.compare_commands(drinks_dict, speech, [key])
+                res, idx = self.compare_commands(drinks_dict, speech, [key])
                 print('    ', key, end='')
                 for spaces in range(max_number_of_chars_of_keys-len(key)):
                     print('.', end='') 
                 print('->', res)
                 if res:
-                    drink_predicted = key
+                    drink_predicted += key+" "# different from receptionist so I can see all the different drinks requested
                     drink_ctr += 1
                     drinks.append(key)
+                    drinks_idx.append(idx)
 
-            print("Drink Detected =", drink_predicted, "(", drink_ctr, ")") 
+            print("Drink Detected =", "(", drink_ctr, ")", drink_predicted) 
             print()
 
-            print(foods, drinks)
+            # print(foods, drinks, foods_idx, drinks_idx)
+            complete_order = foods + drinks
+            complete_order_idx = foods_idx + drinks_idx
+            # print(complete_order, complete_order_idx)
 
-            ### falta alterar para mais que um de cada
+            # Combine the two lists into a list of tuples
+            combined = list(zip(complete_order, complete_order_idx))
+            # Sort the list of tuples based on the numbers
+            sorted_combined = sorted(combined, key=lambda x: x[1])
+            # Extract the sorted names
+            sorted_names = [item[0] for item in sorted_combined]
+            # print(sorted_names)
 
-            for f in foods:
-                final_str += f + ' '
+            # special case for (strawberry jello & strawberry) and (orange juice & orange)) 
+            # in words_dict we have tried so that the longer word is only detected when two different words are detected
+            # this makes it harder to detect but prevents multiple detections when detection of just the common word (strawberry and orange)
+            # this way, when it detects both strawberry and strawberry jello we know it is intended for strawbeery jello.
+            # it is a simpler solution, however if a person requires both strawberry and strawberry jello in the same order it will not work!
+            if 'Orange' in sorted_names and 'Orange_Juice' in sorted_names:
+                sorted_names.remove('Orange')
+            if 'Strawberry' in sorted_names and 'Strawberry_Jello' in sorted_names:
+                sorted_names.remove('Strawberry')
 
-            for d in drinks:
-                final_str += d + ' '
-
-            # final_str=foods_predicted + ' ' + drink_predicted
-            # print("INFO SENT:'%s'" %  final_str)
+            for names in sorted_names:
+                final_str += names + ' '
+            final_str = final_str[:-1] # to remove the last ' ', so a new instance is not created when doing split(' ')
 
             foods.clear()
+            foods_idx.clear()
             drinks.clear()
-    
+            drinks_idx.clear()
+
             if final_str != '':
                 print("INFO SENT:'%s'" %  final_str)
                 self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
@@ -654,6 +677,7 @@ class WhisperAudio():
     def compare_commands(self, w_dict, predicted_text, lst):
 
         ctr_tot = 1
+        index = 0
 
         for commands in lst:
             ctr = 0
@@ -661,14 +685,16 @@ class WhisperAudio():
             for word in w_dict[commands]:
                 if word in predicted_text:
                     ctr = ctr + 1
+                    index = predicted_text.find(word)
+                    # print("INDEX =", index)
             # print(" (", ctr, ")", sep='')
             ctr_tot *= ctr
         # print("ctr_tot:",ctr_tot)
 
         if ctr_tot > 0:
-            return True
+            return True, index
         else:
-            return False
+            return False, index
 
     # gets the devices names for audio input
     def get_pulsectl_device_names(self):
@@ -773,7 +799,7 @@ class AudioNode(Node):
                     if FULL_CALIBRATION_PRINTS:
                         print("NAMES:")
                     for key in names_dict:
-                        res = self.charmie_audio.compare_commands(names_dict, speech, [key])
+                        res, idx = self.charmie_audio.compare_commands(names_dict, speech, [key])
                         if FULL_CALIBRATION_PRINTS:
                             print('    ', key, end='')
                             for spaces in range(max_number_of_chars_of_keys-len(key)):
@@ -790,7 +816,7 @@ class AudioNode(Node):
                     if FULL_CALIBRATION_PRINTS:
                         print("FOODS:")
                     for key in foods_dict:
-                        res = self.charmie_audio.compare_commands(foods_dict, speech, [key])
+                        res, idx = self.charmie_audio.compare_commands(foods_dict, speech, [key])
                         if FULL_CALIBRATION_PRINTS:
                             print('    ', key, end='')
                             for spaces in range(max_number_of_chars_of_keys-len(key)):
@@ -807,7 +833,7 @@ class AudioNode(Node):
                     if FULL_CALIBRATION_PRINTS:
                         print("DRINKS:")
                     for key in drinks_dict:
-                        res = self.charmie_audio.compare_commands(drinks_dict, speech, [key])
+                        res, idx = self.charmie_audio.compare_commands(drinks_dict, speech, [key])
                         if FULL_CALIBRATION_PRINTS:
                             print('    ', key, end='')
                             for spaces in range(max_number_of_chars_of_keys-len(key)):
@@ -824,7 +850,7 @@ class AudioNode(Node):
                     if FULL_CALIBRATION_PRINTS:
                         print("NUMBERS:")
                     for key in numbers_dict:
-                        res = self.charmie_audio.compare_commands(numbers_dict, speech, [key])
+                        res, idx = self.charmie_audio.compare_commands(numbers_dict, speech, [key])
                         if FULL_CALIBRATION_PRINTS:
                             print('    ', key, end='')
                             for spaces in range(max_number_of_chars_of_keys-len(key)):
@@ -841,7 +867,7 @@ class AudioNode(Node):
                     if FULL_CALIBRATION_PRINTS:           
                         print("YES OR NO:")
                     for key in yes_no_dict:
-                        res = self.charmie_audio.compare_commands(yes_no_dict, speech, [key])
+                        res, idx = self.charmie_audio.compare_commands(yes_no_dict, speech, [key])
                         if FULL_CALIBRATION_PRINTS:
                             print('    ', key, end='')
                             for spaces in range(max_number_of_chars_of_keys-len(key)):

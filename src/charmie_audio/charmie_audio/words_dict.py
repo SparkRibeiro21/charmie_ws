@@ -21,13 +21,14 @@ drinks_dict = {
     "Juice_Pack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
                        "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
                        "peck"],
-    "Cola":           [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold", "kohler"],
+    "Cola":           [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold", "kohler", "kala"],
     "Tropical_Juice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
     "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
-	"Ice_Tea":        [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
+	"Iced_Tea":       [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
-                       "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", "ict", " icy ", "nice t"],
-    "Orange_Juice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "order", "or in", "our enjour", "northern juice"],
+                       "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", " icy ", "nice t", "oysti"],
+    # "Orange_Juice":   ["orange", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "or in", "our enjour", "northern juice"], # removed 'order'
+    "Orange_Juice":   ["orange juice", "orangous", "orangels", "foreign", "autumn", "orandris", "our enjour", "northern juice"], # removed 'order' and all "just orange" so there is no conflict with orange 
     "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona"], # removed o "simon" cause it conflicts with th name Simon
     "Water":          ["water"]
 }
@@ -35,25 +36,25 @@ drinks_dict = {
 foods_dict = {
     "Tuna":             ["tuna"],
     "Tomato_Soup":      ["tomato"],
-    "Spam":             ["spam"],
-    "Mustard":          ["mustard"],    
+    "Spam":             ["spam", "spum", "spun"],
+    "Mustard":          ["mustard", "musta", "mustn't", "moustache"],    
     "Strawberry_Jello": ["strawberry jello"],
-    "Chocolate_Jello":  ["chocolat jello"],
-    "Cofee_Grounds":    ["coffee", "grounds"],
+    "Chocolate_Jello":  ["chocolat"],
+    "Coffee_Grounds":   ["coffee", "grounds"],
     "Sugar":            ["sugar"],
 
-    "Pear":             ["pear", "pair", "pier", "beer"],
-    "Plum":             ["plum", "clump"],
+    "Pear":             ["pear", "pair", "pier", "beer", "bare"],
+    "Plum":             ["plum", "clump", "blam", "blum", "plumb"],
     "Peach":            ["peach"],
     "Lemon":            ["lemon"],
-    "Orange":           ["orange"],
+    "Orange":           ["orange", "orton"],
     "Strawberry":       ["strawberr"],
     "Banana":           ["banana"],
     "Apple":            ["apple"],
 
-    "Pringles":         ["pringles", "sprinkles", "wrinkles", "bringles", "friendos"],
-    "Cornflakes":       ["cornflakes"],
-    "Cheezit":          ["cheese", "cheezit"]
+    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles"],
+    "Cornflakes":       ["cornflakes", "corn flakes", "conflicts", "gonna flex"],
+    "Cheezit":          ["cheese", "cheezit", "she's it", "shisit"]
 }
 
 numbers_dict = {

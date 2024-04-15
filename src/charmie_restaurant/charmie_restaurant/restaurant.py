@@ -191,7 +191,7 @@ class RestaurantNode(Node):
 
         # if future.result() is not None:
         #     response = future.result()
-        #     self.get_logger().info('Service call result: Sucess: {response.sucess}, Message:{response.message}}')
+        #     self.get_logger().info('Service call result: Success: {response.success}, Message:{response.message}}')
         # else:
         #     self.get_logger().error('Service call failed')
 
