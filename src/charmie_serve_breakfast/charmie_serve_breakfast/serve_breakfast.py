@@ -685,7 +685,7 @@ class ServeBreakfastMain():
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
-        self.look_table_objects = [45, -45] # temp while debugging! Change to: [-45, -45]
+        self.look_table_objects = [45, -45] # temp while debugging! Correct value: [-45, -45], Debug Value [45, -45]
         self.look_tray = [0, -60]
 
         # Detect Objects Variables
@@ -723,7 +723,7 @@ class ServeBreakfastMain():
                 self.wait_for_start_button()
 
                 # Temporary, must delete later
-                self.set_arm(command="hello", wait_for_end_of=True)
+                # self.set_arm(command="hello", wait_for_end_of=True)
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
@@ -745,6 +745,9 @@ class ServeBreakfastMain():
 
             elif self.state == self.Detect_all_objects:
 
+                # MOVE ARM TO SEARCH FOR OBJECTS
+                self.set_arm(command="search_for_objects", wait_for_end_of=True)
+
                 self.search_for_serve_breakfast_objects()
 
                 self.state = self.Picking_up_spoon
@@ -756,7 +759,8 @@ class ServeBreakfastMain():
                 ##### self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=True)    
-                   
+
+                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
                 ##### MOVE ARM TO ERROR POSITION 
                 time.sleep(1.0)    
 
@@ -782,6 +786,9 @@ class ServeBreakfastMain():
                 
                 ##### ARM PLACE OBJECT IN TRAY
 
+                # Temporary must delete later (in this case change to 4th object)
+                self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                
                 self.state = self.Picking_up_milk
 
             elif self.state == self.Picking_up_milk:
