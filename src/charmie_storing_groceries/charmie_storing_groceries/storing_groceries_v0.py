@@ -482,6 +482,7 @@ class StoringGroceriesMain():
                         if self.shelf_1_height < object_height < self.shelf_2_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'First shelf '
                             print(object_name, 'is in the first shelf ')
+                            # print(object_x_position)
                             """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
@@ -497,6 +498,7 @@ class StoringGroceriesMain():
                         elif self.shelf_2_height < object_height < self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Second shelf '
                             print(object_name, 'is in the second shelf ')
+                            # print(object_x_position)
                             """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
@@ -512,6 +514,7 @@ class StoringGroceriesMain():
                         elif object_height > self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Third shelf '
                             print(object_name, 'is in the third shelf ')
+                            # print(object_x_position)
                             """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
@@ -523,6 +526,10 @@ class StoringGroceriesMain():
                             1,
                             cv2.LINE_AA
                         )  """
+                            
+                        else:
+                            print(object_name, '- none of the shelfs')
+                            # print(object_x_position)
                             
                         if  self.center_shelf <= object_x_position <= self.right_limit_shelf :
                             position += 'Right side '
@@ -553,7 +560,7 @@ class StoringGroceriesMain():
                 # ----------------------------------
                 # Código para dizer 'tal classe está em tal prateleira'
 
-                print('a', self.object_position)
+                print('objects position:', self.object_position)
 
                 position = []
                 object_class_name= []
@@ -566,6 +573,8 @@ class StoringGroceriesMain():
                 # print("Object class names:", object_class_name)
                 
                 keywords = []
+                class_name_array = []
+                nr_classes_detected = 0
 
                 self.classes_detected_wardrobe.clear()
                 
@@ -580,16 +589,24 @@ class StoringGroceriesMain():
                         if all(keyword in keywords for keyword in condition):
                             # If conditions are met, relate the class name to the position
                             class_name = [class_name for class_name, p in self.object_position.items() if p == pos][0]
+                            if class_name not in class_name_array:
+                               class_name_array.append(class_name)
+                            print('Class name:', class_name)
+                            print('All class names', class_name_array)
+                            nr_classes_detected = len(class_name_array)
+                            print('Nr classes detetadas: ', nr_classes_detected)
                             location_filename = f"storing_groceries/{object_location}"
                             class_filename = f"objects_classes/{class_name}"
                             self.classes_detected_wardrobe.append(class_name)
                             self.set_speech(filename=class_filename, wait_for_end_of=True)
                             self.set_speech(filename=location_filename, wait_for_end_of=True)
                             break
-                return self.nr_objects_detected
+
+                return nr_classes_detected
 
     def analysis_table(self):
         i = 0
+        nr_objects_high_priority_detected = 0
 
         for name, class_name in self.node.objects_classNames_dict.items():
             if class_name in self.classes_detected_wardrobe:
@@ -639,14 +656,17 @@ class StoringGroceriesMain():
                             1,
                             cv2.LINE_AA
                         ) """
-
+                        if self.priority_dict[object_class] == 'High':
+                            nr_objects_high_priority_detected += 1
+                            print('Nr objects high: ', nr_objects_high_priority_detected)
                         print('Object ' + object_name + ' from class ' + object_class + ' has ' + self.priority_dict[object_class] + 'priority')
 
                     i += 1
 
                 #self.objects_names_list.clear()
                 # ----------------------------------
-
+                # return self.nr_objects_detected
+                return nr_objects_high_priority_detected
 
     def choose_place_object_wardrobe(self, counter): 
         obj_name, obj_data = self.selected_objects[counter]
@@ -728,6 +748,8 @@ class StoringGroceriesMain():
         print('dentro')
         if name in self.node.objects_classNames_dict:
             # category = self.node.objects_classNames_dict[name]
+            name = name.lower().replace(" ", "_")
+            print(name)
             filename = f"objects_names/{name}"
             self.set_speech(filename=filename, wait_for_end_of=True)
             print(f"Playing audio file: {filename}")
@@ -819,17 +841,16 @@ class StoringGroceriesMain():
                 # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
                 # self.set_neck(position=self.look_cabinet_bottom, wait_for_end_of=True)
                 
-                self.set_speech(filename="storing_groceries/sg_analysing_cabinet", wait_for_end_of=True)
-
                 self.current_image = self.node.image
                 bridge = CvBridge()
                 # Convert ROS Image to OpenCV image
                 cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
                 self.image_most_obj_detected = cv_image
 
-                nr_objects_detected = 0
-                while nr_objects_detected < 5:
-                    nr_objects_detected = self.analysis_cabinet()
+                nr_classes_detected = 0
+                while nr_classes_detected < 4:
+                    self.set_speech(filename="storing_groceries/sg_analysing_cabinet", wait_for_end_of=True)
+                    nr_classes_detected = self.analysis_cabinet()
                     # Adicionar ajuste de pescoço ou então depois ajustar dentro do próprio analysis cabinet
                 self.choose_priority()
                 
@@ -856,10 +877,14 @@ class StoringGroceriesMain():
                 ###### MOVEMENT TO THE KITCHEN COUNTER
 
                 self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
+                nr_objects_detected_high_priority = 0
+                i = 0
+                while nr_objects_detected_high_priority < 5:
 
-                self.analysis_table()
+                    self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
+
+                    nr_objects_detected_high_priority = self.analysis_table()
+
 
                 self.set_speech(filename="storing_groceries/sg_detected", wait_for_end_of=True) 
                 
