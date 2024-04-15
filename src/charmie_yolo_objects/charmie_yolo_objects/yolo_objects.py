@@ -19,17 +19,18 @@ import math
 import time
 
 objects_filename = "m_size_model_300_epochs_after_nandinho.pt"
+objects_filename = "segmentation_M_size_model_600_epochs.pt"
 shoes_filename = "shoes_socks_v1.pt"    
 doors_filename = "door_bruno.pt"    
 
-MIN_OBJECT_CONF_VALUE = 0.5
+MIN_OBJECT_CONF_VALUE = 0.2
 
 DRAW_OBJECT_CONF = True
 DRAW_OBJECT_ID = True
 DRAW_OBJECT_BOX = True
 DRAW_OBJECT_NAME = True
 DRAW_OBJECT_CLASS = True
-DRAW_OBJECT_LOCATION_COORDS = True
+DRAW_OBJECT_LOCATION_COORDS = False
 DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = False
 
 
