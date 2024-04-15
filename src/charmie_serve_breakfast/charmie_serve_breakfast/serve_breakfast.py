@@ -1080,7 +1080,7 @@ class ServeBreakfastMain():
 
         detect_as = [
             ["Spoon", "Fork", "Knife"], # detect as 'spoon'
-            ["Milk"], # detect as 'milk'
+            ["Milk", "Cleanser"], # detect as 'milk'
             ["Cornflakes", "Strawberry_jello", "Chocolate_jello"], # detect as 'cornflakes'
             ["Bowl", "Plate", "Cup", "Mustard"] # detect as 'bowl'
         ]
