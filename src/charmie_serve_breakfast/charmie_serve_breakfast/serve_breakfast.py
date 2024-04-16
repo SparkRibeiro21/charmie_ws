@@ -91,8 +91,8 @@ class ServeBreakfastNode(Node):
         # Yolos
         # while not self.activate_yolo_pose_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
-        ###while not self.activate_yolo_objects_client.wait_for_service(1.0):
-        ###    self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        while not self.activate_yolo_objects_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Arm (CHARMIE)
         while not self.arm_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Arm Trigger Command...")
@@ -657,6 +657,7 @@ class ServeBreakfastMain():
             while not self.node.waited_for_end_of_arm:
                 pass
             self.node.waited_for_end_of_arm = False
+            
         else:
             self.node.arm_success = True
             self.node.arm_message = "Wait for answer not needed"
@@ -685,7 +686,7 @@ class ServeBreakfastMain():
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
-        self.look_table_objects = [45, -45] # temp while debugging! Correct value: [-45, -45], Debug Value [45, -45]
+        self.look_table_objects = [-45, -45] # temp while debugging! Correct value: [-45, -45], Debug Value [45, -45]
         self.look_tray = [0, -60]
 
         # Detect Objects Variables
@@ -694,7 +695,7 @@ class ServeBreakfastMain():
         self.flag_object_total = [False, False, False, False] 
 
         # to debug just a part of the task you can just change the initial state, example:
-        self.state = self.Waiting_for_task_start
+        self.state = self.Detect_all_objects
 
         # MISSING:
         # waiting_door_open
@@ -750,37 +751,38 @@ class ServeBreakfastMain():
 
                 self.search_for_serve_breakfast_objects()
 
+                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
+
                 self.state = self.Picking_up_spoon
 
             elif self.state == self.Picking_up_spoon:
 
-                ##### IF AN ERROR IS DETECTED:
-                
-                ##### self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
+                # post FNR2024: this is here to try to pick up the objects rather than using Deus Ex Machina 
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=True)    
 
-                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
-                ##### MOVE ARM TO ERROR POSITION 
-                time.sleep(1.0)    
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
 
                 self.set_face("help_pick_spoon")             
 
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                time.sleep(2)
                 
-                ##### WHILE OBJECT IS NOT IN GRIPPER:
+                time.sleep(2) # waits for person to put object in hand
                 
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    ##### ARM CLOSE GRIPPER
-
-                    ##### IF OBJECT NOT GRABBED:
+                object_in_gripper = False
+                while not object_in_gripper:
                 
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+                
+                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
                         
-                        ##### ARM OPEN GRIPPER
+                        self.set_arm(command="open_gripper", wait_for_end_of=True)
                                         
                 self.set_neck(position=self.look_tray, wait_for_end_of=True)
                 

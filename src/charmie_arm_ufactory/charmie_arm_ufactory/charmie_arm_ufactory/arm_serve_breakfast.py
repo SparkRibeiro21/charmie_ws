@@ -39,6 +39,7 @@ class ArmUfactory(Node):
 		#self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
 		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
 
+		
 		while not self.set_position_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Position...")
 
@@ -68,6 +69,7 @@ class ArmUfactory(Node):
 
 		while not self.get_gripper_position.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
+		
 
 		self.create_service(ArmTrigger, 'arm_trigger', self.arm_trigger_callback)
 		
@@ -126,7 +128,6 @@ class ArmUfactory(Node):
 		
 		#define key positions and keypoints
 		self.initial_position_bruno = [-215.0, 83.4, -65.0, -0.5, 74.9, 270.0] 
-		self.restaurant_initial_position = [-224.8, 83.4, -65.0, -0.5, 74.9, 270.0] 
 		self.orient_to_table = [-195.4, 40.2, -52.7, 163.4, 77.8, 96.2]
 		self.get_order_position = [-161.0, 20.0, -63.0, 256.0, 13.0, 24.0]
 
@@ -136,8 +137,8 @@ class ArmUfactory(Node):
 
 		# HELLO WAVING MOVEMENT
 		self.initial_position =       [-224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
-		self.first_waving_position =  [ -90.0,  -53.0,  -35.0,  154.0,  -20.9, 110.0] 
-		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0, 110.0] 
+		self.first_waving_position =  [ -90.0,  -53.0,  -35.0,  154.0,  -20.9,  110.0] 
+		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0,  110.0] 
 
 
 		self.pre_place_bowl = [-649.9, 199.0, 786.7, 0.69, 0.007, -1.56]
@@ -163,17 +164,33 @@ class ArmUfactory(Node):
 		self.place_cuttlery_table_up = [-489.1, 150.5, 593.5, 1.97, -0.808, 2.595]
 
 
+		# self.get_order_position_linear =  [-581.4, -211.5, 121.8, 2.305, 0.033, -1.52]
+		# self.above_tray = [-135.0, 120.0, -160.0, - 2.2689, 0.0, -1.57]
+		# self.above_cuttlery_cup = [-135.0, 280.0, -160.0, - 2.2689, 0.0, -1.57]
+		# self.middle_cuttlery_cup = [-135.0, 345.0, -160.0, - 2.2689, 0.0, -1.57]
+		# self.pos_cuttlery_cup = [-198.8, 344.9, -106.2, - 2.2689, 0.0, -1.57]
+		# self.detect_objects_first_position = [-186.6, 1.9, 663.7, 1.531, 0.05, -2.407]
 
 
-		self.get_order_position_linear = [-581.4, -211.5, 121.8, 2.305, 0.033, -1.52]
-		self.above_tray = [-135.0, 120.0, -160.0, - 2.2689, 0.0, -1.57]
-		self.above_cuttlery_cup = [-135.0, 280.0, -160.0, - 2.2689, 0.0, -1.57]
-		self.middle_cuttlery_cup = [-135.0, 345.0, -160.0, - 2.2689, 0.0, -1.57]
-		self.pos_cuttlery_cup = [-198.8, 344.9, -106.2, - 2.2689, 0.0, -1.57]
-
-		self.detect_objects_first_position = [-186.6, 1.9, 663.7, 1.531, 0.05, -2.407]
 
 
+		# self.above_tray = 				  		[ -135.0,  120.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		# self.above_cuttlery_cup = 				[ -135.0,  280.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		# self.middle_cuttlery_cup = 				[ -135.0,  345.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		# self.pos_cuttlery_cup = 				[ -198.8,  344.9, -106.2, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+
+
+		# SERVE THE BREAKFAST VARIABLES:
+  
+		self.get_order_position_joints = 		[ -161.0,   20.0,  -63.0,  256.0, 13.0, 24.0]
+		self.initial_position_joints = 			[ -224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
+
+		self.get_order_position_linear = 				[ -581.4, -211.5,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
+		self.detect_objects_first_position_linear = 	[ -186.6,    1.9,  663.7, math.radians(  87.7), math.radians(   2.9), math.radians(-137.9)]
+
+
+
+		# self.initial_position_joint = []
 
 
 
@@ -182,8 +199,6 @@ class ArmUfactory(Node):
 
 		#self.check_object = [51.0, 17.0, -114.0, 5.0, 112.0, -44.0]
 		
-		#define key positions and keypoints
-		#self.restaurant_initial_position = [6.0, 90.0, -90.0, 0.0, 90.0, 0.0] 
 		print('Nada')
 
 		########### EXPLANATION OF EACH MODE: ########### 
@@ -502,7 +517,7 @@ class ArmUfactory(Node):
 
 	def place_objects_table(self):
 		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
 			self.joint_values_req.speed = 0.4 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
@@ -847,7 +862,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 40:
-			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
 			self.joint_values_req.speed = 0.4 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
@@ -864,7 +879,7 @@ class ArmUfactory(Node):
 
 	def pick_objects_barman(self):
 		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
 			self.joint_values_req.speed = 0.4 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
@@ -1114,7 +1129,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 31:
-			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
 			self.joint_values_req.speed = 0.4 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
@@ -1150,7 +1165,7 @@ class ArmUfactory(Node):
 
 		"""
 		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.get_order_position)
+			self.joint_values_req.angles = self.deg_to_rad(self.get_order_position_joints)
 			self.joint_values_req.speed = 0.4 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
@@ -1158,7 +1173,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 1:
-			self.position_values_req.pose = self.detect_objects_first_position
+			self.position_values_req.pose = self.detect_objects_first_position_linear
 			self.position_values_req.speed = 100.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -1191,22 +1206,6 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
-		"""
-		elif self.estado_tr == 1:
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			time.sleep(1)
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		"""
 
 	def ask_for_objects_to_initial_position(self):
 
@@ -1218,7 +1217,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
 			self.joint_values_req.speed = 0.4 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
@@ -1232,6 +1231,83 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def verify_if_object_is_grabbed(self):
+		# aqui quero fechar, verificar se tenho algo e se tiver colocar uma flag a 1, se não tiver manter a 0. 
+		# Essa flag é que me vai permitir avançar para o próximo estado ou ficar aqui e voltar ao princípio
+		if self.estado_tr == 0:
+			#Fechar Garra
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			
+		elif self.estado_tr == 1: 
+			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
+			print('valor da garra =', self.future)
+			
+		elif self.estado_tr == 2:
+			temp = Bool()
+
+			if self.gripper_tr >= 5.0:
+				# self.flag_object_grabbed.data = True
+				# print('OBJECT GRABBED')
+				temp.data = True
+			else:
+				# self.flag_object_grabbed.data = False
+				# print('OBJECT NOT GRABBED')
+				temp.data = False
+
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def close_gripper(self):
+
+		if self.estado_tr == 0:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def open_gripper(self):
+
+		if self.estado_tr == 0:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 5000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
 
 
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
@@ -1279,6 +1355,12 @@ class ArmUfactory(Node):
 			self.search_for_objects_to_ask_for_objects()
 		elif self.next_arm_movement == "ask_for_objects_to_initial_position":
 			self.ask_for_objects_to_initial_position()
+		elif self.next_arm_movement == "verify_if_object_is_grabbed":
+			self.verify_if_object_is_grabbed()
+		elif self.next_arm_movement == "close_gripper":
+			self.close_gripper()
+		elif self.next_arm_movement == "open_gripper":
+			self.open_gripper()
   
 
 
