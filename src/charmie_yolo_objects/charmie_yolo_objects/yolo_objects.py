@@ -20,8 +20,8 @@ import time
 
 objects_filename = "m_size_model_300_epochs_after_nandinho.pt"
 objects_filename = "segmentation_M_size_model_600_epochs.pt"
-shoes_filename = "shoes_socks_v1.pt"    
-doors_filename = "door_bruno.pt"    
+shoes_filename = "shoes_socks_v1.pt"
+doors_filename = "door_bruno.pt"
 
 MIN_OBJECT_CONF_VALUE = 0.5
 
