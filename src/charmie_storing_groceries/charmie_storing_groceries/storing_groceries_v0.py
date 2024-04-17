@@ -7,14 +7,15 @@ import threading
 
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D
-from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates
-from charmie_interfaces.msg import Yolov8Objects
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ActivateYoloObjects
+from charmie_interfaces.msg import Yolov8Objects, DetectedObject
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
 import json
 
 from pathlib import Path
+from datetime import datetime
 
 import time
 
@@ -52,17 +53,24 @@ class StoringGroceriesNode(Node):
         super().__init__("StoringGroceries")
         self.get_logger().info("Initialised CHARMIE StoringGroceries Node")
 
+        home = str(Path.home())
+        midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+        self.complete_path_custom_face = home+'/'+midpath+'/'
+
         self.home = str(Path.home())
         self.midpath_configuration_files = "charmie_ws/src/configuration_files"
         self.complete_path_configuration_files = self.home+'/'+self.midpath_configuration_files+'/'
 
         ### Topics (Publisher and Subscribers) ###  
+        self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
+
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
 
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
+        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
 
         # Neck
         # self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
@@ -70,6 +78,7 @@ class StoringGroceriesNode(Node):
 
 
         ### Services (Clients) ###
+        self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Neck
         self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
         self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
@@ -98,6 +107,7 @@ class StoringGroceriesNode(Node):
             self.get_logger().error("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
 
         # Variables
+        self.start_button_state = False
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_neck_pos = False
         self.waited_for_end_of_neck_coords = False
@@ -115,6 +125,9 @@ class StoringGroceriesNode(Node):
 
         self.get_neck_position = [1.0, 1.0]
         self.objects_classNames_dict = {}
+
+        self.activate_yolo_objects_success = True
+        self.activate_yolo_objects_message = ""
         
         self.objects_classNames_dict = {item["name"]: item["class"] for item in self.objects_file}
         #print(self.objects_classNames_dict)
@@ -122,13 +135,29 @@ class StoringGroceriesNode(Node):
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
+        while not self.activate_yolo_objects_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        
 
     def get_objects_callback(self, objects: Yolov8Objects):
         #print(objects.objects)
         self.nr_objects = objects.num_objects
         self.objects = objects.objects
         self.image = objects.image_rgb
-        
+
+    def get_start_button_callback(self, state: Bool):
+        self.start_button_state = state.data
+    
+    ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
+    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
+        request = ActivateYoloObjects.Request()
+        request.activate_objects = activate_objects
+        request.activate_shoes = activate_shoes
+        request.activate_doors = activate_doors
+        request.minimum_objects_confidence = minimum_objects_confidence
+
+        self.activate_yolo_objects_client.call_async(request)
+
     #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
         request = SpeechCommand.Request()
@@ -296,18 +325,19 @@ class StoringGroceriesMain():
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
-        self.look_table_objects = [-45, -45]
+        self.look_table_objects = [120, -20]
         self.look_tray = [0, -60]
         self.look_cabinet_top = [-45, 45]
-        self.look_cabinet_center = [-45, 0]
+        self.look_cabinet_center = [0, -30]
         self.look_cabinet_bottom = [-45, -45]
 
-        self.shelf_1_height = 0.18 #0.97
-        self.shelf_2_height = 0.60 #1.39
-        self.shelf_3_height = 1.17 #1.81
+        self.shelf_1_height = 0.14 # 0.18
+        self.shelf_2_height = 0.55 # 0.60 
+        self.shelf_3_height = 0.97 # 1.17 
+        self.shelf_4_height = 1.39
 
-        self.left_limit_shelf = -0.38
-        self.right_limit_shelf = 0.38
+        self.left_limit_shelf = -0.7 # -0.38
+        self.right_limit_shelf = 0.7 # 0.38
         self.center_shelf = 0.0
 
 
@@ -319,6 +349,7 @@ class StoringGroceriesMain():
         self.nr_max_objects_detected = 0
         self.image_most_obj_detected = Image()
         self.image_most_priority = Image()
+        self.image_objects_detected = Image()
         self.prev_time = 0.0
         self.new_time = 0.0
 
@@ -389,6 +420,20 @@ class StoringGroceriesMain():
         self.node.rgb_message = "Value Sucessfully Sent"
 
         return self.node.rgb_success, self.node.rgb_message
+    
+    def wait_for_start_button(self):
+
+        self.node.start_button_state = False
+
+        t = Bool()
+        t.data = True
+        self.node.flag_start_button_publisher.publish(t)
+
+        while not self.node.start_button_state:
+            pass
+
+        t.data = False 
+        self.node.flag_start_button_publisher.publish(t)
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
@@ -511,7 +556,7 @@ class StoringGroceriesMain():
                             cv2.LINE_AA
                         )  """
 
-                        elif object_height > self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        elif self.shelf_4_height > object_height > self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Third shelf '
                             print(object_name, 'is in the third shelf ')
                             # print(object_x_position)
@@ -526,7 +571,23 @@ class StoringGroceriesMain():
                             1,
                             cv2.LINE_AA
                         )  """
-                            
+                        
+                        elif object_height > self.shelf_4_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                            position = 'Fourth shelf '
+                            print(object_name, 'is in the fourth shelf ')
+                            # print(object_x_position)
+                            """ self.image_most_obj_detected = cv2.putText(
+                            self.image_most_obj_detected,
+                            # f"{round(float(per.conf),2)}",
+                            'Third shelf ',
+                            (box_top_left_x, box_top_left_y + box_height),
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1,
+                            (0, 0, 255),
+                            1,
+                            cv2.LINE_AA
+                        )  """
+
                         else:
                             print(object_name, '- none of the shelfs')
                             # print(object_x_position)
@@ -604,9 +665,76 @@ class StoringGroceriesMain():
 
                 return nr_classes_detected
 
+    def create_image_five_objects_same_time(self, detected_objects_table):
+
+        self.current_image = self.node.image
+        bridge = CvBridge()
+        cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+        current_frame_draw = cv_image.copy()
+
+        thresh_h = 80
+        thresh_v = 220
+
+        x_min = 1280
+        x_max = 0
+        y_min = 720
+        y_max = 0
+
+        for object in detected_objects_table:    
+            object_name, object_details = object  
+            box_top_left_x = object_details['box_top_left_x']
+            box_top_left_y = object_details['box_top_left_y']
+            box_width = object_details['box_width']
+            box_height = object_details['box_height']
+        
+            if box_top_left_x < x_min:
+                x_min = box_top_left_x
+            if box_top_left_x+box_width > x_max:
+                x_max = box_top_left_x+box_width
+
+            if box_top_left_y < y_min:
+                y_min = box_top_left_y
+            if box_top_left_y+box_height > y_max:
+                y_max = box_top_left_y+box_height
+
+            start_point = (box_top_left_x, box_top_left_y)
+            end_point = (box_top_left_x+box_width, box_top_left_y+box_height)
+            cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
+            # cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
+        
+        for object in detected_objects_table:      
+            object_name, object_details = object  
+            box_top_left_x = object_details['box_top_left_x']
+            box_top_left_y = object_details['box_top_left_y']
+            box_width = object_details['box_width']
+            box_height = object_details['box_height']
+
+            if box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
+                start_point_text = (box_top_left_x-2, box_top_left_y+25)
+            else:
+                start_point_text = (box_top_left_x-2, box_top_left_y-22)
+
+            text_size, _ = cv2.getTextSize(f"{object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
+            text_w, text_h = text_size
+            cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
+            cv2.putText(current_frame_draw, f"{object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
+        
+        cv2.imshow("Objects detected", current_frame_draw)
+        cv2.waitKey(0)
+        
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
+        time.sleep(0.5)
+        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
+        self.set_face(custom=current_datetime)
+
+        time.sleep(10)
+
+
     def analysis_table(self):
         i = 0
         nr_objects_high_priority_detected = 0
+        self.detected_object = []
 
         for name, class_name in self.node.objects_classNames_dict.items():
             if class_name in self.classes_detected_wardrobe:
@@ -616,12 +744,37 @@ class StoringGroceriesMain():
                 self.priority_dict[class_name] = 'Low'
                 print(class_name + ' Low')
 
-        if hasattr(self.node, 'image') and self.node.image:
-            if hasattr(self.node, 'objects') and self.node.objects:
+        # if hasattr(self.node, 'image') and self.node.image:
+        #     if hasattr(self.node, 'objects') and self.node.objects:
+
+        five_objects_detected = False
+        
+        list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
+        while not five_objects_detected:
+            
+            self.activate_yolo_objects(activate_objects=True)
+            finished_detection = False
+
+            for pos in list_of_neck_position_search:
+
+                print(pos)
+                new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
+                #new_neck_pos = [ pos[0],  pos[1]]
+                print('Neck: ', new_neck_pos)
+                self.set_neck(position=new_neck_pos, wait_for_end_of=True)
+                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
+                time.sleep(1)
+
+                # finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=False)    
+
                 objects_stored = self.node.objects
                 self.nr_objects_detected = self.node.nr_objects
+                current_frame_draw = self.image_objects_detected
                 print('Will iterate for: ', self.nr_objects_detected)
-                while i < self.nr_objects_detected:                    
+                nr_objects_high_priority_detected = 0
+                self.object_details = {}
+                i = 0
+                while i < self.nr_objects_detected:          
                     detected_object = objects_stored[i]
                     object_name = detected_object.object_name
                     object_class = detected_object.object_class
@@ -641,32 +794,44 @@ class StoringGroceriesMain():
                                                             'box_top_left_y': box_top_left_y, 'box_width': box_width, 'box_height': box_height, 
                                                             'priority': self.priority_dict[object_class]}
 
-                        """ start_point = (box_top_left_x, box_top_left_y)
-                        end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
-                        cv2.rectangle(self.image_most_obj_detected, start_point, end_point, (56, 56, 255) , 4) 
-                                                        
-                        self.image_most_obj_detected = cv2.putText(
-                            self.image_most_obj_detected,
-                            # f"{round(float(per.conf),2)}",
-                            f"{object_name}",
-                            (box_top_left_x, box_top_left_y),
-                            cv2.FONT_HERSHEY_DUPLEX,
-                            1,
-                            (255, 0, 0),
-                            1,
-                            cv2.LINE_AA
-                        ) """
                         if self.priority_dict[object_class] == 'High':
                             nr_objects_high_priority_detected += 1
                             print('Nr objects high: ', nr_objects_high_priority_detected)
+
+                            start_point = (box_top_left_x, box_top_left_y)
+                            end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
+                            # cv2.rectangle(current_frame_draw, start_point, end_point, (56, 56, 255) , 4) 
+                                                            
+                            """ current_frame_draw = cv2.putText(
+                                current_frame_draw,
+                                # f"{round(float(per.conf),2)}",
+                                f"{object_name}",
+                                (box_top_left_x, box_top_left_y),
+                                cv2.FONT_HERSHEY_DUPLEX,
+                                1,
+                                (255, 0, 0),
+                                1,
+                                cv2.LINE_AA
+                            ) """
+
+
                         print('Object ' + object_name + ' from class ' + object_class + ' has ' + self.priority_dict[object_class] + 'priority')
 
                     i += 1
 
-                #self.objects_names_list.clear()
-                # ----------------------------------
-                # return self.nr_objects_detected
-                return nr_objects_high_priority_detected
+                print(i)
+                print(self.object_details)
+                if nr_objects_high_priority_detected >= 5:
+                    five_objects_detected = True
+                    self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                    self.set_speech(filename="storing_groceries/sg_detected", wait_for_end_of=True) 
+                    self.select_five_objects()
+                    self.create_image_five_objects_same_time(self.selected_objects)
+                    self.activate_yolo_objects(activate_objects=False)
+                    
+                    break
+
+        return nr_objects_high_priority_detected
 
     def choose_place_object_wardrobe(self, counter): 
         obj_name, obj_data = self.selected_objects[counter]
@@ -742,8 +907,7 @@ class StoringGroceriesMain():
             else:
                 self.priority_dict[class_name] = 'Low'
                 print(class_name + ' Low')
-
-            
+      
     def select_voice_audio(self, name):
         print('dentro')
         if name in self.node.objects_classNames_dict:
@@ -800,6 +964,17 @@ class StoringGroceriesMain():
             
             self.select_voice_audio(name)
 
+    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
+        
+        # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_objects_confidence=minimum_objects_confidence)
+
+        self.node.activate_yolo_objects_success = True
+        self.node.activate_yolo_objects_message = "Activated with selected parameters"
+
+        return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
+
+
 
     def main(self):
 
@@ -811,14 +986,20 @@ class StoringGroceriesMain():
             if self.state == self.Waiting_for_task_start:
                 #print('State 0 = Initial')
 
-                # self.set_face("demo5")
+                self.set_face("demo5")
 
-                # self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                # self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
+                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=False, wait_for_end_of=True)
+
+                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
+
+                self.wait_for_start_button()
 
                 ###### WAITS FOR START BUTTON / DOOR OPEN
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
+                self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
                          
                 # next state
                 # self.state = self.Approach_tables_first_time
@@ -836,61 +1017,78 @@ class StoringGroceriesMain():
                 ###### MOVEMENT TO THE CABINET
 
                 self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
-
-                # self.set_neck(position=self.look_cabinet_top, wait_for_end_of=True)
-                # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
-                # self.set_neck(position=self.look_cabinet_bottom, wait_for_end_of=True)
                 
-                self.current_image = self.node.image
-                bridge = CvBridge()
-                # Convert ROS Image to OpenCV image
-                cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-                self.image_most_obj_detected = cv_image
 
                 nr_classes_detected = 0
+                list_of_neck_position_search = [[0, 0], [0, 15], [0, 30], [0, 45]]
+                position_index = 0
+
+                self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
+
+
                 while nr_classes_detected < 4:
                     self.set_speech(filename="storing_groceries/sg_analysing_cabinet", wait_for_end_of=True)
+
+                    self.current_image = self.node.image
+                    bridge = CvBridge()
+                    # Convert ROS Image to OpenCV image
+                    cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+                    self.image_most_obj_detected= cv_image
+
+                    pos_offset = list_of_neck_position_search[position_index]
+                    new_neck_pos = [self.look_cabinet_center[0] + pos_offset[0], self.look_cabinet_center[1] + pos_offset[1]]
+                    print('pescoço: ', new_neck_pos)
+                    
+                    # Set the neck position
+                    self.set_neck(position=new_neck_pos, wait_for_end_of=True)
+                    
                     nr_classes_detected = self.analysis_cabinet()
+
+                    # Move to the next position
+                    position_index = (position_index + 1) % len(list_of_neck_position_search)
+                    print(position_index)
+
                     # Adicionar ajuste de pescoço ou então depois ajustar dentro do próprio analysis cabinet
                 self.choose_priority()
                 
                 self.set_speech(filename="storing_groceries/sg_finished_analise_cabinet", wait_for_end_of=True) 
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                # self.set_speech(filename="storing_groceries/sg_check_face_cabinet_distribution", wait_for_end_of=True) 
-                
-                # self.set_speech(filename="generic/place_object_cabinet", wait_for_end_of=True)
 
-                # self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
-                
                 # next state
                 self.state = self.Approach_tables_first_time
 
             elif self.state == self.Approach_tables_first_time:
                 #print('State 1 = Approaching table for the first time')
 
-                # self.set_neck(position=self.look_navigation) # , wait_for_end_of=True)
+                self.set_neck(position=self.look_navigation) # , wait_for_end_of=True)
 
                 self.set_speech(filename="generic/moving_table", wait_for_end_of=True)
 
                 ###### MOVEMENT TO THE KITCHEN COUNTER
 
                 self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
+
+                self.set_neck(position=self.look_table_objects)
+
                 nr_objects_detected_high_priority = 0
                 i = 0
-                while nr_objects_detected_high_priority < 5:
 
-                    self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
+                while nr_objects_detected_high_priority < 5:
+                    self.current_image = self.node.image
+                    bridge = CvBridge()
+                    # Convert ROS Image to OpenCV image
+                    cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+                    self.image_objects_detected = cv_image
 
                     nr_objects_detected_high_priority = self.analysis_table()
 
 
-                self.set_speech(filename="storing_groceries/sg_detected", wait_for_end_of=True) 
+                # self.set_speech(filename="storing_groceries/sg_detected", wait_for_end_of=True) 
                 
-                self.select_five_objects()
+                # self.select_five_objects()
 
-                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
+                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
                 # next state
                 self.state = self.Picking_first_object
                 
@@ -908,6 +1106,7 @@ class StoringGroceriesMain():
                 self.set_face(str(object_help_pick))
                 print(object_help_pick)
 
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
                
                 # I will need your help picking the objects from this table and also to place them in the wardrobe
@@ -960,6 +1159,7 @@ class StoringGroceriesMain():
                 self.set_face(str(object_help_pick))
                 print(object_help_pick)
 
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
                
                 # I will need your help picking the objects from this table and also to place them in the wardrobe
@@ -1006,7 +1206,8 @@ class StoringGroceriesMain():
                 object_help_pick = 'help_pick_' + obj_name_lower
                 self.set_face(str(object_help_pick))
                 print(object_help_pick)
-                 
+                
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 # I will need your help picking the objects from this table and also to place them in the wardrobe
@@ -1052,7 +1253,8 @@ class StoringGroceriesMain():
                 object_help_pick = 'help_pick_' + obj_name_lower
                 self.set_face(str(object_help_pick))
                 print(object_help_pick)
-
+                
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 # I will need your help picking the objects from this table and also to place them in the wardrobe
@@ -1099,6 +1301,7 @@ class StoringGroceriesMain():
                 self.set_face(str(object_help_pick))
                 print(object_help_pick)
 
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 # I will need your help picking the objects from this table and also to place them in the wardrobe

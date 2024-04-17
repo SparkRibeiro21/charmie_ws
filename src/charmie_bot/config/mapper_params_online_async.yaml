@@ -14,12 +14,13 @@ slam_toolbox:
     map_frame: map
     base_frame: base_link
     scan_topic: scan
-    mode: mapping #localization 
+    mode: localization #mapping 
 
     # if you'd like to immediately start continuing a map at a given pose
     # or at the dock, but they are mutually exclusive, if pose is given
     # will use pose
-    #map_file_name: /home/bruno/charmie_ws/src/charmie_bot/maps_rviz/test_lar/lar_serial
+    # map_file_name: /home/bruno/charmie_ws/src/charmie_bot/maps_rviz/test_lar/lar_serial
+    map_file_name: /home/charmie/charmie_ws/src/charmie_bot/maps_rviz/LAR_map_pre_nacional_2024
     # map_start_pose: [0.0, 0.0, 0.0]
     #map_start_at_dock: true
 
