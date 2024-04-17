@@ -5,8 +5,8 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import NeckPosition, PointCloudCoordinates
 from charmie_interfaces.srv import GetPointCloud
-from geometry_msgs.msg import Point, Pose2D
-from cv_bridge import CvBridge, CvBridgeError
+from geometry_msgs.msg import Point
+from cv_bridge import CvBridge
 
 import numpy as np
 import cv2
@@ -190,13 +190,14 @@ class PointCloudNode(Node):
         self.tempo_calculo = 0
         self.tempo_frame = 0
 
+
     def get_color_image_head_callback(self, img: Image):
         self.rgb_img = img
-        print("Received RGB Image")
+        # print("Received RGB Image")
 
     def get_aligned_depth_image_callback(self, img: Image):
         self.depth_img = img
-        print("Received Depth Image")
+        # print("Received Depth Image")
 
     def get_neck_position_callback(self, neck_pos: NeckPosition):
         # change the axis to fit the kinematics
@@ -370,7 +371,12 @@ class PointCloudNode(Node):
             # print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
             # print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
             # self.tempo_frame = time.perf_counter()
-
+        
+        else:
+            # this prevents an error that sometimes on a low computational power PC that the rgb image arrives at yolo node 
+            # but the depth has not yet arrived. This is a rare bug, but it crashes the yolos nodes being used.
+            self.get_logger().error(f"Depth Image was not received. Please restart...")
+        
         # print(response)
         return response
 
