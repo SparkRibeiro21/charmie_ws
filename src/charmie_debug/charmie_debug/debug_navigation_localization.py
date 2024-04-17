@@ -25,8 +25,8 @@ class TestNode(Node):
         self.get_logger().info("Initialised CHARMIE Debug Navigation and Localisation Node")
 
         # Navigation
-        self.target_pos_subscriber = self.create_publisher(TarNavSDNL, "target_pos", 10)
-        self.flag_pos_reached_publisher = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
 
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
@@ -38,6 +38,8 @@ class TestNode(Node):
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.rgb_success = True
         self.rgb_message = ""
+
+        self.nav_tar_sdnl = TarNavSDNL()
 
         self.flag_navigation_reached = False
 
@@ -74,17 +76,16 @@ class RestaurantMain():
 
         return self.node.rgb_success, self.node.rgb_message
 
-
-    def track_object(self, object, wait_for_end_of=True):
-
-        self.node.call_neck_track_object_server(object=object, wait_for_end_of=wait_for_end_of)
-        
-        if wait_for_end_of:
-          while not self.node.waited_for_end_of_track_object:
-            pass
-        self.node.waited_for_end_of_track_object = False
-
-        return self.node.track_object_success, self.node.track_object_message   
+    # def track_object(self, object, wait_for_end_of=True):
+    # 
+    #     self.node.call_neck_track_object_server(object=object, wait_for_end_of=wait_for_end_of)
+    #     
+    #     if wait_for_end_of:
+    #        while not self.node.waited_for_end_of_track_object:
+    #         pass
+    #     self.node.waited_for_end_of_track_object = False
+    # 
+    #     return self.node.track_object_success, self.node.track_object_message   
 
     def main(self):
         Waiting_for_start_button = 0
@@ -106,8 +107,25 @@ class RestaurantMain():
                 # your code here ...
 
 
-                pass
+                self.node.nav_tar_sdnl.move_target_coordinates.x = 0.0
+                self.node.nav_tar_sdnl.move_target_coordinates.y = 2.0
+                self.node.nav_tar_sdnl.rotate_target_coordinates.x = 0.0
+                self.node.nav_tar_sdnl.rotate_target_coordinates.y = 4.0
+                self.node.nav_tar_sdnl.flag_not_obs = False
+                self.node.nav_tar_sdnl.follow_me = False
+
+                self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
+
+
+                while not self.node.flag_navigation_reached:
+                    pass
+
+                
+                print("REACHED TARGET POSITION")
                                 
+
+                while True:
+                    pass
 
                 # next state
                 # self.state = Searching_for_clients
