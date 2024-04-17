@@ -192,11 +192,11 @@ class PointCloudNode(Node):
 
     def get_color_image_head_callback(self, img: Image):
         self.rgb_img = img
-        # print("Received RGB Image")
+        print("Received RGB Image")
 
     def get_aligned_depth_image_callback(self, img: Image):
         self.depth_img = img
-        # print("Received Depth Image")
+        print("Received Depth Image")
 
     def get_neck_position_callback(self, neck_pos: NeckPosition):
         # change the axis to fit the kinematics

@@ -519,11 +519,12 @@ class YoloPoseNode(Node):
 
             # print(new_pcloud)
             new_person = DetectedPerson()
+            self.get_logger().info(f"Before PC1.1")
             new_person = self.add_person_to_detectedperson_msg(current_frame, current_frame_draw, boxes_id, keypoints_id, new_pcloud[person_idx].center_coords, \
                                                                self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], \
                                                                new_pcloud[person_idx].requested_point_coords[1], new_pcloud[person_idx].requested_point_coords[0], \
                                                                hand_raised)
-            
+            self.get_logger().info(f"After PC1.1")
             # adds people to "person_pose" without any restriction
             # yolov8_pose.persons.append(new_person) # test removed person_pose (non-filtered)
             
@@ -862,9 +863,12 @@ class YoloPoseNode(Node):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
+        self.get_logger().info(f"Inside PC1.1.1")
+
         person_id = boxes_id.id
         if boxes_id.id == None:
             person_id = 0 
+
 
         new_person = DetectedPerson()
 
@@ -877,6 +881,8 @@ class YoloPoseNode(Node):
 
         new_person.arm_raised = arm_raised
         new_person.body_posture = "None" # still missing... (says whether the person is standing up, sitting, laying down, ...)
+
+        self.get_logger().info(f"Inside PC1.1.2")
 
         new_person.kp_nose_x = int(keypoints_id.xy[0][self.NOSE_KP][0])
         new_person.kp_nose_y = int(keypoints_id.xy[0][self.NOSE_KP][1])
@@ -952,6 +958,8 @@ class YoloPoseNode(Node):
         new_person.head_center_x = center_head_person[0]
         new_person.head_center_y = center_head_person[1]
 
+        self.get_logger().info(f"Inside PC1.1.3")
+
         # changes the axis of point cloud coordinates to fit with robot axis
         person_rel_pos = Point()
         # person_rel_pos.x = -torso_localisation.y/1000
@@ -973,6 +981,8 @@ class YoloPoseNode(Node):
 
         a_ref = (target_x, target_y)
         # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
+
+        self.get_logger().info(f"Inside PC1.1.4")
 
         person_abs_pos = Point()
         person_abs_pos.x = target_x
@@ -1002,6 +1012,7 @@ class YoloPoseNode(Node):
 
         a_ref = (target_x, target_y)
         # print("Rel:", (head_rel_pos.x, head_rel_pos.y), "Abs:", a_ref)
+        self.get_logger().info(f"Inside PC1.1.5")
 
         head_abs_pos = Point()
         head_abs_pos.x = target_x
@@ -1013,6 +1024,8 @@ class YoloPoseNode(Node):
         new_person.height = head_localisation.z/1000 + 0.08 # average person middle of face to top of head distance
 
         new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
+
+        self.get_logger().info(f"Inside PC1.1.6")
 
         if self.GET_CHARACTERISTICS:
             new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
@@ -1033,6 +1046,7 @@ class YoloPoseNode(Node):
             new_person.age_estimate = "None"
             new_person.gender = "None"
 
+        self.get_logger().info(f"Inside PC1.1.7")
 
         return new_person
 
