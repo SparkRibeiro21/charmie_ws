@@ -16,6 +16,10 @@ drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced
 MODE = "STANDARD"
 
 
+COMMANDS = {
+    'problem_detecting_change_object': 'There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?',
+}
+
 #COMMANDS = {
 #    'waiting_start_button': 'Waiting for start button to be pressed.',
 #    'waiting_door_open': 'Waiting for door to be opened.',
@@ -70,10 +74,7 @@ COMMANDS = {
 }
 """
 
-# COMMANDS = {
-#     'problem_detecting_change_object': 'There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?',
-# }
-
+"""
 COMMANDS = {
     'finish_receptionist': 'Thank you. I have finished my receptionist task.',
     'race_caucasian': 'Caucasian.',
@@ -104,6 +105,7 @@ COMMANDS = {
     'ready_receive_guest':'I am ready to receive a new guest. Please stand in front of me.',
     'presentation_answer_after_green_face':'Hello! My name is Charmie. I will make you some questions. Please speak loud and clear. Answer me after the green light on my face.'
 }
+"""
 
 
 class RobotSpeak():
