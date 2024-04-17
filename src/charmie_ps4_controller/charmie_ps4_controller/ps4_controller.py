@@ -382,8 +382,8 @@ class ControllerNode(Node):
 
         self.rgb_demo_index = 0
         self.face_demo_index = 0
-        self.waited_for_end_of_speaking = False # not used, but here to be in conformity with other uses
-        self.waited_for_end_of_arm = False # not used, but here to be in conformity with other uses
+        self.waited_for_end_of_speaking = False
+        self.waited_for_end_of_arm = False 
         self.arm_ready = True
 
         self.i = 0
@@ -519,7 +519,6 @@ class ControllerNode(Node):
         else:
             self.arm_success = True
             self.arm_message = "Wait for answer not needed"
-
 
         self.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
 

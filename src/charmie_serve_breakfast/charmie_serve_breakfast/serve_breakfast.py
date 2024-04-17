@@ -6,7 +6,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from example_interfaces.msg import Bool, String, Int16
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -44,7 +44,9 @@ class ServeBreakfastNode(Node):
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered_hand", self.object_detected_filtered_hand_callback, 10)
-
+        # Arm 
+        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
 
 
         ### Services (Clients) ###
@@ -62,6 +64,8 @@ class ServeBreakfastNode(Node):
         # Yolos
         # self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Arm (CHARMIE)
+        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
 
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
@@ -74,7 +78,6 @@ class ServeBreakfastNode(Node):
         # while not self.calibrate_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # Neck 
-        
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
         while not self.get_neck_position_client.wait_for_service(1.0):
@@ -85,12 +88,14 @@ class ServeBreakfastNode(Node):
             self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         while not self.neck_track_object_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
-        
         # Yolos
         # while not self.activate_yolo_pose_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         while not self.activate_yolo_objects_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        # Arm (CHARMIE)
+        while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
         
 
         # Variables
@@ -100,6 +105,7 @@ class ServeBreakfastNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_arm = False
 
         self.br = CvBridge()
         # self.detected_people = Yolov8Pose()
@@ -127,6 +133,8 @@ class ServeBreakfastNode(Node):
         # self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.arm_success = True
+        self.arm_message = ""
 
         self.get_neck_position = [1.0, 1.0]
         
@@ -145,6 +153,18 @@ class ServeBreakfastNode(Node):
 
     def object_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
         self.detected_objects_hand = det_object
+
+    def arm_finished_movement_callback(self, flag: Bool):
+        # self.get_logger().info("Received response from arm finishing movement")
+        self.arm_ready = True
+        self.waited_for_end_of_arm = True
+        self.arm_success = flag.data
+        if flag.data:
+            self.arm_message = "Arm successfully moved"
+        else:
+            self.arm_message = "Wrong Movement Received"
+
+        self.get_logger().info("Received Arm Finished")
 
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
@@ -624,6 +644,27 @@ class ServeBreakfastMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
+    def set_arm(self, command="", wait_for_end_of=True):
+        
+        # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
+        self.node.waited_for_end_of_arm = False
+        
+        temp = String()
+        temp.data = command
+        self.node.arm_command_publisher.publish(temp)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_arm:
+                pass
+            self.node.waited_for_end_of_arm = False
+            
+        else:
+            self.node.arm_success = True
+            self.node.arm_message = "Wait for answer not needed"
+
+        # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
+        return self.node.arm_success, self.node.arm_message
+    
     def main(self):
         
         # Task Related Variables
@@ -641,11 +682,13 @@ class ServeBreakfastMain():
         self.Placing_spoon = 11
         self.Final_State = 12
 
+        self.wait_time_to_put_objects_in_hand = 1
+
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
-        self.look_table_objects = [45, -45] # temp while debugging! Change to: [-45, -45]
+        self.look_table_objects = [-45, -45] # temp while debugging! Correct value: [-45, -45], Debug Value [45, -45]
         self.look_tray = [0, -60]
 
         # Detect Objects Variables
@@ -654,7 +697,7 @@ class ServeBreakfastMain():
         self.flag_object_total = [False, False, False, False] 
 
         # to debug just a part of the task you can just change the initial state, example:
-        self.state = self.Waiting_for_task_start
+        self.state = self.Detect_all_objects
 
         # MISSING:
         # waiting_door_open
@@ -702,147 +745,153 @@ class ServeBreakfastMain():
 
             elif self.state == self.Detect_all_objects:
 
+                self.set_arm(command="search_for_objects", wait_for_end_of=True)
+
                 self.search_for_serve_breakfast_objects()
+
+                # This used to be here, but we lost a lot of time that the arm could be moving at the same time as we speak, so it has been changed to the 
+                # detection function, before speaking that the objects have been found
+                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
 
                 self.state = self.Picking_up_spoon
 
             elif self.state == self.Picking_up_spoon:
 
-                ##### IF AN ERROR IS DETECTED:
-                
-                ##### self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
+                # post FNR2024: this is here to try to pick up the objects rather than using Deus Ex Machina 
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=True)    
-                   
-                ##### MOVE ARM TO ERROR POSITION 
-                time.sleep(1.0)    
+
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
 
                 self.set_face("help_pick_spoon")             
 
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                time.sleep(2)
                 
-                ##### WHILE OBJECT IS NOT IN GRIPPER:
+                time.sleep(self.wait_time_to_put_objects_in_hand) # waits for person to put object in hand
                 
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    ##### ARM CLOSE GRIPPER
-
-                    ##### IF OBJECT NOT GRABBED:
+                object_in_gripper = False
+                while not object_in_gripper:
                 
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+
+                    # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+                
+                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
                         
-                        ##### ARM OPEN GRIPPER
+                        self.set_arm(command="open_gripper", wait_for_end_of=True)
                                         
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
                 
-                ##### ARM PLACE OBJECT IN TRAY
-
+                self.set_arm(command="collect_spoon_to_tray", wait_for_end_of=True)
+                
                 self.state = self.Picking_up_milk
 
             elif self.state == self.Picking_up_milk:
 
-                ##### IF AN ERROR IS DETECTED:
-                
-                ##### self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-                   
+                # post FNR2024: this is here to try to pick up the objects rather than using Deus Ex Machina 
+
                 self.set_neck(position=self.look_judge, wait_for_end_of=True)    
 
-                ##### MOVE ARM TO ERROR POSITION 
-                time.sleep(1.0)
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
 
                 self.set_face("help_pick_milk") 
                 
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                time.sleep(2)
+                time.sleep(self.wait_time_to_put_objects_in_hand) # waits for person to put object in hand
                 
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+                object_in_gripper = False
+                while not object_in_gripper:
                 
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                        ##### ARM CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED:
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    
+                    # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
                 
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
                         
-                            ##### ARM OPEN GRIPPER
+                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                                        
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
                 
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                        
-                ##### ARM PLACE OBJECT IN TRAY
+                self.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
 
                 self.state = self.Picking_up_cornflakes
            
             elif self.state == self.Picking_up_cornflakes:
 
-                ##### IF AN ERROR IS DETECTED:
-                
-                ##### self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
+                # post FNR2024: this is here to try to pick up the objects rather than using Deus Ex Machina 
                    
                 self.set_neck(position=self.look_judge, wait_for_end_of=True)    
 
-                ##### MOVE ARM TO ERROR POSITION
-                time.sleep(1.0)
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
 
                 self.set_face("help_pick_cornflakes") 
                 
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                time.sleep(2)
+                time.sleep(self.wait_time_to_put_objects_in_hand) # waits for person to put object in hand
                 
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+                object_in_gripper = False
+                while not object_in_gripper:
                 
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                        ##### ARM CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED:
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    
+                    # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
                 
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
                         
-                            ##### ARM OPEN GRIPPER
+                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                                        
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
                 
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                        
-                ##### ARM PLACE OBJECT IN TRAY
+                self.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
 
                 self.state = self.Picking_up_bowl
 
             elif self.state == self.Picking_up_bowl:
 
-                ##### IF AN ERROR IS DETECTED:
-                
-                ##### self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
+                # post FNR2024: this is here to try to pick up the objects rather than using Deus Ex Machina 
                    
                 self.set_neck(position=self.look_judge, wait_for_end_of=True)    
 
-                ##### MOVE ARM TO ERROR POSITION
-                time.sleep(1.0)
-                    
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
                 self.set_face("help_pick_bowl") 
                 
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                time.sleep(2)
+                time.sleep(self.wait_time_to_put_objects_in_hand) # waits for person to put object in hand
                 
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+                object_in_gripper = False
+                while not object_in_gripper:
                 
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                        ##### ARM CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED:
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    
+                    # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
                 
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
                         
-                            ##### ARM OPEN GRIPPER
-
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                        
-                ##### ARM PLACE OBJECT IN TRAY
+                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                                        
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
+                
+                self.set_arm(command="collect_bowl_to_initial_position", wait_for_end_of=True)
 
                 self.state = self.Approach_kitchen_table
 
@@ -854,7 +903,7 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
-                self.set_neck(position=[0, -30], wait_for_end_of=True)
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
                 ###### MOVEMENT TO THE KITCHEN TABLE
 
@@ -989,6 +1038,7 @@ class ServeBreakfastMain():
 
             if finished_detection:
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
                 self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 self.set_speech(filename="objects_names/spoon", wait_for_end_of=True)  
@@ -999,6 +1049,7 @@ class ServeBreakfastMain():
 
             elif all(self.flag_object_total):
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
                 self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 self.create_image_four_sb_objects_separately() 
@@ -1032,6 +1083,7 @@ class ServeBreakfastMain():
 
             if finished_detection:
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
                 self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 self.set_speech(filename="objects_names/spoon", wait_for_end_of=True)  
@@ -1042,6 +1094,7 @@ class ServeBreakfastMain():
 
             elif all(self.flag_object_total):
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
                 self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 self.create_image_four_sb_objects_separately() 
@@ -1081,7 +1134,7 @@ class ServeBreakfastMain():
             ["Spoon", "Fork", "Knife"], # detect as 'spoon'
             ["Milk", "Cleanser"], # detect as 'milk'
             ["Cornflakes", "Strawberry_jello", "Chocolate_jello"], # detect as 'cornflakes'
-            ["Bowl", "Plate", "Cup", "Mustard"] # detect as 'bowl'
+            ["Bowl", "Plate", "Cup"] # detect as 'bowl'
         ]
 
         detect_object = [DetectedObject(), DetectedObject(), DetectedObject(), DetectedObject()]
