@@ -44,7 +44,7 @@
     <joint name="camera_joint" type="fixed">
         <parent link="camera_link_y"/>
         <child link="camera_link"/>
-        <origin xyz="0 0 0.05" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
 
     <link name="camera_link">
@@ -52,7 +52,7 @@
             <geometry>
                 <box size="0.04 0.07 0.04"/>
             </geometry>
-            <material name="blue"/>
+            <material name="red"/>
         </visual>
         <xacro:inertial_box mass="0.1" x="0.04" y="0.07" z="0.04">
             <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -68,7 +68,7 @@
     <link name="camera_link_optical"></link>
 
     <gazebo reference="camera_link">
-        <material>Gazebo/Blue</material>
+        <material>Gazebo/Red</material>
 
         <sensor name="camera" type="depth">
             <pose> 0 0 0 0 0 0 </pose>

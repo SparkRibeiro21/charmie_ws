@@ -9,6 +9,8 @@ from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
 from launch_ros.actions import Node
 from pathlib import Path
 
+import os
+
 
 def generate_launch_description():
 
@@ -64,6 +66,15 @@ def generate_launch_description():
         }.items(),
     )
 
+
+    charmie_multi_camera_launch_file = PythonLaunchDescriptionSource([os.path.join(
+        get_package_share_directory('realsense2_camera'), 'launch', 'charmie_multi_camera_launch.py'
+    )])
+
+    # Use IncludeLaunchDescription to include the launch file
+    charmie_multi_camera_launch_description = IncludeLaunchDescription(charmie_multi_camera_launch_file)
+
+
     serve_breakfast = Node(package='charmie_serve_breakfast',
                 executable='serve_breakfast',
                 name='serve_breakfast',
@@ -100,18 +111,32 @@ def generate_launch_description():
                 )
 
     arm = Node(package='charmie_arm_ufactory',
-                        executable='arm_hello',
-                        name='arm_hello',
+                        executable='arm_serve_breakfast',
+                        name='arm_serve_breakfast',
                         emulate_tty=True
                         )
     
+    yolo_objects = Node(package='charmie_yolo_objects',
+                        executable='yolo_objects',
+                        name='yolo_objects',
+                        emulate_tty=True
+                        )
+    
+    point_cloud = Node(package='charmie_point_cloud',
+                        executable='point_cloud',
+                        name='point_cloud',
+                        emulate_tty=True
+                        )
 
     return LaunchDescription([
-        # LaunchDescription(declared_arguments + [robot_driver_launch]),
+        LaunchDescription(declared_arguments + [robot_driver_launch]),
+        charmie_multi_camera_launch_description,
         face,
         speakers,
         neck,
-        # low_level,
-        # arm,
+        low_level,
+        arm,
+        point_cloud,
+        yolo_objects,
         serve_breakfast,
     ])

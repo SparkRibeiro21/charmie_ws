@@ -252,7 +252,8 @@ class DebugVisualNode(Node):
         self.object_detected_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.get_object_detected_callback, 10)
 
         # get robot_localisation
-        self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+        # self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+        self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom", self.odom_robot_callback, 10)
 
         # search for person, person localisation 
         self.search_for_person_subscriber = self.create_subscription(ListOfPoints, "search_for_person_points", self.search_for_person_callback, 10)

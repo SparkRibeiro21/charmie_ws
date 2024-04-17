@@ -23,7 +23,8 @@ setup(
             "arm_demonstration = charmie_arm_ufactory.arm_demonstration:main",
             "arm_debug = charmie_arm_ufactory.arm_debug:main",
             "arm_cutlery = charmie_arm_ufactory.arm_cutlery:main",
-            "arm_hello = charmie_arm_ufactory.arm_hello:main"
+            "arm_hello = charmie_arm_ufactory.arm_hello:main",
+            "arm_serve_breakfast = charmie_arm_ufactory.arm_serve_breakfast:main"
         ],
     },
 )

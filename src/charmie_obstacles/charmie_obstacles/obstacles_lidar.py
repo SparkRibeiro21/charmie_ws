@@ -41,7 +41,7 @@ class ObstaclesLIDAR:
         self.error_lidar_reading = False
         
         #dists
-        self.OBS_THRESH = 1.5
+        self.OBS_THRESH = 1.0
         self.min_dist_error = 0.1
         self.max_dist_error = 5.0
         self.tr_aux = 0.01
@@ -130,12 +130,20 @@ class ObstaclesLIDAR:
 
     def TRFilter(self):
 
-        aux = self.OBS_THRESH + self.tr_aux 
+
+        # aux = self.OBS_THRESH + self.tr_aux 
+        # for key, value in self.valores_id.items():
+        #     if self.valores_dict[key] < self.min_dist_error or self.valores_dict[key] > self.max_dist_error:
+        #         self.valores_dict[key] = aux
+        #     else:
+        #         aux = self.valores_dict[key]
+
+        # aux = self.OBS_THRESH + self.tr_aux 
         for key, value in self.valores_id.items():
             if self.valores_dict[key] < self.min_dist_error or self.valores_dict[key] > self.max_dist_error:
-                self.valores_dict[key] = aux
-            else:
-                aux = self.valores_dict[key]
+                self.valores_dict[key] = 8
+            # else:
+            #     aux = self.valores_dict[key]
 
     def draw_points_and_obstacle_detection(self):  
 

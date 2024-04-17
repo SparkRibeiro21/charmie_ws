@@ -276,21 +276,21 @@ class StoringGroceriesMain():
         # Task Related Variables
         self.Waiting_for_task_start = 0
         # self.Open_cabinet_door = 1
-        self.Approach_tables_first_time = 1
-        self.Picking_first_object = 2
-        self.Picking_second_object = 3
-        self.Picking_third_object = 4
-        self.Approach_cabinet_first_time = 5
-        self.Placing_third_object = 6
-        self.Placing_second_object = 7
-        self.Placing_first_object = 8
-        self.Approach_tables_second_time = 9
-        self.Picking_fourth_object = 10
+        self.Approach_cabinet_first_time = 1
+        self.Approach_tables_first_time = 2
+        self.Picking_first_object = 3
+        self.Placing_first_object = 4
+        self.Picking_second_object = 5
+        self.Placing_second_object = 6
+        self.Picking_third_object = 7
+        self.Placing_third_object = 8
+        self.Picking_fourth_object = 9
+        self.Placing_fourth_object = 10
         self.Picking_fifth_object = 11
-        self.Approach_cabinet_second_time = 12
-        self.Placing_fifth_object = 13
-        self.Placing_fourth_object = 14
-        self.Final_State = 15
+        self.Placing_fifth_object = 12        
+        self.Final_State = 13
+
+        self.object_counter = 0
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -482,6 +482,7 @@ class StoringGroceriesMain():
                         if self.shelf_1_height < object_height < self.shelf_2_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'First shelf '
                             print(object_name, 'is in the first shelf ')
+                            # print(object_x_position)
                             """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
@@ -497,6 +498,7 @@ class StoringGroceriesMain():
                         elif self.shelf_2_height < object_height < self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Second shelf '
                             print(object_name, 'is in the second shelf ')
+                            # print(object_x_position)
                             """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
@@ -512,6 +514,7 @@ class StoringGroceriesMain():
                         elif object_height > self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Third shelf '
                             print(object_name, 'is in the third shelf ')
+                            # print(object_x_position)
                             """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
                             # f"{round(float(per.conf),2)}",
@@ -523,6 +526,10 @@ class StoringGroceriesMain():
                             1,
                             cv2.LINE_AA
                         )  """
+                            
+                        else:
+                            print(object_name, '- none of the shelfs')
+                            # print(object_x_position)
                             
                         if  self.center_shelf <= object_x_position <= self.right_limit_shelf :
                             position += 'Right side '
@@ -553,7 +560,7 @@ class StoringGroceriesMain():
                 # ----------------------------------
                 # Código para dizer 'tal classe está em tal prateleira'
 
-                print('a', self.object_position)
+                print('objects position:', self.object_position)
 
                 position = []
                 object_class_name= []
@@ -566,6 +573,8 @@ class StoringGroceriesMain():
                 # print("Object class names:", object_class_name)
                 
                 keywords = []
+                class_name_array = []
+                nr_classes_detected = 0
 
                 self.classes_detected_wardrobe.clear()
                 
@@ -580,18 +589,24 @@ class StoringGroceriesMain():
                         if all(keyword in keywords for keyword in condition):
                             # If conditions are met, relate the class name to the position
                             class_name = [class_name for class_name, p in self.object_position.items() if p == pos][0]
+                            if class_name not in class_name_array:
+                               class_name_array.append(class_name)
+                            print('Class name:', class_name)
+                            print('All class names', class_name_array)
+                            nr_classes_detected = len(class_name_array)
+                            print('Nr classes detetadas: ', nr_classes_detected)
                             location_filename = f"storing_groceries/{object_location}"
                             class_filename = f"objects_classes/{class_name}"
                             self.classes_detected_wardrobe.append(class_name)
                             self.set_speech(filename=class_filename, wait_for_end_of=True)
                             self.set_speech(filename=location_filename, wait_for_end_of=True)
                             break
-                    
-                print('b', self.classes_detected_wardrobe)
-                # ----------------------------------
+
+                return nr_classes_detected
 
     def analysis_table(self):
         i = 0
+        nr_objects_high_priority_detected = 0
 
         for name, class_name in self.node.objects_classNames_dict.items():
             if class_name in self.classes_detected_wardrobe:
@@ -641,46 +656,49 @@ class StoringGroceriesMain():
                             1,
                             cv2.LINE_AA
                         ) """
-
+                        if self.priority_dict[object_class] == 'High':
+                            nr_objects_high_priority_detected += 1
+                            print('Nr objects high: ', nr_objects_high_priority_detected)
                         print('Object ' + object_name + ' from class ' + object_class + ' has ' + self.priority_dict[object_class] + 'priority')
 
                     i += 1
 
                 #self.objects_names_list.clear()
                 # ----------------------------------
+                # return self.nr_objects_detected
+                return nr_objects_high_priority_detected
 
+    def choose_place_object_wardrobe(self, counter): 
+        obj_name, obj_data = self.selected_objects[counter]
+        obj_class = obj_data['object_class']
+        keywords = []
+        print(obj_name)
+        # print(obj_class)
+        # print(self.selected_objects)
+        # print(self.object_position.keys())
+        if obj_class in self.object_position.keys():
+            # print(self.object_position.items())
+            position = self.object_position[obj_class]
+            print(position)
+            self.set_speech(filename='storing_groceries/Place_the_object_sg', wait_for_end_of=True)
+            keywords = position.strip().split() # Split each position string into words and extend the keywords list
 
-    def choose_place_object_wardrobe(self):
-        for obj_name, obj_data in self.selected_objects:
-            obj_class = obj_data['object_class']
-            keywords = []
-            print(obj_name)
-            # print(obj_class)
-            # print(self.selected_objects)
-            # print(self.object_position.keys())
-            if obj_class in self.object_position.keys():
-                # print(self.object_position.items())
-                position = self.object_position[obj_class]
-                print(position)
-                self.set_speech(filename='storing_groceries/Place_the_object_sg', wait_for_end_of=True)
-                keywords = position.strip().split() # Split each position string into words and extend the keywords list
-
-                location_filename = None
-                class_filename = None
-                # print(keywords)
-                for condition, object_location in object_position_mapping.items():
-                    if all(keyword in keywords for keyword in condition):
-                        # If conditions are met, relate the class name to the position
-                        location_filename = f"storing_groceries/{object_location}"
-                        class_filename = f"objects_classes/_{obj_class}"
-                        # print(object_location)
-                        self.set_speech(filename=location_filename, wait_for_end_of=True)
-                        self.set_speech(filename='generic/Near', wait_for_end_of=True)
-                        self.set_speech(filename=class_filename, wait_for_end_of=True)
-
-            else:
-                # eventualmente terei de colocar aqui algo caso o objeto escolhido não estivesse na prateleira
-                pass
+            location_filename = None
+            class_filename = None
+            # print(keywords)
+            for condition, object_location in object_position_mapping.items():
+                if all(keyword in keywords for keyword in condition):
+                    # If conditions are met, relate the class name to the position
+                    location_filename = f"storing_groceries/{object_location}"
+                    class_filename = f"objects_classes/_{obj_class}"
+                    # print(object_location)
+                    self.set_speech(filename=location_filename, wait_for_end_of=True)
+                    self.set_speech(filename='generic/Near', wait_for_end_of=True)
+                    self.set_speech(filename=class_filename, wait_for_end_of=True)
+        else:
+            # eventualmente terei de colocar aqui algo caso o objeto escolhido não estivesse na prateleira
+            pass
+        self.object_counter += 1
 
     def choose_priority(self):
         # Este nível fica para a versão 1. Para a versão 0 faço ver o que está na prateleira, guardar essas classes e ficam essas como high
@@ -730,6 +748,8 @@ class StoringGroceriesMain():
         print('dentro')
         if name in self.node.objects_classNames_dict:
             # category = self.node.objects_classNames_dict[name]
+            name = name.lower().replace(" ", "_")
+            print(name)
             filename = f"objects_names/{name}"
             self.set_speech(filename=filename, wait_for_end_of=True)
             print(f"Playing audio file: {filename}")
@@ -791,7 +811,7 @@ class StoringGroceriesMain():
             if self.state == self.Waiting_for_task_start:
                 #print('State 0 = Initial')
 
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 # self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=True, wait_for_end_of=True)
 
@@ -799,8 +819,7 @@ class StoringGroceriesMain():
 
                 ###### WAITS FOR START BUTTON / DOOR OPEN
 
-                time.sleep(2)
-                                
+                         
                 # next state
                 # self.state = self.Approach_tables_first_time
 
@@ -822,15 +841,17 @@ class StoringGroceriesMain():
                 # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
                 # self.set_neck(position=self.look_cabinet_bottom, wait_for_end_of=True)
                 
-                self.set_speech(filename="storing_groceries/sg_analysing_cabinet", wait_for_end_of=True)
-
                 self.current_image = self.node.image
                 bridge = CvBridge()
                 # Convert ROS Image to OpenCV image
                 cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
                 self.image_most_obj_detected = cv_image
 
-                self.analysis_cabinet()
+                nr_classes_detected = 0
+                while nr_classes_detected < 4:
+                    self.set_speech(filename="storing_groceries/sg_analysing_cabinet", wait_for_end_of=True)
+                    nr_classes_detected = self.analysis_cabinet()
+                    # Adicionar ajuste de pescoço ou então depois ajustar dentro do próprio analysis cabinet
                 self.choose_priority()
                 
                 self.set_speech(filename="storing_groceries/sg_finished_analise_cabinet", wait_for_end_of=True) 
@@ -856,54 +877,42 @@ class StoringGroceriesMain():
                 ###### MOVEMENT TO THE KITCHEN COUNTER
 
                 self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
+                nr_objects_detected_high_priority = 0
+                i = 0
+                while nr_objects_detected_high_priority < 5:
 
-                self.analysis_table()
+                    self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
 
+                    nr_objects_detected_high_priority = self.analysis_table()
+
+
+                self.set_speech(filename="storing_groceries/sg_detected", wait_for_end_of=True) 
                 
+                self.select_five_objects()
+
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
                 # next state
                 self.state = self.Picking_first_object
                 
             elif self.state == self.Picking_first_object:
                 #print('State 2 = Picking first object from table')
+            
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True
 
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                obj_name, obj_class = self.selected_objects[self.object_counter]
+                print(obj_name)
+                obj_name_lower = obj_name.lower().replace(" ", "_")
+                print(obj_name_lower)
 
-                ##### MOVES ARM TO TOP OF TABLE POSITION
+                object_help_pick = 'help_pick_' + obj_name_lower
+                self.set_face(str(object_help_pick))
+                print(object_help_pick)
 
-                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-
-                ##### YOLO OBJECTS SEARCH FOR THE FIVE OBJECTS WITH HIGHER CONFIDENCE, FOR BOTH CAMERAS
-
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                # self.set_speech(filename="storing_groceries/sg_found_five_objects", show_in_face=True, wait_for_end_of=True)
-
-                self.select_five_objects()
-                
-                self.choose_place_object_wardrobe()
-
-                self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
-
-                ##### SHOW FACE DETECTED OBJECTS
-                # self.set_face("objects_detected")
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-
-                ##### IF AN ERROR IS DETECTED:
-                
-                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-                   
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+               
+                # I will need your help picking the objects from this table and also to place them in the wardrobe
 
-                self.set_face("help_pick_spoon") #change to the object detected...
-
-                time.sleep(2)
+                # self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
                 
                     ##### WHILE OBJECT IS NOT IN GRIPPER:
                 
@@ -917,190 +926,138 @@ class StoringGroceriesMain():
                         
                             ##### ARM OPEN GRIPPER
                 
-                self.set_face("demo5")
+                # self.set_face("demo5")
                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True)
                 
                 ##### ARM PLACE FIRST OBJECT IN TRAY
                                 
                 # next state
-                self.state = self.Picking_second_object
-                
-            elif self.state == self.Picking_second_object:
-                #print('State 3 = Picking second object from table')
-
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-
-                ##### IF AN ERROR IS DETECTED:
-                
-                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-                   
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_face("help_pick_spoon") #change to the object detected...
-
-                time.sleep(2)
-                
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-                
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                        ##### ARM CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED:
-                
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
-                        
-                            ##### ARM OPEN GRIPPER
-                
-                self.set_face("demo5")
-                        
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                
-                ##### ARM PLACE SECOND OBJECT IN TRAY
-                                
-                # next state
-                self.state = self.Picking_third_object
-                
-            elif self.state == self.Picking_third_object:
-                #print('State 4 = Picking third object from table')
-
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-
-                ##### IF AN ERROR IS DETECTED:
-                
-                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-                   
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_face("help_pick_spoon") #change to the object detected...
-
-                time.sleep(2)
-                
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-                
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                        ##### ARM CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED:
-                
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
-                        
-                            ##### ARM OPEN GRIPPER
-                
-                self.set_face("demo5")
-                        
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                
-                ##### ARM PLACE THIRD OBJECT IN HAND - REST POSITION
-                                
-                # next state
-                self.state = self.Placing_third_object
-                
-                
-            elif self.state == self.Placing_third_object:
-                #print('State 6 = Placing third object grabbed in the cabinet')
-
-                self.set_speech(filename="storing_groceries/sg_place_object_shown_face", wait_for_end_of=True) 
-
-                # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
-
-                time.sleep(1)
-
-                ##### ARM MOVE TO CABINET
-
-                ##### ARM PLACE OBJECT
-
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Placing_second_object
-                
-            elif self.state == self.Placing_second_object:
-                #print('State 7 = Placing second object grabbed in the cabinet')
-
-                self.set_speech(filename="storing_groceries/sg_place_object_shown_face", wait_for_end_of=True) 
-                                
-                time.sleep(1)
-
-                ##### ARM MOVE TO CABINET
-
-                ##### ARM PLACE OBJECT
-
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
-                                
-                # next state
                 self.state = self.Placing_first_object
                 
             elif self.state == self.Placing_first_object:
-                #print('State 8 = Placing first object grabbed in the cabinet')
-
-                self.set_speech(filename="storing_groceries/sg_place_object_shown_face", wait_for_end_of=True) 
-                                
-                time.sleep(1)
-
-                ##### ARM MOVE TO CABINET
-
-                ##### ARM PLACE OBJECT
-
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Approach_tables_second_time
                 
-            elif self.state == self.Approach_tables_second_time:
-                #print('State 9 = Approaching table for the second time to grab rest of the objects')
+                self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
+                time.sleep(7)
+                # MOVIMENTAR
 
-                # self.set_neck(position=self.look_navigation) # , wait_for_end_of=True)
+                self.choose_place_object_wardrobe(self.object_counter)
 
-                self.set_speech(filename="generic/moving_table", wait_for_end_of=True)
+                self.state = self.Picking_second_object
 
-                ###### MOVEMENT TO THE TABLE
+            elif self.state == self.Picking_second_object:
+                time.sleep(7)
+                # MOVIMENTAR
 
-                self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
-                                
-                # next state
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
+
+                obj_name, obj_class = self.selected_objects[self.object_counter]
+                print(obj_name)
+                obj_name_lower = obj_name.lower().replace(" ", "_")
+                print(obj_name_lower)
+
+                object_help_pick = 'help_pick_' + obj_name_lower
+                self.set_face(str(object_help_pick))
+                print(object_help_pick)
+
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+               
+                # I will need your help picking the objects from this table and also to place them in the wardrobe
+
+                # self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
+                
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+                
+                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                        ##### ARM CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED:
+                
+                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        
+                            ##### ARM OPEN GRIPPER
+                
+                # self.set_face("demo5")
+
+                self.state = self.Placing_second_object
+
+            elif self.state == self.Placing_second_object:
+                
+                self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
+                time.sleep(7)
+                # MOVIMENTAR
+
+                self.choose_place_object_wardrobe(self.object_counter)
+
+                self.state = self.Picking_third_object
+
+            elif self.state == self.Picking_third_object:
+                time.sleep(7)
+                # MOVIMENTAR
+
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
+               
+                obj_name, obj_class = self.selected_objects[self.object_counter]
+                print(obj_name)
+                obj_name_lower = obj_name.lower().replace(" ", "_")
+                print(obj_name_lower)
+
+                object_help_pick = 'help_pick_' + obj_name_lower
+                self.set_face(str(object_help_pick))
+                print(object_help_pick)
+                 
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                # I will need your help picking the objects from this table and also to place them in the wardrobe
+
+                # self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
+                
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+                
+                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                        ##### ARM CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED:
+                
+                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        
+                            ##### ARM OPEN GRIPPER
+                
+                # self.set_face("demo5")
+
+                self.state = self.Placing_third_object
+
+            elif self.state == self.Placing_third_object:
+                
+                self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
+                time.sleep(7)
+                # MOVIMENTAR
+                self.choose_place_object_wardrobe(self.object_counter)
+
                 self.state = self.Picking_fourth_object
-                
+
             elif self.state == self.Picking_fourth_object:
-                #print('State 10 = Picking fourth object from table')
+                time.sleep(7)
+                # MOVIMENTAR
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-
-                ##### IF AN ERROR IS DETECTED:
                 
-                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-                   
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
+                obj_name, obj_class = self.selected_objects[self.object_counter]
+                print(obj_name)
+                obj_name_lower = obj_name.lower().replace(" ", "_")
+                print(obj_name_lower)
+
+                object_help_pick = 'help_pick_' + obj_name_lower
+                self.set_face(str(object_help_pick))
+                print(object_help_pick)
+
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                self.set_face("help_pick_spoon") #change to the object detected...
+                # I will need your help picking the objects from this table and also to place them in the wardrobe
 
-                time.sleep(2)
+                # self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
                 
                     ##### WHILE OBJECT IS NOT IN GRIPPER:
                 
@@ -1114,109 +1071,63 @@ class StoringGroceriesMain():
                         
                             ##### ARM OPEN GRIPPER
                 
-                self.set_face("demo5")
-                        
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                
-                ##### ARM PLACE FOURTH OBJECT IN TRAY
-                                
-                # next state
-                self.state = self.Picking_fifth_object
-                
-            elif self.state == self.Picking_fifth_object:
-                #print('State 11 = Picking fifth object from table')
+                # self.set_face("demo5")
 
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-
-                ##### IF AN ERROR IS DETECTED:
-                
-                self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-                   
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_face("help_pick_spoon") #change to the object detected...
-
-                time.sleep(2)
-                
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-                
-                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                        ##### ARM CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED:
-                
-                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
-                        
-                            ##### ARM OPEN GRIPPER
-                
-                self.set_face("demo5")
-                        
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                
-                ##### ARM PLACE FIFTH OBJECT IN TRAY
-                                
-                # next state
-                self.state = self.Approach_cabinet_second_time
-                
-            elif self.state == self.Approach_cabinet_second_time:
-                #print('State 12 = Approaching cabinet door for the second time')
-
-                self.set_speech(filename="storing_groceries/sg_collected_objects_2nd_round", wait_for_end_of=True)
-                
-                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-
-                ###### MOVEMENT TO THE CABINET
-
-                self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
-
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/place_object_cabinet", wait_for_end_of=True)
-
-                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Placing_fifth_object
-                
-            elif self.state == self.Placing_fifth_object:
-                #print('State 13 = Placing fifth object grabbed')
-
-                # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
-                                
-                time.sleep(1)
-
-                ##### ARM MOVE TO CABINET
-
-                ##### ARM PLACE OBJECT
-
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
-                                
-                # next state
                 self.state = self.Placing_fourth_object
-                
+
             elif self.state == self.Placing_fourth_object:
-                #print('State 14 = Placing forth object grabbed')
+                
+                self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
+                time.sleep(7)
+                # MOVIMENTAR
+                self.choose_place_object_wardrobe(self.object_counter)
 
-                # self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
-                                
-                time.sleep(1)
+                self.state = self.Picking_fifth_object
 
-                ##### ARM MOVE TO CABINET
+            elif self.state == self.Picking_fifth_object:
+                time.sleep(7)
+                # MOVIMENTAR
 
-                ##### ARM PLACE OBJECT
+                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
+                
+                obj_name, obj_class = self.selected_objects[self.object_counter]
+                print(obj_name)
+                obj_name_lower = obj_name.lower().replace(" ", "_")
+                print(obj_name_lower)
 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
-                                
-                # next state
+                object_help_pick = 'help_pick_' + obj_name_lower
+                self.set_face(str(object_help_pick))
+                print(object_help_pick)
+
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                # I will need your help picking the objects from this table and also to place them in the wardrobe
+
+                # self.set_speech(filename="storing_groceries/check_face_objects_detected", wait_for_end_of=True)
+                
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+                
+                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                        ##### ARM CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED:
+                
+                self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        
+                            ##### ARM OPEN GRIPPER
+                
+                # self.set_face("demo5")
+
+                self.state = self.Placing_fifth_object
+
+            elif self.state == self.Placing_fifth_object:
+                
+                self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
+                time.sleep(7)
+                # MOVIMENTAR
+                self.choose_place_object_wardrobe(self.object_counter)
+
                 self.state = self.Final_State
             
             elif self.state == self.Final_State:
@@ -1240,7 +1151,7 @@ class StoringGroceriesMain():
 
                 
                 
-                print(' ---------------------- ')
+                """ print(' ---------------------- ')
 
                 # while time.time() - start_time < 5.0:
                 self.analysis_cabinet()
@@ -1264,7 +1175,7 @@ class StoringGroceriesMain():
                     print("Error: self.image_most_obj_detected is None")
 
                 self.object_details.clear()
-                self.object_details = {}
+                self.object_details = {} """
 
 
-                #pass
+                pass

@@ -55,7 +55,7 @@ class TestNode(Node):
         self.waited_for_end_of_track_object = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
-        self.rgb_sucecss = True
+        self.rgb_success = True
         self.rgb_message = ""
         self.track_person_success = True
         self.track_person_message = ""
