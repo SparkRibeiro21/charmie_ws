@@ -655,7 +655,11 @@ class Yolo_obj(Node):
 
             # adds object to "object_pose" without any restriction
             new_object = DetectedObject()
+            self.get_logger().info(f"After PC1.1")
+
+            self.get_logger().info(f"Objects detected: {new_pcloud[object_idx].center_coords}")
             new_object = self.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, new_pcloud[object_idx].center_coords)
+            self.get_logger().info(f"After PC1.2")
             # yolov8_obj.objects.append(new_object) # test removed person_pose (non-filtered)
 
             object_id = boxes_id.id
@@ -863,9 +867,13 @@ class Yolo_obj(Node):
 
     def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates):
 
+        self.get_logger().info(f"After PC1.1.1")
+
         object_id = boxes_id.id
         if boxes_id.id == None:
             object_id = 0 
+
+        self.get_logger().info(f"After PC1.1.2")
 
         new_object = DetectedObject()
 
@@ -873,6 +881,8 @@ class Yolo_obj(Node):
         new_object.object_class = object_class
         new_object.index = int(object_id)
         new_object.confidence = float(boxes_id.conf)
+
+        self.get_logger().info(f"After PC1.1.3")
 
         # print(center_object_coordinates)
 
@@ -895,6 +905,8 @@ class Yolo_obj(Node):
         a_ref = (target_x, target_y)
         # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
 
+        self.get_logger().info(f"After PC1.1.4")
+
         object_abs_pos = Point()
         object_abs_pos.x = target_x
         object_abs_pos.y = target_y
@@ -906,6 +918,8 @@ class Yolo_obj(Node):
         new_object.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
         new_object.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
+        self.get_logger().info(f"After PC1.1.5")
+
         new_object.room_location = "None"      # still missing... (says on which room a detected object is)
         new_object.furniture_location = "None" # still missing... (says if an object location is associated with some furniture, on a table, sofa, counter, ...)
 
@@ -916,6 +930,9 @@ class Yolo_obj(Node):
 
         new_object.orientation = 0.0 # still missing... (says the object angle so the gripper can adjust to correctly pick up the object)
         new_object.camera = "Head"   # still missing... (says which camera is being used)
+
+
+        self.get_logger().info(f"After PC1.1.6")
 
         return new_object
 
