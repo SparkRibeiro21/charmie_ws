@@ -892,7 +892,7 @@ class ServeBreakfastMain():
                 # keyword_list= command.split(" ")
                 # print(keyword_list[0], keyword_list[1])
                 # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
-                # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lowrer(), wait_for_end_of=True)  
+                # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)  
 
                 # change face, to standard face
                 self.set_face("demo5")
