@@ -991,8 +991,8 @@ class ServeBreakfastMain():
                 
             elif self.state == self.Final_State:
 
-                # self.set_neck(position=self.look_judge) # , wait_for_end_of=True)
-
+                self.set_neck(position=self.look_judge) 
+                
                 self.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
 
                 while True:
