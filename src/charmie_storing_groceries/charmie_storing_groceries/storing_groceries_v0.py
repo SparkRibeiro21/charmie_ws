@@ -823,6 +823,7 @@ class StoringGroceriesMain():
                 print(self.object_details)
                 if nr_objects_high_priority_detected >= 5:
                     five_objects_detected = True
+                    self.set_rgb(command=GREEN+BLINK_LONG)
                     self.set_neck(position=self.look_judge, wait_for_end_of=False)
                     self.set_speech(filename="storing_groceries/sg_detected", wait_for_end_of=True) 
                     self.select_five_objects()
@@ -830,6 +831,7 @@ class StoringGroceriesMain():
                     self.activate_yolo_objects(activate_objects=False)
                     
                     break
+                self.set_rgb(command=RED+BLINK_LONG)
 
         return nr_objects_high_priority_detected
 
@@ -994,7 +996,11 @@ class StoringGroceriesMain():
 
                 self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
 
+                self.set_rgb(command=MAGENTA+SET_COLOUR)
+
                 self.wait_for_start_button()
+
+                self.set_rgb(command=BLUE+SET_COLOUR)
 
                 ###### WAITS FOR START BUTTON / DOOR OPEN
                 self.set_neck(position=self.look_navigation, wait_for_end_of=False)
@@ -1044,11 +1050,14 @@ class StoringGroceriesMain():
                     
                     nr_classes_detected = self.analysis_cabinet()
 
+                    self.set_rgb(command=RED+BLINK_LONG)
+
                     # Move to the next position
                     position_index = (position_index + 1) % len(list_of_neck_position_search)
                     print(position_index)
 
                     # Adicionar ajuste de pescoço ou então depois ajustar dentro do próprio analysis cabinet
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 self.choose_priority()
                 
                 self.set_speech(filename="storing_groceries/sg_finished_analise_cabinet", wait_for_end_of=True) 
@@ -1137,15 +1146,16 @@ class StoringGroceriesMain():
             elif self.state == self.Placing_first_object:
                 
                 self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
-                time.sleep(7)
+                time.sleep(3)
                 # MOVIMENTAR
-
+                self.set_speech(filename='storing_groceries/help_place_object', wait_for_end_of=True)
+                # Abrir mão
                 self.choose_place_object_wardrobe(self.object_counter)
 
                 self.state = self.Picking_second_object
 
             elif self.state == self.Picking_second_object:
-                time.sleep(7)
+                time.sleep(3)
                 # MOVIMENTAR
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
@@ -1185,15 +1195,18 @@ class StoringGroceriesMain():
             elif self.state == self.Placing_second_object:
                 
                 self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
-                time.sleep(7)
+                time.sleep(3)
                 # MOVIMENTAR
+
+                self.set_speech(filename='storing_groceries/help_place_object', wait_for_end_of=True)
+                # Abrir mão
 
                 self.choose_place_object_wardrobe(self.object_counter)
 
                 self.state = self.Picking_third_object
 
             elif self.state == self.Picking_third_object:
-                time.sleep(7)
+                time.sleep(3)
                 # MOVIMENTAR
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
@@ -1233,14 +1246,18 @@ class StoringGroceriesMain():
             elif self.state == self.Placing_third_object:
                 
                 self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
-                time.sleep(7)
+                time.sleep(3)
                 # MOVIMENTAR
+
+                self.set_speech(filename='storing_groceries/help_place_object', wait_for_end_of=True)
+                # Abrir mão
+
                 self.choose_place_object_wardrobe(self.object_counter)
 
                 self.state = self.Picking_fourth_object
 
             elif self.state == self.Picking_fourth_object:
-                time.sleep(7)
+                time.sleep(3)
                 # MOVIMENTAR
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
@@ -1280,14 +1297,18 @@ class StoringGroceriesMain():
             elif self.state == self.Placing_fourth_object:
                 
                 self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
-                time.sleep(7)
+                time.sleep(3)
                 # MOVIMENTAR
+
+                self.set_speech(filename='storing_groceries/help_place_object', wait_for_end_of=True)
+                # Abrir mão
+
                 self.choose_place_object_wardrobe(self.object_counter)
 
                 self.state = self.Picking_fifth_object
 
             elif self.state == self.Picking_fifth_object:
-                time.sleep(7)
+                time.sleep(3)
                 # MOVIMENTAR
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
@@ -1327,8 +1348,12 @@ class StoringGroceriesMain():
             elif self.state == self.Placing_fifth_object:
                 
                 self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
-                time.sleep(7)
+                time.sleep(3)
                 # MOVIMENTAR
+
+                self.set_speech(filename='storing_groceries/help_place_object', wait_for_end_of=True)
+                # Abrir mão
+                
                 self.choose_place_object_wardrobe(self.object_counter)
 
                 self.state = self.Final_State
