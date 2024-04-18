@@ -25,7 +25,8 @@ setup(
             "arm_cutlery = charmie_arm_ufactory.arm_cutlery:main",
             "arm_hello = charmie_arm_ufactory.arm_hello:main",
             "arm_pick_place_all_objects = charmie_arm_ufactory.arm_pick_place_all_objects:main",
-            "arm_serve_breakfast = charmie_arm_ufactory.arm_serve_breakfast:main"
+            "arm_serve_breakfast = charmie_arm_ufactory.arm_serve_breakfast:main",
+            "arm_storing_groceries = charmie_arm_ufactory.arm_storing_groceries:main"
         ],
     },
 )

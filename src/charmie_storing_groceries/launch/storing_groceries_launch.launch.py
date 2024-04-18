@@ -1,7 +1,7 @@
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
@@ -106,8 +106,8 @@ def generate_launch_description():
                 )
 
     arm = Node(package='charmie_arm_ufactory',
-                        executable='arm_hello',
-                        name='arm_hello',
+                        executable='arm_storing_groceries',
+                        name='arm_storing_groceries',
                         emulate_tty=True
                         )
     
@@ -123,16 +123,26 @@ def generate_launch_description():
                 emulate_tty=True
                 )
     
+    delayed_actions = []
+
+    # Add a half-second delay before launching each node
+    delay = 0.5
+
+    for node in [speakers, low_level, charmie_both_cameras_launch_description]: #---------> CHANGE ME
+        delayed_actions.append(TimerAction(period=delay, actions=[node]))
+        delay += 0.5
+    
 
     return LaunchDescription([
-        # LaunchDescription(declared_arguments + [robot_driver_launch]),
+        LaunchDescription(declared_arguments + [robot_driver_launch]),
+        # speakers,
+        # charmie_both_cameras_launch_description,
+        *delayed_actions,
         face,
-        speakers,
         neck,
         point_cloud,
         yolo_objects,
-        charmie_both_cameras_launch_description,
-        low_level,
-        # arm,
-        storing_groceries,
+        # low_level,
+        arm,
+        # storing_groceries,
     ])
