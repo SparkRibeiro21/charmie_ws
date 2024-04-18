@@ -6,7 +6,7 @@ import time
 import pygame
 from pathlib import Path
 
-names_list = ["Axel", "John", "Paris", "Robin", "Simone"]
+names_list = ["Adel", "Angel", "Axel", "Charlie", "Jane", "John", "Jules", "Morgan", "Paris", "Robin", "Simone"]
 drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
 
 
