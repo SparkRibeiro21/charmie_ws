@@ -7,8 +7,8 @@ import threading
 
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D
-from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ActivateYoloObjects
-from charmie_interfaces.msg import Yolov8Objects, DetectedObject
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger
+from charmie_interfaces.msg import Yolov8Objects
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
@@ -89,6 +89,9 @@ class StoringGroceriesNode(Node):
 
         # Objects detected
         self.objects_filtered_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered', self.get_objects_callback, 10)
+
+        # Arm (CHARMIE)
+        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Neck 
