@@ -6,7 +6,7 @@ import time
 import pygame
 from pathlib import Path
 
-names_list = ["Axel", "John", "Paris", "Robin", "Simone"]
+names_list = ["Adel", "Angel", "Axel", "Charlie", "Jane", "John", "Jules", "Morgan", "Paris", "Robin", "Simone"]
 drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
 
 
@@ -15,6 +15,10 @@ drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced
 # "RECEPTIONIST": reads names and drinks arrays and generates all commands for first guest names, second guest names and favourite drinks
 MODE = "STANDARD"
 
+
+COMMANDS = {
+    'problem_detecting_change_object': 'There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?',
+}
 
 #COMMANDS = {
 #    'waiting_start_button': 'Waiting for start button to be pressed.',
@@ -70,13 +74,11 @@ COMMANDS = {
 }
 """
 
-# COMMANDS = {
-#     'problem_detecting_change_object': 'There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?',
-# }
-
+"""
 COMMANDS = {
     'help_place_object': 'I need your help placing the object. Please grab the object when I open my hand. I will open my hand in 3, 2, 1.'
 }
+"""
 
 
 class RobotSpeak():

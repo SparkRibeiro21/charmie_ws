@@ -290,7 +290,13 @@ class LowLevelNode(Node):
         aaa = self.robot.get_omni_variables(self.robot.ACCELERATION)
 
         print(aaa)
-        print(type(aaa))
+        # print(type(aaa))
+
+        if aaa[0] == 100:
+            self.get_logger().warning(f"Motors are not being powered!")
+        else:
+            self.get_logger().info(f"Connected to Motor Boards! Accel Ramp Lvl = {aaa[0]}")
+
         if aaa == [1, 1]:
             flag_diagn.data = True
         else:

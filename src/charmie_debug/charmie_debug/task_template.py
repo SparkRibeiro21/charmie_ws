@@ -271,13 +271,16 @@ class ServeBreakfastNode(Node):
         self.track_person_success = True
         self.track_person_message = ""
         self.track_object_success = True
-        self.track_person_message = ""
+        self.track_object_message = ""
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
         self.arm_success = True
         self.arm_message = ""
+
+        self.get_neck_position = [1.0, 1.0]
+
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people

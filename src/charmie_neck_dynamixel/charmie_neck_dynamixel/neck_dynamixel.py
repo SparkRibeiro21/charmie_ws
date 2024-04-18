@@ -146,7 +146,7 @@ class NeckNode(Node):
         self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
 
         # subscribes to robot position, to allow neck_to_coords
-        self.odom_subscriber = self.create_subscription(Odometry, "odom", self.odom_callback, 10)
+        self.odom_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_callback, 10)
         # standard diagnostic publisher
         self.neck_diagnostic_publisher = self.create_publisher(Bool, "neck_diagnostic", 10)
 

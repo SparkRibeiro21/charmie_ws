@@ -40,6 +40,8 @@ class NavigationSDNLClass:
         self.robot_y = 0.0
         self.robot_t = 0.0
         self.nav_target = TarNavSDNL()
+
+
         self.first_nav_target = False
         self.dist_to_target = 0.0
         self.ang_to_target = 0.0 
@@ -151,8 +153,6 @@ class NavigationSDNLClass:
         omni_move.z = float(100.0 - self.f_final)
         
         return omni_move
-        
-
 
     def atrator(self, mov_or_rot):
 
@@ -217,7 +217,6 @@ class NavigationSDNLClass:
         self.min_dist_obs = min_d
         # print()
         return obstacles
-
 
     def repulsor(self):
 
@@ -319,7 +318,6 @@ class NavigationSDNLClass:
         # return f_obstacle, y1, y2, y3, yf, yff, yfff
         return f_obstacle, yff, yfff
 
-
     def combine_atrator_repulsor(self):
 
         mu = 0
@@ -337,7 +335,6 @@ class NavigationSDNLClass:
             y_final[t] = self.y_atrator[t] + self.yfff[t]
 
         return ffinal, y_final
-
 
     def upload_move_dist_to_target(self):
         
@@ -375,7 +372,6 @@ class NavigationSDNLClass:
         
         return ang
 
-
     def normalize_angles(self, ang):
 
         while ang < -180:
@@ -384,7 +380,6 @@ class NavigationSDNLClass:
             ang -= 360
 
         return ang
-
 
     def update_debug_drawings(self):
             
@@ -407,6 +402,7 @@ class NavigationSDNLClass:
             # obstacles
             self.all_obs_val.append(self.aux_obstacles_l)
             
+            """
             # past obstacles
             for j in range(len(self.all_obs_val)):
 
@@ -424,7 +420,7 @@ class NavigationSDNLClass:
                                               (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
                                                int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
                                               (0, 165, 255), int(1.0 + thickness*self.scale/1000))
-             
+            """
 
             thickness = 20
             # current obstacles
@@ -480,20 +476,25 @@ class NavigationSDNLClass:
             
 
 
-            # SDNL equations
-            """
-            if self.first_nav_target:
+            # THIS IF HAS TO BE CHANGED TO A IF AFTER CALCULATING THE VALUES FOR THE DRAW: 
+            if self.first_nav_target and False:
+                # SDNL equations
+                # if self.first_nav_target:
+                # print(self.y_atrator)
                 self.plot1.plot(self.image_plt, self.scale_plotter, self.y_atrator, self.robot_t)
-            for y_plt_ff in self.yff:
-                self.plot3.plot(self.image_plt, self.scale_plotter, y_plt_ff, self.robot_t, (255, 100, 100))
-            self.plot2.plot(self.image_plt, self.scale_plotter, self.yfff, self.robot_t, (0, 140, 255))
-            self.plot2.plot(self.image_plt, self.scale_plotter, self.y_final, self.robot_t, (255, 255, 0))
-            """
+                for y_plt_ff in self.yff:
+                    self.plot3.plot(self.image_plt, self.scale_plotter, y_plt_ff, self.robot_t, (255, 100, 100))
 
+                # print(self.yfff)
+                # print(self.y_final)
+                    
+                self.plot2.plot(self.image_plt, self.scale_plotter, self.yfff, self.robot_t, (0, 140, 255))
+                self.plot2.plot(self.image_plt, self.scale_plotter, self.y_final, self.robot_t, (255, 255, 0))
+                
+                cv2.imshow("SDNL", self.image_plt)
 
 
             cv2.imshow("Navigation SDNL", self.test_image)
-            # cv2.imshow("SDNL", self.image_plt)
             
             k = cv2.waitKey(1)
             if k == ord('+'):
@@ -506,7 +507,6 @@ class NavigationSDNLClass:
 
             self.test_image[:, :] = 0
             self.image_plt[:, :] = 0
-
 
     def odometry_msg_to_position(self, odom: Odometry):
         
@@ -570,6 +570,7 @@ class NavigationSDNLClass:
             self.first_nav_target = True
         # print(self.nav_target)
 
+
 class TRplotter:
 
     def __init__(self, coord_y, colour=(255, 255, 255)):
@@ -580,7 +581,6 @@ class TRplotter:
         self.yc = 400
         self.x = np.linspace(0, 2 * math.pi, 360 * 2)
         self.centre_data = int((self.xc*2 - len(self.x)) / 2)
-
 
     def plot(self, image_plt, scale, y, theta, plt_colour=None):
 
@@ -610,8 +610,10 @@ class TRplotter:
         for value in range(len(self.x)):
             # print(value, end="")
             # cv2.circle(image_plt, (image_plt.shape[1] - self.centre_data - value, int(self.coord_y - scale/10 * y[value])), 0, (100,100,100), 0)
+            
             cv2.circle(image_plt, (self.centre_data + value, int(self.coord_y - scale/20 * y[value])), 0, fcolour, 0)
-
+            
+            pass
             # cv2.line(image_plt, (image_plt.shape[1] - centre_data - value, yc - 200),
             #          (image_plt.shape[1] - centre_data - value, int(yc - 200 - scale * y[value])),
             #          (255, 0, 0))
@@ -678,6 +680,8 @@ class NavSDNLNode(Node):
         # print("here")
 
     def odom_robot_callback(self, odom: Odometry):
+
+        # print("INNNNNNNNNNNNNNNNNNNNNN")
         # updates the position variable
         self.nav.odometry_msg_to_position(odom)
         # self.nav.sdnl_main()
@@ -696,7 +700,8 @@ class NavSDNLNode(Node):
         # print(nav)
     
     def timer_callback(self):
-
+        
+        
         if self.nav.first_nav_target:
 
             # print("estado:", self.navigation_state)
@@ -705,36 +710,36 @@ class NavSDNLNode(Node):
                 omni_move = self.nav.sdnl_main("mov")
                 self.omni_move_publisher.publish(omni_move)
 
-                print(self.nav.nav_target.follow_me)
+                # print(self.nav.nav_target.follow_me)
 
-                if self.nav.nav_target.follow_me:
-                    if self.nav.dist_to_target <= self.nav.nav_threshold_dist_follow_me:
-                        self.navigation_state = 1                        
-                        print("INSIDE1")
-                    else:
-                        print("OUTSIDE1")
-                else:
-                    if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
-                        self.navigation_state = 1
+                # if self.nav.nav_target.follow_me:
+                #     if self.nav.dist_to_target <= self.nav.nav_threshold_dist_follow_me:
+                #         self.navigation_state = 1                        
+                #         print("INSIDE1")
+                #     else:
+                #         print("OUTSIDE1")
+                # else:
+                #     if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
+                #         self.navigation_state = 1
+            
+                if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
+                    self.navigation_state = 2
 
-            if self.navigation_state == 1:
-                omni_move = self.nav.sdnl_main("rot")
-                self.omni_move_publisher.publish(omni_move)
 
-                if self.nav.nav_target.follow_me:
-                    if self.nav.ang_to_target <= self.nav.nav_threshold_ang_follow_me:
-                        self.navigation_state = 2
-                        print("INSIDE2")
-                    else:
-                        print("OUTSIDE2")
-                else:
-                    if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
-                        self.navigation_state = 2
+            # if self.navigation_state == 1:
+            #     omni_move = self.nav.sdnl_main("rot")
+            #     self.omni_move_publisher.publish(omni_move)
+            # 
+            #     if self.nav.nav_target.follow_me:
+            #         if self.nav.ang_to_target <= self.nav.nav_threshold_ang_follow_me:
+            #             self.navigation_state = 2
+            #             print("INSIDE2")
+            #         else:
+            #             print("OUTSIDE2")
+            #     else:
+            #         if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
+            #             self.navigation_state = 2
                     
-
-
-
-            self.nav.update_debug_drawings() # this way it still draws the targets on the final frame
 
             if self.navigation_state == 2:
                 # publica no topico a dizer que acabou
@@ -750,7 +755,8 @@ class NavSDNLNode(Node):
 
             print("DIST_ERR:", self.nav.dist_to_target)
             print("ANG_ERR:", self.nav.ang_to_target) 
-
+            
+            self.nav.update_debug_drawings() # this way it still draws the targets on the final frame
 
 
 def main(args=None):

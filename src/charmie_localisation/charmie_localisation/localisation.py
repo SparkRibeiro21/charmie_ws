@@ -120,6 +120,11 @@ class LocalisationNode(Node):
         self.odom_robot = odom
         # print("ini_t_enc:", self.quat_to_rad(self.odom_robot.pose.pose.orientation))
         # print("erro_ini_t:", self.erro_ini_t)
+        
+        
+        
+        # Temporary for when amcl is not implemtned and want the localisation to be precisely the odometry
+        self.amcl_alone_localisation_publisher.publish(self.odom_robot)
 
 
        
