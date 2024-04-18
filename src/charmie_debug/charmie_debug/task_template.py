@@ -900,7 +900,7 @@ class ServeBreakfastMain():
         self.look_tray = [0, -60]
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Waiting_for_task_start
+        self.state = self.Picking_up_milk
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In ServeBreakfast Main...")
@@ -993,7 +993,7 @@ class ServeBreakfastMain():
                 print("State:", self.state, "- Picking_up_spoon")
 
                 ##### NECK LOOKS AT TABLE
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### MOVES ARM TO TOP OF TABLE POSITION
 
@@ -1056,6 +1056,14 @@ class ServeBreakfastMain():
             elif self.state == self.Picking_up_milk:
                 print("State:", self.state, "- Picking_up_milk")
                 # your code here ...
+
+
+                self.set_arm(command="hello", wait_for_end_of=False)
+
+
+                # Speak: "Cheguei "
+
+
                                 
                 # next state
                 self.state = self.Picking_up_cereal

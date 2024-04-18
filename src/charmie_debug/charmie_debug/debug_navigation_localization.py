@@ -5,7 +5,7 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SpeechCommand
 from sensor_msgs.msg import Image
 
 import cv2 
@@ -31,13 +31,24 @@ class TestNode(Node):
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
 
+        # Speakers
+        self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        
+        ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
+        # Speakers
+        # while not self.speech_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Speech Command...")
+
         # Variables
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_speaking = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.rgb_success = True
         self.rgb_message = ""
+        self.speech_success = True
+        self.speech_message = ""
 
         self.nav_tar_sdnl = TarNavSDNL()
 
@@ -45,6 +56,39 @@ class TestNode(Node):
 
     def flag_navigation_reached_callback(self, flag: Bool):
         self.flag_navigation_reached = flag
+
+    #### SPEECH SERVER FUNCTIONS #####
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
+        request = SpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+        request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
+    
+        future = self.speech_command_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_speech_command)
+        else:
+            self.speech_success = True
+            self.speech_message = "Wait for answer not needed"
+
+    def callback_call_speech_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_success = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_speaking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
 
 
 def main(args=None):
@@ -75,6 +119,17 @@ class RestaurantMain():
         self.node.rgb_message = "Value Sucessfully Sent"
 
         return self.node.rgb_success, self.node.rgb_message
+
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
+
+        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_speaking:
+            pass
+        self.node.waited_for_end_of_speaking = False
+
+        return self.node.speech_success, self.node.speech_message
 
     # def track_object(self, object, wait_for_end_of=True):
     # 
@@ -107,7 +162,7 @@ class RestaurantMain():
                 # your code here ...
 
 
-                self.node.nav_tar_sdnl.move_target_coordinates.x = 0.0
+                self.node.nav_tar_sdnl.move_target_coordinates.x = -1.0
                 self.node.nav_tar_sdnl.move_target_coordinates.y = 2.0
                 self.node.nav_tar_sdnl.rotate_target_coordinates.x = 0.0
                 self.node.nav_tar_sdnl.rotate_target_coordinates.y = 4.0
@@ -120,7 +175,8 @@ class RestaurantMain():
                 while not self.node.flag_navigation_reached:
                     pass
 
-                
+                self.set_speech(filename="sound_effects/sb_ready_start", wait_for_end_of=True)
+
                 print("REACHED TARGET POSITION")
                                 
 
