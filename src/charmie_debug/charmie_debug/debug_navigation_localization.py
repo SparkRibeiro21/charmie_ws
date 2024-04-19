@@ -5,7 +5,7 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SpeechCommand
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SpeechCommand, NavTrigger
 from sensor_msgs.msg import Image
 
 import cv2 
@@ -33,6 +33,16 @@ class TestNode(Node):
 
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        
+
+        # Navigation
+        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+
+        # Arm (CHARMIE)
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+        
+
         
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Speakers
@@ -162,10 +172,9 @@ class RestaurantMain():
                 # your code here ...
 
 
-                self.node.nav_tar_sdnl.move_target_coordinates.x = -1.0
-                self.node.nav_tar_sdnl.move_target_coordinates.y = 2.0
-                self.node.nav_tar_sdnl.rotate_target_coordinates.x = 0.0
-                self.node.nav_tar_sdnl.rotate_target_coordinates.y = 4.0
+                self.node.nav_tar_sdnl.target_coordinates.x = -1.0
+                self.node.nav_tar_sdnl.target_coordinates.y = 2.0
+                self.node.nav_tar_sdnl.move_or_rotate = "MOVE"
                 self.node.nav_tar_sdnl.flag_not_obs = False
                 self.node.nav_tar_sdnl.follow_me = False
 
@@ -174,8 +183,79 @@ class RestaurantMain():
 
                 while not self.node.flag_navigation_reached:
                     pass
+                self.node.flag_navigation_reached = False
 
-                self.set_speech(filename="sound_effects/sb_ready_start", wait_for_end_of=True)
+                print("REACHED TARGET MOVE POSITION")
+
+                self.node.nav_tar_sdnl.target_coordinates.x = 1.0
+                self.node.nav_tar_sdnl.target_coordinates.y = 2.0
+                self.node.nav_tar_sdnl.move_or_rotate = "ROTATE"
+                self.node.nav_tar_sdnl.flag_not_obs = True
+                self.node.nav_tar_sdnl.follow_me = False
+
+                self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
+
+
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+
+                print("REACHED TARGET ROTATE POSITION")
+
+
+                self.node.nav_tar_sdnl.target_coordinates.x = 1.0
+                self.node.nav_tar_sdnl.target_coordinates.y = 2.0
+                self.node.nav_tar_sdnl.move_or_rotate = "MOVE"
+                self.node.nav_tar_sdnl.flag_not_obs = True
+                self.node.nav_tar_sdnl.follow_me = False
+
+                self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
+
+
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+                print("REACHED TARGET MOVE POSITION")
+
+
+
+                self.node.nav_tar_sdnl.target_coordinates.x = -1.1
+                self.node.nav_tar_sdnl.target_coordinates.y = 2.0
+                self.node.nav_tar_sdnl.move_or_rotate = "ROTATE"
+                self.node.nav_tar_sdnl.flag_not_obs = True
+                self.node.nav_tar_sdnl.follow_me = False
+
+                self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
+
+
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+                print("REACHED TARGET MOVE POSITION")
+
+
+
+                self.node.nav_tar_sdnl.target_coordinates.x = 0.0
+                self.node.nav_tar_sdnl.target_coordinates.y = 0.0
+                self.node.nav_tar_sdnl.move_or_rotate = "MOVE"
+                self.node.nav_tar_sdnl.flag_not_obs = True
+                self.node.nav_tar_sdnl.follow_me = False
+
+                self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
+
+
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+                print("REACHED TARGET MOVE POSITION")
+
+
+
+                self.set_speech(filename="sound_effects/sb_ready_start", wait_for_end_of=False)
 
                 print("REACHED TARGET POSITION")
                                 
