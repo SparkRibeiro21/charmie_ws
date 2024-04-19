@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-# PROCURAR POR "##### DUVIDA :"
-
 import rclpy
 from rclpy.node import Node
 
@@ -689,10 +687,10 @@ class RestaurantMain():
         self.Waiting_for_task_start = 0
         self.Detecting_waving_customer = 1
         self.Approach_customer_table = 2
-        self.Receiving_order_listen_and_confirm = 4
-        self.Collect_order_from_barman = 5
-        self.Delivering_customer_order = 6
-        self.Final_State = 7
+        self.Receiving_order_listen_and_confirm = 3
+        self.Collect_order_from_barman = 4
+        self.Delivering_customer_order = 5
+        self.Final_State = 6
         
         # Neck Positions
         self.look_forward = [0, 0]
@@ -705,6 +703,8 @@ class RestaurantMain():
         self.state = self.Waiting_for_task_start
 
         self.state_aux = 0
+        self.state_var = 0
+        self.customer_index = 0
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Restaurant Main...")
@@ -745,16 +745,21 @@ class RestaurantMain():
                 # moves the neck to look forward
                 # self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                ##### DUVIDA : NO RESTAURANT_QUALIFICATION NÓS NESTE ESTADO COMEÇAMOS VIRADOS PARA O BALCÃO,
-                ##### FALAMOS COM O BARMAN E VIRAMOS E COMEÇAMOS A PROVA. ESTE MÉTODO INICIAL É PARA CONTINUAR?
+                ##### START TURN TO BARMAN TABLE
+
+                ##### SPEAK : Hello! I am ready to start the restaurant task
+
+                ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
+
+                ##### SPEAK : I am going to turn around and search for possible customers. See you soon
+
+                ##### TURN AROUND to the customer zone
 
                 # next state
                 self.state = self.Detecting_waving_customer
 
             elif self.state == self.Detecting_waving_customer:
                 print("State:", self.state, "- Detecting_waving_customer")
-
-                ##### DUVIDA : RGBS JÁ ESTAM DENTRO DOS PACKAGES? OU TENHO DE METER TODOS ?
 
                 ##### SPEAK: Searching for waving customers
 
@@ -766,11 +771,11 @@ class RestaurantMain():
 
                     ##### SPEAK: No costumers detected
 
-                    ##### DUVIDA : Back to Search AGAIN???? MOVE TO DIFERENT POSITION AND SEARCH AGAIN???
+                    ##### BACK TO initial searching
 
                 ##### NECK: Looks at detected customer
 
-                ##### SPEAK: Found waving customer
+                ##### SPEAK: Found waving customer self.customer_index = self.customer_index + 1
                 
                 ##### SPEAK: Check face to see customer detected
 
@@ -789,7 +794,7 @@ class RestaurantMain():
                 ##### MOVE TO CUSTOMER
                 # MISSING NAVIGATION ... (TIAGO)
 
-                ##### DETECT THE CUSTOMER TABLE   (!!!!!IMPORTANT!!!!)
+                ##### DETECT THE CUSTOMER TABLE       (!!!!!Not for now!!!!)
                                 
                 # next state
                 if self.state_aux == 0:
@@ -821,7 +826,10 @@ class RestaurantMain():
                     ##### BACK TO LISTEN 
            
                 # next state
-                self.state = self.Collect_order_from_barman
+                if self.customer_index == 1:
+                    self.state = self.Detecting_waving_customer 
+                elif self.customer_index == 2:
+                    self.state = self.Collect_order_from_barman
 
             elif self.state == self.Collect_order_from_barman:
                 print("State:", self.state, "- Collect_order_from_barman")
@@ -833,10 +841,37 @@ class RestaurantMain():
 
                 ##### SPEAK: Say the order to barman
 
-                ##### Collect order from barman
-                ##### DUVIDA : vamos pedir para ele dar á mão? perdemos pontos
-                ##### DUVIDA : vamos recolher do balcão? não perdemos pontos
-                ##### MISSING OBJECT VERIFICATION WITH YOLO OBJECTS
+                ##### ARM GO TO PICK OBJECT POSITION
+                
+                ##### AUDIO : WAIT FOR YES ROBOT
+
+                ##### YOLO OBJECT CONFIRM THE OBJECT
+
+                ##### ARM PUT THE FIRST OBJECT IN TRAY
+
+                ##### ARM GO TO PICK OBJECT POSITION
+
+                ##### AUDIO : WAIT FOR YES ROBOT
+
+                ##### YOLO OBJECT CONFIRM THE OBJECT
+
+                ##### ARM PUT THE SECOND OBJECT IN TRAY
+
+                ##### ARM GO TO PICK OBJECT POSITION
+
+                ##### AUDIO : WAIT FOR YES ROBOT
+
+                ##### YOLO OBJECT CONFIRM THE OBJECT
+
+                ##### ARM PUT THE THIRD OBJECT IN TRAY
+
+                ##### ARM GO TO PICK OBJECT POSITION
+
+                ##### AUDIO : WAIT FOR YES ROBOT
+
+                ##### YOLO OBJECT CONFIRM THE OBJECT
+
+                ##### ARM PUT THE FOURTH OBJECT IN TRAY
        
                 # next state
                 self.state_aux = 1
@@ -847,9 +882,7 @@ class RestaurantMain():
                 
                 ##### SPEAK: Here are the items, i go place in the table
 
-                ##### ARM PICK X OBJECT AND PLACE IN THE CUSTOMER TABLE   (x1 OR x2 OR x3)
-
-                ##### SPEAK: Here are ITEM X (x1 OR x2 OR x3)
+                ##### SPEAK: Here are ITEM X (x1 OR x2 OR x3), CAN YOU PICK FROM MY TRAY?
 
                 ##### SPEAK: Hope you enjoy
                                 
