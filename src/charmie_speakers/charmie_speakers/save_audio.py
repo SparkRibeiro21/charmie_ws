@@ -17,7 +17,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'sg_detected_single_object': 'I have detected ',
+    'sg_analysing_cabinet': 'Analysing the cabinet ',
 }
 
 #COMMANDS = {

@@ -154,8 +154,8 @@ class StoringGroceriesNode(Node):
         while not self.set_neck_coordinates_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         # Arm (CHARMIE)
-        while not self.arm_trigger_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        """ while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...") """
         
 
     def get_objects_callback(self, objects: Yolov8Objects):
@@ -527,6 +527,14 @@ class StoringGroceriesMain():
             if hasattr(self.node, 'objects') and self.node.objects:
                 objects_stored = self.node.objects
                 self.nr_objects_detected = self.node.nr_objects
+
+
+                self.current_image = self.node.image
+                bridge = CvBridge()
+                # Convert ROS Image to OpenCV image
+                cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+                self.current_image_2= cv_image
+
                 print('Will iterate for: ', self.nr_objects_detected)
                 while i < self.nr_objects_detected:                    
                     detected_object = objects_stored[i]
@@ -1152,13 +1160,6 @@ class StoringGroceriesMain():
                 while nr_classes_detected < 4:
                     
                     print('\n \n \n \n')
-                    self.set_speech(filename="storing_groceries/sg_analysing_cabinet", wait_for_end_of=True)
-
-                    self.current_image = self.node.image
-                    bridge = CvBridge()
-                    # Convert ROS Image to OpenCV image
-                    cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-                    self.image_most_obj_detected= cv_image
 
                     pos_offset = list_of_neck_position_search[position_index]
                     new_neck_pos = [self.look_cabinet_center[0] + pos_offset[0], self.look_cabinet_center[1] + pos_offset[1]]
@@ -1168,7 +1169,15 @@ class StoringGroceriesMain():
                     self.set_neck(position=new_neck_pos, wait_for_end_of=True)
 
                     print('Neck: ', new_neck_pos)
-                    
+
+                    self.set_speech(filename="storing_groceries/sg_analysing_cabinet_short", wait_for_end_of=True)
+
+                    self.current_image = self.node.image
+                    bridge = CvBridge()
+                    # Convert ROS Image to OpenCV image
+                    cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+                    self.image_most_obj_detected= cv_image
+
                     nr_classes_detected = self.analysis_cabinet()
 
                     self.current_image = self.node.image
