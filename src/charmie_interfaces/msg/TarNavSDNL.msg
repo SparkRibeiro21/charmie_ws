@@ -1,4 +1,6 @@
-geometry_msgs/Pose2D move_target_coordinates
-geometry_msgs/Pose2D rotate_target_coordinates
+# geometry_msgs/Pose2D move_target_coordinates
+# geometry_msgs/Pose2D rotate_target_coordinates
+geometry_msgs/Pose2D target_coordinates
+string move_or_rotate
 bool flag_not_obs
 bool follow_me

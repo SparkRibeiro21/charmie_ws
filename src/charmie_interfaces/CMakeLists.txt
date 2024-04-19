@@ -53,6 +53,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetAudio.srv"
   "srv/GetNeckPosition.srv"
   "srv/GetPointCloud.srv"
+  "srv/NavTrigger.srv"
   "srv/SaveSpeechCommand.srv"
   "srv/SetNeckCoordinates.srv"
   "srv/SetNeckPosition.srv"
