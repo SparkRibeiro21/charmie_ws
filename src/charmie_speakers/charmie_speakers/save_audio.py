@@ -17,7 +17,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'problem_detecting_change_object': 'There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?',
+    'will_show_objects_one_by_one': 'I will show all the detected objects as I handle collecting them.'
 }
 
 #COMMANDS = {

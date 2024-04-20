@@ -192,9 +192,9 @@ class ArmUfactory(Node):
 		self.get_lower_order_position_linear = 			[ -581.4,  100.0,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
 		self.detect_objects_first_position_linear = 	[ -186.6,    1.9,  663.7, math.radians(  87.7), math.radians(   2.9), math.radians(-137.9)]
 
-		self.above_cuttlery_cup = 						[ -135.0,  120.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		self.above_cuttlery_cup = 						[ -135.0,  260.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		self.place_in_cuttlery_cup =					[ -135.0,  345.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		self.step_away_from_cuttlery_cup =				[ -198.0,  344.0, -106.2, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		self.step_away_from_cuttlery_cup =				[ -135.0,  260.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		
 		self.above_milk_place_spot = 					[ -230.0,  380.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		self.place_milk_in_tray =						[ -230.0,  430.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
@@ -1171,7 +1171,7 @@ class ArmUfactory(Node):
 		"""
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = 1.0472
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1289,7 +1289,7 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
-	def close_gripper_with_check_object(self):
+	def close_gripper_with_check_object(self, min_value):
 
 		if self.estado_tr == 0:
 			set_gripper_speed_req= SetFloat32.Request()
@@ -1298,7 +1298,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 1:
-			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.pos = float(min_value)
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
@@ -1312,7 +1312,7 @@ class ArmUfactory(Node):
 		elif self.estado_tr == 3:
 			temp = Bool()
 
-			if self.gripper_tr >= 5.0:
+			if self.gripper_tr >= min_value+5:
 				# self.flag_object_grabbed.data = True
 				# print('OBJECT GRABBED')
 				temp.data = True
@@ -1397,7 +1397,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 6:
 			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
+			self.set_gripper_req.wait = False
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
@@ -1468,7 +1468,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 6:
 			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
+			self.set_gripper_req.wait = False
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
@@ -1539,7 +1539,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 6:
 			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
+			self.set_gripper_req.wait = False
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
@@ -1627,7 +1627,9 @@ class ArmUfactory(Node):
 		elif self.next_arm_movement == "close_gripper":
 			self.close_gripper()
 		elif self.next_arm_movement == "close_gripper_with_check_object":
-			self.close_gripper_with_check_object()
+			self.close_gripper_with_check_object(0)
+		elif self.next_arm_movement == "close_gripper_with_check_object_cornflakes":
+			self.close_gripper_with_check_object(200)
 		elif self.next_arm_movement == "open_gripper":
 			self.open_gripper()
 		elif self.next_arm_movement == "collect_spoon_to_tray":
