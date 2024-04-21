@@ -1,18 +1,12 @@
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool, Int16, String
+from example_interfaces.msg import Bool, String
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
-from geometry_msgs.msg import Pose, Point, Quaternion
-from charmie_interfaces.msg import RobotSpeech
 from charmie_interfaces.srv import ArmTrigger
-from std_srvs.srv import SetBool
 from functools import partial
-import numpy as np 
 import math
-
 import time
 
-import math
 
 class ArmUfactory(Node):
 	def __init__(self):
@@ -177,7 +171,7 @@ class ArmUfactory(Node):
 		# self.above_tray = 				  		[ -135.0,  120.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		# self.above_cuttlery_cup = 				[ -135.0,  280.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		# self.middle_cuttlery_cup = 				[ -135.0,  345.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		# self.pos_cuttlery_cup = 				[ -198.8,  344.9, -106.2, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		# self.pos_cuttlery_cup = 					[ -198.8,  344.9, -106.2, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 
 
 		### SERVE THE BREAKFAST VARIABLES: ###
@@ -327,7 +321,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 2:
 			self.joint_values_req.angles = self.deg_to_rad(self.secondary_initial_position_debug)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -335,7 +329,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 3:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -393,7 +387,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 2: # safety
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -402,7 +396,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -418,7 +412,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 2:
 			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -434,7 +428,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 4:
 			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -450,7 +444,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 6:
 			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -466,7 +460,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 8:
 			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -482,7 +476,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 10:
 			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -498,7 +492,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 12:
 			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -506,7 +500,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 13:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -523,7 +517,7 @@ class ArmUfactory(Node):
 	def place_objects_table(self):
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -539,7 +533,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 2:
 			self.joint_values_req.angles = self.deg_to_rad(self.orient_to_table)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -868,7 +862,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 40:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -885,7 +879,7 @@ class ArmUfactory(Node):
 	def pick_objects_barman(self):
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -901,7 +895,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 2:
 			self.joint_values_req.angles = self.deg_to_rad(self.get_order_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1135,7 +1129,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 31:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1149,12 +1143,39 @@ class ArmUfactory(Node):
 			print('FEITO Abrir fechar garra')
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
+		print('Abertura gripper em mm =', current_gripper_pos)
+		self.gripper_opening.append(current_gripper_pos)
+		if abs(current_gripper_pos - desired_gripper_pos) <= 5.0: #basicamente se a garra estiver no valor pretendido com uma diferença de 50mm aceito
+			print('Valor de gripper alcançado. Vou para o próximo estado. \n')
+			self.gripper_reached_target.data = True
+
+		elif len(self.gripper_opening) > 100:
+			i = 0
+			reached = 0
+			while i < len(self.gripper_opening) - 11: 
+				i += 1
+				#este ciclo tem o intuito verificar se o valor da garra nas últimas 3 iterações foi o mesmo. Apenas faço isto pois 
+				#caso contrário ao fechar a garra ela nunca chegava ao valor que eu lhe passava e nunca avançava de estado
+				if abs(self.gripper_opening[i] - self.gripper_opening[i+10]) <= 5.0:
+					reached += 1
+
+			if reached >= 5:
+				self.gripper_reached_target.data = True
+
+			if self.gripper_reached_target.data == True:
+				print('Estou com o gripper nesta posição há algumas iterações. Vou para o próximo estado. \n')
+
+		return self.gripper_reached_target.data
+
+	### ACTUAL SERVE THE BREAKFAST ARM MOVEMENTS ###
+
 	def search_for_objects(self):
 
 		"""
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(30) 
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1171,7 +1192,7 @@ class ArmUfactory(Node):
 		"""
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = 1.0472
+			self.joint_values_req.speed = math.radians(60)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1222,7 +1243,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(60)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1564,7 +1585,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = math.radians(60)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1577,32 +1598,8 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
-	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
-		print('Abertura gripper em mm =', current_gripper_pos)
-		self.gripper_opening.append(current_gripper_pos)
-		if abs(current_gripper_pos - desired_gripper_pos) <= 5.0: #basicamente se a garra estiver no valor pretendido com uma diferença de 50mm aceito
-			print('Valor de gripper alcançado. Vou para o próximo estado. \n')
-			self.gripper_reached_target.data = True
-
-		elif len(self.gripper_opening) > 100:
-			i = 0
-			reached = 0
-			while i < len(self.gripper_opening) - 11: 
-				i += 1
-				#este ciclo tem o intuito verificar se o valor da garra nas últimas 3 iterações foi o mesmo. Apenas faço isto pois 
-				#caso contrário ao fechar a garra ela nunca chegava ao valor que eu lhe passava e nunca avançava de estado
-				if abs(self.gripper_opening[i] - self.gripper_opening[i+10]) <= 5.0:
-					reached += 1
-
-			if reached >= 5:
-				self.gripper_reached_target.data = True
-
-			if self.gripper_reached_target.data == True:
-				print('Estou com o gripper nesta posição há algumas iterações. Vou para o próximo estado. \n')
-
-		return self.gripper_reached_target.data
-
 	def movement_selection(self):
+		
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
 		if self.next_arm_movement == "debug_initial":
@@ -1640,8 +1637,6 @@ class ArmUfactory(Node):
 			self.collect_cornflakes_to_tray()
 		elif self.next_arm_movement == "collect_bowl_to_initial_position":
 			self.collect_bowl_to_initial_position()
-
-
 
 
 		else:
