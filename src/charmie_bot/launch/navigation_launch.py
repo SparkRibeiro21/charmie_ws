@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
-from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDescription, ExecuteProcess
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
@@ -21,6 +21,10 @@ def generate_launch_description():
 
     mapper_params_file = LaunchConfiguration('params_file', default='src/charmie_bot/config/mapper_params_online_async.yaml')
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+
+    lifecycle_nodes = ['map_server', 'amcl']
+
+
 
     # Use IncludeLaunchDescription to include the launch file
     charmie_bot_real_launch_description = IncludeLaunchDescription(charmie_bot_real_launch_file)
@@ -70,9 +74,39 @@ def generate_launch_description():
                       name = 'ps4_controller',
                       )
     
+    """ amcl_map_server_launch = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_localization',
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'node_names': lifecycle_nodes}]
+    ) """
+
+    amcl_map_server_launch = Node(
+        package='nav2_util',
+        executable='lifecycle_bringup',
+        name='lifecycle_bringup',
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'node_names': lifecycle_nodes}]
+    )
+
+    bringup_map_server = ExecuteProcess(
+        cmd=['ros2', 'run', 'nav2_util', 'lifecycle_bringup', 'map_server'],
+        output='screen'
+    )
+
+    bringup_amcl = ExecuteProcess(
+        cmd=['ros2', 'run', 'nav2_util', 'lifecycle_bringup', 'amcl'],
+        output='screen'
+    )
+    
     # Add a half-second delay before launching each node
     delay = 0.5
+    delay_2 = 2.0
     delayed_actions = []
+    delay_amcl_map_server = []
 
     for node in [low_level, odometry, ps4]: #---------> CHANGE ME
         delayed_actions.append(TimerAction(period=delay, actions=[node]))
@@ -83,4 +117,7 @@ def generate_launch_description():
         charmie_bot_real_launch_description,
         load_map,
         load_amcl,
+        # bringup_map_server,
+        # bringup_amcl
+        # amcl_map_server_launch,
     ])
