@@ -18,6 +18,7 @@
 # Neck
 # Yolos
 # Arm
+# Door Start
 
 # The following modules are still missing:
 # Nav - TBD
@@ -178,6 +179,9 @@ class ServeBreakfastNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
+        # Door Start
+        self.start_door_subscriber = self.create_subscription(Bool, 'get_door_start', self.get_door_start_callback, 10) 
+        self.flag_door_start_publisher = self.create_publisher(Bool, 'flag_door_start', 10) 
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
@@ -213,10 +217,10 @@ class ServeBreakfastNode(Node):
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
         # Audio
-        while not self.get_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Audio Server...")
-        while not self.calibrate_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        # while not self.get_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Audio Server...")
+        # while not self.calibrate_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         """
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
@@ -248,13 +252,13 @@ class ServeBreakfastNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
-        self.waited_for_end_of_arm = False # not used, but here to be in conformity with other uses
+        self.waited_for_end_of_arm = False
 
         self.br = CvBridge()
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
-        # self.arm_ready = True
+        self.door_start_state = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -380,6 +384,11 @@ class ServeBreakfastNode(Node):
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
+        # print("Received Start Button:", state.data)
+
+    ### DOOR START ###
+    def get_door_start_callback(self, state: Bool):
+        self.door_start_state = state.data
         # print("Received Start Button:", state.data)
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
@@ -710,6 +719,20 @@ class ServeBreakfastMain():
         t.data = False 
         self.node.flag_start_button_publisher.publish(t)
         
+    def wait_for_door_start(self):
+
+        self.node.door_start_state = False
+
+        t = Bool()
+        t.data = True
+        self.node.flag_door_start_publisher.publish(t)
+
+        while not self.node.door_start_state:
+            pass
+
+        t.data = False 
+        self.node.flag_door_start_publisher.publish(t)
+
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
@@ -900,7 +923,7 @@ class ServeBreakfastMain():
         self.look_tray = [0, -60]
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Picking_up_milk
+        self.state = self.Waiting_for_task_start
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In ServeBreakfast Main...")
@@ -916,17 +939,20 @@ class ServeBreakfastMain():
                 # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                 # send speech command to speakers voice, intrucing the robot 
-                self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
+                self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
                 
                 # sends RGB value for debug
                 self.set_rgb(command=CYAN+HALF_ROTATE)
 
                 # change face, to face picking up cup
-                self.set_face("help_pick_cup")
+                # self.set_face("help_pick_cup")
                 
                 # waiting for start button
-                self.wait_for_start_button()
+                self.wait_for_door_start()
+
                 self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
+
+                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
 
                 print("DONE2 - ", self.node.start_button_state)
                 # calibrate the background noise for better voice recognition
@@ -944,7 +970,7 @@ class ServeBreakfastMain():
                 # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)  
 
                 # change face, to standard face
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 # moves the neck to look forward
                 # self.set_neck(position=self.look_forward, wait_for_end_of=False)
@@ -980,7 +1006,7 @@ class ServeBreakfastMain():
                 # self.set_arm(command="hello", wait_for_end_of=False)
 
                 # next state
-                self.state = self.Approach_kitchen_counter
+                # self.state = self.Approach_kitchen_counter
 
             elif self.state == self.Approach_kitchen_counter:
                 print("State:", self.state, "- Approach_kitchen_counter")
@@ -993,7 +1019,7 @@ class ServeBreakfastMain():
                 print("State:", self.state, "- Picking_up_spoon")
 
                 ##### NECK LOOKS AT TABLE
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### MOVES ARM TO TOP OF TABLE POSITION
 
@@ -1056,15 +1082,7 @@ class ServeBreakfastMain():
             elif self.state == self.Picking_up_milk:
                 print("State:", self.state, "- Picking_up_milk")
                 # your code here ...
-
-
-                self.set_arm(command="hello", wait_for_end_of=False)
-
-
-                # Speak: "Cheguei "
-
-
-                                
+                                                
                 # next state
                 self.state = self.Picking_up_cereal
            
