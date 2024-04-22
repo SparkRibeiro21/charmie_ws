@@ -682,7 +682,12 @@ class ServeBreakfastMain():
         self.Placing_spoon = 11
         self.Final_State = 12
 
-        self.wait_time_to_put_objects_in_hand = 1
+        # Configurables
+        self.wait_time_to_put_objects_in_hand = 0
+        self.MULTIPLE_IMAGES_FACE_SAME_TIME = False
+
+        # Custom Faces:
+        self.custom_face_filename = "" 
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -745,6 +750,8 @@ class ServeBreakfastMain():
 
             elif self.state == self.Detect_all_objects:
 
+                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=False)
+
                 self.set_arm(command="search_for_objects", wait_for_end_of=True)
 
                 self.search_for_serve_breakfast_objects()
@@ -753,11 +760,29 @@ class ServeBreakfastMain():
                 # detection function, before speaking that the objects have been found
                 # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
 
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
+
+                self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+
+                # self.set_speech(filename="serve_breakfast/will_show_objects_one_by_one", wait_for_end_of=True)
+                
+                # already shows the detection for the next object while moving the arm from previous action, this way we save time
+                
+                self.set_face(custom=self.custom_face_filename + "spoon")
+
+                self.set_speech(filename="serve_breakfast/found_the_spoon", wait_for_end_of=False)  
+                
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
+
+                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
+
                 self.state = self.Picking_up_spoon
 
             elif self.state == self.Picking_up_spoon:
 
                 # post FNR2024: this is here to try to pick up the objects rather than using Deus Ex Machina 
+
+                time.sleep(5) # the first arm movement is so quick that i have to add a sleep for better judge perception of detected object in face
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=True)    
 
@@ -780,11 +805,19 @@ class ServeBreakfastMain():
                     
                     if not object_in_gripper:
                 
-                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                         
-                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
                                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
+
+                # already shows the detection for the next object while moving the arm from previous action, this way we save time
+                
+                self.set_face(custom=self.custom_face_filename + "milk")
+
+                self.set_speech(filename="serve_breakfast/found_the_milk", wait_for_end_of=False)  
+                
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
                 
                 self.set_arm(command="collect_spoon_to_tray", wait_for_end_of=True)
                 
@@ -815,11 +848,17 @@ class ServeBreakfastMain():
                     
                     if not object_in_gripper:
                 
-                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                         
-                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
                                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
+                
+                self.set_face(custom=self.custom_face_filename + "cornflakes")
+
+                self.set_speech(filename="serve_breakfast/found_the_cornflakes", wait_for_end_of=False)  
+                
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
                 
                 self.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
 
@@ -844,17 +883,23 @@ class ServeBreakfastMain():
                 
                     self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object_cornflakes", wait_for_end_of=True) # different so I do not crush the cornflakes
                     
                     # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
                     
                     if not object_in_gripper:
                 
-                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                         
-                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
                                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
+                
+                self.set_face(custom=self.custom_face_filename + "bowl")
+
+                self.set_speech(filename="serve_breakfast/found_the_bowl", wait_for_end_of=False)  
+                
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
                 
                 self.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
 
@@ -885,9 +930,9 @@ class ServeBreakfastMain():
                     
                     if not object_in_gripper:
                 
-                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                         
-                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
                                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
                 
@@ -1026,7 +1071,7 @@ class ServeBreakfastMain():
                 new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
                 self.set_neck(position=new_neck_pos, wait_for_end_of=True)
                 self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-                time.sleep(1)
+                # time.sleep(1)
 
                 finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=False)    
 
@@ -1048,11 +1093,12 @@ class ServeBreakfastMain():
                 all_objects_detected = True 
 
             elif all(self.flag_object_total):
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-                self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 self.create_image_four_sb_objects_separately() 
+                # self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+                # self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
+                # self.create_image_four_sb_objects_separately() 
                 all_objects_detected = True
 
             if all_objects_detected:
@@ -1093,11 +1139,12 @@ class ServeBreakfastMain():
                 all_objects_detected = True 
 
             elif all(self.flag_object_total):
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-                self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 self.create_image_four_sb_objects_separately() 
+                # self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+                # self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
+                # self.create_image_four_sb_objects_separately() 
                 all_objects_detected = True
 
             if all_objects_detected:
@@ -1113,7 +1160,7 @@ class ServeBreakfastMain():
 
 
 
-    def detect_four_serve_breakfast_objects(self, delta_t, with_hand):
+    def detect_four_serve_breakfast_objects(self, delta_t, with_hand=False):
 
         actual_object = [
             "spoon", 
@@ -1146,12 +1193,14 @@ class ServeBreakfastMain():
             for object in local_detected_objects.objects:
                 for obj in range(TOTAL_OBJ):
                     if object.object_name in detect_as[obj]:
-                        if object.confidence > detect_object[obj].confidence:
-                            # print(" - ", object.object_name, "-", object.confidence, "-", object.index)
-                            detect_object[obj] = object
-                            detect_object[obj].object_name = actual_object[obj]
-                            flag_object[obj] = True
                         
+                        if self.MULTIPLE_IMAGES_FACE_SAME_TIME: # JOHANNES said that this is not the correct deus ex machina ask for help to help with handing over the objects
+                            if object.confidence > detect_object[obj].confidence:
+                                # print(" - ", object.object_name, "-", object.confidence, "-", object.index)
+                                detect_object[obj] = object
+                                detect_object[obj].object_name = actual_object[obj]
+                                flag_object[obj] = True
+                            
                         if object.confidence > self.detect_object_total[obj].confidence:
                             self.detect_object_total[obj] = object
                             self.detect_object_total[obj].object_name = actual_object[obj]
@@ -1249,11 +1298,15 @@ class ServeBreakfastMain():
             "bowl"
         ]
 
+        # same time for all obejcts
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
+        self.custom_face_filename = current_datetime
+
         for i in range(TOTAL_OBJ):
             current_frame = self.node.br.imgmsg_to_cv2(self.images_of_detected_object_total[i], "bgr8")
             current_frame_draw = current_frame.copy()
 
-            thresh_h = 80
+            thresh_h = 220
             thresh_v = 220
 
             x_min = 1280
@@ -1288,10 +1341,10 @@ class ServeBreakfastMain():
             cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
             cv2.putText(current_frame_draw, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
         
-            current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
-            cv2.imwrite(self.node.complete_path_custom_face + current_datetime + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
-            time.sleep(0.5)
-            self.set_face(custom=current_datetime)
-            self.set_speech(filename="objects_names/"+list_sb_objects[i], wait_for_end_of=False)  
-            time.sleep(3)
+            cv2.imwrite(self.node.complete_path_custom_face + current_datetime + list_sb_objects[i] + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
+            
+            # time.sleep(0.5)
+            # self.set_face(custom=current_datetime)
+            # self.set_speech(filename="objects_names/"+list_sb_objects[i], wait_for_end_of=False)  
+            # time.sleep(3)
         
