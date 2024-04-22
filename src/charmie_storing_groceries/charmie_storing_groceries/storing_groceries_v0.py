@@ -369,6 +369,7 @@ class StoringGroceriesMain():
 
         self.left_limit_shelf = -0.7 # -0.38
         self.right_limit_shelf = 0.7 # 0.38
+        self.third_shelf_x = (self.right_limit_shelf - self.left_limit_shelf) / 3
         self.center_shelf = 0.0
 
 
@@ -521,7 +522,7 @@ class StoringGroceriesMain():
                 
     ##### ANALYSE CABINET #####
 
-    def look_cabinet(self):
+    """ def look_cabinet(self):
         i = 0
         detect_object = []
         self.detected_object = []
@@ -539,13 +540,17 @@ class StoringGroceriesMain():
 
                 print('Will iterate for: ', self.nr_objects_detected)
 
+                objects_stored.sort(key=lambda obj: obj.position_relative.z, reverse=True)
+
+                same_position_objects = {}                
+
                 for detected_objects in objects_stored:
                     print(detected_objects.object_name, detected_objects.object_class)
                     if detected_objects.object_name in detect_object:
                         pass
                     else:
                         detect_object.append(detected_objects)
-                        print(detected_objects)
+                        # print(detected_objects)
                         i+=1
                         print(i)
 
@@ -570,114 +575,32 @@ class StoringGroceriesMain():
 
                         else:
                             print(detected_objects.object_name, '- none of the shelfs')
+                            position = 'none of the shelfs '
                             # print(object_x_position)
 
-                        self.object_position[detected_objects.object_name] = position
-                
+                        print('Position:', position)
+                        print('Position Relative X:', detected_objects.position_relative.x)
+                        # Populate same_position_objects dictionary
+                        same_position_objects.setdefault(position, []).append(detected_objects)
+                        print('AAA ', same_position_objects)
+
                 print(detect_object)
 
-                for object in detect_object:
-                    print('')
-
-
-
-                """ while i < self.nr_objects_detected:                    
-                    detected_object = objects_stored[i]
-                    object_name = detected_object.object_name
-                    object_class = detected_object.object_class
-                    object_height = detected_object.position_relative.z
-                    object_confidence = detected_object.confidence
-                    object_x_position = detected_object.position_relative.x
-                    position = ' '
-
-                    if self.shelf_1_height < object_height < self.shelf_2_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                        position = 'First shelf '
-                        print(object_name, 'is in the first shelf ')
-                        
-
-                    elif self.shelf_2_height < object_height < self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                        position = 'Second shelf '
-                        print(object_name, 'is in the second shelf ')
-                        
-
-                    elif self.shelf_4_height > object_height > self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                        position = 'Third shelf '
-                        print(object_name, 'is in the third shelf ')
-                        
-                    elif object_height > self.shelf_4_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                        position = 'Fourth shelf '
-                        print(object_name, 'is in the fourth shelf ')
-                        
-
-                    else:
-                        print(object_name, '- none of the shelfs')
-                        # print(object_x_position)
-                        
-                    if  self.center_shelf <= object_x_position <= self.right_limit_shelf :
-                        position += 'Right side '
-                        
-                    elif self.left_limit_shelf <= object_x_position < self.center_shelf :
-                        position += 'Left side '
-                        
-                    else:
-                        position += 'Outside shelf '
-                        
-                    self.object_position[object_class] = position
-
-                    i += 1
-
-                # Código para dizer 'tal classe está em tal prateleira'
-
-                print('objects position:', self.object_position)
-
-                position = []
-                object_class_name= []
-
-                for class_name, pos in self.object_position.items():
-                    position.append(pos)  # Append the position to the positions list
-                    object_class_name.append(class_name)  # Append the class name to the object_class_names list
-
-                print('Positions: ', position)
-                print('classes: ', object_class_name)
-
-                # print("Positions:", position)
-                # print("Object class names:", object_class_name)
-                
-                keywords = []
-                class_name_array = []
-                nr_classes_detected = 0
-
-                self.classes_detected_wardrobe.clear()
-                
-                for pos in position:
-                    keywords = pos.split() # Split each position string into words and extend the keywords list
-
-                # Initialize filename
-                    class_filename = None
-                    location_filename = None
-                    
-                    for condition, object_location in object_position_mapping.items():
-                        if all(keyword in keywords for keyword in condition):
-                            # If conditions are met, relate the class name to the position
-                            class_name = [class_name for class_name, p in self.object_position.items() if p == pos][0]
-                            if class_name not in class_name_array:
-                               class_name_array.append(class_name)
-                            print('Class name:', class_name)
-                            print('All class names', class_name_array)
-                            nr_classes_detected = len(class_name_array)
-                            print('Nr classes detetadas: ', nr_classes_detected)
-                            location_filename = f"storing_groceries/{object_location}"
-                            class_filename = f"objects_classes/{class_name}"
-                            self.classes_detected_wardrobe.append(class_name)
-                            # self.set_speech(filename=class_filename, wait_for_end_of=True)
-                            # self.set_speech(filename=location_filename, wait_for_end_of=True)
-                            break """
-
-            return 0
+                # Check maximum distance in x-direction between objects in the same position
+                for position, objects in same_position_objects.items():
+                    if len(objects) > 1:
+                        max_distance_x = max(objects, key=lambda obj: obj.position_relative.x).position_relative.x - \
+                                        min(objects, key=lambda obj: obj.position_relative.x).position_relative.x
+                        if max_distance_x > 0.3:
+                            print("Objects in", position, "are too far apart in the x-direction")
+                            # Divide them into two different cases as needed
+                        else:
+                            print("Objects in", position, "are within acceptable distance in the x-direction") """
     
 
     def analysis_cabinet(self):
         i = 0
+        self.object_position = {}
         if hasattr(self.node, 'image') and self.node.image:
             if hasattr(self.node, 'objects') and self.node.objects:
                 objects_stored = self.node.objects
@@ -820,7 +743,13 @@ class StoringGroceriesMain():
                         else:
                             position += 'Outside shelf '
                             
-                        self.object_position[object_class] = position
+                        if detected_object.object_class in self.object_position:
+                            self.object_position[detected_object.object_class].append(position)
+                        else:
+                            self.object_position[detected_object.object_class] = [position]
+
+                        #self.object_position[object_class] = position
+
 
                         print('object ', object_name, ' and confidence ', object_confidence)
                             
@@ -845,9 +774,47 @@ class StoringGroceriesMain():
                 position = []
                 object_class_name= []
 
-                for class_name, pos in self.object_position.items():
-                    position.append(pos)  # Append the position to the positions list
-                    object_class_name.append(class_name)  # Append the class name to the object_class_names list
+                # Create a set to store unique positions
+                unique_positions = set()
+
+                # Create a dictionary to store the positions associated with each class
+                class_positions = {}
+
+                for class_name, positions in self.object_position.items():
+                    for position in positions:
+                        # If the position is not in the unique_positions set, add it to the set
+                        # and store it in the class_positions dictionary
+                        if position not in unique_positions:
+                            unique_positions.add(position)
+                            class_positions[position] = class_name
+                        # If the position is already in the unique_positions set,
+                        # it means there are multiple classes associated with this position,
+                        # so remove it from all associated classes
+                        else:
+                            if class_name in self.object_position:
+                                self.object_position[class_name].remove(position)
+
+                print('New objects position: ', self.object_position)
+
+
+                """ value_counts = {}
+
+                # Iterate over the dictionary to count occurrences of each value
+                 for value in self.object_position.values():
+                    value_counts[value] = value_counts.get(value, 0) + 1
+
+                # Create a set to store the values that occur more than once
+                duplicate_values = set(val for val, count in value_counts.items() if count > 1)
+
+                # Create a new dictionary to store unique classes
+                unique_object_position = {}
+
+                # Iterate over the original dictionary and add classes to the unique_object_position dictionary if their value occurs only once
+                for class_name, value in self.object_position.items():
+                    if value not in duplicate_values:
+                        unique_object_position[class_name] = value
+
+                print(unique_object_position) """
 
                 print('Positions: ', position)
                 print('classes: ', object_class_name)
@@ -1335,7 +1302,7 @@ class StoringGroceriesMain():
                     cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
                     self.image_most_obj_detected= cv_image
 
-                    nr_classes_detected = self.look_cabinet()
+                    nr_classes_detected = self.analysis_cabinet()
 
                     self.current_image = self.node.image
                     bridge = CvBridge()
