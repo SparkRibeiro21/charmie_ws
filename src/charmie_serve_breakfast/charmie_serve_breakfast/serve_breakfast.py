@@ -1113,7 +1113,6 @@ class ServeBreakfastMain():
             self.activate_yolo_objects(activate_objects=True)
             finished_detection = False
             for pos in list_of_neck_position_search:
-
                 print(pos)
                 new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
                 self.set_neck(position=new_neck_pos, wait_for_end_of=True)

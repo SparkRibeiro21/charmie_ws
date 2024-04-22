@@ -339,10 +339,22 @@ class OdometryNode(Node):
         odom.pose.pose.orientation.z = quaternion[2]
         odom.pose.pose.orientation.w = quaternion[3] 
 
+        print(odom.pose.pose.orientation)
+
         odom.twist.twist.linear.x = vel_x 
         odom.twist.twist.linear.y = vel_y
         odom.twist.twist.angular.z = vel_theta
         self.odometry_publisher.publish(odom)
+
+
+        print(coord_theta)
+
+        quaternion_rviz = self.robot_odom.get_quaternion_from_euler(0,0,-coord_theta)
+        odom_rviz = Odometry()
+        odom_rviz.pose.pose.orientation.x = quaternion[0]
+        odom_rviz.pose.pose.orientation.y = quaternion[1]
+        odom_rviz.pose.pose.orientation.z = quaternion[2]
+        odom_rviz.pose.pose.orientation.w = quaternion[3] 
 
         # creates a connection betweeen odom and base link, broadcast all joints of the tf transform,  
         transform = TransformStamped()
@@ -353,7 +365,7 @@ class OdometryNode(Node):
         transform.transform.translation.x = odom.pose.pose.position.y
         transform.transform.translation.y = -odom.pose.pose.position.x
         transform.transform.translation.z = odom.pose.pose.position.z
-        transform.transform.rotation = odom.pose.pose.orientation
+        transform.transform.rotation = odom_rviz.pose.pose.orientation
 
         self.tf_broadcaster_odom_base_link.sendTransform(transform)
         
