@@ -521,6 +521,161 @@ class StoringGroceriesMain():
                 
     ##### ANALYSE CABINET #####
 
+    def look_cabinet(self):
+        i = 0
+        detect_object = []
+        self.detected_object = []
+        if hasattr(self.node, 'image') and self.node.image:
+            if hasattr(self.node, 'objects') and self.node.objects:
+                objects_stored = self.node.objects
+                self.nr_objects_detected = self.node.nr_objects
+
+
+                self.current_image = self.node.image
+                bridge = CvBridge()
+                # Convert ROS Image to OpenCV image
+                cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+                self.current_image_2= cv_image
+
+                print('Will iterate for: ', self.nr_objects_detected)
+
+                for detected_objects in objects_stored:
+                    print(detected_objects.object_name, detected_objects.object_class)
+                    if detected_objects.object_name in detect_object:
+                        pass
+                    else:
+                        detect_object.append(detected_objects)
+                        print(detected_objects)
+                        i+=1
+                        print(i)
+
+                        if self.shelf_1_height < detected_objects.position_relative.z < self.shelf_2_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
+                            position = 'First shelf '
+                            print(detected_objects.object_name, 'is in the first shelf ')
+                            
+
+                        elif self.shelf_2_height < detected_objects.position_relative.z < self.shelf_3_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
+                            position = 'Second shelf '
+                            print(detected_objects.object_name, 'is in the second shelf ')
+                            
+
+                        elif self.shelf_4_height > detected_objects.position_relative.z > self.shelf_3_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
+                            position = 'Third shelf '
+                            print(detected_objects.object_name, 'is in the third shelf ')
+                            
+                        elif detected_objects.position_relative.z > self.shelf_4_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
+                            position = 'Fourth shelf '
+                            print(detected_objects.object_name, 'is in the fourth shelf ')
+                            
+
+                        else:
+                            print(detected_objects.object_name, '- none of the shelfs')
+                            # print(object_x_position)
+
+                        self.object_position[detected_objects.object_name] = position
+                
+                print(detect_object)
+
+                for object in detect_object:
+                    print('')
+
+
+
+                """ while i < self.nr_objects_detected:                    
+                    detected_object = objects_stored[i]
+                    object_name = detected_object.object_name
+                    object_class = detected_object.object_class
+                    object_height = detected_object.position_relative.z
+                    object_confidence = detected_object.confidence
+                    object_x_position = detected_object.position_relative.x
+                    position = ' '
+
+                    if self.shelf_1_height < object_height < self.shelf_2_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        position = 'First shelf '
+                        print(object_name, 'is in the first shelf ')
+                        
+
+                    elif self.shelf_2_height < object_height < self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        position = 'Second shelf '
+                        print(object_name, 'is in the second shelf ')
+                        
+
+                    elif self.shelf_4_height > object_height > self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        position = 'Third shelf '
+                        print(object_name, 'is in the third shelf ')
+                        
+                    elif object_height > self.shelf_4_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        position = 'Fourth shelf '
+                        print(object_name, 'is in the fourth shelf ')
+                        
+
+                    else:
+                        print(object_name, '- none of the shelfs')
+                        # print(object_x_position)
+                        
+                    if  self.center_shelf <= object_x_position <= self.right_limit_shelf :
+                        position += 'Right side '
+                        
+                    elif self.left_limit_shelf <= object_x_position < self.center_shelf :
+                        position += 'Left side '
+                        
+                    else:
+                        position += 'Outside shelf '
+                        
+                    self.object_position[object_class] = position
+
+                    i += 1
+
+                # Código para dizer 'tal classe está em tal prateleira'
+
+                print('objects position:', self.object_position)
+
+                position = []
+                object_class_name= []
+
+                for class_name, pos in self.object_position.items():
+                    position.append(pos)  # Append the position to the positions list
+                    object_class_name.append(class_name)  # Append the class name to the object_class_names list
+
+                print('Positions: ', position)
+                print('classes: ', object_class_name)
+
+                # print("Positions:", position)
+                # print("Object class names:", object_class_name)
+                
+                keywords = []
+                class_name_array = []
+                nr_classes_detected = 0
+
+                self.classes_detected_wardrobe.clear()
+                
+                for pos in position:
+                    keywords = pos.split() # Split each position string into words and extend the keywords list
+
+                # Initialize filename
+                    class_filename = None
+                    location_filename = None
+                    
+                    for condition, object_location in object_position_mapping.items():
+                        if all(keyword in keywords for keyword in condition):
+                            # If conditions are met, relate the class name to the position
+                            class_name = [class_name for class_name, p in self.object_position.items() if p == pos][0]
+                            if class_name not in class_name_array:
+                               class_name_array.append(class_name)
+                            print('Class name:', class_name)
+                            print('All class names', class_name_array)
+                            nr_classes_detected = len(class_name_array)
+                            print('Nr classes detetadas: ', nr_classes_detected)
+                            location_filename = f"storing_groceries/{object_location}"
+                            class_filename = f"objects_classes/{class_name}"
+                            self.classes_detected_wardrobe.append(class_name)
+                            # self.set_speech(filename=class_filename, wait_for_end_of=True)
+                            # self.set_speech(filename=location_filename, wait_for_end_of=True)
+                            break """
+
+            return 0
+    
+
     def analysis_cabinet(self):
         i = 0
         if hasattr(self.node, 'image') and self.node.image:
@@ -666,6 +821,8 @@ class StoringGroceriesMain():
                             position += 'Outside shelf '
                             
                         self.object_position[object_class] = position
+
+                        print('object ', object_name, ' and confidence ', object_confidence)
                             
                         """ self.image_most_obj_detected = cv2.putText(
                             self.image_most_obj_detected,
@@ -1178,7 +1335,7 @@ class StoringGroceriesMain():
                     cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
                     self.image_most_obj_detected= cv_image
 
-                    nr_classes_detected = self.analysis_cabinet()
+                    nr_classes_detected = self.look_cabinet()
 
                     self.current_image = self.node.image
                     bridge = CvBridge()
