@@ -127,6 +127,24 @@ def generate_launch_description():
                         name='point_cloud',
                         emulate_tty=True
                         )
+    
+    lidar = Node(package='charmie_lidar_hokuyo',
+                        executable='lidar_hokuyo',
+                        name='lidar_hokuyo',
+                        emulate_tty=True
+                        )
+    
+    obstacles = Node(package='charmie_obstacles',
+                        executable='obstacles_lidar',
+                        name='obstacles_lidar',
+                        emulate_tty=True
+                        )
+    
+    door_start = Node(package='charmie_door_start',
+                        executable='door_start',
+                        name='door_start',
+                        emulate_tty=True
+                        )
 
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),
@@ -138,5 +156,8 @@ def generate_launch_description():
         arm,
         point_cloud,
         yolo_objects,
+        lidar,
+        obstacles,
+        door_start,
         serve_breakfast,
     ])
