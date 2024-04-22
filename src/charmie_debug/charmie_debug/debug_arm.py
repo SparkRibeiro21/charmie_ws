@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 ### JUST ARM, SPEAKERS AND LOW LEVEL ###
+### LAUNCH FILE ARM: ros2 launch xarm_api xarm6_driver.launch.py
 
 import rclpy
 from rclpy.node import Node
@@ -223,13 +224,13 @@ class DebugArmMain():
 
                 # INITIAL STATE
 
-                self.set_rgb(command=CYAN+HALF_ROTATE)
+                # self.set_rgb(command=CYAN+HALF_ROTATE)
 
-                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+                # self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
 
-                self.wait_for_start_button()
+                # self.wait_for_start_button()
 
-                self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
+                # self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
 
 
 
@@ -242,6 +243,8 @@ class DebugArmMain():
                 self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
 
                 self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+
+                time.sleep(5)
                 
                 
                 # GET SPOON 
@@ -311,7 +314,7 @@ class DebugArmMain():
                 
                     self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object_cornflakes", wait_for_end_of=True)
 
                     # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
                     

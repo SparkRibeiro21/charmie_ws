@@ -184,7 +184,8 @@ class ArmUfactory(Node):
 		# SET POSITIONS VARIABLES
 		self.get_order_position_linear = 				[ -581.4, -211.5,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
 		self.get_lower_order_position_linear = 			[ -581.4,  100.0,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
-		self.detect_objects_first_position_linear = 	[ -186.6,    1.9,  663.7, math.radians(  87.7), math.radians(   2.9), math.radians(-137.9)]
+		# self.detect_objects_first_position_linear = 	[ -186.6,    1.9,  663.7, math.radians(  87.7), math.radians(   2.9), math.radians(-137.9)]
+		self.detect_objects_first_position_linear = 	[ -102.8,  -54.3,  641.9, math.radians(  87.1), math.radians(   2.2), math.radians(-152.2)]
 
 		self.above_cuttlery_cup = 						[ -135.0,  260.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		self.place_in_cuttlery_cup =					[ -135.0,  345.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
@@ -1172,27 +1173,9 @@ class ArmUfactory(Node):
 
 	def search_for_objects(self):
 
-		"""
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = math.radians(30) 
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			print('a')
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		"""
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = math.radians(60)
+			self.joint_values_req.speed = math.radians(50)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1200,7 +1183,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			self.position_values_req.pose = self.detect_objects_first_position_linear
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1218,7 +1201,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.position_values_req.pose = self.get_lower_order_position_linear
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 200.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1372,7 +1355,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.position_values_req.pose = self.above_cuttlery_cup
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 200.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1381,7 +1364,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			self.position_values_req.pose = self.place_in_cuttlery_cup
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 200.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1403,7 +1386,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 4:
 			self.position_values_req.pose = self.step_away_from_cuttlery_cup
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 200.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1425,7 +1408,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 7:
 			self.position_values_req.pose = self.get_lower_order_position_linear
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 200.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1443,7 +1426,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.position_values_req.pose = self.above_milk_place_spot
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1452,7 +1435,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			self.position_values_req.pose = self.place_milk_in_tray
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1474,7 +1457,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 4:
 			self.position_values_req.pose = self.step_away_from_milk_in_tray
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 200.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1496,7 +1479,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 7:
 			self.position_values_req.pose = self.get_lower_order_position_linear
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1514,7 +1497,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.position_values_req.pose = self.above_cornflakes_place_spot
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1523,7 +1506,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			self.position_values_req.pose = self.place_cornflakes_in_tray
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 200.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1545,7 +1528,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 4:
 			self.position_values_req.pose = self.step_away_from_cornflakes_in_tray
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 200.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -1567,7 +1550,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 7:
 			self.position_values_req.pose = self.get_lower_order_position_linear
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
