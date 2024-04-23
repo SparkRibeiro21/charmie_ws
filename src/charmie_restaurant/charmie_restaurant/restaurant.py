@@ -705,6 +705,7 @@ class RestaurantMain():
         self.state_aux = 0
         self.state_var = 0
         self.customer_index = 0
+        self.delivery_index = 0
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Restaurant Main...")
@@ -778,11 +779,11 @@ class RestaurantMain():
 
                     ##### BACK TO initial searching
 
-                ##### SPEAK: Found waving customer
+                ##### SPEAK: Found waving customers
                 self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
                 self.customer_index = self.customer_index + 1
 
-                ##### NECK: waving customer
+                ##### NECK: look waving customer
                 
                 ##### SPEAK: Check face to see customer detected
                 self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
@@ -815,27 +816,27 @@ class RestaurantMain():
                 print("State:", self.state, "- Receiving_order_listen_and_confirm")
                 
                 ##### SPEAK: Hello
-                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
+                self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
 
                 ##### SPEAK: Say your order
-                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
+                self.set_speech(filename="restaurant/say_order", wait_for_end_of=True)
 
                 ##### AUDIO: Listen to the order
 
                 ##### SPEAK: Did you say "order"        (VERIFICATION)
-                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
+                self.set_speech(filename="restaurant/falta_fazer", wait_for_end_of=True)
 
                 ##### AUDIO: Listen "YES" OR "NO"
 
                 ##### IF AN YES:
 
                     ##### SPEAK: Thank you
-                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
+                self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
 
                 ##### IF AN NO:
 
                     ##### SPEAK: Sorry, TRY AGAIN
-                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
+                self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
 
                     ##### BACK TO LISTEN 
            
@@ -849,43 +850,15 @@ class RestaurantMain():
                 print("State:", self.state, "- Collect_order_from_barman")
                 
                 ##### SPEAK: Start moving
+                self.set_speech(filename="restaurant/move_barman", wait_for_end_of=True)
 
                 ##### MOVE TO THE BARMAN TABLE
                 # MISSING NAVIGATION ... (TIAGO)
 
                 ##### SPEAK: Say the order to barman
+                self.set_speech(filename="restaurant/barman_order", wait_for_end_of=True)
 
-                ##### ARM GO TO PICK OBJECT POSITION
-                
-                ##### AUDIO : WAIT FOR YES ROBOT
-
-                ##### YOLO OBJECT CONFIRM THE OBJECT
-
-                ##### ARM PUT THE FIRST OBJECT IN TRAY
-
-                ##### ARM GO TO PICK OBJECT POSITION
-
-                ##### AUDIO : WAIT FOR YES ROBOT
-
-                ##### YOLO OBJECT CONFIRM THE OBJECT
-
-                ##### ARM PUT THE SECOND OBJECT IN TRAY
-
-                ##### ARM GO TO PICK OBJECT POSITION
-
-                ##### AUDIO : WAIT FOR YES ROBOT
-
-                ##### YOLO OBJECT CONFIRM THE OBJECT
-
-                ##### ARM PUT THE THIRD OBJECT IN TRAY
-
-                ##### ARM GO TO PICK OBJECT POSITION
-
-                ##### AUDIO : WAIT FOR YES ROBOT
-
-                ##### YOLO OBJECT CONFIRM THE OBJECT
-
-                ##### ARM PUT THE FOURTH OBJECT IN TRAY
+                ##### PICK ORDERS (DUVIDA)
        
                 # next state
                 self.state_aux = 1
@@ -898,18 +871,22 @@ class RestaurantMain():
 
                 ##### SPEAK: Here are ITEM X (x1 OR x2 OR x3), CAN YOU PICK FROM MY TRAY?
 
-                ##### SPEAK: Hope you enjoy
+                ##### SPEAK: Hope you enjoy!
+                self.set_speech(filename="restaurant/enjoy_order", wait_for_end_of=True)
 
-                ##### Falta fazer ciclo para entrega para o segundo cliente !!!!
+                self.delivery_index = self.delivery_index + 1
                                 
                 # next state
-                self.state = self.Final_State 
+                if self.delivery_index == 1:
+                    self.state = self.Approach_customer_table 
+                elif self.delivery_index == 2:
+                    self.state = self.Final_State 
                 
             elif self.state == self.Final_State:
 
                 ##### SPEAK: FINISHING RESTAURANT TASK
                 
-                self.set_speech(filename="(!!!!CHANGE!!!!)/sb_finished", wait_for_end_of=True)
+                self.set_speech(filename="restaurant/finish_restaurant", wait_for_end_of=True)
 
                 # Lock after finishing task
                 while True:
