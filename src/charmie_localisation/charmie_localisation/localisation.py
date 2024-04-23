@@ -124,7 +124,7 @@ class LocalisationNode(Node):
         
         
         # Temporary for when amcl is not implemtned and want the localisation to be precisely the odometry
-        self.amcl_alone_localisation_publisher.publish(self.odom_robot)
+        # self.amcl_alone_localisation_publisher.publish(self.odom_robot)
 
 
        

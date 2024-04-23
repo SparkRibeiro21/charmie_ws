@@ -23,6 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "debug_arm = charmie_debug.debug_arm:main",
             "debug_audio = charmie_debug.debug_audio:main",
             "debug_main = charmie_debug.debug_main:main",
             "debug_navigation_localization = charmie_debug.debug_navigation_localization:main",
