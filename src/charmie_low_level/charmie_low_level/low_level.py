@@ -25,7 +25,7 @@ import struct
 class RobotControl:
 
     def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB0', baudrate=9600)  # open serial port
+        self.ser = serial.Serial('/dev/ttyUSB1', baudrate=9600)  # open serial port
         print("Connected to Motor Board via:", self.ser.name)  # check which port was really used
 
         # FLAGS

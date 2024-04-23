@@ -17,7 +17,8 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'will_show_objects_one_by_one': 'I will show all the detected objects as I handle collecting them.'
+    'point_to_bag': 'Please point to the bag you want me to carry.',
+    
 }
 
 #COMMANDS = {
