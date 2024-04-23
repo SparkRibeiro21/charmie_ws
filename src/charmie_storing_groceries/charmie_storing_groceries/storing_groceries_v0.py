@@ -599,6 +599,7 @@ class StoringGroceriesMain():
     
 
     def analysis_cabinet(self):
+        nr_classes_detected = 0
         i = 0
         self.object_position = {}
         if hasattr(self.node, 'image') and self.node.image:
@@ -909,7 +910,7 @@ class StoringGroceriesMain():
 
                 return nr_classes_detected
     
-    def load_image_one_object(self, obj_name,  obj):
+    def load_image_one_object(self, obj_name, obj):
         # Construct the filename for the image
         image_name = f"image_{obj_name}.jpg"
 
@@ -919,63 +920,69 @@ class StoringGroceriesMain():
         # Construct the file path for the image
         image_path = os.path.join(output_dir, image_name)
 
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
+        # self.custom_face_filename = current_datetime
+
+        current_frame_draw = self.image_objects_detected.copy()
+
         # Check if the image exists
-        if os.path.exists(image_path):
-            # Load the image
-            image = cv2.imread(image_path)
+        # if os.path.exists(image_path):
+        #     # Load the image
+        #     image = cv2.imread(image_path)
+        #     current_frame_draw = image.copy()
 
             # Check if the image was loaded successfully
-            if image is not None:
-                # Display or process the loaded image as needed
-                cv2.imshow("How I stored Image before", image)
-                cv2.waitKey(0)
+        if current_frame_draw is not None:
+            # Display or process the loaded image as needed
+            cv2.imshow("Original image ", current_frame_draw)
+            cv2.waitKey(0)
 
-                thresh_h = 220
-                thresh_v = 220
+            thresh_h = 220
+            thresh_v = 220
 
-                x_min = 1280
-                x_max = 0
-                y_min = 720
-                y_max = 0
+            x_min = 1280
+            x_max = 0
+            y_min = 720
+            y_max = 0
+        
             
-                
-                if obj.box_top_left_x < x_min:
-                    x_min = obj.box_top_left_x
-                if obj.box_top_left_x+obj.box_width > x_max:
-                    x_max = obj.box_top_left_x+obj.box_width
+            if obj.box_top_left_x < x_min:
+                x_min = obj.box_top_left_x
+            if obj.box_top_left_x+obj.box_width > x_max:
+                x_max = obj.box_top_left_x+obj.box_width
 
-                if obj.box_top_left_y < y_min:
-                    y_min = obj.box_top_left_y
-                if obj.box_top_left_y+obj.box_height > y_max:
-                    y_max = obj.box_top_left_y+obj.box_height
-                
-                
-                start_point = (obj.box_top_left_x, obj.box_top_left_y)
-                end_point = (obj.box_top_left_x+obj.box_width, obj.box_top_left_y+obj.box_height)
-                cv2.rectangle(image, start_point, end_point, (255,255,255) , 4) 
-                
-                if obj.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
-                    start_point_text = (obj.box_top_left_x-2, obj.box_top_left_y+25)
-                else:
-                    start_point_text = (obj.box_top_left_x-2, obj.box_top_left_y-22)
-                    
-                text_size, _ = cv2.getTextSize(f"{object.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
-                text_w, text_h = text_size
-                cv2.rectangle(image, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
-                cv2.putText(image, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
+            if obj.box_top_left_y < y_min:
+                y_min = obj.box_top_left_y
+            if obj.box_top_left_y+obj.box_height > y_max:
+                y_max = obj.box_top_left_y+obj.box_height
             
-                # cv2.imwrite(self.node.complete_path_custom_face + current_datetime + list_sb_objects[i] + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
-                
-                    
-                
-                # self.set_face(custom=image_name)
-                cv2.imshow("New Image", image)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+            
+            start_point = (obj.box_top_left_x, obj.box_top_left_y)
+            end_point = (obj.box_top_left_x+obj.box_width, obj.box_top_left_y+obj.box_height)
+            cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
+            
+            if obj.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
+                start_point_text = (obj.box_top_left_x-2, obj.box_top_left_y+25)
             else:
-                print("Error: Unable to load the image.")
+                start_point_text = (obj.box_top_left_x-2, obj.box_top_left_y-22)
+                
+            text_size, _ = cv2.getTextSize(f"{obj.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
+            text_w, text_h = text_size
+            cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
+            cv2.putText(current_frame_draw, f"{obj.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
+
+            current_frame_draw = current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]
+
+            cv2.imwrite(self.node.complete_path_custom_face + current_datetime + obj_name + ".jpg", current_frame_draw)
+            
+            self.set_face(custom=current_datetime + obj_name)
+            cv2.imshow("New Image", current_frame_draw)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
         else:
-            print("Error: Image not found.")
+            print("Error: Unable to load the image.")
+    # else:
+    #     print("Error: Image not found.")
 
     def detect_table_objects(self):
         i = 0
@@ -1165,10 +1172,10 @@ class StoringGroceriesMain():
         # print(self.object_position.keys())
         if obj_class in self.object_position.keys():
             # print(self.object_position.items())
-            position = self.object_position[obj_class]
+            position = self.object_position[obj_class][0]
             print(position)
             # self.set_speech(filename='storing_groceries/Place_the_object_sg', wait_for_end_of=True)
-            keywords = position.strip().split() # Split each position string into words and extend the keywords list
+            keywords = position.split() # Split each position string into words and extend the keywords list
 
             location_filename = None
             class_filename = None
@@ -1284,34 +1291,34 @@ class StoringGroceriesMain():
         os.makedirs(output_dir, exist_ok=True)  
                 
         # Iterate over each object in self.selected_objects
-        for detected_object in self.selected_objects:
+        # for detected_object in self.selected_objects:
             # Copy the original image to draw rectangles on
-            image_with_rectangles = self.image_objects_detected.copy()
+        # images_table = self.image_objects_detected.copy()
 
-            # Get the attributes of the detected object
-            box_top_left_x = detected_object.box_top_left_x
-            box_top_left_y = detected_object.box_top_left_y
-            box_width = detected_object.box_width
-            box_height = detected_object.box_height
+        """ # Get the attributes of the detected object
+        box_top_left_x = detected_object.box_top_left_x
+        box_top_left_y = detected_object.box_top_left_y
+        box_width = detected_object.box_width
+        box_height = detected_object.box_height
 
-            # Calculate end point of the rectangle
-            end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
+        # Calculate end point of the rectangle
+        end_point = (box_top_left_x + box_width, box_top_left_y + box_height) """
 
-            # Draw rectangle on the copy of the original image
-            cv2.rectangle(image_with_rectangles, (box_top_left_x, box_top_left_y), end_point, (0, 255, 0), 2)
-            cv2.putText(image_with_rectangles, f"{detected_object.object_name}", (box_top_left_x, box_top_left_y), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
+        # Draw rectangle on the copy of the original image
+        # cv2.rectangle(image_with_rectangles, (box_top_left_x, box_top_left_y), end_point, (0, 255, 0), 2)
+        # cv2.putText(image_with_rectangles, f"{detected_object.object_name}", (box_top_left_x, box_top_left_y), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
 
 
-            cv2.imshow('A', image_with_rectangles)
-            cv2.waitKey(0)
+        # cv2.imshow('A', image_with_rectangles)
+        # cv2.waitKey(0)
 
-            # Construct the filename for the image
-            image_name = f"image_{detected_object.object_name}.jpg"
+        # Construct the filename for the image
+        # image_name = f"image_{detected_object.object_name}.jpg"
 
             # Save the image with rectangles
-            cv2.imwrite(os.path.join(output_dir, image_name), image_with_rectangles)
+        # cv2.imwrite(os.path.join(output_dir, image_name), images_table)
 
-            print(f"Saved image with rectangle for object {detected_object.object_name} as {image_name}")
+        # print(f"Saved image with rectangle for object {detected_object.object_name} as {image_name}")
 
     def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
         
@@ -1379,6 +1386,7 @@ class StoringGroceriesMain():
 
                 while nr_classes_detected < 4:
                     
+
                     print('\n \n \n \n')
 
                     pos_offset = list_of_neck_position_search[position_index]
@@ -1389,8 +1397,9 @@ class StoringGroceriesMain():
                     self.set_neck(position=new_neck_pos, wait_for_end_of=True)
 
                     print('Neck: ', new_neck_pos)
-
-                    self.set_speech(filename="storing_groceries/sg_analysing_cabinet_short", wait_for_end_of=True)
+                    time.sleep(1)
+                    if position_index == 0:
+                        self.set_speech(filename="storing_groceries/sg_analysing_object_cabinet", wait_for_end_of=True)
 
                     self.current_image = self.node.image
                     bridge = CvBridge()
@@ -1408,8 +1417,8 @@ class StoringGroceriesMain():
                     """ cv2.imshow('A', current_frame_draw)
                     cv2.waitKey(0) """
                     
-                    """ if nr_classes_detected is None:
-                        nr_classes_detected = 0 """
+                    if nr_classes_detected is None:
+                        nr_classes_detected = 0
 
                     if nr_classes_detected < 4 :
                         self.set_rgb(command=RED+BLINK_LONG)

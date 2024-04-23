@@ -17,7 +17,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'will_show_objects_one_by_one': 'I will show all the detected objects as I handle collecting them.'
+    'sg_analysing_cabinet_short' : 'I am analysing the cabinet.'
 }
 
 #COMMANDS = {
