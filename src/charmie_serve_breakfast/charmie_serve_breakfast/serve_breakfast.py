@@ -602,19 +602,20 @@ class ServeBreakfastMain():
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
 
+                self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+                
                 # self.set_speech(filename="serve_breakfast/will_show_objects_one_by_one", wait_for_end_of=True)
                 
                 # already shows the detection for the next object while moving the arm from previous action, this way we save time
                 
                 self.set_face(custom=self.custom_face_filename + "spoon")
 
-                self.set_speech(filename="serve_breakfast/found_the_spoon", wait_for_end_of=False)  
+                self.set_speech(filename="serve_breakfast/found_the_spoon", wait_for_end_of=True)  
                 
-                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
 
-                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
 
                 self.state = self.Picking_up_spoon
 
@@ -622,7 +623,7 @@ class ServeBreakfastMain():
 
                 # post FNR2024: this is here to try to pick up the objects rather than using Deus Ex Machina 
 
-                time.sleep(5) # the first arm movement is so quick that i have to add a sleep for better judge perception of detected object in face
+                time.sleep(0) # the first arm movement is so quick that i have to add a sleep for better judge perception of detected object in face
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=True)    
 
@@ -913,7 +914,7 @@ class ServeBreakfastMain():
                 self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
                 # time.sleep(1)
 
-                finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=False)    
+                finished_detection = self.detect_four_serve_breakfast_objects(delta_t=1.0, with_hand=False)    
 
                 if finished_detection:
                     break
