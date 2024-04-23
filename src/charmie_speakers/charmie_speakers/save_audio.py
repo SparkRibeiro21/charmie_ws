@@ -70,10 +70,22 @@ COMMANDS = {
 }
 """
 
-# COMMANDS = {
-#     'problem_detecting_change_object': 'There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?',
-# }
+COMMANDS = {
+     'restaurant/start_restaurant': 'Hello! I am ready to start the restaurant task! Waiting for my start button to be pressed.',
+     'restaurant/barman_meeting': 'Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.',
+     'restaurant/turn_search': 'I am going to turn around and search for possible customers. See you soon.',
+     'restaurant/search_customers': 'Searching for calling customers.',
+     'restaurant/no_customers': 'I could not find any customers calling. I am going to search again for calling customers.',
+     'restaurant/found_customer': 'I have found a waving customer.',
+     'restaurant/face_customer': 'Please look at my screen to see the customer detected.',
+     'restaurant/movement_alert': 'Moving to the customer table.'
 
+
+
+     
+ }
+
+"""
 COMMANDS = {
     'finish_receptionist': 'Thank you. I have finished my receptionist task.',
     'race_caucasian': 'Caucasian.',
@@ -104,6 +116,7 @@ COMMANDS = {
     'ready_receive_guest':'I am ready to receive a new guest. Please stand in front of me.',
     'presentation_answer_after_green_face':'Hello! My name is Charmie. I will make you some questions. Please speak loud and clear. Answer me after the green light on my face.'
 }
+"""
 
 
 class RobotSpeak():
@@ -118,7 +131,7 @@ class RobotSpeak():
 
         # info regarding the paths for the recorded files intended to be played
         self.home = str(Path.home())
-        self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
+        self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences/restaurant"
         self.complete_path = self.home+'/'+self.midpath+'/'
 
         # TTS synthetiser models path 

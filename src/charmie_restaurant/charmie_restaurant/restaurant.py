@@ -748,10 +748,13 @@ class RestaurantMain():
                 ##### START TURN TO BARMAN TABLE
 
                 ##### SPEAK : Hello! I am ready to start the restaurant task
+                self.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
 
                 ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
+                self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
 
                 ##### SPEAK : I am going to turn around and search for possible customers. See you soon
+                self.set_speech(filename="restaurant/turn_search", wait_for_end_of=True)
 
                 ##### TURN AROUND to the customer zone
 
@@ -762,6 +765,7 @@ class RestaurantMain():
                 print("State:", self.state, "- Detecting_waving_customer")
 
                 ##### SPEAK: Searching for waving customers
+                self.set_speech(filename="restaurant/search_customers", wait_for_end_of=True)
 
                 ##### NECK: Rotate left and right for better view
 
@@ -770,14 +774,18 @@ class RestaurantMain():
                 ##### IF AN ERROR IS DETECTED:
 
                     ##### SPEAK: No costumers detected
+                self.set_speech(filename="restaurant/no_customers", wait_for_end_of=True)
 
                     ##### BACK TO initial searching
 
-                ##### NECK: Looks at detected customer
+                ##### SPEAK: Found waving customer
+                self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
+                self.customer_index = self.customer_index + 1
 
-                ##### SPEAK: Found waving customer self.customer_index = self.customer_index + 1
+                ##### NECK: waving customer
                 
                 ##### SPEAK: Check face to see customer detected
+                self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
 
                 ##### SHOW FACE DETECTED CUSTOMER
                                 
@@ -790,6 +798,7 @@ class RestaurantMain():
                 ##### NECK MOVEMENT FORWARD POSITION
 
                 ##### SPEAK: Start Movement Alert
+                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
 
                 ##### MOVE TO CUSTOMER
                 # MISSING NAVIGATION ... (TIAGO)
@@ -806,22 +815,27 @@ class RestaurantMain():
                 print("State:", self.state, "- Receiving_order_listen_and_confirm")
                 
                 ##### SPEAK: Hello
+                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
 
                 ##### SPEAK: Say your order
+                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
 
                 ##### AUDIO: Listen to the order
 
                 ##### SPEAK: Did you say "order"        (VERIFICATION)
+                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
 
                 ##### AUDIO: Listen "YES" OR "NO"
 
                 ##### IF AN YES:
 
                     ##### SPEAK: Thank you
+                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
 
                 ##### IF AN NO:
 
                     ##### SPEAK: Sorry, TRY AGAIN
+                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
 
                     ##### BACK TO LISTEN 
            
@@ -885,6 +899,8 @@ class RestaurantMain():
                 ##### SPEAK: Here are ITEM X (x1 OR x2 OR x3), CAN YOU PICK FROM MY TRAY?
 
                 ##### SPEAK: Hope you enjoy
+
+                ##### Falta fazer ciclo para entrega para o segundo cliente !!!!
                                 
                 # next state
                 self.state = self.Final_State 
