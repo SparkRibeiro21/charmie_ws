@@ -185,7 +185,7 @@ class ArmUfactory(Node):
 		self.get_order_position_linear = 				[ -581.4, -211.5,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
 		self.get_lower_order_position_linear = 			[ -581.4,  100.0,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
 		# self.detect_objects_first_position_linear = 	[ -186.6,    1.9,  663.7, math.radians(  87.7), math.radians(   2.9), math.radians(-137.9)]
-		self.detect_objects_first_position_linear = 	[ -102.8,  -54.3,  641.9, math.radians(  87.1), math.radians(   2.2), math.radians(-152.2)]
+		self.detect_objects_first_position_linear = 	[ -178.7, -122.8,  642.0, math.radians(  90.0), math.radians(   0.0), math.radians(-140.0)]
 
 		self.above_cuttlery_cup = 						[ -135.0,  260.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		self.place_in_cuttlery_cup =					[ -135.0,  345.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
