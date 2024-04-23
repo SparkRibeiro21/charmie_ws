@@ -7,6 +7,9 @@ from example_interfaces.msg import Bool, Float32, Int16, String
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SpeechCommand, NavTrigger
 from sensor_msgs.msg import Image
+from geometry_msgs.msg import PoseWithCovarianceStamped
+import numpy as np
+import math
 
 import cv2 
 import threading
@@ -28,6 +31,9 @@ class TestNode(Node):
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
 
+        # Localisation
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
 
@@ -38,9 +44,9 @@ class TestNode(Node):
         # Navigation
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
-        # Arm (CHARMIE)
-        while not self.nav_trigger_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+        # Navigation
+        # while not self.nav_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
         
 
         
@@ -151,6 +157,47 @@ class RestaurantMain():
     #     self.node.waited_for_end_of_track_object = False
     # 
     #     return self.node.track_object_success, self.node.track_object_message   
+    
+    def set_initial_position(self, initial_position):
+
+        task_initialpose = PoseWithCovarianceStamped()
+
+        task_initialpose.header.frame_id = "map"
+        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
+
+        task_initialpose.pose.pose.position.x = initial_position[1]
+        task_initialpose.pose.pose.position.y = -initial_position[0]
+        task_initialpose.pose.pose.position.z = 0.0
+
+        quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+
+        task_initialpose.pose.pose.orientation.x = quaternion[0]
+        task_initialpose.pose.pose.orientation.y = quaternion[1]
+        task_initialpose.pose.pose.orientation.z = quaternion[2]
+        task_initialpose.pose.pose.orientation.w = quaternion[3] 
+        
+        self.node.initialpose_publisher.publish(task_initialpose)
+
+
+
+    def get_quaternion_from_euler(self, roll, pitch, yaw):
+        """
+        Convert an Euler angle to a quaternion.
+        
+        Input
+            :param roll: The roll (rotation around x-axis) angle in radians.
+            :param pitch: The pitch (rotation around y-axis) angle in radians.
+            :param yaw: The yaw (rotation around z-axis) angle in radians.
+        
+        Output
+            :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+        """
+        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        
+        return [qx, qy, qz, qw]
 
     def main(self):
         Waiting_for_start_button = 0
@@ -162,9 +209,15 @@ class RestaurantMain():
         Delivering_order_to_client = 6
         Final_State = 7
         
+        self.initial_position = [-0.409, 4.724, 0]
+        
         # VARS ...
         self.state = Waiting_for_start_button
 
+        self.set_initial_position(self.initial_position)
+
+        while True:
+            pass
 
         while True:
 
