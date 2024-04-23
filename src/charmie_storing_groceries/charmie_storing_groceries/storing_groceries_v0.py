@@ -909,7 +909,7 @@ class StoringGroceriesMain():
 
                 return nr_classes_detected
     
-    def load_image_one_object(self, obj_name):
+    def load_image_one_object(self, obj_name,  obj):
         # Construct the filename for the image
         image_name = f"image_{obj_name}.jpg"
 
@@ -927,8 +927,49 @@ class StoringGroceriesMain():
             # Check if the image was loaded successfully
             if image is not None:
                 # Display or process the loaded image as needed
-                self.set_face(custom=image_name)
-                cv2.imshow("Loaded Image", image)
+                cv2.imshow("How I stored Image before", image)
+                cv2.waitKey(0)
+
+                thresh_h = 220
+                thresh_v = 220
+
+                x_min = 1280
+                x_max = 0
+                y_min = 720
+                y_max = 0
+            
+                
+                if obj.box_top_left_x < x_min:
+                    x_min = obj.box_top_left_x
+                if obj.box_top_left_x+obj.box_width > x_max:
+                    x_max = obj.box_top_left_x+obj.box_width
+
+                if obj.box_top_left_y < y_min:
+                    y_min = obj.box_top_left_y
+                if obj.box_top_left_y+obj.box_height > y_max:
+                    y_max = obj.box_top_left_y+obj.box_height
+                
+                
+                start_point = (obj.box_top_left_x, obj.box_top_left_y)
+                end_point = (obj.box_top_left_x+obj.box_width, obj.box_top_left_y+obj.box_height)
+                cv2.rectangle(image, start_point, end_point, (255,255,255) , 4) 
+                
+                if obj.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
+                    start_point_text = (obj.box_top_left_x-2, obj.box_top_left_y+25)
+                else:
+                    start_point_text = (obj.box_top_left_x-2, obj.box_top_left_y-22)
+                    
+                text_size, _ = cv2.getTextSize(f"{object.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
+                text_w, text_h = text_size
+                cv2.rectangle(image, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
+                cv2.putText(image, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
+            
+                # cv2.imwrite(self.node.complete_path_custom_face + current_datetime + list_sb_objects[i] + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
+                
+                    
+                
+                # self.set_face(custom=image_name)
+                cv2.imshow("New Image", image)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
             else:
@@ -1450,7 +1491,7 @@ class StoringGroceriesMain():
 
                 # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                self.load_image_one_object(obj_name)
+                self.load_image_one_object(obj_name, object_)
 
                 self.set_speech(filename="storing_groceries/place_tray", wait_for_end_of=True)
                 
@@ -1512,7 +1553,66 @@ class StoringGroceriesMain():
 
                 # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                self.load_image_one_object(obj_name)
+                self.load_image_one_object(obj_name, object_)
+
+                self.set_speech(filename="storing_groceries/place_tray", wait_for_end_of=True)
+                
+                # self.create_image_five_objects_same_time(self.selected_objects)
+                self.activate_yolo_objects(activate_objects=False)
+                               
+                # time.sleep(self.wait_time_to_put_objects_in_hand) # waits for person to put object in hand
+                
+                """ object_in_gripper = False
+                while not object_in_gripper:
+                
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+
+                    # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+                        self.set_rgb(command=RED+BLINK_LONG)
+                
+                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        
+                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                    
+                    else:
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+                
+                self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
+                self.set_face("demo5")
+
+                self.object_counter += 1
+
+                self.state = self.Picking_third_object
+                
+            elif self.state == self.Picking_third_object:
+                
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
+
+                self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=True)
+                
+                self.select_voice_audio(self.selected_objects[self.object_counter])
+
+                
+                # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
+                # self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+                object_= self.selected_objects[self.object_counter]
+                obj_name = object_.object_name
+                print(obj_name)
+                obj_name_lower = obj_name.lower().replace(" ", "_")
+                print(obj_name_lower)
+
+                object_help_pick = 'help_pick_' + obj_name_lower
+                # self.set_face(str(object_help_pick))
+                print(object_help_pick)
+
+                # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                self.load_image_one_object(obj_name, object_)
 
                 self.set_speech(filename="storing_groceries/place_tray", wait_for_end_of=True)
                 
@@ -1571,7 +1671,7 @@ class StoringGroceriesMain():
 
                 # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                self.load_image_one_object(obj_name)
+                self.load_image_one_object(obj_name, object_)
 
                 self.set_speech(filename="storing_groceries/place_tray", wait_for_end_of=True)
                 
@@ -1630,7 +1730,7 @@ class StoringGroceriesMain():
 
                 # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                self.load_image_one_object(obj_name)
+                self.load_image_one_object(obj_name, object_)
 
                 self.set_speech(filename="storing_groceries/place_tray", wait_for_end_of=True)
                 
