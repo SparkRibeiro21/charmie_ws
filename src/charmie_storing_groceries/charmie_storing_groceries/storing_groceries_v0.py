@@ -362,9 +362,9 @@ class StoringGroceriesMain():
         self.look_cabinet_center = [0, -30]
         self.look_cabinet_bottom = [-45, -45]
 
-        self.shelf_1_height = 0.14 # 0.18
-        self.shelf_2_height = 0.55 # 0.60 
-        self.shelf_3_height = 0.97 # 1.17 
+        self.shelf_1_height = 0.15 # 0.14 # 0.15
+        self.shelf_2_height = 0.60 # 0.55 # 0.60 
+        self.shelf_3_height = 1.10 # 0.97 # 1.10 
         self.shelf_4_height = 1.39
 
         self.left_limit_shelf = -0.7 # -0.38
@@ -771,65 +771,120 @@ class StoringGroceriesMain():
 
                 print('objects position:', self.object_position)
 
-                position = []
-                object_class_name= []
 
-                # Create a set to store unique positions
-                unique_positions = set()
+                values_to_remove = []
+                for key in self.object_position:
+                    # Collect values to remove from self.object_position[key]
+                    # Get the values associated with the current key
+                    values_to_check = self.object_position[key]
 
-                # Create a dictionary to store the positions associated with each class
-                class_positions = {}
+                    # Iterate over the other keys of the object_position dictionary
+                    for other_key in self.object_position:
+                        # Skip the current key
+                        if other_key == key:
+                            continue
 
-                for class_name, positions in self.object_position.items():
-                    for position in positions:
-                        # If the position is not in the unique_positions set, add it to the set
-                        # and store it in the class_positions dictionary
-                        if position not in unique_positions:
-                            unique_positions.add(position)
-                            class_positions[position] = class_name
-                        # If the position is already in the unique_positions set,
-                        # it means there are multiple classes associated with this position,
-                        # so remove it from all associated classes
-                        else:
-                            if class_name in self.object_position:
-                                self.object_position[class_name].remove(position)
+                        # Get the values associated with the other key
+                        other_values = self.object_position[other_key]
+
+                        # Iterate over the values associated with the current key
+                        for value in values_to_check:
+                            # If the value exists in the values of the other key, add it to values_to_remove
+                            if value in other_values:
+                                values_to_remove.append(value)
+                                print('Values to remove ', values_to_remove)
+                                self.temp = values_to_remove
+
+                    # Remove collected values from self.object_position[key]
+                    for value in values_to_remove:
+                        if value in self.object_position[key]:
+                            self.object_position[key].remove(value)
+
+                # Remove collected values from self.object_position[other_key]
+                # Remove collected values from other keys
+                for key in self.object_position:
+                    print('Values to remove 2', values_to_remove)
+                    for value in values_to_remove:
+                        # print('A', self.object_position[key])
+                        # print('B', value)
+                        if value in self.object_position[key]:
+                            self.object_position[key].remove(value)
 
                 print('New objects position: ', self.object_position)
 
+                position_wardrobe = []
+                object_class_name= []
 
-                """ value_counts = {}
+                # Create a dictionary to store the count of occurrences for each position for each class
+                position_counts = {}
 
-                # Iterate over the dictionary to count occurrences of each value
-                 for value in self.object_position.values():
-                    value_counts[value] = value_counts.get(value, 0) + 1
+                # Iterate over the object_position dictionary
+                for class_name, positions in self.object_position.items():
+                    for position in positions:
+                        # Increment the count of occurrences for the current position and class
+                        position_counts[(class_name, position)] = position_counts.get((class_name, position), 0) + 1
 
-                # Create a set to store the values that occur more than once
-                duplicate_values = set(val for val, count in value_counts.items() if count > 1)
+                # Create a dictionary to store the merged positions for each class
+                merged_object_position = {}
 
-                # Create a new dictionary to store unique classes
-                unique_object_position = {}
+                # Iterate over the position_counts dictionary to find the position with the highest count for each class
+                for (class_name, position), count in position_counts.items():
+                    if class_name in merged_object_position:
+                        # If the class already exists in the merged_object_position dictionary,
+                        # check if the count for the current position is higher than the count for the existing position
+                        if count > position_counts[(class_name, merged_object_position[class_name])]:
+                            merged_object_position[class_name] = position
+                    else:
+                        merged_object_position[class_name] = position
+                        
+                
+                print('Merged objects position ', merged_object_position)
 
-                # Iterate over the original dictionary and add classes to the unique_object_position dictionary if their value occurs only once
-                for class_name, value in self.object_position.items():
-                    if value not in duplicate_values:
-                        unique_object_position[class_name] = value
-
-                print(unique_object_position) """
-
-                print('Positions: ', position)
+                object_class_name = list(merged_object_position.keys())
+                position_wardrobe = list(merged_object_position.values())
+                
+                print('Positions: ', position_wardrobe)
                 print('classes: ', object_class_name)
 
                 # print("Positions:", position)
                 # print("Object class names:", object_class_name)
                 
                 keywords = []
+
+                self.classes_detected_wardrobe.clear()
+
                 class_name_array = []
                 nr_classes_detected = 0
 
-                self.classes_detected_wardrobe.clear()
+                for position in merged_object_position.values():
+                    keywords = position.split()  # Split each position string into words and extend the keywords list
+
+                    # Initialize filenames
+                    class_filename = None
+                    location_filename = None
+
+                    # Iterate over object_position_mapping
+                    for condition, object_location in object_position_mapping.items():
+                        # Check if all keywords in the condition are in the current position
+                        if all(keyword in keywords for keyword in condition):
+                            # Get the class name associated with the current position
+                            class_name = [class_name for class_name, pos in merged_object_position.items() if pos == position][0]
+                            if class_name not in class_name_array:
+                                class_name_array.append(class_name)
+                            print('Class name:', class_name)
+                            print('All class names', class_name_array)
+                            self.classes_detected_wardrobe.append(class_name)
+                            print(self.classes_detected_wardrobe)
+                            nr_classes_detected = len(class_name_array)
+                            print('Nr classes detected: ', nr_classes_detected)
+                            location_filename = f"storing_groceries/{object_location}"
+                            class_filename = f"objects_classes/{class_name}"
+                            break
                 
-                for pos in position:
+                """ for pos in position_wardrobe:
                     keywords = pos.split() # Split each position string into words and extend the keywords list
+
+                    print(keywords)
 
                 # Initialize filename
                     class_filename = None
@@ -850,7 +905,7 @@ class StoringGroceriesMain():
                             self.classes_detected_wardrobe.append(class_name)
                             # self.set_speech(filename=class_filename, wait_for_end_of=True)
                             # self.set_speech(filename=location_filename, wait_for_end_of=True)
-                            break
+                            break """
 
                 return nr_classes_detected
     
