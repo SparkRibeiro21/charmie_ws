@@ -28,7 +28,7 @@ def generate_launch_description():
     )
 
     controller_params_file = os.path.join(get_package_share_directory(package_name), "config", "controller_config.yaml")
-    rviz2_file = os.path.join(get_package_share_directory(package_name), "config", "view_bot.rviz")
+    rviz2_file = os.path.join(get_package_share_directory(package_name), "config", "pre_fnr_2024.rviz")
     #robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
     
     # robot_description = xacro.process_file(xacro_file).toxml() #SAPO
@@ -94,11 +94,18 @@ def generate_launch_description():
                        output='screen',
                        parameters=[{'use_sim_time': False}])
 
-    rviz2_spawner = Node(
+    """ rviz2_spawner = Node(
         package="rviz2",
         executable="rviz2",
         name="rviz2",
         arguments=['-d', 'src/charmie_bot/config/tiago_rviz.rviz'],
+    ) """
+
+    rviz2_spawner = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        arguments=['-d', rviz2_file],
     )
 
     #create node debug_main
