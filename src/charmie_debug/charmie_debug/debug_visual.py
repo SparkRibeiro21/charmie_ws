@@ -181,8 +181,8 @@ class Robot():
                 #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
            
 
-                cv2.circle(self.test_image, (int(self.xc_adj + person.position_relative.x*self.scale),
-                    int(self.yc_adj - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
+                cv2.circle(self.test_image, (int(self.xc_adj + person.position_absolute.x*self.scale),
+                    int(self.yc_adj - person.position_absolute.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
                 
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
                 #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
@@ -195,8 +195,8 @@ class Robot():
            
 
                 cv2.rectangle(self.test_image, 
-                              (int(self.xc_adj + object.position_relative.x*self.scale + self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_relative.y*self.scale + self.lidar_radius*2*self.scale)),
-                              (int(self.xc_adj + object.position_relative.x*self.scale - self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_relative.y*self.scale - self.lidar_radius*2*self.scale)),
+                              (int(self.xc_adj + object.position_absolute.x*self.scale + self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale + self.lidar_radius*2*self.scale)),
+                              (int(self.xc_adj + object.position_absolute.x*self.scale - self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale - self.lidar_radius*2*self.scale)),
                               (255, 0, 0), -1)
                                
                 # cv2.circle(self.test_image, (int(self.xc_adj + object.position_relative.x*self.scale),

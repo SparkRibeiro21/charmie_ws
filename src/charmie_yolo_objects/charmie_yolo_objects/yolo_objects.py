@@ -31,7 +31,7 @@ DRAW_OBJECT_BOX = True
 DRAW_OBJECT_NAME = True
 DRAW_OBJECT_CLASS = True
 DRAW_OBJECT_LOCATION_COORDS = True
-DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = False
+DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = True
 
 
 class Yolo_obj(Node):
@@ -511,8 +511,8 @@ class Yolo_obj(Node):
                                         (new_object.box_center_x, new_object.box_center_y), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
                             
                         # if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
-                        #     cv2.putText(current_frame_draw, new_person.room_location+" - "+new_person.furniture_location,
-                        #                 (self.center_torso_person_list[object_idx][0], self.center_torso_person_list[object_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        #     cv2.putText(current_frame_draw, new_object.room_location+" - "+new_object.furniture_location,
+                        #                 (new_object.box_center_x, new_object.box_center_y+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
             
             # must add also for hand 
             # yolov8_obj.image_rgb = self.head_rgb # test removed person_pose (non-filtered)
@@ -826,10 +826,11 @@ class Yolo_obj(Node):
                                     ', '+str(round(new_object.position_relative.z,2))+')',
                                     (new_object.box_center_x, new_object.box_center_y), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
                         
-                    # if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
-                    #     cv2.putText(current_frame_draw, new_person.room_location+" - "+new_person.furniture_location,
-                    #                 (self.center_torso_person_list[object_idx][0], self.center_torso_person_list[object_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
         
+                    if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
+                            cv2.putText(current_frame_draw, new_object.room_location+" - "+new_object.furniture_location,
+                                (new_object.box_center_x, new_object.box_center_y+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+            
         # must add also for hand 
         # yolov8_obj.image_rgb = self.head_rgb # test removed person_pose (non-filtered)
         # yolov8_obj.num_objects = num_obj # test removed person_pose (non-filtered)
