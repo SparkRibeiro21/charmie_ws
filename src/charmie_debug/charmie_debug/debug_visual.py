@@ -123,6 +123,12 @@ class Robot():
         # print(self.robot_x, self.robot_y, self.robot_t)
 
 
+    def pose2d_msg_to_position(self, pose: Pose2D):
+        
+        self.robot_x = pose.x
+        self.robot_y = pose.y
+        self.robot_t = pose.theta
+
 
     def update_debug_drawings(self):
             
@@ -255,8 +261,6 @@ class Robot():
 
             self.test_image[:, :] = 0
 
-
-
 class DebugVisualNode(Node):
 
     def __init__(self):
@@ -272,10 +276,7 @@ class DebugVisualNode(Node):
         self.object_detected_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.get_object_detected_callback, 10)
 
         # get robot_localisation
-        # self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
-        # self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
-        self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
-        self.initialpose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "initialpose", self.initialpose_callback, 10)
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         # search for person, person localisation 
         self.search_for_person_subscriber = self.create_subscription(ListOfPoints, "search_for_person_points", self.search_for_person_callback, 10)
@@ -302,17 +303,12 @@ class DebugVisualNode(Node):
 
     def odom_robot_callback(self, loc: Odometry):
         self.robot.odometry_msg_to_position(loc)
-
-
-    def amcl_pose_callback(self, pose: PoseWithCovarianceStamped):
-        self.robot.posewithcovariancestamped_msg_to_position(pose)
-    def initialpose_callback(self, pose: PoseWithCovarianceStamped):
-        self.robot.posewithcovariancestamped_msg_to_position(pose)
-
+    
+    def robot_localisation_callback(self, pose: Pose2D):
+        self.robot.pose2d_msg_to_position(pose)
 
     def search_for_person_callback(self, points: ListOfPoints):
         self.robot.search_for_person = points
-
 
     def get_color_image_callback(self, img: Image):
         # self.get_logger().info('Receiving color video frame')
