@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3, Pose2D
 from charmie_interfaces.msg import TarNavSDNL, Obstacles
 from charmie_interfaces.srv import NavTrigger
 
@@ -533,23 +533,6 @@ class NavigationSDNLClass:
             self.test_image[:, :] = 0
             self.image_plt[:, :] = 0
 
-    def odometry_msg_to_position(self, odom: Odometry):
-        
-        self.robot_x = odom.pose.pose.position.x
-        self.robot_y = odom.pose.pose.position.y
-
-        qx = odom.pose.pose.orientation.x
-        qy = odom.pose.pose.orientation.y
-        qz = odom.pose.pose.orientation.z
-        qw = odom.pose.pose.orientation.w
-
-        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
-        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
-        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(yaw, pitch, roll)
-
-        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(self.robot_x, self.robot_y, self.robot_t)
 
     def obstacles_msg_to_position(self, obs: Obstacles):
         self.obstacles = obs
@@ -681,7 +664,10 @@ class NavSDNLNode(Node):
 
         # Create PUBs/SUBs
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
-        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+        
+        # Robot Localisation
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
+        
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
@@ -719,14 +705,11 @@ class NavSDNLNode(Node):
         # self.nav.update_debug_drawings()
         # print("here")
 
-    def odom_robot_callback(self, odom: Odometry):
-
-        # print("INNNNNNNNNNNNNNNNNNNNNN")
-        # updates the position variable
-        self.nav.odometry_msg_to_position(odom)
-        # self.nav.sdnl_main()
+    def robot_localisation_callback(self, pose: Pose2D):
+        self.nav.robot_x = pose.x
+        self.nav.robot_y = pose.y
+        self.nav.robot_t = pose.theta
         self.nav.update_debug_drawings()
-        #print("here2")
 
     def target_pos_callback(self, nav: TarNavSDNL):
         # calculates the velocities and sends them to the motors considering the latest obstacles and odometry position

@@ -70,8 +70,6 @@ class ReceptionistNode(Node):
             self.get_logger().warn("Waiting for Audio Server...")
         while not self.calibrate_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Calibrate Audio Server...")
-
-                
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
@@ -83,7 +81,6 @@ class ReceptionistNode(Node):
             self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         # while not self.neck_track_object_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
-        
         # Yolos
         while not self.activate_yolo_pose_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")

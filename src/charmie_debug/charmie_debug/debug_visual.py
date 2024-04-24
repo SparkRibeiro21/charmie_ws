@@ -85,44 +85,6 @@ class Robot():
         self.colunas = 1280
         self.current_frame = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
 
-
-    def odometry_msg_to_position(self, odom: Odometry):
-        
-        self.robot_x = odom.pose.pose.position.x
-        self.robot_y = odom.pose.pose.position.y
-
-        qx = odom.pose.pose.orientation.x
-        qy = odom.pose.pose.orientation.y
-        qz = odom.pose.pose.orientation.z
-        qw = odom.pose.pose.orientation.w
-
-        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
-        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
-        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(yaw, pitch, roll)
-
-        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(self.robot_x, self.robot_y, self.robot_t)
-
-    def posewithcovariancestamped_msg_to_position(self, pose: PoseWithCovarianceStamped):
-        
-        self.robot_x = -pose.pose.pose.position.y
-        self.robot_y = pose.pose.pose.position.x
-        
-        qx = pose.pose.pose.orientation.x
-        qy = pose.pose.pose.orientation.y
-        qz = pose.pose.pose.orientation.z
-        qw = pose.pose.pose.orientation.w
-
-        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
-        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
-        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(yaw, pitch, roll)
-
-        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(self.robot_x, self.robot_y, self.robot_t)
-
-
     def pose2d_msg_to_position(self, pose: Pose2D):
         
         self.robot_x = pose.x
@@ -272,10 +234,9 @@ class DebugVisualNode(Node):
         
         # get yolo pose person detection filtered
         self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
-
         self.object_detected_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.get_object_detected_callback, 10)
 
-        # get robot_localisation
+        # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         # search for person, person localisation 
@@ -301,12 +262,11 @@ class DebugVisualNode(Node):
         # print("Received new yolo objects. Number of objects = ", obj.num_person)
         self.robot.object_detected = obj
 
-    def odom_robot_callback(self, loc: Odometry):
-        self.robot.odometry_msg_to_position(loc)
-    
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot.pose2d_msg_to_position(pose)
-
+        self.robot.robot_x = pose.x
+        self.robot.robot_y = pose.y
+        self.robot.robot_t = pose.theta
+        
     def search_for_person_callback(self, points: ListOfPoints):
         self.robot.search_for_person = points
 
