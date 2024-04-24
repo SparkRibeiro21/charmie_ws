@@ -6,7 +6,7 @@ import time
 import pygame
 from pathlib import Path
 
-names_list = ["Axel", "John", "Paris", "Robin", "Simone"]
+names_list = ["Adel", "Angel", "Axel", "Charlie", "Jane", "John", "Jules", "Morgan", "Paris", "Robin", "Simone"]
 drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
 
 
@@ -17,7 +17,8 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'problem_detecting_change_object': 'There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?',
+    'point_to_bag': 'Please point to the bag you want me to carry.',
+    
 }
 
 #COMMANDS = {
@@ -76,34 +77,7 @@ COMMANDS = {
 
 """
 COMMANDS = {
-    'finish_receptionist': 'Thank you. I have finished my receptionist task.',
-    'race_caucasian': 'Caucasian.',
-    'race_asian': 'Asian.',
-    'race_black': 'African descendant.',
-    'race_middleeastern': 'Middle Eastern.',
-    'race_indian': 'Indian.',
-    'race_hispanic': 'Hispanic.',
-    'gender_male':'Male.',
-    'gender_female': 'Female.',
-    'height_taller': 'Taller than me.',
-    'height_smaller': 'Shorter than me.',
-    'height_equal': 'Approximately the same height as me.',
-    'under_20':'Under 20 years old.',
-    'between18_32':'Between 18 and 32 years old.',
-    'between28_42':'Between 28 and 40 years old.',
-    'between40_60':'Between 40 and 60 years old.',
-    'over60':'Over 60 years old.',
-    'please_follow_me':'Thank you. Please follow me.',
-    'please_stay_on_my_left':'Please stay on my left until I give you instructions on where to sit.',
-    'please_stay_on_my_right':'Please stay on my right until I give you instructions on where to sit.',
-    'present_everyone':'Hello, I will present everyone in this room.',
-    'please_sit_sofa':'Please take a sit on the sofa that I am looking at.',
-    'please_sit_place':'Please take a sit on the place that I am looking at.',
-    'please_sit_chair':'Please take a sit on the chair that I am looking at.',
-    'dear_host':'Dear host.',
-    'dear_guest':'Dear guest.',
-    'ready_receive_guest':'I am ready to receive a new guest. Please stand in front of me.',
-    'presentation_answer_after_green_face':'Hello! My name is Charmie. I will make you some questions. Please speak loud and clear. Answer me after the green light on my face.'
+    'help_place_object': 'I need your help placing the object. Please grab the object when I open my hand. I will open my hand in 3, 2, 1.'
 }
 """
 

@@ -14,14 +14,15 @@ slam_toolbox:
     map_frame: map
     base_frame: base_link
     scan_topic: scan
-    mode: mapping #localization 
+    mode: localization #mapping 
 
     # if you'd like to immediately start continuing a map at a given pose
     # or at the dock, but they are mutually exclusive, if pose is given
     # will use pose
-    #map_file_name: /home/bruno/charmie_ws/src/charmie_bot/maps_rviz/test_lar/lar_serial
+    # map_file_name: /home/bruno/charmie_ws/src/charmie_bot/maps_rviz/test_lar/lar_serial
+    map_file_name: /home/charmie/charmie_ws/src/charmie_bot/maps_rviz/LAR_map_pre_nacional_2024_v2
     # map_start_pose: [0.0, 0.0, 0.0]
-    #map_start_at_dock: true
+    map_start_at_dock: true
 
     debug_logging: false
     throttle_scans: 1
@@ -42,7 +43,7 @@ slam_toolbox:
     minimum_travel_heading: 0.5
     scan_buffer_size: 10
     scan_buffer_maximum_scan_distance: 10.0
-    link_match_minimum_response_fine: 0.1  
+    link_match_minimum_respon se_fine: 0.1  
     link_scan_maximum_distance: 1.5
     loop_search_maximum_distance: 3.0
     do_loop_closing: true 

@@ -7,6 +7,7 @@ from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, DetectedPerson, NeckPosition, ListOfPoints
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -102,6 +103,25 @@ class Robot():
 
         self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
         # print(self.robot_x, self.robot_y, self.robot_t)
+
+    def posewithcovariancestamped_msg_to_position(self, pose: PoseWithCovarianceStamped):
+        
+        self.robot_x = -pose.pose.pose.position.y
+        self.robot_y = pose.pose.pose.position.x
+        
+        qx = pose.pose.pose.orientation.x
+        qy = pose.pose.pose.orientation.y
+        qz = pose.pose.pose.orientation.z
+        qw = pose.pose.pose.orientation.w
+
+        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
+        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
+        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        # print(yaw, pitch, roll)
+
+        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        # print(self.robot_x, self.robot_y, self.robot_t)
+
 
 
     def update_debug_drawings(self):
@@ -253,7 +273,9 @@ class DebugVisualNode(Node):
 
         # get robot_localisation
         # self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
-        self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom", self.odom_robot_callback, 10)
+        # self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+        self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
+        self.initialpose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "initialpose", self.initialpose_callback, 10)
 
         # search for person, person localisation 
         self.search_for_person_subscriber = self.create_subscription(ListOfPoints, "search_for_person_points", self.search_for_person_callback, 10)
@@ -278,10 +300,14 @@ class DebugVisualNode(Node):
         # print("Received new yolo objects. Number of objects = ", obj.num_person)
         self.robot.object_detected = obj
 
-
-
     def odom_robot_callback(self, loc: Odometry):
         self.robot.odometry_msg_to_position(loc)
+
+
+    def amcl_pose_callback(self, pose: PoseWithCovarianceStamped):
+        self.robot.posewithcovariancestamped_msg_to_position(pose)
+    def initialpose_callback(self, pose: PoseWithCovarianceStamped):
+        self.robot.posewithcovariancestamped_msg_to_position(pose)
 
 
     def search_for_person_callback(self, points: ListOfPoints):

@@ -36,6 +36,9 @@ class ServeBreakfastNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
+        # Door Start
+        self.start_door_subscriber = self.create_subscription(Bool, 'get_door_start', self.get_door_start_callback, 10) 
+        self.flag_door_start_publisher = self.create_publisher(Bool, 'flag_door_start', 10) 
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
@@ -112,6 +115,7 @@ class ServeBreakfastNode(Node):
         self.detected_objects = Yolov8Objects()
         self.detected_objects_hand = Yolov8Objects()
         self.start_button_state = False
+        self.door_start_state = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -128,7 +132,7 @@ class ServeBreakfastNode(Node):
         self.track_person_success = True
         self.track_person_message = ""
         self.track_object_success = True
-        self.track_person_message = ""
+        self.track_object_message = ""
         # self.activate_yolo_pose_success = True
         # self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
@@ -139,14 +143,6 @@ class ServeBreakfastNode(Node):
         self.get_neck_position = [1.0, 1.0]
         
 
-    # def person_pose_filtered_callback(self, det_people: Yolov8Pose):
-    #     self.detected_people = det_people
-    # 
-    #     current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-    #     current_frame_draw = current_frame.copy()
-    #     
-    #     cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
-    #     cv2.waitKey(10)
 
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
@@ -171,18 +167,10 @@ class ServeBreakfastNode(Node):
         self.start_button_state = state.data
         # print("Received Start Button:", state.data)
 
-    ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
-    # def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
-    #     request = ActivateYoloPose.Request()
-    #     request.activate = activate
-    #     request.only_detect_person_legs_visible = only_detect_person_legs_visible
-    #     request.minimum_person_confidence = minimum_person_confidence
-    #     request.minimum_keypoints_to_detect_person = minimum_keypoints_to_detect_person
-    #     request.only_detect_person_arm_raised = only_detect_person_arm_raised
-    #     request.only_detect_person_right_in_front = only_detect_person_right_in_front
-    #     request.characteristics = characteristics
-    # 
-    #     self.activate_yolo_pose_client.call_async(request)\
+    ### DOOR START ###
+    def get_door_start_callback(self, state: Bool):
+        self.door_start_state = state.data
+        # print("Received Start Button:", state.data)
 
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
     def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
@@ -227,69 +215,6 @@ class ServeBreakfastNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
-
-    #### AUDIO SERVER FUNCTIONS #####
-    # def call_audio_server(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, wait_for_end_of=True):
-    #     request = GetAudio.Request()
-    #     request.yes_or_no = yes_or_no
-    #     request.receptionist = receptionist
-    #     request.gpsr = gpsr
-    #     request.restaurant = restaurant
-    # 
-    #     future = self.get_audio_client.call_async(request)
-    #     # print("Sent Command")
-    # 
-    #     if wait_for_end_of:
-    #         future.add_done_callback(self.callback_call_audio)
-    #     else:
-    #         self.track_person_success = True
-    #         self.track_person_message = "Wait for answer not needed"
-    
-    # def callback_call_audio(self, future):
-    # 
-    #     try:
-    #         # in this function the order of the line of codes matter
-    #         # it seems that when using future variables, it creates some type of threading system
-    #         # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-    #         response = future.result()
-    #         self.get_logger().info(str(response.command))
-    #         self.audio_command = response.command
-    #         # self.track_object_success = response.success
-    #         # self.track_object_message = response.message
-    #         # time.sleep(3)
-    #         self.waited_for_end_of_audio = True
-    #     except Exception as e:
-    #         self.get_logger().error("Service call failed %r" % (e,))
-
-
-    # def call_calibrate_audio_server(self, wait_for_end_of=True):
-    #     request = CalibrateAudio.Request()
-    # 
-    #     future = self.calibrate_audio_client.call_async(request)
-    #     # print("Sent Command")
-    # 
-    #     if wait_for_end_of:
-    #         future.add_done_callback(self.callback_call_calibrate_audio)
-    #     else:
-    #         self.track_person_success = True
-    #         self.track_person_message = "Wait for answer not needed"
-    
-    # def callback_call_calibrate_audio(self, future):
-    #
-    #     try:
-    #         # in this function the order of the line of codes matter
-    #         # it seems that when using future variables, it creates some type of threading system
-    #         # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-    #         response = future.result()
-    #         self.get_logger().info(str(response.success) + " - " + str(response.message))
-    #         self.track_person_success = response.success
-    #         self.track_person_message = response.message
-    #         # self.track_object_success = response.success
-    #         # self.track_object_message = response.message
-    #         # time.sleep(3)
-    #         self.waited_for_end_of_calibrate_audio = True
-    #     except Exception as e:
-    #         self.get_logger().error("Service call failed %r" % (e,))
 
     #### SET NECK POSITION SERVER FUNCTIONS #####
     def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
@@ -384,37 +309,6 @@ class ServeBreakfastNode(Node):
             self.get_logger().error("Service call failed %r" % (e,))   
 
 
-    #### NECK SERVER FUNCTIONS #####
-    # def call_neck_track_person_server(self, person, body_part="Head", wait_for_end_of=True):
-    #     request = TrackPerson.Request()
-    #     request.person = person
-    #     request.body_part = body_part
-    # 
-    #     future = self.neck_track_person_client.call_async(request)
-    #     # print("Sent Command")
-    # 
-    #     if wait_for_end_of:
-    #         future.add_done_callback(self.callback_call_neck_track_person)
-    #     else:
-    #         self.track_person_success = True
-    #         self.track_person_message = "Wait for answer not needed"
-    
-    # def callback_call_neck_track_person(self, future):
-    # 
-    #     try:
-    #         # in this function the order of the line of codes matter
-    #         # it seems that when using future variables, it creates some type of threading system
-    #         # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
-    #         response = future.result()
-    #         self.get_logger().info(str(response.success) + " - " + str(response.message))
-    #         self.track_person_success = response.success
-    #         self.track_person_message = response.message
-    #         # time.sleep(3)
-    #         self.waited_for_end_of_track_person = True
-    #     except Exception as e:
-    #         self.get_logger().error("Service call failed %r" % (e,))
-
-
     def call_neck_track_object_server(self, object, wait_for_end_of=True):
         request = TrackObject.Request()
         request.object = object
@@ -496,54 +390,20 @@ class ServeBreakfastMain():
 
         t.data = False 
         self.node.flag_start_button_publisher.publish(t)
+        
+    def wait_for_door_start(self):
 
-    """    
-    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", wait_for_end_of=True):
+        self.node.door_start_state = False
 
-        if yes_or_no or receptionist or gpsr or restaurant:
+        t = Bool()
+        t.data = True
+        self.node.flag_door_start_publisher.publish(t)
 
-            # this code continuously asks for new audio info eveytime it gets an error for mishearing
-            audio_error_counter = 0
-            keywords = "ERROR"
-            while keywords=="ERROR":
-                
-                self.set_speech(filename=question, wait_for_end_of=True)
-                self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
-                
-                if wait_for_end_of:
-                    while not self.node.waited_for_end_of_audio:
-                        pass
-                self.node.waited_for_end_of_audio = False
+        while not self.node.door_start_state:
+            pass
 
-                keywords = self.node.audio_command  
-                
-                if keywords=="ERROR":
-                    audio_error_counter += 1
-
-                    if audio_error_counter == 2:
-                        self.set_speech(filename="generic/please_wait", wait_for_end_of=True)
-                        self.calibrate_audio(wait_for_end_of=True)
-                        audio_error_counter = 0
-
-                    self.set_speech(filename="generic/not_understand_please_repeat", wait_for_end_of=True)
-
-            return self.node.audio_command  
-
-        else:
-            self.node.get_logger().error("ERROR: No audio type selected")
-            return "ERROR: No audio type selected" 
-
-    def calibrate_audio(self, wait_for_end_of=True):
-            
-        self.node.call_calibrate_audio_server(wait_for_end_of=wait_for_end_of)
-
-        if wait_for_end_of:
-            while not self.node.waited_for_end_of_calibrate_audio:
-                pass
-        self.node.waited_for_end_of_calibrate_audio = False
-
-        return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
-    """
+        t.data = False 
+        self.node.flag_door_start_publisher.publish(t)
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
@@ -603,15 +463,6 @@ class ServeBreakfastMain():
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
     
-    # def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
-    #     
-    #     self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, only_detect_person_arm_raised=only_detect_person_arm_raised, characteristics=characteristics)
-    # 
-    #     self.node.activate_yolo_pose_success = True
-    #     self.node.activate_yolo_pose_message = "Activated with selected parameters"
-    # 
-    #     return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
-
     def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
         
         # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
@@ -622,17 +473,6 @@ class ServeBreakfastMain():
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
 
-    # def track_person(self, person, body_part="Head", wait_for_end_of=True):
-    # 
-    #     self.node.call_neck_track_person_server(person=person, body_part=body_part, wait_for_end_of=wait_for_end_of)
-    # 
-    #     if wait_for_end_of:
-    #       while not self.node.waited_for_end_of_track_person:
-    #         pass
-    #     self.node.waited_for_end_of_track_person = False
-    # 
-    #     return self.node.track_person_success, self.node.track_person_message
- 
     def track_object(self, object, wait_for_end_of=True):
 
         self.node.call_neck_track_object_server(object=object, wait_for_end_of=wait_for_end_of)
@@ -682,7 +522,12 @@ class ServeBreakfastMain():
         self.Placing_spoon = 11
         self.Final_State = 12
 
-        self.wait_time_to_put_objects_in_hand = 1
+        # Configurables
+        self.wait_time_to_put_objects_in_hand = 0
+        self.MULTIPLE_IMAGES_FACE_SAME_TIME = False
+
+        # Custom Faces:
+        self.custom_face_filename = "" 
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -697,7 +542,7 @@ class ServeBreakfastMain():
         self.flag_object_total = [False, False, False, False] 
 
         # to debug just a part of the task you can just change the initial state, example:
-        self.state = self.Detect_all_objects
+        self.state = self.Waiting_for_task_start
 
         # MISSING:
         # waiting_door_open
@@ -729,7 +574,7 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
 
-                ##### self.wait_for_door_open()
+                self.wait_for_door_start()
 
                 self.state = self.Approach_kitchen_counter
 
@@ -745,6 +590,8 @@ class ServeBreakfastMain():
 
             elif self.state == self.Detect_all_objects:
 
+                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=False)
+
                 self.set_arm(command="search_for_objects", wait_for_end_of=True)
 
                 self.search_for_serve_breakfast_objects()
@@ -753,11 +600,29 @@ class ServeBreakfastMain():
                 # detection function, before speaking that the objects have been found
                 # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
 
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
+
+                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+
+                self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+
+                # self.set_speech(filename="serve_breakfast/will_show_objects_one_by_one", wait_for_end_of=True)
+                
+                # already shows the detection for the next object while moving the arm from previous action, this way we save time
+                
+                self.set_face(custom=self.custom_face_filename + "spoon")
+
+                self.set_speech(filename="serve_breakfast/found_the_spoon", wait_for_end_of=True)  
+                
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
+
                 self.state = self.Picking_up_spoon
 
             elif self.state == self.Picking_up_spoon:
 
                 # post FNR2024: this is here to try to pick up the objects rather than using Deus Ex Machina 
+
+                time.sleep(0) # the first arm movement is so quick that i have to add a sleep for better judge perception of detected object in face
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=True)    
 
@@ -780,11 +645,19 @@ class ServeBreakfastMain():
                     
                     if not object_in_gripper:
                 
-                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                         
-                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
                                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
+
+                # already shows the detection for the next object while moving the arm from previous action, this way we save time
+                
+                self.set_face(custom=self.custom_face_filename + "milk")
+
+                self.set_speech(filename="serve_breakfast/found_the_milk", wait_for_end_of=False)  
+                
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
                 
                 self.set_arm(command="collect_spoon_to_tray", wait_for_end_of=True)
                 
@@ -815,11 +688,17 @@ class ServeBreakfastMain():
                     
                     if not object_in_gripper:
                 
-                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                         
-                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
                                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
+                
+                self.set_face(custom=self.custom_face_filename + "cornflakes")
+
+                self.set_speech(filename="serve_breakfast/found_the_cornflakes", wait_for_end_of=False)  
+                
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
                 
                 self.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
 
@@ -844,17 +723,23 @@ class ServeBreakfastMain():
                 
                     self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object_cornflakes", wait_for_end_of=True) # different so I do not crush the cornflakes
                     
                     # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
                     
                     if not object_in_gripper:
                 
-                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                         
-                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
                                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
+                
+                self.set_face(custom=self.custom_face_filename + "bowl")
+
+                self.set_speech(filename="serve_breakfast/found_the_bowl", wait_for_end_of=False)  
+                
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
                 
                 self.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
 
@@ -885,9 +770,9 @@ class ServeBreakfastMain():
                     
                     if not object_in_gripper:
                 
-                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                         
-                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
                                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
                 
@@ -991,8 +876,8 @@ class ServeBreakfastMain():
                 
             elif self.state == self.Final_State:
 
-                # self.set_neck(position=self.look_judge) # , wait_for_end_of=True)
-
+                self.set_neck(position=self.look_judge) 
+                
                 self.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
 
                 while True:
@@ -1026,9 +911,9 @@ class ServeBreakfastMain():
                 new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
                 self.set_neck(position=new_neck_pos, wait_for_end_of=True)
                 self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-                time.sleep(1)
+                # time.sleep(1)
 
-                finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=False)    
+                finished_detection = self.detect_four_serve_breakfast_objects(delta_t=1.0, with_hand=False)    
 
                 if finished_detection:
                     break
@@ -1048,11 +933,12 @@ class ServeBreakfastMain():
                 all_objects_detected = True 
 
             elif all(self.flag_object_total):
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-                self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 self.create_image_four_sb_objects_separately() 
+                # self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+                # self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
+                # self.create_image_four_sb_objects_separately() 
                 all_objects_detected = True
 
             if all_objects_detected:
@@ -1067,7 +953,6 @@ class ServeBreakfastMain():
             self.activate_yolo_objects(activate_objects=True)
             finished_detection = False
             for pos in list_of_neck_position_search:
-
                 print(pos)
                 new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
                 self.set_neck(position=new_neck_pos, wait_for_end_of=True)
@@ -1094,11 +979,12 @@ class ServeBreakfastMain():
                 all_objects_detected = True 
 
             elif all(self.flag_object_total):
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-                self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 self.create_image_four_sb_objects_separately() 
+                # self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+                # self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
+                # self.create_image_four_sb_objects_separately() 
                 all_objects_detected = True
 
             if all_objects_detected:
@@ -1114,7 +1000,7 @@ class ServeBreakfastMain():
 
 
 
-    def detect_four_serve_breakfast_objects(self, delta_t, with_hand):
+    def detect_four_serve_breakfast_objects(self, delta_t, with_hand=False):
 
         actual_object = [
             "spoon", 
@@ -1147,12 +1033,14 @@ class ServeBreakfastMain():
             for object in local_detected_objects.objects:
                 for obj in range(TOTAL_OBJ):
                     if object.object_name in detect_as[obj]:
-                        if object.confidence > detect_object[obj].confidence:
-                            # print(" - ", object.object_name, "-", object.confidence, "-", object.index)
-                            detect_object[obj] = object
-                            detect_object[obj].object_name = actual_object[obj]
-                            flag_object[obj] = True
                         
+                        if self.MULTIPLE_IMAGES_FACE_SAME_TIME: # JOHANNES said that this is not the correct deus ex machina ask for help to help with handing over the objects
+                            if object.confidence > detect_object[obj].confidence:
+                                # print(" - ", object.object_name, "-", object.confidence, "-", object.index)
+                                detect_object[obj] = object
+                                detect_object[obj].object_name = actual_object[obj]
+                                flag_object[obj] = True
+                            
                         if object.confidence > self.detect_object_total[obj].confidence:
                             self.detect_object_total[obj] = object
                             self.detect_object_total[obj].object_name = actual_object[obj]
@@ -1250,11 +1138,15 @@ class ServeBreakfastMain():
             "bowl"
         ]
 
+        # same time for all obejcts
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
+        self.custom_face_filename = current_datetime
+
         for i in range(TOTAL_OBJ):
             current_frame = self.node.br.imgmsg_to_cv2(self.images_of_detected_object_total[i], "bgr8")
             current_frame_draw = current_frame.copy()
 
-            thresh_h = 80
+            thresh_h = 220
             thresh_v = 220
 
             x_min = 1280
@@ -1289,10 +1181,10 @@ class ServeBreakfastMain():
             cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
             cv2.putText(current_frame_draw, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
         
-            current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
-            cv2.imwrite(self.node.complete_path_custom_face + current_datetime + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
-            time.sleep(0.5)
-            self.set_face(custom=current_datetime)
-            self.set_speech(filename="objects_names/"+list_sb_objects[i], wait_for_end_of=False)  
-            time.sleep(3)
+            cv2.imwrite(self.node.complete_path_custom_face + current_datetime + list_sb_objects[i] + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
+            
+            # time.sleep(0.5)
+            # self.set_face(custom=current_datetime)
+            # self.set_speech(filename="objects_names/"+list_sb_objects[i], wait_for_end_of=False)  
+            # time.sleep(3)
         
