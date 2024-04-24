@@ -6,6 +6,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 import os
+from pathlib import Path
 from ament_index_python.packages import get_package_share_directory
 
 
@@ -18,6 +19,10 @@ def generate_launch_description():
     slam_launch_file = PythonLaunchDescriptionSource([os.path.join(
         get_package_share_directory('slam_toolbox'), 'launch', 'online_async_launch.py'
     )])
+
+    home = str(Path.home())
+    midpath = "charmie_ws/src/charmie_bot/maps_rviz"
+    complete_path = home+'/'+midpath+'/'+'LAR_pre_nacional_2024_v2.yaml'
 
     mapper_params_file = LaunchConfiguration('params_file', default='src/charmie_bot/config/mapper_params_online_async.yaml')
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
@@ -34,7 +39,8 @@ def generate_launch_description():
             executable='map_server',
             name='map_server',
             parameters=[
-                {'yaml_filename': './src/charmie_bot/maps_rviz/LAR_pre_nacional_2024_v2.yaml'},
+                # {'yaml_filename': './src/charmie_bot/maps_rviz/LAR_pre_nacional_2024_v2.yaml'},
+                {'yaml_filename': complete_path},
                 {'use_sim_time': False}
             ]
         )

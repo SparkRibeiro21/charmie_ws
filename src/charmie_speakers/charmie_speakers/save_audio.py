@@ -17,8 +17,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'point_to_bag': 'Please point to the bag you want me to carry.',
-    
+    'sg_analysing_cabinet_short' : 'I am analysing the cabinet.'
 }
 
 #COMMANDS = {
