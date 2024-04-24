@@ -6,14 +6,20 @@ import time
 import pygame
 from pathlib import Path
 
+names_list = ["Adel", "Angel", "Axel", "Charlie", "Jane", "John", "Jules", "Morgan", "Paris", "Robin", "Simone"]
+drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
+
+
 # MODE can be the following commands:
 # "STANDARD": convert one command into wav and txt 
 # "RECEPTIONIST": reads names and drinks arrays and generates all commands for first guest names, second guest names and favourite drinks
-
-names_list = ["Axel", "John", "Paris", "Robin", "Simone"]
-drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
-
 MODE = "STANDARD"
+
+
+COMMANDS = {
+    'point_to_bag': 'Please point to the bag you want me to carry.',
+    
+}
 
 #COMMANDS = {
 #    'waiting_start_button': 'Waiting for start button to be pressed.',
@@ -69,10 +75,11 @@ COMMANDS = {
 }
 """
 
+"""
 COMMANDS = {
-    'start_receptionist': 'I am ready to start my receptionist task.',
-
+    'help_place_object': 'I need your help placing the object. Please grab the object when I open my hand. I will open my hand in 3, 2, 1.'
 }
+"""
 
 
 class RobotSpeak():

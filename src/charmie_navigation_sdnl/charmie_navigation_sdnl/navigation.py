@@ -6,6 +6,7 @@ from example_interfaces.msg import Bool
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3
 from charmie_interfaces.msg import TarNavSDNL, Obstacles
+from charmie_interfaces.srv import NavTrigger
 
 import cv2
 import numpy as np
@@ -16,8 +17,9 @@ class NavigationSDNLClass:
     def __init__(self):
 
         # configurable SDNL parameters
-        self.lambda_target_mov = 12
-        self.lambda_target_rot = 12
+        # self.lambda_target_mov = 12
+        # self.lambda_target_rot = 12
+        self.lambda_target = 12
         self.beta1 = 9
         self.beta2 = 7
 
@@ -40,6 +42,8 @@ class NavigationSDNLClass:
         self.robot_y = 0.0
         self.robot_t = 0.0
         self.nav_target = TarNavSDNL()
+
+
         self.first_nav_target = False
         self.dist_to_target = 0.0
         self.ang_to_target = 0.0 
@@ -63,7 +67,7 @@ class NavigationSDNLClass:
 
         # visual debug
         self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
-        self.MAX_DIST_FOR_OBS = 0.8
+        self.MAX_DIST_FOR_OBS = 1.0
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
@@ -151,19 +155,19 @@ class NavigationSDNLClass:
         omni_move.z = float(100.0 - self.f_final)
         
         return omni_move
-        
-
 
     def atrator(self, mov_or_rot):
 
         # variables necessary to calculate the atrator
-        if mov_or_rot == "mov":
-            target = (self.nav_target.move_target_coordinates.x, self.nav_target.move_target_coordinates.y)
-            lambda_target = self.lambda_target_mov
-        elif mov_or_rot == "rot":
-            target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
-            lambda_target = self.lambda_target_rot
+        # if mov_or_rot == "mov":
+        #     target = (self.nav_target.move_target_coordinates.x, self.nav_target.move_target_coordinates.y)
+        #     lambda_target = self.lambda_target_mov
+        # elif mov_or_rot == "rot":
+        #     target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
+        #     lambda_target = self.lambda_target_rot
 
+        target = (self.nav_target.target_coordinates.x, self.nav_target.target_coordinates.y) 
+        lambda_target = self.lambda_target
         current_pos = (self.robot_x, self.robot_y)
         phi = self.robot_t
 
@@ -217,7 +221,6 @@ class NavigationSDNLClass:
         self.min_dist_obs = min_d
         # print()
         return obstacles
-
 
     def repulsor(self):
 
@@ -319,7 +322,6 @@ class NavigationSDNLClass:
         # return f_obstacle, y1, y2, y3, yf, yff, yfff
         return f_obstacle, yff, yfff
 
-
     def combine_atrator_repulsor(self):
 
         mu = 0
@@ -338,14 +340,16 @@ class NavigationSDNLClass:
 
         return ffinal, y_final
 
-
     def upload_move_dist_to_target(self):
         
         x1 = self.robot_x
         y1 = self.robot_y
 
-        x2 = self.nav_target.move_target_coordinates.x
-        y2 = self.nav_target.move_target_coordinates.y
+        # x2 = self.nav_target.move_target_coordinates.x
+        # y2 = self.nav_target.move_target_coordinates.y
+        
+        x2 = self.nav_target.target_coordinates.x
+        y2 = self.nav_target.target_coordinates.y
 
         dist = math.sqrt((x2-x1)**2 + (y2-y1)**2)
 
@@ -353,7 +357,9 @@ class NavigationSDNLClass:
 
     def upload_rot_ang_to_target(self):
 
-        target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
+        # target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
+        
+        target = (self.nav_target.target_coordinates.x, self.nav_target.target_coordinates.y)
         current_pos = (self.robot_x, self.robot_y)
 
         # theta1 = math.degrees(self.robot_t + math.pi/2)
@@ -375,7 +381,6 @@ class NavigationSDNLClass:
         
         return ang
 
-
     def normalize_angles(self, ang):
 
         while ang < -180:
@@ -384,7 +389,6 @@ class NavigationSDNLClass:
             ang -= 360
 
         return ang
-
 
     def update_debug_drawings(self):
             
@@ -407,6 +411,7 @@ class NavigationSDNLClass:
             # obstacles
             self.all_obs_val.append(self.aux_obstacles_l)
             
+            """
             # past obstacles
             for j in range(len(self.all_obs_val)):
 
@@ -424,7 +429,7 @@ class NavigationSDNLClass:
                                               (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
                                                int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
                                               (0, 165, 255), int(1.0 + thickness*self.scale/1000))
-             
+            """
 
             thickness = 20
             # current obstacles
@@ -458,6 +463,7 @@ class NavigationSDNLClass:
             
             # targets
             if self.first_nav_target:
+                """
                 cv2.circle(self.test_image, (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x), int(self.yc - self.scale*self.nav_target.move_target_coordinates.y)), 
                                             (int)(self.scale*self.robot_radius/2), (0, 255, 0), -1)
                 cv2.circle(self.test_image, (int(self.xc + self.scale*self.nav_target.rotate_target_coordinates.x), int(self.yc - self.scale*self.nav_target.rotate_target_coordinates.y)), 
@@ -470,8 +476,23 @@ class NavigationSDNLClass:
                                             (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x - self.scale * self.robot_radius * math.cos(aux_ang_tar)),# + math.pi/2)), 
                                              int(self.yc - self.scale*self.nav_target.move_target_coordinates.y + self.scale * self.robot_radius * math.sin(aux_ang_tar))),# + math.pi/2))),
                                             (0, 255, 0), int(1.0 + thickness*self.scale/1000))
-                            
+                """         
             
+                cv2.circle(self.test_image, (int(self.xc + self.scale*self.nav_target.target_coordinates.x), int(self.yc - self.scale*self.nav_target.target_coordinates.y)), 
+                                            (int)(self.scale*self.robot_radius/2), (0, 255, 0), -1)
+                # cv2.circle(self.test_image, (int(self.xc + self.scale*self.nav_target.target_coordinates.x), int(self.yc - self.scale*self.nav_target.target_coordinates.y)), 
+                #                             (int)(self.scale*self.robot_radius/2), (0, 150, 0), -1)  
+
+
+                # aux_ang_tar = math.atan2(self.nav_target.target_coordinates.y - self.nav_target.target_coordinates.y, self.nav_target.target_coordinates.x - self.nav_target.target_coordinates.x)
+                # cv2.line(self.test_image,   (int(self.xc + self.scale*self.nav_target.target_coordinates.x), 
+                #                              int(self.yc - self.scale*self.nav_target.target_coordinates.y)),
+                #                             (int(self.xc + self.scale*self.nav_target.target_coordinates.x - self.scale * self.robot_radius * math.cos(aux_ang_tar)),# + math.pi/2)), 
+                #                              int(self.yc - self.scale*self.nav_target.target_coordinates.y + self.scale * self.robot_radius * math.sin(aux_ang_tar))),# + math.pi/2))),
+                #                             (0, 255, 0), int(1.0 + thickness*self.scale/1000))
+                
+
+
             # robot
             cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
             cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
@@ -480,20 +501,25 @@ class NavigationSDNLClass:
             
 
 
-            # SDNL equations
-            """
-            if self.first_nav_target:
+            # THIS IF HAS TO BE CHANGED TO A IF AFTER CALCULATING THE VALUES FOR THE DRAW: 
+            if self.first_nav_target and False:
+                # SDNL equations
+                # if self.first_nav_target:
+                # print(self.y_atrator)
                 self.plot1.plot(self.image_plt, self.scale_plotter, self.y_atrator, self.robot_t)
-            for y_plt_ff in self.yff:
-                self.plot3.plot(self.image_plt, self.scale_plotter, y_plt_ff, self.robot_t, (255, 100, 100))
-            self.plot2.plot(self.image_plt, self.scale_plotter, self.yfff, self.robot_t, (0, 140, 255))
-            self.plot2.plot(self.image_plt, self.scale_plotter, self.y_final, self.robot_t, (255, 255, 0))
-            """
+                for y_plt_ff in self.yff:
+                    self.plot3.plot(self.image_plt, self.scale_plotter, y_plt_ff, self.robot_t, (255, 100, 100))
 
+                # print(self.yfff)
+                # print(self.y_final)
+                    
+                self.plot2.plot(self.image_plt, self.scale_plotter, self.yfff, self.robot_t, (0, 140, 255))
+                self.plot2.plot(self.image_plt, self.scale_plotter, self.y_final, self.robot_t, (255, 255, 0))
+                
+                cv2.imshow("SDNL", self.image_plt)
 
 
             cv2.imshow("Navigation SDNL", self.test_image)
-            # cv2.imshow("SDNL", self.image_plt)
             
             k = cv2.waitKey(1)
             if k == ord('+'):
@@ -506,7 +532,6 @@ class NavigationSDNLClass:
 
             self.test_image[:, :] = 0
             self.image_plt[:, :] = 0
-
 
     def odometry_msg_to_position(self, odom: Odometry):
         
@@ -570,6 +595,7 @@ class NavigationSDNLClass:
             self.first_nav_target = True
         # print(self.nav_target)
 
+
 class TRplotter:
 
     def __init__(self, coord_y, colour=(255, 255, 255)):
@@ -580,7 +606,6 @@ class TRplotter:
         self.yc = 400
         self.x = np.linspace(0, 2 * math.pi, 360 * 2)
         self.centre_data = int((self.xc*2 - len(self.x)) / 2)
-
 
     def plot(self, image_plt, scale, y, theta, plt_colour=None):
 
@@ -610,8 +635,10 @@ class TRplotter:
         for value in range(len(self.x)):
             # print(value, end="")
             # cv2.circle(image_plt, (image_plt.shape[1] - self.centre_data - value, int(self.coord_y - scale/10 * y[value])), 0, (100,100,100), 0)
+            
             cv2.circle(image_plt, (self.centre_data + value, int(self.coord_y - scale/20 * y[value])), 0, fcolour, 0)
-
+            
+            pass
             # cv2.line(image_plt, (image_plt.shape[1] - centre_data - value, yc - 200),
             #          (image_plt.shape[1] - centre_data - value, int(yc - 200 - scale * y[value])),
             #          (255, 0, 0))
@@ -670,6 +697,21 @@ class NavSDNLNode(Node):
         flag_diagn.data = True
         self.navigation_diagnostic_publisher.publish(flag_diagn)
 
+        self.create_service(NavTrigger, 'nav_trigger', self.navigation_trigger_callback)
+
+        
+    def navigation_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.nav_trigger_client.wait_for_service(1.0):"
+        # Type of service received: 
+        # (nothing)
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages
+        
+        response.success = True
+        response.message = "Arm Trigger"
+        return response
+
+
     def obs_lidar_callback(self, obs: Obstacles):
         # updates the obstacles variable
         self.nav.obstacles_msg_to_position(obs)
@@ -678,6 +720,8 @@ class NavSDNLNode(Node):
         # print("here")
 
     def odom_robot_callback(self, odom: Odometry):
+
+        # print("INNNNNNNNNNNNNNNNNNNNNN")
         # updates the position variable
         self.nav.odometry_msg_to_position(odom)
         # self.nav.sdnl_main()
@@ -696,45 +740,57 @@ class NavSDNLNode(Node):
         # print(nav)
     
     def timer_callback(self):
-
+        
+        
         if self.nav.first_nav_target:
 
             # print("estado:", self.navigation_state)
             
             if self.navigation_state == 0:
-                omni_move = self.nav.sdnl_main("mov")
-                self.omni_move_publisher.publish(omni_move)
 
-                print(self.nav.nav_target.follow_me)
 
-                if self.nav.nav_target.follow_me:
-                    if self.nav.dist_to_target <= self.nav.nav_threshold_dist_follow_me:
-                        self.navigation_state = 1                        
-                        print("INSIDE1")
-                    else:
-                        print("OUTSIDE1")
-                else:
-                    if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
-                        self.navigation_state = 1
-
-            if self.navigation_state == 1:
-                omni_move = self.nav.sdnl_main("rot")
-                self.omni_move_publisher.publish(omni_move)
-
-                if self.nav.nav_target.follow_me:
-                    if self.nav.ang_to_target <= self.nav.nav_threshold_ang_follow_me:
-                        self.navigation_state = 2
-                        print("INSIDE2")
-                    else:
-                        print("OUTSIDE2")
-                else:
+                #     self.node.nav_tar_sdnl.move_or_rotate = "MOVE"
+                # if self.nav
+            
+                if self.nav.nav_target.move_or_rotate.lower() == "rotate": 
+                    omni_move = self.nav.sdnl_main("rot")
+                    self.omni_move_publisher.publish(omni_move)
                     if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
                         self.navigation_state = 2
+                else:
+                    omni_move = self.nav.sdnl_main("mov")
+                    self.omni_move_publisher.publish(omni_move)
+                    if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
+                        self.navigation_state = 2
+            
+                # print(self.nav.nav_target.follow_me)
+
+                # if self.nav.nav_target.follow_me:
+                #     if self.nav.dist_to_target <= self.nav.nav_threshold_dist_follow_me:
+                #         self.navigation_state = 1                        
+                #         print("INSIDE1")
+                #     else:
+                #         print("OUTSIDE1")
+                # else:
+                #     if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
+                #         self.navigation_state = 1
+            
+
+
+            # if self.navigation_state == 1:
+            #     omni_move = self.nav.sdnl_main("rot")
+            #     self.omni_move_publisher.publish(omni_move)
+            # 
+            #     if self.nav.nav_target.follow_me:
+            #         if self.nav.ang_to_target <= self.nav.nav_threshold_ang_follow_me:
+            #             self.navigation_state = 2
+            #             print("INSIDE2")
+            #         else:
+            #             print("OUTSIDE2")
+            #     else:
+            #         if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
+            #             self.navigation_state = 2
                     
-
-
-
-            self.nav.update_debug_drawings() # this way it still draws the targets on the final frame
 
             if self.navigation_state == 2:
                 # publica no topico a dizer que acabou
@@ -750,7 +806,8 @@ class NavSDNLNode(Node):
 
             print("DIST_ERR:", self.nav.dist_to_target)
             print("ANG_ERR:", self.nav.ang_to_target) 
-
+            
+            self.nav.update_debug_drawings() # this way it still draws the targets on the final frame
 
 
 def main(args=None):

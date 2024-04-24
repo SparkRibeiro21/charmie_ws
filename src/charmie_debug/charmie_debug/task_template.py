@@ -17,9 +17,10 @@
 # Face
 # Neck
 # Yolos
+# Arm
+# Door Start
 
 # The following modules are still missing:
-# Arm - TBD
 # Nav - TBD
 
 
@@ -140,7 +141,9 @@ NEXT I PROVIDE AN EXAMPLE ON HOW THE CODE OF A TASK SHOULD BE MADE:
 
 # 14) TEST ALL YOLOS WITH THE PREVIOUS ACTIVATES ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
-# MISSING ARM ... (TIAGO)
+# 15) REPLACE ALL THE ARM MOVE WITH self.set_arm(...)
+
+# 16) TEST ALL ARM MOVE WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
 # MISSING NAVIGATION ... (TIAGO)
 
@@ -152,7 +155,7 @@ from rclpy.node import Node
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
 
 import cv2 
 import threading
@@ -176,6 +179,9 @@ class ServeBreakfastNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
+        # Door Start
+        self.start_door_subscriber = self.create_subscription(Bool, 'get_door_start', self.get_door_start_callback, 10) 
+        self.flag_door_start_publisher = self.create_publisher(Bool, 'flag_door_start', 10) 
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
@@ -183,7 +189,9 @@ class ServeBreakfastNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-
+        # Arm CHARMIE
+        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
 
         ### Services (Clients) ###
         # Speakers
@@ -200,6 +208,8 @@ class ServeBreakfastNode(Node):
         # Yolos
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Arm (CHARMIE)
+        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
 
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
@@ -207,10 +217,10 @@ class ServeBreakfastNode(Node):
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
         # Audio
-        while not self.get_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Audio Server...")
-        while not self.calibrate_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        # while not self.get_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Audio Server...")
+        # while not self.calibrate_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         """
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
@@ -229,6 +239,10 @@ class ServeBreakfastNode(Node):
         while not self.activate_yolo_objects_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         """
+        # Arm (CHARMIE)
+        # while not self.arm_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
@@ -238,11 +252,13 @@ class ServeBreakfastNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_arm = False
 
         self.br = CvBridge()
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
+        self.door_start_state = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -259,11 +275,16 @@ class ServeBreakfastNode(Node):
         self.track_person_success = True
         self.track_person_message = ""
         self.track_object_success = True
-        self.track_person_message = ""
+        self.track_object_message = ""
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.arm_success = True
+        self.arm_message = ""
+
+        self.get_neck_position = [1.0, 1.0]
+
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -348,9 +369,26 @@ class ServeBreakfastNode(Node):
         # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         # cv2.waitKey(10)
 
+    def arm_finished_movement_callback(self, flag: Bool):
+        # self.get_logger().info("Received response from arm finishing movement")
+        # self.arm_ready = True
+        self.waited_for_end_of_arm = True
+        self.arm_success = flag.data
+        if flag.data:
+            self.arm_message = "Arm successfully moved"
+        else:
+            self.arm_message = "Wrong Movement Received"
+
+        self.get_logger().info("Received Arm Finished")
+
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
+        # print("Received Start Button:", state.data)
+
+    ### DOOR START ###
+    def get_door_start_callback(self, state: Bool):
+        self.door_start_state = state.data
         # print("Received Start Button:", state.data)
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
@@ -681,6 +719,20 @@ class ServeBreakfastMain():
         t.data = False 
         self.node.flag_start_button_publisher.publish(t)
         
+    def wait_for_door_start(self):
+
+        self.node.door_start_state = False
+
+        t = Bool()
+        t.data = True
+        self.node.flag_door_start_publisher.publish(t)
+
+        while not self.node.door_start_state:
+            pass
+
+        t.data = False 
+        self.node.flag_door_start_publisher.publish(t)
+
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
@@ -826,6 +878,26 @@ class ServeBreakfastMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
+    def set_arm(self, command="", wait_for_end_of=True):
+        
+        # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
+        self.node.waited_for_end_of_arm = False
+        
+        temp = String()
+        temp.data = command
+        self.node.arm_command_publisher.publish(temp)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_arm:
+                pass
+            self.node.waited_for_end_of_arm = False
+        else:
+            self.node.arm_success = True
+            self.node.arm_message = "Wait for answer not needed"
+
+        # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
+        return self.node.arm_success, self.node.arm_message
+    
     # main state-machine function
     def main(self):
         
@@ -867,17 +939,20 @@ class ServeBreakfastMain():
                 # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                 # send speech command to speakers voice, intrucing the robot 
-                self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
+                self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
                 
                 # sends RGB value for debug
                 self.set_rgb(command=CYAN+HALF_ROTATE)
 
                 # change face, to face picking up cup
-                self.set_face("help_pick_cup")
+                # self.set_face("help_pick_cup")
                 
                 # waiting for start button
-                self.wait_for_start_button()
+                self.wait_for_door_start()
+
                 self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
+
+                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
 
                 print("DONE2 - ", self.node.start_button_state)
                 # calibrate the background noise for better voice recognition
@@ -895,7 +970,7 @@ class ServeBreakfastMain():
                 # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)  
 
                 # change face, to standard face
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 # moves the neck to look forward
                 # self.set_neck(position=self.look_forward, wait_for_end_of=False)
@@ -926,8 +1001,12 @@ class ServeBreakfastMain():
                 # print("deactivated yolo pose - right in front")
                 # time.sleep(5)
                 """
+
+                # example of arm function to say hello
+                # self.set_arm(command="hello", wait_for_end_of=False)
+
                 # next state
-                self.state = self.Approach_kitchen_counter
+                # self.state = self.Approach_kitchen_counter
 
             elif self.state == self.Approach_kitchen_counter:
                 print("State:", self.state, "- Approach_kitchen_counter")
@@ -1003,7 +1082,7 @@ class ServeBreakfastMain():
             elif self.state == self.Picking_up_milk:
                 print("State:", self.state, "- Picking_up_milk")
                 # your code here ...
-                                
+                                                
                 # next state
                 self.state = self.Picking_up_cereal
            

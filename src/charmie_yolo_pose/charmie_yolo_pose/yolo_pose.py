@@ -523,7 +523,6 @@ class YoloPoseNode(Node):
                                                                self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], \
                                                                new_pcloud[person_idx].requested_point_coords[1], new_pcloud[person_idx].requested_point_coords[0], \
                                                                hand_raised)
-            
             # adds people to "person_pose" without any restriction
             # yolov8_pose.persons.append(new_person) # test removed person_pose (non-filtered)
             
@@ -866,6 +865,7 @@ class YoloPoseNode(Node):
         if boxes_id.id == None:
             person_id = 0 
 
+
         new_person = DetectedPerson()
 
         new_person.index_person = int(person_id)
@@ -1032,7 +1032,6 @@ class YoloPoseNode(Node):
             new_person.ethnicity = "None"
             new_person.age_estimate = "None"
             new_person.gender = "None"
-
 
         return new_person
 

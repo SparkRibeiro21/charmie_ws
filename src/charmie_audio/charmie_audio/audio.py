@@ -219,7 +219,9 @@ class WhisperAudio():
             # self.check_threshold = "{:.3f}".format(self.r.energy_threshold)
             self.check_threshold = round(self.r.energy_threshold, 3)
             print(" ENERGY THRESHOLD =", self.check_threshold)
-            
+        
+        self.node.get_logger().info(f"Calibrated Ambient Noise Levels: {self.check_threshold}")    
+        
         self.node.set_rgb(CLEAR)
 
 
@@ -498,6 +500,8 @@ class WhisperAudio():
         speech = speech.replace(".","")
         speech = speech.replace("?","")
         speech = speech.replace("!","")
+
+        self.node.get_logger().info(f"Command Filtered: {speech}")    
 
         if command_type == "yes_or_no":
             print("YES_OR_NO KEYWORDS!")
