@@ -6,7 +6,7 @@ from rclpy.node import Node
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
 
 import cv2 
 import threading
@@ -18,50 +18,29 @@ RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
-# THE COORDINATES ARE STILL TO BE DEFINED
 
-# after_door_point = (0.0, 1.0)
-# inspection_point = (1.9, 3.1)
-# exit_door_orientation = (2.0, 2.0)
-# exit_door = (1.9, 2.0)
-# final_point = (2.0, 6.9)
-# final_point_orientation = (4.0, 6.9)
-
-
-# f_point_loc = (2.55, 0.0)
-# f_point_rot = (2.55, -1.0)
-
-# exit_first_point = (1.0, 5.80 + 1.7 + 1.0)
-# exit_point = (1.00, 5.80 + 1.7 + 2.0)
-
-import time
-
-class InspectionNode(Node):
+class CarryMyLuggageNode(Node):
 
     def __init__(self):
-        super().__init__("Inspection")
-        self.get_logger().info("Initialised CHARMIE Inspection Node")
+        super().__init__("CarryMyLuggage")
+        self.get_logger().info("Initialised CHARMIE CarryMyLuggage Node")
 
         ### Topics (Publisher and Subscribers) ###   
         # Low Level 
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
-        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
-        # Face
-        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
-        self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
+        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-
+        # Arm CHARMIE
+        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
 
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
-        # Audio
-        self.get_audio_client = self.create_client(GetAudio, "audio_command")
-        self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
         # Neck
         self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
         self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
@@ -71,18 +50,14 @@ class InspectionNode(Node):
         # Yolos
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Arm (CHARMIE)
+        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
 
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
-        # Audio
-        while not self.get_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Audio Server...")
-        while not self.calibrate_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Calibrate Audio Server...")
-        """
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
@@ -95,20 +70,22 @@ class InspectionNode(Node):
         while not self.neck_track_object_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
         # Yolos
-        while not self.activate_yolo_pose_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
-        while not self.activate_yolo_objects_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-        """
+        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        # Arm (CHARMIE)
+        # while not self.arm_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        
         # Variables 
-        self.waited_for_end_of_audio = False
-        self.waited_for_end_of_calibrate_audio = False
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_neck_pos = False
         self.waited_for_end_of_neck_coords = False
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_arm = False
 
         self.br = CvBridge()
         self.detected_people = Yolov8Pose()
@@ -120,104 +97,48 @@ class InspectionNode(Node):
         self.speech_message = ""
         self.rgb_success = True
         self.rgb_message = ""
-        self.calibrate_audio_success = True
-        self.calibrate_audio_message = ""
-        self.audio_command = ""
-        self.face_success = True
-        self.face_message = ""
         self.neck_success = True
         self.neck_message = ""
         self.track_person_success = True
         self.track_person_message = ""
         self.track_object_success = True
-        self.track_person_message = ""
+        self.track_object_message = ""
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.arm_success = True
+        self.arm_message = ""
+
+        self.get_neck_position = [1.0, 1.0]
+
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
-        current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-        current_frame_draw = current_frame.copy()
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
         
-        cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
-        cv2.waitKey(10)
+        # cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
+        # cv2.waitKey(10)
 
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
 
-        current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
-        current_frame_draw = current_frame.copy()
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
 
+    def arm_finished_movement_callback(self, flag: Bool):
+        # self.get_logger().info("Received response from arm finishing movement")
+        # self.arm_ready = True
+        self.waited_for_end_of_arm = True
+        self.arm_success = flag.data
+        if flag.data:
+            self.arm_message = "Arm successfully moved"
+        else:
+            self.arm_message = "Wrong Movement Received"
 
-        # img = [0:720, 0:1280]
-        corr_image = False
-        thresh_h = 50
-        thresh_v = 200
-
-        if self.detected_objects.num_objects > 0:
-
-            x_min = 1280
-            x_max = 0
-            y_min = 720
-            y_max = 0
-
-            for object in self.detected_objects.objects:      
-            
-                if object.object_class == "Dishes":
-                    corr_image = True
-
-                    if object.box_top_left_x < x_min:
-                        x_min = object.box_top_left_x
-                    if object.box_top_left_x+object.box_width > x_max:
-                        x_max = object.box_top_left_x+object.box_width
-
-                    if object.box_top_left_y < y_min:
-                        y_min = object.box_top_left_y
-                    if object.box_top_left_y+object.box_height > y_max:
-                        y_max = object.box_top_left_y+object.box_height
-
-                    start_point = (object.box_top_left_x, object.box_top_left_y)
-                    end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
-                    cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
-
-                    cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
-                    
-            
-            for object in self.detected_objects.objects:      
-                
-                if object.object_class == "Dishes":
-                
-                    if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
-                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
-                    else:
-                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
-                        
-                    # just to test for the "serve the breakfast" task...
-                    aux_name = object.object_name
-                    if object.object_name == "Fork" or object.object_name == "Knife":
-                        aux_name = "Spoon"
-                    elif object.object_name == "Plate" or object.object_name == "Cup":
-                        aux_name = "Bowl"
-
-                    text_size, _ = cv2.getTextSize(f"{aux_name}", cv2.FONT_HERSHEY_DUPLEX, 1, 1)
-                    text_w, text_h = text_size
-                    cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
-                    cv2.putText(current_frame_draw, f"{aux_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1, cv2.LINE_AA)
-
-        if corr_image:
-            # current_frame_draw = current_frame_draw[x_min:y_min, x_max,y_max]
-            # img = current_frame_draw[y_min:y_max, x_min,x_max]
-            cv2.imshow("c", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)])
-            cv2.waitKey(10)
-            pass
-        # cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
-        # cv2.waitKey(10)
-
-        # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
-        # cv2.waitKey(10)
+        self.get_logger().info("Received Arm Finished")
 
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
@@ -280,69 +201,6 @@ class InspectionNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
-
-    #### AUDIO SERVER FUNCTIONS #####
-    def call_audio_server(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, wait_for_end_of=True):
-        request = GetAudio.Request()
-        request.yes_or_no = yes_or_no
-        request.receptionist = receptionist
-        request.gpsr = gpsr
-        request.restaurant = restaurant
-
-        future = self.get_audio_client.call_async(request)
-        # print("Sent Command")
-
-        if wait_for_end_of:
-            future.add_done_callback(self.callback_call_audio)
-        else:
-            self.track_person_success = True
-            self.track_person_message = "Wait for answer not needed"
-    
-    def callback_call_audio(self, future):
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            self.get_logger().info(str(response.command))
-            self.audio_command = response.command
-            # self.track_object_success = response.success
-            # self.track_object_message = response.message
-            # time.sleep(3)
-            self.waited_for_end_of_audio = True
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
-
-
-    def call_calibrate_audio_server(self, wait_for_end_of=True):
-        request = CalibrateAudio.Request()
-
-        future = self.calibrate_audio_client.call_async(request)
-        # print("Sent Command")
-
-        if wait_for_end_of:
-            future.add_done_callback(self.callback_call_calibrate_audio)
-        else:
-            self.track_person_success = True
-            self.track_person_message = "Wait for answer not needed"
-    
-    def callback_call_calibrate_audio(self, future):
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.track_person_success = response.success
-            self.track_person_message = response.message
-            # self.track_object_success = response.success
-            # self.track_object_message = response.message
-            # time.sleep(3)
-            self.waited_for_end_of_calibrate_audio = True
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
 
     #### SET NECK POSITION SERVER FUNCTIONS #####
     def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
@@ -497,34 +355,24 @@ class InspectionNode(Node):
             self.get_logger().error("Service call failed %r" % (e,))
 
 
-
-# FLUXOGRAM
-# Wait for START button
-# Wait for door to open
-# Go to inspection point
-# Go to exit door
-# Final state
-
-
+# main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
-    node = InspectionNode()
-    th_main = threading.Thread(target=thread_main_inspection, args=(node,), daemon=True)
+    node = CarryMyLuggageNode()
+    th_main = threading.Thread(target=ThreadMainCarryMyLuggage, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-
-def thread_main_inspection(node: InspectionNode):
-    main = ReceptionistMain(node)
+def ThreadMainCarryMyLuggage(node: CarryMyLuggageNode):
+    main = CarryMyLuggageMain(node)
     main.main()
 
+class CarryMyLuggageMain():
 
-class ReceptionistMain():
-
-    def __init__(self, node: InspectionNode):
+    def __init__(self, node: CarryMyLuggageNode):
+        # create a node instance so all variables ros related can be acessed
         self.node = node
-        self.state = 0
 
     def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
 
@@ -550,6 +398,7 @@ class ReceptionistMain():
  
     def wait_for_start_button(self):
 
+
         self.node.start_button_state = False
 
         t = Bool()
@@ -561,69 +410,7 @@ class ReceptionistMain():
 
         t.data = False 
         self.node.flag_start_button_publisher.publish(t)
-        
-    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", wait_for_end_of=True):
-
-        if yes_or_no or receptionist or gpsr or restaurant:
-
-            # this code continuously asks for new audio info eveytime it gets an error for mishearing
-            audio_error_counter = 0
-            keywords = "ERROR"
-            while keywords=="ERROR":
-                
-                self.set_speech(filename=question, wait_for_end_of=True)
-                self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
-                
-                if wait_for_end_of:
-                    while not self.node.waited_for_end_of_audio:
-                        pass
-                self.node.waited_for_end_of_audio = False
-
-                keywords = self.node.audio_command  
-                
-                if keywords=="ERROR":
-                    audio_error_counter += 1
-
-                    if audio_error_counter == 2:
-                        self.set_speech(filename="generic/please_wait", wait_for_end_of=True)
-                        self.calibrate_audio(wait_for_end_of=True)
-                        audio_error_counter = 0
-
-                    self.set_speech(filename="generic/not_understand_please_repeat", wait_for_end_of=True)
-
-            return self.node.audio_command  
-
-        else:
-            self.node.get_logger().error("ERROR: No audio type selected")
-            return "ERROR: No audio type selected" 
-
-    def calibrate_audio(self, wait_for_end_of=True):
-            
-        self.node.call_calibrate_audio_server(wait_for_end_of=wait_for_end_of)
-
-        if wait_for_end_of:
-            while not self.node.waited_for_end_of_calibrate_audio:
-                pass
-        self.node.waited_for_end_of_calibrate_audio = False
-
-        return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
-    
-    def set_face(self, command="", custom="", wait_for_end_of=True):
-        
-        if custom == "":
-            temp = String()
-            temp.data = command
-            self.node.image_to_face_publisher.publish(temp)
-        else:
-            temp = String()
-            temp.data = custom
-            self.node.custom_image_to_face_publisher.publish(temp)
-
-        self.node.face_success = True
-        self.node.face_message = "Value Sucessfully Sent"
-
-        return self.node.face_success, self.node.face_message
-    
+   
     def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
         self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
@@ -707,20 +494,34 @@ class ReceptionistMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
+    def set_arm(self, command="", wait_for_end_of=True):
+        
+        # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
+        self.node.waited_for_end_of_arm = False
+        
+        temp = String()
+        temp.data = command
+        self.node.arm_command_publisher.publish(temp)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_arm:
+                pass
+            self.node.waited_for_end_of_arm = False
+        else:
+            self.node.arm_success = True
+            self.node.arm_message = "Wait for answer not needed"
+
+        # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
+        return self.node.arm_success, self.node.arm_message
+    
     # main state-machine function
     def main(self):
         
-        # Wait for START button
-        # Wait for door to open
-        # Go to inspection point
-        # Go to exit door
-        # Final state
-
-        # States in ServeBreakfast Task
+        # States in CarryMyLuggage Task
         self.Waiting_for_task_to_start = 0
         self.Recognize_bag = 1
         self.Go_to_bag = 2
-        self.Get_bag = 3
+        self.Pick_bag = 3
         self.Final_State = 4
         
         # Neck Positions
@@ -728,7 +529,7 @@ class ReceptionistMain():
         self.look_navigation = [0, -30]
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Waiting_for_task_start
+        self.state = self.Waiting_for_task_to_start
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Carry My Luggage Main...")
@@ -737,49 +538,77 @@ class ReceptionistMain():
 
             if self.state == self.Waiting_for_task_to_start:
                 print("State:", self.state, "- Waiting_for_task_to_start")
-                # your code here ...
 
-                # set rgb's to red
-                # wait for start button
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                
+                # set rgb's to cyan
+                self.set_rgb(CYAN+SET_COLOUR)
+
+                self.set_speech(filename="carry_my_luggage/carry_luggage_ready_start", wait_for_end_of=True)
+                
+                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=True)
+
+                # wait for start_button
+                self.wait_for_start_button()
+
+                # set rgb's to static green
+                self.set_rgb(GREEN+SET_COLOUR)
 
                 # next state
                 self.state = self.Recognize_bag
 
             elif self.state == self.Recognize_bag:
                 print("State:", self.state, "- Recognize_bag")
-                # your code here ...
 
-                # set egb's to blue
-                # speech: "I'm ready to start my task. Please point to the bag you want me to take."
+                # set rgb's to blue
+                self.set_rgb(BLUE+SET_COLOUR)
+
+                # speech: "Please point to the bag you want me to take."
+                self.set_speech(filename="carry_my_luggage/point_to_bag", wait_for_end_of=True)
                 # how to get pose and bag????
+                
                 # set rgb's to static green
-                # speech: "I have detected the bag"
-                # set face with the detected bag
+                self.set_rgb(GREEN+SET_COLOUR)
 
+                # speech: "I have detected the bag"
+                # speck: dizer qual o saco: criar fase para esquerda e direita
+                self.set_speech(filename="carry_my_luggage/detected_bag_left", wait_for_end_of=True)
+                self.set_speech(filename="carry_my_luggage/detected_bag_right", wait_for_end_of=True)
+                
                 # next state
                 self.state = self.Go_to_bag 
 
             elif self.state == self.Go_to_bag:
                 print("State:", self.state, "- Go_to_bag")
-                # your code here ...
 
                 # set rgb's to rotating green
+                self.set_rgb(GREEN+ROTATE)
+
                 # speech: "I'm going to go to the bag."
+                self.set_speech(filename="carry_my_luggage/going_to_bag", wait_for_end_of=True)
+
                 # look at bag (set neck with the bag's coordinates)
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 # navigation (how?)
 
                 # next state
-                self.state = self.Get_bag
+                self.state = self.Pick_bag
             
-            elif self.state == self.Get_bag:
-                print("State:", self.state, "- Get_bag")
+            elif self.state == self.Pick_bag:
+                print("State:", self.state, "- Pick_bag")
                 # your code here ...  
 
                 # set rgb's to purple
+                self.set_rgb(MAGENTA+ROTATE)
+
                 # speech: "I'm picking up the bag now."
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+
                 # move arm to bag's position (how?)
                 # close claw (how?)
                 # raise arm
+
 
                 # next state
                 self.state = self.Final_State 
@@ -788,9 +617,15 @@ class ReceptionistMain():
                 print("State:", self.state, "- Final_State")
                 # your code here ...
 
-                # set rgb's to static red
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                # set rgb's to static cyan
+                self.set_rgb(CYAN+ROTATE)
+
                 # Speech: "I have picked up the bag, however I cannot follow you. I finished my task."
-                
+                self.set_speech(filename="carry_my_luggage/end_of_carry_luggage", wait_for_end_of=True)
+
+
                 while True:
                     pass
 
