@@ -30,7 +30,6 @@ def generate_launch_description():
     lifecycle_nodes = ['map_server', 'amcl']
 
 
-
     # Use IncludeLaunchDescription to include the launch file
     charmie_bot_real_launch_description = IncludeLaunchDescription(charmie_bot_real_launch_file)
 
