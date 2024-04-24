@@ -715,8 +715,6 @@ class RestaurantMain():
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
 
-                # your code here ...
-                
                 # moves the neck to look down for navigation
                 # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
@@ -751,6 +749,8 @@ class RestaurantMain():
                 ##### SPEAK : Hello! I am ready to start the restaurant task
                 self.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
 
+                ##### START BUTTON
+
                 ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
                 self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
 
@@ -783,9 +783,9 @@ class RestaurantMain():
                 self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
                 self.customer_index = self.customer_index + 1
 
-                ##### NECK: look waving customer
+                ##### NECK: look waving customers
                 
-                ##### SPEAK: Check face to see customer detected
+                ##### SPEAK: Check face to see customers detected
                 self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
 
                 ##### SHOW FACE DETECTED CUSTOMER
@@ -808,37 +808,46 @@ class RestaurantMain():
                                 
                 # next state
                 if self.state_aux == 0:
+
+                    ##### SPEAK: Hello
+                    self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
                     self.state = self.Receiving_order_listen_and_confirm 
+
                 elif self.state_aux == 1:
+
                     self.state = self.Delivering_customer_order
             
             elif self.state == self.Receiving_order_listen_and_confirm:
                 print("State:", self.state, "- Receiving_order_listen_and_confirm")
-                
-                ##### SPEAK: Hello
-                self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
 
-                ##### SPEAK: Say your order
-                self.set_speech(filename="restaurant/say_order", wait_for_end_of=True)
+                while True:
+                    ##### SPEAK: Say your order
+                    self.set_speech(filename="restaurant/say_order", wait_for_end_of=True)
 
-                ##### AUDIO: Listen to the order
+                    ##### AUDIO: Listen the order and repeat for confirmation
+                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
+                    print("Finished:", command)
+                    keyword_list = command.split(" ")
+                    self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
+                    for kw in keyword_list:
+                        print(kw)
+                        self.set_speech(filename="objects_names/" + kw.lower(), wait_for_end_of=True)
 
-                ##### SPEAK: Did you say "order"        (VERIFICATION)
-                self.set_speech(filename="restaurant/falta_fazer", wait_for_end_of=True)
+                    ##### AUDIO: Listen "YES" OR "NO"
+                    confirmation = self.get_audio(yes_or_no=True, wait_for_end_of=True)
+                    print("Finished:", confirmation)
 
-                ##### AUDIO: Listen "YES" OR "NO"
-
-                ##### IF AN YES:
-
-                    ##### SPEAK: Thank you
-                self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
-
-                ##### IF AN NO:
-
-                    ##### SPEAK: Sorry, TRY AGAIN
-                self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
-
-                    ##### BACK TO LISTEN 
+                    ##### Verifica a resposta recebida
+                    if confirmation.lower() == "yes":
+                        ##### SPEAK: Thank you
+                        self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                        break  # Sai do loop se a confirmação for "yes"
+                    elif confirmation.lower() == "no":
+                        ##### SPEAK: Sorry, TRY AGAIN
+                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+                    else:
+                        ##### ERROR
+                        print("ERROR")
            
                 # next state
                 if self.customer_index == 1:
@@ -858,8 +867,18 @@ class RestaurantMain():
                 ##### SPEAK: Say the order to barman
                 self.set_speech(filename="restaurant/barman_order", wait_for_end_of=True)
 
-                ##### PICK ORDERS (DUVIDA)
-       
+                ##### SPEAK: Say order elements
+                ##### Itera sobre cada elemento do pedido
+                for elemento in keyword_list:
+                    # Define o nome do arquivo correspondente ao elemento
+                    filename = "object_names/" + elemento.lower()  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
+                    
+                    # SPEAK: Diz o elemento do pedido
+                    self.set_speech(filename=filename, wait_for_end_of=True)
+
+                ##### SPEAK: Say to the barman put the order in the tray
+                self.set_speech(filename="restaurant/tray_order", wait_for_end_of=True)
+
                 # next state
                 self.state_aux = 1
                 self.state = self.Approach_customer_table
@@ -867,9 +886,8 @@ class RestaurantMain():
             elif self.state == self.Delivering_customer_order:
                 print("State:", self.state, "- Delivering_customer_order")
                 
-                ##### SPEAK: Here are the items, i go place in the table
-
-                ##### SPEAK: Here are ITEM X (x1 OR x2 OR x3), CAN YOU PICK FROM MY TRAY?
+                ##### SPEAK: Here are the items, CAN YOU PICK FROM MY TRAY?
+                self.set_speech(filename="restaurant/pick_tray", wait_for_end_of=True)
 
                 ##### SPEAK: Hope you enjoy!
                 self.set_speech(filename="restaurant/enjoy_order", wait_for_end_of=True)
