@@ -528,13 +528,6 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 2:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")
-
-		""" elif self.estado_tr == 2:
 			set_gripper_speed_req= SetFloat32.Request()
 			set_gripper_speed_req.data = 5000.0
 			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
@@ -588,7 +581,7 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")"""
+			self.get_logger().info("FINISHED MOVEMENT")
 
 	def carry_my_luggage_if_failed_pick(self):
 		print(self.estado_tr)
@@ -719,6 +712,13 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 4:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 5:
 			print('A')
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
 			self.joint_values_req.speed = math.radians(25)
@@ -727,7 +727,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 5:
+		elif self.estado_tr == 6:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)

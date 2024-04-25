@@ -609,9 +609,8 @@ class CarryMyLuggageMain():
                 # move arm to bag's position (how?)
                 self.set_arm(command="carry_my_luggage_pre_check_bag", wait_for_end_of=True)
 
-                while True:
-                    pass
-                """ object_in_gripper = False
+                
+                object_in_gripper = False
                 while not object_in_gripper:
                 
                     # self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
@@ -631,7 +630,7 @@ class CarryMyLuggageMain():
                     
                     else:
                         self.set_rgb(command=GREEN+BLINK_LONG)
-                        self.set_arm(command="carry_my_luggage_bag_picked_correctly", wait_for_end_of=True) """
+                        self.set_arm(command="carry_my_luggage_bag_picked_correctly", wait_for_end_of=True)
 
                 # close claw (how?)
                 # raise arm
