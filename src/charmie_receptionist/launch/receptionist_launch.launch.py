@@ -56,6 +56,12 @@ def generate_launch_description():
                 emulate_tty=True
                 )
     
+    odometry = Node(package='charmie_odometry',
+                executable='odometry',
+                name='odometry',
+                emulate_tty=True
+                )
+    
     face = Node(package='charmie_face',
                 executable='face',
                 name='face',
@@ -68,8 +74,8 @@ def generate_launch_description():
                 )
     
     yolo_pose = Node(package='charmie_yolo_pose',
-                        executable='yolo_pose',
-                        name='yolo_pose',
+                        executable='yolo_pose_characteristics',
+                        name='yolo_pose_characteristics',
                         emulate_tty=True
                         )
     
@@ -96,12 +102,13 @@ def generate_launch_description():
         charmie_multi_camera_launch_description,
         audio,
         face,
-        speakers,
+        # speakers,
         neck,
         low_level,
+        odometry,
         point_cloud,
         yolo_pose,
         lidar,
         obstacles,
-        receptionist,
+        # receptionist,
     ])

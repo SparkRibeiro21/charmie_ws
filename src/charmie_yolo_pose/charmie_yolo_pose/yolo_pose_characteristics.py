@@ -23,7 +23,7 @@ ONLY_DETECT_PERSON_LEGS_VISIBLE = False              # if True only detects peop
 MIN_PERSON_CONF_VALUE = 0.3                          # defines the minimum confidence value to be considered a person
 MIN_KP_TO_DETECT_PERSON = 4                          # this parameter does not consider the four legs keypoints 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False            # only detects person right in front of the robot both on the x and y axis 
-ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.5
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.8
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 1.8
 ONLY_DETECT_PERSON_ARM_RAISED = False                # if True only detects people with their arm raised or waving 
 
