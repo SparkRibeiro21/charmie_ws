@@ -19,8 +19,8 @@ from pathlib import Path
 
 # configurable parameters through ros topics
 ONLY_DETECT_PERSON_LEGS_VISIBLE = False              # if True only detects people whose legs are visible 
-MIN_PERSON_CONF_VALUE = 0.5                          # defines the minimum confidence value to be considered a person
-MIN_KP_TO_DETECT_PERSON = 7                         # this parameter does not consider the four legs keypoints 
+MIN_PERSON_CONF_VALUE = 0.3                          # defines the minimum confidence value to be considered a person
+MIN_KP_TO_DETECT_PERSON = 4                         # this parameter does not consider the four legs keypoints 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False            # only detects person right in front of the robot both on the x and y axis 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.5
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 1.8
@@ -216,8 +216,8 @@ class YoloPoseNode(Node):
 
         self.ACTIVATE_YOLO_POSE = request.activate
         ONLY_DETECT_PERSON_LEGS_VISIBLE = request.only_detect_person_legs_visible
-        MIN_PERSON_CONF_VALUE = request.minimum_person_confidence
-        MIN_KP_TO_DETECT_PERSON = request.minimum_keypoints_to_detect_person
+        # MIN_PERSON_CONF_VALUE = request.minimum_person_confidence
+        # MIN_KP_TO_DETECT_PERSON = request.minimum_keypoints_to_detect_person
         ONLY_DETECT_PERSON_RIGHT_IN_FRONT = request.only_detect_person_right_in_front
         ONLY_DETECT_PERSON_ARM_RAISED = request.only_detect_person_arm_raised
         self.GET_CHARACTERISTICS = request.characteristics

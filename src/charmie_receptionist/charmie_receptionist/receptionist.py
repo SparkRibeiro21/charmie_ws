@@ -12,6 +12,9 @@ import cv2
 import threading
 import time
 from cv_bridge import CvBridge
+from pathlib import Path
+from datetime import datetime
+
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -66,10 +69,10 @@ class ReceptionistNode(Node):
             self.get_logger().warn("Waiting for Server Speech Command...")
 
         # Audio
-        while not self.get_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Audio Server...")
-        while not self.calibrate_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        # while not self.get_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Audio Server...")
+        # while not self.calibrate_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
@@ -78,9 +81,9 @@ class ReceptionistNode(Node):
         while not self.set_neck_coordinates_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         while not self.neck_track_person_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
+            self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
         # while not self.neck_track_object_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
+        #     self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         # Yolos
         while not self.activate_yolo_pose_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
@@ -529,20 +532,28 @@ class ReceptionistMain():
         Characteristics_first_guest = 2
         Navigation_to_sofa = 3
         Presentation_host_first_guest = 4
-        Receive_second_guest = 5
-        Navigation_to_sofa_second = 6
-        Presentation_host_first_second_guest = 7
-        Final_State = 8
+        Navigate_to_starting_point = 5
+        Receive_second_guest = 6
+        Navigation_to_sofa_second = 7
+        Presentation_host_first_second_guest = 8
+        Final_State = 9
 
         self.SIDE_TO_LOOK = "Right"
 
-        self.state = Waiting_for_start_button
+        self.state = Receive_first_guest
+
         self.look_forward = [0, 0]
         self.look_navigation = [0, -40]
         self.look_left = [90, 0]
         self.look_right = [-90, 0]
         self.look_torso = [0, -20]
+
         self.look_empty_place = [1.0, 2.0]
+
+        home = str(Path.home())
+        midpath = "charmie_ws/src/charmie_receptionist/charmie_receptionist/images"
+        self.complete_path_save_images = home+'/'+midpath+'/'
+
         # create a look torso
         # create a look sofa
 
@@ -554,7 +565,6 @@ class ReceptionistMain():
             if self.state == Waiting_for_start_button:
                 print('State 0 = Initial')
 
-    
                 self.set_face("demo5")
                 self.activate_yolo_pose(activate=False)
 
@@ -577,8 +587,11 @@ class ReceptionistMain():
             elif self.state == Receive_first_guest:
                 print('State 1 = Receive first guest')
 
-                self.calibrate_audio(wait_for_end_of=True)
-  
+                ### CHANGED JUST FOR DEBUG !!!
+                # self.calibrate_audio(wait_for_end_of=True)
+                self.activate_yolo_pose(activate=False)
+                self.look_torso = [0,10]
+
                 #NECK: LOOKS IN FRONT 
                 self.set_neck(position=self.look_torso, wait_for_end_of=True)
 
@@ -586,11 +599,16 @@ class ReceptionistMain():
                 self.set_rgb(YELLOW+ROTATE)
                 #SPEAK: I am ready to receive a new guest. Please stand in front of me.
                 self.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
-                #if face = exist:
-                # RGB: OK MODE (GREEN)
-                # self.set_rgb(GREEN+BLINK_LONG)
 
-                # NECK: LOOKS TO GUEST 1
+                ##### TIAGO: CHECK PERSON RIGHT IN FRONT (YOLO POSE) 
+                self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=True)
+                
+                filename, eth, age, gender, height, shirt_c, pants_c = self.search_for_guest_and_get_info() # search for guest 1 and returns all info regarding guest 1
+
+                print(filename, eth, age, gender, height, shirt_c, pants_c)
+
+                self.activate_yolo_pose(activate=False)
+
                 self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
 
                 # AUDIO: RECEIVE NAME AND DRINK OF GUEST
@@ -626,14 +644,14 @@ class ReceptionistMain():
                 #SPEAK:Thank you. Please follow me.
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
                 
+                #MOVE TO SOFA LOCALISATION
+
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 if self.SIDE_TO_LOOK == "Right":
-                    #MOVE TO SOFA LOCALISATION
                     self.set_neck(position=self.look_right, wait_for_end_of=False)
                     #SPEAK:Please stay on my right until I give you instructions on where to sit.
                     self.set_speech(filename="receptionist/please_stay_on_my_right", wait_for_end_of=True)
                 elif self.SIDE_TO_LOOK == "Left":
-                    #MOVE TO SOFA LOCALISATION
                     self.set_neck(position=self.look_left, wait_for_end_of=False)
                     #SPEAK:Please stay on my left until I give you instructions on where to sit.
                     self.set_speech(filename="receptionist/please_stay_on_my_left", wait_for_end_of=True)
@@ -642,13 +660,19 @@ class ReceptionistMain():
 
             elif self.state == Presentation_host_first_guest:
                 print('State 4 = Presentation host and first guest')
-                #NECK: LOOK TO THE SOFA
-                #ACTION: FOUND PERSON (HOST)
-                #NECK: LOOK TO HOST
+
+                self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True)
+
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
+
+                self.search_for_host()
+                
                 #SPEAK:Hello, I will present everyone in this room.
                 self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
                 #NECK: LOOK TO THE GUEST
+
+
+
                 if self.SIDE_TO_LOOK == "Right":
                     #MOVE TO SOFA LOCALISATION
                     self.set_neck(position=self.look_right, wait_for_end_of=False)
@@ -672,9 +696,16 @@ class ReceptionistMain():
                 #RGB: OK MODE
                 self.set_rgb(GREEN+BLINK_LONG)
 
+                self.state = Navigate_to_starting_point
+
+            elif self.state == Navigate_to_starting_point:
+                print('State 1 = Navigate_to_starting_point')
+
                 #NECK: LOOKS TO THE FLOOR (NAVIGATION POSE)
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                
                 #MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
+
                 self.state = Receive_second_guest
 
             elif self.state == Receive_second_guest:
@@ -687,10 +718,13 @@ class ReceptionistMain():
                 self.set_rgb(YELLOW+ROTATE)
 
                 self.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
-                #if face = exist:
-                # RGB: OK MODE (GREEN)
-                #self.set_rgb(GREEN+BLINK_LONG)
-                # NECK: LOOKS TO GUEST 1
+
+                ##### TIAGO: CHECK PERSON RIGHT IN FRONT (YOLO POSE) 
+                self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=False)
+                
+                self.search_for_guest() # search for guest 1 and returns all info regarding guest 1
+
+                self.activate_yolo_pose(activate=False)
 
                 self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
 
@@ -790,6 +824,121 @@ class ReceptionistMain():
 
             else:
                 pass
+
+    def search_for_host(self):
+    
+        host = DetectedPerson()
+        detected_person_temp = Yolov8Pose()
+        host_found = False
+        while detected_person_temp.num_person == 0 and host_found == False: #  and host.room_location:
+            detected_person_temp = self.node.detected_people
+
+            for p in detected_person_temp.persons:
+                if p.room_location == "Living Room" and p.furniture_location == "Sofa":
+                    is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb)
+                    if is_cropped:
+                        host = p
+                        host_found = True
+                        print("SOFA YES")
+                # if the robot localisation is a bit off and i do not detect anyone in the sofa, i just check for people in the living room
+                elif p.room_location == "Living Room":
+                    is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb)
+                    if is_cropped:
+                        host = p
+                        host_found = True
+                        print("SOFA NO")
+                else:
+                        print("CLOSEST PERSON")
+
+
+
+
+        self.set_rgb(GREEN+BLINK_LONG)
+
+        self.set_neck_coords(position=[host.position_absolute.x, host.position_absolute.y], ang=[0,-10])
+
+        return filename, [host.position_absolute.x, host.position_absolute.y]
+
+
+    def search_for_host_and_guest1(self):
+        pass
+
+                
+    def search_for_guest_and_get_info(self):
+
+        self.search_for_guest()
+
+        time.sleep(1)
+
+        detected_person_get_info = Yolov8Pose()
+        guest = DetectedPerson()
+        is_cropped = False
+        while not is_cropped:
+            while detected_person_get_info.num_person == 0:
+                detected_person_get_info = self.node.detected_people
+            guest = detected_person_get_info.persons[0]
+            is_cropped, filename = self.crop_face(guest, detected_person_get_info.image_rgb)
+
+        # filename is the full path of this guest image
+        return filename, guest.ethnicity, guest.age_estimate, guest.gender, guest.height, guest.shirt_color, guest.pants_color
+
+    def search_for_guest(self):
+    
+        detected_person_temp = Yolov8Pose()
+        while detected_person_temp.num_person == 0:
+            detected_person_temp = self.node.detected_people
+
+        self.set_rgb(GREEN+BLINK_LONG)
+
+        # I do this delay and the second confirmation because the moment the person enter the image, the robot will look at the place
+        # this wait i give a timeout for the person to reach a more centered position and then i look at the person 
+        time.sleep(3)
+
+        detected_person_look = Yolov8Pose()
+        while detected_person_look.num_person == 0:
+            detected_person_look = self.node.detected_people
+
+        self.track_person(person=detected_person_look.persons[0], wait_for_end_of=True)
+
+
+    def crop_face(self, new_person, current_frame_image_msg):
+
+        MIN_KP_CONF_VALUE = 0.5
+
+        current_frame = self.node.br.imgmsg_to_cv2(current_frame_image_msg, "bgr8")        
+
+        # y1 = top of bounding box y
+        # y2 = y of lowest height shoulder
+        # x1 = keypoint more to the left
+        # x2 = keypoint more to the right
+        
+        # using all face and shoulders keypoints to make sure face is correctly detected
+        if new_person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_eye_right_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_eye_left_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_nose_conf > MIN_KP_CONF_VALUE:
+            # new_person.kp_ear_right_conf > MIN_KP_CONF_VALUE and \
+            # new_person.kp_ear_left_conf > MIN_KP_CONF_VALUE and \
+            
+            y1 = new_person.box_top_left_y
+            y2 = max(new_person.kp_shoulder_right_y, new_person.kp_shoulder_left_y)
+
+            x1 = min(new_person.kp_shoulder_right_x, new_person.kp_shoulder_left_x, new_person.kp_nose_x, new_person.kp_eye_right_x, new_person.kp_eye_left_x)
+            x2 = max(new_person.kp_shoulder_right_x, new_person.kp_shoulder_left_x, new_person.kp_nose_x, new_person.kp_eye_right_x, new_person.kp_eye_left_x)
+                
+            # same time for all obejcts
+            current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
+            filename = self.complete_path_save_images+current_datetime+".jpg"
+
+            cv2.imwrite(filename, current_frame[y1:y2, x1:x2])
+            return True, filename
+
+        else:
+            return False, "None"
+
+
+
 
     '''def Get_characteristics(race, age, gender, height, shirt_color, pant_color):
         characteristics = []
