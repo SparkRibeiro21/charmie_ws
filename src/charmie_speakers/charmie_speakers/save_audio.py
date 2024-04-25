@@ -77,7 +77,6 @@ COMMANDS = {
 
 
 COMMANDS = {
-    'help_place_object': 'I need your help placing the object. Please grab the object when I open my hand. I will open my hand in 3, 2, 1.',
     'start_sftr':'I am ready to start the Stickler for the rules task!',
     'go_forbidden_room':'I will start by checking if there is someone breaking the forbidden room rule.',
     'start_searching':'Start tracking.',
@@ -87,6 +86,7 @@ COMMANDS = {
     'guest_breaking_rule_forbidden_room':'Hello there guest. You are breaking the forbidden room rule.',
     'action_forbidden_room':'To stop breaking this rule, you must get out of the office and join the other guests in the other rooms of the house.',
     'follow_robot_outside_room':'I will turn around for you to follow me. Dont try to trick me.',
+    'dont_try_to_trick_me':'Follow me! Dont try to trick me.',
     'no_longer_breaking_rule':'You are no longer breaking the rule. Keep enjoying the party without breaking any rules.',
     'finish_sftr':'Thank you. I have finished my stickler for the rules task.'
 }

@@ -911,6 +911,7 @@ class SticklerForTheRulesMain():
         
         # Neck Positions
         self.look_forward = [0, 0]
+        self.look_back = [-180, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
 
@@ -933,7 +934,7 @@ class SticklerForTheRulesMain():
                 self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
                 
                 #START TASK
-                self.set_speech(filename="receptionist/start_receptionist", wait_for_end_of=True)
+                self.set_speech(filename="sticklerfortherules/start_sftr", wait_for_end_of=True)
                 #WAITING START BUTTON
                 self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
                 self.wait_for_start_button()
@@ -942,140 +943,73 @@ class SticklerForTheRulesMain():
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
                 # MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
-                self.state = Navigation_forbidden_room
+                self.state = self.Navigation_forbidden_room
 
 
-            elif self.state == self.Approach_kitchen_counter:
-                print("State:", self.state, "- Approach_kitchen_counter")
-                # your code here ...
+            elif self.state == self.Navigation_forbidden_room:
+                print('State 1 = Navigation forbidden room')
+
+                self.set_speech(filename="sftr/go_forbidden_room", wait_for_end_of=False)
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                #MOVE TO THE ROOM DOOR
                                 
                 # next state
-                self.state = self.Picking_up_spoon
+                self.state = self.Detect_people_forbidden_room
 
-            elif self.state == self.Picking_up_spoon:
-                print("State:", self.state, "- Picking_up_spoon")
-
-                ##### NECK LOOKS AT TABLE
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-
-                ##### MOVES ARM TO TOP OF TABLE POSITION
-
-                ##### SPEAK: Searching for objects
-                # self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-
-                ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
+            elif self.state == self.Detect_people_forbidden_room:
+                print('State 2 = Detect people forbidden room')
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
-                ##### SPEAK: Found spoon
-                # self.set_speech(filename="serve_breakfast/sb_found_spoon", show_in_face=True, wait_for_end_of=True)
+                self.set_speech(filename="sftr/start_searching", wait_for_end_of=False)
+                self.set_rgb(YELLOW+ROTATE)
+                #REPLACE: LOOK TO THE ROOM
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                #DETECT PEOPLE AND STAY LOOKING FOR HIM/HER
+                self.set_rgb(POLICE)
+                self.state = self.Speak_forbidden_room
+
+            elif self.state == self.Speak_forbidden_room:
+                print('State 3 = Speak forbidden room')
                 
-                ##### SPEAK: Check face to see object detected
-                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
-
-                ##### SHOW FACE DETECTED OBJECT (CUSTOM)
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                ##### IF AN ERROR IS DETECTED:
-
-                    ##### SPEAK: There is a problem picking up the object
-                    # self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-
-                    ##### MOVE ARM TO ERROR POSITION 
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_speech(filename="sftr/detecion_forbidden_room", wait_for_end_of=False)
+                #REPLACE: LOOK TO THE PERSON
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=False)
+                self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=False)
+                self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=False)
+                self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=False)
                 
-                    ##### NECK LOOK JUDGE
-                    # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                    ##### SPEAK: Need help, put object on my hand as it is on my face
-                    # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                    ##### SHOW FACE GRIPPER SPOON 
-                    # self.set_face("help_pick_spoon") 
-
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-
-                        ##### SPEAK: Close gripper in 3 2 1 
-                        # self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                        ##### ARM: CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED: 
-
-                            ##### SPEAK: There seems to be a problem, please retry.
-                            # self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
-
-                            ##### ARM OPEN GRIPPER
-                
-                ##### SET FACE TO STANDARD FACE
-                # self.set_face("demo5")
-                        
-                ##### NECK LOOK TRAY
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                        
-                ##### ARM PLACE OBJECT IN TRAY
-
-                self.state = self.Picking_up_milk
-
-            elif self.state == self.Picking_up_milk:
-                print("State:", self.state, "- Picking_up_milk")
-                # your code here ...
-                                                
                 # next state
-                self.state = self.Picking_up_cereal
+                self.state = self.Navigation_out_forbidden_room
            
-            elif self.state == self.Picking_up_cereal:
-                print("State:", self.state, "- Picking_up_cereal")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Picking_up_bowl
+            elif self.state == self.Navigation_out_forbidden_room:
+                print('State 4 = Navigation out forbidden room')
 
-            elif self.state == self.Picking_up_bowl:
-                print("State:", self.state, "- Picking_up_bowl")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Approach_kitchen_table
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                #MOVE TO OUT OF THE BEDROOM
 
-            elif self.state == self.Approach_kitchen_table:
-                print("State:", self.state, "- Approach_kitchen_table")
-                # your code here ...
+                self.set_neck(position=self.look_back, wait_for_end_of=True)
+                
+                #VERIFY IT THE GUEST IS INSIDE OR OUTSIDE DE BEDROOM
+                #IF IS OUTSIDE:
+                self.set_speech(filename="sftr/no_longer_breaking_rule", wait_for_end_of=False)
+                self.set_rgb(GREEN+BLINK_LONG)
+                #IF IS INSIDE:
+                self.set_speech(filename="sftr/dont_try_to_trick_me", wait_for_end_of=False)
+                
                                 
-                # next state
-                self.state = self.Placing_bowl
-
-            elif self.state == self.Placing_bowl:
-                print("State:", self.state, "- Placing_bowl")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Placing_cereal 
-
-            elif self.state == self.Placing_cereal:
-                print("State:", self.state, "- Placing_cereal")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Placing_milk
-           
-            elif self.state == self.Placing_milk:
-                print("State:", self.state, "- Placing_milk")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Placing_spoon
-
-            elif self.state == self.Placing_spoon:
-                print("State:", self.state, "- Placing_spoon")
-                # your code here ...
-                                
-                # next state
                 self.state = self.Final_State 
                 
             elif self.state == self.Final_State:
                 
-                self.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
-
+                print("Finished task!!!")
+                #NECK: LOOK IN FRONT
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_speech(filename="sftr/finish_sftr", wait_for_end_of=True)
+                #NECK: LOOK TO THE FLOOR
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
                 # Lock after finishing task
                 while True:
                     pass
