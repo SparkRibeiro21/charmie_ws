@@ -622,7 +622,7 @@ class CarryMyLuggageMain():
                     if not object_in_gripper:
                         self.set_rgb(command=RED+BLINK_LONG)
                 
-                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                         
                         self.set_arm(command="carry_my_luggage_if_failed_pick", wait_for_end_of=True)
 
