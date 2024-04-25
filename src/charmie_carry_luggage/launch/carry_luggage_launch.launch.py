@@ -112,12 +112,6 @@ def generate_launch_description():
                     ],
                 emulate_tty=True
                 )
-
-    arm = Node(package='charmie_arm_ufactory',
-                        executable='arm_serve_breakfast',
-                        name='arm_serve_breakfast',
-                        emulate_tty=True
-                        )
     
     yolo_objects = Node(package='charmie_yolo_objects',
                         executable='yolo_objects',
@@ -142,18 +136,24 @@ def generate_launch_description():
                         name='lidar_hokuyo',
                         emulate_tty=True
                         )
+    
+    arm_carry_my_luggage = Node(package='charmie_arm_ufactory',
+                        executable='arm_carry_my_luggage',
+                        name='arm_carry_my_luggage',
+                        emulate_tty=True
+                        )
 
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),
-        charmie_multi_camera_launch_description,
-        face,
+        # charmie_multi_camera_launch_description,
+        # face,
         speakers,
         neck,
         low_level,
-        arm,
-        point_cloud,
-        yolo_objects,
-        yolo_pose,
-        lidar,
+        # arm_carry_my_luggage,
+        # point_cloud,
+        # yolo_objects,
+        # yolo_pose,
+        # lidar,
         carry_my_luggage,
     ])

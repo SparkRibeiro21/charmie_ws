@@ -75,8 +75,8 @@ class CarryMyLuggageNode(Node):
         # while not self.activate_yolo_objects_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Arm (CHARMIE)
-        # while not self.arm_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
         
         # Variables 
         self.waited_for_end_of_speaking = False
@@ -605,7 +605,34 @@ class CarryMyLuggageMain():
                 # speech: "I'm picking up the bag now."
                 self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
 
+
                 # move arm to bag's position (how?)
+                self.set_arm(command="carry_my_luggage_pre_check_bag", wait_for_end_of=True)
+
+                while True:
+                    pass
+                """ object_in_gripper = False
+                while not object_in_gripper:
+                
+                    # self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+
+                    # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+                        self.set_rgb(command=RED+BLINK_LONG)
+                
+                        self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
+                        
+                        self.set_arm(command="carry_my_luggage_if_failed_pick", wait_for_end_of=True)
+
+                        self.set_arm(command="carry_my_luggage_pick_bag_after_failing", wait_for_end_of=True)
+                    
+                    else:
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+                        self.set_arm(command="carry_my_luggage_bag_picked_correctly", wait_for_end_of=True) """
+
                 # close claw (how?)
                 # raise arm
 
@@ -624,6 +651,14 @@ class CarryMyLuggageMain():
 
                 # Speech: "I have picked up the bag, however I cannot follow you. I finished my task."
                 self.set_speech(filename="carry_my_luggage/end_of_carry_luggage", wait_for_end_of=True)
+
+                # wait for start_button
+                self.wait_for_start_button()
+
+                # set rgb's to static green
+                self.set_rgb(GREEN+SET_COLOUR)
+
+                self.set_arm(command="carry_my_luggage_back_to_initial_position", wait_for_end_of=True)
 
 
                 while True:
