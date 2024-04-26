@@ -32,7 +32,7 @@ class CarryMyLuggageNode(Node):
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
-        # Yolo Objects
+       # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
@@ -75,9 +75,9 @@ class CarryMyLuggageNode(Node):
         # while not self.activate_yolo_objects_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Arm (CHARMIE)
-        while not self.arm_trigger_client.wait_for_service(1.0):
+        """ while not self.arm_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Arm Trigger Command...")
-        
+         """
         # Variables 
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_neck_pos = False
@@ -522,14 +522,11 @@ class CarryMyLuggageMain():
     
     def detect_bag(self, position_of_referee_x, received_bag):
         correct_bag  = False
-        objects_stored = self.node.objects
-        
-        print('objects received: ', objects_stored)
-        
-        
+        objects_stored = self.node.detected_objects
+                
         for object in objects_stored.objects:
             print('Objeto: ', object)
-            if object.object_name ==  'bag':
+            if object.object_name ==  'bag' or object.object_name ==  'Bag':
                 print('x do saco relativo ao robô: ', object.position_relative.x)
                 if object.position_relative.x <= position_of_referee_x and received_bag == 'right':
                     correct_bag = True
@@ -605,10 +602,12 @@ class CarryMyLuggageMain():
                 # speech: "I have detected the bag"
                 # speck: dizer qual o saco: criar fase para esquerda e direita
                 
+
+                #### TIAGO METE O YOLO POSE AQUI
                 
                 
                 # received_bag tem de ser dado pela função de deteção
-                received_bag = ''
+                received_bag = 'left'
                 
                 if received_bag == "right":
                     self.set_speech(filename="carry_my_luggage/detected_bag_right", wait_for_end_of=True)
@@ -619,22 +618,22 @@ class CarryMyLuggageMain():
                 ### Quero retirar coordenadas do saco detetado. Enquanto não tiver um saco detetado dolado correto que me foi  dado, mexo  pescoço
                 
                 
-                list_of_neck_position_search = [[0, 0], [0, 15], [0, 30], [0, 45]]
+                list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
                 position_index = 0
 
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 correct_bag_detected = False
                 
                 while not correct_bag_detected:
                     pos_offset = list_of_neck_position_search[position_index]
-                    new_neck_pos = [self.look_forward[0] + pos_offset[0], self.look_forward[1] + pos_offset[1]]
+                    new_neck_pos = [self.look_navigation[0] + pos_offset[0], self.look_navigation[1] + pos_offset[1]]
                     print('pescoço: ', new_neck_pos)
                     
                     self.set_neck(position=new_neck_pos, wait_for_end_of=True)
                     
                     time.sleep(3)
                 
-                    self.current_image = self.node.image
+                    self.current_image = self.node.detected_objects.image_rgb
                     bridge = CvBridge()
                     # Convert ROS Image to OpenCV image
                     cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
