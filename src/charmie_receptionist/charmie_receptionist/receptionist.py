@@ -880,10 +880,12 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
 
                 ### SPEAK GUEST1 CHARACTERISTICS
-                self.set_speech(filename="receptionist/race_caucasian", wait_for_end_of=True)
-                self.set_speech(filename="receptionist/between18_32", wait_for_end_of=True)
-                self.set_speech(filename="receptionist/gender_male", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/the_first_guest_is", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/race_"+self.guest1_ethnicity.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/gender_"+self.guest1_gender.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/age_"+self.guest1_age.lower(), wait_for_end_of=True)
                 self.set_speech(filename="receptionist/height_taller", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/the_shirt_color_is"+self.guest1_shirt_color.lower(), wait_for_end_of=True)
                 # self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True) # missing color
                 
 
