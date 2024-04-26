@@ -140,6 +140,12 @@ class CarryMyLuggageNode(Node):
 
         self.get_logger().info("Received Arm Finished")
 
+    def get_objects_callback(self, objects: Yolov8Objects):
+        #print(objects.objects)
+        self.nr_objects = objects.num_objects
+        self.objects = objects.objects
+        self.image = objects.image_rgb
+
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
@@ -514,6 +520,30 @@ class CarryMyLuggageMain():
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
     
+    def detect_bag(self, position_of_referee_x, received_bag):
+        correct_bag  = False
+        objects_stored = self.node.objects
+        
+        print('objects received: ', objects_stored)
+        
+        
+        for object in objects_stored.objects:
+            print('Objeto: ', object)
+            if object.object_name ==  'bag':
+                print('x do saco relativo ao robô: ', object.position_relative.x)
+                if object.position_relative.x <= position_of_referee_x and received_bag == 'right':
+                    correct_bag = True
+                    break
+                elif object.position_relative.x > position_of_referee_x and received_bag == 'left':
+                    correct_bag = True
+                    break
+                else: 
+                    correct_bag = False
+                    
+        return correct_bag
+        
+        
+        
     # main state-machine function
     def main(self):
         
@@ -559,6 +589,8 @@ class CarryMyLuggageMain():
 
             elif self.state == self.Recognize_bag:
                 print("State:", self.state, "- Recognize_bag")
+                
+                self.activate_yolo_objects(activate_objects=True)
 
                 # set rgb's to blue
                 self.set_rgb(BLUE+SET_COLOUR)
@@ -572,8 +604,56 @@ class CarryMyLuggageMain():
 
                 # speech: "I have detected the bag"
                 # speck: dizer qual o saco: criar fase para esquerda e direita
-                self.set_speech(filename="carry_my_luggage/detected_bag_left", wait_for_end_of=True)
-                self.set_speech(filename="carry_my_luggage/detected_bag_right", wait_for_end_of=True)
+                
+                
+                
+                # received_bag tem de ser dado pela função de deteção
+                received_bag = ''
+                
+                if received_bag == "right":
+                    self.set_speech(filename="carry_my_luggage/detected_bag_right", wait_for_end_of=True)
+                elif received_bag == "left":
+                    self.set_speech(filename="carry_my_luggage/detected_bag_left", wait_for_end_of=True)
+                
+                
+                ### Quero retirar coordenadas do saco detetado. Enquanto não tiver um saco detetado dolado correto que me foi  dado, mexo  pescoço
+                
+                
+                list_of_neck_position_search = [[0, 0], [0, 15], [0, 30], [0, 45]]
+                position_index = 0
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                correct_bag_detected = False
+                
+                while not correct_bag_detected:
+                    pos_offset = list_of_neck_position_search[position_index]
+                    new_neck_pos = [self.look_forward[0] + pos_offset[0], self.look_forward[1] + pos_offset[1]]
+                    print('pescoço: ', new_neck_pos)
+                    
+                    self.set_neck(position=new_neck_pos, wait_for_end_of=True)
+                    
+                    time.sleep(3)
+                
+                    self.current_image = self.node.image
+                    bridge = CvBridge()
+                    # Convert ROS Image to OpenCV image
+                    cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+                    self.image_most_obj_detected= cv_image
+                    
+                    
+                    ### VARIÁVEL REFEREE_X TEM DE ME SER DADA PELO POINT CLOUD DA PESSOA
+                    referee_x = 0.0
+                
+                    correct_bag_detected = self.detect_bag(position_of_referee_x= referee_x, received_bag= received_bag)
+                
+                    # Move to the next position
+                    position_index = (position_index + 1) % len(list_of_neck_position_search)
+                    print(position_index)
+                
+                self.activate_yolo_objects(activate_objects=False)
+                
+                while True:
+                    pass
                 
                 # next state
                 self.state = self.Go_to_bag 
