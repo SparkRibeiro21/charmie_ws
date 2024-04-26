@@ -884,7 +884,7 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/race_"+self.guest1_ethnicity.lower(), wait_for_end_of=True)
                 self.set_speech(filename="receptionist/gender_"+self.guest1_gender.lower(), wait_for_end_of=True)
                 self.set_speech(filename="receptionist/age_"+self.guest1_age.lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/height_taller", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/height_"+self.guest1_height.lower(), wait_for_end_of=True)
                 self.set_speech(filename="receptionist/the_shirt_color_is"+self.guest1_shirt_color.lower(), wait_for_end_of=True)
                 # self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True) # missing color
                 
@@ -1132,6 +1132,12 @@ class ReceptionistMain():
             none_variables.append("gender")
 
         if height is not None:
+            if height > 150: 
+                height='taller'
+            elif height < 130:
+                height='smaller'
+            else:
+                height='equal'
             characteristics.append(height)
         else:
             none_variables.append("height")
