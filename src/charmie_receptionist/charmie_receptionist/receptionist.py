@@ -858,7 +858,8 @@ class ReceptionistMain():
                 
                 ### SEARCH FOR HOST AND GUEST1 AND RECEIVE THEIR LOCATION
                 #AJUDA
-                #person_name=self.face_recognition(image,self.complete_path_save_images)
+                person_name_1=self.face_recognition(self.host_filename,self.complete_path_save_images)
+                person_name_2=self.face_recognition(self.guest1_filename,self.complete_path_save_images)
 
                 self.activate_yolo_pose(activate=False)
                 
