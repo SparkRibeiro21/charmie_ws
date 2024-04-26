@@ -671,7 +671,8 @@ class ReceptionistMain():
                 print(self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color)
 
                 ### RENATA: PROCESS CHARACTERISTICS
-
+                self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color = self.Get_characteristics(self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color)
+                
                 self.activate_yolo_pose(activate=False)
 
                 self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
@@ -1104,14 +1105,12 @@ class ReceptionistMain():
 
             cv2.imwrite(filename, current_frame[y1:y2, x1:x2])
             return True, filename
-
+            
         else:
             return False, "None"
+        
 
-
-
-
-    '''def Get_characteristics(race, age, gender, height, shirt_color, pant_color):
+    def Get_characteristics(race, age, gender, height, shirt_color, pant_color):
         characteristics = []
         none_variables = []
 
@@ -1145,53 +1144,29 @@ class ReceptionistMain():
         else:
             none_variables.append("pant_color")
 
-        get_caract = len(characteristics)
+        if not characteristics:  # Se nenhuma característica foi fornecida
+            print("Nenhuma característica fornecida")
+            return None
 
-        return get_caract, characteristics, none_variables
+        for variable in none_variables:
+            if variable == "age":
+                age = 'Between 25 and 32'
+                characteristics.append(age)
+            elif variable == "gender":
+                gender = "Male"
+                characteristics.append(gender)
+            elif variable == "race":
+                race = "Caucasian"
+                characteristics.append(race)
+            elif variable == "height":
+                height = "Taller than me"
+                characteristics.append(height)
+            elif variable == "shirt_color":
+                shirt_color = "White"
+                characteristics.append(shirt_color)
+            elif variable == "pant_color":
+                pass  # Deixa a cor da calça vazia
+            else:
+                print("Empty:", variable)
 
-
-    def Process_Info(get_caract, characteristics, none_variables):
-        if get_caract == 5 or get_caract == 6:
-            print("Características:", characteristics)
-        elif get_caract == 4 or get_caract == 3 or get_caract == 2 or get_caract == 1 or get_caract == 0:
-            print(characteristics)
-            if 'age' in none_variables:
-                print('age 25 and 32')
-            if 'gender' in none_variables:
-                print('gender male')
-            if 'race' in none_variables:
-                print('race caucasian')
-            if 'height' in none_variables:
-                print('height taller than me')
-            if 'shirt_color' in none_variables:
-                print('white')
-            if 'pant_color' in none_variables:
-                pass
-            if not none_variables:  # Se não houver variáveis ausentes
-                print("nada")
-
-
-
-    def main():
-        # Variáveis de exemplo para teste
-        race = "Caucasian"
-        age = 18
-        gender = None
-        height = None
-        shirt_color = "Blue"
-        pant_color = None
-
-        # Chamando a função Get_characteristics
-        get_caract, characteristics, none_variables = Get_characteristics(race, age, gender, height, shirt_color, pant_color)
-
-        # Mostrando os resultados
-        print("Número de características:", get_caract)
-        print("Características:", characteristics)
-        print("Variáveis None:", none_variables)
-
-        # Processando as informações
-        Process_Info(get_caract, characteristics, none_variables)
-
-
-    if __name__ == "__main__":
-        main()'''
+        return age,gender,race,height,shirt_color, pant_color
