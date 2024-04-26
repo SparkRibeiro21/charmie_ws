@@ -409,7 +409,7 @@ class OdometryNode(Node):
 
     def get_encoders_callback(self, enc: Encoders):
         coord_x, coord_y, coord_theta, vel_x, vel_y, vel_theta = self.robot_odom.localization(enc) 
-        print(coord_x, coord_y, coord_theta)
+        # print(coord_x, coord_y, coord_theta)
 
         quaternion = self.robot_odom.get_quaternion_from_euler(0,0,coord_theta)
 
@@ -422,7 +422,7 @@ class OdometryNode(Node):
         odom.pose.pose.orientation.z = quaternion[2]
         odom.pose.pose.orientation.w = quaternion[3] 
 
-        print(odom.pose.pose.orientation)
+        # print(odom.pose.pose.orientation)
 
         odom.twist.twist.linear.x = vel_x 
         odom.twist.twist.linear.y = vel_y
@@ -430,7 +430,7 @@ class OdometryNode(Node):
         self.odometry_publisher.publish(odom)
 
 
-        print(coord_theta)
+        # print(coord_theta)
 
         quaternion_rviz = self.robot_odom.get_quaternion_from_euler(0,0,-coord_theta)
         odom_rviz = Odometry()

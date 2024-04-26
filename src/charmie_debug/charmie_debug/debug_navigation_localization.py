@@ -40,9 +40,12 @@ class TestNode(Node):
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         
-
         # Navigation
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+
+        # Orientation
+        self.flag_orientation_publisher = self.create_publisher(Bool, "flag_orientation", 10)
+
 
         # Navigation
         # while not self.nav_trigger_client.wait_for_service(1.0):
@@ -215,6 +218,11 @@ class RestaurantMain():
         self.state = Waiting_for_start_button
 
         self.set_initial_position(self.initial_position)
+
+        ori = Bool()
+        ori.data = True
+        self.node.flag_orientation_publisher.publish(ori) 
+
 
         while True:
             pass
