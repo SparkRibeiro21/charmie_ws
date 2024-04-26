@@ -23,7 +23,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		"storing_groceries_v0 = charmie_storing_groceries.storing_groceries_v0:main"
+		"storing_groceries_v0 = charmie_storing_groceries.storing_groceries_v0:main",
+        "storing_groceries_v0_with_open_wardrobe = charmie_storing_groceries.storing_groceries_v0_with_open_wardrobe:main"
         ],
     },
 )
