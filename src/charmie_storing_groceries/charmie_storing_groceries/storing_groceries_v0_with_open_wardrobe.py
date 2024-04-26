@@ -524,82 +524,6 @@ class StoringGroceriesMain():
                 
     ##### ANALYSE CABINET #####
 
-    """ def look_cabinet(self):
-        i = 0
-        detect_object = []
-        self.detected_object = []
-        if hasattr(self.node, 'image') and self.node.image:
-            if hasattr(self.node, 'objects') and self.node.objects:
-                objects_stored = self.node.objects
-                self.nr_objects_detected = self.node.nr_objects
-
-
-                self.current_image = self.node.image
-                bridge = CvBridge()
-                # Convert ROS Image to OpenCV image
-                cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-                self.current_image_2= cv_image
-
-                print('Will iterate for: ', self.nr_objects_detected)
-
-                objects_stored.sort(key=lambda obj: obj.position_relative.z, reverse=True)
-
-                same_position_objects = {}                
-
-                for detected_objects in objects_stored:
-                    print(detected_objects.object_name, detected_objects.object_class)
-                    if detected_objects.object_name in detect_object:
-                        pass
-                    else:
-                        detect_object.append(detected_objects)
-                        # print(detected_objects)
-                        i+=1
-                        print(i)
-
-                        if self.shelf_1_height < detected_objects.position_relative.z < self.shelf_2_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
-                            position = 'First shelf '
-                            print(detected_objects.object_name, 'is in the first shelf ')
-                            
-
-                        elif self.shelf_2_height < detected_objects.position_relative.z < self.shelf_3_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
-                            position = 'Second shelf '
-                            print(detected_objects.object_name, 'is in the second shelf ')
-                            
-
-                        elif self.shelf_4_height > detected_objects.position_relative.z > self.shelf_3_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
-                            position = 'Third shelf '
-                            print(detected_objects.object_name, 'is in the third shelf ')
-                            
-                        elif detected_objects.position_relative.z > self.shelf_4_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
-                            position = 'Fourth shelf '
-                            print(detected_objects.object_name, 'is in the fourth shelf ')
-                            
-
-                        else:
-                            print(detected_objects.object_name, '- none of the shelfs')
-                            position = 'none of the shelfs '
-                            # print(object_x_position)
-
-                        print('Position:', position)
-                        print('Position Relative X:', detected_objects.position_relative.x)
-                        # Populate same_position_objects dictionary
-                        same_position_objects.setdefault(position, []).append(detected_objects)
-                        print('AAA ', same_position_objects)
-
-                print(detect_object)
-
-                # Check maximum distance in x-direction between objects in the same position
-                for position, objects in same_position_objects.items():
-                    if len(objects) > 1:
-                        max_distance_x = max(objects, key=lambda obj: obj.position_relative.x).position_relative.x - \
-                                        min(objects, key=lambda obj: obj.position_relative.x).position_relative.x
-                        if max_distance_x > 0.3:
-                            print("Objects in", position, "are too far apart in the x-direction")
-                            # Divide them into two different cases as needed
-                        else:
-                            print("Objects in", position, "are within acceptable distance in the x-direction") """
-    
-
     def analysis_cabinet(self):
         nr_classes_detected = 0
         i = 0
@@ -751,8 +675,6 @@ class StoringGroceriesMain():
                                     else:
                                         pass 
                             
-
-
     def remove_duplicates(self):
         values_to_remove = []
         for key in self.object_position:
@@ -823,9 +745,7 @@ class StoringGroceriesMain():
         
         print('Merged objects position ', merged_object_position)
         return merged_object_position
-
-                
-    
+              
     def load_image_one_object(self, obj_name, obj):
         # Construct the filename for the image
         image_name = f"image_{obj_name}.jpg"
@@ -1211,25 +1131,36 @@ class StoringGroceriesMain():
                 self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
                 
                 self.opening_doors = True
-                door_side = None
+                door_opened = None
                 
-                while door_side == None:
-                    print(door_side)
+                while door_opened == None:
+                    print(door_opened)
                     pos_offset = list_of_neck_position_search[position_index]
                     new_neck_pos = [self.look_cabinet_center[0] + pos_offset[0], self.look_cabinet_center[1] + pos_offset[1]]
                     
                     # Set the neck position
                     self.set_neck(position=new_neck_pos, wait_for_end_of=True)
                     time.sleep(3)
-                    door_side = self.analysis_cabinet()
+                    door_opened = self.analysis_cabinet()
                     
                     position_index = (position_index + 1) % len(list_of_neck_position_search)
                     
-                print(door_side)
+                print(door_opened)
                 position_index = 0
-
-                while True:
-                    pass
+                
+                # navegar até ponto perto da porta
+                # fazer set_arm com Right ou Left
+                if door_opened ==  "Right":
+                    print(door_opened)
+                    # set_arm(open left door)
+                    
+                elif door_opened ==  "Left":
+                    print(door_opened)
+                    # set_arm(open left door)
+                    
+                time.sleep(3)
+                    
+                # navegar de novo de costas até ao ponto antes
 
                 while nr_classes_detected < 4:
                     
