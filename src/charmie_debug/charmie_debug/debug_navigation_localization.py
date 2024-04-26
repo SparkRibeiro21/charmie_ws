@@ -212,16 +212,47 @@ class RestaurantMain():
         Delivering_order_to_client = 6
         Final_State = 7
         
-        self.initial_position = [-0.409, 4.724, 0]
+        # self.initial_position = [-0.409, 4.724, 0]
+        self.initial_position = [1.0, 1.0, 0]
         
         # VARS ...
         self.state = Waiting_for_start_button
 
         self.set_initial_position(self.initial_position)
 
-        ori = Bool()
-        ori.data = True
-        self.node.flag_orientation_publisher.publish(ori) 
+
+        time.sleep(5)
+
+        self.node.nav_tar_sdnl.orientation_absolute = -90.0
+        self.node.nav_tar_sdnl.move_or_rotate = "ROTATE_GLOBAL"
+        self.node.nav_tar_sdnl.flag_not_obs = False
+        self.node.nav_tar_sdnl.follow_me = False
+
+        self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
+
+
+
+        while not self.node.flag_navigation_reached:
+            pass
+        self.node.flag_navigation_reached = False
+        print("REACHED POSITION")
+
+
+        time.sleep(5)
+
+
+        self.node.nav_tar_sdnl.orientation_absolute = 45.0
+        self.node.nav_tar_sdnl.move_or_rotate = "ROTATE_GLOBAL"
+        self.node.nav_tar_sdnl.flag_not_obs = False
+        self.node.nav_tar_sdnl.follow_me = False
+
+        self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
+
+        while not self.node.flag_navigation_reached:
+            pass
+        self.node.flag_navigation_reached = False
+        print("REACHED POSITION")
+
 
 
         while True:
