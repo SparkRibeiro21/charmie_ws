@@ -17,7 +17,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'sg_analysing_cabinet_short' : 'I am analysing the cabinet.'
+    'found_empty_seat' : 'I have found an empty seat.'
 }
 
 #COMMANDS = {
@@ -74,7 +74,7 @@ COMMANDS = {
 }
 """
 
-
+"""
 COMMANDS = {
     'start_sftr':'I am ready to start the Stickler for the rules task!',
     'go_forbidden_room':'I will start by checking if there is someone breaking the forbidden room rule.',
@@ -89,7 +89,7 @@ COMMANDS = {
     'no_longer_breaking_rule':'You are no longer breaking the rule. Keep enjoying the party without breaking any rules.',
     'finish_sftr':'Thank you. I have finished my stickler for the rules task.'
 }
-
+"""
 
 
 class RobotSpeak():
@@ -159,6 +159,7 @@ def main(args=None):
     elif MODE == "RECEPTIONIST":
         receptionist_commands = {}
         for name in names_list:
+            receptionist_commands['receptionist/recep_host_'+name.lower()] = 'The host name is '+name+'.'
             receptionist_commands['receptionist/recep_first_guest_'+name.lower()] = 'The first guest name is '+name+'.'
             receptionist_commands['receptionist/recep_second_guest_'+name.lower()] = 'The second guest name is '+name+'.'
         for drink in drinks_list:

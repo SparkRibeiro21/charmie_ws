@@ -5,6 +5,7 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
 
@@ -14,6 +15,8 @@ import time
 from cv_bridge import CvBridge
 from pathlib import Path
 from datetime import datetime
+import math
+import numpy as np
 
 
 # Constant Variables to ease RGB_MODE coding
@@ -43,6 +46,8 @@ class ReceptionistNode(Node):
         # Arm CHARMIE
         # self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         # self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
+        # Localisation
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
 
         ### Services (Clients) ###
         # Speakers
@@ -522,39 +527,97 @@ class ReceptionistMain():
 
         return self.node.track_person_success, self.node.track_person_message
  
+    def set_initial_position(self, initial_position):
+
+        task_initialpose = PoseWithCovarianceStamped()
+
+        task_initialpose.header.frame_id = "map"
+        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
+
+        task_initialpose.pose.pose.position.x = initial_position[1]
+        task_initialpose.pose.pose.position.y = -initial_position[0]
+        task_initialpose.pose.pose.position.z = 0.0
+
+        quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+
+        task_initialpose.pose.pose.orientation.x = quaternion[0]
+        task_initialpose.pose.pose.orientation.y = quaternion[1]
+        task_initialpose.pose.pose.orientation.z = quaternion[2]
+        task_initialpose.pose.pose.orientation.w = quaternion[3] 
+        
+        self.node.initialpose_publisher.publish(task_initialpose)
+
+    def get_quaternion_from_euler(self, roll, pitch, yaw):
+        """
+        Convert an Euler angle to a quaternion.
+        
+        Input
+            :param roll: The roll (rotation around x-axis) angle in radians.
+            :param pitch: The pitch (rotation around y-axis) angle in radians.
+            :param yaw: The yaw (rotation around z-axis) angle in radians.
+        
+        Output
+            :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+        """
+        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        
+        return [qx, qy, qz, qw]
     
+
     # main state-machine function
     def main(self):
         # examples of names of states
         # use the names of states rather than just numbers to ease 3rd person code analysis
         Waiting_for_start_button = 0
         Receive_first_guest = 1
-        Characteristics_first_guest = 2
-        Navigation_to_sofa = 3
-        Presentation_host_first_guest = 4
-        Navigate_to_starting_point = 5
-        Receive_second_guest = 6
-        Navigation_to_sofa_second = 7
-        Presentation_host_first_second_guest = 8
-        Final_State = 9
+        Navigation_to_sofa = 2
+        Presentation_host_first_guest = 3
+        Navigate_to_starting_point = 4
+        Receive_second_guest = 5
+        Navigation_to_sofa_second = 6
+        Presentation_host_first_second_guest = 7
+        Final_State = 8
 
-        self.SIDE_TO_LOOK = "Right"
+        self.SIDE_TO_LOOK = "right"
 
-        self.state = Receive_first_guest
+        self.state = Waiting_for_start_button
 
         self.look_forward = [0, 0]
         self.look_navigation = [0, -40]
         self.look_left = [90, 0]
         self.look_right = [-90, 0]
-        self.look_torso = [0, -20]
+        self.look_torso = [0, -5]
+        self.look_down_sofa = [0, -10]
 
         self.look_empty_place = [1.0, 2.0]
+        self.look_sofa = [-2.5, 3.0]
 
+        self.host_name = "John"
+        self.host_drink = "Milk"
+        self.host_drink = self.host_drink.replace(' ', '_') # if someone forgets to write correctly
+        self.host_filename = ""
+        self.host_position = ""
+
+        self.guest1_name = ""
+        self.guest1_drink = ""
+        self.guest1_filename = ""
+        self.guest1_ethnicity = ""
+        self.guest1_age = ""
+        self.guest1_gender = ""
+        self.guest1_height = ""
+        self.guest1_shirt_color = ""
+        self.guest1_pants_color = ""
+
+        self.guest2_name = "" 
+        self.guest2_drink = ""
+        
         home = str(Path.home())
         midpath = "charmie_ws/src/charmie_receptionist/charmie_receptionist/images"
         self.complete_path_save_images = home+'/'+midpath+'/'
 
-        # create a look torso
         # create a look sofa
 
         # debug print
@@ -566,94 +629,87 @@ class ReceptionistMain():
                 print('State 0 = Initial')
 
                 self.set_face("demo5")
+
                 self.activate_yolo_pose(activate=False)
 
-                #NECK: LOOKS IN FRONT
+                self.set_initial_position([-2.5, 1.5, 0])
+
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                
                 self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
                 
-                #START TASK
                 self.set_speech(filename="receptionist/start_receptionist", wait_for_end_of=True)
-                #WAITING START BUTTON
-                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
-                self.wait_for_start_button()
                 
-                # NAVIGATION POSE
+                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+                
+                self.wait_for_start_button()
+
+                self.set_rgb(CYAN+ALTERNATE_QUARTERS)
+                
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
-                # MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
+                ### NAVIGATION MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
+                
                 self.state = Receive_first_guest
 
             elif self.state == Receive_first_guest:
                 print('State 1 = Receive first guest')
 
-                ### CHANGED JUST FOR DEBUG !!!
-                # self.calibrate_audio(wait_for_end_of=True)
-                self.activate_yolo_pose(activate=False)
-                self.look_torso = [0,10]
+                ### OPEN THE DOOR ???
 
-                #NECK: LOOKS IN FRONT 
+                self.calibrate_audio(wait_for_end_of=True)
+
                 self.set_neck(position=self.look_torso, wait_for_end_of=True)
 
-                #RGB: WAITING MODE
                 self.set_rgb(YELLOW+ROTATE)
-                #SPEAK: I am ready to receive a new guest. Please stand in front of me.
+
                 self.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
 
-                ##### TIAGO: CHECK PERSON RIGHT IN FRONT (YOLO POSE) 
                 self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=True)
                 
-                filename, eth, age, gender, height, shirt_c, pants_c = self.search_for_guest_and_get_info() # search for guest 1 and returns all info regarding guest 1
+                self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color = self.search_for_guest_and_get_info() # search for guest 1 and returns all info regarding guest 1
+                print(self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color)
 
-                print(filename, eth, age, gender, height, shirt_c, pants_c)
+                ### RENATA: PROCESS CHARACTERISTICS
 
                 self.activate_yolo_pose(activate=False)
 
                 self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
 
-                # AUDIO: RECEIVE NAME AND DRINK OF GUEST
                 command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
                 print("Finished:", command)
                 keyword_list= command.split(" ")
-                guest1_name = keyword_list[0] 
-                guest1_drink = keyword_list[1]
-                print(guest1_name, guest1_drink)
-                self.set_speech(filename="receptionist/recep_first_guest_"+guest1_name.lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/recep_drink_"+guest1_drink.lower(), wait_for_end_of=True)
-                # RGB: OK MODE
+                self.guest1_name = keyword_list[0] 
+                self.guest1_drink = keyword_list[1]
+                print(self.guest1_name, self.guest1_drink)
+                # self.set_speech(filename="receptionist/recep_first_guest_"+self.guest1_name.lower(), wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
+
+                ########## ADICIONAR UM: NICE TO MEET YOU + NOME DA PESSOA
+
                 self.set_rgb(GREEN+BLINK_LONG)
-                # CAMARA: SAVE IMAGE FROM GUEST 1
             
-                self.state = Characteristics_first_guest
-
-            elif self.state == Characteristics_first_guest:
-                print('State 2 = Characteristics first guest')
-                
-                #SAVE IMAGE FROM GUEST WITH NAME: "GUEST1"
-                #SPEAK CHARACTERISTICS: AGE, RACE, GENDER, HEIGHT, SHIRT COLOR, PANTS COLORS
-                #CALL FUNCTION - PROCESS_CHARACTERISTICS - PROCESSING INFORMATION AS IN 2024 CODE
-                #similar like this:
-                #get_caract, characteristics, none_variables = analyze_variables(race, age, gender, height, shirt_color, pant_color)
-
-
                 self.state = Navigation_to_sofa
-                
+
             elif self.state == Navigation_to_sofa:
                 print('State 3 = Navigation to sofa')
 
-                #SPEAK:Thank you. Please follow me.
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
                 
-                #MOVE TO SOFA LOCALISATION
-
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                if self.SIDE_TO_LOOK == "Right":
+                
+                ### NAVIGATION: MOVING TO THE SOFA
+                
+                if self.SIDE_TO_LOOK.lower() == "right":
+
                     self.set_neck(position=self.look_right, wait_for_end_of=False)
-                    #SPEAK:Please stay on my right until I give you instructions on where to sit.
+                    
                     self.set_speech(filename="receptionist/please_stay_on_my_right", wait_for_end_of=True)
-                elif self.SIDE_TO_LOOK == "Left":
+                
+                elif self.SIDE_TO_LOOK.lower() == "left":
+                    
                     self.set_neck(position=self.look_left, wait_for_end_of=False)
-                    #SPEAK:Please stay on my left until I give you instructions on where to sit.
+                    
                     self.set_speech(filename="receptionist/please_stay_on_my_left", wait_for_end_of=True)
 
                 self.state = Presentation_host_first_guest
@@ -661,151 +717,191 @@ class ReceptionistMain():
             elif self.state == Presentation_host_first_guest:
                 print('State 4 = Presentation host and first guest')
 
+                self.set_neck(position=self.look_down_sofa, wait_for_end_of=True)
+
+                self.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
+
                 self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True)
 
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.host_filename, self.host_position = self.search_for_host()
+                print(self.host_filename, self.host_position)
 
-                self.search_for_host()
+                self.activate_yolo_pose(activate=False)
                 
-                #SPEAK:Hello, I will present everyone in this room.
                 self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
-                #NECK: LOOK TO THE GUEST
+                
+                if self.SIDE_TO_LOOK.lower() == "right":
+                
+                    self.set_neck(position=self.look_right, wait_for_end_of=True)
+                
+                elif self.SIDE_TO_LOOK.lower() == "left":
 
+                    self.set_neck(position=self.look_left, wait_for_end_of=True)
+                
 
+                ########## SE MUDARMOS A ORDEM DAS FALAS É MENOS UMA ROTAÇÃO DO NECK E FICA MAIS INTUITIVO PORQUE ESTAMOS
+                ########## PORQUE ESTAMOS A OLHAR PARA O HOST, DIZEMOS AO GUEST PARA ELE SE SENTAR PARA ONDE ESTAMOS A OLHAR
+                ########## MAS COMEÇAMOS A FALAR DE REPENDE PARA O GUEST, ELE NEM SE APERCEBE
 
-                if self.SIDE_TO_LOOK == "Right":
-                    #MOVE TO SOFA LOCALISATION
-                    self.set_neck(position=self.look_right, wait_for_end_of=False)
-                    #SPEAK:Please stay on my right until I give you instructions on where to sit.
-                    self.set_speech(filename="receptionist/please_stay_on_my_right", wait_for_end_of=True)
-                elif self.SIDE_TO_LOOK == "Left":
-                    #MOVE TO SOFA LOCALISATION
-                    self.set_neck(position=self.look_left, wait_for_end_of=False)
-                    #SPEAK:Please stay on my left until I give you instructions on where to sit.
-                    self.set_speech(filename="receptionist/please_stay_on_my_left", wait_for_end_of=True)
+                ### SPEAK: HOST INFORMATION
+                self.set_speech(filename="receptionist/recep_host_"+self.host_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
 
-                #SPEAK:The host is "NAME" and his favorite drink is "DRINK".
-                #NECK: LOOK TO HOST 
-                #SPEAK:The first guest name is "NAME" and the favorite drink is "DRINK"
-                #ACTION: FOUND AN EMPTY SEAT
-                #NECK: LOOK TO AN EMPTY SEAT
-                #SPEAK:Please take a sit on the sofa that I'm looking at.
-                #NECK: LOOK TO SOFA 
-                self.set_neck_coords(position=self.look_empty_place, wait_for_end_of=False)
+                ### NECK: TURN TO HOST
+                self.set_neck_coords(position=self.host_position, ang=-10)
+
+                ### SPEAK GUEST NAME AND FAVOURITE DRINK
+                self.set_speech(filename="receptionist/recep_first_guest_"+self.guest1_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
+
+                ### NECK LOOK AT SOFA
+                self.set_neck_coords(position=self.look_sofa, ang=-20, wait_for_end_of=True)
+
+                ### SEARCH FOR AN EMPTY SEAT: ONLY FOR ROBOCUP
+
+                self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True)
+
                 self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
-                #RGB: OK MODE
+                
                 self.set_rgb(GREEN+BLINK_LONG)
-
+                
                 self.state = Navigate_to_starting_point
 
             elif self.state == Navigate_to_starting_point:
                 print('State 1 = Navigate_to_starting_point')
 
-                #NECK: LOOKS TO THE FLOOR (NAVIGATION POSE)
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 
-                #MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
+                ### NAVIGATION : MOVE TO RECEIVE THE SECOND GUEST POSITION
 
                 self.state = Receive_second_guest
 
             elif self.state == Receive_second_guest:
                 print('State 1 = Receive second guest')
 
+
+
+
+                # TEMPORARY 
+                # self.guest1_name = "Axel"
+                # self.guest1_drink = "Red Wine"
+                # self.guest1_drink = self.guest1_drink.replace(' ', '_') # if someone forgets to write correctly
+
+
+
+                ### OPEN THE DOOR ???                
+
                 self.calibrate_audio(wait_for_end_of=True)
-                #NECK: LOOKS IN FRONT 
+
                 self.set_neck(position=self.look_torso, wait_for_end_of=True)
-                #RGB: WAITING MODE
+
                 self.set_rgb(YELLOW+ROTATE)
 
                 self.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
 
-                ##### TIAGO: CHECK PERSON RIGHT IN FRONT (YOLO POSE) 
                 self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=False)
                 
-                self.search_for_guest() # search for guest 1 and returns all info regarding guest 1
+                self.search_for_guest() # search for guest 2 - only need to look at guest 
 
                 self.activate_yolo_pose(activate=False)
 
                 self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
 
-                # AUDIO: RECEIVE NAME AND DRINK OF GUEST 
                 command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
                 print("Finished:", command)
                 keyword_list= command.split(" ")
-                guest2_name = keyword_list[0] 
-                guest2_drink = keyword_list[1]
-                print(guest2_name, guest2_drink)
-                self.set_speech(filename="receptionist/recep_second_guest_"+guest2_name.lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/recep_drink_"+guest2_drink.lower(), wait_for_end_of=True)
+                self.guest2_name = keyword_list[0] 
+                self.guest2_drink = keyword_list[1]
+                print(self.guest2_name, self.guest2_drink)
+                # self.set_speech(filename="receptionist/recep_second_guest_"+self.guest2_name.lower(), wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/recep_drink_"+self.guest2_drink.lower(), wait_for_end_of=True)
 
                 self.set_rgb(GREEN+BLINK_LONG)
                 self.state = Navigation_to_sofa_second
-
+                
             elif self.state == Navigation_to_sofa_second:
                 print('State 3 = Navigation to sofa')
-                #RGB: OK MODE
-                #self.set_rgb(GREEN+BLINK_LONG)
-                #SPEAK:Thank you. Please follow me.
+
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
-                #NECK: LOOKS TO THE FLOOR (NAVIGATION POSe)
+                
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                if self.SIDE_TO_LOOK == "Right":
-                    #MOVE TO SOFA LOCALISATION
+                
+                ### NAVIGATION: MOVING TO THE SOFA
+                
+                if self.SIDE_TO_LOOK.lower() == "right":
+
                     self.set_neck(position=self.look_right, wait_for_end_of=False)
-                    #SPEAK:Please stay on my right until I give you instructions on where to sit.
+                    
                     self.set_speech(filename="receptionist/please_stay_on_my_right", wait_for_end_of=True)
-                elif self.SIDE_TO_LOOK == "Left":
-                    #MOVE TO SOFA LOCALISATION
+                
+                elif self.SIDE_TO_LOOK.lower() == "left":
+                    
                     self.set_neck(position=self.look_left, wait_for_end_of=False)
-                    #SPEAK:Please stay on my left until I give you instructions on where to sit.
+                    
                     self.set_speech(filename="receptionist/please_stay_on_my_left", wait_for_end_of=True)
 
                 self.state = Presentation_host_first_second_guest
 
             elif self.state == Presentation_host_first_second_guest:
                 print('State 4 = Presentation host, first and second guest')
-                
-                #NECK: LOOK TO THE GUEST
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                
-                #SPEAK:Hello, I will present everyone in this room.
-                self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
-                
-                if self.SIDE_TO_LOOK == "Right":
-                    #MOVE TO SOFA LOCALISATION
-                    self.set_neck(position=self.look_right, wait_for_end_of=False)
-                    #SPEAK:Please stay on my right until I give you instructions on where to sit.
-                    self.set_speech(filename="receptionist/please_stay_on_my_right", wait_for_end_of=True)
-                elif self.SIDE_TO_LOOK == "Left":
-                    #MOVE TO SOFA LOCALISATION
-                    self.set_neck(position=self.look_left, wait_for_end_of=False)
-                    #SPEAK:Please stay on my left until I give you instructions on where to sit.
-                    self.set_speech(filename="receptionist/please_stay_on_my_left", wait_for_end_of=True)
 
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                self.set_speech(filename="receptionist/dear_host"+"receptionist/dear_guest"+"receptionist/keep_face_clear", wait_for_end_of=True)
-                #SPEAK:The host is "NAME" and his favorite drink is "DRINK".
-                #SPEAK:Introduce the first guest - name and drink and characteristics
-                #NECK: LOOK TO THE SOFA/CHAIRS
-                self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
-                #ACTION: FOUND PERSONS/LOCALISATIONS
-                #ACTION: RECOGNIZE HOST AND GUEST 1 AND ASSOCIATE THEM COORDINATES
-                #NECK: LOOK TO HOST
+                self.set_neck(position=self.look_down_sofa, wait_for_end_of=True)
 
-                #SPEAK:Dear host
                 self.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
-                #NECK: LOOK TO THE GUEST
-                #SPEAK:Dear guest
                 self.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
-                #SPEAK:The second guest name is "NAME" and the favorite drink is "DRINK"
-                #ACTION: FOUND AN EMPTY SEAT
-                #NECK: LOOK TO AN EMPTY SEAT
-                #SPEAK:Please take a sit on the sofa that I'm looking at.
-                #NECK: LOOK TO SOFA 
-                self.set_neck_coords(position=self.look_empty_place, wait_for_end_of=False)
+                self.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
+
+                self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True)
+                
+                ### SEARCH FOR HOST AND GUEST1 AND RECEIVE THEIR LOCATION
+
+                self.activate_yolo_pose(activate=False)
+                
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+
+                self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
+
+                if self.SIDE_TO_LOOK.lower() == "right":
+                
+                    self.set_neck(position=self.look_right, wait_for_end_of=True)
+                
+                elif self.SIDE_TO_LOOK.lower() == "left":
+
+                    self.set_neck(position=self.look_left, wait_for_end_of=True)
+
+                ### SPEAK: HOST INFORMATION
+                self.set_speech(filename="receptionist/recep_host_"+self.host_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
+
+                ### SPEAK: GUEST1 INFORMATION
+                self.set_speech(filename="receptionist/recep_first_guest_"+self.guest1_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
+
+                ### SPEAK GUEST1 CHARACTERISTICS
+                self.set_speech(filename="receptionist/race_caucasian", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/between18_32", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/gender_male", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/height_taller", wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True) # missing color
+                
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+
+                ### SPEAK: GUEST2 INFORMATION
+                self.set_speech(filename="receptionist/recep_second_guest_"+self.guest2_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_drink_"+self.guest2_drink.lower(), wait_for_end_of=True)
+
+                self.set_neck_coords(position=self.look_sofa, ang=-20, wait_for_end_of=True)
+
+                ### SEARCH FOR AN EMPTY SEAT: ONLY FOR ROBOCUP                
+                
+                self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True)
+
                 self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
-                #RGB: OK MODE
-                #self.set_rgb(GREEN+BLINK_LONG)
+
+                self.set_rgb(GREEN+BLINK_LONG)
+                
                 self.state = Final_State
 
             elif self.state == Final_State:
@@ -817,7 +913,9 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/finish_receptionist", wait_for_end_of=True)
                 #NECK: LOOK TO THE FLOOR
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                #self.set_rgb(BLUE+ROTATE)
+                
+                self.set_rgb(BLUE+ROTATE)
+                
                 # After finishing the task stays in this loop 
                 while True:
                     pass
@@ -827,13 +925,19 @@ class ReceptionistMain():
 
     def search_for_host(self):
     
+        time.sleep(1)
+    
         host = DetectedPerson()
         detected_person_temp = Yolov8Pose()
         host_found = False
-        while detected_person_temp.num_person == 0 and host_found == False: #  and host.room_location:
+        
+        while detected_person_temp.num_person == 0 or host_found == False: #  and host.room_location:
             detected_person_temp = self.node.detected_people
 
             for p in detected_person_temp.persons:
+                
+                print(p.room_location, p.furniture_location)
+                
                 if p.room_location == "Living Room" and p.furniture_location == "Sofa":
                     is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb)
                     if is_cropped:
@@ -848,14 +952,17 @@ class ReceptionistMain():
                         host_found = True
                         print("SOFA NO")
                 else:
-                        print("CLOSEST PERSON")
-
-
+                    print("CLOSEST PERSON")
+                    is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb)
+                    if is_cropped:
+                        host = p
+                        host_found = True
+                        print("OUTSIDE")
 
 
         self.set_rgb(GREEN+BLINK_LONG)
 
-        self.set_neck_coords(position=[host.position_absolute.x, host.position_absolute.y], ang=[0,-10])
+        self.set_neck_coords(position=[host.position_absolute.x, host.position_absolute.y], ang=-10, wait_for_end_of=True)
 
         return filename, [host.position_absolute.x, host.position_absolute.y]
 
@@ -892,7 +999,7 @@ class ReceptionistMain():
 
         # I do this delay and the second confirmation because the moment the person enter the image, the robot will look at the place
         # this wait i give a timeout for the person to reach a more centered position and then i look at the person 
-        time.sleep(3)
+        time.sleep(2)
 
         detected_person_look = Yolov8Pose()
         while detected_person_look.num_person == 0:
