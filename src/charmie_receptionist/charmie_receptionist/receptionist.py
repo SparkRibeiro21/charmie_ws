@@ -17,7 +17,8 @@ from pathlib import Path
 from datetime import datetime
 import math
 import numpy as np
-
+import face_recognition
+import os
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -856,6 +857,8 @@ class ReceptionistMain():
                 self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True)
                 
                 ### SEARCH FOR HOST AND GUEST1 AND RECEIVE THEIR LOCATION
+                #AJUDA
+                #person_name=self.face_recognition(image,self.complete_path_save_images)
 
                 self.activate_yolo_pose(activate=False)
                 
@@ -1110,7 +1113,52 @@ class ReceptionistMain():
             
         else:
             return False, "None"
-        
+    
+    #TIAGO AJUDA A RECEBER AS IMAGENS CERTAS E A UTILIZAR A PASTA CORRETA ONDE VÃO ESTAR AS IMAGENS
+    def face_recognition(self, image, folder_images):
+       
+        image = face_recognition.load_image_file(image)
+
+        encoding_entry = face_recognition.face_encodings(image)
+
+        if len(encoding_entry) == 0:
+            return [("Unknown", 0)], None, 0  
+
+        encoding_entry = encoding_entry[0]  
+
+        encoding_knowns = []
+        names = []
+
+        for nome_arquivo in os.listdir(folder_images):
+            caminho_arquivo = os.path.join(folder_images, nome_arquivo)
+            imagem = face_recognition.load_image_file(caminho_arquivo)
+            encoding = face_recognition.face_encodings(imagem)
+
+            if len(encoding) == 0:
+                continue 
+
+            encoding = encoding[0]  
+            encoding_knowns.append(encoding)
+            nome_conhecido = os.path.splitext(nome_arquivo)[0] 
+            names.append(nome_conhecido)
+
+        if not encoding_knowns:  
+            return [("Unknown", 0)], None, 0
+
+        all_percentages = []
+        for encoding_knowns in encoding_knowns:
+            distancia = face_recognition.face_distance([encoding_knowns], encoding_entry)[0]
+            confidance = (1 - distancia) * 100
+            all_percentages.append(confidance)
+
+        person_recognized, biggest_confidance = max(zip(names, all_percentages), key=lambda x: x[1])
+
+        if biggest_confidance < 40:
+            person_recognized = "Unknown"
+
+        return person_recognized
+
+
 
     def Get_characteristics(race, age, gender, height, shirt_color, pant_color):
         characteristics = []
@@ -1132,9 +1180,9 @@ class ReceptionistMain():
             none_variables.append("gender")
 
         if height is not None:
-            if height > 150: 
+            if height > 155: 
                 height='taller'
-            elif height < 130:
+            elif height < 140:
                 height='smaller'
             else:
                 height='equal'
