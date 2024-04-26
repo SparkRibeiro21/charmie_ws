@@ -731,20 +731,27 @@ class StoringGroceriesMain():
                     Fourth_shelf = "Fourth shelf"
                     right_side = "Right side"
                     left_side = "Left side"
+                    i = 0
                     search = [first_shelf, second_shelf]
-                    for val in self.object_position.values():
-                        for search_string in search:
-                            if search_string in val:
-                                if right_side in val:
-                                    door_opened = "Right"
-                                    self.opening_doors = False
-                                    return door_opened
-                                elif left_side in val:
-                                    door_opened = "Left"
-                                    self.opening_doors = False
-                                    return door_opened
-                                else:
-                                    pass
+                    print(self.object_position.values())
+                    print(len(self.object_position.values()))
+                    for object_positions in self.object_position.values():
+                        for position in object_positions:
+                            print(position)
+                            for search_string in search:
+                                if search_string in position:
+                                    if right_side in position:
+                                        door_opened = "Right"
+                                        self.opening_doors = False
+                                        return door_opened
+                                    elif left_side in position:
+                                        door_opened = "Left"
+                                        self.opening_doors = False
+                                        return door_opened
+                                    else:
+                                        pass 
+                            
+
 
     def remove_duplicates(self):
         values_to_remove = []
@@ -1207,9 +1214,9 @@ class StoringGroceriesMain():
                 door_side = None
                 
                 while door_side == None:
+                    print(door_side)
                     pos_offset = list_of_neck_position_search[position_index]
                     new_neck_pos = [self.look_cabinet_center[0] + pos_offset[0], self.look_cabinet_center[1] + pos_offset[1]]
-                    print('pescoço: ', new_neck_pos)
                     
                     # Set the neck position
                     self.set_neck(position=new_neck_pos, wait_for_end_of=True)
@@ -1217,8 +1224,7 @@ class StoringGroceriesMain():
                     door_side = self.analysis_cabinet()
                     
                     position_index = (position_index + 1) % len(list_of_neck_position_search)
-                    print(position_index)
-                
+                    
                 print(door_side)
                 position_index = 0
 
