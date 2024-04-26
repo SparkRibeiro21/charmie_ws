@@ -905,7 +905,8 @@ class StoringGroceriesMain():
                     five_objects_detected = True
                     self.set_rgb(command=GREEN+BLINK_LONG)
                     break
-                self.set_rgb(command=RED+BLINK_LONG)
+                else:
+                    self.set_rgb(command=RED+BLINK_LONG)
 
         return nr_objects_high_priority_detected
 
@@ -1097,7 +1098,7 @@ class StoringGroceriesMain():
 
                 self.set_rgb(command=MAGENTA+SET_COLOUR)
 
-                self.wait_for_start_button()
+                # self.wait_for_start_button()
 
                 self.set_rgb(command=BLUE+SET_COLOUR)
 
