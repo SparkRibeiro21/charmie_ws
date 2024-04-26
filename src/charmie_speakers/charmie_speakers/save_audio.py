@@ -91,6 +91,41 @@ COMMANDS = {
 }
 """
 
+COMMANDS = {
+    'color_white':'White.',
+    'color_black':'Black.',
+    'color_grey':'Grey.',
+    'color_red':'Red.',
+    'color_orange':'Orange.',
+    'color_yellow':'Yellow.',
+    'color_green':'Green.',
+    'color_cyan':'Cyan.',
+    'color_blue':'Blue.',
+    'color_purple':'Purple.',
+    'color_magenta':'Magenta.',
+
+    'color_dark_red':'Dark red.',
+    'color_dark_orange':'Brown.',
+    'color_dark_yellow':'Olive.',
+    'color_dark_green':'Dark green.',
+    'color_dark_cyan':'Blue.',
+    'color_dark_blue':'Dark blue.',
+    'color_dark_purple':'Dark purple.',
+    'color_dark_magenta':'Dark magenta.',
+
+    'color_light_red':'Pink.',
+    'color_light_orange':'Light orange.',
+    'color_light_yellow':'Beige.',
+    'color_light_green':'Light green.',
+    'color_light_cyan':'Light cyan.',
+    'color_light_blue':'Light blue.',
+    'color_light_purple':'Light purple.',
+    'color_light_magenta':'Pink.',
+
+    'the_guest_is':'The guest is.',
+    'the_shirt_color_is':'The guest shirt color is.'
+}
+
 
 class RobotSpeak():
     def __init__(self):
