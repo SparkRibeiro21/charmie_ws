@@ -102,7 +102,7 @@ def generate_launch_description():
         charmie_multi_camera_launch_description,
         audio,
         face,
-        # speakers,
+        speakers,
         neck,
         low_level,
         odometry,

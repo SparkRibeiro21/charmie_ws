@@ -925,11 +925,62 @@ class ReceptionistMain():
 
     def search_for_host(self):
     
-        time.sleep(1)
-    
-        host = DetectedPerson()
+        self.set_rgb(MAGENTA+HALF_ROTATE)
+        time.sleep(0.5)
+
         detected_person_temp = Yolov8Pose()
+        start_time = time.time()
+        host = DetectedPerson()
         host_found = False
+
+        while not host_found:
+            while time.time() - start_time < 1.0:
+                detected_person_temp = self.node.detected_people  
+                if detected_person_temp.num_person == 0:  
+                    start_time = time.time()
+                    self.set_rgb(RED+HALF_ROTATE)
+                else:
+                    self.set_rgb(GREEN+HALF_ROTATE)
+                time.sleep(0.2)
+            
+            is_cropped = False
+            for p in detected_person_temp.persons:
+                print(p.room_location, p.furniture_location)
+                
+                if p.room_location == "Living Room" and p.furniture_location == "Sofa":
+                    is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb)
+                    if is_cropped:
+                        host = p
+                        host_found = True
+                        print("SOFA YES")
+
+                # if the robot localisation is a bit off and i do not detect anyone in the sofa, i just check for people in the living room
+                elif p.room_location == "Living Room":
+                    is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb)
+                    if is_cropped:
+                        host = p
+                        host_found = True
+                        print("SOFA NO")
+                else:
+                    print("CLOSEST PERSON")
+                    is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb)
+                    if is_cropped:
+                        host = p
+                        host_found = True
+                        print("OUTSIDE")
+
+        self.set_rgb(WHITE+HALF_ROTATE)
+
+
+
+        """
+        # time.sleep(0.5)
+    
+        # host = DetectedPerson()
+        # detected_person_temp = Yolov8Pose()
+        # host_found = False
+
+        self.set_rgb(MAGENTA+HALF_ROTATE)
         
         while detected_person_temp.num_person == 0 or host_found == False: #  and host.room_location:
             detected_person_temp = self.node.detected_people
@@ -958,10 +1009,12 @@ class ReceptionistMain():
                         host = p
                         host_found = True
                         print("OUTSIDE")
+        self.set_rgb(BLUE+HALF_ROTATE)
 
+        # self.set_rgb(GREEN+BLINK_LONG)
 
-        self.set_rgb(GREEN+BLINK_LONG)
-
+        """
+        
         self.set_neck_coords(position=[host.position_absolute.x, host.position_absolute.y], ang=-10, wait_for_end_of=True)
 
         return filename, [host.position_absolute.x, host.position_absolute.y]
@@ -975,37 +1028,48 @@ class ReceptionistMain():
 
         self.search_for_guest()
 
-        time.sleep(1)
+        time.sleep(0.5)
 
-        detected_person_get_info = Yolov8Pose()
+        detected_person_temp = Yolov8Pose()
+        start_time = time.time()
         guest = DetectedPerson()
         is_cropped = False
         while not is_cropped:
-            while detected_person_get_info.num_person == 0:
-                detected_person_get_info = self.node.detected_people
-            guest = detected_person_get_info.persons[0]
-            is_cropped, filename = self.crop_face(guest, detected_person_get_info.image_rgb)
+            while time.time() - start_time < 1.0:
+                detected_person_temp = self.node.detected_people  
+                if detected_person_temp.num_person == 0:  
+                    start_time = time.time()
+                    self.set_rgb(YELLOW+HALF_ROTATE)
+                else:
+                    self.set_rgb(GREEN+HALF_ROTATE)
+                time.sleep(0.2)
+            guest = detected_person_temp.persons[0]
+            is_cropped, filename = self.crop_face(guest, detected_person_temp.image_rgb)
+
+        self.set_rgb(WHITE+HALF_ROTATE)
 
         # filename is the full path of this guest image
         return filename, guest.ethnicity, guest.age_estimate, guest.gender, guest.height, guest.shirt_color, guest.pants_color
 
     def search_for_guest(self):
     
+        self.set_rgb(MAGENTA+HALF_ROTATE)
+        time.sleep(0.5)
+
         detected_person_temp = Yolov8Pose()
-        while detected_person_temp.num_person == 0:
-            detected_person_temp = self.node.detected_people
+        start_time = time.time()
+        while time.time() - start_time < 3.0:
+            detected_person_temp = self.node.detected_people  
+            if detected_person_temp.num_person == 0:  
+                start_time = time.time()
+                self.set_rgb(RED+HALF_ROTATE)
+            else:
+                self.set_rgb(YELLOW+HALF_ROTATE)
+            time.sleep(0.2)
 
-        self.set_rgb(GREEN+BLINK_LONG)
+        self.set_rgb(WHITE+HALF_ROTATE)
 
-        # I do this delay and the second confirmation because the moment the person enter the image, the robot will look at the place
-        # this wait i give a timeout for the person to reach a more centered position and then i look at the person 
-        time.sleep(2)
-
-        detected_person_look = Yolov8Pose()
-        while detected_person_look.num_person == 0:
-            detected_person_look = self.node.detected_people
-
-        self.track_person(person=detected_person_look.persons[0], wait_for_end_of=True)
+        self.track_person(person=detected_person_temp.persons[0], wait_for_end_of=True)
 
 
     def crop_face(self, new_person, current_frame_image_msg):
