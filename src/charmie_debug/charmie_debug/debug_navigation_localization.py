@@ -258,7 +258,15 @@ class RestaurantMain():
             if self.state == Waiting_for_start_button:
                 # your code here ...
 
+                # If initial position is inside while loop you are telling the robot the wrong localisation.
+                # This command must only be sent once, at the start of the task
                 self.set_initial_position(self.initial_position)
+
+                # next state
+                self.state = Searching_for_clients
+
+            elif self.state == Searching_for_clients:
+                #print('State 1 = Hand Raising Detect')
 
                 time.sleep(3)
                 
@@ -279,19 +287,10 @@ class RestaurantMain():
 
                 print("5 move")
 
-                while True:
-                    pass
-
-                # next state
-                # self.state = Searching_for_clients
-
-            elif self.state == Searching_for_clients:
-                #print('State 1 = Hand Raising Detect')
-
                 # your code here ...
                                 
                 # next state
-                self.state = Final_State
+                # self.state = Final_State
             
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 
