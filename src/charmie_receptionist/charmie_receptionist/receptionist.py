@@ -672,7 +672,6 @@ class ReceptionistMain():
                 print(self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color)
 
                 ### RENATA: PROCESS CHARACTERISTICS
-                self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color = self.Get_characteristics(self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color)
                 
                 self.activate_yolo_pose(activate=False)
 
@@ -884,12 +883,9 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
 
                 ### SPEAK GUEST1 CHARACTERISTICS
-                self.set_speech(filename="receptionist/the_first_guest_is", wait_for_end_of=True)
-                self.set_speech(filename="receptionist/race_"+self.guest1_ethnicity.lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/gender_"+self.guest1_gender.lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/age_"+self.guest1_age.lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/height_"+self.guest1_height.lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/the_shirt_color_is"+self.guest1_shirt_color.lower(), wait_for_end_of=True)
+                #self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color = self.Get_characteristics(self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color)
+                self.Get_characteristics(self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color)
+                
                 # self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True) # missing color
                 
 
@@ -1161,7 +1157,7 @@ class ReceptionistMain():
 
 
 
-    def Get_characteristics(race, age, gender, height, shirt_color, pant_color):
+    def Get_characteristics(self, race, age, gender, height, shirt_color, pant_color):
         characteristics = []
         none_variables = []
 
@@ -1225,5 +1221,12 @@ class ReceptionistMain():
                 pass  # Deixa a cor da calça vazia
             else:
                 print("Empty:", variable)
+
+        self.set_speech(filename="receptionist/the_first_guest_is", wait_for_end_of=True)
+        self.set_speech(filename="receptionist/race_"+race.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/gender_"+gender.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/age_"+age.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/height_"+height.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/the_shirt_color_is"+shirt_color.lower(), wait_for_end_of=True)
 
         return age,gender,race,height,shirt_color, pant_color
