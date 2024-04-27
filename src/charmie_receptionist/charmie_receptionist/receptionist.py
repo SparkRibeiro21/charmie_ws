@@ -1229,4 +1229,4 @@ class ReceptionistMain():
         self.set_speech(filename="receptionist/height_"+height.lower(), wait_for_end_of=True)
         self.set_speech(filename="receptionist/the_shirt_color_is"+shirt_color.lower(), wait_for_end_of=True)
 
-        return age,gender,race,height,shirt_color, pant_color
+        #return age,gender,race,height,shirt_color, pant_color
