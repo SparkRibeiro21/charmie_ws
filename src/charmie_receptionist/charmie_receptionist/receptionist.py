@@ -9,6 +9,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
 
+import os
 import cv2 
 import threading
 import time
@@ -17,6 +18,7 @@ from pathlib import Path
 from datetime import datetime
 import math
 import numpy as np
+import face_recognition
 
 
 # Constant Variables to ease RGB_MODE coding
@@ -583,7 +585,7 @@ class ReceptionistMain():
 
         self.SIDE_TO_LOOK = "right"
 
-        self.state = Waiting_for_start_button
+        self.state = Receive_first_guest
 
         self.look_forward = [0, 0]
         self.look_navigation = [0, -40]
@@ -669,6 +671,9 @@ class ReceptionistMain():
                 
                 self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color = self.search_for_guest_and_get_info() # search for guest 1 and returns all info regarding guest 1
                 print(self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color)
+
+                ### SPEAK GUEST1 CHARACTERISTICS
+                self.get_characteristics(race=self.guest1_ethnicity, age="Under 20", gender=self.guest1_gender,height=self.guest1_height,shirt_color=self.guest1_shirt_color,pant_color= self.guest1_pants_color)
 
                 ### RENATA: PROCESS CHARACTERISTICS
 
@@ -879,12 +884,7 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
 
                 ### SPEAK GUEST1 CHARACTERISTICS
-                self.set_speech(filename="receptionist/race_caucasian", wait_for_end_of=True)
-                self.set_speech(filename="receptionist/between18_32", wait_for_end_of=True)
-                self.set_speech(filename="receptionist/gender_male", wait_for_end_of=True)
-                self.set_speech(filename="receptionist/height_taller", wait_for_end_of=True)
-                # self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True) # missing color
-                
+                self.get_characteristics(self.guest1_ethnicity, self.guest1_age,self.guest1_gender,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color)
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
 
@@ -1035,7 +1035,7 @@ class ReceptionistMain():
         guest = DetectedPerson()
         is_cropped = False
         while not is_cropped:
-            while time.time() - start_time < 1.0:
+            while time.time() - start_time < 2.0:
                 detected_person_temp = self.node.detected_people  
                 if detected_person_temp.num_person == 0:  
                     start_time = time.time()
@@ -1109,89 +1109,136 @@ class ReceptionistMain():
             return False, "None"
 
 
-
-
-    '''def Get_characteristics(race, age, gender, height, shirt_color, pant_color):
+    def get_characteristics(self, race, age, gender, height, shirt_color, pant_color):
         characteristics = []
         none_variables = []
 
-        if race is not None:
-            characteristics.append(race)
+        if race != "None":
+            if race == "Middle Eastern" or race == "Hispanic" or race == "Indian":
+                race = "Caucasian"
+            else:    
+                characteristics.append(race)
         else:
             none_variables.append("race")
 
-        if age is not None:
-            characteristics.append(age)
+        if age != "None":
+            if age == "Over 60":
+                age = "Between 40 and 60"
+                age = age.replace(' ', '_')
+            elif age == "Under 20":
+                age = "Between 18 and 32"
+                age = age.replace(' ', '_')
+            else:
+                age = age.replace(' ', '_')
+                characteristics.append(age)
         else:
             none_variables.append("age")
 
-        if gender is not None:
+        if gender != "None":
             characteristics.append(gender)
         else:
             none_variables.append("gender")
 
-        if height is not None:
+        print(height)
+
+        if height != "None":
+            if height > 1.55: 
+                height='taller'
+            elif height < 1.40:
+                height='smaller'
+            else:
+                height='equal'
             characteristics.append(height)
         else:
             none_variables.append("height")
 
-        if shirt_color is not None:
+        if shirt_color != "None":
             characteristics.append(shirt_color)
         else:
             none_variables.append("shirt_color")
 
-        if pant_color is not None:
+        if pant_color != "None":
             characteristics.append(pant_color)
         else:
             none_variables.append("pant_color")
 
-        get_caract = len(characteristics)
+        if not characteristics:  # Se nenhuma característica foi fornecida
+            print("Nenhuma característica fornecida")
+            return None
 
-        return get_caract, characteristics, none_variables
+        for variable in none_variables:
+            if variable == "age":
+                age = 'Between18_32'
+                characteristics.append(age)
+            elif variable == "gender":
+                gender = "Male"
+                characteristics.append(gender)
+            elif variable == "race":
+                race = "Caucasian"
+                characteristics.append(race)
+            elif variable == "height":
+                height = "Taller than me"
+                characteristics.append(height)
+            elif variable == "shirt_color":
+                shirt_color = "White"
+                characteristics.append(shirt_color)
+            elif variable == "pant_color":
+                pass  # Deixa a cor da calça vazia
+            else:
+                print("Empty:", variable)
 
+        
 
-    def Process_Info(get_caract, characteristics, none_variables):
-        if get_caract == 5 or get_caract == 6:
-            print("Características:", characteristics)
-        elif get_caract == 4 or get_caract == 3 or get_caract == 2 or get_caract == 1 or get_caract == 0:
-            print(characteristics)
-            if 'age' in none_variables:
-                print('age 25 and 32')
-            if 'gender' in none_variables:
-                print('gender male')
-            if 'race' in none_variables:
-                print('race caucasian')
-            if 'height' in none_variables:
-                print('height taller than me')
-            if 'shirt_color' in none_variables:
-                print('white')
-            if 'pant_color' in none_variables:
-                pass
-            if not none_variables:  # Se não houver variáveis ausentes
-                print("nada")
-
-
-
-    def main():
-        # Variáveis de exemplo para teste
-        race = "Caucasian"
-        age = 18
-        gender = None
-        height = None
-        shirt_color = "Blue"
-        pant_color = None
-
-        # Chamando a função Get_characteristics
-        get_caract, characteristics, none_variables = Get_characteristics(race, age, gender, height, shirt_color, pant_color)
-
-        # Mostrando os resultados
-        print("Número de características:", get_caract)
-        print("Características:", characteristics)
-        print("Variáveis None:", none_variables)
-
-        # Processando as informações
-        Process_Info(get_caract, characteristics, none_variables)
+        self.set_speech(filename="receptionist/the_first_guest_is", wait_for_end_of=True)
+        self.set_speech(filename="receptionist/race_"+race.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/gender_"+gender.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/age_"+age.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/height_"+height.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/the_shirt_color_is", wait_for_end_of=True)
+        self.set_speech(filename="receptionist/color_"+shirt_color.lower(), wait_for_end_of=True)
 
 
-    if __name__ == "__main__":
-        main()'''
+
+    #TIAGO AJUDA A RECEBER AS IMAGENS CERTAS E A UTILIZAR A PASTA CORRETA ONDE VÃO ESTAR AS IMAGENS
+    def face_recognition(self, image, folder_images):
+       
+        image = face_recognition.load_image_file(image)
+
+        encoding_entry = face_recognition.face_encodings(image)
+
+        if len(encoding_entry) == 0:
+            return [("Unknown", 0)], None, 0  
+
+        encoding_entry = encoding_entry[0]  
+
+        encoding_knowns = []
+        names = []
+
+        for nome_arquivo in os.listdir(folder_images):
+            caminho_arquivo = os.path.join(folder_images, nome_arquivo)
+            imagem = face_recognition.load_image_file(caminho_arquivo)
+            encoding = face_recognition.face_encodings(imagem)
+
+            if len(encoding) == 0:
+                continue 
+
+            encoding = encoding[0]  
+            encoding_knowns.append(encoding)
+            nome_conhecido = os.path.splitext(nome_arquivo)[0] 
+            names.append(nome_conhecido)
+
+        if not encoding_knowns:  
+            return [("Unknown", 0)], None, 0
+
+        all_percentages = []
+        for encoding_knowns in encoding_knowns:
+            distancia = face_recognition.face_distance([encoding_knowns], encoding_entry)[0]
+            confidance = (1 - distancia) * 100
+            all_percentages.append(confidance)
+
+        person_recognized, biggest_confidance = max(zip(names, all_percentages), key=lambda x: x[1])
+
+        if biggest_confidance < 40:
+            person_recognized = "Unknown"
+
+        return person_recognized

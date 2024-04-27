@@ -40,9 +40,12 @@ class TestNode(Node):
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         
-
         # Navigation
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+
+        # Orientation
+        self.flag_orientation_publisher = self.create_publisher(Bool, "flag_orientation", 10)
+
 
         # Navigation
         # while not self.nav_trigger_client.wait_for_service(1.0):
@@ -209,12 +212,52 @@ class RestaurantMain():
         Delivering_order_to_client = 6
         Final_State = 7
         
+<<<<<<< HEAD
         self.initial_position = [-2.5, 1.5, 0]
+=======
+        # self.initial_position = [-0.409, 4.724, 0]
+        self.initial_position = [1.0, 1.0, 0]
+>>>>>>> main
         
         # VARS ...
         self.state = Waiting_for_start_button
 
         self.set_initial_position(self.initial_position)
+
+
+        time.sleep(5)
+
+        self.node.nav_tar_sdnl.orientation_absolute = -90.0
+        self.node.nav_tar_sdnl.move_or_rotate = "ROTATE_GLOBAL"
+        self.node.nav_tar_sdnl.flag_not_obs = False
+        self.node.nav_tar_sdnl.follow_me = False
+
+        self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
+
+
+
+        while not self.node.flag_navigation_reached:
+            pass
+        self.node.flag_navigation_reached = False
+        print("REACHED POSITION")
+
+
+        time.sleep(5)
+
+
+        self.node.nav_tar_sdnl.orientation_absolute = 45.0
+        self.node.nav_tar_sdnl.move_or_rotate = "ROTATE_GLOBAL"
+        self.node.nav_tar_sdnl.flag_not_obs = False
+        self.node.nav_tar_sdnl.follow_me = False
+
+        self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
+
+        while not self.node.flag_navigation_reached:
+            pass
+        self.node.flag_navigation_reached = False
+        print("REACHED POSITION")
+
+
 
         while True:
             pass

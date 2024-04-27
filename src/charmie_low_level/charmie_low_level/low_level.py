@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
-from example_interfaces.msg import Bool, Int16
+from example_interfaces.msg import Bool, Int16, Float32
 from charmie_interfaces.msg import Encoders
 import serial
 import time
@@ -267,6 +267,9 @@ class LowLevelNode(Node):
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
 
+        self.get_orientation_publisher = self.create_publisher(Float32, "get_orientation", 10)
+        self.flag_orientation_subscriber = self.create_subscription(Bool, "flag_orientation", self.flag_orientation_callback , 10)
+
         self.low_level_diagnostic_publisher = self.create_publisher(Bool, "low_level_diagnostic", 10)
 
 
@@ -312,6 +315,7 @@ class LowLevelNode(Node):
         self.flag_get_vccs = False
         self.flag_get_torso_pos = False
         self.flag_get_encoders = False
+        self.flag_get_orientation = False
 
     
     def torso_test_callback(self, data: Pose2D):
@@ -435,6 +439,17 @@ class LowLevelNode(Node):
             # print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
             self.get_encoders_publisher.publish(cmd)
 
+        if self.flag_get_orientation:
+
+            aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
+            
+            orientation = Float32()
+            orientation.data = (aux_o[0]<<8|aux_o[1])/10
+            
+            print("ORIENTATION:", orientation.data)
+
+            self.get_orientation_publisher.publish(orientation)
+
 
     def flag_start_button_callback(self, flag: Bool):
         # print("Flag Start Button Set To: ", flag.data)
@@ -467,6 +482,14 @@ class LowLevelNode(Node):
         else:
             self.get_logger().info("Received Reading Encoder State False")
         self.flag_get_encoders = flag.data
+
+    def flag_orientation_callback(self, flag: Bool):
+        # print("Flag Orientation Set To: ", flag.data)
+        if flag.data:
+            self.get_logger().info("Received Reading Orientation State True")
+        else:
+            self.get_logger().info("Received Reading Orientation State False")
+        self.flag_get_orientation = flag.data
 
     def set_movement_callback(self, flag: Bool):
         # print("Set Movement Set To: ", flag.data)
