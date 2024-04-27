@@ -884,7 +884,7 @@ class ReceptionistMain():
 
                 ### SPEAK GUEST1 CHARACTERISTICS
                 #self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color = self.Get_characteristics(self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color)
-                self.Get_characteristics(self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color)
+                self.get_characteristics(self.guest1_age,self.guest1_gender,self.guest1_ethnicity,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color)
                 
                 # self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True) # missing color
                 
@@ -1157,7 +1157,7 @@ class ReceptionistMain():
 
 
 
-    def Get_characteristics(self, race, age, gender, height, shirt_color, pant_color):
+    def get_characteristics(self, race, age, gender, height, shirt_color, pant_color):
         characteristics = []
         none_variables = []
 
@@ -1177,9 +1177,9 @@ class ReceptionistMain():
             none_variables.append("gender")
 
         if height is not None:
-            if height > 155: 
+            if height > 1.55: 
                 height='taller'
-            elif height < 140:
+            elif height < 1.40:
                 height='smaller'
             else:
                 height='equal'
