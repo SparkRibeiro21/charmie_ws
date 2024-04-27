@@ -672,11 +672,6 @@ class ReceptionistMain():
                 self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color = self.search_for_guest_and_get_info() # search for guest 1 and returns all info regarding guest 1
                 print(self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color)
 
-                ### SPEAK GUEST1 CHARACTERISTICS
-                self.get_characteristics(race=self.guest1_ethnicity, age="Under 20", gender=self.guest1_gender,height=self.guest1_height,shirt_color=self.guest1_shirt_color,pant_color= self.guest1_pants_color)
-
-                ### RENATA: PROCESS CHARACTERISTICS
-
                 self.activate_yolo_pose(activate=False)
 
                 self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
@@ -857,12 +852,43 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
                 self.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
 
-                self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True)
-                
-                ### SEARCH FOR HOST AND GUEST1 AND RECEIVE THEIR LOCATION
 
+
+
+
+
+                self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True)
+
+                ### SEARCH FOR ALL DETECTED PEOPLE AND RECEIVE THEIR LOCATION
+                # total_photos = []
+                # total_coords = []
+                total_photos, total_coords = self.search_for_host_and_guest1()
+                # total_photos = [photo1, photo2, photo3]
+                # total_coords = [coords1, coords2, coords3]
+                                
                 self.activate_yolo_pose(activate=False)
+
+                ### ATTRIBUTE IDENTIFICATRION TO DETECTED PEOPLE
+                total_identifications = []
+                total_identifications_error = []
+                for photo in total_photos:
+                    identification, error = face_recognition(self, photo)
+                    total_identifications.append(identification)
+                    total_identifications_error.append(error)
+
+                print(len(total_identifications))
                 
+                ### TABELA DE VERDADES DE HOST, GUEST, UNKNOWN
+
+                ### ADD NECKS TO LOOK AT PEOPLE
+
+
+
+
+
+
+
+
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
 
                 self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
@@ -884,8 +910,8 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
 
                 ### SPEAK GUEST1 CHARACTERISTICS
-                self.get_characteristics(self.guest1_ethnicity, self.guest1_age,self.guest1_gender,self.guest1_height,self.guest1_shirt_color, self.guest1_pants_color)
-
+                self.get_characteristics(race=self.guest1_ethnicity, age=self.guest1_age, gender=self.guest1_gender,height=self.guest1_height,shirt_color=self.guest1_shirt_color,pant_color= self.guest1_pants_color)
+                
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
 
                 ### SPEAK: GUEST2 INFORMATION
@@ -971,23 +997,39 @@ class ReceptionistMain():
 
         self.set_rgb(WHITE+HALF_ROTATE)
 
+        self.set_neck_coords(position=[host.position_absolute.x, host.position_absolute.y], ang=-10, wait_for_end_of=True)
+
+        return filename, [host.position_absolute.x, host.position_absolute.y]
 
 
-        """
-        # time.sleep(0.5)
-    
-        # host = DetectedPerson()
-        # detected_person_temp = Yolov8Pose()
-        # host_found = False
+    def search_for_host_and_guest1(self):
+        total_photos = []
+        total_coords = []
+
 
         self.set_rgb(MAGENTA+HALF_ROTATE)
-        
-        while detected_person_temp.num_person == 0 or host_found == False: #  and host.room_location:
-            detected_person_temp = self.node.detected_people
+        time.sleep(0.5)
 
+        detected_person_temp = Yolov8Pose()
+        start_time = time.time()
+        host = DetectedPerson()
+        host_found = False
+
+        while not host_found:
+            while time.time() - start_time < 2.0:
+                detected_person_temp = self.node.detected_people  
+                if detected_person_temp.num_person == 0:  
+                    start_time = time.time()
+                    self.set_rgb(RED+HALF_ROTATE)
+                else:
+                    self.set_rgb(YELLOW+HALF_ROTATE)
+                time.sleep(0.2)
+            
             for p in detected_person_temp.persons:
-                
                 print(p.room_location, p.furniture_location)
+
+                is_cropped = False
+                filename = ""
                 
                 if p.room_location == "Living Room" and p.furniture_location == "Sofa":
                     is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb)
@@ -995,6 +1037,7 @@ class ReceptionistMain():
                         host = p
                         host_found = True
                         print("SOFA YES")
+
                 # if the robot localisation is a bit off and i do not detect anyone in the sofa, i just check for people in the living room
                 elif p.room_location == "Living Room":
                     is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb)
@@ -1009,21 +1052,21 @@ class ReceptionistMain():
                         host = p
                         host_found = True
                         print("OUTSIDE")
-        self.set_rgb(BLUE+HALF_ROTATE)
 
-        # self.set_rgb(GREEN+BLINK_LONG)
+                if is_cropped:
+                    total_photos.append(filename)
+                    total_coords.append([host.position_absolute.x, host.position_absolute.y])
 
-        """
-        
-        self.set_neck_coords(position=[host.position_absolute.x, host.position_absolute.y], ang=-10, wait_for_end_of=True)
+        if len(total_photos) == 1:
+            self.set_rgb(BLUE+HALF_ROTATE)
+        elif len(total_photos) == 2:
+            self.set_rgb(GREEN+HALF_ROTATE)
+        elif len(total_photos) > 2:
+            self.set_rgb(WHITE+HALF_ROTATE)
 
-        return filename, [host.position_absolute.x, host.position_absolute.y]
+        return total_photos, total_coords
 
 
-    def search_for_host_and_guest1(self):
-        pass
-
-                
     def search_for_guest_and_get_info(self):
 
         self.search_for_guest()
@@ -1071,7 +1114,6 @@ class ReceptionistMain():
 
         self.track_person(person=detected_person_temp.persons[0], wait_for_end_of=True)
 
-
     def crop_face(self, new_person, current_frame_image_msg):
 
         MIN_KP_CONF_VALUE = 0.5
@@ -1107,7 +1149,6 @@ class ReceptionistMain():
 
         else:
             return False, "None"
-
 
     def get_characteristics(self, race, age, gender, height, shirt_color, pant_color):
         characteristics = []
@@ -1197,13 +1238,9 @@ class ReceptionistMain():
         self.set_speech(filename="receptionist/the_shirt_color_is", wait_for_end_of=True)
         self.set_speech(filename="receptionist/color_"+shirt_color.lower(), wait_for_end_of=True)
 
-
-
-    #TIAGO AJUDA A RECEBER AS IMAGENS CERTAS E A UTILIZAR A PASTA CORRETA ONDE VÃO ESTAR AS IMAGENS
-    def face_recognition(self, image, folder_images):
+    def face_recognition(self, image):
        
         image = face_recognition.load_image_file(image)
-
         encoding_entry = face_recognition.face_encodings(image)
 
         if len(encoding_entry) == 0:
@@ -1211,9 +1248,44 @@ class ReceptionistMain():
 
         encoding_entry = encoding_entry[0]  
 
+
         encoding_knowns = []
         names = []
 
+        host_guest_paths = [self.host_filename, self.guest1_filename]
+        host_guest_names = ["host", "guest1"]
+
+
+        for i in range(2):
+            img = face_recognition.load_image_file(host_guest_paths[i])
+            encoding = face_recognition.face_encodings(img)
+
+            if len(encoding) == 0:
+                continue 
+
+            encoding = encoding[0]  
+            encoding_knowns.append(encoding)
+            names.append(host_guest_names[i])
+        
+        if not encoding_knowns:  
+            return [("Unknown", 0)], None, 0
+        
+        all_percentages = []
+        for encoding_knowns in encoding_knowns:
+            distancia = face_recognition.face_distance([encoding_knowns], encoding_entry)[0]
+            confidance = (1 - distancia) * 100
+            all_percentages.append(confidance)
+
+        person_recognized, biggest_confidance = max(zip(names, all_percentages), key=lambda x: x[1])
+
+        if biggest_confidance < 40:
+            person_recognized = "Unknown"
+
+        return person_recognized
+    
+        """
+        encoding_knowns = []
+        names = []
         for nome_arquivo in os.listdir(folder_images):
             caminho_arquivo = os.path.join(folder_images, nome_arquivo)
             imagem = face_recognition.load_image_file(caminho_arquivo)
@@ -1242,3 +1314,4 @@ class ReceptionistMain():
             person_recognized = "Unknown"
 
         return person_recognized
+        """
