@@ -68,6 +68,8 @@ class TestNode(Node):
         self.rgb_message = ""
         self.speech_success = True
         self.speech_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
 
         self.nav_tar_sdnl = TarNavSDNL()
 
@@ -161,6 +163,47 @@ class RestaurantMain():
     # 
     #     return self.node.track_object_success, self.node.track_object_message   
     
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, follow_me=False, wait_for_end_of=True):
+
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
+
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.follow_me = follow_me
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
+
+
     def set_initial_position(self, initial_position):
 
         task_initialpose = PoseWithCovarianceStamped()
@@ -212,16 +255,46 @@ class RestaurantMain():
         Delivering_order_to_client = 6
         Final_State = 7
         
-<<<<<<< HEAD
-        self.initial_position = [-2.5, 1.5, 0]
-=======
-        # self.initial_position = [-0.409, 4.724, 0]
-        self.initial_position = [1.0, 1.0, 0]
->>>>>>> main
+        # self.initial_position = [-2.5, 1.5, 0]
+        self.initial_position = [-1.0, 1.5, -90.0]
+
+        # navigation positions
+        self.front_of_sofa = [-2.5, 1.5]
+        self.sofa = [-2.5, 3.0]
         
         # VARS ...
         self.state = Waiting_for_start_button
 
+
+        self.set_initial_position(self.initial_position)
+
+        time.sleep(3)
+
+        # (self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, follow_me=False, wait_for_end_of=True):
+        
+        # this gives an error because "orient" is a non-existing movement type and does not send anything to navigation 
+        self.set_navigation(movement="orient", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+
+        print("2 move")
+
+        self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+
+        print("3 move")
+
+        self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+
+        print("4 move")
+
+        self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
+
+        print("5 move")
+
+
+        while True:
+            pass
+
+
+        """
         self.set_initial_position(self.initial_position)
 
 
@@ -256,11 +329,9 @@ class RestaurantMain():
             pass
         self.node.flag_navigation_reached = False
         print("REACHED POSITION")
+        """
 
 
-
-        while True:
-            pass
 
         while True:
 

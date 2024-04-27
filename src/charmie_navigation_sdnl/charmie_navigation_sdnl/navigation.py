@@ -845,7 +845,7 @@ class NavSDNLNode(Node):
                     print("ANG_ERR:", self.nav.ang_to_target) 
                     if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
                         self.navigation_state = 2
-                elif self.nav.nav_target.move_or_rotate.lower() == "rotate_global":
+                elif self.nav.nav_target.move_or_rotate.lower() == "orientate":
                     omni_move, target_reached = self.nav.rotate_orientation(self.nav.nav_target.orientation_absolute)
                     self.omni_move_publisher.publish(omni_move)
                     if target_reached:
