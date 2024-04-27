@@ -6,8 +6,8 @@ from rclpy.node import Node
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
 
 import os
 import cv2 
@@ -48,6 +48,9 @@ class ReceptionistNode(Node):
         # Arm CHARMIE
         # self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         # self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
+        # Navigation
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
 
@@ -68,6 +71,8 @@ class ReceptionistNode(Node):
         # self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
         # self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        # Navigation
+        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
@@ -96,11 +101,13 @@ class ReceptionistNode(Node):
             self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         # while not self.activate_yolo_objects_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-
         # Arm (CHARMIE)
         # while not self.arm_trigger_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
-        
+        # Navigation
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
@@ -116,6 +123,7 @@ class ReceptionistNode(Node):
         # self.detected_objects = Yolov8Objects()
         self.start_button_state = False
         # self.arm_ready = True
+        self.flag_navigation_reached = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -139,6 +147,9 @@ class ReceptionistNode(Node):
         # self.activate_yolo_objects_message = ""
         self.arm_success = True
         self.arm_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
+
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -153,6 +164,10 @@ class ReceptionistNode(Node):
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
         # print("Received Start Button:", state.data)
+
+    ### NAVIGATION ###
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.flag_navigation_reached = flag
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
@@ -529,6 +544,46 @@ class ReceptionistMain():
 
         return self.node.track_person_success, self.node.track_person_message
  
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, follow_me=False, wait_for_end_of=True):
+
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
+
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.follow_me = follow_me
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
+
     def set_initial_position(self, initial_position):
 
         task_initialpose = PoseWithCovarianceStamped()
@@ -540,34 +595,28 @@ class ReceptionistMain():
         task_initialpose.pose.pose.position.y = -initial_position[0]
         task_initialpose.pose.pose.position.z = 0.0
 
-        quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
 
-        task_initialpose.pose.pose.orientation.x = quaternion[0]
-        task_initialpose.pose.pose.orientation.y = quaternion[1]
-        task_initialpose.pose.pose.orientation.z = quaternion[2]
-        task_initialpose.pose.pose.orientation.w = quaternion[3] 
+        # Convert an Euler angle to a quaternion.
+        # Input
+        #     :param roll: The roll (rotation around x-axis) angle in radians.
+        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
+        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
+        # 
+        # Output
+        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+
+        roll = 0.0
+        pitch = 0.0
+        yaw = math.radians(initial_position[2])
+
+        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
-    def get_quaternion_from_euler(self, roll, pitch, yaw):
-        """
-        Convert an Euler angle to a quaternion.
-        
-        Input
-            :param roll: The roll (rotation around x-axis) angle in radians.
-            :param pitch: The pitch (rotation around y-axis) angle in radians.
-            :param yaw: The yaw (rotation around z-axis) angle in radians.
-        
-        Output
-            :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
-        """
-        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        
-        return [qx, qy, qz, qw]
-    
 
     # main state-machine function
     def main(self):
@@ -583,9 +632,18 @@ class ReceptionistMain():
         Presentation_host_first_second_guest = 7
         Final_State = 8
 
+        self.state = Waiting_for_start_button
+
         self.SIDE_TO_LOOK = "right"
 
-        self.state = Receive_first_guest
+        # Start localisation position
+        self.initial_position = [-1.0, 1.5, -90.0]
+
+        # Navigation Positions
+        self.front_of_sofa = [-2.5, 1.5]
+        self.sofa = [-2.5, 3.0]
+        self.receive_guests = [-1.0, 1.5]
+        self.where_guest_is_received = [0.0, 1.5]
 
         self.look_forward = [0, 0]
         self.look_navigation = [0, -40]
@@ -620,8 +678,7 @@ class ReceptionistMain():
         midpath = "charmie_ws/src/charmie_receptionist/charmie_receptionist/images"
         self.complete_path_save_images = home+'/'+midpath+'/'
 
-        # create a look sofa
-
+        
         # debug print
         print("IN NEW MAIN")
 
@@ -630,11 +687,15 @@ class ReceptionistMain():
             if self.state == Waiting_for_start_button:
                 print('State 0 = Initial')
 
+                self.set_initial_position(self.initial_position)
+
+                print("SET INITIAL POSITION")
+
+                time.sleep(1)
+
                 self.set_face("demo5")
 
                 self.activate_yolo_pose(activate=False)
-
-                self.set_initial_position([-2.5, 1.5, 0])
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
@@ -685,7 +746,7 @@ class ReceptionistMain():
                 # self.set_speech(filename="receptionist/recep_first_guest_"+self.guest1_name.lower(), wait_for_end_of=True)
                 # self.set_speech(filename="receptionist/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
 
-                ########## ADICIONAR UM: NICE TO MEET YOU + NOME DA PESSOA
+                ########## ADICIONAR UM: NICE TO MEET YOU + NOME DA PESSOA ???
 
                 self.set_rgb(GREEN+BLINK_LONG)
             
@@ -698,8 +759,10 @@ class ReceptionistMain():
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 
-                ### NAVIGATION: MOVING TO THE SOFA
-                
+                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
+
                 if self.SIDE_TO_LOOK.lower() == "right":
 
                     self.set_neck(position=self.look_right, wait_for_end_of=False)
@@ -773,22 +836,14 @@ class ReceptionistMain():
 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 
-                ### NAVIGATION : MOVE TO RECEIVE THE SECOND GUEST POSITION
-
+                self.set_navigation(movement="orientate", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
+                
                 self.state = Receive_second_guest
 
             elif self.state == Receive_second_guest:
                 print('State 1 = Receive second guest')
-
-
-
-
-                # TEMPORARY 
-                # self.guest1_name = "Axel"
-                # self.guest1_drink = "Red Wine"
-                # self.guest1_drink = self.guest1_drink.replace(' ', '_') # if someone forgets to write correctly
-
-
 
                 ### OPEN THE DOOR ???                
 
@@ -826,8 +881,10 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                
-                ### NAVIGATION: MOVING TO THE SOFA
+                    
+                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
                 
                 if self.SIDE_TO_LOOK.lower() == "right":
 
@@ -854,7 +911,7 @@ class ReceptionistMain():
 
 
 
-
+                """
 
 
                 self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True)
@@ -883,7 +940,7 @@ class ReceptionistMain():
                 ### ADD NECKS TO LOOK AT PEOPLE
 
 
-
+                """
 
 
 

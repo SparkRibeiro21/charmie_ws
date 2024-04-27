@@ -29,6 +29,12 @@ def generate_launch_description():
                 emulate_tty=True
                 )
     
+    debug_visual = Node(package='charmie_debug',
+                        executable='debug_visual',
+                        name='debug_visual',
+                        emulate_tty=True
+                        )
+    
     speakers = Node(package='charmie_speakers',
                         executable='speakers',
                         name='speakers',
@@ -59,6 +65,12 @@ def generate_launch_description():
     odometry = Node(package='charmie_odometry',
                 executable='odometry',
                 name='odometry',
+                emulate_tty=True
+                )
+    
+    navigation = Node(package='charmie_navigation_sdnl',
+                executable='navigation',
+                name='navigation',
                 emulate_tty=True
                 )
     
@@ -100,12 +112,14 @@ def generate_launch_description():
 
     return LaunchDescription([
         charmie_multi_camera_launch_description,
+        debug_visual,
         audio,
         face,
-        # speakers,
+        speakers,
         neck,
         low_level,
         odometry,
+        navigation,
         point_cloud,
         yolo_pose,
         lidar,
