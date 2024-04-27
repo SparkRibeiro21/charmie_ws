@@ -19,9 +19,11 @@
 # Yolos
 # Arm
 # Door Start
+# Navigation
+# Initial Localisation Position
 
 # The following modules are still missing:
-# Nav - TBD
+# None
 
 
 """
@@ -145,7 +147,13 @@ NEXT I PROVIDE AN EXAMPLE ON HOW THE CODE OF A TASK SHOULD BE MADE:
 
 # 16) TEST ALL ARM MOVE WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
-# MISSING NAVIGATION ... (TIAGO)
+# 17) REPLACE THE SET INITIAL POSITION MOVE WITH self.set_initial_position(...)
+
+# 18) TEST ALL SET INITIAL POSITION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# 19) REPLACE THE NAVIGATION MOVE, ROTATE AND ORIENTATE WITH self.set_navigation(...)
+
+# 20) TEST ALL SET NAVIGATION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
 """
 
@@ -154,13 +162,16 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
+from geometry_msgs.msg import PoseWithCovarianceStamped
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
 
 import cv2 
 import threading
 import time
 from cv_bridge import CvBridge
+import math
+import numpy as np
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -192,6 +203,11 @@ class ServeBreakfastNode(Node):
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
+        # Navigation
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
+        # Localisation
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
 
         ### Services (Clients) ###
         # Speakers
@@ -210,12 +226,14 @@ class ServeBreakfastNode(Node):
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        # Navigation
+        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
-        while not self.speech_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Speech Command...")
+        # while not self.speech_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Speech Command...")
         # Audio
         # while not self.get_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Audio Server...")
@@ -242,6 +260,10 @@ class ServeBreakfastNode(Node):
         # Arm (CHARMIE)
         # while not self.arm_trigger_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        # Navigation
+        # while not self.nav_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+
         
         # Variables 
         self.waited_for_end_of_audio = False
@@ -259,6 +281,7 @@ class ServeBreakfastNode(Node):
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
         self.door_start_state = False
+        self.flag_navigation_reached = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -282,6 +305,8 @@ class ServeBreakfastNode(Node):
         self.activate_yolo_objects_message = ""
         self.arm_success = True
         self.arm_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
 
         self.get_neck_position = [1.0, 1.0]
 
@@ -390,6 +415,10 @@ class ServeBreakfastNode(Node):
     def get_door_start_callback(self, state: Bool):
         self.door_start_state = state.data
         # print("Received Start Button:", state.data)
+
+    ### NAVIGATION ###
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.flag_navigation_reached = flag
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
@@ -898,6 +927,79 @@ class ServeBreakfastMain():
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
     
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, follow_me=False, wait_for_end_of=True):
+
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
+
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.follow_me = follow_me
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
+
+    def set_initial_position(self, initial_position):
+
+        task_initialpose = PoseWithCovarianceStamped()
+
+        task_initialpose.header.frame_id = "map"
+        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
+
+        task_initialpose.pose.pose.position.x = initial_position[1]
+        task_initialpose.pose.pose.position.y = -initial_position[0]
+        task_initialpose.pose.pose.position.z = 0.0
+
+        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+
+        # Convert an Euler angle to a quaternion.
+        # Input
+        #     :param roll: The roll (rotation around x-axis) angle in radians.
+        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
+        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
+        # 
+        # Output
+        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+
+        roll = 0.0
+        pitch = 0.0
+        yaw = math.radians(initial_position[2])
+
+        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        
+        self.node.initialpose_publisher.publish(task_initialpose)
+
     # main state-machine function
     def main(self):
         
@@ -921,7 +1023,14 @@ class ServeBreakfastMain():
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45]
         self.look_tray = [0, -60]
+        
+        # Start localisation position
+        self.initial_position = [-1.0, 1.5, -90.0]
 
+        # navigation positions
+        self.front_of_sofa = [-2.5, 1.5]
+        self.sofa = [-2.5, 3.0]
+        
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
 
@@ -937,7 +1046,7 @@ class ServeBreakfastMain():
                 
                 # moves the neck to look down for navigation
                 # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
-
+                """
                 # send speech command to speakers voice, intrucing the robot 
                 self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
                 
@@ -960,7 +1069,31 @@ class ServeBreakfastMain():
 
                 # moves the neck to look to absolute cordinates in the map
                 # self.set_neck_coords(position=[1.0, 1.0], ang=30, wait_for_end_of=True)
+                """
+                self.set_initial_position(self.initial_position)
+
+                time.sleep(3)
                 
+                # this gives an error because "orient" is a non-existing movement type and does not send anything to navigation 
+                self.set_navigation(movement="orient", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+
+                print("2 move")
+
+                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+
+                print("3 move")
+
+                self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+
+                print("4 move")
+
+                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
+
+                print("5 move")
+
+                while True:
+                    pass
+
                 ### RECEPTIONIST AUDIO EXAMPLE
                 # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
                 # print("Finished:", command)
