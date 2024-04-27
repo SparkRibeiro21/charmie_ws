@@ -212,8 +212,12 @@ class RestaurantMain():
         Delivering_order_to_client = 6
         Final_State = 7
         
+<<<<<<< HEAD
+        self.initial_position = [-2.5, 1.5, 0]
+=======
         # self.initial_position = [-0.409, 4.724, 0]
         self.initial_position = [1.0, 1.0, 0]
+>>>>>>> main
         
         # VARS ...
         self.state = Waiting_for_start_button
