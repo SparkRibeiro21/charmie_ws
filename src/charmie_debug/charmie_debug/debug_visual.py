@@ -64,15 +64,15 @@ class Robot():
         
         with open(self.complete_path + 'rooms_location.json', encoding='utf-8') as json_file:
             self.house_rooms = json.load(json_file)
-        print(self.house_rooms)
+        # print(self.house_rooms)
 
         with open(self.complete_path + 'furniture_location.json', encoding='utf-8') as json_file:
             self.house_furniture = json.load(json_file)
-        print(self.house_furniture)
+        # print(self.house_furniture)
 
         with open(self.complete_path + 'doors_location.json', encoding='utf-8') as json_file:
             self.house_doors = json.load(json_file)
-        print(self.house_doors)
+        # print(self.house_doors)
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
