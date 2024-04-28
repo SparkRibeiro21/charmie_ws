@@ -816,7 +816,7 @@ class ServeBreakfastMain():
                 
                 self.set_arm(command="place_bowl_table", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Placing_cornflakes 
 
@@ -835,12 +835,12 @@ class ServeBreakfastMain():
                 
                 ##### ARM POUR IN BOWL
                 self.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
                 
                 ##### ARM PLACE OBJECT
                 self.set_arm(command="place_cereal_table", wait_for_end_of=True)
                 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Placing_milk
            
@@ -859,12 +859,12 @@ class ServeBreakfastMain():
 
                 ##### ARM POUR IN BOWL
                 self.set_arm(command="pour_milk_bowl", wait_for_end_of=True)
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 ##### ARM PLACE OBJECT
                 self.set_arm(command="place_milk_table", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Placing_spoon
 
@@ -884,7 +884,7 @@ class ServeBreakfastMain():
                 ##### ARM PLACE OBJECT
                 self.set_arm(command="place_spoon_table", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Final_State 
                 

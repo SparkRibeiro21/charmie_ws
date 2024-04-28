@@ -1160,6 +1160,7 @@ class ArmUfactory(Node):
 			print('FEITO Abrir fechar garra')
 			self.get_logger().info("FINISHED MOVEMENT")	
  """
+	
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
 		print('Abertura gripper em mm =', current_gripper_pos)
 		self.gripper_opening.append(current_gripper_pos)
@@ -1742,7 +1743,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
@@ -1751,28 +1752,28 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 10:
+			self.position_values_req.pose = self.after_pouring_cereals_at_bowl
+			self.position_values_req.speed = 70.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 10:
+		elif self.estado_tr == 11:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
-	def place_cereal_table(self):
+	def place_cereal_table(self):   
 		if self.estado_tr ==  0:
-			self.position_values_req.pose = self.after_pouring_cereals_at_bowl
-			self.position_values_req.speed = 70.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  1:
 			self.position_values_req.pose = self.placing_cereal_at_table
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
@@ -1781,27 +1782,27 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 2:
+		elif self.estado_tr == 1:
 			set_gripper_speed_req= SetFloat32.Request()
 			set_gripper_speed_req.data = 1000.0
 			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 3:
+		elif self.estado_tr == 2:
 			self.set_gripper_req.pos = 400.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 4:
+		elif self.estado_tr == 3:
 			self.set_gripper_req.pos = 850.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr ==  5:
+		elif self.estado_tr == 4:
 			self.position_values_req.pose = self.pos_placing_cereal_at_table
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
@@ -1810,7 +1811,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 6:
+		elif self.estado_tr == 5:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -1896,16 +1897,8 @@ class ArmUfactory(Node):
 			self.position_values_req.timeout = 4.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
-   
+
 		elif self.estado_tr == 10:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-	
-	def place_milk_table(self):
-		if self.estado_tr ==  0:
 			self.position_values_req.pose = self.after_pouring_milk_at_bowl
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
@@ -1914,7 +1907,15 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr ==  1:
+		elif self.estado_tr == 11:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+	
+	def place_milk_table(self):   
+		if self.estado_tr == 0:
 			self.position_values_req.pose = self.placing_milk_at_table
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
@@ -1923,27 +1924,27 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 2:
+		elif self.estado_tr == 1:
 			set_gripper_speed_req= SetFloat32.Request()
 			set_gripper_speed_req.data = 1000.0
 			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 3:
+		elif self.estado_tr == 2:
 			self.set_gripper_req.pos = 600.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 4:
+		elif self.estado_tr == 3:
 			self.set_gripper_req.pos = 850.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr ==  5:
+		elif self.estado_tr == 4:
 			self.position_values_req.pose = self.pos_placing_milk_at_table
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
@@ -1952,7 +1953,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 6:
+		elif self.estado_tr == 5:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
