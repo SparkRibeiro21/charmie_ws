@@ -40,14 +40,12 @@ class TestNode(Node):
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         
-
         # Navigation
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
         # Navigation
-        # while not self.nav_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
-        
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
 
         
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
@@ -55,20 +53,22 @@ class TestNode(Node):
         # while not self.speech_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Speech Command...")
 
-        # Variables
+        # Wait Variables
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
         self.waited_for_end_of_speaking = False
 
+        # Code Variables
+        self.flag_navigation_reached = False
+        
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.rgb_success = True
         self.rgb_message = ""
         self.speech_success = True
         self.speech_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
 
-        self.nav_tar_sdnl = TarNavSDNL()
-
-        self.flag_navigation_reached = False
 
     def flag_navigation_reached_callback(self, flag: Bool):
         self.flag_navigation_reached = flag
@@ -158,6 +158,47 @@ class RestaurantMain():
     # 
     #     return self.node.track_object_success, self.node.track_object_message   
     
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, follow_me=False, wait_for_end_of=True):
+
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
+
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.follow_me = follow_me
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
+
+
     def set_initial_position(self, initial_position):
 
         task_initialpose = PoseWithCovarianceStamped()
@@ -169,35 +210,28 @@ class RestaurantMain():
         task_initialpose.pose.pose.position.y = -initial_position[0]
         task_initialpose.pose.pose.position.z = 0.0
 
-        quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
 
-        task_initialpose.pose.pose.orientation.x = quaternion[0]
-        task_initialpose.pose.pose.orientation.y = quaternion[1]
-        task_initialpose.pose.pose.orientation.z = quaternion[2]
-        task_initialpose.pose.pose.orientation.w = quaternion[3] 
+        # Convert an Euler angle to a quaternion.
+        # Input
+        #     :param roll: The roll (rotation around x-axis) angle in radians.
+        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
+        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
+        # 
+        # Output
+        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+
+        roll = 0.0
+        pitch = 0.0
+        yaw = math.radians(initial_position[2])
+
+        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
-
-
-    def get_quaternion_from_euler(self, roll, pitch, yaw):
-        """
-        Convert an Euler angle to a quaternion.
-        
-        Input
-            :param roll: The roll (rotation around x-axis) angle in radians.
-            :param pitch: The pitch (rotation around y-axis) angle in radians.
-            :param yaw: The yaw (rotation around z-axis) angle in radians.
-        
-        Output
-            :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
-        """
-        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        
-        return [qx, qy, qz, qw]
 
     def main(self):
         Waiting_for_start_button = 0
@@ -209,123 +243,54 @@ class RestaurantMain():
         Delivering_order_to_client = 6
         Final_State = 7
         
-        self.initial_position = [-2.5, 1.5, 0]
+        # self.initial_position = [-2.5, 1.5, 0]
+        self.initial_position = [-1.0, 1.5, -90.0]
+
+        # navigation positions
+        self.front_of_sofa = [-2.5, 1.5]
+        self.sofa = [-2.5, 3.0]
         
         # VARS ...
         self.state = Waiting_for_start_button
-
-        self.set_initial_position(self.initial_position)
-
-        while True:
-            pass
 
         while True:
 
             if self.state == Waiting_for_start_button:
                 # your code here ...
 
-
-                self.node.nav_tar_sdnl.target_coordinates.x = -1.0
-                self.node.nav_tar_sdnl.target_coordinates.y = 2.0
-                self.node.nav_tar_sdnl.move_or_rotate = "MOVE"
-                self.node.nav_tar_sdnl.flag_not_obs = False
-                self.node.nav_tar_sdnl.follow_me = False
-
-                self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
-
-
-                while not self.node.flag_navigation_reached:
-                    pass
-                self.node.flag_navigation_reached = False
-
-                print("REACHED TARGET MOVE POSITION")
-
-                self.node.nav_tar_sdnl.target_coordinates.x = 1.0
-                self.node.nav_tar_sdnl.target_coordinates.y = 2.0
-                self.node.nav_tar_sdnl.move_or_rotate = "ROTATE"
-                self.node.nav_tar_sdnl.flag_not_obs = True
-                self.node.nav_tar_sdnl.follow_me = False
-
-                self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
-
-
-                while not self.node.flag_navigation_reached:
-                    pass
-                self.node.flag_navigation_reached = False
-
-
-                print("REACHED TARGET ROTATE POSITION")
-
-
-                self.node.nav_tar_sdnl.target_coordinates.x = 1.0
-                self.node.nav_tar_sdnl.target_coordinates.y = 2.0
-                self.node.nav_tar_sdnl.move_or_rotate = "MOVE"
-                self.node.nav_tar_sdnl.flag_not_obs = True
-                self.node.nav_tar_sdnl.follow_me = False
-
-                self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
-
-
-                while not self.node.flag_navigation_reached:
-                    pass
-                self.node.flag_navigation_reached = False
-
-                print("REACHED TARGET MOVE POSITION")
-
-
-
-                self.node.nav_tar_sdnl.target_coordinates.x = -1.1
-                self.node.nav_tar_sdnl.target_coordinates.y = 2.0
-                self.node.nav_tar_sdnl.move_or_rotate = "ROTATE"
-                self.node.nav_tar_sdnl.flag_not_obs = True
-                self.node.nav_tar_sdnl.follow_me = False
-
-                self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
-
-
-                while not self.node.flag_navigation_reached:
-                    pass
-                self.node.flag_navigation_reached = False
-
-                print("REACHED TARGET MOVE POSITION")
-
-
-
-                self.node.nav_tar_sdnl.target_coordinates.x = 0.0
-                self.node.nav_tar_sdnl.target_coordinates.y = 0.0
-                self.node.nav_tar_sdnl.move_or_rotate = "MOVE"
-                self.node.nav_tar_sdnl.flag_not_obs = True
-                self.node.nav_tar_sdnl.follow_me = False
-
-                self.node.target_pos_publisher.publish(self.node.nav_tar_sdnl)
-
-
-                while not self.node.flag_navigation_reached:
-                    pass
-                self.node.flag_navigation_reached = False
-
-                print("REACHED TARGET MOVE POSITION")
-
-
-
-                self.set_speech(filename="sound_effects/sb_ready_start", wait_for_end_of=False)
-
-                print("REACHED TARGET POSITION")
-                                
-
-                while True:
-                    pass
+                # If initial position is inside while loop you are telling the robot the wrong localisation.
+                # This command must only be sent once, at the start of the task
+                self.set_initial_position(self.initial_position)
 
                 # next state
-                # self.state = Searching_for_clients
+                self.state = Searching_for_clients
 
             elif self.state == Searching_for_clients:
                 #print('State 1 = Hand Raising Detect')
 
+                time.sleep(3)
+                
+                # this gives an error because "orient" is a non-existing movement type and does not send anything to navigation 
+                self.set_navigation(movement="orient", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+
+                print("2 move")
+
+                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+
+                print("3 move")
+
+                self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+
+                print("4 move")
+
+                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
+
+                print("5 move")
+
                 # your code here ...
                                 
                 # next state
-                self.state = Final_State
+                # self.state = Final_State
             
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 

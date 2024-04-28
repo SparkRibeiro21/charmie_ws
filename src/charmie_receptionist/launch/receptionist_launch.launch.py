@@ -14,6 +14,56 @@ import os
 
 def generate_launch_description():
 
+    # Declare arguments
+    declared_arguments = []
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'robot_ip',
+            default_value='192.168.1.219',
+            description='IP address by which the robot can be reached.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'report_type',
+            default_value='normal',
+            description='Tcp report type, default is normal, normal/rich/dev optional.',
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'hw_ns',
+            default_value='xarm',
+            description='The namespace of xarm_driver, default is xarm.',
+        )
+    )
+
+    # Initialize Arguments
+    robot_ip = LaunchConfiguration('robot_ip', default='192.168.1.219')
+    report_type = LaunchConfiguration('report_type', default='normal')
+    hw_ns = LaunchConfiguration('hw_ns', default='xarm')
+    add_gripper = LaunchConfiguration('add_gripper', default=True)
+    add_vacuum_gripper = LaunchConfiguration('add_vacuum_gripper', default=False)
+    show_rviz = LaunchConfiguration('show_rviz', default=False)
+
+
+    home = str(Path.home())
+
+    # robot driver launch
+    # xarm_api/launch/_robot_driver.launch.py
+    robot_driver_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(home + '/charmie_ws/src/charmie_arm_ufactory/xarm_ros2/xarm_api/launch/_robot_driver.launch.py'),
+        launch_arguments={
+            'robot_ip': robot_ip,
+            'report_type': report_type,
+            'dof': '6',
+            'hw_ns': hw_ns,
+            'add_gripper': add_gripper,
+            'add_vacuum_gripper': add_vacuum_gripper,
+            'show_rviz': show_rviz,
+            'robot_type': 'xarm',
+        }.items(),
+    )
    
     charmie_multi_camera_launch_file = PythonLaunchDescriptionSource([os.path.join(
         get_package_share_directory('realsense2_camera'), 'launch', 'charmie_multi_camera_launch.py'
@@ -28,6 +78,12 @@ def generate_launch_description():
                 name='receptionist',
                 emulate_tty=True
                 )
+    
+    debug_visual = Node(package='charmie_debug',
+                        executable='debug_visual',
+                        name='debug_visual',
+                        emulate_tty=True
+                        )
     
     speakers = Node(package='charmie_speakers',
                         executable='speakers',
@@ -59,6 +115,12 @@ def generate_launch_description():
     odometry = Node(package='charmie_odometry',
                 executable='odometry',
                 name='odometry',
+                emulate_tty=True
+                )
+    
+    navigation = Node(package='charmie_navigation_sdnl',
+                executable='navigation',
+                name='navigation',
                 emulate_tty=True
                 )
     
@@ -96,19 +158,29 @@ def generate_launch_description():
                         name='obstacles_lidar',
                         emulate_tty=True
                         )
+    
+    arm_receptionist = Node(package='charmie_arm_ufactory',
+                        executable='arm_receptionist',
+                        name='arm_receptionist',
+                        emulate_tty=True
+                        )
 
 
     return LaunchDescription([
+        LaunchDescription(declared_arguments + [robot_driver_launch]),
         charmie_multi_camera_launch_description,
+        debug_visual,
         audio,
         face,
         speakers,
         neck,
         low_level,
         odometry,
+        navigation,
         point_cloud,
         yolo_pose,
         lidar,
         obstacles,
+        arm_receptionist,
         # receptionist,
     ])

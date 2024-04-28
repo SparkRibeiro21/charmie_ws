@@ -2,9 +2,9 @@
 
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool
+from example_interfaces.msg import Bool, Float32
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Vector3, Pose2D
+from geometry_msgs.msg import Vector3, Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.msg import TarNavSDNL, Obstacles
 from charmie_interfaces.srv import NavTrigger
 
@@ -43,6 +43,11 @@ class NavigationSDNLClass:
         self.robot_t = 0.0
         self.nav_target = TarNavSDNL()
 
+        # IMU ORIENTATION
+        self.imu_orientation = 0.0
+        self.imu_orientation_norm = 0.0
+        self.NORTE = 0.0
+        self.first_imu_orientation = False
 
         self.first_nav_target = False
         self.dist_to_target = 0.0
@@ -66,7 +71,7 @@ class NavigationSDNLClass:
 
 
         # visual debug
-        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
         self.MAX_DIST_FOR_OBS = 1.0
         self.xc = 400
         self.yc = 400
@@ -155,6 +160,41 @@ class NavigationSDNLClass:
         omni_move.z = float(100.0 - self.f_final)
         
         return omni_move
+
+    def rotate_orientation(self, orientation_target):
+        # print("INSIDE!!!!!!!!!!!!!!!!!!!!!!")
+        
+        # orientation_target
+        # print(local_target)
+
+
+        max_rot_speed = 10
+        acceptable_error = 10
+        kp = 0.14
+
+        error = self.imu_orientation_norm + orientation_target
+        speed = error * kp
+        if speed > max_rot_speed:
+            speed = max_rot_speed 
+        if speed < -max_rot_speed:
+            speed = -max_rot_speed 
+
+        target_reached = False
+        omni_move = Vector3()
+        omni_move.x = float(0.0)
+        omni_move.y = float(0.0)
+
+        if abs(error) >= acceptable_error:
+            omni_move.z = float(100.0 - speed)
+            target_reached = False
+        else:
+            omni_move.z = float(100.0)
+            target_reached = True
+
+
+        print(error, speed, target_reached)
+
+        return omni_move, target_reached
 
     def atrator(self, mov_or_rot):
 
@@ -533,7 +573,6 @@ class NavigationSDNLClass:
             self.test_image[:, :] = 0
             self.image_plt[:, :] = 0
 
-
     def obstacles_msg_to_position(self, obs: Obstacles):
         self.obstacles = obs
         # self.aux_obstacles_l = obs
@@ -667,7 +706,12 @@ class NavSDNLNode(Node):
         
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-        
+        self.initialpose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "initialpose", self.get_initialpose_callback, 10)
+
+        # Orientation
+        self.flag_orientation_publisher = self.create_publisher(Bool, "flag_orientation", 10)
+        self.get_orientation_subscribrer = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
+       
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
@@ -685,7 +729,11 @@ class NavSDNLNode(Node):
 
         self.create_service(NavTrigger, 'nav_trigger', self.navigation_trigger_callback)
 
-        
+        ori = Bool()
+        ori.data = True
+        self.flag_orientation_publisher.publish(ori) 
+
+
     def navigation_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.nav_trigger_client.wait_for_service(1.0):"
         # Type of service received: 
         # (nothing)
@@ -711,6 +759,42 @@ class NavSDNLNode(Node):
         self.nav.robot_t = pose.theta
         self.nav.update_debug_drawings()
 
+    def get_orientation_callback(self, orientation: Float32):
+        self.nav.imu_orientation = orientation.data
+        self.nav.imu_orientation_norm = self.nav.imu_orientation - self.nav.NORTE
+        if self.nav.imu_orientation_norm > 180.0:
+            self.nav.imu_orientation_norm -= 360.0
+        if self.nav.imu_orientation_norm < -180.0:
+            self.nav.imu_orientation_norm += 360.0
+
+        # just a flag to know for sure that to calculate NORTH we already have an IMU reading
+        if self.nav.first_imu_orientation == False:
+            self.nav.first_imu_orientation = True
+
+
+    def get_initialpose_callback(self, pose:PoseWithCovarianceStamped):
+        
+        # self.initialpose.x = pose.pose.pose.position.x
+        # self.initialpose.y = pose.pose.pose.position.y
+        
+        qx = pose.pose.pose.orientation.x
+        qy = pose.pose.pose.orientation.y
+        qz = pose.pose.pose.orientation.z
+        qw = pose.pose.pose.orientation.w
+
+        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
+        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
+        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        # print(yaw, pitch, roll)
+        if self.nav.first_imu_orientation:
+            self.nav.NORTE = self.nav.imu_orientation + math.degrees(math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)) 
+            if self.nav.NORTE >= 360.0:
+                self.nav.NORTE -= 360.0
+            if self.nav.NORTE < 0.0:
+                self.nav.NORTE += 360.0
+        else:
+            self.get_logger().error("NO IMU ORIENTATION READING, PLEASE CHECK IF LOW LEVEL WAS INITIALISED BEFORE NAVIGATION")
+
     def target_pos_callback(self, nav: TarNavSDNL):
         # calculates the velocities and sends them to the motors considering the latest obstacles and odometry position
         # print(nav)
@@ -723,6 +807,18 @@ class NavSDNLNode(Node):
         # print(nav)
     
     def timer_callback(self):
+
+        # safety
+        if self.nav.first_imu_orientation == False:
+            self.get_logger().warning("HAD TO RESEND IMU REQUEST...")
+            ori = Bool()
+            ori.data = True
+            self.flag_orientation_publisher.publish(ori) 
+
+
+
+
+        print(self.nav.first_imu_orientation, round(self.nav.NORTE, 2), round(self.nav.imu_orientation, 2), round(self.nav.imu_orientation_norm, 2))
         
         
         if self.nav.first_nav_target:
@@ -738,14 +834,30 @@ class NavSDNLNode(Node):
                 if self.nav.nav_target.move_or_rotate.lower() == "rotate": 
                     omni_move = self.nav.sdnl_main("rot")
                     self.omni_move_publisher.publish(omni_move)
+                    print("DIST_ERR:", self.nav.dist_to_target)
+                    print("ANG_ERR:", self.nav.ang_to_target) 
                     if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
                         self.navigation_state = 2
-                else:
+                elif self.nav.nav_target.move_or_rotate.lower() == "move":
                     omni_move = self.nav.sdnl_main("mov")
                     self.omni_move_publisher.publish(omni_move)
+                    print("DIST_ERR:", self.nav.dist_to_target)
+                    print("ANG_ERR:", self.nav.ang_to_target) 
                     if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
                         self.navigation_state = 2
+                elif self.nav.nav_target.move_or_rotate.lower() == "orientate":
+                    omni_move, target_reached = self.nav.rotate_orientation(self.nav.nav_target.orientation_absolute)
+                    self.omni_move_publisher.publish(omni_move)
+                    if target_reached:
+                        self.navigation_state = 2
+                else:
+                    # ERROR
+                    self.navigation_state = 2
+
             
+
+
+
                 # print(self.nav.nav_target.follow_me)
 
                 # if self.nav.nav_target.follow_me:
@@ -787,8 +899,6 @@ class NavSDNLNode(Node):
                 self.omni_move_publisher.publish(omni_move)
                 self.flag_pos_reached_publisher.publish(finish_flag) 
 
-            print("DIST_ERR:", self.nav.dist_to_target)
-            print("ANG_ERR:", self.nav.ang_to_target) 
             
             self.nav.update_debug_drawings() # this way it still draws the targets on the final frame
 
