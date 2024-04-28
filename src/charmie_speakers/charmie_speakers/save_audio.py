@@ -17,7 +17,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'found_empty_seat' : 'I have found an empty seat.'
+    'gust_arrived_open_door' : 'A guest has arrived. Let me open the door.'
 }
 
 #COMMANDS = {
