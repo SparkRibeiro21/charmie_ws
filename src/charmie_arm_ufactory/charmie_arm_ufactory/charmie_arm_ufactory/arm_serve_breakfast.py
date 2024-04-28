@@ -1734,7 +1734,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
@@ -1876,7 +1876,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
@@ -1885,7 +1885,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
@@ -1894,7 +1894,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
@@ -1903,7 +1903,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
@@ -2036,7 +2036,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
@@ -2045,7 +2045,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
@@ -2054,7 +2054,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
@@ -2063,7 +2063,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 70.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 		
