@@ -564,7 +564,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 50.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
@@ -572,7 +572,7 @@ class ArmUfactory(Node):
 			print('e')
 			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
+			self.set_gripper_req.timeout = 14.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr)) 
 
@@ -603,7 +603,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 50.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
@@ -624,7 +624,7 @@ class ArmUfactory(Node):
 		elif self.estado_tr == 1:
 			self.set_gripper_req.pos = 900.0
 			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
+			self.set_gripper_req.timeout = 14.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
@@ -633,14 +633,14 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 50.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 3:
 			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
+			self.set_gripper_req.timeout = 14.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
@@ -667,7 +667,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 50.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
@@ -685,7 +685,7 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 50.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
@@ -698,7 +698,7 @@ class ArmUfactory(Node):
 		elif self.estado_tr == 2:
 			self.set_gripper_req.pos = 900.0
 			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
+			self.set_gripper_req.timeout = 14.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
@@ -707,14 +707,14 @@ class ArmUfactory(Node):
 			self.position_values_req.speed = 50.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
+			self.position_values_req.timeout = 14.0
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 4:
 			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
+			self.set_gripper_req.timeout = 14.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
