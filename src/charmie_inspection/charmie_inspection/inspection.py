@@ -377,10 +377,10 @@ class InspectionMain():
         self.look_navigation = [0, -30]
 
         # Navigation Coordinates
-        self.front_of_door = [0.0, 1.0] 
-        self.outside_bedroom_door = [-0.7, 4.0]
-        self.inside_bedroom_door = [-2.0, 4.0]
-        self.inside_bedroom_top_door = [-3.0, 5.0]
+        self.front_of_door = [0.0, 1.5] 
+        self.outside_bedroom_door = [-0.7, 4.7]
+        self.inside_bedroom_door = [-2.8, 4.5]
+        self.inside_bedroom_top_door = [-3.5, 5.0]
         
         # Initial Position
         self.initial_position = [0.0, 0.0, 0.0]
@@ -438,10 +438,14 @@ class InspectionMain():
             elif self.state == self.Go_to_inspection_point:
                 print("State:", self.state, "- Go_to_inspection_point")
 
+                # temp
+                # self.set_initial_position([-0.7, 4.2, 90])
+
                 self.set_speech(filename="inspection/going_to_inspection_point", wait_for_end_of=True)
 
                 self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.outside_bedroom_door, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.outside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.outside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.inside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.inside_bedroom_door, flag_not_obs=False, wait_for_end_of=True)
             
@@ -456,7 +460,7 @@ class InspectionMain():
                 
                 # dodge obstacles (how?)
                 
-                time.sleep(3)
+                # time.sleep(3)
 
                 # set rgb's to static green
                 self.set_rgb(GREEN+SET_COLOUR)

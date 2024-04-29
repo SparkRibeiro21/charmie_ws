@@ -14,7 +14,7 @@ import os
 
 def generate_launch_description():
 
-   
+
     charmie_multi_camera_launch_file = PythonLaunchDescriptionSource([os.path.join(
         get_package_share_directory('realsense2_camera'), 'launch', 'charmie_multi_camera_launch.py'
     )])
@@ -111,7 +111,7 @@ def generate_launch_description():
         speakers,
         neck,
         odometry,
-        navigation,
+        # navigation,
         # point_cloud,
         # yolo_pose,
         lidar,

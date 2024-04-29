@@ -353,7 +353,7 @@ class ObstaclesLIDAR:
         obst_list_aux = obst_list
 
         cutting_obs_dist_cm = 0.1
-        cutting_obs_dist_deg = 5
+        cutting_obs_dist_deg = 8 # was 5
         # idealmente isto teria que ser feito com o len_cm mas é muito mais rapido de implementar com diferencças de graus, para já vou tentar assim...
 
         for obs in obst_list_aux:
@@ -371,10 +371,14 @@ class ObstaclesLIDAR:
             d_i = obs['d_i']
             a_f = obs['alfa_f']
             d_f = obs['d_f']
+
+            closer_obs = {}
+
             if aux_length_deg > cutting_obs_dist_deg:
                 
                 while a_i !=  obs['alfa_f']:
-
+                    
+                    temp_cut_obs_list = []
                     print("INSIDE")
 
                     # teta_entre_extremos1 = math.atan2(y2-y1, x2-x1)
@@ -416,8 +420,14 @@ class ObstaclesLIDAR:
                     new_obs['d_avg'] = (d_i+d_f)/2
                     new_obs['d_min'] = d_i
 
-                    cut_obst_list.append(new_obs)
-
+                    
+                    # cut_obst_list.append(new_obs)
+                    if not closer_obs:
+                        closer_obs = new_obs
+                    else:
+                        if new_obs['d_avg'] < closer_obs['d_avg']:
+                            closer_obs = new_obs
+                    
 
                     a_i = a_f
                     d_i = d_f
@@ -425,6 +435,9 @@ class ObstaclesLIDAR:
                     # d_f = obs['d_f']
                     aux_length_deg = - (a_i - a_f)
 
+                
+
+                cut_obst_list.append(closer_obs)
 
             else:
                 cut_obst_list.append(obs)
