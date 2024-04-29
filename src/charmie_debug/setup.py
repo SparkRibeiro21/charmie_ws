@@ -23,6 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "calibrate_door_handle = charmie_debug.calibrate_door_handle:main",
             "debug_arm = charmie_debug.debug_arm:main",
             "debug_audio = charmie_debug.debug_audio:main",
             "debug_main = charmie_debug.debug_main:main",
