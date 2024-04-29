@@ -802,9 +802,9 @@ class YoloPoseNode(Node):
                                         (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
 
                     if DRAW_PERSON_HAND_RAISED:
-                        if hand_raised != "None":
-                            cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
-                                        (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        # if hand_raised != "None":
+                        cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
+                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
                     if DRAW_PERSON_HEIGHT:
                         cv2.putText(current_frame_draw, str(round(new_person.height,2)),
@@ -1016,8 +1016,9 @@ class YoloPoseNode(Node):
 
         new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
 
+        new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
+
         if self.GET_CHARACTERISTICS:
-            new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
 
             new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
             new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
@@ -1038,8 +1039,8 @@ class YoloPoseNode(Node):
                 new_person.gender_probability = 0.0
 
         else:
-            new_person.pointing_at = "None"
-            new_person.pointing_with_arm = "None"
+            # new_person.pointing_at = "None"
+            # new_person.pointing_with_arm = "None"
             new_person.shirt_color = "None"
             new_person.pants_color = "None"
             new_person.ethnicity = "None"
@@ -1243,18 +1244,18 @@ class YoloPoseNode(Node):
         if theta_left > MIN_ANGLE_POINTING:
             if left_wrist[0] < left_hip[0]:
                 arm_pointed_with = "Left Arm"
-                side_pointed = "Right Side"
+                side_pointed = "Right"
             else:
                 arm_pointed_with = "Left Arm"
-                side_pointed = "Left Side"
+                side_pointed = "Left"
         
         elif theta_right > MIN_ANGLE_POINTING:
             if right_wrist[0] < right_hip[0]:
                 arm_pointed_with = "Right Arm"
-                side_pointed = "Right Side"
+                side_pointed = "Right"
             else:
                 arm_pointed_with = "Right Arm"
-                side_pointed = "Left Side"
+                side_pointed = "Left"
         
         return side_pointed, arm_pointed_with
 
