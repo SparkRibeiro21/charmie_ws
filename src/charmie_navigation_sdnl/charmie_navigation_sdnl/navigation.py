@@ -2,10 +2,11 @@
 
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool
+from example_interfaces.msg import Bool, Float32
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3, Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.msg import TarNavSDNL, Obstacles
+from charmie_interfaces.srv import NavTrigger
 
 import cv2
 import numpy as np
@@ -16,21 +17,22 @@ class NavigationSDNLClass:
     def __init__(self):
 
         # configurable SDNL parameters
-        self.lambda_target_mov = 12
-        self.lambda_target_rot = 12
-        self.beta1 = 9
-        self.beta2 = 7
+        # self.lambda_target_mov = 12
+        # self.lambda_target_rot = 12
+        self.lambda_target = 5 # 12
+        self.beta1 = 140 # 9
+        self.beta2 = 0.15 # 7
 
         # configurable other parameters
         self.nav_threshold_dist = 0.6 # in meters
-        self.nav_threshold_dist_follow_me = 1.2 # in meters
+        # self.nav_threshold_dist_follow_me = 1.2 # in meters
         self.nav_threshold_ang = 15 # degrees
-        self.nav_threshold_ang_follow_me = 20 # degrees
-        self.max_lin_speed = 30.0 # speed
-        self.max_ang_speed = 20.0 # speed
+        # self.nav_threshold_ang_follow_me = 20 # degrees
+        # self.max_lin_speed = 15.0 # speed # 30.0
+        self.max_ang_speed = 10.0 # speed # 20.0
         self.tar_dist_decrease_lin_speed = 0.8 # meters
         self.obs_dist_decrease_lin_speed = 1.0 # meters
-        self.min_speed_obs = 5.0 # speed
+        self.min_speed_obs = 6.0 # speed
         self.decay_rate_initial_speed_ramp = 2.0 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
 
@@ -40,6 +42,13 @@ class NavigationSDNLClass:
         self.robot_y = 0.0
         self.robot_t = 0.0
         self.nav_target = TarNavSDNL()
+
+        # IMU ORIENTATION
+        self.imu_orientation = 0.0
+        self.imu_orientation_norm = 0.0
+        self.NORTE = 0.0
+        self.first_imu_orientation = False
+
         self.first_nav_target = False
         self.dist_to_target = 0.0
         self.ang_to_target = 0.0 
@@ -63,7 +72,7 @@ class NavigationSDNLClass:
 
         # visual debug
         self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
-        self.MAX_DIST_FOR_OBS = 0.8
+        self.MAX_DIST_FOR_OBS = 0.7
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
@@ -85,6 +94,7 @@ class NavigationSDNLClass:
         if mov_or_rot == "rot":
             self.nav_target.flag_not_obs = True
 
+        print(self.max_ang_speed, self.lambda_target)
 
         self.f_target, self.y_atrator = self.atrator(mov_or_rot)
 
@@ -96,10 +106,12 @@ class NavigationSDNLClass:
         self.f_obstacle, self.yff, self.yfff = self.repulsor()
         
         if not self.nav_target.flag_not_obs:
+            self.max_lin_speed = 15.0
             self.f_final, self.y_final = self.combine_atrator_repulsor()
             # print("ATRATOR + REPULSORES")
         else:
             # in case it is intended to not consider obstacles
+            self.max_lin_speed = 30.0
             self.f_final = self.f_target
             self.y_final = self.y_atrator
             # print("SÓ ATRATOR")
@@ -143,7 +155,13 @@ class NavigationSDNLClass:
                     speed_i = self.aux_initial_speed_ramp                    
 
             
-            omni_move.y = min(speed_t, speed_o, speed_i)
+            if not self.nav_target.flag_not_obs:
+                omni_move.y = min(speed_t, speed_o, speed_i)
+                print("SPEED COM OBS", self.max_lin_speed, omni_move.y)
+            else:
+                omni_move.y = min(speed_t, speed_i) # remove obstacles distance reduction for cases we do not care about the obstacles
+                print("SPEED SEM OBS", self.max_lin_speed, omni_move.y)
+
             ### DEPOIS TENHO QUE ARRANJAR MANIERA DE JUNTAR AS DUAS EQUACOES, ASSIM NAO HA SALTOS
             # print("speed_t:", speed_t, "speed_o:", speed_o, "speed_i:", speed_i, "omni_move.y:", omni_move.y)
             # print(omni_move.y)
@@ -151,19 +169,54 @@ class NavigationSDNLClass:
         omni_move.z = float(100.0 - self.f_final)
         
         return omni_move
-        
 
+    def rotate_orientation(self, orientation_target):
+        # print("INSIDE!!!!!!!!!!!!!!!!!!!!!!")
+        
+        # orientation_target
+        # print(local_target)
+
+
+        max_rot_speed = 10
+        acceptable_error = 10
+        kp = 0.14
+
+        error = self.imu_orientation_norm + orientation_target
+        speed = error * kp
+        if speed > max_rot_speed:
+            speed = max_rot_speed 
+        if speed < -max_rot_speed:
+            speed = -max_rot_speed 
+
+        target_reached = False
+        omni_move = Vector3()
+        omni_move.x = float(0.0)
+        omni_move.y = float(0.0)
+
+        if abs(error) >= acceptable_error:
+            omni_move.z = float(100.0 - speed)
+            target_reached = False
+        else:
+            omni_move.z = float(100.0)
+            target_reached = True
+
+
+        print(error, speed, target_reached)
+
+        return omni_move, target_reached
 
     def atrator(self, mov_or_rot):
 
         # variables necessary to calculate the atrator
-        if mov_or_rot == "mov":
-            target = (self.nav_target.move_target_coordinates.x, self.nav_target.move_target_coordinates.y)
-            lambda_target = self.lambda_target_mov
-        elif mov_or_rot == "rot":
-            target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
-            lambda_target = self.lambda_target_rot
+        # if mov_or_rot == "mov":
+        #     target = (self.nav_target.move_target_coordinates.x, self.nav_target.move_target_coordinates.y)
+        #     lambda_target = self.lambda_target_mov
+        # elif mov_or_rot == "rot":
+        #     target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
+        #     lambda_target = self.lambda_target_rot
 
+        target = (self.nav_target.target_coordinates.x, self.nav_target.target_coordinates.y) 
+        lambda_target = self.lambda_target
         current_pos = (self.robot_x, self.robot_y)
         phi = self.robot_t
 
@@ -218,7 +271,6 @@ class NavigationSDNLClass:
         # print()
         return obstacles
 
-
     def repulsor(self):
 
         obstacles = self.obstacles_l
@@ -253,9 +305,15 @@ class NavigationSDNLClass:
 
             # sigma = 1
             # sigma_ = 2*math.atan(math.tan(delta_teta/2) + robot_radius/(robot_radius+d_obs))
+
+            
+
             lambda_obstacle_ = self.beta1*math.exp(-d_obs/self.beta2)
             sigma_ = math.atan(math.tan(delta_teta/2) + self.robot_radius/(self.robot_radius+d_obs))
             # print(lambda_obstacle_)
+
+            # sigma_ /= 1.3
+
 
             ### phi_ = phi + 90
             ### if phi_ > 360:
@@ -281,10 +339,11 @@ class NavigationSDNLClass:
             # print("LAMBDA: ", lambda_obstacle_, "SIGMA: ", sigma_)
             ### f_target = -lambda_target*math.sin(phi_ - psi_target)
 
-            f_obs = lambda_obstacle_ * (phi_ - psi_obstacle) * math.exp(-((phi_ - psi_obstacle) ** 2) / (2 * sigma_ ** 2))
+            f_obs = lambda_obstacle_ * (phi_ - psi_obstacle) * math.exp(-((phi_ - psi_obstacle) ** 2) / (2 * (sigma_ ** 2)))
             f_obstacle += f_obs
             # print(f_obs)
 
+            print(round(d_obs,2), round(delta_teta,2), round(lambda_obstacle_,2), round(sigma_,2), round(f_obs,2))
 
             for half_degree in range(360*2):
 
@@ -319,7 +378,6 @@ class NavigationSDNLClass:
         # return f_obstacle, y1, y2, y3, yf, yff, yfff
         return f_obstacle, yff, yfff
 
-
     def combine_atrator_repulsor(self):
 
         mu = 0
@@ -338,14 +396,16 @@ class NavigationSDNLClass:
 
         return ffinal, y_final
 
-
     def upload_move_dist_to_target(self):
         
         x1 = self.robot_x
         y1 = self.robot_y
 
-        x2 = self.nav_target.move_target_coordinates.x
-        y2 = self.nav_target.move_target_coordinates.y
+        # x2 = self.nav_target.move_target_coordinates.x
+        # y2 = self.nav_target.move_target_coordinates.y
+        
+        x2 = self.nav_target.target_coordinates.x
+        y2 = self.nav_target.target_coordinates.y
 
         dist = math.sqrt((x2-x1)**2 + (y2-y1)**2)
 
@@ -353,7 +413,9 @@ class NavigationSDNLClass:
 
     def upload_rot_ang_to_target(self):
 
-        target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
+        # target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
+        
+        target = (self.nav_target.target_coordinates.x, self.nav_target.target_coordinates.y)
         current_pos = (self.robot_x, self.robot_y)
 
         # theta1 = math.degrees(self.robot_t + math.pi/2)
@@ -375,7 +437,6 @@ class NavigationSDNLClass:
         
         return ang
 
-
     def normalize_angles(self, ang):
 
         while ang < -180:
@@ -384,7 +445,6 @@ class NavigationSDNLClass:
             ang -= 360
 
         return ang
-
 
     def update_debug_drawings(self):
             
@@ -407,6 +467,7 @@ class NavigationSDNLClass:
             # obstacles
             self.all_obs_val.append(self.aux_obstacles_l)
             
+            """
             # past obstacles
             for j in range(len(self.all_obs_val)):
 
@@ -424,7 +485,7 @@ class NavigationSDNLClass:
                                               (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
                                                int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
                                               (0, 165, 255), int(1.0 + thickness*self.scale/1000))
-             
+            """
 
             thickness = 20
             # current obstacles
@@ -458,6 +519,7 @@ class NavigationSDNLClass:
             
             # targets
             if self.first_nav_target:
+                """
                 cv2.circle(self.test_image, (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x), int(self.yc - self.scale*self.nav_target.move_target_coordinates.y)), 
                                             (int)(self.scale*self.robot_radius/2), (0, 255, 0), -1)
                 cv2.circle(self.test_image, (int(self.xc + self.scale*self.nav_target.rotate_target_coordinates.x), int(self.yc - self.scale*self.nav_target.rotate_target_coordinates.y)), 
@@ -470,8 +532,23 @@ class NavigationSDNLClass:
                                             (int(self.xc + self.scale*self.nav_target.move_target_coordinates.x - self.scale * self.robot_radius * math.cos(aux_ang_tar)),# + math.pi/2)), 
                                              int(self.yc - self.scale*self.nav_target.move_target_coordinates.y + self.scale * self.robot_radius * math.sin(aux_ang_tar))),# + math.pi/2))),
                                             (0, 255, 0), int(1.0 + thickness*self.scale/1000))
-                            
+                """         
             
+                cv2.circle(self.test_image, (int(self.xc + self.scale*self.nav_target.target_coordinates.x), int(self.yc - self.scale*self.nav_target.target_coordinates.y)), 
+                                            (int)(self.scale*self.robot_radius/2), (0, 255, 0), -1)
+                # cv2.circle(self.test_image, (int(self.xc + self.scale*self.nav_target.target_coordinates.x), int(self.yc - self.scale*self.nav_target.target_coordinates.y)), 
+                #                             (int)(self.scale*self.robot_radius/2), (0, 150, 0), -1)  
+
+
+                # aux_ang_tar = math.atan2(self.nav_target.target_coordinates.y - self.nav_target.target_coordinates.y, self.nav_target.target_coordinates.x - self.nav_target.target_coordinates.x)
+                # cv2.line(self.test_image,   (int(self.xc + self.scale*self.nav_target.target_coordinates.x), 
+                #                              int(self.yc - self.scale*self.nav_target.target_coordinates.y)),
+                #                             (int(self.xc + self.scale*self.nav_target.target_coordinates.x - self.scale * self.robot_radius * math.cos(aux_ang_tar)),# + math.pi/2)), 
+                #                              int(self.yc - self.scale*self.nav_target.target_coordinates.y + self.scale * self.robot_radius * math.sin(aux_ang_tar))),# + math.pi/2))),
+                #                             (0, 255, 0), int(1.0 + thickness*self.scale/1000))
+                
+
+
             # robot
             cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
             cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
@@ -480,20 +557,25 @@ class NavigationSDNLClass:
             
 
 
-            # SDNL equations
-            """
+            # THIS IF HAS TO BE CHANGED TO A IF AFTER CALCULATING THE VALUES FOR THE DRAW: 
             if self.first_nav_target:
+                # SDNL equations
+                # if self.first_nav_target:
+                # print(self.y_atrator)
                 self.plot1.plot(self.image_plt, self.scale_plotter, self.y_atrator, self.robot_t)
-            for y_plt_ff in self.yff:
-                self.plot3.plot(self.image_plt, self.scale_plotter, y_plt_ff, self.robot_t, (255, 100, 100))
-            self.plot2.plot(self.image_plt, self.scale_plotter, self.yfff, self.robot_t, (0, 140, 255))
-            self.plot2.plot(self.image_plt, self.scale_plotter, self.y_final, self.robot_t, (255, 255, 0))
-            """
+                for y_plt_ff in self.yff:
+                    self.plot3.plot(self.image_plt, self.scale_plotter, y_plt_ff, self.robot_t, (255, 100, 100))
 
+                # print(self.yfff)
+                # print(self.y_final)
+                    
+                self.plot2.plot(self.image_plt, self.scale_plotter, self.yfff, self.robot_t, (0, 140, 255))
+                self.plot2.plot(self.image_plt, self.scale_plotter, self.y_final, self.robot_t, (255, 255, 0))
+                
+                cv2.imshow("SDNL", self.image_plt)
 
 
             cv2.imshow("Navigation SDNL", self.test_image)
-            # cv2.imshow("SDNL", self.image_plt)
             
             k = cv2.waitKey(1)
             if k == ord('+'):
@@ -506,25 +588,6 @@ class NavigationSDNLClass:
 
             self.test_image[:, :] = 0
             self.image_plt[:, :] = 0
-
-
-    def odometry_msg_to_position(self, odom: Odometry):
-        
-        self.robot_x = odom.pose.pose.position.x
-        self.robot_y = odom.pose.pose.position.y
-
-        qx = odom.pose.pose.orientation.x
-        qy = odom.pose.pose.orientation.y
-        qz = odom.pose.pose.orientation.z
-        qw = odom.pose.pose.orientation.w
-
-        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
-        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
-        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(yaw, pitch, roll)
-
-        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(self.robot_x, self.robot_y, self.robot_t)
 
     def obstacles_msg_to_position(self, obs: Obstacles):
         self.obstacles = obs
@@ -570,6 +633,7 @@ class NavigationSDNLClass:
             self.first_nav_target = True
         # print(self.nav_target)
 
+
 class TRplotter:
 
     def __init__(self, coord_y, colour=(255, 255, 255)):
@@ -580,7 +644,6 @@ class TRplotter:
         self.yc = 400
         self.x = np.linspace(0, 2 * math.pi, 360 * 2)
         self.centre_data = int((self.xc*2 - len(self.x)) / 2)
-
 
     def plot(self, image_plt, scale, y, theta, plt_colour=None):
 
@@ -607,14 +670,22 @@ class TRplotter:
         cv2.line(image_plt, (image_plt.shape[1] - self.centre_data - 0, self.coord_y + int(2 * scale)),
                  (image_plt.shape[1] - self.centre_data - len(self.x), self.coord_y + int(2 * scale)), (255, 255, 255))
 
-        for value in range(len(self.x)):
-            # print(value, end="")
-            # cv2.circle(image_plt, (image_plt.shape[1] - self.centre_data - value, int(self.coord_y - scale/10 * y[value])), 0, (100,100,100), 0)
-            cv2.circle(image_plt, (self.centre_data + value, int(self.coord_y - scale/20 * y[value])), 0, fcolour, 0)
+        # print("x = ", len(self.x))
 
-            # cv2.line(image_plt, (image_plt.shape[1] - centre_data - value, yc - 200),
-            #          (image_plt.shape[1] - centre_data - value, int(yc - 200 - scale * y[value])),
-            #          (255, 0, 0))
+        # print("y = ", y)
+
+        if y: # checks if list is not empty
+
+            for value in range(len(self.x)):
+                # print(value, end="")
+                # cv2.circle(image_plt, (image_plt.shape[1] - self.centre_data - value, int(self.coord_y - scale/10 * y[value])), 0, (100,100,100), 0)
+                # print(value)
+                cv2.circle(image_plt, (self.centre_data + value, int(self.coord_y - scale/20 * y[value])), 0, fcolour, 0)
+                
+                pass
+                # cv2.line(image_plt, (image_plt.shape[1] - centre_data - value, yc - 200),
+                #          (image_plt.shape[1] - centre_data - value, int(yc - 200 - scale * y[value])),
+                #          (255, 0, 0))
 
         # theta on the three plots
         # print(theta)
@@ -654,7 +725,15 @@ class NavSDNLNode(Node):
 
         # Create PUBs/SUBs
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
-        self.odom_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+        
+        # Robot Localisation
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
+        self.initialpose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "initialpose", self.get_initialpose_callback, 10)
+
+        # Orientation
+        self.flag_orientation_publisher = self.create_publisher(Bool, "flag_orientation", 10)
+        self.get_orientation_subscribrer = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
+       
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
@@ -670,6 +749,25 @@ class NavSDNLNode(Node):
         flag_diagn.data = True
         self.navigation_diagnostic_publisher.publish(flag_diagn)
 
+        self.create_service(NavTrigger, 'nav_trigger', self.navigation_trigger_callback)
+
+        ori = Bool()
+        ori.data = True
+        self.flag_orientation_publisher.publish(ori) 
+
+
+    def navigation_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.nav_trigger_client.wait_for_service(1.0):"
+        # Type of service received: 
+        # (nothing)
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages
+        
+        response.success = True
+        response.message = "Arm Trigger"
+        return response
+
+
     def obs_lidar_callback(self, obs: Obstacles):
         # updates the obstacles variable
         self.nav.obstacles_msg_to_position(obs)
@@ -677,64 +775,152 @@ class NavSDNLNode(Node):
         # self.nav.update_debug_drawings()
         # print("here")
 
-    def odom_robot_callback(self, odom: Odometry):
-        # updates the position variable
-        self.nav.odometry_msg_to_position(odom)
-        # self.nav.sdnl_main()
+    def robot_localisation_callback(self, pose: Pose2D):
+        self.nav.robot_x = pose.x
+        self.nav.robot_y = pose.y
+        self.nav.robot_t = pose.theta
         self.nav.update_debug_drawings()
-        #print("here2")
+
+    def get_orientation_callback(self, orientation: Float32):
+        self.nav.imu_orientation = orientation.data
+        self.nav.imu_orientation_norm = self.nav.imu_orientation - self.nav.NORTE
+        if self.nav.imu_orientation_norm > 180.0:
+            self.nav.imu_orientation_norm -= 360.0
+        if self.nav.imu_orientation_norm < -180.0:
+            self.nav.imu_orientation_norm += 360.0
+
+        # just a flag to know for sure that to calculate NORTH we already have an IMU reading
+        if self.nav.first_imu_orientation == False:
+            self.nav.first_imu_orientation = True
+
+
+    def get_initialpose_callback(self, pose:PoseWithCovarianceStamped):
+        
+        # self.initialpose.x = pose.pose.pose.position.x
+        # self.initialpose.y = pose.pose.pose.position.y
+        
+        qx = pose.pose.pose.orientation.x
+        qy = pose.pose.pose.orientation.y
+        qz = pose.pose.pose.orientation.z
+        qw = pose.pose.pose.orientation.w
+
+        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
+        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
+        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        # print(yaw, pitch, roll)
+        if self.nav.first_imu_orientation:
+            self.nav.NORTE = self.nav.imu_orientation + math.degrees(math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)) 
+            if self.nav.NORTE >= 360.0:
+                self.nav.NORTE -= 360.0
+            if self.nav.NORTE < 0.0:
+                self.nav.NORTE += 360.0
+        else:
+            self.get_logger().error("NO IMU ORIENTATION READING, PLEASE CHECK IF LOW LEVEL WAS INITIALISED BEFORE NAVIGATION")
 
     def target_pos_callback(self, nav: TarNavSDNL):
         # calculates the velocities and sends them to the motors considering the latest obstacles and odometry position
-        # print(nav)
+        print(nav)
         self.nav.navigation_msg_to_position(nav)
         self.nav.dist_to_target = self.nav.upload_move_dist_to_target()
         self.nav.ang_to_target = self.nav.upload_rot_ang_to_target()
+        self.nav.nav_threshold_dist = nav.reached_radius # in meters
         self.navigation_state = 0
 
 
-        # print(nav)
     
     def timer_callback(self):
 
+        # safety
+        if self.nav.first_imu_orientation == False:
+            self.get_logger().warning("HAD TO RESEND IMU REQUEST...")
+            ori = Bool()
+            ori.data = True
+            self.flag_orientation_publisher.publish(ori) 
+
+        # print(self.nav.first_imu_orientation, round(self.nav.NORTE, 2), round(self.nav.imu_orientation, 2), round(self.nav.imu_orientation_norm, 2))
+        
         if self.nav.first_nav_target:
 
             # print("estado:", self.navigation_state)
             
             if self.navigation_state == 0:
-                omni_move = self.nav.sdnl_main("mov")
-                self.omni_move_publisher.publish(omni_move)
 
-                print(self.nav.nav_target.follow_me)
 
-                if self.nav.nav_target.follow_me:
-                    if self.nav.dist_to_target <= self.nav.nav_threshold_dist_follow_me:
-                        self.navigation_state = 1                        
-                        print("INSIDE1")
-                    else:
-                        print("OUTSIDE1")
-                else:
-                    if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
-                        self.navigation_state = 1
+                #     self.node.nav_tar_sdnl.move_or_rotate = "MOVE"
+                # if self.nav
+            
+                if self.nav.nav_target.move_or_rotate.lower() == "rotate":
 
-            if self.navigation_state == 1:
-                omni_move = self.nav.sdnl_main("rot")
-                self.omni_move_publisher.publish(omni_move)
+                    self.nav.max_ang_speed = 20.0 # speed # 20.0
+                    self.nav.lambda_target = 12 # 12
+        
+        
 
-                if self.nav.nav_target.follow_me:
-                    if self.nav.ang_to_target <= self.nav.nav_threshold_ang_follow_me:
-                        self.navigation_state = 2
-                        print("INSIDE2")
-                    else:
-                        print("OUTSIDE2")
-                else:
+                    omni_move = self.nav.sdnl_main("rot")
+                    self.omni_move_publisher.publish(omni_move)
+                    print("DIST_ERR:", self.nav.dist_to_target)
+                    print("ANG_ERR:", self.nav.ang_to_target) 
                     if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
                         self.navigation_state = 2
+
+                elif self.nav.nav_target.move_or_rotate.lower() == "move":
+        
+                    self.nav.max_ang_speed = 10.0 # speed # 20.0
+                    self.nav.lambda_target = 5 # 12
+        
+                    omni_move = self.nav.sdnl_main("mov")
+                    self.omni_move_publisher.publish(omni_move)
+                    print("DIST_ERR:", self.nav.dist_to_target)
+                    print("ANG_ERR:", self.nav.ang_to_target) 
+                    if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
+                        self.navigation_state = 2
+                
+                elif self.nav.nav_target.move_or_rotate.lower() == "orientate":
+
+                    self.nav.max_ang_speed = 20.0 # speed # 20.0
+                    self.nav.lambda_target = 12 # 12
+
+
+                    omni_move, target_reached = self.nav.rotate_orientation(self.nav.nav_target.orientation_absolute)
+                    self.omni_move_publisher.publish(omni_move)
+                    if target_reached:
+                        self.navigation_state = 2
+                else:
+                    # ERROR
+                    self.navigation_state = 2
+
+            
+
+
+
+                # print(self.nav.nav_target.follow_me)
+
+                # if self.nav.nav_target.follow_me:
+                #     if self.nav.dist_to_target <= self.nav.nav_threshold_dist_follow_me:
+                #         self.navigation_state = 1                        
+                #         print("INSIDE1")
+                #     else:
+                #         print("OUTSIDE1")
+                # else:
+                #     if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
+                #         self.navigation_state = 1
+            
+
+
+            # if self.navigation_state == 1:
+            #     omni_move = self.nav.sdnl_main("rot")
+            #     self.omni_move_publisher.publish(omni_move)
+            # 
+            #     if self.nav.nav_target.follow_me:
+            #         if self.nav.ang_to_target <= self.nav.nav_threshold_ang_follow_me:
+            #             self.navigation_state = 2
+            #             print("INSIDE2")
+            #         else:
+            #             print("OUTSIDE2")
+            #     else:
+            #         if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
+            #             self.navigation_state = 2
                     
-
-
-
-            self.nav.update_debug_drawings() # this way it still draws the targets on the final frame
 
             if self.navigation_state == 2:
                 # publica no topico a dizer que acabou
@@ -748,9 +934,8 @@ class NavSDNLNode(Node):
                 self.omni_move_publisher.publish(omni_move)
                 self.flag_pos_reached_publisher.publish(finish_flag) 
 
-            print("DIST_ERR:", self.nav.dist_to_target)
-            print("ANG_ERR:", self.nav.ang_to_target) 
-
+            
+            self.nav.update_debug_drawings() # this way it still draws the targets on the final frame
 
 
 def main(args=None):

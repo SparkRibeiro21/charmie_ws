@@ -1,0 +1,1 @@
+I will show all the detected objects as I handle collecting them.

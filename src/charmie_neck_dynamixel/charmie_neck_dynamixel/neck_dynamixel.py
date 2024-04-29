@@ -5,7 +5,6 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D 
 from example_interfaces.msg import Bool
 from nav_msgs.msg import Odometry
-from sensor_msgs.msg import Image
 from charmie_interfaces.msg import NeckPosition
 from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackPerson, TrackObject
 
@@ -13,8 +12,6 @@ import math
 import tty
 import termios
 import os
-import cv2
-from cv_bridge import CvBridge, CvBridgeError
 
 DEBUG_DRAW = True
 
@@ -144,9 +141,10 @@ class NeckNode(Node):
 
         # sends the current position of the servos after every change made on the publisher topics
         self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
+        
+        # Robot Localisation
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
-        # subscribes to robot position, to allow neck_to_coords
-        self.odom_subscriber = self.create_subscription(Odometry, "odom", self.odom_callback, 10)
         # standard diagnostic publisher
         self.neck_diagnostic_publisher = self.create_publisher(Bool, "neck_diagnostic", 10)
 
@@ -404,21 +402,10 @@ class NeckNode(Node):
     #     print("neck_to_coords:", pan_neck_to_coords, ang)
     #     self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis)
 
-
-    def odom_callback(self, odom: Odometry):
-        # update the last odom value
-                
-        self.robot_x = odom.pose.pose.position.x
-        self.robot_y = odom.pose.pose.position.y
-
-        qx = odom.pose.pose.orientation.x
-        qy = odom.pose.pose.orientation.y
-        qz = odom.pose.pose.orientation.z
-        qw = odom.pose.pose.orientation.w
-
-        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        
-        # print(self.robot_x, self.robot_y, self.robot_t)
+    def robot_localisation_callback(self, pose: Pose2D):
+        self.robot_x = pose.x
+        self.robot_y = pose.y
+        self.robot_t = pose.theta
 
     """
     def callback_neck_track_person(self, pose: TrackPerson):

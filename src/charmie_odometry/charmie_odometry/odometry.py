@@ -3,9 +3,16 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool
-from geometry_msgs.msg import Twist, TransformStamped
+from geometry_msgs.msg import Twist, TransformStamped, Pose2D, PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import Encoders
+import rclpy.time
+import tf2_geometry_msgs
+
+import tf2_py
+from tf2_ros import TransformException
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
 
 import cv2
 import math
@@ -302,6 +309,15 @@ class OdometryNode(Node):
         self.odometry_publisher = self.create_publisher(Odometry, "odom", 10)
         self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 10)
 
+        self.initialpose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "initialpose", self.get_initialpose_callback, 10)
+
+        self.robot_localisation_publisher = self.create_publisher(Pose2D, "robot_localisation", 10)
+        self.robot_localisation = Pose2D()
+
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+        self.create_timer(0.1, self.tf_timer)
+
         self.tf_broadcaster_odom_base_link = tf2_ros.TransformBroadcaster(self)
 
         self.robot_odom = RobotOdometry()
@@ -320,13 +336,86 @@ class OdometryNode(Node):
         flag_diagn.data = True
         self.odometry_diagnostic_publisher.publish(flag_diagn)
 
-    # def timer_callback(self):
-        # quaternion = self.robot_odom.get_quaternion_from_euler(0,0,1.57079633)
-        # print(quaternion, quaternion[0], quaternion[1], quaternion[2], quaternion[3])
+        self.initialpose = Pose2D()
+
+        self.is_map_odom_link = False
+
+
+    def tf_timer(self):
+
+        print(self.is_map_odom_link)
+        # this was created to add initialpose the same way we add to when there is a map->base_link, because, since this connection does not exist
+        # initial_pose_adjustement = Pose2D()
+
+        # is there is a map tf, than we use the global localisation with odom and amcl 
+        try:
+            transform = self.tf_buffer.lookup_transform("map", "base_link", rclpy.time.Time())
+            self.is_map_odom_link = True
+            # initial_pose_adjustement = 0, 0, 0
+            
+        except TransformException as ex:
+            self.get_logger().warning(f'Could not transform {"map"} to {"base_link"}: {ex}')
+
+            # else: we use the local localisation with just odom 
+            try:
+                transform = self.tf_buffer.lookup_transform("odom", "base_link", rclpy.time.Time())
+                        
+            except TransformException as ex:
+                self.get_logger().warning(f'Could not transform {"odom"} to {"base_link"}: {ex}')
+                return
+
+        position = transform.transform.translation
+        orientation = transform.transform.rotation
+
+        qx = orientation.x
+        qy = orientation.y
+        qz = orientation.z
+        qw = orientation.w
+
+        map_odom = Pose2D()
+        map_odom.x = -position.y # - initial_pose_adjustement.y
+        map_odom.y =  position.x # + initial_pose_adjustement.x
+        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
+        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
+        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        # print(yaw, pitch, roll)
+        map_odom.theta = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz) # + initial_pose_adjustement.theta
         
+        self.robot_localisation.x = float(map_odom.x) 
+        self.robot_localisation.y = float(map_odom.y)
+        self.robot_localisation.theta = float(map_odom.theta)
+        
+        self.get_logger().info("Robot localisation: ({}, {}, {})".format(self.robot_localisation.x, self.robot_localisation.y, self.robot_localisation.theta))
+
+        self.robot_localisation_publisher.publish(self.robot_localisation)
+
+    def get_initialpose_callback(self, pose:PoseWithCovarianceStamped):
+        
+        self.initialpose.x = pose.pose.pose.position.x
+        self.initialpose.y = pose.pose.pose.position.y
+        
+        qx = pose.pose.pose.orientation.x
+        qy = pose.pose.pose.orientation.y
+        qz = pose.pose.pose.orientation.z
+        qw = pose.pose.pose.orientation.w
+
+        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
+        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
+        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        # print(yaw, pitch, roll)
+        self.initialpose.theta = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz) 
+
+
+        if self.is_map_odom_link == False:
+            print("INSIDE")
+            self.robot_odom.coord_rel_x_ = -self.initialpose.y
+            self.robot_odom.coord_rel_y_ = self.initialpose.x
+            self.robot_odom.coord_rel_t  = self.initialpose.theta
+
+
     def get_encoders_callback(self, enc: Encoders):
         coord_x, coord_y, coord_theta, vel_x, vel_y, vel_theta = self.robot_odom.localization(enc) 
-        print(coord_x, coord_y, coord_theta)
+        # print(coord_x, coord_y, coord_theta)
 
         quaternion = self.robot_odom.get_quaternion_from_euler(0,0,coord_theta)
 
@@ -339,10 +428,22 @@ class OdometryNode(Node):
         odom.pose.pose.orientation.z = quaternion[2]
         odom.pose.pose.orientation.w = quaternion[3] 
 
+        # print(odom.pose.pose.orientation)
+
         odom.twist.twist.linear.x = vel_x 
         odom.twist.twist.linear.y = vel_y
         odom.twist.twist.angular.z = vel_theta
         self.odometry_publisher.publish(odom)
+
+
+        # print(coord_theta)
+
+        quaternion_rviz = self.robot_odom.get_quaternion_from_euler(0,0,-coord_theta)
+        odom_rviz = Odometry()
+        odom_rviz.pose.pose.orientation.x = quaternion[0]
+        odom_rviz.pose.pose.orientation.y = quaternion[1]
+        odom_rviz.pose.pose.orientation.z = quaternion[2]
+        odom_rviz.pose.pose.orientation.w = quaternion[3] 
 
         # creates a connection betweeen odom and base link, broadcast all joints of the tf transform,  
         transform = TransformStamped()
@@ -353,7 +454,7 @@ class OdometryNode(Node):
         transform.transform.translation.x = odom.pose.pose.position.y
         transform.transform.translation.y = -odom.pose.pose.position.x
         transform.transform.translation.z = odom.pose.pose.position.z
-        transform.transform.rotation = odom.pose.pose.orientation
+        transform.transform.rotation = odom_rviz.pose.pose.orientation
 
         self.tf_broadcaster_odom_base_link.sendTransform(transform)
         

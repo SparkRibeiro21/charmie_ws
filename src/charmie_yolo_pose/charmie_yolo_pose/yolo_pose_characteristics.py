@@ -20,10 +20,10 @@ from pathlib import Path
 
 # configurable parameters through ros topics
 ONLY_DETECT_PERSON_LEGS_VISIBLE = False              # if True only detects people whose legs are visible 
-MIN_PERSON_CONF_VALUE = 0.5                          # defines the minimum confidence value to be considered a person
-MIN_KP_TO_DETECT_PERSON = 7                         # this parameter does not consider the four legs keypoints 
+MIN_PERSON_CONF_VALUE = 0.3                          # defines the minimum confidence value to be considered a person
+MIN_KP_TO_DETECT_PERSON = 4                          # this parameter does not consider the four legs keypoints 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False            # only detects person right in front of the robot both on the x and y axis 
-ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.5
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.6
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 1.8
 ONLY_DETECT_PERSON_ARM_RAISED = False                # if True only detects people with their arm raised or waving 
 
@@ -45,7 +45,7 @@ DRAW_PERSON_HAND_RAISED = False
 DRAW_PERSON_HEIGHT = True
 DRAW_PERSON_CLOTHES_COLOR = True
 DRAW_CHARACTERISTICS = True
-DRAW_FACE_RECOGNITION = True
+DRAW_FACE_RECOGNITION = False
 
 
 class YoloPoseNode(Node):
@@ -125,8 +125,8 @@ class YoloPoseNode(Node):
         # Intel Realsense Subscribers
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
 
-        # get robot_localisation
-        self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+        # Robot Localisation
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         ### Services (Clients) ###
         # Point Cloud
@@ -231,8 +231,8 @@ class YoloPoseNode(Node):
 
         self.ACTIVATE_YOLO_POSE = request.activate
         ONLY_DETECT_PERSON_LEGS_VISIBLE = request.only_detect_person_legs_visible
-        MIN_PERSON_CONF_VALUE = request.minimum_person_confidence
-        MIN_KP_TO_DETECT_PERSON = request.minimum_keypoints_to_detect_person
+        # MIN_PERSON_CONF_VALUE = request.minimum_person_confidence
+        # MIN_KP_TO_DETECT_PERSON = request.minimum_keypoints_to_detect_person
         ONLY_DETECT_PERSON_RIGHT_IN_FRONT = request.only_detect_person_right_in_front
         ONLY_DETECT_PERSON_ARM_RAISED = request.only_detect_person_arm_raised
         self.GET_CHARACTERISTICS = request.characteristics
@@ -802,9 +802,9 @@ class YoloPoseNode(Node):
                                         (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
 
                     if DRAW_PERSON_HAND_RAISED:
-                        if hand_raised != "None":
-                            cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
-                                        (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        # if hand_raised != "None":
+                        cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
+                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
                     if DRAW_PERSON_HEIGHT:
                         cv2.putText(current_frame_draw, str(round(new_person.height,2)),
@@ -818,7 +818,7 @@ class YoloPoseNode(Node):
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
                         
                     if DRAW_CHARACTERISTICS:
-                        cv2.putText(current_frame_draw, new_person.age_estimate+" / "+new_person.gender+" / "+new_person.ethnicity,
+                        cv2.putText(current_frame_draw, str(round(new_person.height,2))+" / "+new_person.age_estimate+" / "+new_person.gender+" / "+new_person.ethnicity,
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
 
@@ -854,27 +854,10 @@ class YoloPoseNode(Node):
         self.get_logger().info(f"Time Yolo_Pose: {round(time.perf_counter() - self.tempo_total,2)}")
 
 
-    def odom_robot_callback(self, loc: Odometry):
-        self.odometry_msg_to_position(loc)
-
-
-    def odometry_msg_to_position(self, odom: Odometry):
-        
-        self.robot_x = odom.pose.pose.position.x
-        self.robot_y = odom.pose.pose.position.y
-
-        qx = odom.pose.pose.orientation.x
-        qy = odom.pose.pose.orientation.y
-        qz = odom.pose.pose.orientation.z
-        qw = odom.pose.pose.orientation.w
-
-        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
-        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
-        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(yaw, pitch, roll)
-
-        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(self.robot_x, self.robot_y, self.robot_t)
+    def robot_localisation_callback(self, pose: Pose2D):
+        self.robot_x = pose.x
+        self.robot_y = pose.y
+        self.robot_t = pose.theta
 
 
     def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
@@ -1033,8 +1016,9 @@ class YoloPoseNode(Node):
 
         new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
 
+        new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
+
         if self.GET_CHARACTERISTICS:
-            new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
 
             new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
             new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
@@ -1055,8 +1039,8 @@ class YoloPoseNode(Node):
                 new_person.gender_probability = 0.0
 
         else:
-            new_person.pointing_at = "None"
-            new_person.pointing_with_arm = "None"
+            # new_person.pointing_at = "None"
+            # new_person.pointing_with_arm = "None"
             new_person.shirt_color = "None"
             new_person.pants_color = "None"
             new_person.ethnicity = "None"
@@ -1096,7 +1080,7 @@ class YoloPoseNode(Node):
             if DRAW_FACE_RECOGNITION:
                 cv2.rectangle(current_frame_draw, (x1, y1), (x2, y2), (0, 255, 255) , 4) 
                 
-            cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
+            # cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
             
             return True, current_frame[y1:y2, x1:x2]
 
@@ -1260,18 +1244,18 @@ class YoloPoseNode(Node):
         if theta_left > MIN_ANGLE_POINTING:
             if left_wrist[0] < left_hip[0]:
                 arm_pointed_with = "Left Arm"
-                side_pointed = "Right Side"
+                side_pointed = "Right"
             else:
                 arm_pointed_with = "Left Arm"
-                side_pointed = "Left Side"
+                side_pointed = "Left"
         
         elif theta_right > MIN_ANGLE_POINTING:
             if right_wrist[0] < right_hip[0]:
                 arm_pointed_with = "Right Arm"
-                side_pointed = "Right Side"
+                side_pointed = "Right"
             else:
                 arm_pointed_with = "Right Arm"
-                side_pointed = "Left Side"
+                side_pointed = "Left"
         
         return side_pointed, arm_pointed_with
 

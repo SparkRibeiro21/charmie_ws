@@ -7,6 +7,7 @@ from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, DetectedPerson, NeckPosition, ListOfPoints
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -63,15 +64,15 @@ class Robot():
         
         with open(self.complete_path + 'rooms_location.json', encoding='utf-8') as json_file:
             self.house_rooms = json.load(json_file)
-        print(self.house_rooms)
+        # print(self.house_rooms)
 
         with open(self.complete_path + 'furniture_location.json', encoding='utf-8') as json_file:
             self.house_furniture = json.load(json_file)
-        print(self.house_furniture)
+        # print(self.house_furniture)
 
         with open(self.complete_path + 'doors_location.json', encoding='utf-8') as json_file:
             self.house_doors = json.load(json_file)
-        print(self.house_doors)
+        # print(self.house_doors)
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
@@ -84,24 +85,11 @@ class Robot():
         self.colunas = 1280
         self.current_frame = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
 
-
-    def odometry_msg_to_position(self, odom: Odometry):
+    def pose2d_msg_to_position(self, pose: Pose2D):
         
-        self.robot_x = odom.pose.pose.position.x
-        self.robot_y = odom.pose.pose.position.y
-
-        qx = odom.pose.pose.orientation.x
-        qy = odom.pose.pose.orientation.y
-        qz = odom.pose.pose.orientation.z
-        qw = odom.pose.pose.orientation.w
-
-        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
-        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
-        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(yaw, pitch, roll)
-
-        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(self.robot_x, self.robot_y, self.robot_t)
+        self.robot_x = pose.x
+        self.robot_y = pose.y
+        self.robot_t = pose.theta
 
 
     def update_debug_drawings(self):
@@ -193,8 +181,8 @@ class Robot():
                 #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
            
 
-                cv2.circle(self.test_image, (int(self.xc_adj + person.position_relative.x*self.scale),
-                    int(self.yc_adj - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
+                cv2.circle(self.test_image, (int(self.xc_adj + person.position_absolute.x*self.scale),
+                    int(self.yc_adj - person.position_absolute.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
                 
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
                 #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
@@ -207,8 +195,8 @@ class Robot():
            
 
                 cv2.rectangle(self.test_image, 
-                              (int(self.xc_adj + object.position_relative.x*self.scale + self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_relative.y*self.scale + self.lidar_radius*2*self.scale)),
-                              (int(self.xc_adj + object.position_relative.x*self.scale - self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_relative.y*self.scale - self.lidar_radius*2*self.scale)),
+                              (int(self.xc_adj + object.position_absolute.x*self.scale + self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale + self.lidar_radius*2*self.scale)),
+                              (int(self.xc_adj + object.position_absolute.x*self.scale - self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale - self.lidar_radius*2*self.scale)),
                               (255, 0, 0), -1)
                                
                 # cv2.circle(self.test_image, (int(self.xc_adj + object.position_relative.x*self.scale),
@@ -235,8 +223,6 @@ class Robot():
 
             self.test_image[:, :] = 0
 
-
-
 class DebugVisualNode(Node):
 
     def __init__(self):
@@ -248,11 +234,10 @@ class DebugVisualNode(Node):
         
         # get yolo pose person detection filtered
         self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
-
         self.object_detected_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.get_object_detected_callback, 10)
 
-        # get robot_localisation
-        self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+        # Robot Localisation
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         # search for person, person localisation 
         self.search_for_person_subscriber = self.create_subscription(ListOfPoints, "search_for_person_points", self.search_for_person_callback, 10)
@@ -277,15 +262,13 @@ class DebugVisualNode(Node):
         # print("Received new yolo objects. Number of objects = ", obj.num_person)
         self.robot.object_detected = obj
 
-
-
-    def odom_robot_callback(self, loc: Odometry):
-        self.robot.odometry_msg_to_position(loc)
-
-
+    def robot_localisation_callback(self, pose: Pose2D):
+        self.robot.robot_x = pose.x
+        self.robot.robot_y = pose.y
+        self.robot.robot_t = pose.theta
+        
     def search_for_person_callback(self, points: ListOfPoints):
         self.robot.search_for_person = points
-
 
     def get_color_image_callback(self, img: Image):
         # self.get_logger().info('Receiving color video frame')

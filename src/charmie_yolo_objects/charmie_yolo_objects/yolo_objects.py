@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Float32
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import DetectedObject, Yolov8Objects, ListOfImages, ListOfStrings, PointCloudCoordinates, BoundingBox, BoundingBoxAndPoints
@@ -20,18 +20,18 @@ import time
 
 objects_filename = "m_size_model_300_epochs_after_nandinho.pt"
 objects_filename = "segmentation_M_size_model_600_epochs.pt"
-shoes_filename = "shoes_socks_v1.pt"    
-doors_filename = "door_bruno.pt"    
+shoes_filename = "shoes_socks_v1.pt"
+doors_filename = "door_bruno.pt"
 
-MIN_OBJECT_CONF_VALUE = 0.2
+MIN_OBJECT_CONF_VALUE = 0.5
 
 DRAW_OBJECT_CONF = True
 DRAW_OBJECT_ID = True
 DRAW_OBJECT_BOX = True
 DRAW_OBJECT_NAME = True
 DRAW_OBJECT_CLASS = True
-DRAW_OBJECT_LOCATION_COORDS = False
-DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = False
+DRAW_OBJECT_LOCATION_COORDS = True
+DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = True
 
 
 class Yolo_obj(Node):
@@ -105,8 +105,8 @@ class Yolo_obj(Node):
         self.doors_filtered_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered', 10)
         self.shoes_filtered_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered', 10)
         
-        # get robot_localisation
-        self.localisation_robot_subscriber = self.create_subscription(Odometry, "odom_a", self.odom_robot_callback, 10)
+        # Robot Localisation
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         ### Services (Clients) ###
         # Point Cloud
@@ -511,8 +511,8 @@ class Yolo_obj(Node):
                                         (new_object.box_center_x, new_object.box_center_y), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
                             
                         # if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
-                        #     cv2.putText(current_frame_draw, new_person.room_location+" - "+new_person.furniture_location,
-                        #                 (self.center_torso_person_list[object_idx][0], self.center_torso_person_list[object_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        #     cv2.putText(current_frame_draw, new_object.room_location+" - "+new_object.furniture_location,
+                        #                 (new_object.box_center_x, new_object.box_center_y+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
             
             # must add also for hand 
             # yolov8_obj.image_rgb = self.head_rgb # test removed person_pose (non-filtered)
@@ -655,6 +655,7 @@ class Yolo_obj(Node):
 
             # adds object to "object_pose" without any restriction
             new_object = DetectedObject()
+            self.get_logger().info(f"Objects detected: {new_pcloud[object_idx].center_coords}")
             new_object = self.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, new_pcloud[object_idx].center_coords)
             # yolov8_obj.objects.append(new_object) # test removed person_pose (non-filtered)
 
@@ -825,10 +826,11 @@ class Yolo_obj(Node):
                                     ', '+str(round(new_object.position_relative.z,2))+')',
                                     (new_object.box_center_x, new_object.box_center_y), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
                         
-                    # if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
-                    #     cv2.putText(current_frame_draw, new_person.room_location+" - "+new_person.furniture_location,
-                    #                 (self.center_torso_person_list[object_idx][0], self.center_torso_person_list[object_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
         
+                    if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
+                            cv2.putText(current_frame_draw, new_object.room_location+" - "+new_object.furniture_location,
+                                (new_object.box_center_x, new_object.box_center_y+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+            
         # must add also for hand 
         # yolov8_obj.image_rgb = self.head_rgb # test removed person_pose (non-filtered)
         # yolov8_obj.num_objects = num_obj # test removed person_pose (non-filtered)
@@ -1199,27 +1201,10 @@ class Yolo_obj(Node):
         self.cropped_image_object_detected_publisher.publish(list_of_strings)
     """
     
-    def odom_robot_callback(self, loc: Odometry):
-        self.odometry_msg_to_position(loc)
-
-
-    def odometry_msg_to_position(self, odom: Odometry):
-        
-        self.robot_x = odom.pose.pose.position.x
-        self.robot_y = odom.pose.pose.position.y
-
-        qx = odom.pose.pose.orientation.x
-        qy = odom.pose.pose.orientation.y
-        qz = odom.pose.pose.orientation.z
-        qw = odom.pose.pose.orientation.w
-
-        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
-        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
-        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(yaw, pitch, roll)
-
-        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(self.robot_x, self.robot_y, self.robot_t)
+    def robot_localisation_callback(self, pose: Pose2D):
+        self.robot_x = pose.x
+        self.robot_y = pose.y
+        self.robot_t = pose.theta
 
         
 def main(args=None):

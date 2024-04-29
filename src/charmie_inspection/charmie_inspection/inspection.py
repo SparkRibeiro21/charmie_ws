@@ -3,509 +3,523 @@
 import rclpy
 from rclpy.node import Node
 
+# import variables from standard libraries and both messages and services from custom charmie_interfaces
+from example_interfaces.msg import Bool, String, Int16
+from geometry_msgs.msg import PoseWithCovarianceStamped
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
+
+import cv2 
 import threading
-
-from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
-from example_interfaces.msg import Bool, Int16, Float32
-from sensor_msgs.msg import Image
-from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import Obstacles, RobotSpeech, TarNavSDNL, Yolov8Pose, DetectedPerson, NeckPosition
-
-import mediapipe as mp
-import numpy as np
-from cv_bridge import CvBridge, CvBridgeError
-import cv2
-import math
-
-after_door_point = (0.0, 1.0)
-inspection_point = (1.9, 3.1)
-# exit_door_orientation = (2.0, 2.0)
-exit_door = (1.9, 2.0)
-final_point = (2.0, 6.9)
-final_point_orientation = (4.0, 6.9)
-
-
-
-
-f_point_loc = (2.55, 0.0)
-f_point_rot = (2.55, -1.0)
-
-# exit_first_point = (1.0, 5.80 + 1.7 + 1.0)
-# exit_point = (1.00, 5.80 + 1.7 + 2.0)
-
 import time
+from cv_bridge import CvBridge
+import math
+import numpy as np
+
+# Constant Variables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+
 
 class InspectionNode(Node):
 
     def __init__(self):
         super().__init__("Inspection")
         self.get_logger().info("Initialised CHARMIE Inspection Node")
-        
 
-        ###         PUBs/SUBs        
-        
-        # Door Start
-        self.start_door_publisher = self.create_publisher(Bool, 'start_door', 10) 
-        self.done_start_door_subscriber = self.create_subscription(Bool, 'done_start_door', self.done_start_door_callback, 10) 
-        
-        # Speaker
-        self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
-        self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
-        
-        # Neck
-        self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
-        
-        # Navigation 
-        self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
-        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_pos_reached_callback, 10)
-
-        # Low Level: Start Button
+        ### Topics (Publisher and Subscribers) ###   
+        # Low Level 
+        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
-        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
-        # Low Level: RGB
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-
-        # Initial Pose for Localisation
-        self.initial_pose_amcl_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10) # aux temp
+        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
+        # Door Start
+        self.start_door_subscriber = self.create_subscription(Bool, 'get_door_start', self.get_door_start_callback, 10) 
+        self.flag_door_start_publisher = self.create_publisher(Bool, 'flag_door_start', 10) 
+        # Yolo Pose
+        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+        # Navigation
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
+        # Localisation
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         
-        # Intel Realsense
-        self.camera_subscriber = self.create_subscription(Image, "/color/image_raw", self.color_img_callbcak, 10)
-        self.depth_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_depth_callback, 10)
+
+        ### Services (Clients) ###
+        # Neck
+        self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
+        # Speakers
+        self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        # Yolos
+        self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
+        # Navigation
+        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+
+        # if is necessary to wait for a specific service to be ON, uncomment the two following lines
+        # Speakers
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
+        # Neck 
+        while not self.set_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+        # Yolos
+        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")        
+        # Navigation
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
         
-        # Odometry
-        self.odometry_subscriber = self.create_subscription(Odometry, "odom_a", self.get_odometry_robot_callback, 10)
+        # Variables 
+        self.waited_for_end_of_speaking = False
+        self.waited_for_end_of_neck_pos = False
 
-        #YOLOv8Pose
-        self.yolo_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.yolo_pose_callback, 10)
-
-        ###         Vars
-        self.done_start_door = False
-        self.flag_speech_done = False
-        self.flag_navigation_done = False
+        self.br = CvBridge()
+        self.detected_people = Yolov8Pose()
         self.start_button_state = False
-        self.speech_str = RobotSpeech()
-        self.talk_neck = Pose2D()
-        self.talk_neck.x = 180.0
-        self.talk_neck.y = 150.0
+        self.door_start_state = False
+        self.flag_navigation_reached = False
 
-        self.bridge = CvBridge()
-        self.image_color = Image()
-        self.depth_img = Image()
+        # Success and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_success = True
+        self.speech_message = ""
+        self.rgb_success = True
+        self.rgb_message = ""
+        self.neck_success = True
+        self.neck_message = ""
+        self.activate_yolo_pose_success = True
+        self.activate_yolo_pose_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
 
-        self.robot_t = 0.0
-        self.robot_x = 0.0
-        self.robot_y = 0.0
+    def person_pose_filtered_callback(self, det_people: Yolov8Pose):
+        self.detected_people = det_people
 
-        self.color = Int16()
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
+        # cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
+        # cv2.waitKey(10)
 
-        self.yolo_poses = Yolov8Pose()
-
-        """ self.distance_x = Float32()
-        self.distance_y = Float32() """
-
-    def yolo_pose_callback(self, yolo: Yolov8Pose):
-        #self.index_person = points.index_person
-        # print('--------------------')
-        self.yolo_poses = yolo
-        
-        # for i in range(len(yolo.persons)):
-        #     print(yolo.persons[i].x_rel, yolo.persons[i].y_rel)
-                
-        """ self.distance_x = yolo.persons[1]
-        self.distance_y = yolo.persons[2] """
-        
-    def done_start_door_callback(self, state:Bool):
-        self.done_start_door = state.data
-        print("Finished Door Start")
-
-    def get_speech_done_callback(self, state: Bool):
-        self.flag_speech_done = state.data
-        print("Received Speech Flag:", state.data)
-
-    def flag_pos_reached_callback(self, state: Bool):
-        self.flag_navigation_done = state.data
-        print("Received Navigation Flag:", state.data)
-
+    ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
-        print("Received Start Button:", state.data)
+        # print("Received Start Button:", state.data)
 
-    def color_img_callbcak(self, img: Image):
-        #print('camera callback')
-        self.image_color = img
+    ### DOOR START ###
+    def get_door_start_callback(self, state: Bool):
+        self.door_start_state = state.data
+        # print("Received Start Button:", state.data)
 
-    def get_depth_callback(self, img: Image):
-        #print('camera callback')
-        self.depth_img = img
+    ### NAVIGATION ###
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.flag_navigation_reached = flag
 
-    def get_odometry_robot_callback(self, odom:Odometry):
-        self.robot_current_position = odom
-        self.robot_x = odom.pose.pose.position.x
-        self.robot_y = odom.pose.pose.position.y
+    ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
+    def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
+        request = ActivateYoloPose.Request()
+        request.activate = activate
+        request.only_detect_person_legs_visible = only_detect_person_legs_visible
+        request.minimum_person_confidence = minimum_person_confidence
+        request.minimum_keypoints_to_detect_person = minimum_keypoints_to_detect_person
+        request.only_detect_person_arm_raised = only_detect_person_arm_raised
+        request.only_detect_person_right_in_front = only_detect_person_right_in_front
+        request.characteristics = characteristics
 
-        qx = odom.pose.pose.orientation.x
-        qy = odom.pose.pose.orientation.y
-        qz = odom.pose.pose.orientation.z
-        qw = odom.pose.pose.orientation.w
+        self.activate_yolo_pose_client.call_async(request)
+        
 
-        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
-        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
-        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(yaw, pitch, roll)
+    #### SET NECK POSITION SERVER FUNCTIONS #####
+    def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
+        request = SetNeckPosition.Request()
+        request.pan = float(position[0])
+        request.tilt = float(position[1])
+        
+        future = self.set_neck_position_client.call_async(request)
+        # print("Sent Command")
 
-        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_set_neck_command)
+        else:
+            self.neck_success = True
+            self.neck_message = "Wait for answer not needed"
+    
+    def callback_call_set_neck_command(self, future): #, a, b):
 
-    def publish_initial_pose(self, x:float, y:float):
-
-        pose = PoseWithCovarianceStamped()
-
-        pose.header.stamp = self.get_clock().now().to_msg()
-        pose.header.frame_id = "map"
-
-        pose.pose.pose.position.x = y
-        pose.pose.pose.position.y = -x
-
-        # it must start always facing the map axis (facing inside the house from the outise of the entrance door)
-        pose.pose.pose.orientation.x = 0.0
-        pose.pose.pose.orientation.y = 0.0
-        pose.pose.pose.orientation.z = 0.0
-        pose.pose.pose.orientation.w = 1.0
-
-        print("SENT INITIAL POSE")
-
-        self.initial_pose_amcl_publisher.publish(pose)
-
-
-
-
-# FLUXOGRAM
-# START
-# Wait for Door to Open
-# Go to Position
-# aVoid obstacles
-# avoid human passing
-# fala
-# fica à espera que diga YES
-# vai para a saida 
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_success = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_neck_pos = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
 
 
+    #### SPEECH SERVER FUNCTIONS #####
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
+        request = SpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+        request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
+    
+        future = self.speech_command_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_speech_command)
+        else:
+            self.speech_success = True
+            self.speech_message = "Wait for answer not needed"
+
+    def callback_call_speech_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_success = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_speaking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
+
+
+# main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
     node = InspectionNode()
-    th_main = threading.Thread(target=thread_main_inspection, args=(node,), daemon=True)
+    th_main = threading.Thread(target=ThreadMainInspection, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-
-def thread_main_inspection(node: InspectionNode):
-    main = ReceptionistMain(node)
+def ThreadMainInspection(node: InspectionNode):
+    main = InspectionMain(node)
     main.main()
 
-
-class ReceptionistMain():
+class InspectionMain():
 
     def __init__(self, node: InspectionNode):
+        # create a node instance so all variables ros related can be acessed
         self.node = node
-        self.state = 0
 
-        self.mp_drawing = mp.solutions.drawing_utils
-        self.mp_pose = mp.solutions.pose
-        self.pose = self.mp_pose.Pose(min_detection_confidence=0.8)
-        self.neck_pose = NeckPosition()
-        self.neck_pose.pan = 180.0
-        self.neck_pose.tilt = 193.0
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
+
+        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
         
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_speaking:
+            pass
+        self.node.waited_for_end_of_speaking = False
+
+        return self.node.speech_success, self.node.speech_message
+
+    def set_rgb(self, command="", wait_for_end_of=True):
         
-    def wait_for_end_of_speaking(self):
-        while not self.node.flag_speech_done:
-            pass
-        self.node.flag_speech_done = False
-    
-    def wait_for_end_of_start_door(self):
-        while not self.node.done_start_door:
-            pass
-        self.node.done_start_door = False
+        temp = Int16()
+        temp.data = command
+        self.node.rgb_mode_publisher.publish(temp)
 
+        self.node.rgb_success = True
+        self.node.rgb_message = "Value Sucessfully Sent"
 
+        return self.node.rgb_success, self.node.rgb_message
+ 
     def wait_for_start_button(self):
+
+        self.node.start_button_state = False
+
+        t = Bool()
+        t.data = True
+        self.node.flag_start_button_publisher.publish(t)
+
         while not self.node.start_button_state:
             pass
-        f = Bool()
-        f.data = False 
-        self.node.flag_start_button_publisher.publish(f)
 
+        t.data = False 
+        self.node.flag_start_button_publisher.publish(t)
+        
+    def wait_for_door_start(self):
 
-    def wait_for_end_of_navigation(self):
-        while not self.node.flag_navigation_done:
+        self.node.door_start_state = False
+
+        t = Bool()
+        t.data = True
+        self.node.flag_door_start_publisher.publish(t)
+
+        while not self.node.door_start_state:
             pass
-        self.node.flag_navigation_done = False
-        print("Finished Navigation")
 
+        t.data = False 
+        self.node.flag_door_start_publisher.publish(t)
 
-    def wait_for_end_of_navigation_but_check_for_people_obstacles(self, move_t, rotate_t):
+    def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
-        max_dist_to_target = 0.5
-        max_dist_to_person = 1.2
-
-        dist_to_target = math.sqrt((move_t[0] - self.node.robot_x)**2 + (move_t[1] - self.node.robot_y)**2)
-
-        print('AQUI')
-        # self.check_for_human_obstacle_multiperson()
-        s_ant = 0
-        s = 0
+        self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
         
-        while dist_to_target > max_dist_to_target:
-            s_ant = s
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_neck_pos:
+            pass
+        self.node.waited_for_end_of_neck_pos = False
 
-            # time.sleep(0.05)
+        return self.node.neck_success, self.node.neck_message
 
-            dist_to_target = math.sqrt((move_t[0] - self.node.robot_x)**2 + (move_t[1] - self.node.robot_y)**2)
-            min_y = self.check_for_human_obstacle_multiperson()
-            print(min_y)
-
-            if min_y > max_dist_to_person: # deteta pessoa mas está acima do threshold
-                # anda normal
-                self.coordinates_to_navigation(move_t, rotate_t, False) 
-                s = 0
-                print('S = 0')
-
-            else:  # deteta pessoa abaixo do threshold
-                # tem que parar
-                print('S=1')
-                
-                # variavel para o robo ficar a olhar para onde já está virado por defeito
-                stop_orientation_x = max_dist_to_person*2 * math.sin(-self.node.robot_t) + self.node.robot_x
-                stop_orientation_y = max_dist_to_person*2 * math.cos(-self.node.robot_t) + self.node.robot_y
-
-                self.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (stop_orientation_x, stop_orientation_y), False)
-                s = 1
-
-            if s_ant == 0 and s == 1: # starts seeing obstacle person
-                self.node.color.data = 1
-                self.node.rgb_mode_publisher.publish(self.node.color)
-            elif s_ant == 1 and s == 0:
-                self.node.color.data = 0
-                self.node.rgb_mode_publisher.publish(self.node.color)
-            
-            self.node.flag_navigation_done = False
-
-        self.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), rotate_t, False)
-        self.wait_for_end_of_navigation()
-
-
-    def coordinates_to_navigation(self, p1, p2, bool):
-        nav = TarNavSDNL()
-        nav.flag_not_obs = bool
-        nav.move_target_coordinates.x = p1[0]
-        nav.move_target_coordinates.y = p1[1]
-        nav.rotate_target_coordinates.x = p2[0]
-        nav.rotate_target_coordinates.y = p2[1]
-        self.node.target_position_publisher.publish(nav)
-        # print("Published Navigation")
+    def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
-    def check_for_human_obstacle_multiperson(self):
-        yolo = self.node.yolo_poses
-        min_y = 10.0
-        if len(yolo.person) > 0:    
-            for i in range(len(yolo.persons)):
-                if yolo.persons[i].y_rel < min_y:
-                    min_y = yolo.persons[i].y_rel
-        print(min_y)
-        print('**************')
-        return min_y
+        self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, only_detect_person_arm_raised=only_detect_person_arm_raised, characteristics=characteristics)
 
-    def check_for_human_obstacles(self):
-        #NAVIGATION TO TARGET (PERSON)
-        # self.get_logger().info('FUNCTION FOLLOW')
-        img = self.node.bridge.imgmsg_to_cv2(self.node.image_color, "bgr8")
-        depth_img = self.node.bridge.imgmsg_to_cv2(self.node.depth_img, "32FC1")
-        height, witdh, _ = img.shape
-        image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        self.node.activate_yolo_pose_success = True
+        self.node.activate_yolo_pose_message = "Activated with selected parameters"
 
-        results = self.pose.process(image)
-        #print("RESULTS")
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        dist_x = 0
-        self.distance = 0
+        return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-        if results.pose_landmarks:
-            self.mp_drawing.draw_landmarks(image, results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS, self.mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2), self.mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=2))
-            
-            point_12 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_SHOULDER].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_SHOULDER].y*height,2))
-            point_11 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_SHOULDER].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_SHOULDER].y*height,2))
-            
-            aux_x_pixel = (point_11[0] + point_12[0])/2
-            aux_y_pixel = (point_11[1] + point_12[1])/2
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
 
-            center_x = witdh/2
-            dist_aux_x = center_x - aux_x_pixel
-            dist_x = -((dist_aux_x * 0.01)/3.8)
-            
-            self.depth_img_array = np.array(depth_img, dtype=np.dtype('f8'))
-            try:
-                self.distance = (self.depth_img_array[int(aux_y_pixel), int(aux_x_pixel)])/1000
-            except:
-                self.distance = 0.0
-                print("ERRO INDEX")
 
-            dist = f"({dist_x:.2f},{self.distance:.2f})"
-            #dist_text = f"{dist_x:.2f}"
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
 
-            """ theta1 = math.tan(self.distance/dist_x)
-            theta_degrees = math.degrees(theta1) """
-            """print("THETA: ", theta_degrees)
-            print("X: ", dist_x)
-            print("Y: ", self.distance) """
-            #angle = f"{theta_degrees:.2f}"
-
-            #self.person_target.x = 
-
-            cv2.line(image, (int(aux_x_pixel), int(aux_y_pixel)), (int(center_x), int(aux_y_pixel)), (0,0,255), 2)
-            #cv2.putText(image, angle, (int(aux_x_pixel), int(aux_y_pixel+20)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
-            cv2.putText(image, dist, (int(aux_x_pixel), int(aux_y_pixel-10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-            #aux_1 = (aux_x_pixel, aux_y_pixel)
-            cv2.circle(image, (int(aux_x_pixel), int(aux_y_pixel)), 3, (255,0,0), 2)
-            cv2.circle(depth_img, (int(aux_x_pixel), int(aux_y_pixel)), 3, (0,0,0), 2)
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
 
         else:
-            dist_x = 0
-            self.distance = 0
+            
+            navigation = TarNavSDNL()
 
-        # cv2.imshow("FOLLOW TARGET", image)
-        #cv2.imshow("Depth", depth_img)
-        # cv2.waitKey(1)
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
 
-        # print(dist_x, self.distance)
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.reached_radius = reached_radius
 
-        return dist_x, self.distance # x, y
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
 
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
 
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
+
+    def set_initial_position(self, initial_position):
+
+        task_initialpose = PoseWithCovarianceStamped()
+
+        task_initialpose.header.frame_id = "map"
+        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
+
+        task_initialpose.pose.pose.position.x = initial_position[1]
+        task_initialpose.pose.pose.position.y = -initial_position[0]
+        task_initialpose.pose.pose.position.z = 0.0
+
+        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+
+        # Convert an Euler angle to a quaternion.
+        # Input
+        #     :param roll: The roll (rotation around x-axis) angle in radians.
+        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
+        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
+        # 
+        # Output
+        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+
+        roll = 0.0
+        pitch = 0.0
+        yaw = math.radians(initial_position[2])
+
+        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        
+        self.node.initialpose_publisher.publish(task_initialpose)
+
+    # main state-machine function
     def main(self):
-        # self.node.color.data = 100
-        # self.node.rgb_mode_publisher.publish(self.node.color)
-        print("IN NEW MAIN")
-        time.sleep(1)
+        
+        # Wait for START button
+        # Wait for door to open
+        # Go to inspection point
+        # Go to exit door
+        # Final state
+
+        # States in Inspection Task
+        self.Waiting_for_start_button = 0
+        self.Waiting_for_door_to_open = 1
+        self.Go_to_inspection_point = 2
+        self.Waiting_for_end_of_inspection = 3
+        self.Go_to_exit_door = 4
+        self.Final_State = 5
+        
+        # Neck Positions
+        self.look_forward = [0, 0]
+        self.look_navigation = [0, -30]
+
+        # Navigation Coordinates
+        self.front_of_door = [0.0, 1.5] 
+        self.outside_bedroom_door = [-0.7, 4.7]
+        self.inside_bedroom_door = [-2.8, 4.5]
+        self.inside_bedroom_top_door = [-3.5, 5.0]
+        
+        # Initial Position
+        self.initial_position = [0.0, 0.0, 0.0]
+
+        # State the robot starts at, when testing it may help to change to the state it is intended to be tested
+        self.state = self.Waiting_for_start_button
+
+        # debug print to know we are on the main start of the task
+        self.node.get_logger().info("In Inspection Main...")
 
         while True:
 
-            # State Machine
-
-            if self.state == 0:
-                self.node.get_logger().info("STATE 0")
+            if self.state == self.Waiting_for_start_button:
+                print("State:", self.state, "- Waiting_for_start_button")
                 
-                # print("0")
-                # self.coordinates_to_navigation(inspection_point, sofas, False)
-                # self.coordinates_to_navigation((1.0, 5.0), sofas, False)
-                # self.wait_for_end_of_navigation_but_check_for_people_obstacles(inspection_point, sofas)
-                # print("OUT")
+                self.set_initial_position(self.initial_position)
+                print("SET INITIAL POSITION")
 
-                self.node.publish_initial_pose(x=0.0, y=0.0)
+                time.sleep(1)
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
-                # self.coordinates_to_navigation((0.0,4.0), (1.0, 5.0), False)
-                # self.wait_for_end_of_navigation()
-            
-                self.node.neck_position_publisher.publish(self.neck_pose)
+                # set rgb's to cyan
+                self.set_rgb(CYAN+SET_COLOUR)
 
-                self.node.get_logger().info("Ready to inspection")
+                ### FAZER ESTA FRASE
+                self.set_speech(filename="inspection/inspection_ready_start", wait_for_end_of=True)
 
-                # Says it is ready to start its Inspection
-                self.node.speech_str.command = "I am ready to start my Inspection. Waiting for door to be opened."
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                
-                # print("1")
-                # wait for door
-                door_start = Bool()
-                door_start.data = True
-                self.node.start_door_publisher.publish(door_start)
-                time.sleep(0.1)
-                self.node.start_door_publisher.publish(door_start)
-                self.wait_for_end_of_start_door()
+                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=True)
 
-                self.node.color.data = 12
-                self.node.rgb_mode_publisher.publish(self.node.color)
-                
-                
-                # Says: Oh thanks for opening the door. On my way to the Inspection Point
-                self.node.speech_str.command = "Thank you for opening the door. On my way to the Inspection Point."
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-
-                # self.state = 1
-
-                aux_point = (0.0, 3.0)
-
-
-                #Navegação para o Ponto de Inspeção
-                self.coordinates_to_navigation(after_door_point, aux_point, True)
-                self.wait_for_end_of_navigation()
-
-                self.coordinates_to_navigation(aux_point, inspection_point, False)
-                self.wait_for_end_of_navigation_but_check_for_people_obstacles(aux_point, inspection_point)
-                
-
-                #### CODIGO PARA DETECAO DE PESSOAS TEM QUE SER NOS PROXIMOS WAITS NAVIGATION
-                self.coordinates_to_navigation(inspection_point, exit_door, False)
-                self.wait_for_end_of_navigation_but_check_for_people_obstacles(inspection_point, exit_door)
-                # self.coordinates_to_navigation(inspection_point, exit_first_point, False)
-                # self.wait_for_end_of_navigation()
-
-
-                self.node.speech_str.command = "Hello my name is charmie and I am very happy to make my debut on robocup at home. Hoppefully I am able to show some of my skills on the upcoming days. \
-                I am ready to move on to the exit, when you are ready just press my start button. Meanwhile I will wait here."
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-
-                # quando chegar fala: Hello my name is CHARMIE and I am very happy to make my debut on RoboCup@Home, Hoppefully I am able to show my skills on the upcoming days.
-                # I am ready to move on to the exit, when you are ready just stand in front of me and say Yes. Meanwhile I will wait here.
-                # self.node.speech_str.command = "I am ready to receive a new guest. Please stand in front of me."
-                # self.node.speaker_publisher.publish(self.node.speech_str)
-                # self.wait_for_end_of_speaking()
-                t = Bool()
-                t.data = True
-                self.node.flag_start_button_publisher.publish(t)
+                # wait for start_button
                 self.wait_for_start_button()
 
-                self.node.color.data = 12
-                self.node.rgb_mode_publisher.publish(self.node.color)
+                # set rgb's to static green
+                self.set_rgb(GREEN+SET_COLOUR)
+
+                # next state
+                self.state = self.Waiting_for_door_to_open
+
+            elif self.state == self.Waiting_for_door_to_open:
+                print("State:", self.state, "- Waiting_for_door_to_open")
                 
+                self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
 
+                self.wait_for_door_start()
 
-                self.node.speech_str.command = "Thank you. I will head to the exit."
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
+                # set rbg's to rotating green
+                self.set_rgb(GREEN+ROTATE)
 
-                # exit_door_orientation = (2.0, 2.0)ão
-                # self.coordinates_to_navigation(after_door_point, inspection_point, True)
-                # self.wait_for_end_of_navigation()
+                # next state
+                self.state = self.Go_to_inspection_point 
 
+            elif self.state == self.Go_to_inspection_point:
+                print("State:", self.state, "- Go_to_inspection_point")
 
-# f_point_loc = (2.55, 0.0)
-# f_point_rot = (2.55, -1.0)
+                # temp
+                # self.set_initial_position([-0.7, 4.2, 90])
 
-                self.coordinates_to_navigation(f_point_loc, f_point_rot, False)
-                self.wait_for_end_of_navigation_but_check_for_people_obstacles(f_point_loc, f_point_rot)
+                self.set_speech(filename="inspection/going_to_inspection_point", wait_for_end_of=True)
 
-                self.state = 1
-
-                # wait pela audição
-                # self.node.audio_command_publisher.publish(self.node.speech_type)
-                # self.wait_for_end_of_audio()
-
-
-                # Time to move to the exit, see you soon.
-                #self.node.coordinates.move_target_coordinates = self.node.door_coordinates
-                #self.node.coordinates.rotate_target_coordinates = self.node.door_coordinates_orientation
-                #self.node.coordinates.flag_not_obs = False
-                #self.node.target_position_publisher.publish(self.node.coordinates)
-                #self.wait_for_end_of_navigation()
+                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.outside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.outside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_bedroom_door, flag_not_obs=False, wait_for_end_of=True)
+            
                 
+                # self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
 
 
-            elif self.state == 1:
+                # navigation to the inspection point (how?)               
+                
+                # dodge obstacles (how?)
+                
+                # time.sleep(3)
+
+                # set rgb's to static green
+                self.set_rgb(GREEN+SET_COLOUR)
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                self.set_speech(filename="inspection/arrived_inspection_point", wait_for_end_of=True)
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                # next state
+                self.state = self.Waiting_for_end_of_inspection
+            
+            elif self.state == self.Waiting_for_end_of_inspection:
+                print("State:", self.state, "- Waiting_for_end_of_inspection")
+
+                # set rgb's to rotating rainbow  
+                self.set_rgb(RAINBOW_ROT)
+
+                self.set_speech(filename="inspection/inspection_introduction", wait_for_end_of=True)
+
+                # set rgb's to red
+                self.set_rgb(CYAN+SET_COLOUR)
+
+                # wait for start button
+                self.wait_for_start_button()
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
+                # set rgb's to rotating green
+                self.set_rgb(GREEN+ROTATE)
+
+                # next state
+                self.state = self.Go_to_exit_door 
+
+            elif self.state == self.Go_to_exit_door:
+                print("State:", self.state, "- Go_to_exit_door")
+                                
+                self.set_speech(filename="inspection/moving_exit_door", wait_for_end_of=True)
+                
+                self.set_navigation(movement="rotate", target=self.inside_bedroom_top_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_bedroom_top_door, flag_not_obs=False, wait_for_end_of=True)
+
+                # next state
+                self.state = self.Final_State 
+
+            elif self.state == self.Final_State:
+                print("State:", self.state, "- Final_State")
+
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                self.set_speech(filename="inspection/arrived_exit_door", wait_for_end_of=True)
+
+                # set rgb's to static cyan  
+                self.set_rgb(CYAN+SET_COLOUR)
+
+                while True:
+                    pass
+
+            else:
                 pass

@@ -81,15 +81,6 @@ class RestaurantNode(Node):
         self.search_for_person_publisher = self.create_publisher(SearchForPerson, 'search_for_person', 10)
         self.search_for_person_subscriber = self.create_subscription(ListOfPoints, "search_for_person_points", self.search_for_person_point_callback, 10)
 
-
-
-        # SERVICE TR
-        # self.bool_service_client = self.create_client(SetBool, 'bool_service')
-
-        # while not self.bool_service_client.wait_for_service(timeout_sec=1.0):
-        #     self.get_logger().info('Service not available, waiting again...')
-
-
         self.br = CvBridge()
         self.image_color = Image()
         self.depth_img = Image()

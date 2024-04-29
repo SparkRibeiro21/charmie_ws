@@ -1,4 +1,6 @@
 from setuptools import find_packages, setup
+import os
+from glob import glob
 
 package_name = 'charmie_storing_groceries'
 
@@ -10,6 +12,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -20,7 +23,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		"storing_groceries_v0 = charmie_storing_groceries.storing_groceries_v0:main"
+		"storing_groceries_v0 = charmie_storing_groceries.storing_groceries_v0:main",
+        "storing_groceries_v0_with_open_wardrobe = charmie_storing_groceries.storing_groceries_v0_with_open_wardrobe:main"
         ],
     },
 )

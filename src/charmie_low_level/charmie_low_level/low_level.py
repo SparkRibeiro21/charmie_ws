@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
-from example_interfaces.msg import Bool, Int16
+from example_interfaces.msg import Bool, Int16, Float32
 from charmie_interfaces.msg import Encoders
 import serial
 import time
@@ -97,7 +97,7 @@ class RobotControl:
                 # print(comm_dict['SetVar'], comm_dict['Value'])
 
                 self.ser.write(comm_dict['SetVar'].encode('utf-8'))
-                time.sleep(0.002)
+                time.sleep(0.003)
                 self.ser.write(comm_dict['Value'][0].to_bytes(comm_dict['NoBytes'], 'big'))
                 return 0  # No error
             else:
@@ -111,7 +111,7 @@ class RobotControl:
         if 'GetVar' in comm_dict:  # check if it is a variable that can be 'get'
             # print(comm_dict['GetVar'], comm_dict['NoBytes'])
             self.ser.write(comm_dict['GetVar'].encode('utf-8'))  # sends get command
-            time.sleep(0.002)
+            time.sleep(0.003)
 
             while self.ser.in_waiting < comm_dict['NoBytes'] * 2:  # 2x NoBytes since there are two motor drivers
                 pass  # waits until all the variables have been returned
@@ -225,16 +225,19 @@ class RobotControl:
         # print(type(self.OMNI_MOVE['Dir']))
         # print(type(dir_aux))
         
-        print('SENT VALUE')
-        print(self.OMNI_MOVE['CommVar'], " -> ", self.OMNI_MOVE['Dir'], self.OMNI_MOVE['Lin'], self.OMNI_MOVE['Ang'])
+        #### MUST UNCOMMENT LATER, DEBUG ENCODERS
+        # print('SENT VALUE')
+        # print(self.OMNI_MOVE['CommVar'], " -> ", self.OMNI_MOVE['Dir'], self.OMNI_MOVE['Lin'], self.OMNI_MOVE['Ang'])
+        
+        
         # print(dir_aux)
 
         self.ser.write(self.OMNI_MOVE['CommVar'].encode('utf-8'))
-        time.sleep(0.002)
+        time.sleep(0.003)
         self.ser.write(dir_aux.to_bytes(1, 'big'))
-        time.sleep(0.002)
+        time.sleep(0.003)
         self.ser.write(self.OMNI_MOVE['Lin'].to_bytes(1, 'big'))
-        time.sleep(0.002)
+        time.sleep(0.003)
         self.ser.write(self.OMNI_MOVE['Ang'].to_bytes(1, 'big'))
 
         self.OMNI_MOVE_ANT['Lin'] = self.OMNI_MOVE['Lin']
@@ -264,6 +267,9 @@ class LowLevelNode(Node):
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
 
+        self.get_orientation_publisher = self.create_publisher(Float32, "get_orientation", 10)
+        self.flag_orientation_subscriber = self.create_subscription(Bool, "flag_orientation", self.flag_orientation_callback , 10)
+
         self.low_level_diagnostic_publisher = self.create_publisher(Bool, "low_level_diagnostic", 10)
 
 
@@ -276,7 +282,7 @@ class LowLevelNode(Node):
         flag_diagn = Bool()
         flag_diagn.data = False
 
-        self.create_timer(0.05, self.timer_callback)
+        self.create_timer(0.1, self.timer_callback)
         # self.create_timer(1.0, self.timer_callback2)
 
         self.robot = RobotControl()
@@ -290,7 +296,13 @@ class LowLevelNode(Node):
         aaa = self.robot.get_omni_variables(self.robot.ACCELERATION)
 
         print(aaa)
-        print(type(aaa))
+        # print(type(aaa))
+
+        if aaa[0] == 100:
+            self.get_logger().warning(f"Motors are not being powered!")
+        else:
+            self.get_logger().info(f"Connected to Motor Boards! Accel Ramp Lvl = {aaa[0]}")
+
         if aaa == [1, 1]:
             flag_diagn.data = True
         else:
@@ -303,6 +315,7 @@ class LowLevelNode(Node):
         self.flag_get_vccs = False
         self.flag_get_torso_pos = False
         self.flag_get_encoders = False
+        self.flag_get_orientation = False
 
     
     def torso_test_callback(self, data: Pose2D):
@@ -420,8 +433,22 @@ class LowLevelNode(Node):
             cmd.enc_m2 = (aux_e[4] << 24) + (aux_e[5] << 16) + (aux_e[6] << 8) + aux_e[7]
             cmd.enc_m3 = (aux_e[8] << 24) + (aux_e[9] << 16) + (aux_e[10] << 8) + aux_e[11]
             cmd.enc_m4 = (aux_e[12] << 24) + (aux_e[13] << 16) + (aux_e[14] << 8) + aux_e[15]
-            print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
+
+            print(aux_e[0], aux_e[1], aux_e[2], aux_e[3], "|", aux_e[4], aux_e[5], aux_e[6], aux_e[7], "|", aux_e[8], aux_e[9], aux_e[10], aux_e[11], "|", aux_e[12], aux_e[13], aux_e[14], aux_e[15])
+
+            # print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
             self.get_encoders_publisher.publish(cmd)
+
+        if self.flag_get_orientation:
+
+            aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
+            
+            orientation = Float32()
+            orientation.data = (aux_o[0]<<8|aux_o[1])/10
+            
+            print("ORIENTATION:", orientation.data)
+
+            self.get_orientation_publisher.publish(orientation)
 
 
     def flag_start_button_callback(self, flag: Bool):
@@ -456,6 +483,14 @@ class LowLevelNode(Node):
             self.get_logger().info("Received Reading Encoder State False")
         self.flag_get_encoders = flag.data
 
+    def flag_orientation_callback(self, flag: Bool):
+        # print("Flag Orientation Set To: ", flag.data)
+        if flag.data:
+            self.get_logger().info("Received Reading Orientation State True")
+        else:
+            self.get_logger().info("Received Reading Orientation State False")
+        self.flag_get_orientation = flag.data
+
     def set_movement_callback(self, flag: Bool):
         # print("Set Movement Set To: ", flag.data)
         if flag.data:
@@ -475,7 +510,8 @@ class LowLevelNode(Node):
         self.robot.set_omni_variables(self.robot.TORSO, int(pos.y))
 
     def omni_move_callback(self, omni:Vector3):
-        print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
+        ### MUST UNCOMMENT LATER, TESTING DEBUG 
+        # print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
         self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
 
 

@@ -1,0 +1,7 @@
+image: LAR_map_pre_nacional_2024.pgm
+mode: trinary
+resolution: 0.05
+origin: [-2.73, -3.33, 0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.25

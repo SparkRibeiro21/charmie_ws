@@ -1,693 +1,938 @@
 #!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
+
+# import variables from standard libraries and both messages and services from custom charmie_interfaces
+from example_interfaces.msg import Bool, String, Int16
+from geometry_msgs.msg import Point, PoseWithCovarianceStamped
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
+
+import cv2 
 import threading
-
-from geometry_msgs.msg import Vector3, Pose2D
-from example_interfaces.msg import Int16, Bool, String
-from sensor_msgs.msg import Image
-from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import RobotSpeech, SpeechType, TarNavSDNL, Yolov8Pose, NeckPosition
-
-from cv_bridge import CvBridge, CvBridgeError
-import cv2
-import mediapipe as mp
+import time
+from cv_bridge import CvBridge
 import math
 import numpy as np
-import time
 
-door_out = (0.0, 0.0)
-door_in = (0.0, 1.0)
-aux_1 = (1.4, 1.9)
-task_pos = (-2.0, 1.0)
-ref_pos = (0.6, 9.05)
-#--------------------------------
+# Constant Variables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
-class CarryLuggageNode(Node):
+
+class CarryMyLuggageNode(Node):
 
     def __init__(self):
-        super().__init__("CarryLuggage")
-        self.get_logger().info("Initiliased Carry Luggage Node")
+        super().__init__("CarryMyLuggage")
+        self.get_logger().info("Initialised CHARMIE CarryMyLuggage Node")
 
-        # Neck Topics
-        self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
-        # self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos", self.get_neck_position_callback, 10)
-
-        # Low Level Topics
-        # Low Level: RGB
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-        #self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
-        #self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
-        #self.vccs_subscriber = self.create_subscription(Pose2D, "get_vccs", self.get_vccs_callback, 10)
-        #self.flag_vccs_publisher = self.create_publisher(Bool, "flag_vccs", 10)
-        self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
-        #self.get_encoders_subscriber = self.create_subscription(Encoders, "get_encoders", self.get_encoders_callback, 10)
-        #self.flag_encoders_publisher = self.create_publisher(Bool, "flag_encoders", 10)
-    
-        # Speaker
-        self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
-        self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
-
-        # Audio
-        self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
-        #self.flag_listening_subscriber = self.create_subscription(Bool, "flag_listening", self.flag_listening_callback, 10)
-        self.get_speech_subscriber = self.create_subscription(String, "get_speech", self.get_speech_callback, 10)
-
-        # Odometry
-        self.odometry_subscriber = self.create_subscription(Odometry, "odom", self.get_odometry_robot_callback, 10)
-
-        # Navigation 
-        self.target_position_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
-        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_pos_reached_callback, 10)
-
-        # Intel Realsense
-        self.camera_subscriber = self.create_subscription(Image, "/color/image_raw", self.color_img_callbcak, 10)
-        self.depth_subscriber = self.create_subscription(Image, "/aligned_depth_to_color/image_raw", self.get_depth_callback, 10)
-
-                # Low Level: Start Button
+        ### Topics (Publisher and Subscribers) ###   
+        # Low Level 
+        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
-
+        # Yolo Pose
+        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+       # Yolo Objects
+        self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
+        # Arm CHARMIE
+        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
+        # Navigation
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
+        # Localisation
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         
-        # Timer
-        # self.create_timer(0.1, self.timer_callback)
+        ### Services (Clients) ###
+        # Speakers
+        self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        # Neck
+        self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
+        self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
+        self.set_neck_coordinates_client = self.create_client(SetNeckCoordinates, "neck_to_coords")
+        self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
+        self.neck_track_object_client = self.create_client(TrackObject, "neck_track_object")
+        # Yolos
+        self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
+        self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Arm (CHARMIE)
+        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
 
-        # Changing Variables
-        self.state = 0
 
+        # if is necessary to wait for a specific service to be ON, uncomment the two following lines
+        # Speakers
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
+        # Neck 
+        while not self.set_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+        while not self.get_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
+        while not self.set_neck_coordinates_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        while not self.neck_track_person_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
+        while not self.neck_track_object_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
+        # Yolos
+        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        # Arm (CHARMIE)
+        """ while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+         """
+        # Variables 
+        self.waited_for_end_of_speaking = False
+        self.waited_for_end_of_neck_pos = False
+        self.waited_for_end_of_neck_coords = False
+        self.waited_for_end_of_get_neck = False
+        self.waited_for_end_of_track_person = False
+        self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_arm = False
+
+        self.br = CvBridge()
+        self.detected_people = Yolov8Pose()
+        self.detected_objects = Yolov8Objects()
         self.start_button_state = False
 
+        # Success and Message confirmations for all set_(something) CHARMIE functions
+        self.speech_success = True
+        self.speech_message = ""
+        self.rgb_success = True
+        self.rgb_message = ""
+        self.neck_success = True
+        self.neck_message = ""
+        self.track_person_success = True
+        self.track_person_message = ""
+        self.track_object_success = True
+        self.track_object_message = ""
+        self.activate_yolo_pose_success = True
+        self.activate_yolo_pose_message = ""
+        self.activate_yolo_objects_success = True
+        self.activate_yolo_objects_message = ""
+        self.arm_success = True
+        self.arm_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
+        self.flag_navigation_reached = False
 
-        """ self.person_points = Yolov8Pose()
-        self.person_position = Pose2D() """
+        self.get_neck_position = [1.0, 1.0]
 
-        self.speech_str = RobotSpeech()
-        self.speech_type = SpeechType()
-        self.speech_type.yes_or_no = True
-        self.get_speech = String()
 
-        self.flag_speech_done = False
-        self.flag_navigation_done = False
-        self.flag_audio_done = False
-        self.flag_stop_signal = False
-        self.flag_arrived = False
-        self.flag_bag_put = False
+    def person_pose_filtered_callback(self, det_people: Yolov8Pose):
+        self.detected_people = det_people
 
-        self.bridge = CvBridge()
-        self.image_color = Image()
-        self.depth_img = Image()
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
         
-        #NECK
-        self.neck_pose = NeckPosition()
-        self.neck_pose.pan = 180.0
-        self.neck_pose.tilt = 180.0
+        # cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
+        # cv2.waitKey(10)
 
-        self.distance = 0.0
-        self.robot_t = 0.0
-        self.robot_x = 0.0
-        self.robot_y = 0.0
+    def object_detected_filtered_callback(self, det_object: Yolov8Objects):
+        self.detected_objects = det_object
 
-        #RGB
-        self.color = Int16()
-        #NAV COORD DECLARATION
-        self.coordinates = TarNavSDNL()
-        self.point_arena = Pose2D()
-        self.begin_coords = Pose2D()
-        self.begin_orientation = Pose2D()
-        self.start_task_coords = Pose2D()
-        self.start_task_orientation = Pose2D()
-        self.inter_coords = Pose2D()
-        self.inter_orientation = Pose2D()
-        #target = (pixel, dist)
-        self.person_target = Pose2D()
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
 
-        #audio
-        self.keywords = String()
-        self.left_right = []
-        #--------------------------------  
+    def arm_finished_movement_callback(self, flag: Bool):
+        # self.get_logger().info("Received response from arm finishing movement")
+        # self.arm_ready = True
+        self.waited_for_end_of_arm = True
+        self.arm_success = flag.data
+        if flag.data:
+            self.arm_message = "Arm successfully moved"
+        else:
+            self.arm_message = "Wrong Movement Received"
 
-        self.mp_drawing = mp.solutions.drawing_utils
-        self.mp_pose = mp.solutions.pose
-        self.pose = self.mp_pose.Pose(min_detection_confidence=0.8)
+        self.get_logger().info("Received Arm Finished")
 
-    def color_img_callbcak(self, img: Image):
-        #print('camera callback')
-        self.image_color = img
+    def get_objects_callback(self, objects: Yolov8Objects):
+        #print(objects.objects)
+        self.nr_objects = objects.num_objects
+        self.objects = objects.objects
+        self.image = objects.image_rgb
 
-    def get_depth_callback(self, img: Image):
-        #print('camera callback')
-        self.depth_img = img
-       
-    def get_speech_callback(self, keywords : String):
-        print("Received Audio:", keywords.data)
-        self.keywords = keywords
-        self.flag_audio_done = True
-
-    def get_speech_done_callback(self, state: Bool):
-        print("Received Speech Flag:", state.data)
-        self.flag_speech_done = True
-    
-    def flag_pos_reached_callback(self, state: Bool):
-        print("Received Navigation Flag:", state.data)
-        self.flag_navigation_done = True
-    
-    def start_audio(self):
-        self.audio_command_publisher.publish(self.speech_type)
-
+    ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
-        print("Received Start Button:", state.data)
+        # print("Received Start Button:", state.data)
 
-    def get_odometry_robot_callback(self, odom:Odometry):
-        self.robot_current_position = odom
-        self.robot_x = odom.pose.pose.position.x
-        self.robot_y = odom.pose.pose.position.y
+    ### NAVIGATION ###
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.flag_navigation_reached = flag
 
-        qx = odom.pose.pose.orientation.x
-        qy = odom.pose.pose.orientation.y
-        qz = odom.pose.pose.orientation.z
-        qw = odom.pose.pose.orientation.w
+    ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
+    def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
+        request = ActivateYoloPose.Request()
+        request.activate = activate
+        request.only_detect_person_legs_visible = only_detect_person_legs_visible
+        request.minimum_person_confidence = minimum_person_confidence
+        request.minimum_keypoints_to_detect_person = minimum_keypoints_to_detect_person
+        request.only_detect_person_arm_raised = only_detect_person_arm_raised
+        request.only_detect_person_right_in_front = only_detect_person_right_in_front
+        request.characteristics = characteristics
 
-        # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
-        # pitch = math.asin(-2.0*(qx*qz - qw*qy))
-        # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
-        # print(yaw, pitch, roll)
+        self.activate_yolo_pose_client.call_async(request)
 
-        self.robot_t = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
+    ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
+    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
+        request = ActivateYoloObjects.Request()
+        request.activate_objects = activate_objects
+        request.activate_shoes = activate_shoes
+        request.activate_doors = activate_doors
+        request.minimum_objects_confidence = minimum_objects_confidence
 
-    def choose_bag(self):
-        self.get_logger().info('FUNCTION CHOOSE BAG')
-
-        img = self.bridge.imgmsg_to_cv2(self.image_color, "bgr8")
-        height, witdh, _ = img.shape
-        image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        results = self.pose.process(image)
-        #print("RESULTS")
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-        if results.pose_landmarks:
-            self.mp_drawing.draw_landmarks(image, results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS, self.mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2), self.mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=2))
-            #LEFT_SIDE_IMG
-            point_12 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_SHOULDER].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_SHOULDER].y*height,2))
-            point_16 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_WRIST].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_WRIST].y*height,2))
-            point_24 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_HIP].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_HIP].y*height,2))
-            
-            point_11 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_SHOULDER].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_SHOULDER].y*height,2))
-            point_15 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_WRIST].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_WRIST].y*height,2))
-            point_23 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_HIP].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_HIP].y*height,2))
-            
-            #ANGLES
-            theta_1 = calculate_3angle(point_12, point_16, point_24)
-            theta_2 = calculate_3angle(point_11, point_15, point_23)
-
-            angle_text1 = f"{theta_1:.1f}"
-            angle_text2 = f"{theta_2:.1f}"
-            cv2.putText(image, angle_text1, (int(point_12[0]+10), int(point_12[1]-5)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
-            cv2.putText(image, angle_text2, (int(point_11[0]+10), int(point_11[1]-5)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
-            
-            if (theta_1 > 15 and theta_1 > theta_2) or point_15[0] < point_23[0]:
-                #print("Pointing to My Left")
-                #print('-------------------')
-                #cv2.putText(image, "RIGHT", (15,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-                self.left_right.append('right')
-                self.state = 2
-            elif (theta_2 > 15 and theta_1 < theta_2) or point_16[0] > point_24[0]:
-                #print("Pointing to My Right")
-                #print('--------------------')
-                #cv2.putText(image, "LEFT", (15,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-                self.left_right.append('left')
-                self.state = 2
-
-        cv2.imshow("CHOOSE BAG", image)
-        cv2.waitKey(1)
-
-        #return self.state
+        self.activate_yolo_objects_client.call_async(request)
         
-    def arm_raise(self):
-        self.get_logger().info('FUNCTION ARM RAISE')
+    #### SPEECH SERVER FUNCTIONS #####
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
+        request = SpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+        request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
+    
+        future = self.speech_command_client.call_async(request)
+        # print("Sent Command")
 
-        img = self.bridge.imgmsg_to_cv2(self.image_color, "bgr8")
-        height, witdh, _ = img.shape
-        image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        results = self.pose.process(image)
-        #print("RESULTS")
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-        if results.pose_landmarks:
-            self.mp_drawing.draw_landmarks(image, results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS, self.mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2), self.mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=2))
-            #LEFT_SIDE_IMG
-            point_0 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.NOSE].y*height,2))
-            point_15 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_WRIST].y*height,2))
-            point_16 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_WRIST].y*height,2))
-            
-            """ point_11 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_SHOULDER].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_SHOULDER].y*height,2))
-            point_15 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_WRIST].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_WRIST].y*height,2)) """
-                        
-            if (point_15 < 100 and point_15 < point_0) or (point_16 < 100 and point_16 < point_0):
-                #print("ARM RAISE")
-                #print('-------------------')
-                cv2.putText(image, "ARM RAISE", (15,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
-                self.state = 7
-                self.flag_stop_signal = True
-
-        cv2.imshow("ARM RAISE", image)
-        cv2.waitKey(1)
-
-        return self.flag_stop_signal
-
-    def follow_function(self):
-        #NAVIGATION TO TARGET (PERSON)
-        #self.get_logger().info('FUNCTION FOLLOW')
-        img = self.bridge.imgmsg_to_cv2(self.image_color, "bgr8")
-        depth_img = self.bridge.imgmsg_to_cv2(self.depth_img, "32FC1")
-        height, witdh, _ = img.shape
-        image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-        results = self.pose.process(image)
-        #print("RESULTS")
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        dist_x = 0
-
-        if results.pose_landmarks:
-            self.mp_drawing.draw_landmarks(image, results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS, self.mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2), self.mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=2))
-            
-            point_12 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_SHOULDER].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.RIGHT_SHOULDER].y*height,2))
-            point_11 = (round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_SHOULDER].x*witdh,2),
-                        round(results.pose_landmarks.landmark[self.mp_pose.PoseLandmark.LEFT_SHOULDER].y*height,2))
-            
-            aux_x_pixel = (point_11[0] + point_12[0])/2
-            aux_y_pixel = (point_11[1] + point_12[1])/2
-
-            center_x = witdh/2
-            dist_aux_x = center_x - aux_x_pixel
-            dist_x = -((dist_aux_x * 0.01)/3.8)
-            
-            self.depth_img_array = np.array(depth_img, dtype=np.dtype('f8'))
-            try:
-                self.distance = (self.depth_img_array[int(aux_y_pixel), int(aux_x_pixel)])/1000
-            except:
-                self.distance = 0.0
-                print("ERRO INDEX")
-
-            dist = f"({dist_x:.2f},{self.distance:.2f})"
-            #dist_text = f"{dist_x:.2f}"
-
-            """ theta1 = math.tan(self.distance/dist_x)
-            theta_degrees = math.degrees(theta1) """
-            """print("THETA: ", theta_degrees)
-            print("X: ", dist_x)
-            print("Y: ", self.distance) """
-            #angle = f"{theta_degrees:.2f}"
-
-            #self.person_target.x = 
-
-            cv2.line(image, (int(aux_x_pixel), int(aux_y_pixel)), (int(center_x), int(aux_y_pixel)), (0,0,255), 2)
-            #cv2.putText(image, angle, (int(aux_x_pixel), int(aux_y_pixel+20)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
-            cv2.putText(image, dist, (int(aux_x_pixel), int(aux_y_pixel-10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-            #aux_1 = (aux_x_pixel, aux_y_pixel)
-            cv2.circle(image, (int(aux_x_pixel), int(aux_y_pixel)), 3, (255,0,0), 2)
-            cv2.circle(depth_img, (int(aux_x_pixel), int(aux_y_pixel)), 3, (0,0,0), 2)
-
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_speech_command)
         else:
-            dist_x = 0
-            self.distance = 0
+            self.speech_success = True
+            self.speech_message = "Wait for answer not needed"
 
-        cv2.imshow("FOLLOW TARGET", image)
-        #cv2.imshow("Depth", depth_img)
-        cv2.waitKey(1)
+    def callback_call_speech_command(self, future): #, a, b):
 
-        return dist_x, self.distance
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_success = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_speaking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
 
 
-    def coordinates_to_navigation(self, p1, p2, bool_obs=False, bool_follow_me=False):
-        nav = TarNavSDNL()
-        nav.flag_not_obs = bool_obs
-        nav.follow_me = bool_follow_me
-        print(nav.follow_me)
-        nav.move_target_coordinates.x = p1[0]
-        nav.move_target_coordinates.y = p1[1]
-        nav.rotate_target_coordinates.x = p2[0]
-        nav.rotate_target_coordinates.y = p2[1]
-        self.target_position_publisher.publish(nav)
+    #### SET NECK POSITION SERVER FUNCTIONS #####
+    def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
+        request = SetNeckPosition.Request()
+        request.pan = float(position[0])
+        request.tilt = float(position[1])
+        
+        future = self.set_neck_position_client.call_async(request)
+        # print("Sent Command")
 
-def calculate_3angle(p1, p2, p3):
-    vector_1 = (p2[0] - p1[0], p2[1] - p1[1])
-    vector_2 = (p3[0] - p1[0], p3[1] - p1[1])
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_set_neck_command)
+        else:
+            self.neck_success = True
+            self.neck_message = "Wait for answer not needed"
+    
+    def callback_call_set_neck_command(self, future): #, a, b):
 
-    dot_product = vector_1[0] * vector_2[0] + vector_1[1] * vector_2[1]
-    magnitude_1 = math.sqrt(vector_1[0]**2 + vector_1[1]**2)
-    magnitude_2 = math.sqrt(vector_2[0]**2 + vector_2[1]**2)
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_success = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_neck_pos = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
 
-    theta = math.acos(dot_product / (magnitude_1 * magnitude_2))
-    theta_degrees = math.degrees(theta)
 
-    return theta_degrees
+    #### SET NECK COORDINATES SERVER FUNCTIONS #####
+    def call_neck_coordinates_server(self, x, y, z, tilt, flag, wait_for_end_of=True):
+        request = SetNeckCoordinates.Request()
+        request.coords.x = float(x)
+        request.coords.y = float(y)
+        request.coords.z = float(z)
+        request.is_tilt = flag
+        request.tilt = float(tilt)
+        
+        future = self.set_neck_coordinates_client.call_async(request)
+        # print("Sent Command")
 
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_set_neck_coords_command)
+        else:
+            self.neck_success = True
+            self.neck_message = "Wait for answer not needed"
+    
+    def callback_call_set_neck_coords_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_sucecss = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_neck_coords = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
+
+
+    #### GET NECK POSITION SERVER FUNCTIONS #####
+    def call_get_neck_position_server(self):
+        request = GetNeckPosition.Request()
+        
+        future = self.get_neck_position_client.call_async(request)
+        # print("Sent Command")
+
+        # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+        future.add_done_callback(self.callback_call_get_neck_command)
+    
+    def callback_call_get_neck_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info("Received Neck Position: (%s" %(str(response.pan) + ", " + str(response.tilt)+")"))
+            self.get_neck_position[0] = response.pan
+            self.get_neck_position[1] = response.tilt
+            # time.sleep(3)
+            self.waited_for_end_of_get_neck = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
+
+
+    #### NECK SERVER FUNCTIONS #####
+    def call_neck_track_person_server(self, person, body_part="Head", wait_for_end_of=True):
+        request = TrackPerson.Request()
+        request.person = person
+        request.body_part = body_part
+
+        future = self.neck_track_person_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_neck_track_person)
+        else:
+            self.track_person_success = True
+            self.track_person_message = "Wait for answer not needed"
+    
+    def callback_call_neck_track_person(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.track_person_success = response.success
+            self.track_person_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_track_person = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+    def call_neck_track_object_server(self, object, wait_for_end_of=True):
+        request = TrackObject.Request()
+        request.object = object
+
+        future = self.neck_track_object_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_neck_track_object)
+        else:
+            self.track_person_success = True
+            self.track_person_message = "Wait for answer not needed"
+    
+    def callback_call_neck_track_object(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.track_object_success = response.success
+            self.track_object_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_track_object = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+# main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
-    node = CarryLuggageNode()
-    th_main = threading.Thread(target=thread_main_carry, args=(node,), daemon=True)
+    node = CarryMyLuggageNode()
+    th_main = threading.Thread(target=ThreadMainCarryMyLuggage, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-def thread_main_carry(node: CarryLuggageNode):
-    main = CarryLuggageMain(node)
+def ThreadMainCarryMyLuggage(node: CarryMyLuggageNode):
+    main = CarryMyLuggageMain(node)
     main.main()
 
+class CarryMyLuggageMain():
 
-class CarryLuggageMain():
-    
-    def __init__(self, node: CarryLuggageNode):
+    def __init__(self, node: CarryMyLuggageNode):
+        # create a node instance so all variables ros related can be acessed
         self.node = node
-        self.first_time_without_person = False
-        self.first_time_person_close = False
-        self.target_x = 0.0 
-        self.target_y = 0.0 
-        stop_orientation_x = 0.0
-        stop_orientation_y = 0.0
-        self.first_time_slow_down = True
-        
-        # self.detected_person_first_time = True
-        
-    def wait_for_end_of_speaking(self):
-        while not self.node.flag_speech_done:
-            pass
-        self.node.flag_speech_done = False
-    
-    def wait_for_end_of_navigation(self):
-        while not self.node.flag_navigation_done:
-            pass
-        self.node.flag_navigation_done = False
 
-    def wait_for_end_of_audio(self):
-        while not self.node.flag_audio_done:
-            pass
-        self.node.flag_audio_done = False
-        self.node.flag_speech_done = False  
-        # Since audio also uses speaker for errors
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
 
+        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_speaking:
+            pass
+        self.node.waited_for_end_of_speaking = False
+
+        return self.node.speech_success, self.node.speech_message
+
+    def set_rgb(self, command="", wait_for_end_of=True):
+        
+        temp = Int16()
+        temp.data = command
+        self.node.rgb_mode_publisher.publish(temp)
+
+        self.node.rgb_success = True
+        self.node.rgb_message = "Value Sucessfully Sent"
+
+        return self.node.rgb_success, self.node.rgb_message
+ 
     def wait_for_start_button(self):
+
+
+        self.node.start_button_state = False
+
+        t = Bool()
+        t.data = True
+        self.node.flag_start_button_publisher.publish(t)
+
         while not self.node.start_button_state:
             pass
-        f = Bool()
-        f.data = False 
-        self.node.flag_start_button_publisher.publish(f)
+
+        t.data = False 
+        self.node.flag_start_button_publisher.publish(t)
+   
+    def set_neck(self, position=[0, 0], wait_for_end_of=True):
+
+        self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_neck_pos:
+            pass
+        self.node.waited_for_end_of_neck_pos = False
+
+        return self.node.neck_success, self.node.neck_message
+    
+    def set_neck_coords(self, position=[], ang=0.0, wait_for_end_of=True):
+
+        if len(position) == 2:
+            self.node.call_neck_coordinates_server(x=position[0], y=position[1], z=0.0, tilt=ang, flag=True, wait_for_end_of=wait_for_end_of)
+        elif len(position) == 3:
+            print("You tried neck to coordintes using (x,y,z) please switch to (x,y,theta)")
+            pass
+            # The following line is correct, however since the functionality is not implemented yet, should not be called
+            # self.node.call_neck_coordinates_server(x=position[0], y=position[1], z=position[2], tilt=0.0, flag=False, wait_for_end_of=wait_for_end_of)
+        else:
+            print("Something went wrong")
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_neck_coords:
+            pass
+        self.node.waited_for_end_of_neck_coords = False
+
+        return self.node.neck_success, self.node.neck_message
+    
+    def get_neck(self, wait_for_end_of=True):
+    
+        self.node.call_get_neck_position_server()
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_get_neck:
+            pass
+        self.node.waited_for_end_of_get_neck = False
 
 
+        return self.node.get_neck_position[0], self.node.get_neck_position[1] 
+    
+    def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
+        
+        self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, only_detect_person_arm_raised=only_detect_person_arm_raised, characteristics=characteristics)
+
+        self.node.activate_yolo_pose_success = True
+        self.node.activate_yolo_pose_message = "Activated with selected parameters"
+
+        return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
+
+    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
+        
+        # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_objects_confidence=minimum_objects_confidence)
+
+        self.node.activate_yolo_objects_success = True
+        self.node.activate_yolo_objects_message = "Activated with selected parameters"
+
+        return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
+
+    def track_person(self, person, body_part="Head", wait_for_end_of=True):
+
+        self.node.call_neck_track_person_server(person=person, body_part=body_part, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_track_person:
+            pass
+        self.node.waited_for_end_of_track_person = False
+
+        return self.node.track_person_success, self.node.track_person_message
+ 
+    def track_object(self, object, wait_for_end_of=True):
+
+        self.node.call_neck_track_object_server(object=object, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_track_object:
+            pass
+        self.node.waited_for_end_of_track_object = False
+
+        return self.node.track_object_success, self.node.track_object_message   
+
+    def set_arm(self, command="", wait_for_end_of=True):
+        
+        # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
+        self.node.waited_for_end_of_arm = False
+        
+        temp = String()
+        temp.data = command
+        self.node.arm_command_publisher.publish(temp)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_arm:
+                pass
+            self.node.waited_for_end_of_arm = False
+        else:
+            self.node.arm_success = True
+            self.node.arm_message = "Wait for answer not needed"
+
+        # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
+        return self.node.arm_success, self.node.arm_message
+
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
+
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
+
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.reached_radius = reached_radius
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
+
+    
+    def set_initial_position(self, initial_position):
+
+        task_initialpose = PoseWithCovarianceStamped()
+
+        task_initialpose.header.frame_id = "map"
+        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
+
+        task_initialpose.pose.pose.position.x = initial_position[1]
+        task_initialpose.pose.pose.position.y = -initial_position[0]
+        task_initialpose.pose.pose.position.z = 0.0
+
+        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+
+        # Convert an Euler angle to a quaternion.
+        # Input
+        #     :param roll: The roll (rotation around x-axis) angle in radians.
+        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
+        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
+        # 
+        # Output
+        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+
+        roll = 0.0
+        pitch = 0.0
+        yaw = math.radians(initial_position[2])
+
+        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        
+        self.node.initialpose_publisher.publish(task_initialpose)
+
+
+    def detect_bag(self, position_of_referee_x, received_bag):
+        correct_bag  = False
+        self.activate_yolo_objects(activate_objects=True)
+        objects_stored = self.node.detected_objects
+        obj = Point()
+                
+        for object in objects_stored.objects:
+            print('Objeto: ', object)
+            if object.object_name ==  'bag' or object.object_name ==  'Bag':
+                print('x do saco relativo ao robô: ', object.position_relative.x)
+                if object.position_relative.x <= position_of_referee_x and received_bag == 'right':
+                    correct_bag = True
+                    print('Coordenadas do saco (mundo): ', object.position_absolute)
+                    obj = object.position_absolute
+                    break
+                elif object.position_relative.x > position_of_referee_x and received_bag == 'left':
+                    correct_bag = True
+                    print('Coordenadas do saco (mundo): ', object.position_absolute)
+                    obj = object.position_absolute
+                    break
+                else: 
+                    correct_bag = False
+                    
+        return correct_bag, obj
+        
+    def detect_person_pointing(self):
+        detected_person_temp = Yolov8Pose()
+        self.activate_yolo_pose(activate=True)
+
+        time.sleep(0.5)
+        detected_person_temp = self.node.detected_people  
+
+
+        bag_side = ""
+        self.set_rgb(BLUE+HALF_ROTATE)
+
+        person_detected = False
+        while not person_detected:
+            
+            detected_person_temp = self.node.detected_people  
+
+            for p in detected_person_temp.persons:
+                if p.room_location == "Corridor" and p.pointing_at != "None":
+                    person_detected = True
+                    bag_side = p.pointing_at.lower()
+                    self.set_rgb(GREEN+HALF_ROTATE)
+
+                print(p.room_location, p.pointing_at, person_detected)
+            
+            time.sleep(0.05)
+
+        self.activate_yolo_pose(activate=False)
+
+        return bag_side
+        
+        
+    # main state-machine function
     def main(self):
-        self.node.get_logger().info('NEW MAIN')
+        
+        # States in CarryMyLuggage Task
+        self.Waiting_for_task_to_start = 0
+        self.Recognize_bag = 1
+        self.Go_to_bag = 2
+        self.Pick_bag = 3
+        self.Final_State = 4
+        
+        # Neck Positions
+        self.look_forward = [0, 0]
+        self.look_navigation = [0, -30]
 
-        #DEFINE NECK POSE FOR ALL THE TASK
-        self.node.neck_position_publisher.publish(self.node.neck_pose)
+        self.initial_position = [-3.5, 1.5, -90.0]
+
+        self.IMU_ANGLE = 0.0
+        self.INITIAL_REACHED_RADIUS = 1.0
+
+        # State the robot starts at, when testing it may help to change to the state it is intended to be tested
+        self.state = self.Waiting_for_task_to_start
+
+        # debug print to know we are on the main start of the task
+        self.node.get_logger().info("In Carry My Luggage Main...")
 
         while True:
 
-            #STATE 0 - NAV + READY
-            if self.node.state == 0:
-                self.node.get_logger().info('State 0')
-                #READY FOR TASK
-                self.node.speech_str.command = 'I am ready to start the Carry My Luggage Task.'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                
-                # t = Bool()
-                # t.data = True
-                # self.node.flag_start_button_publisher.publish(t)
-                # self.wait_for_start_button()
-                # time.sleep(5)
+            if self.state == self.Waiting_for_task_to_start:
+                print("State:", self.state, "- Waiting_for_task_to_start")
 
-                # self.node.color.data = 41
-                # self.node.rgb_mode_publisher.publish(self.node.color.data) 
-                
-                self.node.state = 1
+                self.set_initial_position(self.initial_position)
+                print("SET INITIAL POSITION")
 
+                time.sleep(1)
+        
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
-            #STATE 1 - CHOOSE BAG
-            if self.node.state == 1:
-                self.node.speech_str.command = 'Please point to the bag.'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                self.node.get_logger().info('State 1')
-                try:
-                    self.node.choose_bag()
-                    #self.node.arm_raise()
-                    #self.node.follow_function()
-                except CvBridgeError:
-                    pass #print('Erro')
+                # set rgb's to cyan
+                self.set_rgb(CYAN+SET_COLOUR)
+
+                self.set_speech(filename="carry_my_luggage/carry_luggage_ready_start", wait_for_end_of=True)
+                
+                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=True)
+
+                # wait for start_button
+                self.wait_for_start_button()
+
+                self.set_rgb(BLUE+SET_COLOUR)
+
+                # set rgb's to static green
+                # self.set_rgb(GREEN+SET_COLOUR)
+
+                # next state
+                self.state = self.Recognize_bag
+
+            elif self.state == self.Recognize_bag:
+                print("State:", self.state, "- Recognize_bag")
+                
+                # set rgb's to blue
+
+                # speech: "Please point to the bag you want me to take."
+                self.set_speech(filename="carry_my_luggage/point_to_bag", wait_for_end_of=True)
+                # how to get pose and bag????
+                
+                # set rgb's to static green
+                # self.set_rgb(GREEN+SET_COLOUR)
+
+                # speech: "I have detected the bag"
+                # speck: dizer qual o saco: criar fase para esquerda e direita
+                
+                #### TIAGO METE O YOLO POSE AQUI
+                received_bag = self.detect_person_pointing()
+                
+                
+                # received_bag tem de ser dado pela função de deteção
+                self.set_speech(filename="carry_my_luggage/detected_bag_"+received_bag.lower(), wait_for_end_of=True)
+                
+                
+                ### Quero retirar coordenadas do saco detetado. Enquanto não tiver um saco detetado dolado correto que me foi  dado, mexo  pescoço
+                
+                
+                self.activate_yolo_objects(activate_objects=True)
+
+                list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
+                position_index = 0
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                correct_bag_detected = False
+                
+                while not correct_bag_detected:
+                    pos_offset = list_of_neck_position_search[position_index]
+                    new_neck_pos = [self.look_navigation[0] + pos_offset[0], self.look_navigation[1] + pos_offset[1]]
+                    print('pescoço: ', new_neck_pos)
+                    
+                    self.set_neck(position=new_neck_pos, wait_for_end_of=True)
+                    
+                    time.sleep(3)
+                
+                    # self.current_image = self.node.detected_objects.image_rgb
+                    # bridge = CvBridge()
+                    # Convert ROS Image to OpenCV image
+                    # cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+                    # self.image_most_obj_detected= cv_image
+                    
+                    
+                    ### VARIÁVEL REFEREE_X TEM DE ME SER DADA PELO POINT CLOUD DA PESSOA
+                    referee_x = 0.0
+                
+                    correct_bag_detected, relative_position_of_bag = self.detect_bag(position_of_referee_x= referee_x, received_bag= received_bag)
+                
+                    # Move to the next position
+                    position_index = (position_index + 1) % len(list_of_neck_position_search)
+                    print(position_index)
+                
+                self.activate_yolo_objects(activate_objects=False)
+
+                # next state
+                self.state = self.Go_to_bag 
+
+            elif self.state == self.Go_to_bag:
+                print("State:", self.state, "- Go_to_bag")
+
+                # set rgb's to rotating green
+                self.set_rgb(GREEN+ROTATE)
+
+                # speech: "I'm going to go to the bag."
+                self.set_speech(filename="carry_my_luggage/going_to_bag", wait_for_end_of=True)
+
+                print('Navigate to: ', relative_position_of_bag.x, relative_position_of_bag.y)
+                self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
+                print('received bag: ', received_bag)
+                if received_bag == 'left':
+                    self.IMU_ANGLE = -20.0
+                    print('left')
+                elif received_bag == 'right':
+                    self.IMU_ANGLE = 20.0
+                    print('\n \n \n \n right \n \n \n')
+                else:
+                    self.IMU_ANGLE = 0.0
+
+                self.set_navigation(movement="orientate", absolute_angle= self.IMU_ANGLE, flag_not_obs=True, wait_for_end_of=True)
+
+                # look at bag (set neck with the bag's coordinates)
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                # navigation (how?)
+
+                # next state
+                self.state = self.Pick_bag
             
-            #STATE 2 - CHECK LEFT + ASK TO PUT
-            if self.node.state == 2:
-                self.node.get_logger().info('State 2')
-                #CONFIRM BAG
-                self.node.speech_str.command = f"Please answer me after the green light under my wheels." #RIGHT ROBOT
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
+            elif self.state == self.Pick_bag:
+                print("State:", self.state, "- Pick_bag")
+                # your code here ...  
+
+                # set rgb's to purple
+                self.set_rgb(MAGENTA+ROTATE)
+
+                # speech: "I'm picking up the bag now."
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
 
 
-                self.node.speech_str.command = f"Did you choose the bag on your {self.node.left_right[0]}. Please say yes or no and then say robot" #RIGHT ROBOT
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
+                # move arm to bag's position (how?)
+                self.set_arm(command="carry_my_luggage_pre_check_bag", wait_for_end_of=True)
 
-                self.node.color.data = 12
-                self.node.rgb_mode_publisher.publish(self.node.color)
-                
+                list_of_rotations = [0.0, 20.0, -20.0]
 
-                #YES OR NO ANSWER
-                self.node.audio_command_publisher.publish(self.node.speech_type)
-                self.wait_for_end_of_audio()
-                print(self.node.keywords.data)
-                #IF YES - PLACE BAG
-                if self.node.keywords.data == 'yes':    
-                    self.node.speech_str.command = 'ok, please put the bag on the black hook on my left shoulder.'
-                    self.node.speaker_publisher.publish(self.node.speech_str)
-                    self.wait_for_end_of_speaking()
-                    self.node.state = 4
-                elif self.node.keywords.data == 'no':
-                    self.node.speech_str.command = 'ah ok, sorry, pick up the other bag and put it on my hook.'
-                    self.node.speaker_publisher.publish(self.node.speech_str)
-                    self.wait_for_end_of_speaking()
-                    self.node.state = 4
+                i = 0
+                first_time = True
+                object_in_gripper = False
+                while not object_in_gripper:
+                    while self.INITIAL_REACHED_RADIUS > 0.0:
+                        for pos in list_of_rotations:
+                            if pos == 0.0 and first_time == True:
+                                first_time = False
+                                i += 1
+                                if i == len(list_of_rotations):
+                                    print('já rodei 2 vezes pelo imu')
+                                    break
+                            else:
+                                print('ciclo de orientation imu')
+                                # self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-            #STATE 4 - CHECK BAG PLACE
-            if self.node.state == 4:
-                self.node.get_logger().info('State 4')
-                #CONFIRM PLACE BAG
-                time.sleep(3)
-                self.node.speech_str.command = 'Did you place the bag on my hook? Please say yes or no and then say robot'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                #YES OR NO ANSWER
-                self.node.audio_command_publisher.publish(self.node.speech_type)
-                self.wait_for_end_of_audio()
-                #IF YES - PLACE BAG
-                if self.node.keywords.data == 'yes':    
-                    self.node.flag_bag_put = True
-                    self.node.state = 5
-                
+                                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
 
-            #STATE 5 - READY TO FOLLOW + STOP SIGNAL
-            if self.node.state == 5 and self.node.flag_bag_put:
-                self.node.get_logger().info('State 5')
-                self.node.speech_str.command = 'I am ready to follow you. When we arrive at our destination, please raise your arm. '
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                #self.node.speech_str.command = 'Second, I have RGB leds unders my wheels, if they are red you are too close and may move on, if they are green, I am able to follow you, If they are magenta you are too far away. Please look at me while you are walking and consider my RGB lights. '
-                # self.node.speaker_publisher.publish(self.node.speech_str)
-                # self.wait_for_end_of_speaking()
-                self.node.state = 6
-
-            
-
-            #STATE 6 - FOLLOW ME
-            if self.node.state == 6:
-                try:
-                    #self.node.choose_bag()
-                    #self.node.arm_raise()
-                    person_x, person_y = self.node.follow_function()
-                    if person_y > 0:
-                        #print(person_x)
-                        #print(person_y)
-                        angle_person = math.atan2(person_x, person_y)
-                        dist_person = math.sqrt(person_x**2 + person_y**2)
-                        #print(self.node.robot_t, angle_person, angle_person - self.node.robot_t)
-                        theta_aux = math.pi/2 - (angle_person - self.node.robot_t)
-
-                        target_x = dist_person * math.cos(theta_aux) + self.node.robot_x
-                        target_y = dist_person * math.sin(theta_aux) + self.node.robot_y
-
-                        # target_x = person_x + self.node.robot_x
-                        # target_y = person_y + self.node.robot_y
-
-                        h_target_inter = 1.5
-                        dist_max_person = 4.5
-                        # target_inter_x = (dist_person - h_target_inter) * math.sin(angle_person)
-                        # target_inter_y = (dist_person - h_target_inter) * math.cos(angle_person)
-
-                        # angle_target_inter = math.atan2(target_inter_x, target_inter_y)
-                        # dist_target_inter = math.sqrt(target_inter_x**2 + target_inter_y**2)
-                        # print(self.node.robot_t, angle_target_inter, angle_target_inter - self.node.robot_t)
-                        # theta_inter_aux = math.pi/2 - (angle_target_inter - self.node.robot_t)
-
-                        # tar_int_x = dist_target_inter * math.cos(theta_inter_aux) + self.node.robot_x
-                        # tar_int_y = dist_target_inter * math.sin(theta_inter_aux) + self.node.robot_y
-
-                        stop_orientation_x = h_target_inter*2 * math.sin(-self.node.robot_t) + self.node.robot_x
-                        stop_orientation_y = h_target_inter*2 * math.cos(-self.node.robot_t) + self.node.robot_y
-
-
-                        ### for stability reasons dist_person must be replaced by person_y
-                        #COLOCAR CORES NOS ESTADOS S1(green) S2(blue) S3(red)
-                        #NORMAL
-                        if person_y > h_target_inter and person_y < dist_max_person: 
-                            self.node.color.data = 11 #Fix Green
-                            self.node.rgb_mode_publisher.publish(self.node.color)
-                            self.node.coordinates_to_navigation((target_x, target_y), (stop_orientation_x, stop_orientation_y), False, True)
-                            print('ESTADO 1')
-                            self.first_time_person_close = False
-                            self.first_time_slow_down = True
-
-                        #PERSON TOO FAR - ASK TO GET CLOSER
-                        elif person_y > dist_max_person: 
-                            self.node.color.data = 41 #Fix Kinda Pink
-                            self.node.rgb_mode_publisher.publish(self.node.color)
-                            print('ESTADO 2')
-                            self.first_time_person_close = False
-
-                            print(self.first_time_slow_down)
-
-                            if self.first_time_slow_down:
-                                self.node.speech_str.command = 'Please come back and stand in front of me.'
-                                self.node.speaker_publisher.publish(self.node.speech_str)
-                                # time.sleep(1)
-                                self.first_time_slow_down = False
-
-                            self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (target_x, target_y), False, True)
-                            # self.node.coordinates_to_navigation((target_x, target_y), (stop_orientation_x, stop_orientation_y), False, True)
-
-
-                            # self.wait_for_end_of_speaking()
+                                # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
+                                
+                                if not object_in_gripper:
+                                    self.set_rgb(command=RED+BLINK_LONG)
                             
-                            # self.node.coordinates_to_navigation((target_x, target_y), (stop_orientation_x, stop_orientation_y), False, True)
-                            # self.wait_for_end_of_navigation()
+                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                                    
+                                    self.set_arm(command="carry_my_luggage_if_failed_pick", wait_for_end_of=True)
+                                    
+                                    print('before navigation orientate')
 
-                            # self.node.speech_str.command = 'Place yourself in front of me less than a meter away.'
-                            # self.node.speaker_publisher.publish(self.node.speech_str)
-                            # self.wait_for_end_of_speaking()
+                                    self.set_navigation(movement="orientate", absolute_angle= self.IMU_ANGLE + pos, flag_not_obs=True, wait_for_end_of=True)
 
-                            # time.sleep(5)
-                            
+                                    i += 1
 
-                        #PERSON TOO CLOSE - dist < h_target    
-                        else:   
-                            self.node.color.data = 1 #Fix Red
-                            self.node.rgb_mode_publisher.publish(self.node.color)
-                            stop_signal = self.node.arm_raise()
-                            if stop_signal == True:
-                                self.node.state = 7
+                                    print('Antes de voltar a movimentar braço para saco')
+                                    self.set_arm(command="carry_my_luggage_pick_bag_after_failing", wait_for_end_of=True)
 
-                            print('ESTADO 3')
-                            if not self.first_time_person_close:
-                                self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (target_x, target_y), False, True)
-                                self.first_time_person_close = True
-
-
-                        
-                        #self.node.coordinates_to_navigation((target_x, target_y), task_pos, False)
-                        # if dist_person < h_target_inter:
-
-                        #     self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), (stop_orientation_x, stop_orientation_y), False, True)
-                        # else:
-                        #     self.node.coordinates_to_navigation((tar_int_x, tar_int_y), (target_x, target_y), False, True)
-                        
-                        # self.node.coordinates_to_navigation((person_x, person_y), task_pos, False)
-                        #self.wait_for_end_of_navigation()
-                        self.first_time_without_person = True
-
-                    #NO PERSON
-                    else:    
-                        if self.first_time_without_person:
-                            # self.node.coordinates_to_navigation((self.node.robot_x, self.node.robot_y), task_pos, False, False)
-                            self.node.coordinates_to_navigation((target_x, target_y), (stop_orientation_x, stop_orientation_y), False, False)
-                            print('ESTADO 4')
-
-                        self.first_time_without_person = False
-
-
-                except CvBridgeError:
-                    pass #print('Erro')
+                                    if i == len(list_of_rotations):
+                                        print('Iterations', i)
+                                        object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                        if not object_in_gripper:
+                                            self.set_rgb(command=RED+BLINK_LONG)
+                                            self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                                            self.set_arm(command="carry_my_luggage_if_failed_pick", wait_for_end_of=True)
+                                        else:
+                                            print('Funcionou!')
+                                            self.set_rgb(command=GREEN+BLINK_LONG)
+                                            self.set_arm(command="carry_my_luggage_bag_picked_correctly", wait_for_end_of=True)
+                                            object_in_gripper = True
+                                        break
+                                else:
+                                    print('Funcionou!')
+                                    self.set_rgb(command=GREEN+BLINK_LONG)
+                                    self.set_arm(command="carry_my_luggage_bag_picked_correctly", wait_for_end_of=True)
+                                    object_in_gripper = True
+                                    break
+                        if not object_in_gripper:
+                            self.INITIAL_REACHED_RADIUS -= 0.3
+                            print('Radius ',self.INITIAL_REACHED_RADIUS)
+                            i = 0
+                            print('vou rodar para saco e andar para ele')
                 
-            #STATE 7 - CHECK DESTINATION
-            if self.node.state == 7 and self.node.flag_stop_signal:
-                self.node.get_logger().info('State 7')
-                #CONFIRM ARRIVED
-                self.node.speech_str.command = 'Have we arrived yet? Please say yes or no and then say robot'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                #YES OR NO ANSWER
-                self.node.audio_command_publisher.publish(self.node.speech_type)
-                self.wait_for_end_of_audio()
-                #IF YES RECEIVED
-                if self.node.keywords.data == 'yes':    
-                    self.node.flag_arrived = True
-                    self.node.state = 8
-                
-            #STATE 8 - ASK TO TAKE BAG OUT
-            if self.node.state == 8 and self.node.flag_arrived:
-                self.node.get_logger().info('State 6')
-                #CONFIRM ARRIVED
-                self.node.speech_str.command = 'Please take the bag out.'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                self.node.state = 9
-            
-            #STATE 9 - CHECK BAG OUT
-            if self.node.state == 9:
-                self.node.get_logger().info('State 9')
-                #CONFIRM BAG OUT
-                self.node.speech_str.command = 'Did you take out the bag of my board? Please say yes or no and then say robot'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                #YES OR NO ANSWER
-                self.node.audio_command_publisher.publish(self.node.speech_type)
-                self.wait_for_end_of_audio()
-                #IF YES RECEIVED
-                if self.node.keywords.data == 'yes':   
-                    self.node.flag_bag_put = False
-                    self.node.state = 10
+                            self.set_navigation(movement="rotate", target= [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, wait_for_end_of=True)
+                            self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
+                            print('andei para a frente, estou pronto para testar de novo')
+                        else:
+                            print('funcionou')
+                            break
+                    
 
-            #STATE 10 - GO BACK ARENA
-            if self.node.state == 10 and not self.node.flag_bag_put:
-                self.node.get_logger().info('State 8')
-                self.node.speech_str.command = 'Now I will go back to the arena.'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
 
-                self.node.coordinates_to_navigation((0.0, 2.0), (0.0, 0.0), False)
-                self.wait_for_end_of_navigation()
 
-                self.node.coordinates_to_navigation((0.0, 0.0), (0.0, 1.0), False)
-                self.wait_for_end_of_navigation()
-                #WHEN INSIDE - take position from odom
-                self.node.state = 11
+                # close claw (how?)
+                # raise arm
 
-            #STATE 11 - INSIDE ARENA + FINISH TASK
-            if self.node.state == 11:
-                self.node.get_logger().info('State 11')
-                #CONFIRM ARRIVED
-                self.node.speech_str.command = 'I arrived at the arena. My task is over.'
-                self.node.speaker_publisher.publish(self.node.speech_str)
-                self.wait_for_end_of_speaking()
-                self.node.color.data = 2 #Fix Blue
-                self.node.rgb_mode_publisher.publish(self.node.color)
-                #FINISH TASK
+
+                # next state
+                self.state = self.Final_State 
+
+            elif self.state == self.Final_State:
+                print("State:", self.state, "- Final_State")
+                # your code here ...
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                # set rgb's to static cyan
+                self.set_rgb(CYAN+ROTATE)
+
+                # Speech: "I have picked up the bag, however I cannot follow you. I finished my task."
+                self.set_speech(filename="carry_my_luggage/end_of_carry_luggage", wait_for_end_of=True)
+
+                # wait for start_button
+                self.wait_for_start_button()
+
+                # set rgb's to static green
+                self.set_rgb(GREEN+SET_COLOUR)
+
+                self.set_arm(command="carry_my_luggage_back_to_initial_position", wait_for_end_of=True)
+
+
+                while True:
+                    pass
+
+            else:
+                pass

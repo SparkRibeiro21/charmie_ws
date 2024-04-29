@@ -18,6 +18,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             'robot_ip',
+            default_value='192.168.1.219',
             description='IP address by which the robot can be reached.',
         )
     )
@@ -37,17 +38,18 @@ def generate_launch_description():
     )
 
     # Initialize Arguments
-    robot_ip = LaunchConfiguration('robot_ip')
+    robot_ip = LaunchConfiguration('robot_ip', default='192.168.1.219')
     report_type = LaunchConfiguration('report_type', default='normal')
     hw_ns = LaunchConfiguration('hw_ns', default='xarm')
-    add_gripper = LaunchConfiguration('add_gripper', default=False)
+    add_gripper = LaunchConfiguration('add_gripper', default=True)
     add_vacuum_gripper = LaunchConfiguration('add_vacuum_gripper', default=False)
     show_rviz = LaunchConfiguration('show_rviz', default=False)
 
     # robot driver launch
     # xarm_api/launch/_robot_driver.launch.py
     robot_driver_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/_robot_driver.launch.py']),
+        #PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/_robot_driver.launch.py']),
+        PythonLaunchDescriptionSource('/home/charmie/charmie_ws/src/charmie_arm_ufactory/xarm_ros2/xarm_api/launch/_robot_driver.launch.py'),
         launch_arguments={
             'robot_ip': robot_ip,
             'report_type': report_type,
