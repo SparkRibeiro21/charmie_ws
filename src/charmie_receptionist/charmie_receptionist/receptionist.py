@@ -6,7 +6,7 @@ from rclpy.node import Node
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedOebject, TarNavSDNL
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
 
 import os
@@ -664,27 +664,29 @@ class ReceptionistMain():
         Presentation_host_first_second_guest = 7
         Final_State = 8
 
-        self.state = Presentation_host_first_second_guest
+        self.state = Waiting_for_start_button
 
         self.SIDE_TO_LOOK = "right"
-        self.OPEN_DOOR = False
+        self.OPEN_DOOR = True
 
         # Start localisation position
         self.initial_position = [-1.0, 1.5, -90.0]
-        self.initial_position_with_door = [-1.0, 1.5, -135.0]
+        self.initial_position_with_door = [-0.33, 1.4, -135.0]
 
         # Navigation Positions
         self.front_of_sofa = [-2.5, 1.5]
         self.sofa = [-2.5, 3.0]
         self.receive_guests = [-1.0, 1.5]
         self.where_guest_is_received = [0.0, 1.5]
+        self.map_initial_position = [0.25, 0.0]
 
         self.look_forward = [0, 0]
         self.look_navigation = [0, -40]
         self.look_left = [90, 0]
         self.look_right = [-90, 0]
         self.look_torso = [0, -5]
-        self.look_down_sofa = [0, -20]
+        self.look_down_sofa = [0, -25]
+        self.look_door = [-45, 0]
 
         self.look_empty_place = [1.0, 2.0]
         self.look_sofa = [-2.5, 3.0]
@@ -745,10 +747,20 @@ class ReceptionistMain():
 
                 self.set_rgb(CYAN+ALTERNATE_QUARTERS)
                 
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-
                 if self.OPEN_DOOR == True:
+                    self.set_neck(position=self.look_door, wait_for_end_of=False)
+
+                    time.sleep(5)
+                
+                    self.set_speech(filename="receptionist/guest_arrived_open_door", wait_for_end_of=True)
+
                     self.set_arm(command="open_door_LAR", wait_for_end_of= True)
+
+                    self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                
+                    self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
+                
+                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
                 ### NAVIGATION MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
                 
@@ -798,7 +810,8 @@ class ReceptionistMain():
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 
-                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
 
@@ -824,7 +837,7 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
                 self.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
 
-                self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True)
+                self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, characteristics=False)
 
                 self.host_filename, self.host_position = self.search_for_host()
                 print(self.host_filename, self.host_position)
@@ -847,7 +860,7 @@ class ReceptionistMain():
                 elif self.SIDE_TO_LOOK.lower() == "left":
                     self.set_neck(position=self.look_left, wait_for_end_of=True)
                 
-                self.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
                 time.sleep(0.5)
 
                 ### SPEAK: HOST INFORMATION
@@ -1430,7 +1443,11 @@ class ReceptionistMain():
         # if biggest_confidance < 40:
         #     person_recognized = "Unknown"
 
-        return person_recognized, all_percentages[0], all_percentages[1]
+        if len(all_percentages) == 2:
+            return person_recognized, all_percentages[0], all_percentages[1]
+        else:
+            print("LEN FACE DETECTED ERRADO", len(all_percentages))
+            return person_recognized, 0.0, 0.0
     
         """
         encoding_knowns = []

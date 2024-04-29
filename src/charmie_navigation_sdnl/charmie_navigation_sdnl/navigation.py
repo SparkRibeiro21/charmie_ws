@@ -25,9 +25,9 @@ class NavigationSDNLClass:
 
         # configurable other parameters
         self.nav_threshold_dist = 0.6 # in meters
-        self.nav_threshold_dist_follow_me = 1.2 # in meters
+        # self.nav_threshold_dist_follow_me = 1.2 # in meters
         self.nav_threshold_ang = 15 # degrees
-        self.nav_threshold_ang_follow_me = 20 # degrees
+        # self.nav_threshold_ang_follow_me = 20 # degrees
         self.max_lin_speed = 30.0 # speed
         self.max_ang_speed = 20.0 # speed
         self.tar_dist_decrease_lin_speed = 0.8 # meters
@@ -71,7 +71,7 @@ class NavigationSDNLClass:
 
 
         # visual debug
-        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.MAX_DIST_FOR_OBS = 1.0
         self.xc = 400
         self.yc = 400
@@ -797,14 +797,14 @@ class NavSDNLNode(Node):
 
     def target_pos_callback(self, nav: TarNavSDNL):
         # calculates the velocities and sends them to the motors considering the latest obstacles and odometry position
-        # print(nav)
+        print(nav)
         self.nav.navigation_msg_to_position(nav)
         self.nav.dist_to_target = self.nav.upload_move_dist_to_target()
         self.nav.ang_to_target = self.nav.upload_rot_ang_to_target()
+        self.nav.nav_threshold_dist = nav.reached_radius # in meters
         self.navigation_state = 0
 
 
-        # print(nav)
     
     def timer_callback(self):
 
@@ -815,11 +815,7 @@ class NavSDNLNode(Node):
             ori.data = True
             self.flag_orientation_publisher.publish(ori) 
 
-
-
-
         print(self.nav.first_imu_orientation, round(self.nav.NORTE, 2), round(self.nav.imu_orientation, 2), round(self.nav.imu_orientation_norm, 2))
-        
         
         if self.nav.first_nav_target:
 

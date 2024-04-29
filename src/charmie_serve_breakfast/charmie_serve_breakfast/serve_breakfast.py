@@ -542,7 +542,7 @@ class ServeBreakfastMain():
         self.flag_object_total = [False, False, False, False] 
 
         # to debug just a part of the task you can just change the initial state, example:
-        self.state = self.Placing_bowl #self.Waiting_for_task_start
+        self.state = self.Waiting_for_task_start
 
         # MISSING:
         # waiting_door_open

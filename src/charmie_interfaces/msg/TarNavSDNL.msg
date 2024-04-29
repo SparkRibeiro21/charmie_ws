@@ -1,7 +1,5 @@
-# geometry_msgs/Pose2D move_target_coordinates
-# geometry_msgs/Pose2D rotate_target_coordinates
 geometry_msgs/Pose2D target_coordinates
 string move_or_rotate
 float32 orientation_absolute
 bool flag_not_obs
-bool follow_me
+float32 reached_radius
