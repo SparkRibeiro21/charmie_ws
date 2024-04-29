@@ -156,15 +156,15 @@ def generate_launch_description():
                 )
 
     return LaunchDescription([
-        # LaunchDescription(declared_arguments + [robot_driver_launch]),
+        LaunchDescription(declared_arguments + [robot_driver_launch]),
         charmie_multi_camera_launch_description,
         # face,
         speakers,
         neck,
         low_level,
         odometry,
-        # navigation,
-        # arm_carry_my_luggage,
+        navigation,
+        arm_carry_my_luggage,
         point_cloud,
         yolo_objects,
         yolo_pose,

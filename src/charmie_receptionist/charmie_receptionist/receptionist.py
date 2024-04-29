@@ -746,6 +746,8 @@ class ReceptionistMain():
                 self.wait_for_start_button()
 
                 self.set_rgb(CYAN+ALTERNATE_QUARTERS)
+
+                self.set_speech(filename="receptionist/waiting_door_bell", wait_for_end_of=True)
                 
                 if self.OPEN_DOOR == True:
                     self.set_neck(position=self.look_door, wait_for_end_of=False)
