@@ -70,28 +70,9 @@ COMMANDS = {
 }
 """
 
-"""
-COMMANDS = {
-     'start_restaurant': 'Hello! I am ready to start the restaurant task! Waiting for my start button to be pressed.',
-     'barman_meeting': 'Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.',
-     'turn_search': 'I am going to turn around and search for possible customers. See you soon.',
-     'search_customers': 'Searching for waving customers.',
-     'no_customers': 'I could not find any customers calling. I am going to search again for calling customers.',
-     'found_customer': 'I found waving customers.',
-     'face_customer': 'Please look at my screen to see the customers detected.',
-     'movement_alert': 'Moving to the customer table.',
-     'hello_customer': 'Hello! My name is charmie and I am here to help you.',
-     'say_order': 'Please say your order.',
-     'yes_order': 'Thank you. I am going to get your order.',
-     'no_order': 'Sorry for my mistake, lets try again.',
-     'move_barman': 'Moving to the barman.',
-     'barman_order': 'Hello again, barman. The customer order is.',
-     'tray_order': 'Please put the order in my tray.',
-     'pick_tray': 'Here are the items you have ordered. Please pick the items from my tray.',
-     'enjoy_order': 'Hope you enjoy it. See you soon.',
-     'finish_restaurant': 'I have finished my restaurant task.'
- }
-"""
+# COMMANDS = {
+#     'problem_detecting_change_object': 'There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?',
+# }
 
 """
 COMMANDS = {
@@ -139,7 +120,7 @@ class RobotSpeak():
 
         # info regarding the paths for the recorded files intended to be played
         self.home = str(Path.home())
-        self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences/restaurant"
+        self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
         self.complete_path = self.home+'/'+self.midpath+'/'
 
         # TTS synthetiser models path 

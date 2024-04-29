@@ -750,6 +750,7 @@ class RestaurantMain():
                 self.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
 
                 ##### START BUTTON
+                self.wait_for_start_button()
 
                 ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
                 self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
@@ -788,7 +789,9 @@ class RestaurantMain():
                 ##### SPEAK: Check face to see customers detected
                 self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
 
-                ##### SHOW FACE DETECTED CUSTOMER
+                ##### SHOW FACE DETECTED CUSTOMER ---- FALTA IR AO YOLO BUSCAR A DETEÇÃO DOS WAVING CUSTOMERS E METER AQUI !!!!
+                self.set_face("customer1")
+                self.set_face("customer2")
                                 
                 # next state
                 self.state = self.Approach_customer_table
@@ -797,6 +800,10 @@ class RestaurantMain():
                 print("State:", self.state, "- Approach_customer_table")
 
                 ##### NECK MOVEMENT FORWARD POSITION
+
+                ##### BACK TO STANDART FACE
+                self.set_face("demo5")
+                
 
                 ##### SPEAK: Start Movement Alert
                 self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
@@ -831,7 +838,7 @@ class RestaurantMain():
                     self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
                     for kw in keyword_list:
                         print(kw)
-                        self.set_speech(filename="objects_names/" + kw.lower(), wait_for_end_of=True)
+                        self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
 
                     ##### AUDIO: Listen "YES" OR "NO"
                     confirmation = self.get_audio(yes_or_no=True, wait_for_end_of=True)
@@ -871,7 +878,7 @@ class RestaurantMain():
                 ##### Itera sobre cada elemento do pedido
                 for elemento in keyword_list:
                     # Define o nome do arquivo correspondente ao elemento
-                    filename = "object_names/" + elemento.lower()  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
+                    filename = "object_names/" + elemento.lower().replace(" ", "_")  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
                     
                     # SPEAK: Diz o elemento do pedido
                     self.set_speech(filename=filename, wait_for_end_of=True)
