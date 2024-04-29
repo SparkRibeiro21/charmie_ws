@@ -542,7 +542,7 @@ class ServeBreakfastMain():
         self.flag_object_total = [False, False, False, False] 
 
         # to debug just a part of the task you can just change the initial state, example:
-        self.state = self.Waiting_for_task_start
+        self.state = self.Placing_bowl #self.Waiting_for_task_start
 
         # MISSING:
         # waiting_door_open
@@ -813,8 +813,10 @@ class ServeBreakfastMain():
                 ##### ARM MOVE TO TABLE
 
                 ##### ARM PLACE OBJECT
+                
+                self.set_arm(command="place_bowl_table", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Placing_cornflakes 
 
@@ -830,12 +832,15 @@ class ServeBreakfastMain():
                 self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### ARM MOVE TO TABLE
-
+                
                 ##### ARM POUR IN BOWL
-
+                self.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
+                
                 ##### ARM PLACE OBJECT
-
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                self.set_arm(command="place_cereal_table", wait_for_end_of=True)
+                
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Placing_milk
            
@@ -853,10 +858,13 @@ class ServeBreakfastMain():
                 ##### ARM MOVE TO TABLE
 
                 ##### ARM POUR IN BOWL
+                self.set_arm(command="pour_milk_bowl", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 ##### ARM PLACE OBJECT
+                self.set_arm(command="place_milk_table", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Placing_spoon
 
@@ -874,12 +882,15 @@ class ServeBreakfastMain():
                 ##### ARM MOVE TO TABLE
 
                 ##### ARM PLACE OBJECT
+                self.set_arm(command="place_spoon_table", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
 
                 self.state = self.Final_State 
                 
             elif self.state == self.Final_State:
+                
+                self.set_arm(command="arm_go_rest", wait_for_end_of=True)
 
                 self.set_neck(position=self.look_judge) 
                 

@@ -145,6 +145,7 @@ def generate_launch_description():
                         name='door_start',
                         emulate_tty=True
                         )
+    
 
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),

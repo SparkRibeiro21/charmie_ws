@@ -149,10 +149,13 @@ class ArmUfactory(Node):
 		self.unlock_handler = 							[-658.8, 99.9, 718.6, math.radians(-3.2), math.radians(45.3), math.radians(-179.8)]
   
 		self.start_pulling_door =						[-647.6, 162.8, 735.1, math.radians(-19.6), math.radians(41.8), math.radians(156.5)]
-		self.keep_pulling_door =						[-580.4, 140.0, 656.1, math.radians(-19.6), math.radians(41.8), math.radians(156.5)]
-		self.start_lifting_a_bit_the_handler =			[-531.6, 137.8, 604.8, math.radians(-19.6), math.radians(41.8), math.radians(156.5)]
-		
-		self.preparing_to_go_open_door =				[-537.0, 106.8, 596.8, math.radians(-3.3), math.radians(45.3), math.radians(180.0)]
+		# self.keep_pulling_door =						[-580.4, 140.0, 656.1, math.radians(-19.6), math.radians(41.8), math.radians(156.5)]
+		# self.start_lifting_a_bit_the_handler =			[-531.6, 137.8, 604.8, math.radians(-19.6), math.radians(41.8), math.radians(156.5)]
+		self.opening_door =								[-528.7, 149.9, 516.7, math.radians(-14.6), math.radians(43.5), math.radians(163.9)]	
+
+
+		self.leave_door = 								[-532.0, 118.1, 510.8, math.radians(-14.6), math.radians(43.5), math.radians(163.9)]
+		# self.preparing_to_go_open_door =				[-537.0, 106.8, 596.8, math.radians(-3.3), math.radians(45.3), math.radians(180.0)]
 		self.keep_preparing_to_go_open_door =			[-443.9, 114.2, 504.5, math.radians(-3.3), math.radians(45.3), math.radians(180.0)]
   
 		self.almost_reaching_door = 					[-360.0, -128.2, 623.8, math.radians(121.6), math.radians(1.5), math.radians(-95.0)]
@@ -566,7 +569,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
 		elif self.estado_tr == 9:
-			self.position_values_req.pose = self.keep_pulling_door
+			self.position_values_req.pose = self.opening_door
 			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -575,7 +578,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
 		elif self.estado_tr == 10:
-			self.position_values_req.pose = self.start_lifting_a_bit_the_handler
+			self.position_values_req.pose = self.leave_door
 			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
@@ -584,15 +587,6 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
 		elif self.estado_tr == 11:
-			self.position_values_req.pose = self.preparing_to_go_open_door
-			self.position_values_req.speed = 80.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 12:
 			self.position_values_req.pose = self.keep_preparing_to_go_open_door
 			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
@@ -601,7 +595,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 13:
+		elif self.estado_tr == 12:
 			self.position_values_req.pose = self.almost_reaching_door
 			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
@@ -610,14 +604,14 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 14:
+		elif self.estado_tr == 13:
 			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = False
 			self.set_gripper_req.timeout = 4.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 15:
+		elif self.estado_tr == 14:
 			self.position_values_req.pose = self.going_sideways_to_door
 			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
@@ -626,7 +620,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 16:
+		elif self.estado_tr == 15:
 			self.position_values_req.pose = self.reaching_behind_door
 			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
@@ -635,7 +629,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 73:
+		elif self.estado_tr == 16:
 			self.position_values_req.pose = self.pulling_door_from_behind
 			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
@@ -644,7 +638,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 18:
+		elif self.estado_tr == 17:
 			self.position_values_req.pose = self.keep_pulling_door_from_behind
 			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
@@ -653,7 +647,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 19:
+		elif self.estado_tr == 18:
 			self.position_values_req.pose = self.keep_2_pulling_door_from_behind
 			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
@@ -662,7 +656,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 20:
+		elif self.estado_tr == 19:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
 			self.joint_values_req.speed = math.radians(80)
 			self.joint_values_req.wait = True
@@ -670,7 +664,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
-		elif self.estado_tr == 21:
+		elif self.estado_tr == 20:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -691,7 +685,7 @@ class ArmUfactory(Node):
 			self.close_gripper()
 		elif self.next_arm_movement == "close_gripper_with_check_object":
 			self.close_gripper_with_check_object()
-		elif self.next_arm_movement == "open_door":
+		elif self.next_arm_movement == "open_door_LAR":
 			self.open_door()
 
 
