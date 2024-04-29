@@ -147,6 +147,19 @@ def generate_launch_description():
                         )
     
 
+    odometry = Node(package='charmie_odometry',
+                executable='odometry',
+                name='odometry',
+                emulate_tty=True
+                )
+    
+    navigation = Node(package='charmie_navigation_sdnl',
+                executable='navigation',
+                name='navigation',
+                emulate_tty=True
+                )
+    
+
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),
         charmie_multi_camera_launch_description,
@@ -155,10 +168,12 @@ def generate_launch_description():
         neck,
         low_level,
         arm,
+        odometry,
+        navigation,
         point_cloud,
         yolo_objects,
         lidar,
         obstacles,
         door_start,
-        serve_breakfast,
+        # serve_breakfast,
     ])

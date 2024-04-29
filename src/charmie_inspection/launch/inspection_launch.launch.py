@@ -90,18 +90,32 @@ def generate_launch_description():
                         name='door_start',
                         emulate_tty=True
                         )
-
+    
+    odometry = Node(package='charmie_odometry',
+                executable='odometry',
+                name='odometry',
+                emulate_tty=True
+                )
+    
+    navigation = Node(package='charmie_navigation_sdnl',
+                executable='navigation',
+                name='navigation',
+                emulate_tty=True
+                )
+    
 
     return LaunchDescription([
-        charmie_multi_camera_launch_description,
+        # charmie_multi_camera_launch_description,
+        low_level,
         face,
         speakers,
         neck,
-        low_level,
-        point_cloud,
-        yolo_pose,
+        odometry,
+        navigation,
+        # point_cloud,
+        # yolo_pose,
         lidar,
         obstacles,
         door_start,
-        inspection,
+        # inspection,
     ])
