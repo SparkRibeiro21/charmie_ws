@@ -5,7 +5,7 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, PoseWithCovarianceStamped
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
 
@@ -13,6 +13,8 @@ import cv2
 import threading
 import time
 from cv_bridge import CvBridge
+import math
+import numpy as np
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -40,7 +42,9 @@ class CarryMyLuggageNode(Node):
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
         # Navigation
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
-        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
+        # Localisation
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         
         ### Services (Clients) ###
         # Speakers
@@ -531,7 +535,7 @@ class CarryMyLuggageMain():
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
 
-    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, follow_me=False, wait_for_end_of=True):
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
 
 
         if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
@@ -555,7 +559,7 @@ class CarryMyLuggageMain():
             navigation.move_or_rotate = movement
             navigation.orientation_absolute = absolute_angle
             navigation.flag_not_obs = flag_not_obs
-            navigation.follow_me = follow_me
+            navigation.reached_radius = reached_radius
 
             self.node.flag_navigation_reached = False
             
@@ -571,6 +575,41 @@ class CarryMyLuggageMain():
 
         return self.node.navigation_success, self.node.navigation_message   
 
+    
+    def set_initial_position(self, initial_position):
+
+        task_initialpose = PoseWithCovarianceStamped()
+
+        task_initialpose.header.frame_id = "map"
+        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
+
+        task_initialpose.pose.pose.position.x = initial_position[1]
+        task_initialpose.pose.pose.position.y = -initial_position[0]
+        task_initialpose.pose.pose.position.z = 0.0
+
+        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+
+        # Convert an Euler angle to a quaternion.
+        # Input
+        #     :param roll: The roll (rotation around x-axis) angle in radians.
+        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
+        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
+        # 
+        # Output
+        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+
+        roll = 0.0
+        pitch = 0.0
+        yaw = math.radians(initial_position[2])
+
+        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        
+        self.node.initialpose_publisher.publish(task_initialpose)
+
+
     def detect_bag(self, position_of_referee_x, received_bag):
         correct_bag  = False
         objects_stored = self.node.detected_objects
@@ -582,19 +621,48 @@ class CarryMyLuggageMain():
                 print('x do saco relativo ao robô: ', object.position_relative.x)
                 if object.position_relative.x <= position_of_referee_x and received_bag == 'right':
                     correct_bag = True
-                    print('Coordenadas do saco: ', object.position_relative)
-                    obj = object.position_relative
+                    print('Coordenadas do saco (mundo): ', object.position_absolute)
+                    obj = object.position_absolute
                     break
                 elif object.position_relative.x > position_of_referee_x and received_bag == 'left':
                     correct_bag = True
-                    print('Coordenadas do saco: ', object.position_relative)
-                    obj = object.position_relative
+                    print('Coordenadas do saco (mundo): ', object.position_absolute)
+                    obj = object.position_absolute
                     break
                 else: 
                     correct_bag = False
                     
         return correct_bag, obj
         
+    def detect_person_pointing(self):
+        detected_person_temp = Yolov8Pose()
+        self.activate_yolo_pose(activate=True)
+
+        time.sleep(0.5)
+        detected_person_temp = self.node.detected_people  
+
+
+        bag_side = ""
+        self.set_rgb(BLUE+HALF_ROTATE)
+
+        person_detected = False
+        while not person_detected:
+            
+            detected_person_temp = self.node.detected_people  
+
+            for p in detected_person_temp.persons:
+                if p.room_location == "Corridor" and p.pointing_at != "None":
+                    person_detected = True
+                    bag_side = p.pointing_at.lower()
+                    self.set_rgb(GREEN+HALF_ROTATE)
+
+                print(p.room_location, p.pointing_at, person_detected)
+            
+            time.sleep(0.05)
+
+        self.activate_yolo_pose(activate=False)
+
+        return bag_side
         
         
     # main state-machine function
@@ -611,6 +679,8 @@ class CarryMyLuggageMain():
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
 
+        self.initial_position = [-3.5, 1.5, -90.0]
+
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_to_start
 
@@ -622,6 +692,11 @@ class CarryMyLuggageMain():
             if self.state == self.Waiting_for_task_to_start:
                 print("State:", self.state, "- Waiting_for_task_to_start")
 
+                self.set_initial_position(self.initial_position)
+                print("SET INITIAL POSITION")
+
+                time.sleep(1)
+        
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
                 # set rgb's to cyan
@@ -634,8 +709,10 @@ class CarryMyLuggageMain():
                 # wait for start_button
                 self.wait_for_start_button()
 
+                self.set_rgb(BLUE+SET_COLOUR)
+
                 # set rgb's to static green
-                self.set_rgb(GREEN+SET_COLOUR)
+                # self.set_rgb(GREEN+SET_COLOUR)
 
                 # next state
                 self.state = self.Recognize_bag
@@ -643,37 +720,31 @@ class CarryMyLuggageMain():
             elif self.state == self.Recognize_bag:
                 print("State:", self.state, "- Recognize_bag")
                 
-                self.activate_yolo_objects(activate_objects=True)
-
                 # set rgb's to blue
-                self.set_rgb(BLUE+SET_COLOUR)
 
                 # speech: "Please point to the bag you want me to take."
                 self.set_speech(filename="carry_my_luggage/point_to_bag", wait_for_end_of=True)
                 # how to get pose and bag????
                 
                 # set rgb's to static green
-                self.set_rgb(GREEN+SET_COLOUR)
+                # self.set_rgb(GREEN+SET_COLOUR)
 
                 # speech: "I have detected the bag"
                 # speck: dizer qual o saco: criar fase para esquerda e direita
                 
-
                 #### TIAGO METE O YOLO POSE AQUI
+                received_bag = self.detect_person_pointing()
                 
                 
                 # received_bag tem de ser dado pela função de deteção
-                received_bag = 'left'
-                
-                if received_bag == "right" or received_bag == "Right":
-                    self.set_speech(filename="carry_my_luggage/detected_bag_right", wait_for_end_of=True)
-                elif received_bag == "left" or received_bag == "Left":
-                    self.set_speech(filename="carry_my_luggage/detected_bag_left", wait_for_end_of=True)
+                self.set_speech(filename="carry_my_luggage/detected_bag_"+received_bag.lower(), wait_for_end_of=True)
                 
                 
                 ### Quero retirar coordenadas do saco detetado. Enquanto não tiver um saco detetado dolado correto que me foi  dado, mexo  pescoço
                 
                 
+                self.activate_yolo_objects(activate_objects=True)
+
                 list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
                 position_index = 0
 
@@ -689,11 +760,11 @@ class CarryMyLuggageMain():
                     
                     time.sleep(3)
                 
-                    self.current_image = self.node.detected_objects.image_rgb
-                    bridge = CvBridge()
+                    # self.current_image = self.node.detected_objects.image_rgb
+                    # bridge = CvBridge()
                     # Convert ROS Image to OpenCV image
-                    cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-                    self.image_most_obj_detected= cv_image
+                    # cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+                    # self.image_most_obj_detected= cv_image
                     
                     
                     ### VARIÁVEL REFEREE_X TEM DE ME SER DADA PELO POINT CLOUD DA PESSOA
@@ -707,7 +778,9 @@ class CarryMyLuggageMain():
                 
                 self.activate_yolo_objects(activate_objects=False)
                 print('Navigate to: ', relative_position_of_bag.x, relative_position_of_bag.y)
-                self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, reached_radius=1.0, wait_for_end_of=True)
+                
+                self.set_navigation(movement="orientate", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
                 
                 while True:
                     pass
