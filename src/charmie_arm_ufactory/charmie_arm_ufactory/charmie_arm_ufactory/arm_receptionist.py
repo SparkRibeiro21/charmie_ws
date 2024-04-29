@@ -534,7 +534,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 5:
 			self.position_values_req.pose = self.orient_to_handler
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -543,7 +543,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 6:
 			self.position_values_req.pose = self.reach_handler
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -552,7 +552,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 7:
 			self.position_values_req.pose = self.unlock_handler
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -570,7 +570,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 9:
 			self.position_values_req.pose = self.opening_door
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 100.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -579,7 +579,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 10:
 			self.position_values_req.pose = self.leave_door
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -588,7 +588,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 11:
 			self.position_values_req.pose = self.keep_preparing_to_go_open_door
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -597,7 +597,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 12:
 			self.position_values_req.pose = self.almost_reaching_door
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -613,7 +613,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 14:
 			self.position_values_req.pose = self.going_sideways_to_door
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -622,7 +622,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 15:
 			self.position_values_req.pose = self.reaching_behind_door
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -631,7 +631,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 16:
 			self.position_values_req.pose = self.pulling_door_from_behind
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -640,7 +640,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 17:
 			self.position_values_req.pose = self.keep_pulling_door_from_behind
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0
@@ -649,7 +649,7 @@ class ArmUfactory(Node):
    
 		elif self.estado_tr == 18:
 			self.position_values_req.pose = self.keep_2_pulling_door_from_behind
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 4.0

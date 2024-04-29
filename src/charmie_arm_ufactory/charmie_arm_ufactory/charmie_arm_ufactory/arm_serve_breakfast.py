@@ -209,7 +209,7 @@ class ArmUfactory(Node):
 		self.place_bowl_table_final = 					[-719.1, 321.5, 557.6, math.radians(59.4), math.radians(39.8), math.radians(175.8)]				
 		self.little_adjustment_after_placing_bowl = 	[-714.6, 306.2, 550.8, math.radians(59.4), math.radians(39.8), math.radians(175.8)]
   
-		self.pick_cereals_tray = 						[-198.0, 420.0, 170.0, math.radians(-90.0), math.radians(0.0), math.radians(-90.0)]							
+		self.pick_cereals_tray = 						[-228.0, 420.0, 170.0, math.radians(-90.0), math.radians(0.0), math.radians(-90.0)]							
 		self.pos_pick_cereals_tray = 					[-394.4, 120.0,  74.4, math.radians(173.3), math.radians(0.0), math.radians(-90.0)]
 		self.strategic_avoid_possible_chair_cereals =  	[-648.7,  20.0, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
 		self.reach_position_to_pour_cereals_bowl = 		[-648.7, 220.0, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]

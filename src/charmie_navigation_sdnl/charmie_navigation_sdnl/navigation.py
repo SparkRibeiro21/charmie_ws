@@ -71,7 +71,7 @@ class NavigationSDNLClass:
 
 
         # visual debug
-        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.MAX_DIST_FOR_OBS = 1.0
         self.xc = 400
         self.yc = 400

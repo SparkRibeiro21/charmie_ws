@@ -5,7 +5,8 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
+from geometry_msgs.msg import Point
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
 
 import cv2 
@@ -37,7 +38,10 @@ class CarryMyLuggageNode(Node):
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
-
+        # Navigation
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
+        
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -109,6 +113,9 @@ class CarryMyLuggageNode(Node):
         self.activate_yolo_objects_message = ""
         self.arm_success = True
         self.arm_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
+        self.flag_navigation_reached = False
 
         self.get_neck_position = [1.0, 1.0]
 
@@ -150,6 +157,10 @@ class CarryMyLuggageNode(Node):
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
         # print("Received Start Button:", state.data)
+
+    ### NAVIGATION ###
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.flag_navigation_reached = flag
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
@@ -519,10 +530,51 @@ class CarryMyLuggageMain():
 
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
-    
+
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, follow_me=False, wait_for_end_of=True):
+
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
+
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.follow_me = follow_me
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
+
     def detect_bag(self, position_of_referee_x, received_bag):
         correct_bag  = False
         objects_stored = self.node.detected_objects
+        obj = Point()
                 
         for object in objects_stored.objects:
             print('Objeto: ', object)
@@ -530,14 +582,18 @@ class CarryMyLuggageMain():
                 print('x do saco relativo ao robô: ', object.position_relative.x)
                 if object.position_relative.x <= position_of_referee_x and received_bag == 'right':
                     correct_bag = True
+                    print('Coordenadas do saco: ', object.position_relative)
+                    obj = object.position_relative
                     break
                 elif object.position_relative.x > position_of_referee_x and received_bag == 'left':
                     correct_bag = True
+                    print('Coordenadas do saco: ', object.position_relative)
+                    obj = object.position_relative
                     break
                 else: 
                     correct_bag = False
                     
-        return correct_bag
+        return correct_bag, obj
         
         
         
@@ -609,9 +665,9 @@ class CarryMyLuggageMain():
                 # received_bag tem de ser dado pela função de deteção
                 received_bag = 'left'
                 
-                if received_bag == "right":
+                if received_bag == "right" or received_bag == "Right":
                     self.set_speech(filename="carry_my_luggage/detected_bag_right", wait_for_end_of=True)
-                elif received_bag == "left":
+                elif received_bag == "left" or received_bag == "Left":
                     self.set_speech(filename="carry_my_luggage/detected_bag_left", wait_for_end_of=True)
                 
                 
@@ -643,13 +699,15 @@ class CarryMyLuggageMain():
                     ### VARIÁVEL REFEREE_X TEM DE ME SER DADA PELO POINT CLOUD DA PESSOA
                     referee_x = 0.0
                 
-                    correct_bag_detected = self.detect_bag(position_of_referee_x= referee_x, received_bag= received_bag)
+                    correct_bag_detected, relative_position_of_bag = self.detect_bag(position_of_referee_x= referee_x, received_bag= received_bag)
                 
                     # Move to the next position
                     position_index = (position_index + 1) % len(list_of_neck_position_search)
                     print(position_index)
                 
                 self.activate_yolo_objects(activate_objects=False)
+                print('Navigate to: ', relative_position_of_bag.x, relative_position_of_bag.y)
+                self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, wait_for_end_of=True)
                 
                 while True:
                     pass
