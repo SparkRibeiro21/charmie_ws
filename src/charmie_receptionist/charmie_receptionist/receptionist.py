@@ -557,7 +557,7 @@ class ReceptionistMain():
 
         return self.node.track_person_success, self.node.track_person_message
  
-    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, follow_me=False, wait_for_end_of=True):
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
 
 
         if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
@@ -581,7 +581,7 @@ class ReceptionistMain():
             navigation.move_or_rotate = movement
             navigation.orientation_absolute = absolute_angle
             navigation.flag_not_obs = flag_not_obs
-            navigation.follow_me = follow_me
+            navigation.reached_radius = reached_radius
 
             self.node.flag_navigation_reached = False
             
@@ -930,7 +930,7 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                    
+    
                 self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)

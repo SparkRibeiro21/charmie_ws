@@ -6,9 +6,9 @@ from rclpy.node import Node
 import threading
 
 from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import Pose2D
-from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects
-from charmie_interfaces.msg import Yolov8Objects, DetectedObject
+from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, NavTrigger
+from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
@@ -16,6 +16,8 @@ import json
 
 from pathlib import Path
 from datetime import datetime
+import math
+import numpy as np
 
 import os
 
@@ -81,7 +83,13 @@ class StoringGroceriesNode(Node):
         # Arm 
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
-
+        
+        # Navigation
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
+        # Localisation
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+        
 
         ### Services (Clients) ###
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
@@ -99,6 +107,9 @@ class StoringGroceriesNode(Node):
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
 
+        # Navigation
+        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Neck 
         # while not self.set_neck_position_client.wait_for_service(1.0):
@@ -107,6 +118,10 @@ class StoringGroceriesNode(Node):
         #     self.get_logger().warn("Waiting for Server Get Neck Position Command...")
         # while not self.set_neck_coordinates_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        # Navigation
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+        
         
         try:
             with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
@@ -131,6 +146,9 @@ class StoringGroceriesNode(Node):
         self.rgb_message = ""
         self.face_success = True
         self.face_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
+        self.flag_navigation_reached = False
 
         self.get_neck_position = [1.0, 1.0]
         self.objects_classNames_dict = {}
@@ -167,6 +185,10 @@ class StoringGroceriesNode(Node):
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
     
+    ### NAVIGATION ###
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.flag_navigation_reached = flag
+
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
     def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
         request = ActivateYoloObjects.Request()
@@ -372,6 +394,8 @@ class StoringGroceriesMain():
         self.third_shelf_x = (self.right_limit_shelf - self.left_limit_shelf) / 3
         self.center_shelf = 0.0
 
+        # Initial Position
+        self.initial_position = [0.0, 0.0, 0.0]
 
         # to debug just a part of the task you can just change the initial state, example:
         # self.state = self.Approach_kitchen_table
@@ -519,7 +543,83 @@ class StoringGroceriesMain():
 
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
-                
+
+    
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
+
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
+
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.reached_radius = reached_radius
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
+
+    
+    def set_initial_position(self, initial_position):
+
+        task_initialpose = PoseWithCovarianceStamped()
+
+        task_initialpose.header.frame_id = "map"
+        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
+
+        task_initialpose.pose.pose.position.x = initial_position[1]
+        task_initialpose.pose.pose.position.y = -initial_position[0]
+        task_initialpose.pose.pose.position.z = 0.0
+
+        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+
+        # Convert an Euler angle to a quaternion.
+        # Input
+        #     :param roll: The roll (rotation around x-axis) angle in radians.
+        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
+        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
+        # 
+        # Output
+        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+
+        roll = 0.0
+        pitch = 0.0
+        yaw = math.radians(initial_position[2])
+
+        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        
+        self.node.initialpose_publisher.publish(task_initialpose)
+
+  
     ##### ANALYSE CABINET #####
 
     """ def look_cabinet(self):
@@ -1341,6 +1441,10 @@ class StoringGroceriesMain():
                 #print('State 0 = Initial')
 
                 #self.set_face("demo5")
+                self.set_initial_position(self.initial_position)
+                print("SET INITIAL POSITION")
+
+                time.sleep(1)
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
 

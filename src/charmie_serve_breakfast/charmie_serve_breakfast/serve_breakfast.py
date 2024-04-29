@@ -5,8 +5,9 @@ from rclpy.node import Node
 
 from sensor_msgs.msg import Image
 from example_interfaces.msg import Bool, String, Int16
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
+from geometry_msgs.msg import PoseWithCovarianceStamped
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -19,6 +20,8 @@ import time
 from cv_bridge import CvBridge
 from pathlib import Path
 from datetime import datetime
+import math
+import numpy as np
 
 class ServeBreakfastNode(Node):
 
@@ -50,7 +53,12 @@ class ServeBreakfastNode(Node):
         # Arm 
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
-
+        # Navigation
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
+        # Localisation
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+        
 
         ### Services (Clients) ###
         # Speakers
@@ -69,6 +77,8 @@ class ServeBreakfastNode(Node):
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        # Navigation
+        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
@@ -99,6 +109,9 @@ class ServeBreakfastNode(Node):
         # Arm (CHARMIE)
         while not self.arm_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        # Navigation
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
         
 
         # Variables
@@ -116,6 +129,7 @@ class ServeBreakfastNode(Node):
         self.detected_objects_hand = Yolov8Objects()
         self.start_button_state = False
         self.door_start_state = False
+        self.flag_navigation_reached = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -139,6 +153,8 @@ class ServeBreakfastNode(Node):
         self.activate_yolo_objects_message = ""
         self.arm_success = True
         self.arm_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
 
         self.get_neck_position = [1.0, 1.0]
         
@@ -171,6 +187,10 @@ class ServeBreakfastNode(Node):
     def get_door_start_callback(self, state: Bool):
         self.door_start_state = state.data
         # print("Received Start Button:", state.data)
+
+    ### NAVIGATION ###
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.flag_navigation_reached = flag
 
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
     def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
@@ -505,6 +525,79 @@ class ServeBreakfastMain():
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
     
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
+
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
+
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.reached_radius = reached_radius
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
+
+    def set_initial_position(self, initial_position):
+
+        task_initialpose = PoseWithCovarianceStamped()
+
+        task_initialpose.header.frame_id = "map"
+        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
+
+        task_initialpose.pose.pose.position.x = initial_position[1]
+        task_initialpose.pose.pose.position.y = -initial_position[0]
+        task_initialpose.pose.pose.position.z = 0.0
+
+        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+
+        # Convert an Euler angle to a quaternion.
+        # Input
+        #     :param roll: The roll (rotation around x-axis) angle in radians.
+        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
+        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
+        # 
+        # Output
+        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+
+        roll = 0.0
+        pitch = 0.0
+        yaw = math.radians(initial_position[2])
+
+        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        
+        self.node.initialpose_publisher.publish(task_initialpose)
+
     def main(self):
         
         # Task Related Variables
@@ -536,6 +629,9 @@ class ServeBreakfastMain():
         self.look_table_objects = [-45, -45] # temp while debugging! Correct value: [-45, -45], Debug Value [45, -45]
         self.look_tray = [0, -60]
 
+        # Initial Position
+        self.initial_position = [0.0, 0.0, 0.0]
+
         # Detect Objects Variables
         self.detect_object_total = [DetectedObject(), DetectedObject(), DetectedObject(), DetectedObject()]
         self.images_of_detected_object_total = [Image(), Image(), Image(), Image()]
@@ -558,6 +654,11 @@ class ServeBreakfastMain():
 
             if self.state == self.Waiting_for_task_start:
 
+                self.set_initial_position(self.initial_position)
+                print("SET INITIAL POSITION")
+
+                time.sleep(1)
+        
                 self.activate_yolo_objects(activate_objects=False)
 
                 self.set_face("demo5")
