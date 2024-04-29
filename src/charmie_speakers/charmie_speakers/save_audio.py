@@ -17,7 +17,9 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'gust_arrived_open_door' : 'A guest has arrived. Let me open the door.'
+    'waiting_door_bell' : 'Waiting for a new guest to ring the door bell.',
+    'cornflakes_poured' : 'Cornflakes poured.',
+    'milk_poured' : 'Milk poured.',
 }
 
 #COMMANDS = {
