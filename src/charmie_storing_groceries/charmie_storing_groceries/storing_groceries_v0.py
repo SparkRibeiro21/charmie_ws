@@ -411,7 +411,7 @@ class StoringGroceriesMain():
 
         # to debug just a part of the task you can just change the initial state, example:
         # self.state = self.Approach_kitchen_table
-        self.state = self.Waiting_for_task_start
+        self.state = self.Approach_cabinet_first_time
 
         self.nr_objects_detected_previous = 0
         self.nr_max_objects_detected = 0
@@ -727,6 +727,7 @@ class StoringGroceriesMain():
     def analysis_cabinet(self):
         nr_classes_detected = 0
         i = 0
+        objects = []
         self.object_position = {}
         if hasattr(self.node, 'image') and self.node.image:
             if hasattr(self.node, 'objects') and self.node.objects:
@@ -739,6 +740,15 @@ class StoringGroceriesMain():
                 # Convert ROS Image to OpenCV image
                 cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
                 self.current_image_2= cv_image
+
+                for detected_objects in objects_stored:
+                    print(detected_objects.object_name, detected_objects.object_class)
+                    if detected_objects.object_name in objects:
+                        pass
+                    else:
+                        objects.append(objects_stored) 
+
+                print(objects_stored)
 
                 print('Will iterate for: ', self.nr_objects_detected)
                 while i < self.nr_objects_detected:                    
@@ -757,118 +767,39 @@ class StoringGroceriesMain():
                     if object_name in self.object_details:
                         pass
                     else:
-                        """ self.object_details[object_name] = {'confidence': object_confidence, 'object_height': object_height,
-                                                            'object_class': object_class, 'x_position': object_x_position, 'box_top_left_x': box_top_left_x,
-                                                            'box_top_left_y': box_top_left_y, 'box_width': box_width, 'box_height': box_height}
-
-                        start_point = (box_top_left_x, box_top_left_y)
-                        end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
-                        cv2.rectangle(self.image_most_obj_detected, start_point, end_point, (56, 56, 255) , 4)  """
-
-                        """ if object_x_position < self.left_limit_shelf or object_x_position > self.right_limit_shelf:
-                            print(object_name, 'is outside the wardrobe')
-                            self.image_most_obj_detected = cv2.putText(
-                            self.image_most_obj_detected,
-                            # f"{round(float(per.conf),2)}",
-                            'Outside wardrobe',
-                            (box_top_left_x, box_top_left_y + box_height),
-                            cv2.FONT_HERSHEY_DUPLEX,
-                            1,
-                            (0, 0, 255),
-                            1,
-                            cv2.LINE_AA
-                        ) 
-                        
-                        elif object_height < self.shelf_1_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                            print(object_name, 'is on the floor')
-                            self.image_most_obj_detected = cv2.putText(
-                            self.image_most_obj_detected,
-                            # f"{round(float(per.conf),2)}",
-                            'Floor',
-                            (box_top_left_x, box_top_left_y + box_height),
-                            cv2.FONT_HERSHEY_DUPLEX,
-                            1,
-                            (0, 0, 255),
-                            1,
-                            cv2.LINE_AA
-                        ) """
                              
-                        if self.shelf_1_height < object_height < self.shelf_2_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        if self.shelf_1_height < object_height < self.shelf_2_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'First shelf '
                             print(object_name, 'is in the first shelf ')
                             # print(object_x_position)
-                            """ self.image_most_obj_detected = cv2.putText(
-                            self.image_most_obj_detected,
-                            # f"{round(float(per.conf),2)}",
-                            'First shelf ',
-                            (box_top_left_x, box_top_left_y + box_height),
-                            cv2.FONT_HERSHEY_DUPLEX,
-                            1,
-                            (0, 0, 255),
-                            1,
-                            cv2.LINE_AA
-                        )  """
 
-                        elif self.shelf_2_height < object_height < self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        elif self.shelf_2_height < object_height < self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Second shelf '
                             print(object_name, 'is in the second shelf ')
                             # print(object_x_position)
-                            """ self.image_most_obj_detected = cv2.putText(
-                            self.image_most_obj_detected,
-                            # f"{round(float(per.conf),2)}",
-                            'Second shelf ',
-                            (box_top_left_x, box_top_left_y + box_height),
-                            cv2.FONT_HERSHEY_DUPLEX,
-                            1,
-                            (0, 0, 255),
-                            1,
-                            cv2.LINE_AA
-                        )  """
 
-                        elif self.shelf_4_height > object_height > self.shelf_3_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        elif self.shelf_4_height > object_height > self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Third shelf '
                             print(object_name, 'is in the third shelf ')
                             # print(object_x_position)
-                            """ self.image_most_obj_detected = cv2.putText(
-                            self.image_most_obj_detected,
-                            # f"{round(float(per.conf),2)}",
-                            'Third shelf ',
-                            (box_top_left_x, box_top_left_y + box_height),
-                            cv2.FONT_HERSHEY_DUPLEX,
-                            1,
-                            (0, 0, 255),
-                            1,
-                            cv2.LINE_AA
-                        )  """
                         
-                        elif object_height > self.shelf_4_height and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        elif object_height > self.shelf_4_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Fourth shelf '
                             print(object_name, 'is in the fourth shelf ')
                             # print(object_x_position)
-                            """ self.image_most_obj_detected = cv2.putText(
-                            self.image_most_obj_detected,
-                            # f"{round(float(per.conf),2)}",
-                            'Third shelf ',
-                            (box_top_left_x, box_top_left_y + box_height),
-                            cv2.FONT_HERSHEY_DUPLEX,
-                            1,
-                            (0, 0, 255),
-                            1,
-                            cv2.LINE_AA
-                        )  """
 
                         else:
                             print(object_name, '- none of the shelfs')
-                            # print(object_x_position)
+                            print(object_height)
                             
-                        if  self.center_shelf <= object_x_position <= self.right_limit_shelf :
+                        """ if  self.center_shelf <= object_x_position <= self.right_limit_shelf :
                             position += 'Right side '
                             
                         elif self.left_limit_shelf <= object_x_position < self.center_shelf :
                             position += 'Left side '
                             
                         else:
-                            position += 'Outside shelf '
+                            position += 'Outside shelf ' """
                             
                         if detected_object.object_class in self.object_position:
                             self.object_position[detected_object.object_class].append(position)
@@ -879,18 +810,6 @@ class StoringGroceriesMain():
 
 
                         print('object ', object_name, ' and confidence ', object_confidence)
-                            
-                        """ self.image_most_obj_detected = cv2.putText(
-                            self.image_most_obj_detected,
-                            # f"{round(float(per.conf),2)}",
-                            f"{object_name}",
-                            (box_top_left_x, box_top_left_y),
-                            cv2.FONT_HERSHEY_DUPLEX,
-                            1,
-                            (255, 0, 0),
-                            1,
-                            cv2.LINE_AA
-                        ) """
 
                     i += 1
 
@@ -898,6 +817,8 @@ class StoringGroceriesMain():
 
                 print('objects position:', self.object_position)
 
+                for class_name in self.object_position.keys():
+                    print('nome:', class_name)
 
                 values_to_remove = []
                 for key in self.object_position:
@@ -1008,31 +929,6 @@ class StoringGroceriesMain():
                             class_filename = f"objects_classes/{class_name}"
                             break
                 
-                """ for pos in position_wardrobe:
-                    keywords = pos.split() # Split each position string into words and extend the keywords list
-
-                    print(keywords)
-
-                # Initialize filename
-                    class_filename = None
-                    location_filename = None
-                    
-                    for condition, object_location in object_position_mapping.items():
-                        if all(keyword in keywords for keyword in condition):
-                            # If conditions are met, relate the class name to the position
-                            class_name = [class_name for class_name, p in self.object_position.items() if p == pos][0]
-                            if class_name not in class_name_array:
-                               class_name_array.append(class_name)
-                            print('Class name:', class_name)
-                            print('All class names', class_name_array)
-                            nr_classes_detected = len(class_name_array)
-                            print('Nr classes detetadas: ', nr_classes_detected)
-                            location_filename = f"storing_groceries/{object_location}"
-                            class_filename = f"objects_classes/{class_name}"
-                            self.classes_detected_wardrobe.append(class_name)
-                            # self.set_speech(filename=class_filename, wait_for_end_of=True)
-                            # self.set_speech(filename=location_filename, wait_for_end_of=True)
-                            break """
 
                 return nr_classes_detected
     
@@ -1510,17 +1406,17 @@ class StoringGroceriesMain():
 
                 ###### MOVEMENT TO THE CABINET
 
-                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
+                """ self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.outside_kitchen_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.outside_kitchen_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.inside_kitchen_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.inside_kitchen_door, flag_not_obs=False, wait_for_end_of=True)
                 self.set_navigation(movement="orientate", absolute_angle= -90.0, flag_not_obs = True, wait_for_end_of=True)
-            
+                
 
 
                 self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
-                
+                """
 
                 nr_classes_detected = 0
                 list_of_neck_position_search = [[0, 0], [0, 15], [0, 30], [0, 45]]
@@ -1542,7 +1438,7 @@ class StoringGroceriesMain():
                     self.set_neck(position=new_neck_pos, wait_for_end_of=True)
 
                     print('Neck: ', new_neck_pos)
-                    time.sleep(1)
+                    time.sleep(3)
                     if position_index == 0:
                         self.set_speech(filename="storing_groceries/sg_analysing_object_cabinet", wait_for_end_of=True)
 
@@ -1559,8 +1455,8 @@ class StoringGroceriesMain():
                     cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
                     current_frame_draw = cv_image.copy()
 
-                    """ cv2.imshow('A', current_frame_draw)
-                    cv2.waitKey(0) """
+                    cv2.imshow('A', current_frame_draw)
+                    cv2.waitKey(0)
                     
                     if nr_classes_detected is None:
                         nr_classes_detected = 0
