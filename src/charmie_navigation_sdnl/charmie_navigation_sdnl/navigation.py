@@ -2,15 +2,22 @@
 
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool, Float32
+from example_interfaces.msg import Bool, Float32, Int16
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3, Pose2D, PoseWithCovarianceStamped
-from charmie_interfaces.msg import TarNavSDNL, Obstacles
+from charmie_interfaces.msg import TarNavSDNL, Obstacles, Yolov8Pose
 from charmie_interfaces.srv import NavTrigger
 
 import cv2
 import numpy as np
 import math
+
+
+# Constant Variables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+
 
 class NavigationSDNLClass:
 
@@ -723,6 +730,10 @@ class NavSDNLNode(Node):
         # Create Code Class Instance
         self.nav = NavigationSDNLClass() 
 
+        # Low Level 
+        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
+        self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
+        
         # Create PUBs/SUBs
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
         
@@ -734,14 +745,18 @@ class NavSDNLNode(Node):
         self.flag_orientation_publisher = self.create_publisher(Bool, "flag_orientation", 10)
         self.get_orientation_subscribrer = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
        
-        self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
-        
+        # Navigation        
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
         self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) 
 
+        # Yolo Pose
+        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+        
         self.create_timer(0.1, self.timer_callback)
 
         self.navigation_state = 0
+        self.detected_people = Yolov8Pose()
+        self.PERSON_IN_FRONT = False
 
         self.navigation_diagnostic_publisher = self.create_publisher(Bool, "navigation_diagnostic", 10)
 
@@ -754,6 +769,37 @@ class NavSDNLNode(Node):
         ori = Bool()
         ori.data = True
         self.flag_orientation_publisher.publish(ori) 
+
+
+        self.rgb_success = True
+        self.rgb_message = ""
+
+
+    def person_pose_filtered_callback(self, det_people: Yolov8Pose):
+        self.detected_people = det_people
+
+        if self.detected_people.num_person > 0:
+            self.set_rgb(RED+SET_COLOUR)
+            self.PERSON_IN_FRONT = True
+        else:
+            self.set_rgb(BLUE+HALF_ROTATE)
+            self.PERSON_IN_FRONT = False
+
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
+        # cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
+        # cv2.waitKey(10)
+
+    def set_rgb(self, command="", wait_for_end_of=True):
+        
+        temp = Int16()
+        temp.data = command
+        self.rgb_mode_publisher.publish(temp)
+
+        self.rgb_success = True
+        self.rgb_message = "Value Sucessfully Sent"
+
+        return self.rgb_success, self.rgb_message
 
 
     def navigation_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.nav_trigger_client.wait_for_service(1.0):"
@@ -853,9 +899,6 @@ class NavSDNLNode(Node):
 
                     self.nav.max_ang_speed = 20.0 # speed # 20.0
                     self.nav.lambda_target = 12 # 12
-        
-        
-
                     omni_move = self.nav.sdnl_main("rot")
                     self.omni_move_publisher.publish(omni_move)
                     print("DIST_ERR:", self.nav.dist_to_target)
@@ -868,7 +911,16 @@ class NavSDNLNode(Node):
                     self.nav.max_ang_speed = 10.0 # speed # 20.0
                     self.nav.lambda_target = 5 # 12
         
-                    omni_move = self.nav.sdnl_main("mov")
+                    if not self.PERSON_IN_FRONT:
+                        omni_move = self.nav.sdnl_main("mov")
+                    else:
+                        omni_move = Vector3()
+                        omni_move.x = float(0.0)
+                        omni_move.y = float(0.0)
+                        omni_move.z = float(100.0)
+
+                        # TESTAR: ADICIONAR TAMBEM QUANDO RECEBO YOLO POSE ??? 
+
                     self.omni_move_publisher.publish(omni_move)
                     print("DIST_ERR:", self.nav.dist_to_target)
                     print("ANG_ERR:", self.nav.ang_to_target) 

@@ -952,6 +952,7 @@ class ServeBreakfastMain():
             navigation.orientation_absolute = absolute_angle
             navigation.flag_not_obs = flag_not_obs
             navigation.reached_radius = reached_radius
+            navigation.avoid_people = False
 
             self.node.flag_navigation_reached = False
             
