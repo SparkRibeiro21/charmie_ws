@@ -37,7 +37,7 @@ class InspectionNode(Node):
         self.start_door_subscriber = self.create_subscription(Bool, 'get_door_start', self.get_door_start_callback, 10) 
         self.flag_door_start_publisher = self.create_publisher(Bool, 'flag_door_start', 10) 
         # Yolo Pose
-        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+        # self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Navigation
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
@@ -74,7 +74,7 @@ class InspectionNode(Node):
         self.waited_for_end_of_neck_pos = False
 
         self.br = CvBridge()
-        self.detected_people = Yolov8Pose()
+        # self.detected_people = Yolov8Pose()
         self.start_button_state = False
         self.door_start_state = False
         self.flag_navigation_reached = False
@@ -91,8 +91,8 @@ class InspectionNode(Node):
         self.navigation_success = True
         self.navigation_message = ""
 
-    def person_pose_filtered_callback(self, det_people: Yolov8Pose):
-        self.detected_people = det_people
+    # def person_pose_filtered_callback(self, det_people: Yolov8Pose):
+    #     self.detected_people = det_people
 
         # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
         # current_frame_draw = current_frame.copy()
@@ -282,7 +282,7 @@ class InspectionMain():
 
         return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, avoid_people=False, wait_for_end_of=True):
 
 
         if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
@@ -307,15 +307,23 @@ class InspectionMain():
             navigation.orientation_absolute = absolute_angle
             navigation.flag_not_obs = flag_not_obs
             navigation.reached_radius = reached_radius
+            navigation.avoid_people = avoid_people
 
             self.node.flag_navigation_reached = False
-            
+
+            if navigation.avoid_people:
+                self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
+
             self.node.target_pos_publisher.publish(navigation)
 
             if wait_for_end_of:
                 while not self.node.flag_navigation_reached:
                     pass
                 self.node.flag_navigation_reached = False
+
+
+            if navigation.avoid_people:
+                self.activate_yolo_pose(activate=False)
 
             self.navigation_success = True
             self.navigation_message = "Arrived at selected location"
@@ -374,7 +382,7 @@ class InspectionMain():
         
         # Neck Positions
         self.look_forward = [0, 0]
-        self.look_navigation = [0, -30]
+        self.look_navigation = [0, -10]
 
         # Navigation Coordinates
         self.front_of_door = [0.0, 1.5] 
@@ -400,6 +408,14 @@ class InspectionMain():
                 print("SET INITIAL POSITION")
 
                 time.sleep(1)
+
+                
+                
+                # temp:
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.outside_bedroom_door, flag_not_obs=True, avoid_people=True, wait_for_end_of=True)
+                
+
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
@@ -445,22 +461,9 @@ class InspectionMain():
 
                 self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.outside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.outside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.outside_bedroom_door, flag_not_obs=True, avoid_people=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.inside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.inside_bedroom_door, flag_not_obs=False, wait_for_end_of=True)
-            
-                
-                # self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
-
-
-                # navigation to the inspection point (how?)               
-                
-                # dodge obstacles (how?)
-                
-                # time.sleep(3)
+                self.set_navigation(movement="move", target=self.inside_bedroom_door, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
 
                 # set rgb's to static green
                 self.set_rgb(GREEN+SET_COLOUR)

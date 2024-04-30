@@ -105,15 +105,15 @@ def generate_launch_description():
     
 
     return LaunchDescription([
-        # charmie_multi_camera_launch_description,
+        charmie_multi_camera_launch_description,
         low_level,
         face,
         speakers,
         neck,
         odometry,
         # navigation,
-        # point_cloud,
-        # yolo_pose,
+        point_cloud,
+        yolo_pose,
         lidar,
         obstacles,
         door_start,

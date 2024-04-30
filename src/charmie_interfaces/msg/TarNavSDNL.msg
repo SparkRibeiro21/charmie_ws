@@ -3,3 +3,4 @@ string move_or_rotate
 float32 orientation_absolute
 bool flag_not_obs
 float32 reached_radius
+bool avoid_people
