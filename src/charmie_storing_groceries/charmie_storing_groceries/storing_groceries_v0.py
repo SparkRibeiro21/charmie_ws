@@ -747,9 +747,9 @@ class StoringGroceriesMain():
                     if detected_objects.object_name in objects:
                         pass
                     else:
-                        objects.append(objects_stored) 
+                        objects.append(detected_objects) 
 
-                print(objects_stored)
+                print(objects)
 
                 print('Will iterate for: ', self.nr_objects_detected)
                 while i < self.nr_objects_detected:                    
@@ -817,9 +817,27 @@ class StoringGroceriesMain():
                 # Código para dizer 'tal classe está em tal prateleira'
 
                 print('objects position:', self.object_position)
+                object_x_values = {}
 
-                for class_name in self.object_position.keys():
-                    print('nome:', class_name)
+                # Iterate through the objects and store object_x values for each class
+                for obj in objects:
+                    obj_class = obj.object_class
+                    object_x = obj.position_relative.x
+                    if obj_class not in object_x_values:
+                        object_x_values[obj_class] = []
+                    object_x_values[obj_class].append(object_x)
+
+                # Print object_x values for each class
+                for obj_class, x_values in object_x_values.items():
+                    print(f"{obj_class} object_x values:")
+                    i = 0
+                    average_x_values = 0
+                    for x in x_values:
+                        i +=1
+                        print(f"  - {x}")
+                        average_x_values += x
+                    average_x_values = average_x_values / i
+                    print(f"average: {average_x_values}")
 
                 values_to_remove = []
                 for key in self.object_position:
@@ -1439,7 +1457,7 @@ class StoringGroceriesMain():
                     self.set_neck(position=new_neck_pos, wait_for_end_of=True)
 
                     print('Neck: ', new_neck_pos)
-                    time.sleep(3)
+                    time.sleep(5)
                     if position_index == 0:
                         self.set_speech(filename="storing_groceries/sg_analysing_object_cabinet", wait_for_end_of=True)
 
