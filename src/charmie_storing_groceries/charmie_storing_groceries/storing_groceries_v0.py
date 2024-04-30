@@ -76,6 +76,10 @@ class StoringGroceriesNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
 
+        # Door Start
+        self.start_door_subscriber = self.create_subscription(Bool, 'get_door_start', self.get_door_start_callback, 10) 
+        self.flag_door_start_publisher = self.create_publisher(Bool, 'flag_door_start', 10) 
+
         # Neck
         # self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
@@ -136,6 +140,7 @@ class StoringGroceriesNode(Node):
         self.waited_for_end_of_neck_pos = False
         self.waited_for_end_of_neck_coords = False
         self.waited_for_end_of_get_neck = False
+        self.door_start_state = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -185,6 +190,11 @@ class StoringGroceriesNode(Node):
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
     
+    ### DOOR START ###
+    def get_door_start_callback(self, state: Bool):
+        self.door_start_state = state.data
+        # print("Received Start Button:", state.data)
+
     ### NAVIGATION ###
     def flag_navigation_reached_callback(self, flag: Bool):
         self.flag_navigation_reached = flag
@@ -232,6 +242,8 @@ class StoringGroceriesNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
+
+    
 
     #### SET NECK POSITION SERVER FUNCTIONS #####
     def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
@@ -444,6 +456,20 @@ class StoringGroceriesMain():
         self.node.waited_for_end_of_neck_pos = False
 
         return self.node.neck_success, self.node.neck_message
+    
+    def wait_for_door_start(self):
+
+        self.node.door_start_state = False
+
+        t = Bool()
+        t.data = True
+        self.node.flag_door_start_publisher.publish(t)
+
+        while not self.node.door_start_state:
+            pass
+
+        t.data = False 
+        self.node.flag_door_start_publisher.publish(t)
     
     def set_neck_coords(self, position=[], ang=0.0, wait_for_end_of=True):
 
@@ -1435,6 +1461,11 @@ class StoringGroceriesMain():
         print("IN NEW MAIN")
         # time.sleep(1)
 
+        # Navigation Coordinates
+        self.front_of_door = [0.0, 1.5] 
+        self.outside_kitchen_door = [-0.7, 5.5]
+        self.inside_kitchen_door = [-0.7, 7.5]
+       
         while True:
 
             if self.state == self.Waiting_for_task_start:
@@ -1463,6 +1494,7 @@ class StoringGroceriesMain():
 
                 self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
                          
+                self.wait_for_door_start()
                 # next state
                 # self.state = self.Approach_tables_first_time
 
@@ -1477,6 +1509,15 @@ class StoringGroceriesMain():
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
                 ###### MOVEMENT TO THE CABINET
+
+                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.outside_kitchen_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.outside_kitchen_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_kitchen_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_kitchen_door, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= -90.0, flag_not_obs = True, wait_for_end_of=True)
+            
+
 
                 self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
                 
