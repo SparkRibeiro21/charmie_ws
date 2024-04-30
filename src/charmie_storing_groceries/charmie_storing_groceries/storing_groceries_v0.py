@@ -401,9 +401,9 @@ class StoringGroceriesMain():
         self.shelf_3_height = 1.10 # 0.97 # 1.10 
         self.shelf_4_height = 1.39
 
+        self.shelf_length = 0.9
         self.left_limit_shelf = -0.7 # -0.38
         self.right_limit_shelf = 0.7 # 0.38
-        self.third_shelf_x = (self.right_limit_shelf - self.left_limit_shelf) / 3
         self.center_shelf = 0.0
 
         # Initial Position
@@ -819,6 +819,19 @@ class StoringGroceriesMain():
                 print('objects position:', self.object_position)
                 object_x_values = {}
 
+                # Dictionary to store filtered values
+                filtered_objects_position = {}
+
+                # Loop through the original dictionary
+                for key, values in self.object_position.items():
+                    # Use set to remove duplicates and then convert back to list
+                    unique_values = list(set(values))
+                    # If there's only one unique value, use that
+                    if len(unique_values) == 1:
+                        filtered_objects_position[key] = unique_values[0]
+
+                print("Filtered objects position:", filtered_objects_position)
+
                 # Iterate through the objects and store object_x values for each class
                 for obj in objects:
                     obj_class = obj.object_class
@@ -829,7 +842,7 @@ class StoringGroceriesMain():
 
                 # Print object_x values for each class
                 for obj_class, x_values in object_x_values.items():
-                    print(f"{obj_class} object_x values:")
+                    #print(f"{obj_class} object_x values:")
                     i = 0
                     average_x_values = 0
                     for x in x_values:
@@ -837,85 +850,126 @@ class StoringGroceriesMain():
                         print(f"  - {x}")
                         average_x_values += x
                     average_x_values = average_x_values / i
-                    print(f"average: {average_x_values}")
+                    #print(f"average: {average_x_values}")
+                
+                # Organize objects by position
+                objects_by_position = {}
+                for obj_class, position in filtered_objects_position.items():
+                    if position not in objects_by_position:
+                        objects_by_position[position] = []
+                    objects_by_position[position].append(obj_class)
+                
+                for position, obj_classes in objects_by_position.items():
+                    print(f"\nObjects in {position}:")
+                    for obj_class in obj_classes:
+                        if obj_class in object_x_values:
+                            x_values = object_x_values[obj_class]
+                            print(f"{obj_class} object_x values:")
+                            i = 0
+                            average_x_values = 0
+                            for x in x_values:
+                                i +=1
+                                print(f"  - {x}")
+                                average_x_values += x
+                            average_x_values = average_x_values / i
+                            print(f"  Average: {average_x_values}")
+                        else:
+                            print(f"No object_x values found for class {obj_class}")
+                    
 
-                values_to_remove = []
-                for key in self.object_position:
-                    # Collect values to remove from self.object_position[key]
-                    # Get the values associated with the current key
-                    values_to_check = self.object_position[key]
+                # Dictionary to store average x values for each class and shelf
+                average_values_by_shelf = {}
 
-                    # Iterate over the other keys of the object_position dictionary
-                    for other_key in self.object_position:
-                        # Skip the current key
-                        if other_key == key:
-                            continue
+                # Iterate through the objects and store object_x values for each class
+                for obj in objects:
+                    obj_class = obj.object_class
+                    object_x = obj.position_relative.x
+                    position = filtered_objects_position.get(obj_class)
+                    if position:
+                        if position not in average_values_by_shelf:
+                            average_values_by_shelf[position] = {}
+                        if obj_class not in average_values_by_shelf[position]:
+                            average_values_by_shelf[position][obj_class] = []
+                        average_values_by_shelf[position][obj_class].append(object_x)
+                        print('average values by shelf', average_values_by_shelf)
 
-                        # Get the values associated with the other key
-                        other_values = self.object_position[other_key]
+    
 
-                        # Iterate over the values associated with the current key
-                        for value in values_to_check:
-                            # If the value exists in the values of the other key, add it to values_to_remove
-                            if value in other_values:
-                                values_to_remove.append(value)
-                                print('Values to remove ', values_to_remove)
-                                self.temp = values_to_remove
+                # Initialize variables to store reference x values
+                left_reference_x = None
+                right_reference_x = None
 
-                    # Remove collected values from self.object_position[key]
-                    for value in values_to_remove:
-                        if value in self.object_position[key]:
-                            self.object_position[key].remove(value)
+                # Initialize variable for single class average x
+                single_class_average_x = None
 
-                # Remove collected values from self.object_position[other_key]
-                # Remove collected values from other keys
-                for key in self.object_position:
-                    print('Values to remove 2', values_to_remove)
-                    for value in values_to_remove:
-                        # print('A', self.object_position[key])
-                        # print('B', value)
-                        if value in self.object_position[key]:
-                            self.object_position[key].remove(value)
+                for shelf, class_values in average_values_by_shelf.items():
+                    average_values_by_shelf[shelf] = dict(sorted(class_values.items(), key=lambda item: len(item[1]), reverse=True))
 
-                print('New objects position: ', self.object_position)
+                # Sort the shelves based on the total number of classes they contain
+                sorted_shelves = dict(sorted(average_values_by_shelf.items(), key=lambda item: len(item[1]), reverse=True))
 
-                position_wardrobe = []
-                object_class_name= []
+                print('sorted shelves ', sorted_shelves)
 
-                # Create a dictionary to store the count of occurrences for each position for each class
-                position_counts = {}
+                average_values_by_shelf = sorted_shelves
 
-                # Iterate over the object_position dictionary
-                for class_name, positions in self.object_position.items():
-                    for position in positions:
-                        # Increment the count of occurrences for the current position and class
-                        position_counts[(class_name, position)] = position_counts.get((class_name, position), 0) + 1
+                positions_in_cabinet = {}
 
-                # Create a dictionary to store the merged positions for each class
-                merged_object_position = {}
+                # Iterate through the average values for each shelf
+                for shelf, class_values in average_values_by_shelf.items():
+                    print(f"\nShelf: {shelf}")
 
-                # Iterate over the position_counts dictionary to find the position with the highest count for each class
-                for (class_name, position), count in position_counts.items():
-                    if class_name in merged_object_position:
-                        # If the class already exists in the merged_object_position dictionary,
-                        # check if the count for the current position is higher than the count for the existing position
-                        if count > position_counts[(class_name, merged_object_position[class_name])]:
-                            merged_object_position[class_name] = position
+                    # Get class names and average x values
+                    class_names = list(class_values.keys())
+                    average_x_values = [sum(x_values) / len(x_values) for x_values in class_values.values()]
+
+                    if len(average_x_values) == 2:
+                        # If two classes and reference x values are not yet established, determine left or right side and store reference x values
+                        if left_reference_x is None and right_reference_x is None:
+                            if abs(average_x_values[0] - average_x_values[1]) > 0:
+                                print(f'{class_names[0]} - left side')
+                                print(f'{class_names[1]} - right side')
+                                left_reference_x = min(average_x_values)
+                                right_reference_x = max(average_x_values)
+                                positions_in_cabinet[class_names[0]] = f"{shelf} Left side"
+                                positions_in_cabinet[class_names[1]] = f"{shelf} Right side"
+                            else:
+                                print(f'{class_names[0]} - right side')
+                                print(f'{class_names[1]} - left side')
+                                left_reference_x = max(average_x_values)
+                                right_reference_x = min(average_x_values)
+                                positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
+                                positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
+                        else:
+                            if abs(average_x_values[0] - average_x_values[1]) > 0:
+                                print(f'{class_names[0]} - left side')
+                                print(f'{class_names[1]} - right side')
+                                positions_in_cabinet[class_names[0]] = f"{shelf} Left side"
+                                positions_in_cabinet[class_names[1]] = f"{shelf} Right side"
+                            else:
+                                print(f'{class_names[0]} - right side')
+                                print(f'{class_names[1]} - left side')
+                                positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
+                                positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
+                    elif len(average_x_values) == 1:
+                        # If only one class, compare with reference x values
+                        if left_reference_x is not None and right_reference_x is not None:
+                            single_class_average_x = average_x_values[0]
+                            if abs(single_class_average_x - left_reference_x ) < self.shelf_length / 3:
+                                print(f"{class_names[0]} - left side")
+                                positions_in_cabinet[class_names[0]] = f"{shelf} Left side"
+                            elif abs(single_class_average_x - right_reference_x ) < self.shelf_length / 3:
+                                print(f"{class_names[0]} - right side")
+                                positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
+                        else:
+                            print("Not enough data to determine position")
                     else:
-                        merged_object_position[class_name] = position
-                        
-                
-                print('Merged objects position ', merged_object_position)
+                        # If three classes, print a message indicating the situation is strange
+                        print("Strange situation: Three classes present")
+                    
 
-                object_class_name = list(merged_object_position.keys())
-                position_wardrobe = list(merged_object_position.values())
-                
-                print('Positions: ', position_wardrobe)
-                print('classes: ', object_class_name)
-
-                # print("Positions:", position)
-                # print("Object class names:", object_class_name)
-                
+                print(positions_in_cabinet)
+                self.object_position = positions_in_cabinet
+    
                 keywords = []
 
                 self.classes_detected_wardrobe.clear()
@@ -923,7 +977,7 @@ class StoringGroceriesMain():
                 class_name_array = []
                 nr_classes_detected = 0
 
-                for position in merged_object_position.values():
+                for position in positions_in_cabinet.values():
                     keywords = position.split()  # Split each position string into words and extend the keywords list
 
                     # Initialize filenames
@@ -935,7 +989,7 @@ class StoringGroceriesMain():
                         # Check if all keywords in the condition are in the current position
                         if all(keyword in keywords for keyword in condition):
                             # Get the class name associated with the current position
-                            class_name = [class_name for class_name, pos in merged_object_position.items() if pos == position][0]
+                            class_name = [class_name for class_name, pos in positions_in_cabinet.items() if pos == position][0]
                             if class_name not in class_name_array:
                                 class_name_array.append(class_name)
                             print('Class name:', class_name)
@@ -947,8 +1001,9 @@ class StoringGroceriesMain():
                             location_filename = f"storing_groceries/{object_location}"
                             class_filename = f"objects_classes/{class_name}"
                             break
-                
 
+                
+                            
                 return nr_classes_detected
     
     def load_image_one_object(self, obj_name, obj):
@@ -1207,25 +1262,30 @@ class StoringGroceriesMain():
         object_ = self.selected_objects[counter]
         obj_class = object_.object_class
         keywords = []
-        print(object_.object_name)
+        print('choose place object wardrobe ', object_.object_name)
         # print(obj_class)
         # print(self.selected_objects)
         # print(self.object_position.keys())
+        print(self.object_position)
         if obj_class in self.object_position.keys():
             # print(self.object_position.items())
-            position = self.object_position[obj_class][0]
+            position = self.object_position[obj_class]
             print(position)
             # self.set_speech(filename='storing_groceries/Place_the_object_sg', wait_for_end_of=True)
             keywords = position.split() # Split each position string into words and extend the keywords list
 
             location_filename = None
             class_filename = None
-            # print(keywords)
+            
+            print('keywords ', keywords)
+            print('object mapping ', object_position_mapping)
             for condition, object_location in object_position_mapping.items():
                 if all(keyword in keywords for keyword in condition):
                     # If conditions are met, relate the class name to the position
                     location_filename = f"storing_groceries/{object_location}"
                     class_filename = f"objects_classes/_{obj_class}"
+                    print(location_filename)
+                    print(class_filename)
                     # print(object_location)
                     self.set_speech(filename=location_filename, wait_for_end_of=True)
                     self.set_speech(filename='generic/Near', wait_for_end_of=True)
