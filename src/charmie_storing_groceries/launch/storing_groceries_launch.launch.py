@@ -164,7 +164,7 @@ def generate_launch_description():
     
 
     return LaunchDescription([
-        # LaunchDescription(declared_arguments + [robot_driver_launch]),
+        LaunchDescription(declared_arguments + [robot_driver_launch]),
         *delayed_actions,
         lidar,
         obstacles,
@@ -173,7 +173,7 @@ def generate_launch_description():
         neck,
         point_cloud,
         yolo_objects,
-        # arm,
+        arm,
         # storing_groceries,
         # odometry
         # navigation

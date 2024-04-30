@@ -177,8 +177,8 @@ class StoringGroceriesNode(Node):
         while not self.set_neck_coordinates_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         # Arm (CHARMIE)
-        """ while not self.arm_trigger_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Arm Trigger Command...") """
+        while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
         
 
     def get_objects_callback(self, objects: Yolov8Objects):
@@ -647,84 +647,6 @@ class StoringGroceriesMain():
         self.node.initialpose_publisher.publish(task_initialpose)
 
   
-    ##### ANALYSE CABINET #####
-
-    """ def look_cabinet(self):
-        i = 0
-        detect_object = []
-        self.detected_object = []
-        if hasattr(self.node, 'image') and self.node.image:
-            if hasattr(self.node, 'objects') and self.node.objects:
-                objects_stored = self.node.objects
-                self.nr_objects_detected = self.node.nr_objects
-
-
-                self.current_image = self.node.image
-                bridge = CvBridge()
-                # Convert ROS Image to OpenCV image
-                cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-                self.current_image_2= cv_image
-
-                print('Will iterate for: ', self.nr_objects_detected)
-
-                objects_stored.sort(key=lambda obj: obj.position_relative.z, reverse=True)
-
-                same_position_objects = {}                
-
-                for detected_objects in objects_stored:
-                    print(detected_objects.object_name, detected_objects.object_class)
-                    if detected_objects.object_name in detect_object:
-                        pass
-                    else:
-                        detect_object.append(detected_objects)
-                        # print(detected_objects)
-                        i+=1
-                        print(i)
-
-                        if self.shelf_1_height < detected_objects.position_relative.z < self.shelf_2_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
-                            position = 'First shelf '
-                            print(detected_objects.object_name, 'is in the first shelf ')
-                            
-
-                        elif self.shelf_2_height < detected_objects.position_relative.z < self.shelf_3_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
-                            position = 'Second shelf '
-                            print(detected_objects.object_name, 'is in the second shelf ')
-                            
-
-                        elif self.shelf_4_height > detected_objects.position_relative.z > self.shelf_3_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
-                            position = 'Third shelf '
-                            print(detected_objects.object_name, 'is in the third shelf ')
-                            
-                        elif detected_objects.position_relative.z > self.shelf_4_height and self.left_limit_shelf < detected_objects.position_relative.x < self.right_limit_shelf :
-                            position = 'Fourth shelf '
-                            print(detected_objects.object_name, 'is in the fourth shelf ')
-                            
-
-                        else:
-                            print(detected_objects.object_name, '- none of the shelfs')
-                            position = 'none of the shelfs '
-                            # print(object_x_position)
-
-                        print('Position:', position)
-                        print('Position Relative X:', detected_objects.position_relative.x)
-                        # Populate same_position_objects dictionary
-                        same_position_objects.setdefault(position, []).append(detected_objects)
-                        print('AAA ', same_position_objects)
-
-                print(detect_object)
-
-                # Check maximum distance in x-direction between objects in the same position
-                for position, objects in same_position_objects.items():
-                    if len(objects) > 1:
-                        max_distance_x = max(objects, key=lambda obj: obj.position_relative.x).position_relative.x - \
-                                        min(objects, key=lambda obj: obj.position_relative.x).position_relative.x
-                        if max_distance_x > 0.3:
-                            print("Objects in", position, "are too far apart in the x-direction")
-                            # Divide them into two different cases as needed
-                        else:
-                            print("Objects in", position, "are within acceptable distance in the x-direction") """
-    
-
     def analysis_cabinet(self):
         nr_classes_detected = 0
         i = 0
@@ -1030,8 +952,8 @@ class StoringGroceriesMain():
             # Check if the image was loaded successfully
         if current_frame_draw is not None:
             # Display or process the loaded image as needed
-            cv2.imshow("Original image ", current_frame_draw)
-            cv2.waitKey(0)
+            """ cv2.imshow("Original image ", current_frame_draw)
+            cv2.waitKey(0) """
 
             thresh_h = 220
             thresh_v = 220
@@ -1072,9 +994,9 @@ class StoringGroceriesMain():
             cv2.imwrite(self.node.complete_path_custom_face + current_datetime + obj_name + ".jpg", current_frame_draw)
             
             self.set_face(custom=current_datetime + obj_name)
-            cv2.imshow("New Image", current_frame_draw)
+            """ cv2.imshow("New Image", current_frame_draw)
             cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            cv2.destroyAllWindows() """
         else:
             print("Error: Unable to load the image.")
     # else:
@@ -1138,23 +1060,6 @@ class StoringGroceriesMain():
                             nr_objects_high_priority_detected += 1
                             print('Nr objects high: ', nr_objects_high_priority_detected)
 
-                            """ start_point = (box_top_left_x, box_top_left_y)
-                            end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
-                            # cv2.rectangle(current_frame_draw, start_point, end_point, (56, 56, 255) , 4) 
-                                                            
-                             current_frame_draw = cv2.putText(
-                                current_frame_draw,
-                                # f"{round(float(per.conf),2)}",
-                                f"{object_name}",
-                                (box_top_left_x, box_top_left_y),
-                                cv2.FONT_HERSHEY_DUPLEX,
-                                1,
-                                (255, 0, 0),
-                                1,
-                                cv2.LINE_AA
-                            ) """
-
-
                         print('Object ' + detected_objects.object_name + ' from class ' + detected_objects.object_class + ' has ' + self.priority_dict[detected_objects.object_class] + 'priority')
 
                     i += 1
@@ -1168,95 +1073,6 @@ class StoringGroceriesMain():
                 self.set_rgb(command=RED+BLINK_LONG)
 
         return nr_objects_high_priority_detected
-
-    """ def analysis_table(self):
-        i = 0
-        nr_objects_high_priority_detected = 0
-        self.detected_object = []
-
-        for name, class_name in self.node.objects_classNames_dict.items():
-            if class_name in self.classes_detected_wardrobe:
-                self.priority_dict[class_name] = 'High'
-                print(class_name + ' High')
-            else:
-                self.priority_dict[class_name] = 'Low'
-                print(class_name + ' Low')
-
-        # if hasattr(self.node, 'image') and self.node.image:
-        #     if hasattr(self.node, 'objects') and self.node.objects:
-
-        five_objects_detected = False
-        
-        list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
-        while not five_objects_detected:
-            
-            self.activate_yolo_objects(activate_objects=True)
-            finished_detection = False
-
-            for pos in list_of_neck_position_search:
-
-                print(pos)
-                new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
-                #new_neck_pos = [ pos[0],  pos[1]]
-                print('Neck: ', new_neck_pos)
-                self.set_neck(position=new_neck_pos, wait_for_end_of=True)
-                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-                time.sleep(1)
-
-                # finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=False)    
-
-                objects_stored = self.node.objects
-                self.nr_objects_detected = self.node.nr_objects
-                current_frame_draw = self.image_objects_detected
-                print('Will iterate for: ', self.nr_objects_detected)
-                nr_objects_high_priority_detected = 0
-                self.object_details = {}
-                i = 0
-                while i < self.nr_objects_detected:          
-                    detected_object = objects_stored[i]
-                    object_name = detected_object.object_name
-                    object_class = detected_object.object_class
-                    object_height = detected_object.position_relative.z
-                    object_confidence = detected_object.confidence
-                    object_x_position = detected_object.position_relative.x
-                    box_top_left_x = detected_object.box_top_left_x
-                    box_top_left_y = detected_object.box_top_left_y
-                    box_width = detected_object.box_width
-                    box_height = detected_object.box_height
-                    #print(f"Object: {object_name}, Height: {object_height}, Confidence: {object_confidence}")
-                    if object_name in self.object_details:
-                        pass
-                    else:
-                        self.object_details[object_name] = {'confidence': object_confidence, 'object_height': object_height,
-                                                            'object_class': object_class,'x_position': object_x_position, 'box_top_left_x': box_top_left_x,
-                                                            'box_top_left_y': box_top_left_y, 'box_width': box_width, 'box_height': box_height, 
-                                                            'priority': self.priority_dict[object_class]}
-
-                        if self.priority_dict[object_class] == 'High':
-                            nr_objects_high_priority_detected += 1
-                            print('Nr objects high: ', nr_objects_high_priority_detected)
-
-                            start_point = (box_top_left_x, box_top_left_y)
-                            end_point = (box_top_left_x + box_width, box_top_left_y + box_height)
-                            # cv2.rectangle(current_frame_draw, start_point, end_point, (56, 56, 255) , 4) 
-
-                        print('Object ' + object_name + ' from class ' + object_class + ' has ' + self.priority_dict[object_class] + 'priority')
-
-                    i += 1
-
-                print(i)
-                print(self.object_details)
-                if nr_objects_high_priority_detected >= 5:
-                    five_objects_detected = True
-                    self.set_rgb(command=GREEN+BLINK_LONG)
-                    self.set_speech(filename="storing_groceries/sg_detected", wait_for_end_of=True) 
-                    self.select_five_objects()
-                    self.create_image_five_objects_same_time(self.selected_objects)
-                    self.activate_yolo_objects(activate_objects=False)
-                    break
-                self.set_rgb(command=RED+BLINK_LONG)
-
-        return nr_objects_high_priority_detected """
 
     def choose_place_object_wardrobe(self, counter): 
         object_ = self.selected_objects[counter]
@@ -1517,7 +1333,7 @@ class StoringGroceriesMain():
                     self.set_neck(position=new_neck_pos, wait_for_end_of=True)
 
                     print('Neck: ', new_neck_pos)
-                    time.sleep(5)
+                    time.sleep(3)
                     if position_index == 0:
                         self.set_speech(filename="storing_groceries/sg_analysing_object_cabinet", wait_for_end_of=True)
 
@@ -1534,8 +1350,8 @@ class StoringGroceriesMain():
                     cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
                     current_frame_draw = cv_image.copy()
 
-                    cv2.imshow('A', current_frame_draw)
-                    cv2.waitKey(0)
+                    """ cv2.imshow('A', current_frame_draw)
+                    cv2.waitKey(0) """
                     
                     if nr_classes_detected is None:
                         nr_classes_detected = 0
@@ -1553,6 +1369,8 @@ class StoringGroceriesMain():
                 self.choose_priority()
                 
                 self.set_speech(filename="storing_groceries/sg_finished_analise_cabinet", wait_for_end_of=True) 
+
+                self.set_arm(command="arm_up_a_bit", wait_for_end_of=True)
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
 
@@ -1915,6 +1733,7 @@ class StoringGroceriesMain():
 
             elif self.state == self.Placing_second_object:
                 
+                time.sleep(3)
                 # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
                 self.set_speech(filename='storing_groceries/help_place_cabinet', wait_for_end_of=True)
                 self.select_voice_audio(self.selected_objects[self.object_counter])
@@ -1931,6 +1750,7 @@ class StoringGroceriesMain():
 
             elif self.state == self.Placing_third_object:
  
+                time.sleep(3)
                 # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
                 self.set_speech(filename='storing_groceries/help_place_cabinet', wait_for_end_of=True)
                 self.select_voice_audio(self.selected_objects[self.object_counter])
@@ -1946,6 +1766,7 @@ class StoringGroceriesMain():
             
             elif self.state == self.Placing_fourth_object:
          
+                time.sleep(3)
                 # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
                 self.set_speech(filename='storing_groceries/help_place_cabinet', wait_for_end_of=True)
                 self.select_voice_audio(self.selected_objects[self.object_counter])
@@ -1962,6 +1783,7 @@ class StoringGroceriesMain():
 
             elif self.state == self.Placing_fifth_object:
                 
+                time.sleep(3)
                 # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
                 self.set_speech(filename='storing_groceries/help_place_cabinet', wait_for_end_of=True)
                 self.select_voice_audio(self.selected_objects[self.object_counter])
@@ -1981,6 +1803,7 @@ class StoringGroceriesMain():
                 # self.wait_for_end_of_speaking()  
                 self.state += 1
                 print("Finished task!!!")
+                self.set_arm(command="arm_go_rest", wait_for_end_of=False)
                 self.set_rgb(command=RAINBOW_ROT)
                 
                 # self.set_neck(position=self.look_judge) # , wait_for_end_of=True)
