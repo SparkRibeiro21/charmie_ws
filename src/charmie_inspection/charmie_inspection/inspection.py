@@ -409,14 +409,6 @@ class InspectionMain():
 
                 time.sleep(1)
 
-                
-                
-                # temp:
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.outside_bedroom_door, flag_not_obs=True, avoid_people=True, wait_for_end_of=True)
-                
-
-
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
                 # set rgb's to cyan

@@ -118,7 +118,7 @@ class NavigationSDNLClass:
             # print("ATRATOR + REPULSORES")
         else:
             # in case it is intended to not consider obstacles
-            self.max_lin_speed = 30.0
+            self.max_lin_speed = 20.0
             self.f_final = self.f_target
             self.y_final = self.y_atrator
             # print("SÓ ATRATOR")
@@ -781,6 +781,16 @@ class NavSDNLNode(Node):
         if self.detected_people.num_person > 0:
             self.set_rgb(RED+SET_COLOUR)
             self.PERSON_IN_FRONT = True
+            
+            omni_move = Vector3()
+            omni_move.x = float(0.0)
+            omni_move.y = float(0.0)
+            omni_move.z = float(100.0)
+
+            # TESTAR: ADICIONAR TAMBEM QUANDO RECEBO YOLO POSE ??? 
+
+            self.omni_move_publisher.publish(omni_move)
+
         else:
             self.set_rgb(BLUE+HALF_ROTATE)
             self.PERSON_IN_FRONT = False
