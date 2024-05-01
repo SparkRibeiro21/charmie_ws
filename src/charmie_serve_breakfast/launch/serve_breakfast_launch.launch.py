@@ -159,17 +159,24 @@ def generate_launch_description():
                 emulate_tty=True
                 )
     
+    debug_visual = Node(package='charmie_debug',
+                executable='debug_visual',
+                name='debug_visual',
+                emulate_tty=True
+                )
+    
 
     return LaunchDescription([
-        LaunchDescription(declared_arguments + [robot_driver_launch]),
+        # LaunchDescription(declared_arguments + [robot_driver_launch]),
         charmie_multi_camera_launch_description,
+        debug_visual,
         face,
         speakers,
         neck,
         low_level,
-        arm,
+        # arm,
         odometry,
-        navigation,
+        # navigation,
         point_cloud,
         yolo_objects,
         lidar,
