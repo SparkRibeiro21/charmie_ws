@@ -28,7 +28,7 @@ class Robot():
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
-        self.scale = 0.057*1000
+        self.scale = 0.063*1000
         self.xx_shift = -110
         self.yy_shift = -370
 
