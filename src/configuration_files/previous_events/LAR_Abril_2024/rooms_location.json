@@ -1,0 +1,7 @@
+[
+{"name": "Corridor",    "top_left_coords": [-1.30,  5.68], "bot_right_coords": [  0.8, 0.40]},
+{"name": "Living Room", "top_left_coords": [-4.65,  3.56], "bot_right_coords": [-1.30, 0.40]},
+{"name": "Bedroom",     "top_left_coords": [-4.65,  5.68], "bot_right_coords": [-1.30, 3.56]},
+{"name": "Kitchen",     "top_left_coords": [-4.65,  9.32], "bot_right_coords": [ 0.80, 5.68]},
+{"name": "Office",      "top_left_coords": [-4.65, 12.82], "bot_right_coords": [ 0.80, 9.32]}
+]
