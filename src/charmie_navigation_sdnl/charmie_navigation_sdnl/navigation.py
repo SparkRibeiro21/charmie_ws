@@ -779,7 +779,6 @@ class NavSDNLNode(Node):
         self.detected_people = det_people
 
         if self.detected_people.num_person > 0:
-            self.set_rgb(RED+SET_COLOUR)
             self.PERSON_IN_FRONT = True
             
             omni_move = Vector3()
@@ -792,7 +791,6 @@ class NavSDNLNode(Node):
             self.omni_move_publisher.publish(omni_move)
 
         else:
-            self.set_rgb(BLUE+HALF_ROTATE)
             self.PERSON_IN_FRONT = False
 
         # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
@@ -920,14 +918,17 @@ class NavSDNLNode(Node):
         
                     self.nav.max_ang_speed = 10.0 # speed # 20.0
                     self.nav.lambda_target = 5 # 12
-        
-                    if not self.PERSON_IN_FRONT:
-                        omni_move = self.nav.sdnl_main("mov")
-                    else:
+                    
+                    if self.nav.nav_target.avoid_people and self.PERSON_IN_FRONT:
+                        self.set_rgb(RED+SET_COLOUR)
                         omni_move = Vector3()
                         omni_move.x = float(0.0)
                         omni_move.y = float(0.0)
-                        omni_move.z = float(100.0)
+                        omni_move.z = float(100.0) 
+                    else:
+                        if self.nav.nav_target.avoid_people:
+                            self.set_rgb(BLUE+HALF_ROTATE)
+                        omni_move = self.nav.sdnl_main("mov")
 
                         # TESTAR: ADICIONAR TAMBEM QUANDO RECEBO YOLO POSE ??? 
 
