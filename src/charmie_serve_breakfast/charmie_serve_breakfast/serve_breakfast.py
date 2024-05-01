@@ -107,8 +107,8 @@ class ServeBreakfastNode(Node):
         while not self.activate_yolo_objects_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Arm (CHARMIE)
-        while not self.arm_trigger_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        # while not self.arm_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
         # Navigation
         while not self.nav_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
@@ -633,6 +633,15 @@ class ServeBreakfastMain():
         # Initial Position
         self.initial_position = [0.0, 0.0, 0.0]
 
+        # Navigation Positions
+        self.front_of_door = [0.3, 2.5]
+        self.almost_kitchen = [1.7, 5.3]
+        self.inside_kitchen = [1.7, 7.0]
+        # self.cabinet = [-2.0, 7.5]
+        self.midway_kitchen_counter = [0.5, 8.0]
+        self.kitchen_counter = [0.5, 10.0]
+
+
         # Detect Objects Variables
         self.detect_object_total = [DetectedObject(), DetectedObject(), DetectedObject(), DetectedObject()]
         self.images_of_detected_object_total = [Image(), Image(), Image(), Image()]
@@ -684,7 +693,19 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
 
-                ###### MOVEMENT TO THE KITCHEN COUNTER
+                
+                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+
 
                 self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=True)
                 
@@ -1226,7 +1247,7 @@ class ServeBreakfastMain():
 
             start_point = (object.box_top_left_x, object.box_top_left_y)
             end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
-            cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
+            cv2.rectangle(current_frame_draw, start_point, end_point, (0,255,0) , 4) 
             # cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
         
         for object in serve_breakfast_objects:      
@@ -1238,7 +1259,7 @@ class ServeBreakfastMain():
 
             text_size, _ = cv2.getTextSize(f"{object.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
             text_w, text_h = text_size
-            cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
+            cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (0,255,0), -1)
             cv2.putText(current_frame_draw, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
         
         current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
