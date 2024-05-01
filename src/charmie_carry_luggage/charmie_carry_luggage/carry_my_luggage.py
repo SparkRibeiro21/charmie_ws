@@ -653,7 +653,7 @@ class CarryMyLuggageMain():
             detected_person_temp = self.node.detected_people  
 
             for p in detected_person_temp.persons:
-                if p.room_location == "Bedroom" and p.pointing_at != "None":
+                if p.room_location == "Office" and p.pointing_at != "None":
                     person_detected = True
                     bag_side = p.pointing_at.lower()
                     self.set_rgb(GREEN+HALF_ROTATE)
@@ -797,6 +797,9 @@ class CarryMyLuggageMain():
                 self.set_speech(filename="carry_my_luggage/going_to_bag", wait_for_end_of=True)
 
                 print('Navigate to: ', relative_position_of_bag.x, relative_position_of_bag.y)
+
+                self.set_speech(filename="carry_my_luggage/might_touch_bag", wait_for_end_of=False)
+
                 self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
                 print('received bag: ', received_bag)
                 if received_bag == 'left':
@@ -835,7 +838,7 @@ class CarryMyLuggageMain():
                 # move arm to bag's position (how?)
                 self.set_arm(command="carry_my_luggage_pre_check_bag", wait_for_end_of=True)
 
-                list_of_rotations = [0.0, -20.0, 20.0]
+                list_of_rotations = [0.0, -30.0, 30.0]
                 raio = [0.9, 0.4, 0.2, 0.0]
                 counter = 0
 
@@ -901,7 +904,7 @@ class CarryMyLuggageMain():
                             print('Radius ',self.INITIAL_REACHED_RADIUS)
                             i = 0
                             print('vou rodar para saco e andar para ele')
-                
+                            self.set_speech(filename="carry_my_luggage/might_touch_bag", wait_for_end_of=False)
                             self.set_navigation(movement="rotate", target= [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, wait_for_end_of=True)
                             self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
                             print('andei para a frente, estou pronto para testar de novo')
@@ -933,7 +936,7 @@ class CarryMyLuggageMain():
                 # move arm to bag's position (how?)
                 self.set_arm(command="carry_my_luggage_pre_check_bag", wait_for_end_of=True)
 
-                list_of_rotations = [0.0, 20.0, -20.0]
+                list_of_rotations = [0.0, 30.0, -30.0]
 
                 raio = [0.9, 0.4, 0.2, 0.0]
                 counter = 0
@@ -999,7 +1002,7 @@ class CarryMyLuggageMain():
                             print('Radius ',self.INITIAL_REACHED_RADIUS)
                             i = 0
                             print('vou rodar para saco e andar para ele')
-                
+                            self.set_speech(filename="carry_my_luggage/might_touch_bag", wait_for_end_of=False)
                             self.set_navigation(movement="rotate", target= [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, wait_for_end_of=True)
                             self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
                             print('andei para a frente, estou pronto para testar de novo')

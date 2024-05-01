@@ -163,7 +163,7 @@ def generate_launch_description():
         neck,
         low_level,
         odometry,
-        # navigation,
+        navigation,
         arm_carry_my_luggage,
         point_cloud,
         yolo_objects,

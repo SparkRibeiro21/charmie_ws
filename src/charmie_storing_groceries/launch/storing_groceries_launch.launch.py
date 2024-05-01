@@ -153,19 +153,27 @@ def generate_launch_description():
                         emulate_tty=True
                         )
     
+    debug_visual = Node(package='charmie_debug',
+                        executable='debug_visual',
+                        name='debug_visual',
+                        emulate_tty=True
+                        )
+    
     delayed_actions = []
 
     # Add a half-second delay before launching each node
     delay = 0.5
 
-    for node in [speakers, low_level, charmie_both_cameras_launch_description, odometry, navigation]: #---------> CHANGE ME
+    for node in [speakers, low_level, odometry, navigation]: #---------> CHANGE ME
         delayed_actions.append(TimerAction(period=delay, actions=[node]))
         delay += 0.5
     
 
     return LaunchDescription([
-        LaunchDescription(declared_arguments + [robot_driver_launch]),
+        # LaunchDescription(declared_arguments + [robot_driver_launch]),
         *delayed_actions,
+        debug_visual,
+        charmie_both_cameras_launch_description,
         lidar,
         obstacles,
         door_start,
@@ -173,8 +181,6 @@ def generate_launch_description():
         neck,
         point_cloud,
         yolo_objects,
-        arm,
+        # arm,
         # storing_groceries,
-        # odometry
-        # navigation
     ])

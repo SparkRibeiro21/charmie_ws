@@ -115,17 +115,23 @@ class StoringGroceriesNode(Node):
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
-        # Neck 
-        # while not self.set_neck_position_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        # while not self.get_neck_position_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-        # while not self.set_neck_coordinates_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         # Navigation
         while not self.nav_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
-        
+        # Speakers
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
+        while not self.activate_yolo_objects_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        while not self.set_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+        while not self.get_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
+        while not self.set_neck_coordinates_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        # Arm (CHARMIE)
+        """ while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...") """
         
         try:
             with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
@@ -165,20 +171,6 @@ class StoringGroceriesNode(Node):
         self.detected_objects = Yolov8Objects()
         #print(self.objects_classNames_dict)
 
-        # Speakers
-        while not self.speech_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Speech Command...")
-        while not self.activate_yolo_objects_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-        while not self.set_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        while not self.get_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-        while not self.set_neck_coordinates_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
-        # Arm (CHARMIE)
-        while not self.arm_trigger_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
         
 
     def get_objects_callback(self, objects: Yolov8Objects):
@@ -390,28 +382,28 @@ class StoringGroceriesMain():
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
-        self.look_table_objects = [120, -20]
+        self.look_table_objects = [90, -20]
         self.look_tray = [0, -60]
         self.look_cabinet_top = [-45, 45]
         self.look_cabinet_center = [0, -30]
         self.look_cabinet_bottom = [-45, -45]
 
-        self.shelf_1_height = 0.15 # 0.14 # 0.15
-        self.shelf_2_height = 0.60 # 0.55 # 0.60 
-        self.shelf_3_height = 1.10 # 0.97 # 1.10 
-        self.shelf_4_height = 1.39
+        self.shelf_1_height = 0.39 # 0.15 # 0.14 # 0.15
+        self.shelf_2_height = 0.67 # 0.60 # 0.55 # 0.60 
+        self.shelf_3_height = 0.92 # 1.10 # 0.97 # 1.10 
+        self.shelf_4_height = 1.28 # 1.39
 
-        self.shelf_length = 0.9
+        self.shelf_length = 0.75
         self.left_limit_shelf = -0.7 # -0.38
         self.right_limit_shelf = 0.7 # 0.38
         self.center_shelf = 0.0
 
         # Initial Position
-        self.initial_position = [0.0, 0.0, 0.0]
+        self.initial_position = [0.0, 0.1, 0.0]
 
         # to debug just a part of the task you can just change the initial state, example:
         # self.state = self.Approach_kitchen_table
-        self.state = self.Approach_cabinet_first_time
+        self.state = self.Waiting_for_task_start
 
         self.nr_objects_detected_previous = 0
         self.nr_max_objects_detected = 0
@@ -847,26 +839,26 @@ class StoringGroceriesMain():
                     if len(average_x_values) == 2:
                         # If two classes and reference x values are not yet established, determine left or right side and store reference x values
                         if left_reference_x is None and right_reference_x is None:
-                            if abs(average_x_values[0] - average_x_values[1]) > 0:
-                                print(f'{class_names[0]} - left side')
-                                print(f'{class_names[1]} - right side')
+                            if average_x_values[0] > average_x_values[1]:
+                                print(f'{class_names[1]} - left side')
+                                print(f'{class_names[0]} - right side')
                                 left_reference_x = min(average_x_values)
                                 right_reference_x = max(average_x_values)
-                                positions_in_cabinet[class_names[0]] = f"{shelf} Left side"
-                                positions_in_cabinet[class_names[1]] = f"{shelf} Right side"
-                            else:
-                                print(f'{class_names[0]} - right side')
-                                print(f'{class_names[1]} - left side')
-                                left_reference_x = max(average_x_values)
-                                right_reference_x = min(average_x_values)
                                 positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
                                 positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
-                        else:
-                            if abs(average_x_values[0] - average_x_values[1]) > 0:
-                                print(f'{class_names[0]} - left side')
+                            else:
                                 print(f'{class_names[1]} - right side')
+                                print(f'{class_names[0]} - left side')
+                                left_reference_x = max(average_x_values)
+                                right_reference_x = min(average_x_values)
                                 positions_in_cabinet[class_names[0]] = f"{shelf} Left side"
                                 positions_in_cabinet[class_names[1]] = f"{shelf} Right side"
+                        else:
+                            if average_x_values[0] > average_x_values[1]:
+                                print(f'{class_names[1]} - left side')
+                                print(f'{class_names[0]} - right side')
+                                positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
+                                positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
                             else:
                                 print(f'{class_names[0]} - right side')
                                 print(f'{class_names[1]} - left side')
@@ -977,7 +969,7 @@ class StoringGroceriesMain():
             
             start_point = (obj.box_top_left_x, obj.box_top_left_y)
             end_point = (obj.box_top_left_x+obj.box_width, obj.box_top_left_y+obj.box_height)
-            cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
+            cv2.rectangle(current_frame_draw, start_point, end_point, (255,0,0) , 4) 
             
             if obj.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
                 start_point_text = (obj.box_top_left_x-2, obj.box_top_left_y+25)
@@ -986,8 +978,8 @@ class StoringGroceriesMain():
                 
             text_size, _ = cv2.getTextSize(f"{obj.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
             text_w, text_h = text_size
-            cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
-            cv2.putText(current_frame_draw, f"{obj.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
+            cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,0,0), -1)
+            cv2.putText(current_frame_draw, f"{obj.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2, cv2.LINE_AA)
 
             current_frame_draw = current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]
 
@@ -1210,7 +1202,7 @@ class StoringGroceriesMain():
         # Iterate over each object in self.selected_objects
         # for detected_object in self.selected_objects:
             # Copy the original image to draw rectangles on
-        # images_table = self.image_objects_detected.copy()
+        images_table = self.image_objects_detected.copy()
 
         """ # Get the attributes of the detected object
         box_top_left_x = detected_object.box_top_left_x
@@ -1230,10 +1222,10 @@ class StoringGroceriesMain():
         # cv2.waitKey(0)
 
         # Construct the filename for the image
-        # image_name = f"image_{detected_object.object_name}.jpg"
+        image_name = f"image_{detected_object.object_name}.jpg"
 
             # Save the image with rectangles
-        # cv2.imwrite(os.path.join(output_dir, image_name), images_table)
+        cv2.imwrite(os.path.join(output_dir, image_name), images_table)
 
         # print(f"Saved image with rectangle for object {detected_object.object_name} as {image_name}")
 
@@ -1253,13 +1245,21 @@ class StoringGroceriesMain():
         # time.sleep(1)
 
         # Navigation Coordinates
+        """## LAR
         self.front_of_door = [0.0, 1.5] 
         self.outside_kitchen_door = [-0.7, 5.5]
-        self.inside_kitchen_door = [-0.7, 7.5]
+        self.inside_kitchen_door = [-0.7, 7.5] """
+
+        self.front_of_door = [0.3, 2.5]
+        self.almost_kitchen = [1.7, 5.3]
+        self.inside_kitchen = [1.7, 7.0]
+        self.cabinet = [-2.0, 7.5]
        
         while True:
 
             if self.state == self.Waiting_for_task_start:
+
+                time.sleep(1)
                 #print('State 0 = Initial')
 
                 #self.set_face("demo5")
@@ -1270,9 +1270,9 @@ class StoringGroceriesMain():
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.set_speech(filename="storing_groceries/sg_ready_start", show_in_face=False, wait_for_end_of=True)
+                self.set_speech(filename="storing_groceries/sg_ready_start", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/waiting_start_button", show_in_face=True, wait_for_end_of=True) # must change to door open
+                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=True) # must change to door open
 
                 self.set_rgb(command=MAGENTA+SET_COLOUR)
 
@@ -1286,6 +1286,8 @@ class StoringGroceriesMain():
                 self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
                          
                 self.wait_for_door_start()
+
+                time.sleep(3.5)
                 # next state
                 # self.state = self.Approach_tables_first_time
 
@@ -1299,22 +1301,26 @@ class StoringGroceriesMain():
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
+                self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
+
                 ###### MOVEMENT TO THE CABINET
 
-                """ self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.outside_kitchen_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.outside_kitchen_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.inside_kitchen_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.inside_kitchen_door, flag_not_obs=False, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle= -90.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= 95.0, flag_not_obs = True, wait_for_end_of=True)
                 
 
 
                 self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
-                """
+               
 
                 nr_classes_detected = 0
-                list_of_neck_position_search = [[0, 0], [0, 15], [0, 30], [0, 45]]
+                list_of_neck_position_search = [[0, 0], [0, 15], [0, 30]]
                 position_index = 0
 
                 self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
@@ -1370,7 +1376,7 @@ class StoringGroceriesMain():
                 
                 self.set_speech(filename="storing_groceries/sg_finished_analise_cabinet", wait_for_end_of=True) 
 
-                self.set_arm(command="arm_up_a_bit", wait_for_end_of=True)
+                # self.set_arm(command="arm_up_a_bit", wait_for_end_of=True)
 
                 # self.set_neck(position=self.look_judge, wait_for_end_of=True)
 
@@ -1803,7 +1809,7 @@ class StoringGroceriesMain():
                 # self.wait_for_end_of_speaking()  
                 self.state += 1
                 print("Finished task!!!")
-                self.set_arm(command="arm_go_rest", wait_for_end_of=False)
+                # self.set_arm(command="arm_go_rest", wait_for_end_of=False)
                 self.set_rgb(command=RAINBOW_ROT)
                 
                 # self.set_neck(position=self.look_judge) # , wait_for_end_of=True)

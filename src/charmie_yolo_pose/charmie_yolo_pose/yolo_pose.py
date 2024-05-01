@@ -28,7 +28,7 @@ ONLY_DETECT_PERSON_ARM_RAISED = False                # if True only detects peop
 
 # must be adjusted if we want just to not detect the feet in cases where the walls are really low and we can see the knees
 # 3 may be used in cases where it just does not detect on of the feet 
-NUMBER_OF_LEG_KP_TO_BE_DETECTED = 2
+NUMBER_OF_LEG_KP_TO_BE_DETECTED = 4
 MIN_KP_CONF_VALUE = 0.5
 
 
