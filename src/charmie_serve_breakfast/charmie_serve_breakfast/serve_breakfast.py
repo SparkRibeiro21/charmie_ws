@@ -631,15 +631,15 @@ class ServeBreakfastMain():
         self.look_tray = [0, -60]
 
         # Initial Position
-        self.initial_position = [0.0, 0.0, 0.0]
+        self.initial_position = [0.0, 0.1, 0.0]
 
         # Navigation Positions
         self.front_of_door = [0.3, 2.5]
-        self.almost_kitchen = [1.7, 5.3]
-        self.inside_kitchen = [1.7, 7.0]
+        self.almost_kitchen = [1.5, 5.3]
+        self.inside_kitchen = [1.5, 6.8]
         # self.cabinet = [-2.0, 7.5]
-        self.midway_kitchen_counter = [0.5, 8.0]
-        self.kitchen_counter = [0.5, 10.0]
+        self.midway_kitchen_counter = [-0.2, 8.0]
+        self.kitchen_counter = [-0.2, 9.5]
 
 
         # Detect Objects Variables
@@ -691,20 +691,20 @@ class ServeBreakfastMain():
 
             elif self.state == self.Approach_kitchen_counter:
 
-                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=False)
 
                 
                 self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="rotate", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 
-                self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
 
 
                 self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=True)

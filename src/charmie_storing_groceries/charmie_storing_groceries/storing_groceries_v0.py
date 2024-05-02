@@ -1311,7 +1311,7 @@ class StoringGroceriesMain():
                 self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="orientate", absolute_angle= 95.0, flag_not_obs = True, wait_for_end_of=True)
                 
 
