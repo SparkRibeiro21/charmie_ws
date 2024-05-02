@@ -690,7 +690,7 @@ class ReceptionistMain():
         self.sofa = [3.0, 3.2]
         self.centro_cadeiras = [3.0, 3.0]
         
-        self.receive_guests = [0.7, 1.8]
+        self.receive_guests = [1.0, 1.8]
         self.where_guest_is_received = [-2.8, 1.5]
         self.map_initial_position = [0.0, 0.0]
  
@@ -729,6 +729,8 @@ class ReceptionistMain():
         home = str(Path.home())
         midpath = "charmie_ws/src/charmie_receptionist/charmie_receptionist/images"
         self.complete_path_save_images = home+'/'+midpath+'/'
+
+        self.set_initial_position(self.initial_position)
 
         
         # debug print
@@ -833,9 +835,9 @@ class ReceptionistMain():
                 self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="rotate", target=self.centro_cadeiras, flag_not_obs=True, wait_for_end_of=True)
-                time.sleep(2)
-                self.set_speech(filename="generic/Near", wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle=-110.0, flag_not_obs=True, wait_for_end_of=True)
+                # time.sleep(2)
+                # self.set_speech(filename="generic/Near", wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle=-100.0, flag_not_obs=True, wait_for_end_of=True)
 
                 if self.SIDE_TO_LOOK.lower() == "right":
 
@@ -910,10 +912,11 @@ class ReceptionistMain():
                 # self.set_navigation(movement="orientate", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
-                time.sleep(2)
-                self.set_speech(filename="generic/Near", wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle=+90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
+                # time.sleep(2)
+                # self.set_speech(filename="generic/Near", wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
 
                 
                 self.state = Receive_second_guest
@@ -965,9 +968,9 @@ class ReceptionistMain():
                 self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 #self.set_navigation(movement="rotate", target=self.centro_cadeiras, flag_not_obs=True, wait_for_end_of=True)
-                time.sleep(2)
-                self.set_speech(filename="generic/Near", wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle=-110.0, flag_not_obs=True, wait_for_end_of=True)
+                # time.sleep(2)
+                # self.set_speech(filename="generic/Near", wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle=-95.0, flag_not_obs=True, wait_for_end_of=True)
 
                 if self.SIDE_TO_LOOK.lower() == "right":
 
