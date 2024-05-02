@@ -81,6 +81,7 @@ class ServeBreakfastNode(Node):
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
 
+        """
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
@@ -112,7 +113,16 @@ class ServeBreakfastNode(Node):
         # Navigation
         while not self.nav_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
-        
+        """
+
+
+        # TEMP:
+        # Arm (CHARMIE)
+        while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        # Speakers
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
 
         # Variables
         self.waited_for_end_of_speaking = False
@@ -648,7 +658,7 @@ class ServeBreakfastMain():
         self.flag_object_total = [False, False, False, False] 
 
         # to debug just a part of the task you can just change the initial state, example:
-        self.state = self.Waiting_for_task_start
+        self.state = self.Placing_bowl
 
         # MISSING:
         # waiting_door_open
@@ -930,8 +940,8 @@ class ServeBreakfastMain():
 
             elif self.state == self.Placing_bowl:
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-                time.sleep(1)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # time.sleep(1)
 
                 ##### ARM MOVE TO TABLE
 
@@ -939,75 +949,73 @@ class ServeBreakfastMain():
                 
                 self.set_arm(command="place_bowl_table", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
                 self.state = self.Placing_cornflakes 
 
             elif self.state == self.Placing_cornflakes:
 
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                time.sleep(1)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # time.sleep(1)
                 
                 ##### ARM MOVE TRAY
 
                 ##### ARM PICK OBJECT 
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### ARM MOVE TO TABLE
                 
                 ##### ARM POUR IN BOWL
                 self.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=False)
                 
                 ##### ARM PLACE OBJECT
                 self.set_arm(command="place_cereal_table", wait_for_end_of=True)
-                
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
                 self.state = self.Placing_milk
            
             elif self.state == self.Placing_milk:
 
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                time.sleep(1)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # time.sleep(1)
 
                 ##### ARM MOVE TRAY
 
                 ##### ARM PICK OBJECT 
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+               #  self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### ARM MOVE TO TABLE
 
                 ##### ARM POUR IN BOWL
                 self.set_arm(command="pour_milk_bowl", wait_for_end_of=True)
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/milk_poured", wait_for_end_of=False)
 
                 ##### ARM PLACE OBJECT
                 self.set_arm(command="place_milk_table", wait_for_end_of=True)
-
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
                 self.state = self.Placing_spoon
 
             elif self.state == self.Placing_spoon:
 
-                self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                time.sleep(1)
+                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
+                # time.sleep(1)
 
                 ##### ARM MOVE TRAY
 
                 ##### ARM PICK OBJECT 
 
-                self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
+                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
 
                 ##### ARM MOVE TO TABLE
 
                 ##### ARM PLACE OBJECT
                 self.set_arm(command="place_spoon_table", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
                 self.state = self.Final_State 
                 
@@ -1015,9 +1023,9 @@ class ServeBreakfastMain():
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=True)
 
-                self.set_neck(position=self.look_judge) 
+                # self.set_neck(position=self.look_judge) 
                 
-                self.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=False)
 
                 while True:
                     pass

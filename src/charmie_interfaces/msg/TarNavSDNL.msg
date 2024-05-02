@@ -4,3 +4,6 @@ float32 orientation_absolute
 bool flag_not_obs
 float32 reached_radius
 bool avoid_people
+float32 adjust_time
+float32 adjust_direction
+float32 adjust_min_dist
