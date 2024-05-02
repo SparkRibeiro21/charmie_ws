@@ -707,8 +707,8 @@ class ReceptionistMain():
         # LAR: self.look_sofa = [-2.5, 3.0]
         self.look_sofa = [3.0, 3.5]
 
-        self.host_name = "John"
-        self.host_drink = "Milk"
+        self.host_name = "Noah"
+        self.host_drink = "Iced Tea"
         self.host_drink = self.host_drink.replace(' ', '_') # if someone forgets to write correctly
         self.host_filename = ""
         self.host_position = ""
@@ -886,7 +886,7 @@ class ReceptionistMain():
                 time.sleep(0.5)
 
                 ### SPEAK: HOST INFORMATION
-                self.set_speech(filename="receptionist/recep_host_"+self.host_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_host_name", wait_for_end_of=True)
                 self.set_speech(filename="receptionist/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
 
                 ### NECK LOOK AT SOFA
@@ -1048,7 +1048,7 @@ class ReceptionistMain():
                 self.get_characteristics(race=self.guest1_ethnicity, age=self.guest1_age, gender=self.guest1_gender,height=self.guest1_height,shirt_color=self.guest1_shirt_color,pant_color= self.guest1_pants_color)
                 
                 ### SPEAK: HOST INFORMATION
-                self.set_speech(filename="receptionist/recep_host_"+self.host_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/recep_host_name", wait_for_end_of=True)
                 self.set_speech(filename="receptionist/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
                 
                 self.set_neck_coords(position=self.look_sofa, ang=-20, wait_for_end_of=True)
