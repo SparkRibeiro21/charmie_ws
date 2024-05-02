@@ -5,7 +5,7 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import Point, PoseWithCovarianceStamped
+from geometry_msgs.msg import Point, PoseWithCovarianceStamped, Pose2D
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
 
@@ -30,6 +30,7 @@ class CarryMyLuggageNode(Node):
 
         ### Topics (Publisher and Subscribers) ###   
         # Low Level 
+        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
@@ -682,7 +683,7 @@ class CarryMyLuggageMain():
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
 
-        self.initial_position = [-3.5, 1.5, 0.0]
+        self.initial_position = [-4.5, 1.0, 0.0]
 
         self.IMU_ANGLE = 90.0
         self.INITIAL_REACHED_RADIUS = 0.9
@@ -798,6 +799,8 @@ class CarryMyLuggageMain():
 
                 print('Navigate to: ', relative_position_of_bag.x, relative_position_of_bag.y)
 
+                
+
                 self.set_speech(filename="carry_my_luggage/might_touch_bag", wait_for_end_of=False)
 
                 self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
@@ -831,14 +834,19 @@ class CarryMyLuggageMain():
                 # set rgb's to purple
                 self.set_rgb(MAGENTA+ROTATE)
 
+                # self.torso_pos.x = -1.0
+                # self.torso_test_publisher.publish(self.torso_pos)
+
                 # speech: "I'm picking up the bag now."
                 self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
 
+                # self.torso_pos.x = 0.0
+                # self.torso_test_publisher.publish(self.torso_pos)
 
                 # move arm to bag's position (how?)
                 self.set_arm(command="carry_my_luggage_pre_check_bag", wait_for_end_of=True)
 
-                list_of_rotations = [0.0, -30.0, 30.0]
+                list_of_rotations = [0.0, -30.0, -60.0]
                 raio = [0.9, 0.4, 0.2, 0.0]
                 counter = 0
 
@@ -929,14 +937,19 @@ class CarryMyLuggageMain():
                 # set rgb's to purple
                 self.set_rgb(MAGENTA+ROTATE)
 
+                # self.torso_pos.x = -1.0
+                # self.torso_test_publisher.publish(self.torso_pos)
+
                 # speech: "I'm picking up the bag now."
                 self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
 
+                # self.torso_pos.x = 0.0
+                # self.torso_test_publisher.publish(self.torso_pos)
 
                 # move arm to bag's position (how?)
                 self.set_arm(command="carry_my_luggage_pre_check_bag", wait_for_end_of=True)
 
-                list_of_rotations = [0.0, 30.0, -30.0]
+                list_of_rotations = [0.0, 30.0, 60.0]
 
                 raio = [0.9, 0.4, 0.2, 0.0]
                 counter = 0
