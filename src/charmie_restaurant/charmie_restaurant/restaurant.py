@@ -61,10 +61,12 @@ class RestaurantNode(Node):
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
         # Audio
+        """
         while not self.get_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Audio Server...")
         while not self.calibrate_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        """
         """
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
@@ -698,6 +700,7 @@ class RestaurantMain():
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45]
         self.look_tray = [0, -60]
+        self.look_customers = [0, 0]
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
@@ -722,35 +725,33 @@ class RestaurantMain():
                 self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                 
                 # sends RGB value for debug
-                self.set_rgb(command=CYAN+HALF_ROTATE)
-
-                # change face, to face picking up cup
-                self.set_face("help_pick_cup")
+                #self.set_rgb(command=CYAN+HALF_ROTATE)
                 
                 # waiting for start button
-                self.wait_for_start_button()
-                self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
+                #self.wait_for_start_button()
+                #self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
 
-                print("DONE2 - ", self.node.start_button_state)
+                #print("DONE2 - ", self.node.start_button_state)
+
                 # calibrate the background noise for better voice recognition
                 # self.calibrate_audio(wait_for_end_of=True)
 
-                # moves the neck to look to absolute cordinates in the map
-                # self.set_neck_coords(position=[1.0, 1.0], ang=30, wait_for_end_of=True) 
-
                 # change face, to standard face
-                self.set_face("demo5")
+                #self.set_face("demo5")
 
                 # moves the neck to look forward
-                # self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                #self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
                 ##### START TURN TO BARMAN TABLE
+
+                ##### NECK LOOKS AT Barman
+                #self.set_neck(position=self.look_judge, wait_for_end_of=True)
 
                 ##### SPEAK : Hello! I am ready to start the restaurant task
                 self.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
 
                 ##### START BUTTON
-                self.wait_for_start_button()
+                #self.wait_for_start_button()
 
                 ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
                 self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
@@ -766,45 +767,57 @@ class RestaurantMain():
             elif self.state == self.Detecting_waving_customer:
                 print("State:", self.state, "- Detecting_waving_customer")
 
+                error_detected = False # Assume no error by default
+
                 ##### SPEAK: Searching for waving customers
                 self.set_speech(filename="restaurant/search_customers", wait_for_end_of=True)
 
                 ##### NECK: Rotate left and right for better view
+                ##### !!!!!!!TIAGO ESTÁ A FAZER A NOVA VERSÃO DESTA FUNÇÃO!!!!!!!!1
 
                 ##### YOLO POSE SEARCH FOR ONLY_DETECT_PERSON_ARM_RAISED
+                #self.activate_yolo_pose(activate=True, only_detect_person_arm_raised=True)
+                print("activated yolo pose")
+                time.sleep(5)
 
                 ##### IF AN ERROR IS DETECTED:
+                if error_detected:
 
                     ##### SPEAK: No costumers detected
-                self.set_speech(filename="restaurant/no_customers", wait_for_end_of=True)
+                    self.set_speech(filename="restaurant/no_customers", wait_for_end_of=True)
 
                     ##### BACK TO initial searching
+                    self.state = self.Detecting_waving_customer
 
-                ##### SPEAK: Found waving customers
-                self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
-                self.customer_index = self.customer_index + 1
+                else:
+                    ##### SPEAK: Found waving customers
+                    self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
+                    self.customer_index = self.customer_index + 1
 
-                ##### NECK: look waving customers
-                
-                ##### SPEAK: Check face to see customers detected
-                self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
+                    ##### NECK: look waving customers
+                    ##### !!!!!!!self.look_customers está a zero! Tem de se ir buscar as coordenadas dos customers detetados!!!!!!!
+                    #self.set_neck(position=self.look_customers, wait_for_end_of=True)
+                    
+                    ##### SPEAK: Check face to see customers detected
+                    self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
 
-                ##### SHOW FACE DETECTED CUSTOMER ---- FALTA IR AO YOLO BUSCAR A DETEÇÃO DOS WAVING CUSTOMERS E METER AQUI !!!!
-                self.set_face("customer1")
-                self.set_face("customer2")
-                                
-                # next state
-                self.state = self.Approach_customer_table
+                    ##### SHOW FACE DETECTED CUSTOMER 
+                    ##### !!!!!!!FALTA IR AO YOLO BUSCAR A DETEÇÃO DOS WAVING CUSTOMERS E METER AQUI !!!!!!!!!!
+                    #self.set_face("customer1")
+                    #self.set_face("customer2")
+                                    
+                    # next state
+                    self.state = self.Approach_customer_table
 
             elif self.state == self.Approach_customer_table:
                 print("State:", self.state, "- Approach_customer_table")
 
                 ##### NECK MOVEMENT FORWARD POSITION
-
-                ##### BACK TO STANDART FACE
-                self.set_face("demo5")
+                #self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
-
+                ##### BACK TO STANDART FACE
+                #self.set_face("demo5")
+                
                 ##### SPEAK: Start Movement Alert
                 self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
 
@@ -815,13 +828,14 @@ class RestaurantMain():
                                 
                 # next state
                 if self.state_aux == 0:
+                    ##### NECK: Look to customer, detetar novamente??? e ir buscar a cara do cliente????.
+                    #self.set_neck(position=self.look_customers, wait_for_end_of=True)
 
                     ##### SPEAK: Hello
                     self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
                     self.state = self.Receiving_order_listen_and_confirm 
 
                 elif self.state_aux == 1:
-
                     self.state = self.Delivering_customer_order
             
             elif self.state == self.Receiving_order_listen_and_confirm:
@@ -830,31 +844,32 @@ class RestaurantMain():
                 while True:
                     ##### SPEAK: Say your order
                     self.set_speech(filename="restaurant/say_order", wait_for_end_of=True)
+                    break
 
                     ##### AUDIO: Listen the order and repeat for confirmation
-                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
-                    print("Finished:", command)
-                    keyword_list = command.split(" ")
-                    self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
-                    for kw in keyword_list:
-                        print(kw)
-                        self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+                    #command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
+                    #print("Finished:", command)
+                    #keyword_list = command.split(" ")
+                    #self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
+                    #for kw in keyword_list:
+                    #    print(kw)
+                    #    self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
 
                     ##### AUDIO: Listen "YES" OR "NO"
-                    confirmation = self.get_audio(yes_or_no=True, wait_for_end_of=True)
-                    print("Finished:", confirmation)
+                    #confirmation = self.get_audio(yes_or_no=True, wait_for_end_of=True)
+                    #print("Finished:", confirmation)
 
                     ##### Verifica a resposta recebida
-                    if confirmation.lower() == "yes":
+                    #if confirmation.lower() == "yes":
                         ##### SPEAK: Thank you
-                        self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
-                        break  # Sai do loop se a confirmação for "yes"
-                    elif confirmation.lower() == "no":
+                        #self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                        #break  # Sai do loop se a confirmação for "yes"
+                    #elif confirmation.lower() == "no":
                         ##### SPEAK: Sorry, TRY AGAIN
-                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
-                    else:
+                        #self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+                    #else:
                         ##### ERROR
-                        print("ERROR")
+                        #print("ERROR")
            
                 # next state
                 if self.customer_index == 1:
@@ -876,12 +891,12 @@ class RestaurantMain():
 
                 ##### SPEAK: Say order elements
                 ##### Itera sobre cada elemento do pedido
-                for elemento in keyword_list:
+                #for elemento in keyword_list:
                     # Define o nome do arquivo correspondente ao elemento
-                    filename = "object_names/" + elemento.lower().replace(" ", "_")  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
+                    #filename = "object_names/" + elemento.lower().replace(" ", "_")  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
                     
                     # SPEAK: Diz o elemento do pedido
-                    self.set_speech(filename=filename, wait_for_end_of=True)
+                    #self.set_speech(filename=filename, wait_for_end_of=True)
 
                 ##### SPEAK: Say to the barman put the order in the tray
                 self.set_speech(filename="restaurant/tray_order", wait_for_end_of=True)
