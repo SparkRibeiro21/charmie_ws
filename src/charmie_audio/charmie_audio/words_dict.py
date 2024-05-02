@@ -18,20 +18,20 @@ names_dict = {
 """
 
 names_dict = {
-    "Kai":      ["kai", "kite", "guy"],
-    "Noah":     ["noah", "no one"],
-    "Unique":   ["unique", "vinik", "yoonique", "eunik"],
-    "Luca":     ["luca", "luka", "loga"],
-    "Evelyn":   ["evelyn", "eveline"],
-    "Jayden":   ["jayden", "j don", "jaden", "raven"],
-    "James":    ["james", "denise"],
-    "Riley":    ["riley", "really"],
-    "Harper":   ["harper", "khadipah", "harpur", "arper", "arthur"],
+    "Kai":      ["kai", "kite", "guy", " kei ", " kay ", "kate", " k "],
+    "Noah":     ["noah", "no one", "noha"],
+    "Unique":   ["unique", "vinik", "yoonique", "eunik", " unic ", "henic", "eunich"],
+    "Luca":     ["luca", "luka", "loga", "mocha"],
+    "Evelyn":   ["evelyn", "evelin", "hevelin", "heavily", " evan "],
+    "Jayden":   ["jayden", "j don", "jaden", "raven", "haydn", " haidan"],
+    "James":    ["james", "denise", "hamis", "hamiz"],
+    "Riley":    ["riley", "really", "dryland", "rylan", "rylu"],
+    "Harper":   ["harper", "khadipah", "harpur", "arper", "arthur", "harpe"],
     "Quinn":    ["quinn", "clem", "queen", "green"],
-    "Avery":    ["avery", "every"],
-    "Remi":     ["remi", "renee", "rani ", "rami ", "remy", "ray me", "rene"],
-    "River":    ["river", "rever", "reaver", "rida", "rivel", "peever"], # david?
-    "Atlas":    ["atlas", "atlash", "atles", "art loz", "akhlish"]
+    "Avery":    ["avery", "every", "henry", "everett"],
+    "Remi":     ["remi", "renee", " rani ", " rami ", "remy", "ray me", "rene", "hemi", " vami ", "raimi"],
+    "River":    ["river", "rever", "reaver", "rida", "rivel", "peever", " recer "], # david?
+    "Atlas":    ["atlas", "atlash", "atles", "art loz", "akhlish", "ad-lose", "after", " atash ", "akish", "arthlash", "akash", "akulosh", "akulish", "ateles", " asla ", "aatish", " athos "]
 }
 
 
@@ -39,7 +39,7 @@ drinks_dict = {
     "Red_Wine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
     "Juice_Pack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
                        "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
-                       "peck", "druspek", "drip spec", "juicy pek", "juice but"],
+                       "peck", "druspek", "drip spec", "juicy pek", "juice but", "respect", " juspe ", "jeez park"],
     "Cola":           [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold", "kohler", "kala", "gola"],
     "Tropical_Juice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
     "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
@@ -48,8 +48,8 @@ drinks_dict = {
                        "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", " icy ", "nice t", "oysti"],
     "Orange_Juice":   ["orange", "orang", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "our enjour", "northern juice", "orton julius",\
     # "Orange_Juice":   ["orange juice", "orangous", "orangels", "foreign", "autumn", "orandris", "our enjour", "northern juice", "orton julius",\
-                       "orang joyce", "orang juiis", "orange joyce", "arun jus"], # removed 'order' and all "just orange" so there is no conflict with orange 
-    "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona"], # removed o "simon" cause it conflicts with th name Simon
+                       "orang joyce", "orang juiis", "orange joyce", "arun jus", "jordan jus"], # removed 'order' and all "just orange" so there is no conflict with orange 
+    "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona", "sabanab"], # removed o "simon" cause it conflicts with th name Simon
     "Water":          ["water", "laude"]
 }
 
