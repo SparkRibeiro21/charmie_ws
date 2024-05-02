@@ -22,7 +22,7 @@ def generate_launch_description():
 
     home = str(Path.home())
     midpath = "charmie_ws/src/charmie_bot/maps_rviz"
-    complete_path = home+'/'+midpath+'/'+'LAR_pre_nacional_2024_v2.yaml'
+    complete_path = home+'/'+midpath+'/'+'FNR24_v0.yaml'
 
     mapper_params_file = LaunchConfiguration('params_file', default='src/charmie_bot/config/mapper_params_online_async.yaml')
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')

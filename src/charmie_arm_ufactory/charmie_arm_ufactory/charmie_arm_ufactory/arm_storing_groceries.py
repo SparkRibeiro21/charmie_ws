@@ -127,7 +127,7 @@ class ArmUfactory(Node):
 	def setup(self):
 		
 		#define key positions and keypoints
-		self.initial_position_bruno = [-215.0, 83.4, -65.0, -0.5, 74.9, 270.0] 
+		self.initial_position_bruno = [-178.0, 83.4, -65.0, -0.5, 74.9, 270.0] 
 		self.orient_to_table = [-195.4, 40.2, -52.7, 163.4, 77.8, 96.2]
 		self.get_order_position = [-161.0, 20.0, -63.0, 256.0, 13.0, 24.0]
 
@@ -1400,6 +1400,28 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def arm_up_a_bit(self):
+		if self.estado_tr == 0:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			
+		elif self.estado_tr == 1:
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_bruno)
+			self.joint_values_req.speed = 0.8
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
 
 	def collect_spoon_to_tray(self):
 
@@ -1667,6 +1689,8 @@ class ArmUfactory(Node):
 			self.place_objects_table()
 		elif self.next_arm_movement == "pick_objects":
 			self.pick_objects_barman()
+		elif self.next_arm_movement == "arm_up_a_bit":
+			self.arm_up_a_bit()
 
 
 			""" # new serve breakfast functions

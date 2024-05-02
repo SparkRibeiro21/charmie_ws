@@ -384,11 +384,18 @@ class InspectionMain():
         self.look_forward = [0, 0]
         self.look_navigation = [0, -10]
 
-        # Navigation Coordinates
-        self.front_of_door = [0.0, 1.5] 
+        # Navigation Coordinates [x, y]
+        """ self.front_of_door = [0.0, 1.5] 
         self.outside_bedroom_door = [-0.7, 4.7]
         self.inside_bedroom_door = [-2.8, 4.5]
-        self.inside_bedroom_top_door = [-3.5, 5.0]
+        self.inside_bedroom_top_door = [-3.5, 5.0] """
+
+        self.front_of_door = [0.3, 2.5]
+        self.door_office = [-2.2, 3.0]
+        self.inside_office = [-3.7, 3.0]
+        self.final_point = [-4.7, 3.0]
+        self.almost_outside_door = [-4.5, 1.5]
+        self.outside_house = [-4.5, -1.5]
         
         # Initial Position
         self.initial_position = [0.0, 0.0, 0.0]
@@ -408,14 +415,6 @@ class InspectionMain():
                 print("SET INITIAL POSITION")
 
                 time.sleep(1)
-
-                
-                
-                # temp:
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.outside_bedroom_door, flag_not_obs=True, avoid_people=True, wait_for_end_of=True)
-                
-
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
@@ -443,6 +442,8 @@ class InspectionMain():
 
                 self.wait_for_door_start()
 
+                time.sleep(3.5)
+
                 self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                 # set rbg's to rotating green
@@ -459,11 +460,19 @@ class InspectionMain():
 
                 self.set_speech(filename="inspection/going_to_inspection_point", wait_for_end_of=True)
 
-                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
+                """ self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.outside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.outside_bedroom_door, flag_not_obs=True, avoid_people=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.inside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.inside_bedroom_door, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_bedroom_door, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True) """
+
+                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True,  avoid_people=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.door_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.door_office, flag_not_obs=True, avoid_people=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_office, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.final_point, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.final_point, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
 
                 # set rgb's to static green
                 self.set_rgb(GREEN+SET_COLOUR)
@@ -504,8 +513,10 @@ class InspectionMain():
                                 
                 self.set_speech(filename="inspection/moving_exit_door", wait_for_end_of=True)
                 
-                self.set_navigation(movement="rotate", target=self.inside_bedroom_top_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.inside_bedroom_top_door, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.almost_outside_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.almost_outside_door, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.outside_house, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.outside_house, flag_not_obs=False, avoid_people=True, wait_for_end_of=True)
 
                 # next state
                 self.state = self.Final_State 

@@ -135,12 +135,36 @@ def generate_launch_description():
                 emulate_tty=True
                 )
     
+    lidar = Node(package='charmie_lidar_hokuyo',
+                        executable='lidar_hokuyo',
+                        name='lidar_hokuyo',
+                        emulate_tty=True
+                        )
+    
+    obstacles = Node(package='charmie_obstacles',
+                        executable='obstacles_lidar',
+                        name='obstacles_lidar',
+                        emulate_tty=True
+                        )
+    
+    door_start = Node(package='charmie_door_start',
+                        executable='door_start',
+                        name='door_start',
+                        emulate_tty=True
+                        )
+    
+    debug_visual = Node(package='charmie_debug',
+                        executable='debug_visual',
+                        name='debug_visual',
+                        emulate_tty=True
+                        )
+    
     delayed_actions = []
 
     # Add a half-second delay before launching each node
     delay = 0.5
 
-    for node in [speakers, low_level, charmie_both_cameras_launch_description]: #---------> CHANGE ME
+    for node in [speakers, low_level, odometry, navigation]: #---------> CHANGE ME
         delayed_actions.append(TimerAction(period=delay, actions=[node]))
         delay += 0.5
     
@@ -148,12 +172,15 @@ def generate_launch_description():
     return LaunchDescription([
         # LaunchDescription(declared_arguments + [robot_driver_launch]),
         *delayed_actions,
+        debug_visual,
+        charmie_both_cameras_launch_description,
+        lidar,
+        obstacles,
+        door_start,
         face,
         neck,
         point_cloud,
         yolo_objects,
         # arm,
         # storing_groceries,
-        # odometry
-        # navigation
     ])
