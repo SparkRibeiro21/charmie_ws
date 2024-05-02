@@ -17,9 +17,10 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'waiting_door_bell' : 'Waiting for a new guest to ring the door bell.',
-    'cornflakes_poured' : 'Cornflakes poured.',
-    'milk_poured' : 'Milk poured.',
+    'Fifth_shelf_ls' : 'On the left side of the fifth shelf from the bottom.',
+    'Fifth_shelf_rs' : 'On the right side of the fifth shelf from the bottom.',
+    'Sixth_shelf_ls' : 'On the left side of the sixth shelf from the bottom.',
+    'Sixth_shelf_rs' : 'On the right side of the sixth shelf from the bottom.'
 }
 
 #COMMANDS = {

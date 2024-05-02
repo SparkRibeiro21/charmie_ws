@@ -13,8 +13,7 @@ import os
 
 
 def generate_launch_description():
-
-
+   
     charmie_multi_camera_launch_file = PythonLaunchDescriptionSource([os.path.join(
         get_package_share_directory('realsense2_camera'), 'launch', 'charmie_multi_camera_launch.py'
     )])
@@ -22,12 +21,12 @@ def generate_launch_description():
     # Use IncludeLaunchDescription to include the launch file
     charmie_multi_camera_launch_description = IncludeLaunchDescription(charmie_multi_camera_launch_file)
 
-
-    inspection = Node(package='charmie_inspection',
-                executable='inspection',
-                name='inspection',
-                emulate_tty=True
-                )
+    
+    debug_visual = Node(package='charmie_debug',
+                        executable='debug_visual',
+                        name='debug_visual',
+                        emulate_tty=True
+                        )
     
     speakers = Node(package='charmie_speakers',
                         executable='speakers',
@@ -50,6 +49,18 @@ def generate_launch_description():
                 emulate_tty=True
                 )
     
+    odometry = Node(package='charmie_odometry',
+                executable='odometry',
+                name='odometry',
+                emulate_tty=True
+                )
+    
+    navigation = Node(package='charmie_navigation_sdnl',
+                executable='navigation',
+                name='navigation',
+                emulate_tty=True
+                )
+    
     face = Node(package='charmie_face',
                 executable='face',
                 name='face',
@@ -62,8 +73,14 @@ def generate_launch_description():
                 )
     
     yolo_pose = Node(package='charmie_yolo_pose',
-                        executable='yolo_pose',
-                        name='yolo_pose',
+                        executable='yolo_pose_characteristics',
+                        name='yolo_pose_characteristics',
+                        emulate_tty=True
+                        )
+    
+    yolo_objects = Node(package='charmie_yolo_objects',
+                        executable='yolo_objects',
+                        name='yolo_objects',
                         emulate_tty=True
                         )
     
@@ -85,44 +102,27 @@ def generate_launch_description():
                         emulate_tty=True
                         )
     
-    door_start = Node(package='charmie_door_start',
-                        executable='door_start',
-                        name='door_start',
+    stickler = Node(package='charmie_stickler_for_the_rules',
+                        executable='stickler_for_the_rules',
+                        name='stickler_for_the_rules',
                         emulate_tty=True
                         )
     
-    odometry = Node(package='charmie_odometry',
-                executable='odometry',
-                name='odometry',
-                emulate_tty=True
-                )
-    
-    navigation = Node(package='charmie_navigation_sdnl',
-                executable='navigation',
-                name='navigation',
-                emulate_tty=True
-                )
-    
-    debug_visual = Node(package='charmie_debug',
-                        executable='debug_visual',
-                        name='debug_visual',
-                        emulate_tty=True
-                        )
-    
+ 
 
     return LaunchDescription([
         charmie_multi_camera_launch_description,
-        low_level,
+        debug_visual,
         face,
         speakers,
         neck,
+        low_level,
         odometry,
         navigation,
         point_cloud,
         yolo_pose,
+        yolo_objects,
         lidar,
         obstacles,
-        door_start,
-        debug_visual,
-        # inspection,
+        # stickler
     ])
