@@ -5,13 +5,13 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, Float32, Int16
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3, Pose2D, PoseWithCovarianceStamped
-from charmie_interfaces.msg import TarNavSDNL, Obstacles, Yolov8Pose
+from charmie_interfaces.msg import TarNavSDNL, Obstacles, Yolov8Pose, Obstacles
 from charmie_interfaces.srv import NavTrigger
 
 import cv2
 import numpy as np
 import math
-
+import time
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -753,9 +753,14 @@ class NavSDNLNode(Node):
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         
+        # Obstacles 
+        self.obstacles_subscriber = self.create_subscription(Obstacles, 'obs_lidar', self.obstacles_callback, 10)
+
         self.create_timer(0.1, self.timer_callback)
 
         self.navigation_state = 0
+        self.obstacles = Obstacles()
+        self.MIN_DIST_OBS = 0.0
         self.detected_people = Yolov8Pose()
         self.PERSON_IN_FRONT = False
 
@@ -775,6 +780,19 @@ class NavSDNLNode(Node):
         self.rgb_success = True
         self.rgb_message = ""
 
+    def obstacles_callback(self, obs:Obstacles):
+        self.obstacles = obs
+            
+        self.MIN_DIST_OBS = 10.0
+
+        # if len(self.obstacles.obstacles) == 0:
+        #     print("NO OBSTACLES")
+        # else:
+        for obs in self.obstacles.obstacles:
+            if obs.dist < self.MIN_DIST_OBS:
+                self.MIN_DIST_OBS = obs.dist
+
+        # print(self.MIN_DIST_OBS)        
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -949,6 +967,49 @@ class NavSDNLNode(Node):
                     self.omni_move_publisher.publish(omni_move)
                     if target_reached:
                         self.navigation_state = 2
+
+
+
+
+                elif self.nav.nav_target.move_or_rotate.lower() == "adjust":
+
+                    print("Entrei adjust NORMAL")
+                    print(self.nav.nav_target.adjust_time, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
+
+
+                    omni_move = Vector3()
+                    omni_move.x = float(self.nav.nav_target.adjust_direction)
+                    omni_move.y = float(15.0)
+                    omni_move.z = float(100.0) 
+                    self.omni_move_publisher.publish(omni_move)
+                    time.sleep(self.nav.nav_target.adjust_time)
+                    self.navigation_state = 2
+
+
+
+                elif self.nav.nav_target.move_or_rotate.lower() == "adjust_obstacle":
+
+                    print("Entrei adjust OBSTACLE")
+                    print(self.nav.nav_target.adjust_time, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
+
+
+                    omni_move = Vector3()
+                    omni_move.x = float(self.nav.nav_target.adjust_direction)
+                    omni_move.y = float(15.0)
+                    omni_move.z = float(100.0) 
+
+                    print(self.MIN_DIST_OBS)
+                    
+                    if self.MIN_DIST_OBS < self.nav.nav_target.adjust_min_dist:
+                        omni_move.x = float(0.0)
+                        omni_move.y = float(0.0)
+                        self.navigation_state = 2
+
+
+                    self.omni_move_publisher.publish(omni_move)
+
+
+
                 else:
                     # ERROR
                     self.navigation_state = 2
@@ -988,6 +1049,7 @@ class NavSDNLNode(Node):
 
             if self.navigation_state == 2:
                 # publica no topico a dizer que acabou
+                print("Finished")
                 finish_flag = Bool()
                 finish_flag.data = True
                 self.nav.first_nav_target = False
