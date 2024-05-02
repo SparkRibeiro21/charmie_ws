@@ -398,7 +398,7 @@ class InspectionMain():
         self.outside_house = [-4.5, -1.5]
         
         # Initial Position
-        self.initial_position = [0.0, 0.0, 0.0]
+        self.initial_position = [0.0, 0.1, 0.0]
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_start_button

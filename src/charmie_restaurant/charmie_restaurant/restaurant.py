@@ -703,7 +703,7 @@ class RestaurantMain():
         self.look_customers = [0, 0]
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Waiting_for_task_start
+        self.state = self.Approach_customer_table
 
         self.state_aux = 0
         self.state_var = 0
@@ -719,17 +719,21 @@ class RestaurantMain():
                 print("State:", self.state, "- Waiting_for_task_start")
 
                 # moves the neck to look down for navigation
-                # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                 # send speech command to speakers voice, intrucing the robot 
                 self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                 
                 # sends RGB value for debug
-                #self.set_rgb(command=CYAN+HALF_ROTATE)
+                self.set_rgb(command=CYAN+HALF_ROTATE)
                 
+                ##### SPEAK : Hello! I am ready to start the restaurant task
+                self.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
+
                 # waiting for start button
-                #self.wait_for_start_button()
-                #self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
+                self.wait_for_start_button()
+
+                self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
 
                 #print("DONE2 - ", self.node.start_button_state)
 
@@ -739,16 +743,10 @@ class RestaurantMain():
                 # change face, to standard face
                 #self.set_face("demo5")
 
-                # moves the neck to look forward
-                #self.set_neck(position=self.look_forward, wait_for_end_of=False)
-
                 ##### START TURN TO BARMAN TABLE
 
                 ##### NECK LOOKS AT Barman
-                #self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                ##### SPEAK : Hello! I am ready to start the restaurant task
-                self.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
 
                 ##### START BUTTON
                 #self.wait_for_start_button()
@@ -760,14 +758,14 @@ class RestaurantMain():
                 self.set_speech(filename="restaurant/turn_search", wait_for_end_of=True)
 
                 ##### TURN AROUND to the customer zone
-
+                #### NAVIGATION
                 # next state
                 self.state = self.Detecting_waving_customer
 
             elif self.state == self.Detecting_waving_customer:
                 print("State:", self.state, "- Detecting_waving_customer")
 
-                error_detected = False # Assume no error by default
+                error_detected = True # Assume no error by default
 
                 ##### SPEAK: Searching for waving customers
                 self.set_speech(filename="restaurant/search_customers", wait_for_end_of=True)
@@ -796,7 +794,7 @@ class RestaurantMain():
 
                     ##### NECK: look waving customers
                     ##### !!!!!!!self.look_customers está a zero! Tem de se ir buscar as coordenadas dos customers detetados!!!!!!!
-                    #self.set_neck(position=self.look_customers, wait_for_end_of=True)
+                    self.set_neck(position=self.look_customers, wait_for_end_of=True)
                     
                     ##### SPEAK: Check face to see customers detected
                     self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
@@ -808,15 +806,15 @@ class RestaurantMain():
                                     
                     # next state
                     self.state = self.Approach_customer_table
-
+                
             elif self.state == self.Approach_customer_table:
                 print("State:", self.state, "- Approach_customer_table")
 
                 ##### NECK MOVEMENT FORWARD POSITION
-                #self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
                 ##### BACK TO STANDART FACE
-                #self.set_face("demo5")
+                self.set_face("demo5")
                 
                 ##### SPEAK: Start Movement Alert
                 self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
@@ -829,7 +827,7 @@ class RestaurantMain():
                 # next state
                 if self.state_aux == 0:
                     ##### NECK: Look to customer, detetar novamente??? e ir buscar a cara do cliente????.
-                    #self.set_neck(position=self.look_customers, wait_for_end_of=True)
+                    self.set_neck(position=self.look_customers, wait_for_end_of=True)
 
                     ##### SPEAK: Hello
                     self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
@@ -837,6 +835,7 @@ class RestaurantMain():
 
                 elif self.state_aux == 1:
                     self.state = self.Delivering_customer_order
+
             
             elif self.state == self.Receiving_order_listen_and_confirm:
                 print("State:", self.state, "- Receiving_order_listen_and_confirm")

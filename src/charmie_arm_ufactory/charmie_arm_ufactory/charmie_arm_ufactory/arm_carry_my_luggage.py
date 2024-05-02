@@ -201,7 +201,9 @@ class ArmUfactory(Node):
 
 		self.pre_ready_to_pick_bag = 					[ -472.4, 28.7, 478.8,  math.radians(88.6),  math.radians(-2.2),  math.radians(-91.0)]
 		self.pick_bag = 								[26.9, 867.6, 484.2, math.radians(88.9), math.radians(-2.4), math.radians(179.7)]
-		self.final_position_rotate = 						[-277.5, 149.8, 419.7, math.radians(-156.2), math.radians(83.0), math.radians(29.0)]
+		# self.pick_bag = 								[28.7, 853.9, 528.3, math.radians(88.9), math.radians(-2.4), math.radians(179.7)]
+		
+		self.final_position_rotate = 					[-277.5, 149.8, 419.7, math.radians(-156.2), math.radians(83.0), math.radians(29.0)]
 		
 		print('Nada')
 

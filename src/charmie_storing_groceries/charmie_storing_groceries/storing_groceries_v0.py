@@ -49,7 +49,11 @@ object_position_mapping = {
     ('Third', 'Right'): 'Third_shelf_rs',
     ('Third', 'Left'): 'Third_shelf_ls',
     ('Fourth', 'Right'): 'Fourth_shelf_rs',
-    ('Fourth', 'Left'): 'Fourth_shelf_ls'
+    ('Fourth', 'Left'): 'Fourth_shelf_ls',
+    ('Fifth', 'Right'): 'Fifth_shelf_rs',
+    ('Fifth', 'Left'): 'Fifth_shelf_ls',
+    ('Sixth', 'Right'): 'Sixth_shelf_rs',
+    ('Sixth', 'Left'): 'Sixth_shelf_ls'
 }
 class StoringGroceriesNode(Node):
 
@@ -388,10 +392,12 @@ class StoringGroceriesMain():
         self.look_cabinet_center = [0, -30]
         self.look_cabinet_bottom = [-45, -45]
 
-        self.shelf_1_height = 0.39 # 0.15 # 0.14 # 0.15
-        self.shelf_2_height = 0.67 # 0.60 # 0.55 # 0.60 
-        self.shelf_3_height = 0.92 # 1.10 # 0.97 # 1.10 
-        self.shelf_4_height = 1.28 # 1.39
+        self.shelf_1_height = 0.0 # 0.15 # 0.14 # 0.15
+        self.shelf_2_height = 0.39 # 0.60 # 0.55 # 0.60 
+        self.shelf_3_height = 0.67  # 1.10 # 0.97 # 1.10 
+        self.shelf_4_height = 0.92  # 1.39
+        self.shelf_5_height = 1.28
+        self.shelf_6_height = 1.57
 
         self.shelf_length = 0.75
         self.left_limit_shelf = -0.7 # -0.38
@@ -671,6 +677,7 @@ class StoringGroceriesMain():
                     object_name = detected_object.object_name
                     object_class = detected_object.object_class
                     object_height = detected_object.position_relative.z
+                    object_distance = detected_object.position_relative.y
                     object_confidence = detected_object.confidence
                     object_x_position = detected_object.position_relative.x
                     box_top_left_x = detected_object.box_top_left_x
@@ -682,8 +689,11 @@ class StoringGroceriesMain():
                     if object_name in self.object_details:
                         pass
                     else:
-                             
-                        if self.shelf_1_height < object_height < self.shelf_2_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        if object_distance > 3.0:
+                            print(object_name, '- too far')
+                            print(object_height)
+                            
+                        elif self.shelf_1_height < object_height < self.shelf_2_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'First shelf '
                             print(object_name, 'is in the first shelf ')
                             # print(object_x_position)
@@ -698,9 +708,19 @@ class StoringGroceriesMain():
                             print(object_name, 'is in the third shelf ')
                             # print(object_x_position)
                         
-                        elif object_height > self.shelf_4_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                        elif self.shelf_5_height > object_height > self.shelf_4_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
                             position = 'Fourth shelf '
                             print(object_name, 'is in the fourth shelf ')
+                            # print(object_x_position)
+
+                        elif self.shelf_6_height > object_height > self.shelf_5_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                            position = 'Fifth shelf '
+                            print(object_name, 'is in the fifth shelf ')
+                            # print(object_x_position)
+
+                        elif object_height > self.shelf_6_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                            position = 'Sixth shelf '
+                            print(object_name, 'is in the sixth shelf ')
                             # print(object_x_position)
 
                         else:
@@ -1311,7 +1331,7 @@ class StoringGroceriesMain():
                 self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="orientate", absolute_angle= 95.0, flag_not_obs = True, wait_for_end_of=True)
                 
 
