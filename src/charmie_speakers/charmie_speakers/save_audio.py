@@ -6,8 +6,10 @@ import time
 import pygame
 from pathlib import Path
 
-names_list = ["Adel", "Angel", "Axel", "Charlie", "Jane", "John", "Jules", "Morgan", "Paris", "Robin", "Simone"]
+# names_list = ["Adel", "Angel", "Axel", "Charlie", "Jane", "John", "Jules", "Morgan", "Paris", "Robin", "Simone"]
+names_list = ["Kai", "Noah", "Unique", "Luca", "Evelyn", "Jayden", "James", "Riley", "Harper", "Quinn", "Avery", "Remi", "River", "Atlas"]
 drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
+host_name = "Noah"
 
 
 # MODE can be the following commands:
@@ -17,10 +19,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'Fifth_shelf_ls' : 'On the left side of the fifth shelf from the bottom.',
-    'Fifth_shelf_rs' : 'On the right side of the fifth shelf from the bottom.',
-    'Sixth_shelf_ls' : 'On the left side of the sixth shelf from the bottom.',
-    'Sixth_shelf_rs' : 'On the right side of the sixth shelf from the bottom.'
+    'recep_first_guest_noah' : 'The first guest name is noah.'
 }
 
 #COMMANDS = {
@@ -165,12 +164,13 @@ def main(args=None):
         charmie_speech.convert_command(COMMANDS, play_sound=True)
     elif MODE == "RECEPTIONIST":
         receptionist_commands = {}
+        receptionist_commands['receptionist/recep_host_name'] = 'The host name is '+host_name+'.'
         for name in names_list:
-            receptionist_commands['receptionist/recep_host_'+name.lower()] = 'The host name is '+name+'.'
+            # receptionist_commands['receptionist/recep_host_'+name.lower()] = 'The host name is '+name+'.'
             receptionist_commands['receptionist/recep_first_guest_'+name.lower()] = 'The first guest name is '+name+'.'
             receptionist_commands['receptionist/recep_second_guest_'+name.lower()] = 'The second guest name is '+name+'.'
-        for drink in drinks_list:
-            receptionist_commands['receptionist/recep_drink_'+drink.lower().replace(' ', '_')] = 'The favourite drink is '+drink+'.'
+        # for drink in drinks_list:
+        #     receptionist_commands['receptionist/recep_drink_'+drink.lower().replace(' ', '_')] = 'The favourite drink is '+drink+'.'
             
         charmie_speech.convert_command(receptionist_commands, play_sound=True)
         

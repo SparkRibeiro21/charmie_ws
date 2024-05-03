@@ -1,7 +1,7 @@
 # this variable is just to help to better visualise for debug purposes
 max_number_of_chars_of_keys = 16
 
-
+"""
 names_dict = {
     "Adel":     ["adel", "adele", "adam", "avel"],
     "Angel":    ["angel", "anjo", "ahil", "anjou", "anjal", "hong kong", "zangal", "enzo" ], # removed "hell" because of possible "hello" people may say
@@ -15,23 +15,42 @@ names_dict = {
     "Robin":    ["robin", "harbin", "robyn", "hobby", "hobean", "hohvin", "robon", "corbin", "haubin", "horven"],
     "Simone":   ["simone", "simon", "simo", "siman"]
 }
+"""
+
+names_dict = {
+    "Kai":      ["kai", "kite", "guy", " kei ", " kay ", "kate", " k "],
+    "Noah":     ["noah", "no one", "noha"],
+    "Unique":   ["unique", "vinik", "yoonique", "eunik", " unic ", "henic", "eunich"],
+    "Luca":     ["luca", "luka", "loga", "mocha"],
+    "Evelyn":   ["evelyn", "evelin", "hevelin", "heavily", " evan "],
+    "Jayden":   ["jayden", "j don", "jaden", "raven", "haydn", " haidan"],
+    "James":    ["james", "denise", "hamis", "hamiz"],
+    "Riley":    ["riley", "really", "dryland", "rylan", "rylu"],
+    "Harper":   ["harper", "khadipah", "harpur", "arper", "arthur", "harpe"],
+    "Quinn":    ["quinn", "clem", "queen", "green"],
+    "Avery":    ["avery", "every", "henry", "everett"],
+    "Remi":     ["remi", "renee", " rani ", " rami ", "remy", "ray me", "rene", "hemi", " vami ", "raimi"],
+    "River":    ["river", "rever", "reaver", "rida", "rivel", "peever", " recer "], # david?
+    "Atlas":    ["atlas", "atlash", "atles", "art loz", "akhlish", "ad-lose", "after", " atash ", "akish", "arthlash", "akash", "akulosh", "akulish", "ateles", " asla ", "aatish", " athos "]
+}
+
 
 drinks_dict = {
     "Red_Wine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
     "Juice_Pack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
                        "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
-                       "peck", "druspek", "drip spec", "juicy pek"],
-    "Cola":           [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold", "kohler", "kala"],
+                       "peck", "druspek", "drip spec", "juicy pek", "juice but", "respect", " juspe ", "jeez park"],
+    "Cola":           [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold", "kohler", "kala", "gola"],
     "Tropical_Juice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
     "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
-	"Iced_Tea":       [" ice", "tea", "ist", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
+	"Iced_Tea":       [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
                        "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", " icy ", "nice t", "oysti"],
     "Orange_Juice":   ["orange", "orang", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "our enjour", "northern juice", "orton julius",\
     # "Orange_Juice":   ["orange juice", "orangous", "orangels", "foreign", "autumn", "orandris", "our enjour", "northern juice", "orton julius",\
-                       "orang joyce", "orang juiis", "orange joyce", ], # removed 'order' and all "just orange" so there is no conflict with orange 
-    "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona"], # removed o "simon" cause it conflicts with th name Simon
-    "Water":          ["water"]
+                       "orang joyce", "orang juiis", "orange joyce", "arun jus", "jordan jus"], # removed 'order' and all "just orange" so there is no conflict with orange 
+    "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona", "sabanab"], # removed o "simon" cause it conflicts with th name Simon
+    "Water":          ["water", "laude"]
 }
 
 foods_dict = {
