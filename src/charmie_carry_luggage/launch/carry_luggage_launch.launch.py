@@ -154,6 +154,12 @@ def generate_launch_description():
                 name='navigation',
                 emulate_tty=True
                 )
+    
+    debug_visual = Node(package='charmie_debug',
+                        executable='debug_visual',
+                        name='debug_visual',
+                        emulate_tty=True
+                        )
 
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),
@@ -167,6 +173,7 @@ def generate_launch_description():
         arm_carry_my_luggage,
         point_cloud,
         yolo_objects,
+        debug_visual,
         yolo_pose,
         # lidar,
         # carry_my_luggage,
