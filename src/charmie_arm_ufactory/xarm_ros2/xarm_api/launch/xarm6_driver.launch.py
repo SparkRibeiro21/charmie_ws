@@ -10,9 +10,15 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
+from pathlib import Path
 
 
 def generate_launch_description():
+
+    home = str(Path.home())
+    midpath = "charmie_ws/src/charmie_arm_ufactory/xarm_ros2/xarm_api/launch/_robot_driver.launch.py"
+    complete_path = home+'/'+midpath+'/'
+
     # Declare arguments
     declared_arguments = []
     declared_arguments.append(
@@ -48,8 +54,8 @@ def generate_launch_description():
     # robot driver launch
     # xarm_api/launch/_robot_driver.launch.py
     robot_driver_launch = IncludeLaunchDescription(
-        #PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/_robot_driver.launch.py']),
-        PythonLaunchDescriptionSource('/home/charmie/charmie_ws/src/charmie_arm_ufactory/xarm_ros2/xarm_api/launch/_robot_driver.launch.py'),
+        PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/_robot_driver.launch.py']),
+        #PythonLaunchDescriptionSource(complete_path),
         launch_arguments={
             'robot_ip': robot_ip,
             'report_type': report_type,

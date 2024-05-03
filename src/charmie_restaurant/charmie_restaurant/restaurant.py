@@ -43,8 +43,8 @@ class RestaurantNode(Node):
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         # Navigation
-        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
-        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)
+        #self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        #self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)
 
 
         ### Services (Clients) ###
@@ -753,6 +753,7 @@ class RestaurantMain():
         self.state_var = 0
         self.customer_index = 0
         self.delivery_index = 0
+        self.all_orders = []
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Restaurant Main...")
@@ -763,21 +764,21 @@ class RestaurantMain():
                 print("State:", self.state, "- Waiting_for_task_start")
 
                 # moves the neck to look down for navigation
-                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                #self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                 # send speech command to speakers voice, intrucing the robot 
                 self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                 
                 # sends RGB value for debug
-                self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
+                #self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
                 
                 ##### SPEAK : Hello! I am ready to start the restaurant task
                 self.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
 
                 # waiting for start button
-                self.wait_for_start_button()
+                #self.wait_for_start_button()
 
-                self.set_rgb(command=CYAN+ALTERNATE_QUARTERS)
+                #self.set_rgb(command=CYAN+ALTERNATE_QUARTERS)
 
                 # calibrate the background noise for better voice recognition
                 # self.calibrate_audio(wait_for_end_of=True)
@@ -788,7 +789,7 @@ class RestaurantMain():
                 ##### START TURN TO BARMAN TABLE!!!
 
                 ##### NECK LOOKS AT Barman
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                #self.set_neck(position=self.look_forward, wait_for_end_of=True)
 
                 ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
                 self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
@@ -805,12 +806,12 @@ class RestaurantMain():
             elif self.state == self.Detecting_waving_customer:
                 print("State:", self.state, "- Detecting_waving_customer")
 
-                error_detected = True # Assume no error by default
+                error_detected = False # Assume no error by default
 
                 ##### SPEAK: Searching for waving customers
                 self.set_speech(filename="restaurant/search_customers", wait_for_end_of=True)
 
-                self.set_rgb(command=ORANGE+HALF_ROTATE)
+                #self.set_rgb(command=ORANGE+HALF_ROTATE)
 
                 ##### NECK: Rotate left and right for better view
                 ##### !!!!!!!TIAGO ESTÁ A FAZER A NOVA VERSÃO DESTA FUNÇÃO!!!!!!!!
@@ -823,7 +824,7 @@ class RestaurantMain():
                 ##### IF AN ERROR IS DETECTED:
                 if error_detected:
 
-                    self.set_rgb(command=RED+BLINK_QUICK)
+                    #self.set_rgb(command=RED+BLINK_QUICK)
 
                     ##### SPEAK: No costumers detected
                     self.set_speech(filename="restaurant/no_customers", wait_for_end_of=True)
@@ -833,15 +834,15 @@ class RestaurantMain():
 
                 else:
 
-                    self.set_rgb(command=GREEN+BLINK_QUICK)
+                    #self.set_rgb(command=GREEN+BLINK_QUICK)
 
                     ##### SPEAK: Found waving customers
                     self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
-                    self.customer_index = self.customer_index + 1
+                    #self.customer_index = self.customer_index + 1
 
                     ##### NECK: look waving customers
                     ##### !!!!!!!self.look_customers está a zero! Tem de se ir buscar as coordenadas dos customers detetados!!!!!!!
-                    self.set_neck(position=self.look_customers, wait_for_end_of=True)
+                    #self.set_neck(position=self.look_customers, wait_for_end_of=True)
                     
                     ##### SPEAK: Check face to see customers detected
                     self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
@@ -858,7 +859,7 @@ class RestaurantMain():
                 print("State:", self.state, "- Approach_customer_table")
 
                 ##### NECK MOVEMENT FORWARD POSITION
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                #self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
                 ##### BACK TO STANDART FACE
                 self.set_face("demo5")
@@ -866,7 +867,7 @@ class RestaurantMain():
                 ##### SPEAK: Start Movement Alert
                 self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
 
-                self.set_rgb(command=BLUE+ROTATE)
+                #self.set_rgb(command=BLUE+ROTATE)
 
                 ##### MOVE TO CUSTOMER
                 # MISSING NAVIGATION ... (TIAGO)
@@ -875,7 +876,7 @@ class RestaurantMain():
                 if self.state_aux == 0:
 
                     ##### NECK: Look to customer
-                    self.set_neck(position=self.look_customers, wait_for_end_of=True)
+                    #self.set_neck(position=self.look_customers, wait_for_end_of=True)
 
                     ##### SPEAK: Hello
                     self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
@@ -889,7 +890,7 @@ class RestaurantMain():
 
                 while True:
 
-                    self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
+                    #self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
 
                     ##### AUDIO: Listen the order and repeat for confirmation
                     command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
@@ -901,26 +902,28 @@ class RestaurantMain():
                         self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
 
                     ##### AUDIO: Listen "YES" OR "NO"
-                    confirmation = self.get_audio(yes_or_no=True, question="generic/Near", wait_for_end_of=True)  #####FAZER SPEAK PARA AQUI
+                    ##### "Please say yes or no to confirm the order"
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", wait_for_end_of=True)
                     print("Finished:", confirmation)
 
                     ##### Verifica a resposta recebida
                     if confirmation.lower() == "yes":
-                        self.set_rgb(command=GREEN+BLINK_LONG)
+                        self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                        #self.set_rgb(command=GREEN+BLINK_LONG)
                         ##### SPEAK: Thank you
                         self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
                         break  # Sai do loop se a confirmação for "yes"
                     elif confirmation.lower() == "no":
-                        self.set_rgb(command=RED+BLINK_LONG)
+                        #self.set_rgb(command=RED+BLINK_LONG)
                         ##### SPEAK: Sorry, TRY AGAIN
                         self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
                     else:
-                        self.set_rgb(command=YELLOW+BLINK_LONG)
+                        #self.set_rgb(command=YELLOW+BLINK_LONG)
                         ##### ERROR
                         print("ERROR")
 
                 print("teste final")
-                self.customer_index = 2
+                self.customer_index = self.customer_index + 1
 
                 # next state
                 if self.customer_index == 1:
@@ -934,22 +937,23 @@ class RestaurantMain():
                 ##### SPEAK: Start moving
                 self.set_speech(filename="restaurant/move_barman", wait_for_end_of=True)
 
-                self.set_rgb(command=BLUE+ROTATE)
+                #self.set_rgb(command=BLUE+ROTATE)
 
                 ##### MOVE TO THE BARMAN TABLE
                 # MISSING NAVIGATION ... (TIAGO)
 
                 ##### SPEAK: Say the order to barman
-                self.set_speech(filename="restaurant/barman_order", wait_for_end_of=True)
+                self.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
 
                 ##### SPEAK: Say order elements
                 ##### Itera sobre cada elemento do pedido
-                for elemento in keyword_list:
-                    # Define o nome do arquivo correspondente ao elemento
-                    filename = "objects_names/" + elemento.lower().replace(" ", "_")  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
-                    
-                    # SPEAK: Diz o elemento do pedido
-                    self.set_speech(filename=filename, wait_for_end_of=True)
+                for pedido in self.all_orders:
+                    for elemento in pedido:
+                        # Define o nome do arquivo correspondente ao elemento
+                        filename = "objects_names/" + elemento.lower().replace(" ", "_")  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
+                        
+                        # SPEAK: Diz o elemento do pedido
+                        self.set_speech(filename=filename, wait_for_end_of=True)
 
                 ##### SPEAK: Say to the barman put the order in the tray
                 self.set_speech(filename="restaurant/tray_order", wait_for_end_of=True)
@@ -981,7 +985,7 @@ class RestaurantMain():
                 
                 self.set_speech(filename="restaurant/finish_restaurant", wait_for_end_of=True)
 
-                self.set_rgb(command=RAINBOW_ROT)
+                #self.set_rgb(command=RAINBOW_ROT)
 
                 # Lock after finishing task
                 while True:

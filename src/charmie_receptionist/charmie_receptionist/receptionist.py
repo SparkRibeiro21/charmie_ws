@@ -682,10 +682,15 @@ class ReceptionistMain():
         # LAR: self.map_initial_position = [0.25, 0.0]
 
         # Start Localisation Position
-        self.initial_position = [0.7, 1.8, 90.0]
-        self.initial_position_with_door = [-0.3, 1.7, -135.0]
+        # self.initial_position = [0.7, 1.8, 90.0]
+        self.initial_position = [-1.0, 3.0, -90.0]
+        self.initial_position_with_door = [-1.3, 1.7, -135.0]
 
         # Navigation Positions
+        # self.new_strating_position = []
+ 
+ 
+ 
         self.front_of_sofa = [-0.3, 3.7]
         self.sofa = [3.0, 3.2]
         self.centro_cadeiras = [3.0, 3.0]
@@ -705,7 +710,7 @@ class ReceptionistMain():
 
         self.look_empty_place = [1.0, 2.0]
         # LAR: self.look_sofa = [-2.5, 3.0]
-        self.look_sofa = [3.0, 3.5]
+        self.look_sofa = [3.0, 4.0]
 
         self.host_name = "Noah"
         self.host_drink = "Iced Tea"
@@ -763,6 +768,8 @@ class ReceptionistMain():
                 
                 self.wait_for_start_button()
 
+                self.set_navigation(movement="rotate", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
+
                 self.set_rgb(CYAN+ALTERNATE_QUARTERS)
                 
                 if self.OPEN_DOOR == True:
@@ -784,6 +791,10 @@ class ReceptionistMain():
                 # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
                 ### NAVIGATION MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
+
+                self.set_navigation(movement="move", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
+
+                self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
                 
                 self.state = Receive_first_guest
 
