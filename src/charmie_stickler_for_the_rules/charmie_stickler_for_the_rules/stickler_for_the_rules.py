@@ -154,14 +154,17 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import PoseWithCovarianceStamped
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
+from geometry_msgs.msg import PoseWithCovarianceStamped, Point
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfPoints
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
 
 import cv2 
 import threading
 import time
 from cv_bridge import CvBridge
+import math
+import datetime
+
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -994,7 +997,192 @@ class SticklerForTheRulesMain():
         task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         
         self.node.initialpose_publisher.publish(task_initialpose)
+
+    def search_for_person_2(self, tetas):
+
+        self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=True)                
+
+        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+
+        time.sleep(3.0)
         
+        imshow_detected_people = True
+
+        total_person_detected = []
+        person_detected = []
+        total_cropped_people = []
+        cropped_people = []
+        points = []
+        croppeds = []
+
+        people_ctr = 0
+        delay_ctr = 0
+
+        print("Started")
+        for t in tetas:
+            self.set_neck(position=[t, -10])
+            time.sleep(2)
+
+            for people in self.node.detected_people.persons:
+                people_ctr+=1
+                print(" - ", people.index_person, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
+                print(" - ", people.index_person, people.position_relative.x,people.position_relative.y, people.position_relative.z)
+                aux = (people.position_absolute.x, people.position_absolute.y) 
+                person_detected.append(aux)
+                points.append(aux)
+
+                if imshow_detected_people:
+
+                    y1 = people.box_top_left_y
+                    y2 = people.box_top_left_y + people.box_height
+
+                    x1 = people.box_top_left_x
+                    x2 = people.box_top_left_x + people.box_width
+
+                    print(y1, y1, x1,x2)
+                    br = CvBridge()
+                    current_frame = br.imgmsg_to_cv2(self.node.detected_people.image_rgb, "bgr8")
+                    cropped_image = current_frame[y1:y2, x1:x2]
+                    cropped_people.append(cropped_image)
+                    
+                    croppeds.append(cropped_image)
+
+            total_person_detected.append(person_detected.copy())
+            total_cropped_people.append(cropped_people.copy())
+            print("Total number of people detected:", len(person_detected), people_ctr)
+            person_detected.clear()          
+            cropped_people.clear()
+
+
+        ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
+        
+        print(total_person_detected)
+        print(len(points))
+       
+        filtered_persons = []
+        filtered_persons_cropped = []
+        new_filtered_persons_cropped = []
+        for frame in range(len(total_person_detected)):
+            print(filtered_persons)
+            # print(filtered_persons_cropped)
+
+            if not len(filtered_persons):
+                for person in range(len(total_person_detected[frame])):
+                    filtered_persons.append(total_person_detected[frame][person])
+                    filtered_persons_cropped.append(total_cropped_people[frame][person])
+                    new_filtered_persons_cropped.append(total_cropped_people[frame][person])
+            else:
+                for person in range(len(total_person_detected[frame])):
+                    same_person_ctr = 0
+                    same_person_coords = (0,0)
+                    for filtered in range(len(filtered_persons)): #_aux:
+
+                        # print("??? ", total_person_detected[frame][person], filtered_persons[filtered])
+                        dist = math.dist(total_person_detected[frame][person], filtered_persons[filtered])
+                        # print("person:", person, "filtered:", filtered, "dist:", dist)
+                        
+                        if dist < 1.0:
+                            same_person_ctr+=1
+                            same_person_coords = filtered_persons[filtered]
+                            same_person_cropped = filtered_persons_cropped[filtered] 
+
+                            # print(same_person_cropped.shape)
+                        
+                    
+                    if same_person_ctr > 0:
+
+                        # just debug
+                        for p in filtered_persons_cropped:
+                            print(p.shape)
+
+                        print("---", same_person_cropped.shape)
+
+                        
+                        # print(same_person_cropped)
+                        # print(total_cropped_people[frame][person])
+                        # print(len(same_person_cropped), len(total_cropped_people[frame][person]))
+                        # print(same_person_cropped.shape[0], same_person_cropped.shape[1])
+                        # print(total_cropped_people[frame][person].shape[0], total_cropped_people[frame][person].shape[1])
+                        
+                        # the same person is the person on the first frame, whereas total_cropped_people[frame][person] is the same person on the second frame
+                        # if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
+                            # filtered_persons_cropped.remove(same_person_cropped)
+                            # filtered_persons_cropped.append(total_cropped_people[frame][person])
+                            # total_cropped_people[frame][person] = 
+                            # pass
+                        # for p in filtered_persons_cropped:
+                        #     if p.shape == same_person_cropped.shape:
+                        #         filtered_persons_cropped.remove(p)
+
+                        #         del my_list[index_to_remove]  # Removes the value at index 2 (i.e., the third element)
+                        
+                        
+                        #         filtered_persons_cropped.remove(p)
+                        
+                        
+                        # filtered_persons_cropped.remove(same_person_cropped)
+                        # if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
+                        #     filtered_persons_cropped.append(total_cropped_people[frame][person])
+                        #     new_filtered_persons_cropped.append(total_cropped_people[frame][person])
+                        # else:
+                        #     filtered_persons_cropped.append(same_person_cropped)
+                        #     new_filtered_persons_cropped.append(same_person_cropped)
+                            
+                        #print(same_person_ctr, same_person_coords, person)
+                        filtered_persons.remove(same_person_coords)
+
+                        avg_person = ((total_person_detected[frame][person][0]+same_person_coords[0])/2, (total_person_detected[frame][person][1]+same_person_coords[1])/2)
+                        # print(avg_person)
+                        filtered_persons.append(avg_person)
+                        points.append(avg_person)
+
+                    else:
+                    
+                        filtered_persons.append(total_person_detected[frame][person])
+                        filtered_persons_cropped.append(total_cropped_people[frame][person])
+                        new_filtered_persons_cropped.append(total_cropped_people[frame][person])
+        
+        # same time for all people
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
+        self.custom_face_filename = current_datetime
+        
+        # ctr = 0
+        # for c in croppeds:
+        #     ctr+=1
+        #     cv2.imwrite("Person Detected_"+str(ctr)+".jpg", c)
+        ctr = 0
+        filenames = []
+        for c in new_filtered_persons_cropped:
+            ctr+=1
+            path = current_datetime + "_person_" + str(ctr) 
+            filenames.append(path)
+            
+            # cv2.imwrite("Person Filtered_"+str(ctr)+".jpg", c)
+            cv2.imwrite(self.node.complete_path_custom_face + path + ".jpg", c) 
+        
+        print("Finished")
+
+
+        print("---", filtered_persons)
+        points_to_send = ListOfPoints()
+        # for debug, see all points and the average calculations
+        # for p in points:
+        for p in filtered_persons:
+            aux = Point()
+            aux.x = float(p[0])
+            aux.y = float(p[1])
+            aux.z = 0.0
+            points_to_send.coords.append(aux)
+
+        print(filtered_persons)
+
+        # print(points_to_send)
+        self.node.search_for_person_publisher.publish(points_to_send)
+        
+        self.activate_yolo_pose(activate=False)                
+
+        return filtered_persons, filenames
+    
     def check_if_charmie_is_being_followed(self, last_time):
         self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
         
@@ -1099,31 +1287,40 @@ class SticklerForTheRulesMain():
                 
                 self.set_speech(filename="sftr/start_searching", wait_for_end_of=False)
                 self.set_rgb(YELLOW+ROTATE)
-                self.activate_yolo_pose(activate=True)
                 #REPLACE: LOOK TO THE ROOM
+                            
+                tetas = [-30, 0, 30]
+                coords_of_people, images_of_people = self.search_for_person_2(tetas)
                 
-                # GUardar tamanho do array em nr_persons_detected_bedroom
+                if coords_of_people == []:
+                    detected_person = False
+                else:
+                    nr_persons_detected_bedroom = len(coords_of_people)
+                    detected_person = True
+                    self.set_rgb(POLICE)
                 
-                
-                
+                for c in coords_of_people:
+                    self.set_neck_coords(position=c, wait_for_end_of=True)
+                    time.sleep(2)
+                    #ONLY FOR DEBUG
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                #DETECT PEOPLE AND STAY LOOKING FOR HIM/HER
-                self.activate_yolo_pose(activate=False)
-                self.set_rgb(POLICE)
+                
                 self.state = self.Speak_forbidden_room
 
             elif self.state == self.Speak_forbidden_room:
                 print('State 3 = Speak forbidden room')
                 
-                
                 if detected_person ==True:
-                    self.set_speech(filename="sftr/detecion_forbidden_room", wait_for_end_of=False)
+                    self.set_speech(filename="sftr/detecion_forbidden_room", wait_for_end_of=True)
                     #REPLACE: LOOK TO THE PERSON
-                    self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                    self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=False)
-                    self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=False)
-                    self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=False)
-                    self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=False)
+                    index = len(coords_of_people) - nr_persons_detected_bedroom
+                    neck_guest = coords_of_people[index]
+
+                    self.set_neck(position=neck_guest, wait_for_end_of=True)
+                    self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=True)
                     self.state = self.Navigation_out_forbidden_room
                     
                 else:
@@ -1141,8 +1338,8 @@ class SticklerForTheRulesMain():
                 #MOVE TO OUT OF THE BEDROOM
                 self.set_navigation(movement="rotate", target=self.after_leaving_bedroom, flag_not_obs=True, wait_for_end_of=True)
                 self.set_neck(position=self.look_back, wait_for_end_of=True)
-                self.set_speech(filename="sftr/follow_me", wait_for_end_of=False)
-                self.set_navigation(movement="move", target=self.after_leaving_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_speech(filename="sftr/follow_me", wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.after_leaving_bedroom, flag_not_obs=False, wait_for_end_of=True)
                 self.check_if_charmie_is_being_followed()
                 self.set_navigation(movement="move", target=self.center_office, flag_not_obs=True, wait_for_end_of=True)
                 self.check_if_charmie_is_being_followed()
