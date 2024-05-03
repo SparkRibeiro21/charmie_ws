@@ -385,8 +385,8 @@ class StoringGroceriesMain():
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
-        self.look_judge = [45, 0]
-        self.look_table_objects = [90, -20]
+        self.look_judge = [-45, 0]
+        self.look_table_objects = [90, -40]
         self.look_tray = [0, -60]
         self.look_cabinet_top = [-45, 45]
         self.look_cabinet_center = [0, -30]
@@ -862,15 +862,15 @@ class StoringGroceriesMain():
                             if average_x_values[0] > average_x_values[1]:
                                 print(f'{class_names[1]} - left side')
                                 print(f'{class_names[0]} - right side')
-                                left_reference_x = min(average_x_values)
-                                right_reference_x = max(average_x_values)
+                                left_reference_x = average_x_values[1]
+                                right_reference_x = average_x_values[0]
                                 positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
                                 positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
                             else:
                                 print(f'{class_names[1]} - right side')
                                 print(f'{class_names[0]} - left side')
-                                left_reference_x = max(average_x_values)
-                                right_reference_x = min(average_x_values)
+                                left_reference_x = average_x_values[0]
+                                right_reference_x = average_x_values[1]
                                 positions_in_cabinet[class_names[0]] = f"{shelf} Left side"
                                 positions_in_cabinet[class_names[1]] = f"{shelf} Right side"
                         else:
@@ -1273,7 +1273,7 @@ class StoringGroceriesMain():
         self.front_of_door = [0.3, 2.5]
         self.almost_kitchen = [1.7, 5.3]
         self.inside_kitchen = [1.7, 7.0]
-        self.cabinet = [-2.0, 7.5]
+        self.cabinet = [-1.5, 7.5]
        
         while True:
 
@@ -1331,8 +1331,8 @@ class StoringGroceriesMain():
                 self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle= 95.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs = True, wait_for_end_of=True)
                 
 
 
@@ -1340,7 +1340,7 @@ class StoringGroceriesMain():
                
 
                 nr_classes_detected = 0
-                list_of_neck_position_search = [[0, 0], [0, 15], [0, 30]]
+                list_of_neck_position_search = [[0, 0], [0, 10], [0, 15], [0, 20], [0, 25], [0, 30]]
                 position_index = 0
 
                 self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
@@ -1408,11 +1408,11 @@ class StoringGroceriesMain():
 
                 self.set_neck(position=self.look_navigation) # , wait_for_end_of=True)
 
-                self.set_speech(filename="generic/moving_table", wait_for_end_of=True)
+                # self.set_speech(filename="generic/moving_table", wait_for_end_of=True)
 
                 ###### MOVEMENT TO THE KITCHEN COUNTER
 
-                self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
+                # self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
 
                 self.set_neck(position=self.look_table_objects)
 
@@ -1442,11 +1442,11 @@ class StoringGroceriesMain():
             elif self.state == self.Picking_first_object:
                 #print('State 2 = Picking first object from table')
 
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
                 self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=True) 
                 
                 self.select_voice_audio(self.selected_objects[self.object_counter])
+
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                 
                 # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
@@ -1465,6 +1465,10 @@ class StoringGroceriesMain():
                 # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 self.load_image_one_object(obj_name, object_)
+
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True) 
+
+                time.sleep(2)
 
                 self.set_speech(filename="storing_groceries/place_tray", wait_for_end_of=True)
                 
@@ -1493,9 +1497,11 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 self.object_counter += 1
+
+                time.sleep(2)
                                             
                 # next state
                 self.state = self.Picking_second_object
@@ -1504,11 +1510,11 @@ class StoringGroceriesMain():
 
             elif self.state == self.Picking_second_object:
                 
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=True)
+                self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=True) 
                 
                 self.select_voice_audio(self.selected_objects[self.object_counter])
+
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                 
                 # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
@@ -1527,6 +1533,10 @@ class StoringGroceriesMain():
                 # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 self.load_image_one_object(obj_name, object_)
+
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True) 
+
+                time.sleep(2)
 
                 self.set_speech(filename="storing_groceries/place_tray", wait_for_end_of=True)
                 
@@ -1555,19 +1565,21 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 self.object_counter += 1
+
+                time.sleep(2)
 
                 self.state = self.Picking_third_object
                 
             elif self.state == self.Picking_third_object:
                 
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=True)
+                self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=True) 
                 
                 self.select_voice_audio(self.selected_objects[self.object_counter])
+
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                 
                 # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
@@ -1586,6 +1598,10 @@ class StoringGroceriesMain():
                 # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 self.load_image_one_object(obj_name, object_)
+
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True) 
+
+                time.sleep(2)
 
                 self.set_speech(filename="storing_groceries/place_tray", wait_for_end_of=True)
                 
@@ -1614,19 +1630,21 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 self.object_counter += 1
+
+                time.sleep(2)
 
                 self.state = self.Picking_fourth_object
 
             elif self.state == self.Picking_fourth_object:
                 
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=True)
+                self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=True) 
                 
                 self.select_voice_audio(self.selected_objects[self.object_counter])
+
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                 
                 # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
@@ -1645,6 +1663,10 @@ class StoringGroceriesMain():
                 # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 self.load_image_one_object(obj_name, object_)
+
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True) 
+
+                time.sleep(2)
 
                 self.set_speech(filename="storing_groceries/place_tray", wait_for_end_of=True)
                 
@@ -1673,19 +1695,21 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                self.set_face("demo5")
+                # self.set_face("demo5")
 
                 self.object_counter += 1
+
+                time.sleep(2)
 
                 self.state = self.Picking_fifth_object
 
             elif self.state == self.Picking_fifth_object:
                 
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=True)
+                self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=True) 
                 
                 self.select_voice_audio(self.selected_objects[self.object_counter])
+
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                 
                 # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
@@ -1704,6 +1728,10 @@ class StoringGroceriesMain():
                 # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 self.load_image_one_object(obj_name, object_)
+
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True) 
+
+                time.sleep(2)
 
                 self.set_speech(filename="storing_groceries/place_tray", wait_for_end_of=True)
                 
@@ -1736,15 +1764,17 @@ class StoringGroceriesMain():
 
                 self.object_counter += 1
 
+                time.sleep(2)
+
                 self.state = self.Placing_first_object
 
             elif self.state == self.Placing_first_object:
                 self.object_counter = 0
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
+                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                # self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=True)
                 time.sleep(1)
                 # MOVIMENTAR
-                self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
+                # self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=True)
                 # self.set_arm(command="help_pick_and_place_object", wait_for_end_of=True)
                 self.set_speech(filename='storing_groceries/help_place_cabinet', wait_for_end_of=True)
                 self.select_voice_audio(self.selected_objects[self.object_counter])
@@ -1752,6 +1782,7 @@ class StoringGroceriesMain():
                 # self.set_arm(command="open_gripper", wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 self.choose_place_object_wardrobe(self.object_counter)
+                time.sleep(3.5)
                 # self.set_arm(command="close_gripper", wait_for_end_of=False)
                 # self.set_arm(command="arm_go_rest", wait_for_end_of=False)
 
@@ -1769,6 +1800,7 @@ class StoringGroceriesMain():
                 self.choose_place_object_wardrobe(self.object_counter)
                 # self.set_arm(command="close_gripper", wait_for_end_of=False)
                 # self.set_arm(command="arm_go_rest", wait_for_end_of=False)
+                time.sleep(3.5)
 
                 self.state = self.Placing_third_object
 
@@ -1786,6 +1818,7 @@ class StoringGroceriesMain():
                 self.choose_place_object_wardrobe(self.object_counter)
                 # self.set_arm(command="close_gripper", wait_for_end_of=False)
                 # self.set_arm(command="arm_go_rest", wait_for_end_of=False)
+                time.sleep(3.5)
 
                 self.state = self.Placing_fourth_object
 
@@ -1802,6 +1835,7 @@ class StoringGroceriesMain():
                 self.choose_place_object_wardrobe(self.object_counter)
                 # self.set_arm(command="close_gripper", wait_for_end_of=False)
                 # self.set_arm(command="arm_go_rest", wait_for_end_of=False)
+                time.sleep(3.5)
 
                 self.state = self.Placing_fifth_object
 
@@ -1819,6 +1853,7 @@ class StoringGroceriesMain():
                 self.choose_place_object_wardrobe(self.object_counter)
                 # self.set_arm(command="close_gripper", wait_for_end_of=False)
                 # self.set_arm(command="arm_go_rest", wait_for_end_of=False)
+                time.sleep(3.5)
 
                 self.state = self.Final_State
             

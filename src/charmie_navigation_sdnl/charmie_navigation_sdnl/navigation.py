@@ -78,7 +78,7 @@ class NavigationSDNLClass:
 
 
         # visual debug
-        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
         self.MAX_DIST_FOR_OBS = 0.7
         self.xc = 400
         self.yc = 400
@@ -118,8 +118,8 @@ class NavigationSDNLClass:
             # print("ATRATOR + REPULSORES")
         else:
             # in case it is intended to not consider obstacles
-            # self.max_lin_speed = 20.0
-            self.max_lin_speed = 30.0
+            self.max_lin_speed = 20.0
+            # self.max_lin_speed = 30.0
             self.f_final = self.f_target
             self.y_final = self.y_atrator
             # print("SÓ ATRATOR")
