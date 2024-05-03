@@ -154,8 +154,9 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
+from geometry_msgs.msg import PoseWithCovarianceStamped
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
 
 import cv2 
 import threading
@@ -190,8 +191,14 @@ class SticklerForTheRulesNode(Node):
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         # Arm CHARMIE
-        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
-        self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
+        # self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        # self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
+
+         # Navigation
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
+        # Localisation
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
 
         ### Services (Clients) ###
         # Speakers
@@ -209,7 +216,9 @@ class SticklerForTheRulesNode(Node):
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
-        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        # self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        # Navigation
+        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
@@ -222,22 +231,33 @@ class SticklerForTheRulesNode(Node):
         # while not self.calibrate_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         
+        # Audio
+        while not self.get_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Audio Server...")
+        while not self.calibrate_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        while not self.get_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
+        # while not self.get_neck_position_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Get Neck Position Command...")
         while not self.set_neck_coordinates_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         while not self.neck_track_person_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
-        while not self.neck_track_object_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
+        # while not self.neck_track_object_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         # Yolos
         while not self.activate_yolo_pose_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
-        while not self.activate_yolo_objects_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        # Arm (CHARMIE)
+        # while not self.arm_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        # Navigation
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
         
         # Arm (CHARMIE)
         # while not self.arm_trigger_client.wait_for_service(1.0):
@@ -391,6 +411,10 @@ class SticklerForTheRulesNode(Node):
         self.door_start_state = state.data
         # print("Received Start Button:", state.data)
 
+    ### NAVIGATION ###
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.flag_navigation_reached = flag
+    
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
         request = ActivateYoloPose.Request()
@@ -878,6 +902,46 @@ class SticklerForTheRulesMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
+
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.reached_radius = reached_radius
+            navigation.avoid_people = False
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
+
     def set_arm(self, command="", wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
@@ -898,6 +962,57 @@ class SticklerForTheRulesMain():
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
     
+    def set_initial_position(self, initial_position):
+
+        task_initialpose = PoseWithCovarianceStamped()
+
+        task_initialpose.header.frame_id = "map"
+        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
+
+        task_initialpose.pose.pose.position.x = initial_position[1]
+        task_initialpose.pose.pose.position.y = -initial_position[0]
+        task_initialpose.pose.pose.position.z = 0.0
+
+        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+
+        # Convert an Euler angle to a quaternion.
+        # Input
+        #     :param roll: The roll (rotation around x-axis) angle in radians.
+        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
+        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
+        # 
+        # Output
+        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+
+        roll = 0.0
+        pitch = 0.0
+        yaw = math.radians(initial_position[2])
+
+        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        
+        self.node.initialpose_publisher.publish(task_initialpose)
+        
+    def check_if_charmie_is_being_followed(self, last_time):
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
+        
+        detected_person_temp = Yolov8Pose()
+    
+        detected_person_temp = self.node.detected_people  
+        not_following = True
+        while not_following:
+            if detected_person_temp.num_person == 0:  
+                self.set_rgb(YELLOW+HALF_ROTATE)
+                self.set_speech(filename="sticklerfortherules/Come_behind_me", wait_for_end_of=True)
+                time.sleep(3)
+            else:
+                self.set_rgb(GREEN+HALF_ROTATE)
+                self.set_speech(filename="sticklerfortherules/Thanks_for_following", wait_for_end_of=True)
+                not_following = False
+          
+    
     # main state-machine function
     def main(self):
         
@@ -914,6 +1029,15 @@ class SticklerForTheRulesMain():
         self.look_back = [-180, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
+        
+        self.initial_position = [-1.0, 3.0, 180.0]
+        self.pre_door_to_office = [-2.0, 3.0, 90.0]
+        self.inside_office = [-4.0, 3.0, 90.0]
+        self.center_office = [-5.0, 3.5, 180.0]
+        self.after_leaving_bedroom = [-5.0, 5.0, 180.0]
+        self.pre_door_to_bedroom = [-5.0, 5.0, 0.0]
+        self.inside_bedroom = [-5.0, 6.0, 0.0]
+        self.nr_times_tracking_fb = 0
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_start_button 
@@ -933,6 +1057,9 @@ class SticklerForTheRulesMain():
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
                 
+                # SET START POSITION
+                self.set_initial_position(self.initial_position)
+                
                 #START TASK
                 self.set_speech(filename="sticklerfortherules/start_sftr", wait_for_end_of=True)
                 #WAITING START BUTTON
@@ -950,57 +1077,89 @@ class SticklerForTheRulesMain():
                 print('State 1 = Navigation forbidden room')
 
                 self.set_speech(filename="sftr/go_forbidden_room", wait_for_end_of=False)
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 #MOVE TO THE ROOM DOOR
-                                
+                
+                self.set_navigation(movement="rotate", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_office, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
+
                 # next state
                 self.state = self.Detect_people_forbidden_room
 
             elif self.state == self.Detect_people_forbidden_room:
                 print('State 2 = Detect people forbidden room')
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.nr_times_tracking_fb += 1
                 
                 self.set_speech(filename="sftr/start_searching", wait_for_end_of=False)
                 self.set_rgb(YELLOW+ROTATE)
+                self.activate_yolo_pose(activate=True)
                 #REPLACE: LOOK TO THE ROOM
+                
+                # GUardar tamanho do array em nr_persons_detected_bedroom
+                
+                
+                
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 #DETECT PEOPLE AND STAY LOOKING FOR HIM/HER
+                self.activate_yolo_pose(activate=False)
                 self.set_rgb(POLICE)
                 self.state = self.Speak_forbidden_room
 
             elif self.state == self.Speak_forbidden_room:
                 print('State 3 = Speak forbidden room')
                 
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                self.set_speech(filename="sftr/detecion_forbidden_room", wait_for_end_of=False)
-                #REPLACE: LOOK TO THE PERSON
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=False)
-                self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=False)
-                self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=False)
-                self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=False)
                 
+                if detected_person ==True:
+                    self.set_speech(filename="sftr/detecion_forbidden_room", wait_for_end_of=False)
+                    #REPLACE: LOOK TO THE PERSON
+                    self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                    self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=False)
+                    self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=False)
+                    self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=False)
+                    self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=False)
+                    self.state = self.Navigation_out_forbidden_room
+                    
+                else:
+                    if self.nr_times_tracking_fb == 3:
+                        self.state == self.Final_State
+                    else:
+                        self.state = self.Detect_people_forbidden_room
+                    
                 # next state
-                self.state = self.Navigation_out_forbidden_room
            
             elif self.state == self.Navigation_out_forbidden_room:
                 print('State 4 = Navigation out forbidden room')
-
+                nr_persons_detected_bedroom -= 1
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 #MOVE TO OUT OF THE BEDROOM
-
+                self.set_navigation(movement="rotate", target=self.after_leaving_bedroom, flag_not_obs=True, wait_for_end_of=True)
                 self.set_neck(position=self.look_back, wait_for_end_of=True)
-                
-                #VERIFY IT THE GUEST IS INSIDE OR OUTSIDE DE BEDROOM
-                #IF IS OUTSIDE:
+                self.set_speech(filename="sftr/follow_me", wait_for_end_of=False)
+                self.set_navigation(movement="move", target=self.after_leaving_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.check_if_charmie_is_being_followed()
+                self.set_navigation(movement="move", target=self.center_office, flag_not_obs=True, wait_for_end_of=True)
+                self.check_if_charmie_is_being_followed()
                 self.set_speech(filename="sftr/no_longer_breaking_rule", wait_for_end_of=False)
                 self.set_rgb(GREEN+BLINK_LONG)
-                #IF IS INSIDE:
-                self.set_speech(filename="sftr/dont_try_to_trick_me", wait_for_end_of=False)
-                
+                        
+                if nr_persons_detected_bedroom == 0:
+                    self.state = self.Final_State 
+                else: 
+                    self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
+                    self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
+
+                    self.state = self.Detect_people_forbidden_room
                                 
-                self.state = self.Final_State 
-                
             elif self.state == self.Final_State:
                 
                 print("Finished task!!!")
