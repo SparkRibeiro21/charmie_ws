@@ -399,7 +399,7 @@ class StoringGroceriesMain():
         self.shelf_5_height = 1.28
         self.shelf_6_height = 1.57
 
-        self.shelf_length = 0.75
+        self.shelf_length = 0.70
         self.left_limit_shelf = -0.7 # -0.38
         self.right_limit_shelf = 0.7 # 0.38
         self.center_shelf = 0.0
@@ -832,6 +832,8 @@ class StoringGroceriesMain():
                 # Initialize variables to store reference x values
                 left_reference_x = None
                 right_reference_x = None
+                left_reference_x = -0.5
+                right_reference_x = 0.05
 
                 # Initialize variable for single class average x
                 single_class_average_x = None
@@ -855,6 +857,9 @@ class StoringGroceriesMain():
                     # Get class names and average x values
                     class_names = list(class_values.keys())
                     average_x_values = [sum(x_values) / len(x_values) for x_values in class_values.values()]
+
+                    left_reference_x = -0.5
+                    right_reference_x = 0.05
 
                     if len(average_x_values) == 2:
                         # If two classes and reference x values are not yet established, determine left or right side and store reference x values
@@ -1332,7 +1337,8 @@ class StoringGroceriesMain():
                 self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=False, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= 85.0, flag_not_obs = True, wait_for_end_of=True)
+
                 
 
 
@@ -1346,7 +1352,7 @@ class StoringGroceriesMain():
                 self.set_neck(position=self.look_cabinet_center, wait_for_end_of=True)
 
 
-                while nr_classes_detected < 4:
+                while nr_classes_detected < 2:
                     
 
                     print('\n \n \n \n')
@@ -1382,7 +1388,7 @@ class StoringGroceriesMain():
                     if nr_classes_detected is None:
                         nr_classes_detected = 0
 
-                    if nr_classes_detected < 4 :
+                    if nr_classes_detected < 2:
                         self.set_rgb(command=RED+BLINK_LONG)
                         nr_classes_detected = 0
 
