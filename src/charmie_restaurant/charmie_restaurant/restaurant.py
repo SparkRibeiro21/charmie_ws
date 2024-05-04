@@ -31,6 +31,11 @@ class RestaurantNode(Node):
         super().__init__("Restaurant")
         self.get_logger().info("Initialised CHARMIE Restaurant Node")
 
+        # path to save detected people in search for person
+        home = str(Path.home())
+        midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+        self.complete_path_custom_face = home+'/'+midpath+'/'
+
         ### Topics (Publisher and Subscribers) ###   
         # Low Level 
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
@@ -46,9 +51,9 @@ class RestaurantNode(Node):
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         # Navigation
-        #self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
-        #self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)
-        # Search for Person debug publisher
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
+         # Search for Person debug publisher
         self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
 
 
@@ -133,6 +138,8 @@ class RestaurantNode(Node):
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -1015,6 +1022,8 @@ class RestaurantMain():
                 # waiting for start button
                 self.wait_for_start_button()
 
+                print('start button')
+
                 self.set_rgb(command=CYAN+ALTERNATE_QUARTERS)
 
                 # change face, to standard face
@@ -1033,15 +1042,13 @@ class RestaurantMain():
 
                 ##### TURN AROUND to the customer zone
                 #### NAVIGATION
-                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
 
                 # next state
                 self.state = self.Detecting_waving_customers
 
             elif self.state == self.Detecting_waving_customers:
                 print("State:", self.state, "- Detecting_waving_customers")
-
-                error_detected = False # Assume no error by default
 
                 ##### SPEAK: Searching for waving customers
                 self.set_speech(filename="restaurant/search_customers", wait_for_end_of=True)
@@ -1053,12 +1060,13 @@ class RestaurantMain():
                 ##### YOLO POSE SEARCH FOR ONLY_DETECT_PERSON_ARM_RAISED
                 coords_of_people, images_of_people = self.search_for_person_2(tetas)
 
-                print("RESPOSTA:", coords_of_people, images_of_people)
+                print("RESPOSTA:", coords_of_people)
+
 
                 self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
                 ##### IF AN ERROR IS DETECTED:
-                if error_detected:
+                if coords_of_people == []:
 
                     self.set_rgb(command=RED+BLINK_QUICK)
 
@@ -1074,17 +1082,20 @@ class RestaurantMain():
 
                     ##### SPEAK: Found waving customers
                     self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
-                    
+                    self.x = []
+                    self.y = []
                     ##### NECK: look waving customers
                     for c in coords_of_people:
                         self.set_neck_coords(position=c, wait_for_end_of=True)
+                        self.x.append(c[0])
+                        self.y.append(c[1])
                         time.sleep(2)
                     
-                    if len(coords_of_people) >= 1:
+                    """ if len(coords_of_people) >= 1:
                         self.x1, self.y1 = coords_of_people[0]  # Coordenadas da primeira pessoa
                     if len(coords_of_people) >= 2:
                         self.x2, self.y2 = coords_of_people[1]  # Coordenadas da segunda pessoa
-
+                        """
                     ##### SPEAK: Check face to see customers detected
                     self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
                     
@@ -1096,6 +1107,8 @@ class RestaurantMain():
                         self.set_face(custom=i)
                         time.sleep(3)
                                     
+                    while True:
+                        pass
                     # next state
                     self.state = self.Approach_customer1_table
                 
