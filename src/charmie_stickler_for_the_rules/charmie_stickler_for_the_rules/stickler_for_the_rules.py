@@ -1194,7 +1194,9 @@ class SticklerForTheRulesMain():
             if detected_person_temp.num_person == 0:  
                 self.set_rgb(YELLOW+HALF_ROTATE)
                 self.set_speech(filename="sticklerfortherules/Come_behind_me", wait_for_end_of=True)
-                time.sleep(3)
+                time.sleep(2.5)
+                self.set_rgb(RED+BLINK_QUICK)
+                time.sleep(1)
             else:
                 self.set_rgb(GREEN+HALF_ROTATE)
                 self.set_speech(filename="sticklerfortherules/Thanks_for_following", wait_for_end_of=True)
@@ -1285,16 +1287,19 @@ class SticklerForTheRulesMain():
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 self.nr_times_tracking_fb += 1
                 
+                print('nr times tracking = ', self.nr_times_tracking_fb)
+                
                 self.set_speech(filename="sftr/start_searching", wait_for_end_of=False)
                 self.set_rgb(YELLOW+ROTATE)
                 #REPLACE: LOOK TO THE ROOM
                             
                 tetas = [-30, 0, 30]
                 coords_of_people, images_of_people = self.search_for_person_2(tetas)
-                
+                print('Coordinates of people with legs detected: ', coords_of_people)
                 if coords_of_people == []:
                     detected_person = False
                 else:
+                    print('Nr de pessoas detetadas: ', len(coords_of_people))
                     nr_persons_detected_bedroom = len(coords_of_people)
                     detected_person = True
                     self.set_rgb(POLICE)
@@ -1313,8 +1318,11 @@ class SticklerForTheRulesMain():
                 if detected_person ==True:
                     self.set_speech(filename="sftr/detecion_forbidden_room", wait_for_end_of=True)
                     #REPLACE: LOOK TO THE PERSON
+                    
                     index = len(coords_of_people) - nr_persons_detected_bedroom
+                    print('Index da pessoa que eu detetei e estou a olhar: ', index)
                     neck_guest = coords_of_people[index]
+                    print('Coordinates of the  guest I am looking at: ', neck_guest)
 
                     self.set_neck(position=neck_guest, wait_for_end_of=True)
                     self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=True)
@@ -1347,8 +1355,10 @@ class SticklerForTheRulesMain():
                 self.set_rgb(GREEN+BLINK_LONG)
                         
                 if nr_persons_detected_bedroom == 0:
+                    print('No more persons detected')
                     self.state = self.Final_State 
                 else: 
+                    print('Still persons in the room')
                     self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
                     self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
                     self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
