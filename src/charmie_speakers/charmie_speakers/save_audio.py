@@ -19,7 +19,8 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'recep_first_guest_noah' : 'The first guest name is noah.'
+    'Thanks_for_following' : 'Thanks for coming behind me. Please keep following me.',
+    'Come_behind_me' : 'Please come behind me. I need you to follow me.'
 }
 
 #COMMANDS = {
