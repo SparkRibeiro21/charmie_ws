@@ -1226,7 +1226,7 @@ class SticklerForTheRulesMain():
         self.center_office = [-5.0, 3.5, 180.0]
         self.after_leaving_bedroom = [-5.0, 5.0, 180.0]
         self.pre_door_to_bedroom = [-5.0, 5.0, 0.0]
-        self.inside_bedroom = [-5.0, 6.0, 0.0]
+        self.inside_bedroom = [-5.5, 6.5, 0.0]
         self.nr_times_tracking_fb = 0
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
@@ -1239,7 +1239,6 @@ class SticklerForTheRulesMain():
             if self.state == self.Waiting_for_start_button:
                 print('State 0 = Waiting_for_start_button')
 
-    
                 self.set_face("demo5")
                 self.activate_yolo_pose(activate=False)
 
@@ -1345,6 +1344,7 @@ class SticklerForTheRulesMain():
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 #MOVE TO OUT OF THE BEDROOM
                 self.set_navigation(movement="rotate", target=self.after_leaving_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle = 180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_neck(position=self.look_back, wait_for_end_of=True)
                 self.set_speech(filename="sftr/follow_me", wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.after_leaving_bedroom, flag_not_obs=False, wait_for_end_of=True)
