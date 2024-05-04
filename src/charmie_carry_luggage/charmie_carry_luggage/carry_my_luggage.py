@@ -641,7 +641,7 @@ class CarryMyLuggageMain():
         detected_person_temp = Yolov8Pose()
         self.activate_yolo_pose(activate=True)
 
-        time.sleep(0.5)
+        time.sleep(3.0)
         detected_person_temp = self.node.detected_people  
 
 
@@ -765,7 +765,7 @@ class CarryMyLuggageMain():
                     
                     self.set_neck(position=new_neck_pos, wait_for_end_of=True)
                     
-                    time.sleep(3)
+                    time.sleep(5)
                 
                     # self.current_image = self.node.detected_objects.image_rgb
                     # bridge = CvBridge()
