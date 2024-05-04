@@ -19,8 +19,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'Thanks_for_following' : 'Thanks for coming behind me. Please keep following me.',
-    'Come_behind_me' : 'Please come behind me. I need you to follow me.'
+    'Thanks_for_following_2' : 'Thanks for coming behind me.'
 }
 
 #COMMANDS = {
