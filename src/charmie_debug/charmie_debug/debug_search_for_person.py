@@ -6,7 +6,7 @@ from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates
 from sensor_msgs.msg import Image
 
 import cv2 
@@ -15,6 +15,8 @@ import time
 from cv_bridge import CvBridge
 import math
 import numpy as np
+from pathlib import Path
+from datetime import datetime
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -27,18 +29,22 @@ class TestNode(Node):
         super().__init__("Debug")
         self.get_logger().info("Initialised CHARMIE Test Speakers and Face Node")
 
+        # path to save detected people in search for person
+        home = str(Path.home())
+        midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+        self.complete_path_custom_face = home+'/'+midpath+'/'
+
         ### Topics (Publisher and Subscribers) ###  
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
 
-        # self.only_detect_person_legs_visible_subscriber = self.create_subscription(Bool, "only_det_per_legs_vis", self.get_only_detect_person_legs_visible_callback, 10)
-        # self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_per_conf", self.get_minimum_person_confidence_callback, 10)
-        # self.minimum_keypoints_to_detect_person_subscriber = self.create_subscription(Int16, "min_kp_det_per", self.get_minimum_keypoints_to_detect_person_callback, 10)
-        # self.only_detect_person_right_in_front_subscriber = self.create_subscription(Bool, "only_det_per_right_in_front", self.get_only_detect_person_right_in_front_callback, 10)
-        # self.only_detect_person_arm_raised_subscriber = self.create_subscription(Bool, "only_det_per_arm_raised", self.get_only_detect_person_arm_raised_callback, 10)
-
+        # Face
+        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
+        self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
+        
+        # Search for Person debug publisher
         self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
 
         # Low level
@@ -48,6 +54,8 @@ class TestNode(Node):
         
         # Neck
         self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
+        self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
+        self.set_neck_coordinates_client = self.create_client(SetNeckCoordinates, "neck_to_coords")
         self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
         self.neck_track_object_client = self.create_client(TrackObject, "neck_track_object")
         # Yolos
@@ -70,10 +78,13 @@ class TestNode(Node):
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
         self.waited_for_end_of_neck_pos = False
+        self.waited_for_end_of_neck_coords = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.rgb_success = True
         self.rgb_message = ""
+        self.face_success = True
+        self.face_message = ""
         self.neck_success = True
         self.neck_message = ""
         self.track_person_success = True
@@ -264,6 +275,97 @@ class TestNode(Node):
             self.get_logger().error("Service call failed %r" % (e,))
 
 
+    #### SET NECK COORDINATES SERVER FUNCTIONS #####
+    def call_neck_coordinates_server(self, x, y, z, tilt, flag, wait_for_end_of=True):
+        request = SetNeckCoordinates.Request()
+        request.coords.x = float(x)
+        request.coords.y = float(y)
+        request.coords.z = float(z)
+        request.is_tilt = flag
+        request.tilt = float(tilt)
+        
+        future = self.set_neck_coordinates_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_set_neck_coords_command)
+        else:
+            self.neck_success = True
+            self.neck_message = "Wait for answer not needed"
+    
+    def callback_call_set_neck_coords_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_success = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_neck_coords = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
+
+
+    #### GET NECK POSITION SERVER FUNCTIONS #####
+    def call_get_neck_position_server(self):
+        request = GetNeckPosition.Request()
+        
+        future = self.get_neck_position_client.call_async(request)
+        # print("Sent Command")
+
+        # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+        future.add_done_callback(self.callback_call_get_neck_command)
+    
+    def callback_call_get_neck_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info("Received Neck Position: (%s" %(str(response.pan) + ", " + str(response.tilt)+")"))
+            self.get_neck_position[0] = response.pan
+            self.get_neck_position[1] = response.tilt
+            # time.sleep(3)
+            self.waited_for_end_of_get_neck = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
+
+
+    def call_neck_track_object_server(self, object, wait_for_end_of=True):
+        request = TrackObject.Request()
+        request.object = object
+
+        future = self.neck_track_object_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_neck_track_object)
+        else:
+            self.track_person_success = True
+            self.track_person_message = "Wait for answer not needed"
+    
+    def callback_call_neck_track_object(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.track_object_success = response.success
+            self.track_object_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_track_object = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
         request = ActivateYoloPose.Request()
@@ -318,6 +420,22 @@ class RestaurantMain():
 
         return self.node.rgb_success, self.node.rgb_message
 
+    def set_face(self, command="", custom="", wait_for_end_of=True):
+        
+        if custom == "":
+            temp = String()
+            temp.data = command
+            self.node.image_to_face_publisher.publish(temp)
+        else:
+            temp = String()
+            temp.data = custom
+            self.node.custom_image_to_face_publisher.publish(temp)
+
+        self.node.face_success = True
+        self.node.face_message = "Value Sucessfully Sent"
+
+        return self.node.face_success, self.node.face_message
+    
     def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
         self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
@@ -328,6 +446,37 @@ class RestaurantMain():
         self.node.waited_for_end_of_neck_pos = False
 
         return self.node.neck_success, self.node.neck_message
+    
+    def set_neck_coords(self, position=[], ang=0.0, wait_for_end_of=True):
+
+        if len(position) == 2:
+            self.node.call_neck_coordinates_server(x=position[0], y=position[1], z=0.0, tilt=ang, flag=True, wait_for_end_of=wait_for_end_of)
+        elif len(position) == 3:
+            print("You tried neck to coordintes using (x,y,z) please switch to (x,y,theta)")
+            pass
+            # The following line is correct, however since the functionality is not implemented yet, should not be called
+            # self.node.call_neck_coordinates_server(x=position[0], y=position[1], z=position[2], tilt=0.0, flag=False, wait_for_end_of=wait_for_end_of)
+        else:
+            print("Something went wrong")
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_neck_coords:
+            pass
+        self.node.waited_for_end_of_neck_coords = False
+
+        return self.node.neck_success, self.node.neck_message
+    
+    def get_neck(self, wait_for_end_of=True):
+    
+        self.node.call_get_neck_position_server()
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_get_neck:
+            pass
+        self.node.waited_for_end_of_get_neck = False
+
+
+        return self.node.get_neck_position[0], self.node.get_neck_position[1] 
     
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
@@ -380,6 +529,8 @@ class RestaurantMain():
         Delivering_order_to_client = 6
         Final_State = 7
 
+
+
         print("IN NEW MAIN")
         time.sleep(2)
 
@@ -400,14 +551,32 @@ class RestaurantMain():
             if self.state == Waiting_for_start_button:
 
                 ### EXAMPLES TO ACTIVATE/DEACTIVATE AND CONFIGURE YOLO POSE AND TOLO OBJECTS 
-                self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=True)
-
+                # self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_legs_visible=True) # , only_detect_person_arm_raised=True)
+                self.set_face(command="demo5")
                 self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
                 time.sleep(2.0)
 
-                tetas = [-120, -60, 0, 60, 120]
-                self.search_for_person_2(tetas)
+                # tetas = [-120, -60, 0, 60, 120]
+                tetas = [-45, 0, 60]
+                coords_of_people, images_of_people = self.search_for_person_2(tetas)
+
+                print("RESPOSTA:", coords_of_people, images_of_people)
+
+                self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
+
+                for c in coords_of_people:
+                    self.set_neck_coords(position=c, wait_for_end_of=True)
+                    time.sleep(2)
+
+                self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
+                
+                for i in images_of_people:
+                    self.set_face(custom=i)
+                    time.sleep(3)
+
+                
+
 
                 while True:
                     pass
@@ -559,10 +728,13 @@ class RestaurantMain():
                 pass
 
 
-
     def search_for_person_2(self, tetas):
 
+        self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=True)                
+
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+
+        time.sleep(3.0)
         
         imshow_detected_people = True
 
@@ -573,14 +745,13 @@ class RestaurantMain():
         points = []
         croppeds = []
 
-
         people_ctr = 0
         delay_ctr = 0
 
         print("Started")
         for t in tetas:
             self.set_neck(position=[t, -10])
-            time.sleep(5)
+            time.sleep(2)
 
             for people in self.node.detected_people.persons:
                 people_ctr+=1
@@ -612,20 +783,25 @@ class RestaurantMain():
             person_detected.clear()          
             cropped_people.clear()
 
-
+        self.activate_yolo_pose(activate=False)
+        
         ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
-
+        
         print(total_person_detected)
         print(len(points))
        
         filtered_persons = []
         filtered_persons_cropped = []
+        new_filtered_persons_cropped = []
         for frame in range(len(total_person_detected)):
+            print(filtered_persons)
+            # print(filtered_persons_cropped)
 
             if not len(filtered_persons):
                 for person in range(len(total_person_detected[frame])):
                     filtered_persons.append(total_person_detected[frame][person])
                     filtered_persons_cropped.append(total_cropped_people[frame][person])
+                    new_filtered_persons_cropped.append(total_cropped_people[frame][person])
             else:
                 for person in range(len(total_person_detected[frame])):
                     same_person_ctr = 0
@@ -640,8 +816,18 @@ class RestaurantMain():
                             same_person_ctr+=1
                             same_person_coords = filtered_persons[filtered]
                             same_person_cropped = filtered_persons_cropped[filtered] 
+
+                            # print(same_person_cropped.shape)
                         
+                    
                     if same_person_ctr > 0:
+
+                        # just debug
+                        for p in filtered_persons_cropped:
+                            print(p.shape)
+
+                        print("---", same_person_cropped.shape)
+
                         
                         # print(same_person_cropped)
                         # print(total_cropped_people[frame][person])
@@ -655,13 +841,23 @@ class RestaurantMain():
                             # filtered_persons_cropped.append(total_cropped_people[frame][person])
                             # total_cropped_people[frame][person] = 
                             # pass
+                        # for p in filtered_persons_cropped:
+                        #     if p.shape == same_person_cropped.shape:
+                        #         filtered_persons_cropped.remove(p)
 
-                        # in some cases, I remove and then add again the same value, so it photos match the locations
-                        filtered_persons_cropped.remove(same_person_cropped)
-                        if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
-                            filtered_persons_cropped.append(total_cropped_people[frame][person])
-                        else:
-                            filtered_persons_cropped.append(same_person_cropped)
+                        #         del my_list[index_to_remove]  # Removes the value at index 2 (i.e., the third element)
+                        
+                        
+                        #         filtered_persons_cropped.remove(p)
+                        
+                        
+                        # filtered_persons_cropped.remove(same_person_cropped)
+                        # if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
+                        #     filtered_persons_cropped.append(total_cropped_people[frame][person])
+                        #     new_filtered_persons_cropped.append(total_cropped_people[frame][person])
+                        # else:
+                        #     filtered_persons_cropped.append(same_person_cropped)
+                        #     new_filtered_persons_cropped.append(same_person_cropped)
                             
                         #print(same_person_ctr, same_person_coords, person)
                         filtered_persons.remove(same_person_coords)
@@ -672,18 +868,29 @@ class RestaurantMain():
                         points.append(avg_person)
 
                     else:
+                    
                         filtered_persons.append(total_person_detected[frame][person])
                         filtered_persons_cropped.append(total_cropped_people[frame][person])
-    
+                        new_filtered_persons_cropped.append(total_cropped_people[frame][person])
         
+        # same time for all people
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
+        self.custom_face_filename = current_datetime
+        
+        # ctr = 0
+        # for c in croppeds:
+        #     ctr+=1
+        #     cv2.imwrite("Person Detected_"+str(ctr)+".jpg", c)
         ctr = 0
-        for c in croppeds:
+        filenames = []
+        for c in new_filtered_persons_cropped:
             ctr+=1
-            cv2.imwrite("Person Detected_"+str(ctr)+".jpg", c)
-        ctr = 0
-        for c in filtered_persons_cropped:
-            ctr+=1
-            cv2.imwrite("Person Filtered_"+str(ctr)+".jpg", c)
+            path = current_datetime + "_person_" + str(ctr) 
+            filenames.append(path)
+            
+            # cv2.imwrite("Person Filtered_"+str(ctr)+".jpg", c)
+            cv2.imwrite(self.node.complete_path_custom_face + path + ".jpg", c) 
+        
         print("Finished")
 
 
@@ -698,252 +905,9 @@ class RestaurantMain():
             aux.z = 0.0
             points_to_send.coords.append(aux)
 
-        # print(points_to_send)
-        self.node.search_for_person_publisher.publish(points_to_send)
-
-
-    def search_for_person(self):
-        print("In Search for Person.")
-        
-        rgb = Int16()
-        rgb.data = 63
-        self.node.rgb_mode_publisher.publish(rgb)
-
-        tetas = self.node.search_for_person_data.angles
-        # tetas = [-120, -60, 0, 60, 120]
-        imshow_detected_people = self.node.search_for_person_data.show_image_people_detected
-        # imshow_detected_people = True
-
-        total_person_detected = []
-        person_detected = []
-        total_cropped_people = []
-        cropped_people = []
-        points = []
-        croppeds = []
-
-        # neck = NeckPosition()
-        # neck.pan = float(180 - tetas[0])
-        # neck.tilt = float(180)
-        # self.node.neck_position_publisher.publish(neck)
-        # time.sleep(1.0)
-
-        people_ctr = 0
-        delay_ctr = 0
-        for t in tetas:
-            print("Rotating Neck:", t)
-            
-            neck = NeckPosition()
-            neck.pan = float(180 - t)
-            neck.tilt = float(180)
-            self.node.neck_position_publisher.publish(neck)
-            if delay_ctr == 0: # since the initial angle of the tracking is never known, we do this to make sure there is time for the neck to reach the first position before analysing the yolo pose
-                time.sleep(2.0)
-            else:
-                time.sleep(1.5)
-            delay_ctr+=1
-
-            # print(self.node.latest_person_pose.num_person)
-
-            for people in self.node.latest_person_pose.persons:
-                people_ctr+=1
-                print(" - ", people.index_person, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
-                print(" - ", people.index_person, people.position_relative.x,people.position_relative.y, people.position_relative.z)
-                aux = (people.position_absolute.x, people.position_absolute.y) 
-                person_detected.append(aux)
-                points.append(aux)
-
-                if imshow_detected_people:
-
-                    y1 = people.box_top_left_y
-                    y2 = people.box_top_left_y + people.box_height
-
-                    x1 = people.box_top_left_x
-                    x2 = people.box_top_left_x + people.box_width
-
-                    print(y1, y1, x1,x2)
-                    br = CvBridge()
-                    current_frame = br.imgmsg_to_cv2(self.node.latest_color_image, "bgr8")
-                    cropped_image = current_frame[y1:y2, x1:x2]
-                    cropped_people.append(cropped_image)
-                    
-                    croppeds.append(cropped_image)
-
-            total_person_detected.append(person_detected.copy())
-            total_cropped_people.append(cropped_people.copy())
-            print("Total number of people detected:", len(person_detected), people_ctr)
-            person_detected.clear()          
-            cropped_people.clear()
-
-        # print(len(cropped_image))
-        # for cropped in cropped_people:
-        #     cv2.imshow("Detected People", cropped)
-        #     cv2.waitKey(1)
-        #     time.sleep(5)
-
-        print(total_person_detected)
-        print(len(points))
-       
-        filtered_persons = []
-        filtered_persons_cropped = []
-        for frame in range(len(total_person_detected)):
-
-            if not len(filtered_persons):
-                for person in range(len(total_person_detected[frame])):
-                    filtered_persons.append(total_person_detected[frame][person])
-                    filtered_persons_cropped.append(total_cropped_people[frame][person])
-            else:
-                for person in range(len(total_person_detected[frame])):
-                    same_person_ctr = 0
-                    same_person_coords = (0,0)
-                    for filtered in range(len(filtered_persons)): #_aux:
-
-                        # print("??? ", total_person_detected[frame][person], filtered_persons[filtered])
-                        dist = math.dist(total_person_detected[frame][person], filtered_persons[filtered])
-                        # print("person:", person, "filtered:", filtered, "dist:", dist)
-                        
-                        if dist < 1.0:
-                            same_person_ctr+=1
-                            same_person_coords = filtered_persons[filtered]
-                            same_person_cropped = filtered_persons_cropped[filtered] 
-                        
-                    if same_person_ctr > 0:
-                        
-                        # print(same_person_cropped)
-                        # print(total_cropped_people[frame][person])
-                        # print(len(same_person_cropped), len(total_cropped_people[frame][person]))
-                        # print(same_person_cropped.shape[0], same_person_cropped.shape[1])
-                        # print(total_cropped_people[frame][person].shape[0], total_cropped_people[frame][person].shape[1])
-                        
-                        # the same person is the person on the first frame, whereas total_cropped_people[frame][person] is the same person on the second frame
-                        # if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
-                            # filtered_persons_cropped.remove(same_person_cropped)
-                            # filtered_persons_cropped.append(total_cropped_people[frame][person])
-                            # total_cropped_people[frame][person] = 
-                            # pass
-
-                        # in some cases, I remove and then add again the same value, so it photos match the locations
-                        filtered_persons_cropped.remove(same_person_cropped)
-                        if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
-                            filtered_persons_cropped.append(total_cropped_people[frame][person])
-                        else:
-                            filtered_persons_cropped.append(same_person_cropped)
-                            
-                        #print(same_person_ctr, same_person_coords, person)
-                        filtered_persons.remove(same_person_coords)
-
-                        avg_person = ((total_person_detected[frame][person][0]+same_person_coords[0])/2, (total_person_detected[frame][person][1]+same_person_coords[1])/2)
-                        # print(avg_person)
-                        filtered_persons.append(avg_person)
-                        points.append(avg_person)
-
-                    else:
-                        filtered_persons.append(total_person_detected[frame][person])
-                        filtered_persons_cropped.append(total_cropped_people[frame][person])
-
-        # print("---", filtered_persons)
-        show_detected_people = True
-        
-        ctr = 0
-        for c in croppeds:
-            ctr+=1
-            cv2.imwrite("Person Detected_"+str(ctr)+".jpg", c)
-        ctr = 0
-        for c in filtered_persons_cropped:
-            ctr+=1
-            cv2.imwrite("Person Filtered_"+str(ctr)+".jpg", c)
-
-
-        if show_detected_people:
-            H = 720
-            y_offset = 50
-            x_offset = 50
-            max_image_height = 0
-            detected_person_final_image = np.zeros(( H+(y_offset*2), H*10, 3), np.uint8)
-            
-            i_ctr = 0
-            for i in range(len(filtered_persons_cropped)):
-                i_ctr += 1
-                print("Image shape:", filtered_persons_cropped[i].shape)
-                print("Image dtype:", filtered_persons_cropped[i].dtype)
-
-                scale_factor  = H/filtered_persons_cropped[i].shape[0]
-                width = int(filtered_persons_cropped[i].shape[1] * scale_factor)
-                height = int(filtered_persons_cropped[i].shape[0] * scale_factor)
-
-                if width > H//2:
-                    scale_factor  = (H//2)/filtered_persons_cropped[i].shape[1]
-                    width = int(filtered_persons_cropped[i].shape[1] * scale_factor)
-                    height = int(filtered_persons_cropped[i].shape[0] * scale_factor)
-
-
-
-                if height > max_image_height:
-                    max_image_height = height
-
-                dim = (width, height)
-                print(scale_factor, dim)
-                filtered_persons_cropped[i] = cv2.resize(filtered_persons_cropped[i], dim, interpolation = cv2.INTER_AREA)
-
-                # cv2.imshow("Image"+str(i_ctr), i)
-
-                detected_person_final_image[y_offset:y_offset+filtered_persons_cropped[i].shape[0], x_offset:x_offset+filtered_persons_cropped[i].shape[1]] = filtered_persons_cropped[i]
-
-                detected_person_final_image = cv2.putText(
-                    detected_person_final_image,
-                    f"{'Customer '+str(i_ctr)}",
-                    (x_offset, y_offset-10),
-                    cv2.FONT_HERSHEY_DUPLEX,
-                    1,
-                    (255, 255, 255),
-                    1,
-                    cv2.LINE_AA
-                ) 
-
-                print(filtered_persons[i])
-                
-                detected_person_final_image = cv2.putText(
-                    detected_person_final_image,
-                    f"{'('+str(round(filtered_persons[i][0],2))+', '+str(round(filtered_persons[i][1],2))+')'}",
-                    (x_offset, int(height+(1.5*y_offset))),
-                    cv2.FONT_HERSHEY_DUPLEX,
-                    0.75,
-                    (255, 255, 255),
-                    1,
-                    cv2.LINE_AA
-                )
-
-                x_offset += width+50
-
-            print(max_image_height)
-
-            detected_person_final_image = detected_person_final_image[0:max_image_height+(y_offset*2), 0:x_offset] # Slicing to crop the image
-            cv2.imshow("Customers Detected", detected_person_final_image)
-            cv2.waitKey(100)
-
-        print("---", filtered_persons)
-        points_to_send = ListOfPoints()
-        # for debug, see all points and the average calculations
-        # for p in points:
-        for p in filtered_persons:
-            aux = Point()
-            aux.x = float(p[0])
-            aux.y = float(p[1])
-            aux.z = 0.0
-            points_to_send.coords.append(aux)
+        print(filtered_persons)
 
         # print(points_to_send)
         self.node.search_for_person_publisher.publish(points_to_send)
 
-        # for p in filtered_persons:
-        #     pose = Pose2D()
-        #     pose.x = p[0]
-        #     pose.y = p[1]
-        #     pose.theta = 180.0
-        #     self.node.neck_to_coords_publisher.publish(pose)
-        #     time.sleep(3)
-
-        # neck = NeckPosition()
-        # neck.pan = float(180)
-        # neck.tilt = float(180)
-        # self.node.neck_position_publisher.publish(neck)
-
+        return filtered_persons, filenames

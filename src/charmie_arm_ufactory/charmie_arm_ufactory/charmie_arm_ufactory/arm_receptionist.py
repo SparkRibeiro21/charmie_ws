@@ -165,6 +165,7 @@ class ArmUfactory(Node):
 		self.keep_pulling_door_from_behind = 			[-785.0, -72.4, -68.2, math.radians(121.6), math.radians(1.5), math.radians(-95.0)]
 		self.keep_2_pulling_door_from_behind = 			[-638.1, -87.8, 22.6, math.radians(121.6), math.radians(1.5), math.radians(-95.0)]
 
+		self.pre_open_door = [-413.9, -2.5, 476.7, math.radians(-3.2),math.radians(45.3), math.radians(-179.8)]
 		print('Nada')
 
 		########### EXPLANATION OF EACH MODE: ########### 
@@ -228,6 +229,8 @@ class ArmUfactory(Node):
 		rclpy.spin_until_future_complete(self, self.future)
 
 		print('gripper_speed')
+  
+
 
 	def deg_to_rad(self, deg):
 		rad = [deg[0] * math.pi / 180,
@@ -495,7 +498,7 @@ class ArmUfactory(Node):
 
 		return self.gripper_reached_target.data
 
-	def open_door(self):
+	def open_door_LAR(self):
 		if self.estado_tr == 0:
 			set_gripper_speed_req= SetFloat32.Request()
 			set_gripper_speed_req.data = 5000.0
@@ -672,6 +675,185 @@ class ArmUfactory(Node):
 			print('FEITO Abrir fechar garra')
 			self.get_logger().info("FINISHED MOVEMENT")	
 	
+	def open_door(self):
+		if self.estado_tr == 0:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 5000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 1:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 2:
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.speed = math.radians(60)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  3:
+			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
+			self.joint_values_req.speed = math.radians(60)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 4:
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 5:
+			self.position_values_req.pose = self.orient_to_handler
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 6:
+			self.position_values_req.pose = self.reach_handler
+			self.position_values_req.speed = 80.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 7:
+			self.position_values_req.pose = self.unlock_handler
+			self.position_values_req.speed = 80.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 8:
+			self.position_values_req.pose = self.start_pulling_door
+			self.position_values_req.speed = 80.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 9:
+			self.position_values_req.pose = self.opening_door
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 10:
+			self.position_values_req.pose = self.leave_door
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 11:
+			self.position_values_req.pose = self.keep_preparing_to_go_open_door
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 12:
+			self.position_values_req.pose = self.almost_reaching_door
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 13:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 14:
+			self.position_values_req.pose = self.going_sideways_to_door
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 15:
+			self.position_values_req.pose = self.reaching_behind_door
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 16:
+			self.position_values_req.pose = self.pulling_door_from_behind
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 17:
+			self.position_values_req.pose = self.keep_pulling_door_from_behind
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 18:
+			self.position_values_req.pose = self.keep_2_pulling_door_from_behind
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 19:
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.speed = math.radians(80)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 20:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			print('FEITO Abrir fechar garra')
+			self.get_logger().info("FINISHED MOVEMENT")	
+  
+  
+  
 	def movement_selection(self):
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
@@ -686,7 +868,7 @@ class ArmUfactory(Node):
 		elif self.next_arm_movement == "close_gripper_with_check_object":
 			self.close_gripper_with_check_object()
 		elif self.next_arm_movement == "open_door_LAR":
-			self.open_door()
+			self.open_door_LAR()
 
 
 
