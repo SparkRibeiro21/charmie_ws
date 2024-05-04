@@ -163,7 +163,10 @@ import threading
 import time
 from cv_bridge import CvBridge
 import math
-import datetime
+from datetime import datetime
+import numpy as np
+from pathlib import Path
+
 
 
 # Constant Variables to ease RGB_MODE coding
@@ -177,6 +180,10 @@ class SticklerForTheRulesNode(Node):
     def __init__(self):
         super().__init__("SticklerForTheRules")
         self.get_logger().info("Initialised CHARMIE SticklerForTheRules Node")
+
+        home = str(Path.home())
+        midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+        self.complete_path_custom_face = home+'/'+midpath+'/'
 
         ### Topics (Publisher and Subscribers) ###   
         # Low Level 
@@ -196,6 +203,9 @@ class SticklerForTheRulesNode(Node):
         # Arm CHARMIE
         # self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         # self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
+
+        # Search for Person debug publisher
+        self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
 
          # Navigation
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
@@ -235,10 +245,10 @@ class SticklerForTheRulesNode(Node):
         #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         
         # Audio
-        while not self.get_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Audio Server...")
-        while not self.calibrate_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        # while not self.get_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Audio Server...")
+        # while not self.calibrate_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
@@ -251,8 +261,8 @@ class SticklerForTheRulesNode(Node):
         # while not self.neck_track_object_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         # Yolos
-        while not self.activate_yolo_pose_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         # while not self.activate_yolo_objects_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Arm (CHARMIE)
@@ -305,6 +315,10 @@ class SticklerForTheRulesNode(Node):
         self.activate_yolo_objects_message = ""
         self.arm_success = True
         self.arm_message = ""
+        self.navigation_success = True
+        self.navigation_message = ""
+        self.flag_navigation_reached = False
+
 
         self.get_neck_position = [1.0, 1.0]
 
@@ -1020,7 +1034,7 @@ class SticklerForTheRulesMain():
 
         print("Started")
         for t in tetas:
-            self.set_neck(position=[t, -10])
+            self.set_neck(position=[t, -25])
             time.sleep(2)
 
             for people in self.node.detected_people.persons:
@@ -1183,26 +1197,50 @@ class SticklerForTheRulesMain():
 
         return filtered_persons, filenames
     
-    def check_if_charmie_is_being_followed(self, last_time):
+    def check_if_charmie_is_being_followed(self):
         self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
         
         detected_person_temp = Yolov8Pose()
-    
+        self.set_rgb(WHITE+HALF_ROTATE)
+        time.sleep(2.5)
         detected_person_temp = self.node.detected_people  
+        print(detected_person_temp.num_person)
+        # print(detected_person_temp.persons)
         not_following = True
         while not_following:
+            detected_person_temp = self.node.detected_people 
             if detected_person_temp.num_person == 0:  
                 self.set_rgb(YELLOW+HALF_ROTATE)
-                self.set_speech(filename="sticklerfortherules/Come_behind_me", wait_for_end_of=True)
-                time.sleep(2.5)
+                self.set_speech(filename="sftr/Come_behind_me", wait_for_end_of=True)
                 self.set_rgb(RED+BLINK_QUICK)
                 time.sleep(1)
             else:
                 self.set_rgb(GREEN+HALF_ROTATE)
-                self.set_speech(filename="sticklerfortherules/Thanks_for_following", wait_for_end_of=True)
+                self.set_speech(filename="sftr/Thanks_for_following", wait_for_end_of=True)
                 not_following = False
           
-    
+    def check_if_charmie_is_being_followed2(self):
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
+        
+        detected_person_temp = Yolov8Pose()
+        self.set_rgb(WHITE+HALF_ROTATE)
+        time.sleep(2.5)
+        detected_person_temp = self.node.detected_people  
+        print(detected_person_temp.num_person)
+        # print(detected_person_temp.persons)
+        not_following = True
+        while not_following:
+            detected_person_temp = self.node.detected_people 
+            if detected_person_temp.num_person == 0:  
+                self.set_rgb(YELLOW+HALF_ROTATE)
+                self.set_speech(filename="sftr/Come_behind_me", wait_for_end_of=True)
+                self.set_rgb(RED+BLINK_QUICK)
+                time.sleep(1)
+            else:
+                self.set_rgb(GREEN+HALF_ROTATE)
+                self.set_speech(filename="sftr/Thanks_for_following_2", wait_for_end_of=True)
+                not_following = False
+
     # main state-machine function
     def main(self):
         
@@ -1224,13 +1262,18 @@ class SticklerForTheRulesMain():
         self.pre_door_to_office = [-2.0, 3.0, 90.0]
         self.inside_office = [-4.0, 3.0, 90.0]
         self.center_office = [-5.0, 3.5, 180.0]
-        self.after_leaving_bedroom = [-5.0, 5.0, 180.0]
-        self.pre_door_to_bedroom = [-5.0, 5.0, 0.0]
-        self.inside_bedroom = [-5.5, 6.5, 0.0]
+        self.after_leaving_bedroom = [-5.3, 5.0, 180.0]
+        self.pre_door_to_bedroom = [-5.5, 5.0, 0.0]
+        self.inside_bedroom = [-5.5, 6.2, 0.0]
         self.nr_times_tracking_fb = 0
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_start_button 
+
+        # DEBUG:
+        # self.state = self.Detect_people_forbidden_room 
+        #self.initial_position = [-4.5, 5.0, 0.0]
+        #self.set_initial_position(self.initial_position)
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In SticklerForTheRules Main...")
 
@@ -1250,7 +1293,7 @@ class SticklerForTheRulesMain():
                 self.set_initial_position(self.initial_position)
                 
                 #START TASK
-                self.set_speech(filename="sticklerfortherules/start_sftr", wait_for_end_of=True)
+                self.set_speech(filename="sftr/start_sftr", wait_for_end_of=True)
                 #WAITING START BUTTON
                 self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
                 self.wait_for_start_button()
@@ -1298,32 +1341,49 @@ class SticklerForTheRulesMain():
                 if coords_of_people == []:
                     detected_person = False
                 else:
-                    print('Nr de pessoas detetadas: ', len(coords_of_people))
+                    print('\n\n Nr de pessoas detetadas: ', len(coords_of_people))
                     nr_persons_detected_bedroom = len(coords_of_people)
                     detected_person = True
                     self.set_rgb(POLICE)
+                    """ for i in images_of_people:
+                        self.set_face(custom=i)
+                        time.sleep(3) """
                 
                 for c in coords_of_people:
-                    self.set_neck_coords(position=c, wait_for_end_of=True)
-                    time.sleep(2)
+                    # self.set_neck_coords(position=c, wait_for_end_of=True)
+                    print('\n\n\n\ C:' , c)
+                    print('x: ', c[0])
+                    print('y: ', c[1])
+                    
+                    if -6.5 < c[0] < -2.5 and 5.6 < c[1] < 11.0:
+                        coordinates_guest = c
+                        self.set_neck_coords(position=c, ang= -5.0, wait_for_end_of=True)
+                        
+                        time.sleep(2)
+                        self.state = self.Speak_forbidden_room
+                        break
+                    else:
+                        self.state = self.Detect_people_forbidden_room
                     #ONLY FOR DEBUG
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+
+        
+                # self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
-                self.state = self.Speak_forbidden_room
+                   # self.state = self.Speak_forbidden_room
 
             elif self.state == self.Speak_forbidden_room:
                 print('State 3 = Speak forbidden room')
                 
                 if detected_person ==True:
-                    self.set_speech(filename="sftr/detecion_forbidden_room", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/detection_forbidden_room", wait_for_end_of=True)
                     #REPLACE: LOOK TO THE PERSON
                     
-                    index = len(coords_of_people) - nr_persons_detected_bedroom
-                    print('Index da pessoa que eu detetei e estou a olhar: ', index)
-                    neck_guest = coords_of_people[index]
-                    print('Coordinates of the  guest I am looking at: ', neck_guest)
+                    # index = len(coords_of_people) - nr_persons_detected_bedroom
+                    # print('Index da pessoa que eu detetei e estou a olhar: ', index)
+                    
+                    print('Coordinates of the  guest I am looking at: ', coordinates_guest)
 
-                    self.set_neck(position=neck_guest, wait_for_end_of=True)
+                    # self.set_neck(position=coords_of_people[0], wait_for_end_of=True)
                     self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=True)
                     self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=True)
                     self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=True)
@@ -1344,13 +1404,14 @@ class SticklerForTheRulesMain():
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 #MOVE TO OUT OF THE BEDROOM
                 self.set_navigation(movement="rotate", target=self.after_leaving_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle = 180.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle = 180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_neck(position=self.look_back, wait_for_end_of=True)
                 self.set_speech(filename="sftr/follow_me", wait_for_end_of=True)
+                time.sleep(2)
                 self.set_navigation(movement="move", target=self.after_leaving_bedroom, flag_not_obs=False, wait_for_end_of=True)
                 self.check_if_charmie_is_being_followed()
                 self.set_navigation(movement="move", target=self.center_office, flag_not_obs=True, wait_for_end_of=True)
-                self.check_if_charmie_is_being_followed()
+                self.check_if_charmie_is_being_followed2()
                 self.set_speech(filename="sftr/no_longer_breaking_rule", wait_for_end_of=False)
                 self.set_rgb(GREEN+BLINK_LONG)
                         
