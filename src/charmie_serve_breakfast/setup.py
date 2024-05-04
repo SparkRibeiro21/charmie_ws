@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
 		"serve_breakfast = charmie_serve_breakfast.serve_breakfast:main",
+		"serve_breakfast_pre_fnr = charmie_serve_breakfast.serve_breakfast_pre_fnr:main",
 		"serve_breakfast_template = charmie_serve_breakfast.serve_breakfast_template:main"
         ],
     },
