@@ -235,7 +235,8 @@ class ArmUfactory(Node):
 		self.lift_funilocopo_more =						[-394.4, 120.0, 74.4, math.radians(173.3), math.radians(0.0), math.radians( -90.0)]
   
 		self.reach_position_to_place_spoon_table = 		[-648.7, 220.0, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
-		self.place_spoon_table_joints = 						[-501.6, 239.3, 513.9, math.radians(122.1), math.radians(-40.0), math.radians(135.7)]
+		self.place_spoon_table_joints = 				[-501.6, 239.3, 513.9, math.radians(122.1), math.radians(-40.0), math.radians(135.7)]
+		self.small_up_after_drop_spoon_table = 			[-501.6, 209.3, 513.9, math.radians(122.1), math.radians(-40.0), math.radians(135.7)]
 		self.pos_place_spoon_table = 					[-648.7, 120.0, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
   
   
@@ -2085,6 +2086,15 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
 		elif self.estado_tr == 10:
+			self.position_values_req.pose = self.small_up_after_drop_spoon_table
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 11:
 			self.position_values_req.pose = self.pos_place_spoon_table
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
@@ -2093,7 +2103,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 		
-		elif self.estado_tr == 11:
+		elif self.estado_tr == 12:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
