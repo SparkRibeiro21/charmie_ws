@@ -277,11 +277,11 @@ class RestaurantMain():
 
                 # time.sleep(3)
                 
-                self.set_navigation(movement="adjust", target=self.front_of_sofa, flag_not_obs=True, adjust_time=8.0, adjust_direction=135.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=8.0, adjust_direction=135.0, wait_for_end_of=True)
 
                 self.set_navigation(movement="orientate", absolute_angle=-45.0, flag_not_obs=True, wait_for_end_of=True)
 
-                self.set_navigation(movement="adjust_obstacle", target=self.front_of_sofa, flag_not_obs=True, adjust_time=1.0, adjust_direction=-45.0+360, adjust_min_dist=0.5, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_time=1.0, adjust_direction=-45.0+360, adjust_min_dist=0.5, wait_for_end_of=True)
 
                 while True:
                     pass

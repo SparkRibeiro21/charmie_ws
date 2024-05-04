@@ -235,7 +235,8 @@ class ArmUfactory(Node):
 		self.lift_funilocopo_more =						[-394.4, 120.0, 74.4, math.radians(173.3), math.radians(0.0), math.radians( -90.0)]
   
 		self.reach_position_to_place_spoon_table = 		[-648.7, 220.0, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
-		self.place_spoon_table_joints = 						[-501.6, 239.3, 513.9, math.radians(122.1), math.radians(-40.0), math.radians(135.7)]
+		self.place_spoon_table_joints = 				[-501.6, 239.3, 513.9, math.radians(122.1), math.radians(-40.0), math.radians(135.7)]
+		self.small_up_after_drop_spoon_table = 			[-501.6, 209.3, 513.9, math.radians(122.1), math.radians(-40.0), math.radians(135.7)]
 		self.pos_place_spoon_table = 					[-648.7, 120.0, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
   
   
@@ -1214,6 +1215,26 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+
+	### ACTUAL SERVE THE BREAKFAST ARM MOVEMENTS ###
+
+	def initial_pose_to_ask_for_objects(self):
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def search_for_objects_to_ask_for_objects(self):
 
 		if self.estado_tr == 0:
@@ -1234,14 +1255,14 @@ class ArmUfactory(Node):
 
 	def ask_for_objects_to_initial_position(self):
 
-		if self.estado_tr == 0:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
+		# if self.estado_tr == 0:
+		# 	self.set_gripper_req.pos = 0.0
+		# 	self.set_gripper_req.wait = True
+		# 	self.set_gripper_req.timeout = 4.0
+		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
+		# 	self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 1:
+		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
 			self.joint_values_req.speed = math.radians(60)
 			self.joint_values_req.wait = True
@@ -1249,7 +1270,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 2:
+		elif self.estado_tr == 1:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -2065,6 +2086,15 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
    
 		elif self.estado_tr == 10:
+			self.position_values_req.pose = self.small_up_after_drop_spoon_table
+			self.position_values_req.speed = 150.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 11:
 			self.position_values_req.pose = self.pos_place_spoon_table
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
@@ -2073,7 +2103,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 		
-		elif self.estado_tr == 11:
+		elif self.estado_tr == 12:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -2137,6 +2167,13 @@ class ArmUfactory(Node):
 			self.search_for_objects()
 		elif self.next_arm_movement == "search_for_objects_to_ask_for_objects":
 			self.search_for_objects_to_ask_for_objects()
+		
+		# new
+		elif self.next_arm_movement == "initial_pose_to_ask_for_objects":
+			self.initial_pose_to_ask_for_objects()
+		# elif self.next_arm_movement == "collect_milk_to_tray2":
+		# 	self.collect_milk_to_tray2()
+
 		elif self.next_arm_movement == "ask_for_objects_to_initial_position":
 			self.ask_for_objects_to_initial_position()
 		elif self.next_arm_movement == "verify_if_object_is_grabbed":
