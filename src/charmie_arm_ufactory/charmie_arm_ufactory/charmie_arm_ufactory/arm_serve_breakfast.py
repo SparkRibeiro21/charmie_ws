@@ -1214,6 +1214,26 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+
+	### ACTUAL SERVE THE BREAKFAST ARM MOVEMENTS ###
+
+	def initial_pose_to_ask_for_objects(self):
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def search_for_objects_to_ask_for_objects(self):
 
 		if self.estado_tr == 0:
@@ -1234,14 +1254,14 @@ class ArmUfactory(Node):
 
 	def ask_for_objects_to_initial_position(self):
 
-		if self.estado_tr == 0:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
+		# if self.estado_tr == 0:
+		# 	self.set_gripper_req.pos = 0.0
+		# 	self.set_gripper_req.wait = True
+		# 	self.set_gripper_req.timeout = 4.0
+		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
+		# 	self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 1:
+		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
 			self.joint_values_req.speed = math.radians(60)
 			self.joint_values_req.wait = True
@@ -1249,7 +1269,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 2:
+		elif self.estado_tr == 1:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -2137,6 +2157,13 @@ class ArmUfactory(Node):
 			self.search_for_objects()
 		elif self.next_arm_movement == "search_for_objects_to_ask_for_objects":
 			self.search_for_objects_to_ask_for_objects()
+		
+		# new
+		elif self.next_arm_movement == "initial_pose_to_ask_for_objects":
+			self.initial_pose_to_ask_for_objects()
+		# elif self.next_arm_movement == "collect_milk_to_tray2":
+		# 	self.collect_milk_to_tray2()
+
 		elif self.next_arm_movement == "ask_for_objects_to_initial_position":
 			self.ask_for_objects_to_initial_position()
 		elif self.next_arm_movement == "verify_if_object_is_grabbed":

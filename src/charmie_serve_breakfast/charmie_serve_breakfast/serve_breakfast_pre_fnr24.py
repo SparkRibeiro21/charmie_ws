@@ -737,8 +737,6 @@ class ServeBreakfastMain():
 
                 self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
 
-                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-
                 self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
                 
                 # self.set_speech(filename="serve_breakfast/will_show_objects_one_by_one", wait_for_end_of=True)
@@ -747,7 +745,6 @@ class ServeBreakfastMain():
                 
                 self.set_face(custom=self.custom_face_filename + "spoon")
 
-                self.set_speech(filename="serve_breakfast/found_the_spoon", wait_for_end_of=True)  
                 self.set_speech(filename="serve_breakfast/found_the_spoon", wait_for_end_of=True)  
                 
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
