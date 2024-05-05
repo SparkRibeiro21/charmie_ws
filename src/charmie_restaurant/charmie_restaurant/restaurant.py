@@ -997,7 +997,7 @@ class RestaurantMain():
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
-        self.state = self.Receiving_order1_listen_and_confirm
+        # self.state = self.Receiving_order1_listen_and_confirm
         self.set_face("demo5")
 
 
@@ -1301,8 +1301,8 @@ class RestaurantMain():
                 self.set_neck(position=[self.x2, self.y2], wait_for_end_of=True) """
 
                 # next state
-                self.state = self.Receiving_order2_listen_and_confirm
-                #self.state = self.Approach_customer2_table
+                
+                self.state = self.Approach_customer2_table
 
             elif self.state == self.Approach_customer2_table:
                 print("State:", self.state, "- Approach_customer2_table")
@@ -1385,8 +1385,8 @@ class RestaurantMain():
                 self.set_rgb(command=BLUE+ROTATE)
 
                 ##### MOVE TO THE BARMAN TABLE
-                # self.set_navigation(movement="rotate", target=[0.0, 0.0], flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=[0.0, 0.0], flag_not_obs=False, wait_for_end_of=True, reached_radius=3.5)
+                self.set_navigation(movement="rotate", target=[0.0, 0.0], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[0.0, 0.0], flag_not_obs=False, wait_for_end_of=True, reached_radius=3.5)
 
                 ##### SPEAK: Say the order to barman
                 self.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
@@ -1405,9 +1405,6 @@ class RestaurantMain():
                 self.set_speech(filename="restaurant/tray_order", wait_for_end_of=True)
 
                 time.sleep(30)
-
-                while True:
-                    pass
 
                 # next state
                 self.state = self.Delivering_customer_order1
