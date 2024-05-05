@@ -19,7 +19,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'face_customer' : 'Please look at my face to see the customers detected.'
+    'green_face' : 'I will ask you some questions. Please answer me after the green light on my face. '
 }
 
 #COMMANDS = {

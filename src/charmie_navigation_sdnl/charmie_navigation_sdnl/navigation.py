@@ -118,8 +118,8 @@ class NavigationSDNLClass:
             # print("ATRATOR + REPULSORES")
         else:
             # in case it is intended to not consider obstacles
-            self.max_lin_speed = 30.0
             # self.max_lin_speed = 30.0
+            self.max_lin_speed = 20.0
             self.f_final = self.f_target
             self.y_final = self.y_atrator
             # print("SÓ ATRATOR")

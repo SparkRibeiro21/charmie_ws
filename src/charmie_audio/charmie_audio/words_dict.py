@@ -46,8 +46,8 @@ drinks_dict = {
 	"Iced_Tea":       [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
                        "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", " icy ", "nice t", "oysti", " aste "],
-    "Orange_Juice":   ["orange", "orang", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "our enjour", "northern juice", "orton julius",\
-    # "Orange_Juice":   ["orange juice", "orangous", "orangels", "foreign", "autumn", "orandris", "our enjour", "northern juice", "orton julius",\
+    # "Orange_Juice":   ["orange", "orang", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "our enjour", "northern juice", "orton julius",\
+    "Orange_Juice":   ["orange juice", "orangous", "orangels", "foreign", "autumn", "orandris", "our enjour", "northern juice", "orton julius",\
                        "orang joyce", "orang juiis", "orange joyce", "arun jus", "jordan jus", "oronschuss"], # removed 'order' and all "just orange" so there is no conflict with orange 
     "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona", "sabanab"], # removed o "simon" cause it conflicts with th name Simon
     "Water":          ["water", "laude"]

@@ -573,12 +573,14 @@ class RestaurantMain():
             while keywords=="ERROR":
                 
                 self.set_speech(filename=question, wait_for_end_of=True)
+                self.set_face("demo7")
                 self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
                 
                 if wait_for_end_of:
                     while not self.node.waited_for_end_of_audio:
                         pass
                 self.node.waited_for_end_of_audio = False
+                self.set_face("demo5")
 
                 keywords = self.node.audio_command  
                 
@@ -995,7 +997,9 @@ class RestaurantMain():
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
-        self.state = self.Detecting_waving_customers
+        self.state = self.Receiving_order1_listen_and_confirm
+        self.set_face("demo5")
+
 
         self.all_orders = []
         self.x1 = 0
@@ -1140,7 +1144,6 @@ class RestaurantMain():
                         print('\n \n coordenadas cliente :', c[0], c[1])
                         print('distance to client: ', dist)
                         
-                        time.sleep(2)
                     print('x de todos os clientes: ', self.x)
 
                     print('y de todos os clientes: ', self.y)
@@ -1177,7 +1180,10 @@ class RestaurantMain():
 
                     print("Result:", result)
 
-                    for people in sorted_distances:
+                    self.set_neck(position=[sorted_x_values[0], sorted_y_values[0]], wait_for_end_of=True)
+                    time.sleep(2)
+                    self.set_neck(position=[sorted_x_values[1], sorted_y_values[1]], wait_for_end_of=True)
+                    time.sleep(2)
 
                 
                     self.set_neck(position=self.look_back, wait_for_end_of=True)
@@ -1191,7 +1197,7 @@ class RestaurantMain():
                     for i in sorted_images:
                         counter += 1
                         self.set_face(custom=i)
-                        time.sleep(3)
+                        time.sleep(2)
                         if counter == 2:
                             break
 
@@ -1204,8 +1210,6 @@ class RestaurantMain():
                 
             elif self.state == self.Approach_customer1_table:
                 print("State:", self.state, "- Approach_customer1_table")
-                while True:
-                    pass
 
                 ##### NECK MOVEMENT FORWARD POSITION
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
@@ -1219,11 +1223,11 @@ class RestaurantMain():
                 self.set_rgb(command=BLUE+ROTATE)
 
                 ##### MOVE TO CUSTOMER 1
-                self.set_navigation(movement="rotate", target=[self.x_final_array[0], self.y_final_array[0]], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[self.x_final_array[0], self.y_final_array[0]], reached_radius=2.0, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=[sorted_x_values[0], sorted_y_values[0]], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_x_values[0], sorted_y_values[0]], reached_radius=2.0, flag_not_obs=False, wait_for_end_of=True)
 
                 ##### NECK: Look to customer 1
-                self.set_neck(position=[self.x_final_array[0], self.y_final_array[0]], wait_for_end_of=True)
+                self.set_neck(position=[sorted_x_values[0], sorted_y_values[0]], wait_for_end_of=True)
 
                 ##### SPEAK: Hello
                 self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
@@ -1237,6 +1241,8 @@ class RestaurantMain():
                 while True:
 
                     self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
+
+                    self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
 
                     ##### AUDIO: Listen the order and repeat for confirmation
                     command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
@@ -1256,8 +1262,13 @@ class RestaurantMain():
                     if confirmation.lower() == "yes":
                         self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
                         self.set_rgb(command=GREEN+BLINK_LONG)
+
+                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                        for kw in keyword_list:
+                            print(kw)
+                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
                         ##### SPEAK: Thank you
-                        self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
                         break  # Sai do loop se a confirmação for "yes"
                     elif confirmation.lower() == "no":
                         self.set_rgb(command=RED+BLINK_LONG)
@@ -1269,7 +1280,7 @@ class RestaurantMain():
                         print("ERROR")
 
                 # next state
-                self.state = self.Detecting_customer2_again
+                """ self.state = self.Detecting_customer2_again
 
             elif self.state == self.Detecting_customer2_again:
                 print("State:", self.state, "- Detecting_customer2_again")
@@ -1287,10 +1298,11 @@ class RestaurantMain():
                     self.x2, self.y2 = coords_of_people[0]
 
                 ##### NECK: Look to customer 2
-                self.set_neck(position=[self.x2, self.y2], wait_for_end_of=True)
+                self.set_neck(position=[self.x2, self.y2], wait_for_end_of=True) """
 
                 # next state
-                self.state = self.Approach_customer2_table
+                self.state = self.Receiving_order2_listen_and_confirm
+                #self.state = self.Approach_customer2_table
 
             elif self.state == self.Approach_customer2_table:
                 print("State:", self.state, "- Approach_customer2_table")
@@ -1306,11 +1318,12 @@ class RestaurantMain():
 
                 self.set_rgb(command=BLUE+ROTATE)
 
-                ##### MOVE TO CUSTOMER 1
-                self.set_navigation(movement="move", target=[self.x1, self.y1], flag_not_obs=True, wait_for_end_of=True)
+                ##### MOVE TO CUSTOMER 2
+                self.set_navigation(movement="rotate", target=[sorted_x_values[1], sorted_y_values[1]], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_x_values[1], sorted_y_values[1]], reached_radius=3.0, flag_not_obs=False, wait_for_end_of=True)
 
-                ##### NECK: Look to customer 1
-                self.set_neck(position=[self.x2, self.y2], wait_for_end_of=True)
+                ##### NECK: Look to customer 2
+                self.set_neck(position=[sorted_x_values[1], sorted_y_values[1]], wait_for_end_of=True)
 
                 ##### SPEAK: Hello
                 self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
@@ -1322,6 +1335,8 @@ class RestaurantMain():
                 while True:
 
                     self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
+
+                    self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
 
                     ##### AUDIO: Listen the order and repeat for confirmation
                     command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
@@ -1341,8 +1356,13 @@ class RestaurantMain():
                     if confirmation.lower() == "yes":
                         self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
                         self.set_rgb(command=GREEN+BLINK_LONG)
+
+                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                        for kw in keyword_list:
+                            print(kw)
+                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
                         ##### SPEAK: Thank you
-                        self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
                         break  # Sai do loop se a confirmação for "yes"
                     elif confirmation.lower() == "no":
                         self.set_rgb(command=RED+BLINK_LONG)
@@ -1365,7 +1385,8 @@ class RestaurantMain():
                 self.set_rgb(command=BLUE+ROTATE)
 
                 ##### MOVE TO THE BARMAN TABLE
-                self.set_navigation(movement="move", target=[0.0, 0.0], flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=[0.0, 0.0], flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=[0.0, 0.0], flag_not_obs=False, wait_for_end_of=True, reached_radius=3.5)
 
                 ##### SPEAK: Say the order to barman
                 self.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
@@ -1383,6 +1404,11 @@ class RestaurantMain():
                 ##### SPEAK: Say to the barman put the order in the tray
                 self.set_speech(filename="restaurant/tray_order", wait_for_end_of=True)
 
+                time.sleep(30)
+
+                while True:
+                    pass
+
                 # next state
                 self.state = self.Delivering_customer_order1
 
@@ -1396,10 +1422,13 @@ class RestaurantMain():
 
                 ##### NAVIGATION TO FIRST CUSTOMER
                 ##### MOVE TO CUSTOMER 1
-                self.set_navigation(movement="move", target=[self.x1, self.y1], flag_not_obs=True, wait_for_end_of=True)
-                
+                self.set_navigation(movement="rotate", target=[sorted_x_values[0], sorted_y_values[0]], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_x_values[0], sorted_y_values[0]], reached_radius=2.0, flag_not_obs=False, wait_for_end_of=True)
+
                 ##### SPEAK: Here are the items, CAN YOU PICK FROM MY TRAY?
                 self.set_speech(filename="restaurant/pick_tray", wait_for_end_of=True)
+
+                time.sleep(10)
 
                 ##### SPEAK: Hope you enjoy!
                 self.set_speech(filename="restaurant/enjoy_order", wait_for_end_of=True)
@@ -1417,11 +1446,14 @@ class RestaurantMain():
 
                 ##### NAVIGATION TO SECOND CUSTOMER
                 ##### MOVE TO CUSTOMER 2
-                self.set_navigation(movement="move", target=[self.x2, self.y2], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=[sorted_x_values[1], sorted_y_values[1]], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_x_values[1], sorted_y_values[1]], reached_radius=2.0, flag_not_obs=False, wait_for_end_of=True)
+
                 
                 ##### SPEAK: Here are the items, CAN YOU PICK FROM MY TRAY?
                 self.set_speech(filename="restaurant/pick_tray", wait_for_end_of=True)
-
+                
+                time.sleep(10)
                 ##### SPEAK: Hope you enjoy!
                 self.set_speech(filename="restaurant/enjoy_order", wait_for_end_of=True)
                                 
