@@ -19,8 +19,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'ready_start_ct' : 'I am ready to start my clean the table task.',
-    'finished_ct' : 'I have finished my clean the table task.'
+    'Thanks_for_following_2' : 'Thanks for coming behind me.'
 }
 
 #COMMANDS = {
