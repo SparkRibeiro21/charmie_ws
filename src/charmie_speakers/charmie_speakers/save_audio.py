@@ -19,7 +19,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'green_face' : 'I will ask you some questions. Please answer me after the green light on my face. '
+    'yes_no_question' : 'To confirm the order please respond with yes robot or no robot.'
 }
 
 #COMMANDS = {
