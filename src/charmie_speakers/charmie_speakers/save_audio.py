@@ -19,7 +19,7 @@ MODE = "STANDARD"
 
 
 COMMANDS = {
-    'Thanks_for_following_2' : 'Thanks for coming behind me.'
+    'face_customer' : 'Please look at my face to see the customers detected.'
 }
 
 #COMMANDS = {

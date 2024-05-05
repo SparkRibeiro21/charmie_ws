@@ -31,6 +31,8 @@ class RestaurantNode(Node):
         super().__init__("Restaurant")
         self.get_logger().info("Initialised CHARMIE Restaurant Node")
 
+        self.DIST_CLIENT = 6.0
+
         # path to save detected people in search for person
         home = str(Path.home())
         midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
@@ -79,12 +81,12 @@ class RestaurantNode(Node):
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
         # Audio
-        """
+        
         while not self.get_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Audio Server...")
         while not self.calibrate_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Calibrate Audio Server...")
-        """
+       
         """
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
@@ -981,6 +983,7 @@ class RestaurantMain():
         
         # Neck Positions
         self.look_forward = [0, 0]
+        self.look_back = [-180, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45]
@@ -992,6 +995,7 @@ class RestaurantMain():
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
+        self.state = self.Detecting_waving_customers
 
         self.all_orders = []
         self.x1 = 0
@@ -1032,7 +1036,7 @@ class RestaurantMain():
                 ##### START TURN TO BARMAN TABLE!!!
 
                 ##### NECK LOOKS AT Barman
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_neck(position=self.look_back, wait_for_end_of=True)
 
                 ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
                 self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
@@ -1042,7 +1046,9 @@ class RestaurantMain():
 
                 ##### TURN AROUND to the customer zone
                 #### NAVIGATION
-                self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
 
                 # next state
                 self.state = self.Detecting_waving_customers
@@ -1062,11 +1068,13 @@ class RestaurantMain():
 
                 print("RESPOSTA:", coords_of_people)
 
+                print('Tamanho array', len(images_of_people))
+
 
                 self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
                 ##### IF AN ERROR IS DETECTED:
-                if coords_of_people == []:
+                if len(images_of_people) == 0:
 
                     self.set_rgb(command=RED+BLINK_QUICK)
 
@@ -1074,6 +1082,40 @@ class RestaurantMain():
                     self.set_speech(filename="restaurant/no_customers", wait_for_end_of=True)
 
                     ##### BACK TO initial searching
+                    self.state = self.Detecting_waving_customers
+
+                elif len(images_of_people) == 1:
+                    self.set_rgb(command=YELLOW+BLINK_QUICK)
+
+                    ##### SPEAK: Found waving customers
+                    self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
+                    self.x = []
+                    self.y = []
+                    dist_array = []
+
+                    for c in coords_of_people:
+                        self.set_neck_coords(position=c, wait_for_end_of=True)
+                        self.x.append(c[0])
+                        self.y.append(c[1])
+                        dist = math.sqrt(c[0]**2 +c[1]**2)
+                        dist_array.append(dist)
+                        print('\n \n coordenadas cliente :', c[0], c[1])
+                        print('distance to client: ', dist)
+                        
+                        time.sleep(2)
+                    print('x de todos os clientes: ', self.x)
+
+                    print('y de todos os clientes: ', self.y)
+
+                    print('\n\n dist all clients: ', dist_array)
+
+                    self.set_neck(position=self.look_back, wait_for_end_of=True)
+                    ##### SPEAK: Check face to see customers detected
+                    self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
+
+                    self.set_face(custom=images_of_people[0])
+                    time.sleep(3)
+
                     self.state = self.Detecting_waving_customers
 
                 else:
@@ -1084,36 +1126,86 @@ class RestaurantMain():
                     self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
                     self.x = []
                     self.y = []
+                    self.x_final_array = []
+                    self.y_final_array = []
+                    dist_array = []
+                    final_images = []
                     ##### NECK: look waving customers
                     for c in coords_of_people:
-                        self.set_neck_coords(position=c, wait_for_end_of=True)
+                        # self.set_neck_coords(position=c, wait_for_end_of=True)
                         self.x.append(c[0])
                         self.y.append(c[1])
+                        dist = math.sqrt(c[0]**2 +c[1]**2)
+                        dist_array.append(dist)
+                        print('\n \n coordenadas cliente :', c[0], c[1])
+                        print('distance to client: ', dist)
+                        
                         time.sleep(2)
-                    
-                    """ if len(coords_of_people) >= 1:
-                        self.x1, self.y1 = coords_of_people[0]  # Coordenadas da primeira pessoa
-                    if len(coords_of_people) >= 2:
-                        self.x2, self.y2 = coords_of_people[1]  # Coordenadas da segunda pessoa
-                        """
+                    print('x de todos os clientes: ', self.x)
+
+                    print('y de todos os clientes: ', self.y)
+
+                    print('\n\n dist all clients: ', dist_array)
+                    # i = 0
+                    # j = 0
+                    # dist_array = sorted(dist_array)
+                    # print('sorted array: ', dist_array)
+                    # counter = 0
+
+
+
+                    # Combine the x, y, and distance values into tuples
+                    combined_values = list(zip(self.x, self.y, dist_array, images_of_people))
+
+                    # Sort the tuples based on the distance values
+                    sorted_combined_values = sorted(combined_values, key=lambda tup: tup[2])
+
+                    # Split the sorted tuples back into separate arrays
+                    sorted_x_values, sorted_y_values, sorted_distances, sorted_images = map(list, zip(*sorted_combined_values))
+
+                    print("Sorted x values:", sorted_x_values)
+                    print("Sorted y values:", sorted_y_values)
+                    print("Sorted distances:", sorted_distances)
+                    print('Sorted images', sorted_images)
+
+                    time.sleep(3)
+
+
+                    result = [(sorted_x_values[i], sorted_y_values[i]) for i in range(len(sorted_distances))]
+
+                    print('\n \n coords of people received: ', coords_of_people)
+
+                    print("Result:", result)
+
+                    for people in sorted_distances:
+
+                
+                    self.set_neck(position=self.look_back, wait_for_end_of=True)
                     ##### SPEAK: Check face to see customers detected
                     self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
                     
-                    ##### NECK: Reset the neck for standart position
-                    self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
+                    
 
                     ##### SHOW FACE DETECTED CUSTOMER 
-                    for i in images_of_people:
+                    counter = 0 
+                    for i in sorted_images:
+                        counter += 1
                         self.set_face(custom=i)
                         time.sleep(3)
-                                    
-                    while True:
-                        pass
+                        if counter == 2:
+                            break
+
+                    
+
+                    ##### NECK: Reset the neck for standart position
+                    self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)             
                     # next state
                     self.state = self.Approach_customer1_table
                 
             elif self.state == self.Approach_customer1_table:
                 print("State:", self.state, "- Approach_customer1_table")
+                while True:
+                    pass
 
                 ##### NECK MOVEMENT FORWARD POSITION
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
@@ -1127,13 +1219,16 @@ class RestaurantMain():
                 self.set_rgb(command=BLUE+ROTATE)
 
                 ##### MOVE TO CUSTOMER 1
-                self.set_navigation(movement="move", target=[self.x1, self.y1], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=[self.x_final_array[0], self.y_final_array[0]], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[self.x_final_array[0], self.y_final_array[0]], reached_radius=2.0, flag_not_obs=False, wait_for_end_of=True)
 
                 ##### NECK: Look to customer 1
-                self.set_neck(position=[self.x1, self.y1], wait_for_end_of=True)
+                self.set_neck(position=[self.x_final_array[0], self.y_final_array[0]], wait_for_end_of=True)
 
                 ##### SPEAK: Hello
                 self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
+                
+
                 self.state = self.Receiving_order1_listen_and_confirm
 
             elif self.state == self.Receiving_order1_listen_and_confirm:
@@ -1178,6 +1273,7 @@ class RestaurantMain():
 
             elif self.state == self.Detecting_customer2_again:
                 print("State:", self.state, "- Detecting_customer2_again")
+
 
                 ##### SPEAK: Could the second customer please raise their hand again?
                 self.set_speech(filename="restaurant/raise_hand_again", wait_for_end_of=True)
