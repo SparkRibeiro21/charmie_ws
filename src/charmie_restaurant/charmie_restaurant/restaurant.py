@@ -1173,16 +1173,6 @@ class RestaurantMain():
                     print("Sorted distances:", sorted_distances)
                     print('Sorted images', sorted_images)
 
-                    if sorted_distances[0] > 6.0: 
-                        REACH_RADIUS_FIRST = 3.5
-                    else:
-                        REACH_RADIUS_FIRST = 2.3
-
-                    if sorted_distances[1] > 6.0:
-                        REACH_RADIUS_SECOND = 4.0
-                    else:
-                        REACH_RADIUS_SECOND = 3.0
-
                     time.sleep(3)
 
 
@@ -1236,7 +1226,7 @@ class RestaurantMain():
 
                 ##### MOVE TO CUSTOMER 1
                 self.set_navigation(movement="rotate", target=[sorted_x_values[0], sorted_y_values[0]], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_x_values[0], sorted_y_values[0]], reached_radius=REACH_RADIUS_FIRST, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_x_values[0], sorted_y_values[0]], reached_radius=2.2, flag_not_obs=False, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=[sorted_x_values[0], sorted_y_values[0]], flag_not_obs=True, wait_for_end_of=True)
 
                 ##### NECK: Look to customer 1
@@ -1333,7 +1323,7 @@ class RestaurantMain():
 
                 ##### MOVE TO CUSTOMER 2
                 self.set_navigation(movement="rotate", target=[sorted_x_values[1], sorted_y_values[1]], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_x_values[1], sorted_y_values[1]], reached_radius=REACH_RADIUS_SECOND, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_x_values[1], sorted_y_values[1]], reached_radius=2.4, flag_not_obs=False, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=[sorted_x_values[1], sorted_y_values[1]], flag_not_obs=True, wait_for_end_of=True)
 
                 ##### NECK: Look to customer 2
@@ -1438,7 +1428,7 @@ class RestaurantMain():
                 ##### NAVIGATION TO FIRST CUSTOMER
                 ##### MOVE TO CUSTOMER 1
                 self.set_navigation(movement="rotate", target=[sorted_x_values[0], sorted_y_values[0]], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_x_values[0], sorted_y_values[0]], reached_radius=REACH_RADIUS_FIRST, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_x_values[0], sorted_y_values[0]], reached_radius=2.7, flag_not_obs=False, wait_for_end_of=True)
 
                 ##### SPEAK: Here are the items, CAN YOU PICK FROM MY TRAY?
                 self.set_speech(filename="restaurant/pick_tray", wait_for_end_of=True)
@@ -1462,7 +1452,7 @@ class RestaurantMain():
                 ##### NAVIGATION TO SECOND CUSTOMER
                 ##### MOVE TO CUSTOMER 2
                 self.set_navigation(movement="rotate", target=[sorted_x_values[1], sorted_y_values[1]], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_x_values[1], sorted_y_values[1]], reached_radius=REACH_RADIUS_SECOND, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_x_values[1], sorted_y_values[1]], reached_radius=2.7, flag_not_obs=False, wait_for_end_of=True)
 
                 
                 ##### SPEAK: Here are the items, CAN YOU PICK FROM MY TRAY?

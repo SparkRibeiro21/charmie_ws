@@ -111,8 +111,8 @@ def generate_launch_description():
                 )
 
     arm = Node(package='charmie_arm_ufactory',
-                        executable='arm_serve_breakfast',
-                        name='arm_serve_breakfast',
+                        executable='arm_clean_table',
+                        name='arm_clean_table',
                         emulate_tty=True
                         )
     
@@ -168,7 +168,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),
-        charmie_multi_camera_launch_description,
+        # charmie_multi_camera_launch_description,
         debug_visual,
         face,
         speakers,
@@ -176,9 +176,9 @@ def generate_launch_description():
         low_level,
         arm,
         odometry,
-        navigation,
-        point_cloud,
-        yolo_objects,
+        # navigation,
+        # point_cloud,
+        # yolo_objects,
         lidar,
         obstacles,
         door_start,

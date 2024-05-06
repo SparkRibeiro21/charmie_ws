@@ -246,9 +246,11 @@ class ArmUfactory(Node):
   
 
 		self.place_cup1 = [-597.0,  50.0, 132.4, math.radians(132.1), math.radians(1.9), math.radians(-87.1)]
-		self.place_cup2 = [-557.0, 134.9, 455.3, math.radians(85.6), math.radians(43.2), math.radians(178.4)]
-		self.place_cup3 = [-564.0, 424.0, 471.6, math.radians(85.6), math.radians(43.2), math.radians(178.4)]
-		self.place_cup4 = [-564.0, 424.0, 471.6, math.radians(85.6), math.radians(43.2), math.radians(178.4)]
+		self.place_cup2 = [-557.0, 134.9, 405.3, math.radians(85.6), math.radians(43.2), math.radians(178.4)]
+		self.place_cup_2_joints = [-164.6, 23.2, -92.5, -88.9, 103.8, 339.1]
+		self.place_cup3 = [-564.8, 424.0, 471.6, math.radians(85.6), math.radians(43.2), math.radians(178.4)]
+		self.place_cup4 = [-557.4, 134.9, 455.3, math.radians(85.6), math.radians(43.2), math.radians(178.4)]
+
 
 		self.place_culp_ini_joints = [-179.4, 17.7, -64.2, 130.8, 0.6, 136]
 
@@ -2186,7 +2188,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 3:
-			time.sleep(2.0)
+			time.sleep(5.0)
 			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 4.0
@@ -2194,12 +2196,11 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 4:
-			self.position_values_req.pose = self.place_cup2
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.joint_values_req.angles = self.deg_to_rad(self.place_cup_2_joints)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 5:
