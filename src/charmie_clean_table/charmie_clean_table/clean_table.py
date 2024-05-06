@@ -533,10 +533,11 @@ class ServeBreakfastMain():
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
     
-    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
+
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_time=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
 
 
-        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
 
             self.navigation_success = False
@@ -559,6 +560,9 @@ class ServeBreakfastMain():
             navigation.flag_not_obs = flag_not_obs
             navigation.reached_radius = reached_radius
             navigation.avoid_people = False
+            navigation.adjust_time = adjust_time
+            navigation.adjust_direction = adjust_direction
+            navigation.adjust_min_dist = adjust_min_dist
 
             self.node.flag_navigation_reached = False
             
@@ -573,6 +577,7 @@ class ServeBreakfastMain():
             self.navigation_message = "Arrived at selected location"
 
         return self.node.navigation_success, self.node.navigation_message   
+
 
     def set_initial_position(self, initial_position):
 
@@ -676,7 +681,10 @@ class ServeBreakfastMain():
         self.flag_object_total = [False, False, False, False, False] 
 
         # to debug just a part of the task you can just change the initial state, example:
-        self.state = self.Placing_bowl
+        self.state = self.Waiting_for_task_start
+        # self.state = self.Open_rack
+
+        ### DEBUG:
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
 
@@ -698,6 +706,8 @@ class ServeBreakfastMain():
                 self.set_speech(filename="clean_the_table/ready_start_ct", wait_for_end_of=True)
 
                 self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+
+
 
                 self.wait_for_start_button()
                 
@@ -721,11 +731,12 @@ class ServeBreakfastMain():
                 self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 
-                self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True )
 
+                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_time=1.0, adjust_direction=-45.0+360, adjust_min_dist=0.60, wait_for_end_of=True)
 
                 self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=True)
                 
@@ -749,7 +760,7 @@ class ServeBreakfastMain():
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+                self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
 
                 # GET KNIFE
                 self.set_speech(filename="clean_the_table/found_the_knife", wait_for_end_of=True)  
@@ -793,12 +804,25 @@ class ServeBreakfastMain():
                 self.set_speech(filename="clean_the_table/place_object_in_tray", wait_for_end_of=True)  
                 time.sleep(3)
 
+                self.set_arm(command="arm_go_rest", wait_for_end_of=True)
+
                 self.state = self.Approach_washing_machine
 
             elif self.state == self.Approach_washing_machine:
 
 
-                self.state = self.Open_rack
+                self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs = True, wait_for_end_of=True)
+
+                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_time=1.0, adjust_direction=0.0, adjust_min_dist=0.60, wait_for_end_of=True)
+
+                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
+
+                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_time=1.0, adjust_direction=45.0, adjust_min_dist=0.50, wait_for_end_of=True)
+
+                self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True )
+
+
+                self.state = self.Place_cup
 
             elif self.state == self.Open_rack:
 
@@ -806,9 +830,22 @@ class ServeBreakfastMain():
                 self.state = self.Place_cup
 
             elif self.state == self.Place_cup:
+
+                self.set_face("help_pick_cup") 
+                
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                self.set_arm(command="place_cup", wait_for_end_of=True)
             
 
-                self.state = self.Close_rack
+
+
+
+
+
+
+
+                self.state = self.Final_State
 
             elif self.state == self.Close_rack:
             
@@ -838,7 +875,6 @@ class ServeBreakfastMain():
                 
             elif self.state == self.Final_State:
                 
-                self.set_arm(command="arm_go_rest", wait_for_end_of=True)
 
                 # self.set_neck(position=self.look_judge) 
                 
