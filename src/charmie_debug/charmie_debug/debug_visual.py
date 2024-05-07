@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, DetectedPerson, NeckPosition, ListOfPoints
+from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, DetectedPerson, NeckPosition, ListOfPoints, TarNavSDNL
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -80,6 +80,9 @@ class Robot():
         self.person_pose = Yolov8Pose()
         self.object_detected = Yolov8Objects()
         self.search_for_person = ListOfPoints()
+
+        self.navigation = TarNavSDNL()
+        self.is_navigating = False
 
         self.linhas = 720
         self.colunas = 1280
@@ -159,6 +162,15 @@ class Robot():
                       int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
                        
 
+            if self.is_navigating:
+                pass
+            
+            if self.navigation.move_or_rotate == "move" or self.navigation.move_or_rotate == "rotate":
+                cv2.circle(self.test_image, (int(self.xc_adj + self.navigation.target_coordinates.x*self.scale),
+                    int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (0, 255, 0), -1)
+                cv2.circle(self.test_image, (int(self.xc_adj + self.navigation.target_coordinates.x*self.scale),
+                    int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.navigation.reached_radius), (0, 255, 0), 1)
+            
             for person in self.search_for_person.coords:
                 # print(person.position_relative.x/1000, person.position_relative.y/1000)
 
@@ -239,6 +251,10 @@ class DebugVisualNode(Node):
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
+        # Navigation
+        self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
+
         # search for person, person localisation 
         self.search_for_person_subscriber = self.create_subscription(ListOfPoints, "search_for_person_points", self.search_for_person_callback, 10)
         
@@ -247,6 +263,16 @@ class DebugVisualNode(Node):
         
         self.robot = Robot()
         
+
+    def target_pos_callback(self, nav: TarNavSDNL):
+        self.robot.navigation = nav
+        self.robot.is_navigating = True
+        print(nav)
+
+
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.robot.is_navigating = False
+
 
     def get_neck_position_callback(self, pose: NeckPosition):
         # print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
