@@ -5,7 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, LaserScan
 from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, DetectedPerson, NeckPosition, ListOfPoints, TarNavSDNL
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from cv_bridge import CvBridge, CvBridgeError
@@ -83,6 +83,9 @@ class Robot():
 
         self.navigation = TarNavSDNL()
         self.is_navigating = False
+
+        self.scan = LaserScan()
+        self.valores_dict = {}
 
         self.linhas = 720
         self.colunas = 1280
@@ -248,6 +251,9 @@ class DebugVisualNode(Node):
         self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
         self.object_detected_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.get_object_detected_callback, 10)
 
+        # lidar
+        self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.lidar_callback , 10)
+
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
@@ -263,6 +269,23 @@ class DebugVisualNode(Node):
         
         self.robot = Robot()
         
+
+    def lidar_callback(self, scan: LaserScan):
+        self.robot.scan = scan
+        # print(scan)
+
+        START_RAD = scan.angle_min
+        STEP_RAD = scan.angle_increment
+
+
+        for i in range(len(scan.ranges)):
+            # print(x)
+            # i = i + 1
+            # self.valores_id[START_RAD+i*STEP_RAD] = i
+            self.robot.valores_dict[START_RAD+i*STEP_RAD] = scan.ranges[i]
+
+        print(self.robot.valores_dict, "\n")
+
 
     def target_pos_callback(self, nav: TarNavSDNL):
         self.robot.navigation = nav
