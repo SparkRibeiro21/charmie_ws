@@ -87,6 +87,9 @@ class Robot():
         self.scan = LaserScan()
         self.valores_dict = {}
 
+        self.NORTE = 319.1
+        self.imu_orientation_norm_rad = 0.0
+
         self.linhas = 720
         self.colunas = 1280
         self.current_frame = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
@@ -95,7 +98,7 @@ class Robot():
         
         self.robot_x = pose.x
         self.robot_y = pose.y
-        self.robot_t = pose.theta
+        # self.robot_t = pose.theta
 
 
     def update_debug_drawings(self):
@@ -152,7 +155,7 @@ class Robot():
 
             ### ROBOT
             cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
-            cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
+            # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
             cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
                                          int(self.yc_adj - self.scale*self.robot_y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius)+2, (0, 255, 255), -1)
             
@@ -174,6 +177,33 @@ class Robot():
                 cv2.circle(self.test_image, (int(self.xc_adj + self.navigation.target_coordinates.x*self.scale),
                     int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.navigation.reached_radius), (0, 255, 0), 1)
             
+
+            # print(self.robot_t, self.imu_orientation_norm_rad)
+
+            # self.robot_t = -self.imu_orientation_norm_rad
+
+            for key, value in self.valores_dict.items():
+                # print(f"Ang: {key}, Dist: {value}")
+
+
+
+                if value > 0.1: 
+                    obs_x = value * math.cos(key + self.robot_t + math.pi/2)
+                    obs_y = value * math.sin(key + self.robot_t + math.pi/2)
+
+                    ### ROBOT
+
+                    cv2.circle(self.test_image, (int(self.xc_adj + self.scale * (self.robot_x + obs_x) + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                                                int(self.yc_adj - self.scale * (self.robot_y + obs_y) - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                                                2, (0, 0, 255), -1)
+                
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                #                             int(self.yc_adj - self.scale*self.robot_y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius)+2, (0, 255, 255), -1)
+                
+
+
+
+
             for person in self.search_for_person.coords:
                 # print(person.position_relative.x/1000, person.position_relative.y/1000)
 
@@ -266,8 +296,26 @@ class DebugVisualNode(Node):
         
         # Intel Realsense Subscribers
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
-        
+
+        # IMU
+        self.get_orientation_subscribrer = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
+       
+
         self.robot = Robot()
+
+
+    def get_orientation_callback(self, orientation: Float32):
+        # self.robot.imu_orientation = orientation.data
+        imu_orientation_norm = orientation.data - self.robot.NORTE
+        if imu_orientation_norm > 180.0:
+            imu_orientation_norm -= 360.0
+        if imu_orientation_norm < -180.0:
+            imu_orientation_norm += 360.0
+
+        self.robot.imu_orientation_norm_rad = math.radians(imu_orientation_norm)
+        self.robot.robot_t = -self.robot.imu_orientation_norm_rad
+
+        
         
 
     def lidar_callback(self, scan: LaserScan):
@@ -284,7 +332,7 @@ class DebugVisualNode(Node):
             # self.valores_id[START_RAD+i*STEP_RAD] = i
             self.robot.valores_dict[START_RAD+i*STEP_RAD] = scan.ranges[i]
 
-        print(self.robot.valores_dict, "\n")
+        # print(self.robot.valores_dict, "\n")
 
 
     def target_pos_callback(self, nav: TarNavSDNL):
@@ -314,7 +362,7 @@ class DebugVisualNode(Node):
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot.robot_x = pose.x
         self.robot.robot_y = pose.y
-        self.robot.robot_t = pose.theta
+        # self.robot.robot_t = pose.theta
         
     def search_for_person_callback(self, points: ListOfPoints):
         self.robot.search_for_person = points
