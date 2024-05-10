@@ -795,11 +795,13 @@ class YoloPoseNode(Node):
                                     (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+120), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
                     if DRAW_PERSON_CLOTHES_COLOR:
-                        cv2.putText(current_frame_draw, new_person.shirt_color,
-                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.shirt_rgb.blue, new_person.shirt_rgb.green, new_person.shirt_rgb.red), 1, cv2.LINE_AA)
+                        cv2.putText(current_frame_draw, new_person.shirt_color + "(" + str(new_person.shirt_rgb.red) + ", " + str(new_person.shirt_rgb.green) + ", " + str(new_person.shirt_rgb.blue) + ")",
+                                    # (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.shirt_rgb.blue, new_person.shirt_rgb.green, new_person.shirt_rgb.red), 1, cv2.LINE_AA)
+                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
-                        cv2.putText(current_frame_draw, new_person.pants_color,
-                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
+                        cv2.putText(current_frame_draw, new_person.pants_color + "(" + str(new_person.pants_rgb.red) + ", " + str(new_person.pants_rgb.green) + ", " + str(new_person.pants_rgb.blue) + ")",
+                                    # (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
+                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
 
             # print("===")
@@ -1205,7 +1207,7 @@ class YoloPoseNode(Node):
 
         # Averages and Standard Deviations for White, Grey and Black colors
         MIN_AVG_FOR_BLACK = 30 
-        MIN_AVG_FOR_WHITE = 220 
+        MIN_AVG_FOR_WHITE = 130 # was 220 
         MIN_STD_DEV_FOR_GREY = 8.0 
         MIN_STD_DEV_FOR_BW = 15.0 
 
