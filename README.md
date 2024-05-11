@@ -58,7 +58,7 @@ To setup the realsense package in your workspace, please follow the installation
 
 |Event|Ranking|Points|
 | ------------- | ------------- | ------------- |
-|RoboCup Portugal Open 2024|TBD|TBD|
+|RoboCup Portugal Open 2024|1/3|3140|
 |RoboCup 2023|7/15|932|
 |RoboCup Portugal Open 2023|3/3|400|
 
