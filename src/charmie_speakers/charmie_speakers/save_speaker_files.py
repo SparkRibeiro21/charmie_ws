@@ -63,8 +63,6 @@ class RobotSpeak():
 
         for filename, command in commands.items():
 
-            print(filename, command)
-
             self.filename = filename+".wav"
 
             # create txt file with command for face package 
