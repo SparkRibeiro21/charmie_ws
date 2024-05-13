@@ -6,19 +6,15 @@ import time
 import pygame
 from pathlib import Path
 
-
 # names_list = ["Adel", "Angel", "Axel", "Charlie", "Jane", "John", "Jules", "Morgan", "Paris", "Robin", "Simone"]
-
 names_list = ["Kai", "Noah", "Unique", "Luca", "Evelyn", "Jayden", "James", "Riley", "Harper", "Quinn", "Avery", "Remi", "River", "Atlas"]
 drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
 host_name = "Noah"
 
-
 # MODE can be the following commands:
 # "STANDARD": convert one command into wav and txt 
 # "RECEPTIONIST": reads names and drinks arrays and generates all commands for first guest names, second guest names and favourite drinks
-MODE = "STANDARD"
-
+MODE = "RECEPTIONIST"
 
 COMMANDS = {
     'Thanks_for_following_2' : 'Thanks for coming behind me.'
@@ -168,6 +164,7 @@ def main(args=None):
         receptionist_commands = {}
         receptionist_commands['receptionist/names/recep_host_name'] = 'The host name is '+host_name+'.'
         for name in names_list:
+            receptionist_commands['receptionist/names/recep_dear_'+name.lower()] = 'Dear '+name+'.'
             # receptionist_commands['receptionist/recep_host_'+name.lower()] = 'The host name is '+name+'.'
             receptionist_commands['receptionist/names/recep_first_guest_'+name.lower()] = 'The first guest name is '+name+'.'
             receptionist_commands['receptionist/names/recep_second_guest_'+name.lower()] = 'The second guest name is '+name+'.'
