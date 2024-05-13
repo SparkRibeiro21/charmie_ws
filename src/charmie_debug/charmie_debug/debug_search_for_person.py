@@ -557,21 +557,26 @@ class RestaurantMain():
 
                 tetas = [-120, -60, 0, 60, 120]
                 # tetas = [-45, 0, 60]
-                coords_of_people, images_of_people = self.search_for_person_3(tetas)
+                people_found = self.search_for_person_3(tetas)
 
-                print("RESPOSTA:", coords_of_people, images_of_people)
+                print("FOUND:", len(people_found)) 
+                for p in people_found:
+                    print("ID:", p.index_person)
 
-                self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
-                for c in coords_of_people:
-                    self.set_neck_coords(position=c, wait_for_end_of=True)
-                    time.sleep(2)
+                # print("RESPOSTA:", coords_of_people, images_of_people)
 
-                self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
+                # self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
+
+                # for c in coords_of_people:
+                #     self.set_neck_coords(position=c, wait_for_end_of=True)
+                #     time.sleep(2)
+
+                # self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
                 
-                for i in images_of_people:
-                    self.set_face(custom=i)
-                    time.sleep(3)
+                # for i in images_of_people:
+                #     self.set_face(custom=i)
+                #     time.sleep(3)
 
                 
 
@@ -804,8 +809,11 @@ class RestaurantMain():
                         to_append.append(total_person_detected[frame][person])
 
             for p in to_remove:
-                print("REMOVED: ", p.index_person)
-                filtered_persons.remove(p)
+                if p in filtered_persons:
+                    print("REMOVED: ", p.index_person)
+                    filtered_persons.remove(p)
+                else:
+                    print("TRIED TO REMOVE TWICE THE SAME PERSON")
             to_remove.clear()  
 
             for p in to_append:
@@ -813,9 +821,14 @@ class RestaurantMain():
                 filtered_persons.append(p)
             to_append.clear()
 
-        print("FILTERED:")
-        for p in filtered_persons:
-            print(p.index_person)
+        # print("FILTERED:")
+        # for p in filtered_persons:
+        #     print(p.index_person)
+
+        return filtered_persons
+
+
+
 
         # same time for all people
         # current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
@@ -859,7 +872,6 @@ class RestaurantMain():
         return filtered_persons, filenames
         """
         
-        return [], []
 
         
 
