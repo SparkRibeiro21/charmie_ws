@@ -741,7 +741,7 @@ class RestaurantMain():
         print("Started")
         for t in tetas:
             self.set_neck(position=[t, -10], wait_for_end_of=True)
-            time.sleep(3)
+            time.sleep(5)
 
             for people in self.node.detected_people.persons:
                 people_ctr+=1
@@ -787,9 +787,18 @@ class RestaurantMain():
                             print("SAME PERSON")                        
                     
                     if same_person_ctr > 0:
-                        
-                        to_remove.append(same_person_old)
-                        to_append.append(same_person_new)
+
+                        same_person_old_distance_center = abs(1280/2 - same_person_old.body_center_x) 
+                        same_person_new_distance_center = abs(1280/2 - same_person_new.body_center_x) 
+
+                        print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
+                        print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
+
+                        if same_person_new_distance_center < same_person_old_distance_center: # person from newer frame is more centered with camera center
+                            to_remove.append(same_person_old)
+                            to_append.append(same_person_new)
+                        else: # person from older frame is more centered with camera center
+                            pass # that person is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
 
                     else:
                         to_append.append(total_person_detected[frame][person])
