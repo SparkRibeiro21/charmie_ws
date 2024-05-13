@@ -24,6 +24,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/ArmController.msg"
   "msg/BoundingBox.msg"
   "msg/BoundingBoxAndPoints.msg"
   "msg/DetectedObject.msg"
