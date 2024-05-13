@@ -61,18 +61,20 @@ class Robot():
         self.complete_path = self.home+'/'+self.midpath+'/'
 
         # Open all configuration files
-        
-        with open(self.complete_path + 'rooms_location.json', encoding='utf-8') as json_file:
-            self.house_rooms = json.load(json_file)
-        # print(self.house_rooms)
+        try:
+            with open(self.complete_path + 'rooms_location.json', encoding='utf-8') as json_file:
+                self.house_rooms = json.load(json_file)
+            # print(self.house_rooms)
 
-        with open(self.complete_path + 'furniture_location.json', encoding='utf-8') as json_file:
-            self.house_furniture = json.load(json_file)
-        # print(self.house_furniture)
+            with open(self.complete_path + 'furniture_location.json', encoding='utf-8') as json_file:
+                self.house_furniture = json.load(json_file)
+            # print(self.house_furniture)
 
-        with open(self.complete_path + 'doors_location.json', encoding='utf-8') as json_file:
-            self.house_doors = json.load(json_file)
-        # print(self.house_doors)
+            with open(self.complete_path + 'doors_location.json', encoding='utf-8') as json_file:
+                self.house_doors = json.load(json_file)
+            # print(self.house_doors)
+        except:
+            print("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
