@@ -532,10 +532,8 @@ class RestaurantMain():
 
 
         print("IN NEW MAIN")
-        time.sleep(2)
-
-
-        p_ = DetectedPerson()
+        # time.sleep(2)
+        # p_ = DetectedPerson()
 
         while True:
 
@@ -557,9 +555,9 @@ class RestaurantMain():
 
                 time.sleep(2.0)
 
-                # tetas = [-120, -60, 0, 60, 120]
-                tetas = [-45, 0, 60]
-                coords_of_people, images_of_people = self.search_for_person_2(tetas)
+                tetas = [-120, -60, 0, 60, 120]
+                # tetas = [-45, 0, 60]
+                coords_of_people, images_of_people = self.search_for_person_3(tetas)
 
                 print("RESPOSTA:", coords_of_people, images_of_people)
 
@@ -726,6 +724,136 @@ class RestaurantMain():
 
             else:
                 pass
+
+
+    def search_for_person_3(self, tetas):
+
+        self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)                
+        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+        time.sleep(0.5)
+        
+        total_person_detected = []
+        person_detected = []
+        people_ctr = 0
+
+        ### MOVES NECK AND SAVES DETECTED PEOPLE ###
+        
+        print("Started")
+        for t in tetas:
+            self.set_neck(position=[t, -10], wait_for_end_of=True)
+            time.sleep(3)
+
+            for people in self.node.detected_people.persons:
+                people_ctr+=1
+                person_detected.append(people)
+
+            total_person_detected.append(person_detected.copy())
+            print("Total number of people detected:", len(person_detected), people_ctr)
+            person_detected.clear()          
+
+        self.activate_yolo_pose(activate=False)
+        print(total_person_detected)
+
+        ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
+        
+        filtered_persons = []
+
+        for frame in range(len(total_person_detected)):
+
+            to_append = []
+            to_remove = []
+
+            if not len(filtered_persons):
+                print("NO PEOPLE", frame)
+                for person in range(len(total_person_detected[frame])):
+                    to_append.append(total_person_detected[frame][person])
+            else:
+                print("YES PEOPLE", frame)
+
+                MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same person
+
+                for person in range(len(total_person_detected[frame])):
+                    same_person_ctr = 0
+
+                    for filtered in range(len(filtered_persons)):
+
+                        dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
+                        print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
+                        
+                        if dist < MIN_DIST:
+                            same_person_ctr+=1
+                            same_person_old = filtered_persons[filtered]
+                            same_person_new = total_person_detected[frame][person]
+                            print("SAME PERSON")                        
+                    
+                    if same_person_ctr > 0:
+                        
+                        to_remove.append(same_person_old)
+                        to_append.append(same_person_new)
+
+                    else:
+                        to_append.append(total_person_detected[frame][person])
+
+            for p in to_remove:
+                print("REMOVED: ", p.index_person)
+                filtered_persons.remove(p)
+            to_remove.clear()  
+
+            for p in to_append:
+                print("ADDED: ", p.index_person)
+                filtered_persons.append(p)
+            to_append.clear()
+
+        print("FILTERED:")
+        for p in filtered_persons:
+            print(p.index_person)
+
+        # same time for all people
+        # current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
+        # self.custom_face_filename = current_datetime
+        
+        """
+
+        # ctr = 0
+        # for c in croppeds:
+        #     ctr+=1
+        #     cv2.imwrite("Person Detected_"+str(ctr)+".jpg", c)
+        ctr = 0
+        filenames = []
+        for c in new_filtered_persons_cropped:
+            ctr+=1
+            path = current_datetime + "_person_" + str(ctr) 
+            filenames.append(path)
+            
+            # cv2.imwrite("Person Filtered_"+str(ctr)+".jpg", c)
+            cv2.imwrite(self.node.complete_path_custom_face + path + ".jpg", c) 
+        
+        print("Finished")
+
+
+        print("---", filtered_persons)
+        points_to_send = ListOfPoints()
+        # for debug, see all points and the average calculations
+        # for p in points:
+        for p in filtered_persons:
+            aux = Point()
+            aux.x = float(p[0])
+            aux.y = float(p[1])
+            aux.z = 0.0
+            points_to_send.coords.append(aux)
+
+        print(filtered_persons)
+
+        # print(points_to_send)
+        self.node.search_for_person_publisher.publish(points_to_send)
+        
+        return filtered_persons, filenames
+        """
+        
+        return [], []
+
+        
+
 
 
     def search_for_person_2(self, tetas):

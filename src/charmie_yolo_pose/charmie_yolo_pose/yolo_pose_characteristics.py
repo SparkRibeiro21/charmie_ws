@@ -1020,10 +1020,10 @@ class YoloPoseNode(Node):
 
         new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
 
-        if self.GET_CHARACTERISTICS:
+        new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
+        new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
 
-            new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
-            new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
+        if self.GET_CHARACTERISTICS:
 
             # in order to predict the ethnicity, age and gender, it is necessary to first cut out the face of the detected person
             is_cropped_face, cropped_face = self.crop_face(current_frame, current_frame_draw, new_person)
@@ -1043,8 +1043,8 @@ class YoloPoseNode(Node):
         else:
             # new_person.pointing_at = "None"
             # new_person.pointing_with_arm = "None"
-            new_person.shirt_color = "None"
-            new_person.pants_color = "None"
+            # new_person.shirt_color = "None"
+            # new_person.pants_color = "None"
             new_person.ethnicity = "None"
             new_person.ethnicity_probability = 0.0
             new_person.age_estimate = "None"
