@@ -888,8 +888,8 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
 
                 ### SPEAK GUEST NAME AND FAVOURITE DRINK
-                self.set_speech(filename="receptionist/recep_first_guest_"+self.guest1_name.lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_first_guest_"+self.guest1_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
 
                 ### NECK TURN TO GUEST
                 if self.SIDE_TO_LOOK.lower() == "right":                
@@ -901,8 +901,8 @@ class ReceptionistMain():
                 time.sleep(0.5)
 
                 ### SPEAK: HOST INFORMATION
-                self.set_speech(filename="receptionist/recep_host_name", wait_for_end_of=True)
-                self.set_speech(filename="receptionist/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_host_name", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
 
                 ### NECK LOOK AT SOFA
                 self.set_neck_coords(position=self.look_sofa, ang=-20, wait_for_end_of=True)
@@ -1047,8 +1047,8 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
 
                 ### SPEAK: GUEST2 INFORMATION
-                self.set_speech(filename="receptionist/recep_second_guest_"+self.guest2_name.lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/recep_drink_"+self.guest2_drink.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_second_guest_"+self.guest2_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+self.guest2_drink.lower(), wait_for_end_of=True)
 
                 if self.SIDE_TO_LOOK.lower() == "right":
                     self.set_neck(position=self.look_right, wait_for_end_of=True)
@@ -1057,15 +1057,15 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
                 
                 ### SPEAK: GUEST1 INFORMATION
-                self.set_speech(filename="receptionist/recep_first_guest_"+self.guest1_name.lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_first_guest_"+self.guest1_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
                 
                 ### SPEAK GUEST1 CHARACTERISTICS
                 self.get_characteristics(race=self.guest1_ethnicity, age=self.guest1_age, gender=self.guest1_gender,height=self.guest1_height,shirt_color=self.guest1_shirt_color,pant_color= self.guest1_pants_color)
                 
                 ### SPEAK: HOST INFORMATION
-                self.set_speech(filename="receptionist/recep_host_name", wait_for_end_of=True)
-                self.set_speech(filename="receptionist/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_host_name", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
                 
                 self.set_neck_coords(position=self.look_sofa, ang=-20, wait_for_end_of=True)
 
@@ -1448,10 +1448,10 @@ class ReceptionistMain():
         
 
         self.set_speech(filename="receptionist/the_first_guest_is", wait_for_end_of=True)
-        self.set_speech(filename="receptionist/race_"+race.lower(), wait_for_end_of=True)
-        self.set_speech(filename="receptionist/gender_"+gender.lower(), wait_for_end_of=True)
-        self.set_speech(filename="receptionist/age_"+age.lower(), wait_for_end_of=True)
-        self.set_speech(filename="receptionist/height_"+height.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/characteristics/race_"+race.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/characteristics/gender_"+gender.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/characteristics/age_"+age.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/characteristics/height_"+height.lower(), wait_for_end_of=True)
         # self.set_speech(filename="receptionist/the_shirt_color_is", wait_for_end_of=True)
         # self.set_speech(filename="receptionist/color_"+shirt_color.lower(), wait_for_end_of=True)
 
