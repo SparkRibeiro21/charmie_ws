@@ -557,7 +557,7 @@ class RestaurantMain():
 
                 tetas = [-120, -60, 0, 60, 120]
                 # tetas = [-45, 0, 60]
-                people_found = self.search_for_person_3(tetas)
+                people_found = self.search_for_person_3(tetas=tetas, delta_t=5.0)
 
                 print("FOUND:", len(people_found)) 
                 for p in people_found:
@@ -731,7 +731,7 @@ class RestaurantMain():
                 pass
 
 
-    def search_for_person_3(self, tetas):
+    def search_for_person_3(self, tetas, delta_t=3.0):
 
         self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)                
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
@@ -743,21 +743,53 @@ class RestaurantMain():
 
         ### MOVES NECK AND SAVES DETECTED PEOPLE ###
         
-        print("Started")
         for t in tetas:
+            self.set_rgb(RED+SET_COLOUR)
             self.set_neck(position=[t, -10], wait_for_end_of=True)
-            time.sleep(5)
+            time.sleep(1.0) # 0.5
+            self.set_rgb(WHITE+SET_COLOUR)
 
-            for people in self.node.detected_people.persons:
-                people_ctr+=1
-                person_detected.append(people)
+            start_time = time.time()
+            while (time.time() - start_time) < delta_t:        
+                local_detected_people = self.node.detected_people
+                for temp_people in local_detected_people.persons:
+                    
+                    is_already_in_list = False
+                    person_already_in_list = DetectedPerson()
+                    for people in person_detected:
 
+                        if temp_people.index_person == people.index_person:
+                            is_already_in_list = True
+                            person_already_in_list = people
+
+                    if is_already_in_list:
+                        person_detected.remove(person_already_in_list)
+                    elif temp_people.index_person > 0: # debug
+                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
+                        self.set_rgb(GREEN+SET_COLOUR)
+                    
+                    if temp_people.index_person > 0:
+                        person_detected.append(temp_people)
+                        people_ctr+=1
+
+            # DEBUG
+            # print("people in this neck pos:")
+            # for people in person_detected:
+            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+        
             total_person_detected.append(person_detected.copy())
-            print("Total number of people detected:", len(person_detected), people_ctr)
+            # print("Total number of people detected:", len(person_detected), people_ctr)
             person_detected.clear()          
 
         self.activate_yolo_pose(activate=False)
-        print(total_person_detected)
+        # print(total_person_detected)
+
+        # DEBUG
+        # print("TOTAL people in this neck pos:")
+        # for frame in total_person_detected:
+        #     for people in frame:    
+        #         print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+        #     print("-")
 
         ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
         
@@ -769,11 +801,11 @@ class RestaurantMain():
             to_remove = []
 
             if not len(filtered_persons):
-                print("NO PEOPLE", frame)
+                # print("NO PEOPLE", frame)
                 for person in range(len(total_person_detected[frame])):
                     to_append.append(total_person_detected[frame][person])
             else:
-                print("YES PEOPLE", frame)
+                # print("YES PEOPLE", frame)
 
                 MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same person
 
@@ -783,21 +815,21 @@ class RestaurantMain():
                     for filtered in range(len(filtered_persons)):
 
                         dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
-                        print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
+                        # print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
                         
                         if dist < MIN_DIST:
                             same_person_ctr+=1
                             same_person_old = filtered_persons[filtered]
                             same_person_new = total_person_detected[frame][person]
-                            print("SAME PERSON")                        
+                            # print("SAME PERSON")                        
                     
                     if same_person_ctr > 0:
 
                         same_person_old_distance_center = abs(1280/2 - same_person_old.body_center_x) 
                         same_person_new_distance_center = abs(1280/2 - same_person_new.body_center_x) 
 
-                        print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
-                        print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
+                        # print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
+                        # print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
 
                         if same_person_new_distance_center < same_person_old_distance_center: # person from newer frame is more centered with camera center
                             to_remove.append(same_person_old)
@@ -810,14 +842,14 @@ class RestaurantMain():
 
             for p in to_remove:
                 if p in filtered_persons:
-                    print("REMOVED: ", p.index_person)
+                    # print("REMOVED: ", p.index_person)
                     filtered_persons.remove(p)
-                else:
-                    print("TRIED TO REMOVE TWICE THE SAME PERSON")
+                # else:
+                    # print("TRIED TO REMOVE TWICE THE SAME PERSON")
             to_remove.clear()  
 
             for p in to_append:
-                print("ADDED: ", p.index_person)
+                # print("ADDED: ", p.index_person)
                 filtered_persons.append(p)
             to_append.clear()
 
@@ -871,192 +903,3 @@ class RestaurantMain():
         
         return filtered_persons, filenames
         """
-        
-
-        
-
-
-
-    def search_for_person_2(self, tetas):
-
-        self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=True)                
-
-        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-
-        time.sleep(3.0)
-        
-        imshow_detected_people = True
-
-        total_person_detected = []
-        person_detected = []
-        total_cropped_people = []
-        cropped_people = []
-        points = []
-        croppeds = []
-
-        people_ctr = 0
-        delay_ctr = 0
-
-        print("Started")
-        for t in tetas:
-            self.set_neck(position=[t, -10])
-            time.sleep(2)
-
-            for people in self.node.detected_people.persons:
-                people_ctr+=1
-                print(" - ", people.index_person, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
-                print(" - ", people.index_person, people.position_relative.x,people.position_relative.y, people.position_relative.z)
-                aux = (people.position_absolute.x, people.position_absolute.y) 
-                person_detected.append(aux)
-                points.append(aux)
-
-                if imshow_detected_people:
-
-                    y1 = people.box_top_left_y
-                    y2 = people.box_top_left_y + people.box_height
-
-                    x1 = people.box_top_left_x
-                    x2 = people.box_top_left_x + people.box_width
-
-                    print(y1, y1, x1,x2)
-                    br = CvBridge()
-                    current_frame = br.imgmsg_to_cv2(self.node.detected_people.image_rgb, "bgr8")
-                    cropped_image = current_frame[y1:y2, x1:x2]
-                    cropped_people.append(cropped_image)
-                    
-                    croppeds.append(cropped_image)
-
-            total_person_detected.append(person_detected.copy())
-            total_cropped_people.append(cropped_people.copy())
-            print("Total number of people detected:", len(person_detected), people_ctr)
-            person_detected.clear()          
-            cropped_people.clear()
-
-        self.activate_yolo_pose(activate=False)
-        
-        ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
-        
-        print(total_person_detected)
-        print(len(points))
-       
-        filtered_persons = []
-        filtered_persons_cropped = []
-        new_filtered_persons_cropped = []
-        for frame in range(len(total_person_detected)):
-            print(filtered_persons)
-            # print(filtered_persons_cropped)
-
-            if not len(filtered_persons):
-                for person in range(len(total_person_detected[frame])):
-                    filtered_persons.append(total_person_detected[frame][person])
-                    filtered_persons_cropped.append(total_cropped_people[frame][person])
-                    new_filtered_persons_cropped.append(total_cropped_people[frame][person])
-            else:
-                for person in range(len(total_person_detected[frame])):
-                    same_person_ctr = 0
-                    same_person_coords = (0,0)
-                    for filtered in range(len(filtered_persons)): #_aux:
-
-                        # print("??? ", total_person_detected[frame][person], filtered_persons[filtered])
-                        dist = math.dist(total_person_detected[frame][person], filtered_persons[filtered])
-                        # print("person:", person, "filtered:", filtered, "dist:", dist)
-                        
-                        if dist < 1.0:
-                            same_person_ctr+=1
-                            same_person_coords = filtered_persons[filtered]
-                            same_person_cropped = filtered_persons_cropped[filtered] 
-
-                            # print(same_person_cropped.shape)
-                        
-                    
-                    if same_person_ctr > 0:
-
-                        # just debug
-                        for p in filtered_persons_cropped:
-                            print(p.shape)
-
-                        print("---", same_person_cropped.shape)
-
-                        
-                        # print(same_person_cropped)
-                        # print(total_cropped_people[frame][person])
-                        # print(len(same_person_cropped), len(total_cropped_people[frame][person]))
-                        # print(same_person_cropped.shape[0], same_person_cropped.shape[1])
-                        # print(total_cropped_people[frame][person].shape[0], total_cropped_people[frame][person].shape[1])
-                        
-                        # the same person is the person on the first frame, whereas total_cropped_people[frame][person] is the same person on the second frame
-                        # if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
-                            # filtered_persons_cropped.remove(same_person_cropped)
-                            # filtered_persons_cropped.append(total_cropped_people[frame][person])
-                            # total_cropped_people[frame][person] = 
-                            # pass
-                        # for p in filtered_persons_cropped:
-                        #     if p.shape == same_person_cropped.shape:
-                        #         filtered_persons_cropped.remove(p)
-
-                        #         del my_list[index_to_remove]  # Removes the value at index 2 (i.e., the third element)
-                        
-                        
-                        #         filtered_persons_cropped.remove(p)
-                        
-                        
-                        # filtered_persons_cropped.remove(same_person_cropped)
-                        # if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
-                        #     filtered_persons_cropped.append(total_cropped_people[frame][person])
-                        #     new_filtered_persons_cropped.append(total_cropped_people[frame][person])
-                        # else:
-                        #     filtered_persons_cropped.append(same_person_cropped)
-                        #     new_filtered_persons_cropped.append(same_person_cropped)
-                            
-                        #print(same_person_ctr, same_person_coords, person)
-                        filtered_persons.remove(same_person_coords)
-
-                        avg_person = ((total_person_detected[frame][person][0]+same_person_coords[0])/2, (total_person_detected[frame][person][1]+same_person_coords[1])/2)
-                        # print(avg_person)
-                        filtered_persons.append(avg_person)
-                        points.append(avg_person)
-
-                    else:
-                    
-                        filtered_persons.append(total_person_detected[frame][person])
-                        filtered_persons_cropped.append(total_cropped_people[frame][person])
-                        new_filtered_persons_cropped.append(total_cropped_people[frame][person])
-        
-        # same time for all people
-        current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
-        self.custom_face_filename = current_datetime
-        
-        # ctr = 0
-        # for c in croppeds:
-        #     ctr+=1
-        #     cv2.imwrite("Person Detected_"+str(ctr)+".jpg", c)
-        ctr = 0
-        filenames = []
-        for c in new_filtered_persons_cropped:
-            ctr+=1
-            path = current_datetime + "_person_" + str(ctr) 
-            filenames.append(path)
-            
-            # cv2.imwrite("Person Filtered_"+str(ctr)+".jpg", c)
-            cv2.imwrite(self.node.complete_path_custom_face + path + ".jpg", c) 
-        
-        print("Finished")
-
-
-        print("---", filtered_persons)
-        points_to_send = ListOfPoints()
-        # for debug, see all points and the average calculations
-        # for p in points:
-        for p in filtered_persons:
-            aux = Point()
-            aux.x = float(p[0])
-            aux.y = float(p[1])
-            aux.z = 0.0
-            points_to_send.coords.append(aux)
-
-        print(filtered_persons)
-
-        # print(points_to_send)
-        self.node.search_for_person_publisher.publish(points_to_send)
-
-        return filtered_persons, filenames
