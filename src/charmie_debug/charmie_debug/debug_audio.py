@@ -280,15 +280,25 @@ class RestaurantMain():
                 #     self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
 
                 ### RECEPTIONIST EXAMPLE
-                print("Started")
-                command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
-                print("Finished:", command)
-                keyword_list= command.split(" ")
-                print(keyword_list[0], keyword_list[1])
-                self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
+                # print("Started")
+                # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
+                # print("Finished:", command)
+                # keyword_list= command.split(" ")
+                # print(keyword_list[0], keyword_list[1])
+                # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
-                # CALIBRATION EXAMPLE
+
+                ### GPSR EXAMPLE
+                print("Started")
+                command = self.get_audio(gpsr=True, question="gpsr/gpsr_question", wait_for_end_of=True)
+                print("Finished:", command)
+                self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
+                self.set_speech(command=command, wait_for_end_of=True)
+                self.set_speech(filename="gpsr/gpsr_can_not_execute", wait_for_end_of=True)
+                
+
+                ### CALIBRATION EXAMPLE
                 # s, m = self.calibrate_audio(wait_for_end_of=True)
                 # print("Finished:", s, m)
 

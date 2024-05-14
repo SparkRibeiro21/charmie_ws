@@ -493,9 +493,9 @@ class WhisperAudio():
         return final_text
 
 
-    def check_keywords(self, speech, command_type):
+    def check_keywords(self, speech_nf, command_type):
 
-        speech = speech.lower()
+        speech = speech_nf.lower()
         speech = speech.replace(",","")
         speech = speech.replace(".","")
         speech = speech.replace("?","")
@@ -671,7 +671,7 @@ class WhisperAudio():
         elif command_type == "gpsr":
             print("GPSR KEYWORDS!")
             self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
-            pass
+            return speech_nf
         else:
             print("ERROR SELECTING AUDIO MODE!")
             self.node.set_rgb(RED+BACK_AND_FORTH_8)
@@ -997,7 +997,7 @@ class AudioNode(Node):
         keywords = ""
 
         # self.latest_command = comm
-        self.get_logger().info("Received Audio Command")
+        self.get_logger().info("Received Audio Command: %s" %command_type)
         # publish rgb estou a ouvir
         
         # while keywords=="" or keywords=="ERROR" or keywords==None:

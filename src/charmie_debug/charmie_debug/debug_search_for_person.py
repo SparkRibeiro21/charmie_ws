@@ -565,15 +565,16 @@ class RestaurantMain():
 
 
                 for p in people_found:
+                    pass
                     
 
 
 
 
-        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-        # current_frame_draw = current_frame.copy()
-        # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-        # cv2.waitKey(10)
+                # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+                # current_frame_draw = current_frame.copy()
+                # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
+                # cv2.waitKey(10)
 
 
 
