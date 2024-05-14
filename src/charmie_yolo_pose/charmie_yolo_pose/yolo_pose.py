@@ -2,10 +2,8 @@
 from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool, Float32, Int16
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
-from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, BoundingBox, BoundingBoxAndPoints, RGB
 from charmie_interfaces.srv import GetPointCloud, ActivateYoloPose
 from cv_bridge import CvBridge, CvBridgeError
@@ -25,6 +23,7 @@ ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False            # only detects person right
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.6
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 1.8
 ONLY_DETECT_PERSON_ARM_RAISED = False                # if True only detects people with their arm raised or waving 
+GET_CHARACTERISTICS = False
 
 # must be adjusted if we want just to not detect the feet in cases where the walls are really low and we can see the knees
 # 3 may be used in cases where it just does not detect on of the feet 
@@ -142,8 +141,6 @@ class YoloPoseNode(Node):
         self.robot_y = 0.0
         self.robot_t = 0.0 # math.pi/2
 
-        self.GET_CHARACTERISTICS = True
-
         self.N_KEYPOINTS = 17
         self.NUMBER_OF_LEGS_KP = 4
         self.NOSE_KP = 0
@@ -202,7 +199,7 @@ class YoloPoseNode(Node):
         # ---
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages.
-        global ONLY_DETECT_PERSON_LEGS_VISIBLE, MIN_PERSON_CONF_VALUE, MIN_KP_TO_DETECT_PERSON, ONLY_DETECT_PERSON_RIGHT_IN_FRONT, ONLY_DETECT_PERSON_ARM_RAISED
+        global ONLY_DETECT_PERSON_LEGS_VISIBLE, MIN_PERSON_CONF_VALUE, MIN_KP_TO_DETECT_PERSON, ONLY_DETECT_PERSON_RIGHT_IN_FRONT, ONLY_DETECT_PERSON_ARM_RAISED, GET_CHARACTERISTICS
 
         if request.activate:
             self.get_logger().info("Activated Yolo Pose %s" %("("+str(request.only_detect_person_legs_visible)+", "
@@ -220,7 +217,7 @@ class YoloPoseNode(Node):
         # MIN_KP_TO_DETECT_PERSON = request.minimum_keypoints_to_detect_person
         ONLY_DETECT_PERSON_RIGHT_IN_FRONT = request.only_detect_person_right_in_front
         ONLY_DETECT_PERSON_ARM_RAISED = request.only_detect_person_arm_raised
-        self.GET_CHARACTERISTICS = request.characteristics
+        GET_CHARACTERISTICS = request.characteristics
 
         # returns whether the message was played and some informations regarding status
         response.success = True
@@ -846,10 +843,11 @@ class YoloPoseNode(Node):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
+        global GET_CHARACTERISTICS
+
         person_id = boxes_id.id
         if boxes_id.id == None:
             person_id = 0 
-
 
         new_person = DetectedPerson()
 
@@ -1004,11 +1002,13 @@ class YoloPoseNode(Node):
         new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
         new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
         
-        if self.GET_CHARACTERISTICS:
-
-            new_person.ethnicity = "None" # still missing... (says whether the person white, asian, african descendent, middle eastern, ...)
-            new_person.age_estimate = "None" # still missing... (says an approximate age gap like 25-35 ...)
-            new_person.gender = "None" # still missing... (says whether the person is male or female)
+        if GET_CHARACTERISTICS:
+                new_person.ethnicity = "None" # says whether the person white, asian, african descendent, middle eastern, ...
+                new_person.ethnicity_probability = 0.0
+                new_person.age_estimate = "None" # says an approximate age gap like 25-35 ...
+                new_person.age_estimate_probability = 0.0
+                new_person.gender = "None" # says whether the person is male or female
+                new_person.gender_probability = 0.0
 
         else:
             # new_person.pointing_at = "None"
@@ -1016,8 +1016,11 @@ class YoloPoseNode(Node):
             # new_person.shirt_color = "None"
             # new_person.pants_color = "None"
             new_person.ethnicity = "None"
+            new_person.ethnicity_probability = 0.0
             new_person.age_estimate = "None"
+            new_person.age_estimate_probability = 0.0
             new_person.gender = "None"
+            new_person.gender_probability = 0.0
 
         return new_person
 

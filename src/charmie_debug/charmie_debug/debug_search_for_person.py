@@ -557,11 +557,30 @@ class RestaurantMain():
 
                 tetas = [-120, -60, 0, 60, 120]
                 # tetas = [-45, 0, 60]
-                people_found = self.search_for_person_3(tetas=tetas, delta_t=5.0)
+                people_found = self.search_for_person(tetas=tetas, delta_t=5.0)
 
                 print("FOUND:", len(people_found)) 
                 for p in people_found:
                     print("ID:", p.index_person)
+
+
+                for p in people_found:
+                    
+
+
+
+
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
+        # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
+        # cv2.waitKey(10)
+
+
+
+
+
+
+
 
 
                 # print("RESPOSTA:", coords_of_people, images_of_people)
@@ -731,7 +750,7 @@ class RestaurantMain():
                 pass
 
 
-    def search_for_person_3(self, tetas, delta_t=3.0):
+    def search_for_person(self, tetas, delta_t=3.0):
 
         self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)                
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
