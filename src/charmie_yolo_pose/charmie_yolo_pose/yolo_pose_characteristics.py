@@ -44,7 +44,7 @@ DRAW_PERSON_HAND_RAISED = False
 DRAW_PERSON_HEIGHT = True
 DRAW_PERSON_CLOTHES_COLOR = True
 DRAW_CHARACTERISTICS = True
-DRAW_FACE_RECOGNITION = False
+DRAW_FACE_RECOGNITION = True
 
 
 class YoloPoseNode(Node):
@@ -475,6 +475,8 @@ class YoloPoseNode(Node):
 
     def post_receiving_pcloud(self, new_pcloud):
 
+        global GET_CHARACTERISTICS
+
         # print("points")
         # print(new_pcloud)
 
@@ -561,6 +563,7 @@ class YoloPoseNode(Node):
             for kp in range(self.N_KEYPOINTS - self.NUMBER_OF_LEGS_KP): # all keypoints without the legs
                 if keypoints_id.conf[0][kp] > MIN_KP_CONF_VALUE:
                     body_kp_high_conf_counter+=1
+
             # print("body_kp_high_conf_counter = ", body_kp_high_conf_counter)
 
 
@@ -603,6 +606,19 @@ class YoloPoseNode(Node):
 
             if ALL_CONDITIONS_MET:
                 num_persons_filtered+=1
+
+                # characteristics will only be updated after we confirm that the person is inside the filteredpersons
+                # otherwise the large amount of time spent getting the characteristics from the models is applied to
+                # every detected person and not only the filtered 
+                is_cropped_face = False
+                if GET_CHARACTERISTICS:
+                    # in order to predict the ethnicity, age and gender, it is necessary to first cut out the face of the detected person
+                    is_cropped_face, cropped_face = self.crop_face(current_frame, current_frame_draw, new_person)
+
+                    if is_cropped_face:
+                        new_person.ethnicity, new_person.ethnicity_probability = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
+                        new_person.age_estimate, new_person.age_estimate_probability = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
+                        new_person.gender, new_person.gender_probability = self.get_gender_prediction(cropped_face) # says whether the person is male or female
 
                 # adds people to "person_pose_filtered" with selected filters
                 yolov8_pose_filtered.persons.append(new_person)
@@ -815,8 +831,8 @@ class YoloPoseNode(Node):
                         cv2.putText(current_frame_draw, new_person.pants_color + "(" + str(new_person.pants_rgb.red) + ", " + str(new_person.pants_rgb.green) + ", " + str(new_person.pants_rgb.blue) + ")",
                                     # (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                        
-                    if DRAW_CHARACTERISTICS:
+                    
+                    if DRAW_CHARACTERISTICS and GET_CHARACTERISTICS and is_cropped_face:
                         cv2.putText(current_frame_draw, str(round(new_person.height,2))+" / "+new_person.age_estimate+" / "+new_person.gender+" / "+new_person.ethnicity,
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
@@ -1024,34 +1040,20 @@ class YoloPoseNode(Node):
         new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
         new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
 
-        if GET_CHARACTERISTICS:
+        # characteristics will only be updated after we confirm that the person is inside the filteredpersons
+        # otherwise the large amount of time spent getting the characteristics from the models is applied to
+        # every detected person and not only the filtered 
 
-            # in order to predict the ethnicity, age and gender, it is necessary to first cut out the face of the detected person
-            is_cropped_face, cropped_face = self.crop_face(current_frame, current_frame_draw, new_person)
-
-            if is_cropped_face:
-                new_person.ethnicity, new_person.ethnicity_probability = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
-                new_person.age_estimate, new_person.age_estimate_probability = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
-                new_person.gender, new_person.gender_probability = self.get_gender_prediction(cropped_face) # says whether the person is male or female
-            else:
-                new_person.ethnicity = "None" # says whether the person white, asian, african descendent, middle eastern, ...
-                new_person.ethnicity_probability = 0.0
-                new_person.age_estimate = "None" # says an approximate age gap like 25-35 ...
-                new_person.age_estimate_probability = 0.0
-                new_person.gender = "None" # says whether the person is male or female
-                new_person.gender_probability = 0.0
-
-        else:
-            # new_person.pointing_at = "None"
-            # new_person.pointing_with_arm = "None"
-            # new_person.shirt_color = "None"
-            # new_person.pants_color = "None"
-            new_person.ethnicity = "None"
-            new_person.ethnicity_probability = 0.0
-            new_person.age_estimate = "None"
-            new_person.age_estimate_probability = 0.0
-            new_person.gender = "None"
-            new_person.gender_probability = 0.0
+        # new_person.pointing_at = "None"
+        # new_person.pointing_with_arm = "None"
+        # new_person.shirt_color = "None"
+        # new_person.pants_color = "None"
+        new_person.ethnicity = "None"
+        new_person.ethnicity_probability = 0.0
+        new_person.age_estimate = "None"
+        new_person.age_estimate_probability = 0.0
+        new_person.gender = "None"
+        new_person.gender_probability = 0.0
 
 
         return new_person
