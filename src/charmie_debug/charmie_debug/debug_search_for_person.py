@@ -557,29 +557,19 @@ class RestaurantMain():
 
                 tetas = [-120, -60, 0, 60, 120]
                 # tetas = [-45, 0, 60]
-                people_found = self.search_for_person(tetas=tetas, delta_t=5.0)
+                people_found = self.search_for_person(tetas=tetas, delta_t=3.0)
 
                 print("FOUND:", len(people_found)) 
                 for p in people_found:
                     print("ID:", p.index_person)
 
+                self.set_rgb(BLUE+HALF_ROTATE)
+                self.set_neck(position=[180, 0], wait_for_end_of=True)
+                time.sleep(0.5)
 
                 for p in people_found:
-                    pass
-                    
-
-
-
-
-                # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-                # current_frame_draw = current_frame.copy()
-                # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-                # cv2.waitKey(10)
-
-
-
-
-
+                    path = self.detected_person_to_face_path(person=p, send_to_face=True)
+                    time.sleep(4)
 
 
 
@@ -880,46 +870,18 @@ class RestaurantMain():
         return filtered_persons
 
 
+    def detected_person_to_face_path(self, person, send_to_face):
 
-
-        # same time for all people
-        # current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
-        # self.custom_face_filename = current_datetime
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
         
-        """
-
-        # ctr = 0
-        # for c in croppeds:
-        #     ctr+=1
-        #     cv2.imwrite("Person Detected_"+str(ctr)+".jpg", c)
-        ctr = 0
-        filenames = []
-        for c in new_filtered_persons_cropped:
-            ctr+=1
-            path = current_datetime + "_person_" + str(ctr) 
-            filenames.append(path)
-            
-            # cv2.imwrite("Person Filtered_"+str(ctr)+".jpg", c)
-            cv2.imwrite(self.node.complete_path_custom_face + path + ".jpg", c) 
+        cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
+        just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
+        # cv2.imshow("Search for Person", just_person_image)
+        # cv2.waitKey(100)
+        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + str(person.index_person) + ".jpg", just_person_image) 
+        time.sleep(0.5)
         
-        print("Finished")
-
-
-        print("---", filtered_persons)
-        points_to_send = ListOfPoints()
-        # for debug, see all points and the average calculations
-        # for p in points:
-        for p in filtered_persons:
-            aux = Point()
-            aux.x = float(p[0])
-            aux.y = float(p[1])
-            aux.z = 0.0
-            points_to_send.coords.append(aux)
-
-        print(filtered_persons)
-
-        # print(points_to_send)
-        self.node.search_for_person_publisher.publish(points_to_send)
+        if send_to_face:
+            self.set_face(custom=current_datetime + str(person.index_person))
         
-        return filtered_persons, filenames
-        """
+        return current_datetime + str(person.index_person)

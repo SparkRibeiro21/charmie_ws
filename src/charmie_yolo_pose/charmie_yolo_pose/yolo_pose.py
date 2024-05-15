@@ -851,6 +851,8 @@ class YoloPoseNode(Node):
 
         new_person = DetectedPerson()
 
+        new_person.image_rgb_frame = self.rgb_img
+
         new_person.index_person = int(person_id)
         new_person.conf_person = float(boxes_id.conf)
         new_person.box_top_left_x = int(boxes_id.xyxy[0][0])
