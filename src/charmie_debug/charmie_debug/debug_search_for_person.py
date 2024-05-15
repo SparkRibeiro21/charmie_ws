@@ -529,11 +529,7 @@ class RestaurantMain():
         Delivering_order_to_client = 6
         Final_State = 7
 
-
-
         print("IN NEW MAIN")
-        # time.sleep(2)
-        # p_ = DetectedPerson()
 
         while True:
 
@@ -547,15 +543,16 @@ class RestaurantMain():
             # State 6 = Final Speech
 
             if self.state == Waiting_for_start_button:
+                # print('State 0 = Initial')
 
-                ### EXAMPLES TO ACTIVATE/DEACTIVATE AND CONFIGURE YOLO POSE AND TOLO OBJECTS 
-                # self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_legs_visible=True) # , only_detect_person_arm_raised=True)
+                ### SEARCH FOR PERSON EXAMPLE ###
+                
                 self.set_face(command="demo5")
                 self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
                 time.sleep(2.0)
 
-                tetas = [-120, -60, 0, 60, 120]
+                tetas = [[-120, -10], [60, -10], [0, -10], [-60, -10], [120, -10]]
                 # tetas = [-45, 0, 60]
                 people_found = self.search_for_person(tetas=tetas, delta_t=3.0)
 
@@ -564,163 +561,21 @@ class RestaurantMain():
                     print("ID:", p.index_person)
 
                 self.set_rgb(BLUE+HALF_ROTATE)
-                self.set_neck(position=[180, 0], wait_for_end_of=True)
+                self.set_neck(position=[0, 0], wait_for_end_of=True)
                 time.sleep(0.5)
 
                 for p in people_found:
                     path = self.detected_person_to_face_path(person=p, send_to_face=True)
                     time.sleep(4)
 
+                self.set_rgb(CYAN+HALF_ROTATE)
+                time.sleep(0.5)
 
-
-
-                # print("RESPOSTA:", coords_of_people, images_of_people)
-
-                # self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
-
-                # for c in coords_of_people:
-                #     self.set_neck_coords(position=c, wait_for_end_of=True)
-                #     time.sleep(2)
-
-                # self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
-                
-                # for i in images_of_people:
-                #     self.set_face(custom=i)
-                #     time.sleep(3)
-
-                
-
-
-                while True:
-                    pass
-                
-                
-                ### EXAMPLE TO TRACK PERSON
-                # if self.node.detected_people.num_person > 0:
-                    # p_=self.node.detected_people.persons[0]
-                    # print(p_.head_center_x, p_.head_center_y)
-                    # self.track_person(p_, body_part="Head", wait_for_end_of=True)
-                    # print(".")
-                    # time.sleep(5)
-                
-                ### EXAMPLE TO TRACK OBJECT
-                # if self.node.detected_objects.num_objects > 0:
-                #     p_=self.node.detected_objects.objects[0]
-                #     print(p_.object_name)
-                #     self.track_object(p_,wait_for_end_of=True)
-                #     print(".")
-                #     time.sleep(5)
-
-                ### EXAMPLES TO ACTIVATE/DEACTIVATE AND CONFIGURE YOLO POSE AND TOLO OBJECTS 
-                # self.activate_yolo_pose(activate=True)
-
-                # self.activate_yolo_objects(activate_objects=False)
-                # print("activated yolo pose")
-                # time.sleep(10)
-                # self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=7)
-                # self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.3)
-                # print("deactivated yolo pose - 0.8")
-                # time.sleep(5)
-                # self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=10)
-                # self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.8)
-                # print("deactivated yolo pose - right in front")
-                # time.sleep(5)
-
-
-                """
-                s, m = self.set_rgb(RED+MOON)
-                print(s, m)
-                success, message = self.set_speech(filename="arm/arm_close_gripper", command="", wait_for_end_of=True)
-                print(success, message)
-                time.sleep(5)
-                self.set_rgb(BLUE+ROTATE)
-                success, message = self.set_speech(filename="arm/introduction_full", command="", wait_for_end_of=False)
-                print(success, message)
-                time.sleep(5)
-                self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-                success, message = self.set_speech(filename="arm/arm_close_grippe", command="", wait_for_end_of=True)
-                print(success, message)
-                time.sleep(5)
-
-                """
-
-                """
-                files = ["recep_characteristic_1", "recep_characteristic_2", "recep_characteristic_3", "recep_characteristic_4"]
-                commands = ["The first guest shirt is black", "Its age is between 23 and 32", "The guest is a bit taller than me", "and its ethnicity is white."]
-                self.save_speech(files, commands)
-                print("...")
-                time.sleep(5)
-                print("...")
-
-
-                self.set_speech(filename="temp/recep_characteristic_1", wait_for_end_of=True)
-                
-
-                # self.set_speech(command="Hello brother", wait_for_end_of=True)
-                
-                # self.set_speech(filename="generic/introduction_full", command="", wait_for_end_of=True)
-                # time.sleep(2)
-
-                self.set_speech(filename="receptionist/recep_drink_milk", command="", wait_for_end_of=True)
-                self.set_face("help_pick_cup")
-                time.sleep(3)
-
-
-                # self.set_speech(filename="generic/introduction_ful", command="", wait_for_end_of=True)
-
-
-
-
-                # self.node.test_custom_image_face_str.data = "clients_temp"
-                # self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
-                # time.sleep(5)
-
-                # self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
-                
-                # self.set_face(custom="clients_temp")
-                # time.sleep(3)
-
-
-                self.set_face("help_pick_bowl")
-                time.sleep(3)
-
-                self.set_speech(filename="receptionist/recep_drink_orange_juice", show_in_face=True, wait_for_end_of=True)
-
-
-                self.set_face("demo8")
-                time.sleep(3)
-
-                self.set_face(custom="clients_tem")
-                time.sleep(3)
-
-                # self.set_speech(filename="arm/arm_close_gripper", command="", wait_for_end_of=True)
-                # time.sleep(2)
-
-
-                self.set_speech(filename="receptionist/recep_drink_red_wine", wait_for_end_of=True)
-
-                self.set_face("help_pick_milk")
-                time.sleep(3)
-
-                self.set_face("help_pick_spoon")
-                time.sleep(3)
-
-
-                self.set_speech(filename="generic/introduction_full", show_in_face=True, wait_for_end_of=True)
-                # start = time.time()
-                # while time.time() < start + 3: # in seconds
-                #     pass
-                    # print(",", end='')
-                # print()
-
-                """
-
-                #print('State 0 = Initial')
-
-                # your code here ...
-                                
-                # next state
-                # self.state = Searching_for_clients
+                for p in people_found:
+                    self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
+                    time.sleep(4)
+                                    
+                self.state = Searching_for_clients
 
             elif self.state == Searching_for_clients:
                 #print('State 1 = Hand Raising Detect')
@@ -734,8 +589,10 @@ class RestaurantMain():
                 # self.node.speech_str.command = "I have finished my restaurant task." 
                 # self.node.speaker_publisher.publish(self.node.speech_str)
                 # self.wait_for_end_of_speaking()  
-                self.state += 1
                 print("Finished task!!!")
+
+                while True:
+                    pass
 
             else:
                 pass
@@ -755,7 +612,7 @@ class RestaurantMain():
         
         for t in tetas:
             self.set_rgb(RED+SET_COLOUR)
-            self.set_neck(position=[t, -10], wait_for_end_of=True)
+            self.set_neck(position=t, wait_for_end_of=True)
             time.sleep(1.0) # 0.5
             self.set_rgb(WHITE+SET_COLOUR)
 
