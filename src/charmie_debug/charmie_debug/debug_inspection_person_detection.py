@@ -34,6 +34,10 @@ class TestNode(Node):
         midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
         self.complete_path_custom_face = home+'/'+midpath+'/'
 
+        # Intel Realsense Subscribers
+        # self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+
         ### Topics (Publisher and Subscribers) ###  
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
@@ -63,11 +67,11 @@ class TestNode(Node):
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         
         # Neck 
-        while not self.set_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+        # while not self.set_neck_position_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Position Command...")
         # Yolos
-        while not self.activate_yolo_pose_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
 
         # while not self.activate_yolo_objects_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
@@ -99,6 +103,20 @@ class TestNode(Node):
         self.br = CvBridge()
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
+
+
+    def get_aligned_depth_image_callback(self, img: Image):
+        self.depth_img = img
+        # print("Received Depth Image")
+
+        current_frame_depth_head = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
+        height, width = current_frame_depth_head.shape
+
+
+        # current_frame_depth_head = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        current_frame_draw = current_frame_depth_head.copy()
+        cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
+        cv2.waitKey(10)
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
