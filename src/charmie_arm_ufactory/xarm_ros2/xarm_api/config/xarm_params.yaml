@@ -29,7 +29,7 @@ ufactory_driver:
       open_lite6_gripper: false
       close_lite6_gripper: false
       stop_lite6_gripper: false
-      get_state: false
+      get_state: true
       get_cmdnum: false
       get_vacuum_gripper: false
       get_gripper_err_code: false
@@ -46,20 +46,20 @@ ufactory_driver:
       get_linear_track_is_enabled: false
       get_linear_track_on_zero: false
       get_linear_track_sci: false
-      get_err_warn_code: false
+      get_err_warn_code: true
       get_linear_track_sco: false
       set_mode: true
       set_state: true
-      set_collision_sensitivity: false
+      set_collision_sensitivity: true
       set_teach_sensitivity: false
       set_gripper_mode: true
       set_gripper_enable: true
       set_tgpio_modbus_timeout: false
       set_bio_gripper_speed: false
-      set_collision_rebound: false
-      set_fence_mode: false
+      set_collision_rebound: true
+      set_fence_mode: true
       set_reduced_mode: false
-      set_self_collision_detection: false
+      set_self_collision_detection: true
       set_simulation_robot: false
       set_baud_checkset_enable: false
       set_report_tau_or_i: false
@@ -81,9 +81,9 @@ ufactory_driver:
       get_checkset_default_baud: false
       set_checkset_default_baud: false
       get_gripper_position: true
-      get_position: false
+      get_position: true
       get_servo_angle: true
-      get_position_aa: false
+      get_position_aa: true
       get_ft_sensor_data: false
       set_pause_time: true
       set_tcp_jerk: false
@@ -99,13 +99,13 @@ ufactory_driver:
       set_reduced_joint_range: false
       set_tcp_load: false
       set_position: true
-      set_tool_position: false
-      set_position_aa: false
-      set_servo_cartesian: false
-      set_servo_cartesian_aa: false
+      set_tool_position: true
+      set_position_aa: true
+      set_servo_cartesian: true
+      set_servo_cartesian_aa: true
       set_servo_angle: true
       set_servo_angle_j: true
-      move_circle: false
+      move_circle: true
       move_gohome: true
       vc_set_joint_velocity: true
       vc_set_cartesian_velocity: true
