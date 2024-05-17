@@ -101,22 +101,17 @@ class TestNode(Node):
         self.activate_yolo_objects_message = ""
 
         self.br = CvBridge()
+        self.depth_img = Image()
+        self.first_depth_image_received = False
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
 
 
     def get_aligned_depth_image_callback(self, img: Image):
         self.depth_img = img
+        self.first_depth_image_received = True
         # print("Received Depth Image")
 
-        current_frame_depth_head = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
-        height, width = current_frame_depth_head.shape
-
-
-        # current_frame_depth_head = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-        current_frame_draw = current_frame_depth_head.copy()
-        cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-        cv2.waitKey(10)
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -565,43 +560,36 @@ class RestaurantMain():
 
                 ### SEARCH FOR PERSON EXAMPLE ###
                 
-                self.set_face(command="demo5")
-                self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
+                # self.set_face(command="demo5")
+                # self.set_neck(position=[0.0, -20.0], wait_for_end_of=True)
 
-                time.sleep(2.0)
+                # time.sleep(2.0)
 
-                tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                # tetas = [-45, 0, 60]
-                people_found = self.search_for_person(tetas=tetas, delta_t=3.0)
-
-                print("FOUND:", len(people_found)) 
-                for p in people_found:
-                    print("ID:", p.index_person)
-
-                self.set_rgb(BLUE+HALF_ROTATE)
-                self.set_neck(position=[0, 0], wait_for_end_of=True)
-                time.sleep(0.5)
-
-                for p in people_found:
-                    path = self.detected_person_to_face_path(person=p, send_to_face=True)
-                    time.sleep(4)
-
-                self.set_rgb(CYAN+HALF_ROTATE)
-                time.sleep(0.5)
-
-                for p in people_found:
-                    self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                    time.sleep(4)
-                                    
                 self.state = Searching_for_clients
 
             elif self.state == Searching_for_clients:
                 #print('State 1 = Hand Raising Detect')
 
                 # your code here ...
+
+                # self.detected_people = det_people
+                # if self.detected_people.num_person > 0:
+
+
+                overall, zeros, zeros_err, near, near_err = self.check_person_depth_head(zeros_half_or_full_img="half", zeros_percentage=0.4, near_half_or_full_img="half", near_percentage=0.1, near_max_dist=800)
+                      
+                
+
+                if zeros or near: 
+                    print("STOP", overall, zeros, round(zeros_err,2), near, round(near_err,2))
+                else:
+                    print("GO", overall, zeros, round(zeros_err,2), near, round(near_err,2))
                                 
+                        
+                
+                
                 # next state
-                self.state = Final_State
+                # self.state = Final_State
             
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 
@@ -614,6 +602,86 @@ class RestaurantMain():
 
             else:
                 pass
+
+    # def check_person_depth_head(self, half_or_full_img="full", percentage=0.5, min_dist=0, max_dist=800):
+    def check_person_depth_head(self, zeros_half_or_full_img="half", zeros_percentage=0.4, near_half_or_full_img="half", near_percentage=0.1, near_max_dist=0):
+
+        overall = False
+        zeros = False
+        zeros_err = 0.0
+        near = False
+        near_err = 0.0
+
+        if self.node.first_depth_image_received:
+            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
+            height, width = current_frame_depth_head.shape
+
+            blank_image = np.zeros((height,width,3), np.uint8)
+            tot_pixeis = height*width 
+
+
+            blank_image_cropped = blank_image[height//2:height,:]
+
+            mask_zero = (current_frame_depth_head == 0)
+            mask_near = (current_frame_depth_head > 0) & (current_frame_depth_head <= near_max_dist)
+            mask_remaining = (current_frame_depth_head > near_max_dist) # just for debug
+            
+
+
+            blank_image[mask_zero] = [255,255,255]
+            blank_image[mask_near] = [255,0,0]
+            blank_image[mask_remaining] = [0,0,255]
+
+
+            pixel_count_zeros = np.count_nonzero(mask_zero)
+            pixel_count_near = np.count_nonzero(mask_near)
+
+            # print(pixel_count, tot_pixeis, pixel_count/tot_pixeis)
+            # print("total:", round(pixel_count3/tot_pixeis,2), "near:", round(pixel_count1/tot_pixeis,2))
+            # print("total:", round(pixel_count/tot_pixeis,2))
+
+            """
+            for y in range(height):
+                for x in range(width):
+                        pixel_value = current_frame_depth_head[y, x]
+                        # Perform your desired operation on pixel_value here
+                        if pixel_value > 1000:
+                            blank_image[y,x] = (255,0,0)
+                        # print(f"Pixel value at ({x}, {y}): {pixel_value}")
+            """
+
+            # def obstacles_depth(half_or_full, percentage, min_dist, max_dist)
+
+
+
+            # print(current_frame_draw[width//2][height//2])
+
+            # cv2.circle(blank_image, (width//2, height//2), 5, (255,255,255), -1)
+
+
+            # current_frame_depth_head = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+            # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
+            cv2.imshow("New Img Distance Inspection", blank_image)
+            cv2.imshow("New Img Distance Inspection - Cropped", blank_image_cropped)
+            cv2.waitKey(10)
+
+            # if pixel_count/tot_pixeis > percentage:
+            #     return True, pixel_count/tot_pixeis
+            # else:
+            #     return False, pixel_count/tot_pixeis
+
+            zeros_err = pixel_count_zeros/tot_pixeis
+            if zeros_err >= zeros_percentage:
+                zeros = True
+            near_err = pixel_count_near/tot_pixeis
+            if near_err >= near_percentage:
+                near = True
+            if zeros or near:
+                overall = True
+
+        return overall, zeros, zeros_err, near, near_err         
+        
+
 
 
     def search_for_person(self, tetas, delta_t=3.0):
