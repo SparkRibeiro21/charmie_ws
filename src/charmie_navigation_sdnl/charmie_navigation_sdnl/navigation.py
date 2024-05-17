@@ -7,11 +7,13 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3, Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.msg import TarNavSDNL, Obstacles, Yolov8Pose, Obstacles
 from charmie_interfaces.srv import NavTrigger
+from sensor_msgs.msg import Image
 
 import cv2
 import numpy as np
 import math
 import time
+from cv_bridge import CvBridge
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -750,6 +752,9 @@ class NavSDNLNode(Node):
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
         self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) 
 
+        # Camera
+        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         
@@ -757,6 +762,10 @@ class NavSDNLNode(Node):
         self.obstacles_subscriber = self.create_subscription(Obstacles, 'obs_lidar', self.obstacles_callback, 10)
 
         self.create_timer(0.1, self.timer_callback)
+
+        self.br = CvBridge()
+        self.depth_img = Image()
+        self.first_depth_image_received = False
 
         self.navigation_state = 0
         self.obstacles = Obstacles()
@@ -794,9 +803,15 @@ class NavSDNLNode(Node):
 
         # print(self.MIN_DIST_OBS)        
 
+    def get_aligned_depth_image_callback(self, img: Image):
+        self.depth_img = img
+        self.first_depth_image_received = True
+        # print("Received Depth Image")
+
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
+        """
         if self.detected_people.num_person > 0:
             self.PERSON_IN_FRONT = True
             
@@ -807,6 +822,20 @@ class NavSDNLNode(Node):
 
             # TESTAR: ADICIONAR TAMBEM QUANDO RECEBO YOLO POSE ??? 
 
+            self.omni_move_publisher.publish(omni_move)
+
+        else:
+            self.PERSON_IN_FRONT = False
+
+        """
+        
+        if self.detected_people.num_person > 0 or self.check_person_depth_head:
+            self.PERSON_IN_FRONT = True
+            
+            omni_move = Vector3()
+            omni_move.x = float(0.0)
+            omni_move.y = float(0.0)
+            omni_move.z = float(100.0)
             self.omni_move_publisher.publish(omni_move)
 
         else:
@@ -899,6 +928,77 @@ class NavSDNLNode(Node):
         self.nav.nav_threshold_dist = nav.reached_radius # in meters
         self.navigation_state = 0
 
+
+    def check_person_depth_head(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=800):
+
+        overall = False
+        DEBUG = True
+
+        if self.first_depth_image_received:
+            current_frame_depth_head = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
+            height, width = current_frame_depth_head.shape
+            current_frame_depth_head_half = current_frame_depth_head[height//2:height,:]
+            
+            # FOR THE FULL IMAGE
+
+            tot_pixeis = height*width 
+            mask_zero = (current_frame_depth_head == 0)
+            mask_near = (current_frame_depth_head > 0) & (current_frame_depth_head <= near_max_dist)
+            
+            if DEBUG:
+                mask_remaining = (current_frame_depth_head > near_max_dist) # just for debug
+                blank_image = np.zeros((height,width,3), np.uint8)
+                blank_image[mask_zero] = [255,255,255]
+                blank_image[mask_near] = [255,0,0]
+                blank_image[mask_remaining] = [0,0,255]
+
+            pixel_count_zeros = np.count_nonzero(mask_zero)
+            pixel_count_near = np.count_nonzero(mask_near)
+
+            # FOR THE BOTTOM HALF OF THE IMAGE
+
+            mask_zero_half = (current_frame_depth_head_half == 0)
+            mask_near_half = (current_frame_depth_head_half > 0) & (current_frame_depth_head_half <= near_max_dist)
+            
+            if DEBUG:
+                mask_remaining_half = (current_frame_depth_head_half > near_max_dist) # just for debug
+                blank_image_half = np.zeros((height//2,width,3), np.uint8)
+                blank_image_half[mask_zero_half] = [255,255,255]
+                blank_image_half[mask_near_half] = [255,0,0]
+                blank_image_half[mask_remaining_half] = [0,0,255]
+                    
+            pixel_count_zeros_half = np.count_nonzero(mask_zero_half)
+            pixel_count_near_half = np.count_nonzero(mask_near_half)
+            
+            if DEBUG:
+                cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
+                cv2.imshow("New Img Distance Inspection", blank_image)
+                cv2.waitKey(10)
+
+            half_image_zero_or_near = False
+            half_image_zero_or_near_err = 0.0
+            
+            full_image_near = False
+            full_image_near_err = 0.0
+
+
+            half_image_zero_or_near_err = (pixel_count_zeros_half+pixel_count_near_half)/(tot_pixeis//2)
+            if half_image_zero_or_near_err >= half_image_zero_or_near_percentage:
+                half_image_zero_or_near = True
+            
+            full_image_near_err = pixel_count_near/tot_pixeis
+            if full_image_near_err >= full_image_near_percentage:
+                full_image_near = True
+            
+            
+            if half_image_zero_or_near or full_image_near:
+                overall = True
+
+            # just for debug
+            # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
+            # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
+        
+        return overall
 
     
     def timer_callback(self):
