@@ -576,15 +576,16 @@ class RestaurantMain():
                 # if self.detected_people.num_person > 0:
 
 
-                overall, zeros, zeros_err, near, near_err = self.check_person_depth_head(zeros_half_or_full_img="half", zeros_percentage=0.4, near_half_or_full_img="half", near_percentage=0.1, near_max_dist=800)
+                overall = self.check_person_depth_head() #half_image_zero_or_near_percentage=0.4, full_image_near_percentage=0.1, near_max_dist=800)
                       
                 
 
-                if zeros or near: 
-                    print("STOP", overall, zeros, round(zeros_err,2), near, round(near_err,2))
+                if overall: 
+                    # print("STOP", overall, zeros, round(zeros_err,2), near, round(near_err,2))
+                    print("STOP")
                 else:
-                    print("GO", overall, zeros, round(zeros_err,2), near, round(near_err,2))
-                                
+                    # print("GO", overall, zeros, round(zeros_err,2), near, round(near_err,2))
+                    print("GO")
                         
                 
                 
@@ -603,86 +604,77 @@ class RestaurantMain():
             else:
                 pass
 
-    # def check_person_depth_head(self, half_or_full_img="full", percentage=0.5, min_dist=0, max_dist=800):
-    def check_person_depth_head(self, zeros_half_or_full_img="half", zeros_percentage=0.4, near_half_or_full_img="half", near_percentage=0.1, near_max_dist=0):
+    def check_person_depth_head(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=800):
 
         overall = False
-        zeros = False
-        zeros_err = 0.0
-        near = False
-        near_err = 0.0
+        DEBUG = True
 
         if self.node.first_depth_image_received:
             current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
             height, width = current_frame_depth_head.shape
+            current_frame_depth_head_half = current_frame_depth_head[height//2:height,:]
+            
+            # FOR THE FULL IMAGE
 
-            blank_image = np.zeros((height,width,3), np.uint8)
             tot_pixeis = height*width 
-
-
-            blank_image_cropped = blank_image[height//2:height,:]
-
             mask_zero = (current_frame_depth_head == 0)
             mask_near = (current_frame_depth_head > 0) & (current_frame_depth_head <= near_max_dist)
-            mask_remaining = (current_frame_depth_head > near_max_dist) # just for debug
             
-
-
-            blank_image[mask_zero] = [255,255,255]
-            blank_image[mask_near] = [255,0,0]
-            blank_image[mask_remaining] = [0,0,255]
-
+            if DEBUG:
+                mask_remaining = (current_frame_depth_head > near_max_dist) # just for debug
+                blank_image = np.zeros((height,width,3), np.uint8)
+                blank_image[mask_zero] = [255,255,255]
+                blank_image[mask_near] = [255,0,0]
+                blank_image[mask_remaining] = [0,0,255]
 
             pixel_count_zeros = np.count_nonzero(mask_zero)
             pixel_count_near = np.count_nonzero(mask_near)
 
-            # print(pixel_count, tot_pixeis, pixel_count/tot_pixeis)
-            # print("total:", round(pixel_count3/tot_pixeis,2), "near:", round(pixel_count1/tot_pixeis,2))
-            # print("total:", round(pixel_count/tot_pixeis,2))
+            # FOR THE BOTTOM HALF OF THE IMAGE
 
-            """
-            for y in range(height):
-                for x in range(width):
-                        pixel_value = current_frame_depth_head[y, x]
-                        # Perform your desired operation on pixel_value here
-                        if pixel_value > 1000:
-                            blank_image[y,x] = (255,0,0)
-                        # print(f"Pixel value at ({x}, {y}): {pixel_value}")
-            """
+            mask_zero_half = (current_frame_depth_head_half == 0)
+            mask_near_half = (current_frame_depth_head_half > 0) & (current_frame_depth_head_half <= near_max_dist)
+            
+            if DEBUG:
+                mask_remaining_half = (current_frame_depth_head_half > near_max_dist) # just for debug
+                blank_image_half = np.zeros((height//2,width,3), np.uint8)
+                blank_image_half[mask_zero_half] = [255,255,255]
+                blank_image_half[mask_near_half] = [255,0,0]
+                blank_image_half[mask_remaining_half] = [0,0,255]
+                    
+            pixel_count_zeros_half = np.count_nonzero(mask_zero_half)
+            pixel_count_near_half = np.count_nonzero(mask_near_half)
+            
+            if DEBUG:
+                cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
+                cv2.imshow("New Img Distance Inspection", blank_image)
+                cv2.waitKey(10)
 
-            # def obstacles_depth(half_or_full, percentage, min_dist, max_dist)
+            half_image_zero_or_near = False
+            half_image_zero_or_near_err = 0.0
+            
+            full_image_near = False
+            full_image_near_err = 0.0
 
 
-
-            # print(current_frame_draw[width//2][height//2])
-
-            # cv2.circle(blank_image, (width//2, height//2), 5, (255,255,255), -1)
-
-
-            # current_frame_depth_head = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-            # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-            cv2.imshow("New Img Distance Inspection", blank_image)
-            cv2.imshow("New Img Distance Inspection - Cropped", blank_image_cropped)
-            cv2.waitKey(10)
-
-            # if pixel_count/tot_pixeis > percentage:
-            #     return True, pixel_count/tot_pixeis
-            # else:
-            #     return False, pixel_count/tot_pixeis
-
-            zeros_err = pixel_count_zeros/tot_pixeis
-            if zeros_err >= zeros_percentage:
-                zeros = True
-            near_err = pixel_count_near/tot_pixeis
-            if near_err >= near_percentage:
-                near = True
-            if zeros or near:
+            half_image_zero_or_near_err = (pixel_count_zeros_half+pixel_count_near_half)/(tot_pixeis//2)
+            if half_image_zero_or_near_err >= half_image_zero_or_near_percentage:
+                half_image_zero_or_near = True
+            
+            full_image_near_err = pixel_count_near/tot_pixeis
+            if full_image_near_err >= full_image_near_percentage:
+                full_image_near = True
+            
+            
+            if half_image_zero_or_near or full_image_near:
                 overall = True
 
-        return overall, zeros, zeros_err, near, near_err         
+            # just for debug
+            # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
+            # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
         
-
-
+        return overall
+        
 
     def search_for_person(self, tetas, delta_t=3.0):
 
