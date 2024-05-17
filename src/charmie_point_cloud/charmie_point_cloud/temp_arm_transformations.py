@@ -1056,7 +1056,7 @@ class ServeBreakfastMain():
         ### nos numeros que saem: x vai para trás do robô. y vai para baixo no robô. z vai para a direita do robô
         
         
-        
+        ### PARECE-ME QUE X E Z ESTÃO TROCADOS NO RESULTADO QUE TENHO EM RELAºÃO AO BRAÇO
         object_ = self.node.objects
         print(object_)
         print('\n\n')
@@ -1079,6 +1079,17 @@ class ServeBreakfastMain():
             
             AA = np.dot(T, c)
             
+            # print('ex Ponto em relação ao braço:', AA)
+
+
+            aux = AA[0]
+            AA[0] = AA[2]
+            AA[2] = aux
+
+            """ AA[0] = AA[0] * 10
+            AA[1] = AA[1] * 10
+            AA[2] = AA[2] * 10
+            my_formatted_list = [ '%.2f' % elem for elem in AA ] """
             print('Ponto em relação ao braço:', AA)
             print('\n\n')
 
