@@ -560,8 +560,11 @@ class RestaurantMain():
 
                 ### SEARCH FOR PERSON EXAMPLE ###
                 
-                # self.set_face(command="demo5")
+                self.set_face(command="Imagem7")
                 # self.set_neck(position=[0.0, -20.0], wait_for_end_of=True)
+
+                while True:
+                    pass
 
                 # time.sleep(2.0)
 
