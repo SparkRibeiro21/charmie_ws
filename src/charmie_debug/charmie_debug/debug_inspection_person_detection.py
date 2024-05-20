@@ -560,11 +560,13 @@ class RestaurantMain():
 
                 ### SEARCH FOR PERSON EXAMPLE ###
                 
-                self.set_face(command="Imagem7")
+                # self.set_face(command="please_say_restaurant")
+                # self.set_face(command="please_say_yes_or_no")
+                # self.set_face(command="please_say_receptionist")
                 # self.set_neck(position=[0.0, -20.0], wait_for_end_of=True)
 
-                while True:
-                    pass
+                # while True:
+                #     pass
 
                 # time.sleep(2.0)
 

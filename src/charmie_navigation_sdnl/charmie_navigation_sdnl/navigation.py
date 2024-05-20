@@ -806,7 +806,7 @@ class NavSDNLNode(Node):
     def get_aligned_depth_image_callback(self, img: Image):
         self.depth_img = img
         self.first_depth_image_received = True
-        # print("Received Depth Image")
+        print("Received Depth Image")
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -828,8 +828,10 @@ class NavSDNLNode(Node):
             self.PERSON_IN_FRONT = False
 
         """
+
+        print(self.PERSON_IN_FRONT)
         
-        if self.detected_people.num_person > 0 or self.check_person_depth_head:
+        if self.detected_people.num_person > 0 or self.check_person_depth_head():
             self.PERSON_IN_FRONT = True
             
             omni_move = Vector3()
@@ -932,9 +934,13 @@ class NavSDNLNode(Node):
     def check_person_depth_head(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=800):
 
         overall = False
-        DEBUG = True
+        DEBUG = False
+
+        print(self.first_depth_image_received)
 
         if self.first_depth_image_received:
+
+            print("in")
             current_frame_depth_head = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
             height, width = current_frame_depth_head.shape
             current_frame_depth_head_half = current_frame_depth_head[height//2:height,:]
@@ -1028,8 +1034,8 @@ class NavSDNLNode(Node):
                     self.nav.lambda_target = 12 # 12
                     omni_move = self.nav.sdnl_main("rot")
                     self.omni_move_publisher.publish(omni_move)
-                    print("DIST_ERR:", self.nav.dist_to_target)
-                    print("ANG_ERR:", self.nav.ang_to_target) 
+                    # print("DIST_ERR:", self.nav.dist_to_target)
+                    # print("ANG_ERR:", self.nav.ang_to_target) 
                     if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
                         self.navigation_state = 2
 
@@ -1052,8 +1058,8 @@ class NavSDNLNode(Node):
                         # TESTAR: ADICIONAR TAMBEM QUANDO RECEBO YOLO POSE ??? 
 
                     self.omni_move_publisher.publish(omni_move)
-                    print("DIST_ERR:", self.nav.dist_to_target)
-                    print("ANG_ERR:", self.nav.ang_to_target) 
+                    # print("DIST_ERR:", self.nav.dist_to_target)
+                    # print("ANG_ERR:", self.nav.ang_to_target) 
                     if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
                         self.navigation_state = 2
                 

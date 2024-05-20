@@ -382,7 +382,7 @@ class InspectionMain():
         
         # Neck Positions
         self.look_forward = [0, 0]
-        self.look_navigation = [0, -10]
+        self.look_navigation = [0, -20]
 
         # Navigation Coordinates [x, y]
         """ self.front_of_door = [0.0, 1.5] 
