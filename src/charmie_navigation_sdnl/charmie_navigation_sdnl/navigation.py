@@ -839,6 +839,7 @@ class NavSDNLNode(Node):
             omni_move.y = float(0.0)
             omni_move.z = float(100.0)
             self.omni_move_publisher.publish(omni_move)
+            self.set_rgb(RED+SET_COLOUR)
 
         else:
             self.PERSON_IN_FRONT = False
