@@ -869,9 +869,13 @@ class ReceptionistMain():
             elif self.state == Presentation_host_first_guest:
                 print('State 4 = Presentation host and first guest')
 
+                # temp:
+                # self.guest1_name = "Evelyn"
+                # self.guest1_drink = "Cola"
+
                 self.set_neck(position=self.look_down_sofa, wait_for_end_of=True)
 
-                self.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_dear_"+self.host_name.lower(), wait_for_end_of=True)
                 self.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
 
                 self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, characteristics=False)
@@ -884,7 +888,7 @@ class ReceptionistMain():
                 ### NECK: TURN TO HOST
                 self.set_neck_coords(position=self.host_position, ang=-10)
                 time.sleep(0.5)
-                self.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_dear_"+self.host_name.lower(), wait_for_end_of=True)
                 self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
 
                 ### SPEAK GUEST NAME AND FAVOURITE DRINK
@@ -897,7 +901,7 @@ class ReceptionistMain():
                 elif self.SIDE_TO_LOOK.lower() == "left":
                     self.set_neck(position=self.look_left, wait_for_end_of=True)
                 
-                self.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_dear_"+self.guest1_name.lower(), wait_for_end_of=True)
                 time.sleep(0.5)
 
                 ### SPEAK: HOST INFORMATION
@@ -1002,10 +1006,18 @@ class ReceptionistMain():
             elif self.state == Presentation_host_first_second_guest:
                 print('State 4 = Presentation host, first and second guest')
 
+                # temp:
+                # self.guest1_name = "Evelyn"
+                # self.guest1_drink = "Cola"
+
+                # temp:
+                # self.guest2_name = "Kai"
+                # self.guest2_drink = "Red Wine"
+                
                 self.set_neck(position=self.look_down_sofa, wait_for_end_of=True)
 
-                self.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
-                self.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_dear_"+self.host_name.lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_dear_"+self.guest1_name.lower(), wait_for_end_of=True)
                 self.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
 
                 self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, characteristics=False)
@@ -1038,11 +1050,11 @@ class ReceptionistMain():
 
                     self.set_neck_coords(position=guest1_coords, ang=-20)
                     time.sleep(0.5)
-                    self.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
+                    self.set_speech(filename="receptionist/names/recep_dear_"+self.guest1_name.lower(), wait_for_end_of=True)
                 
                     self.set_neck_coords(position=host_coords, ang=-20)
                     time.sleep(0.5)
-                    self.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
+                    self.set_speech(filename="receptionist/names/recep_dear_"+self.host_name.lower(), wait_for_end_of=True)
 
                 self.set_speech(filename="receptionist/present_everyone", wait_for_end_of=True)
 
@@ -1054,7 +1066,7 @@ class ReceptionistMain():
                     self.set_neck(position=self.look_right, wait_for_end_of=True)
                 elif self.SIDE_TO_LOOK.lower() == "left":
                     self.set_neck(position=self.look_left, wait_for_end_of=True)
-                self.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
+                self.set_speech(filename="receptionist/names/recep_dear_"+self.guest2_name.lower(), wait_for_end_of=True)
                 
                 ### SPEAK: GUEST1 INFORMATION
                 self.set_speech(filename="receptionist/names/recep_first_guest_"+self.guest1_name.lower(), wait_for_end_of=True)

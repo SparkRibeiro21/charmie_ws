@@ -811,24 +811,6 @@ class NavSDNLNode(Node):
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
-        """
-        if self.detected_people.num_person > 0:
-            self.PERSON_IN_FRONT = True
-            
-            omni_move = Vector3()
-            omni_move.x = float(0.0)
-            omni_move.y = float(0.0)
-            omni_move.z = float(100.0)
-
-            # TESTAR: ADICIONAR TAMBEM QUANDO RECEBO YOLO POSE ??? 
-
-            self.omni_move_publisher.publish(omni_move)
-
-        else:
-            self.PERSON_IN_FRONT = False
-
-        """
-
         print(self.PERSON_IN_FRONT)
         
         if self.detected_people.num_person > 0 or self.check_person_depth_head():
