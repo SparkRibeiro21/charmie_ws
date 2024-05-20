@@ -665,7 +665,7 @@ class ReceptionistMain():
         Presentation_host_first_second_guest = 7
         Final_State = 8
 
-        self.state = Waiting_for_start_button
+        self.state = Receive_first_guest
 
         self.SIDE_TO_LOOK = "right"
         self.OPEN_DOOR = False
@@ -723,7 +723,7 @@ class ReceptionistMain():
         self.guest1_ethnicity = ""
         self.guest1_age = ""
         self.guest1_gender = ""
-        self.guest1_height = ""
+        self.guest1_height = 0.0
         self.guest1_shirt_color = ""
         self.guest1_pants_color = ""
 
@@ -812,14 +812,16 @@ class ReceptionistMain():
                 self.set_rgb(YELLOW+ROTATE)
 
                 self.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
-
-                self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=True)
                 
                 self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color = self.search_for_guest_and_get_info() # search for guest 1 and returns all info regarding guest 1
                 print(self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color)
-
+                
                 self.activate_yolo_pose(activate=False)
 
+                
+                self.get_characteristics(race=self.guest1_ethnicity, age=self.guest1_age, gender=self.guest1_gender, height=self.guest1_height, shirt_color=self.guest1_shirt_color, pants_color=self.guest1_pants_color)
+                
+                
                 self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
 
                 command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
@@ -951,7 +953,7 @@ class ReceptionistMain():
 
                 self.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
 
-                self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=False)
+                # self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=False)
                 
                 self.search_for_guest() # search for guest 2 - only need to look at guest 
 
@@ -1007,12 +1009,10 @@ class ReceptionistMain():
                 print('State 4 = Presentation host, first and second guest')
 
                 # temp:
-                # self.guest1_name = "Evelyn"
-                # self.guest1_drink = "Cola"
-
-                # temp:
-                # self.guest2_name = "Kai"
-                # self.guest2_drink = "Red Wine"
+                self.guest1_name = "Evelyn"
+                self.guest1_drink = "Cola"
+                self.guest2_name = "Kai"
+                self.guest2_drink = "Red_Wine"
                 
                 self.set_neck(position=self.look_down_sofa, wait_for_end_of=True)
 
@@ -1073,7 +1073,7 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+self.guest1_drink.lower(), wait_for_end_of=True)
                 
                 ### SPEAK GUEST1 CHARACTERISTICS
-                self.get_characteristics(race=self.guest1_ethnicity, age=self.guest1_age, gender=self.guest1_gender,height=self.guest1_height,shirt_color=self.guest1_shirt_color,pant_color= self.guest1_pants_color)
+                self.get_characteristics(race=self.guest1_ethnicity, age=self.guest1_age, gender=self.guest1_gender, height=self.guest1_height, shirt_color=self.guest1_shirt_color, pants_color=self.guest1_pants_color)
                 
                 ### SPEAK: HOST INFORMATION
                 self.set_speech(filename="receptionist/names/recep_host_name", wait_for_end_of=True)
@@ -1238,6 +1238,8 @@ class ReceptionistMain():
 
         self.search_for_guest()
 
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=True)
+
         time.sleep(0.5)
 
         detected_person_temp = Yolov8Pose()
@@ -1245,7 +1247,7 @@ class ReceptionistMain():
         guest = DetectedPerson()
         is_cropped = False
         while not is_cropped:
-            while time.time() - start_time < 2.0:
+            while time.time() - start_time < 1.0:
                 detected_person_temp = self.node.detected_people  
                 if detected_person_temp.num_person == 0:  
                     start_time = time.time()
@@ -1262,6 +1264,8 @@ class ReceptionistMain():
         return filename, guest.ethnicity, guest.age_estimate, guest.gender, guest.height, guest.shirt_color, guest.pants_color
 
     def search_for_guest(self):
+
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=False)
     
         self.set_rgb(MAGENTA+HALF_ROTATE)
         time.sleep(0.5)
@@ -1379,93 +1383,62 @@ class ReceptionistMain():
         else:
             return False, "None"
 
-    def get_characteristics(self, race, age, gender, height, shirt_color, pant_color):
-        characteristics = []
-        none_variables = []
-
-        if race != "None":
+    def get_characteristics(self, race, age, gender, height, shirt_color, pants_color):
+        
+        if race != "None": # Minor corrections to value received
             if race == "Middle Eastern" or race == "Hispanic" or race == "Indian":
                 race = "Caucasian"
-            else:    
-                characteristics.append(race)
-        else:
-            none_variables.append("race")
-
-        if age != "None":
+        else: # If the robot can not compute, it guesses the following
+            race = "Caucasian"
+        
+        if age != "None": # Minor corrections to value received
             if age == "Over 60":
                 age = "Between 40 and 60"
-                age = age.replace(' ', '_')
             elif age == "Under 20":
                 age = "Between 18 and 32"
-                age = age.replace(' ', '_')
-            else:
-                age = age.replace(' ', '_')
-                characteristics.append(age)
-        else:
-            none_variables.append("age")
-
-        if gender != "None":
-            characteristics.append(gender)
-        else:
-            none_variables.append("gender")
-
-        print(height)
-
-        if height != "None":
-            if height > 1.55: 
-                height='taller'
-            elif height < 1.40:
-                height='smaller'
-            else:
-                height='equal'
-            characteristics.append(height)
-        else:
-            none_variables.append("height")
-
-        if shirt_color != "None":
-            characteristics.append(shirt_color)
-        else:
-            none_variables.append("shirt_color")
-
-        if pant_color != "None":
-            characteristics.append(pant_color)
-        else:
-            none_variables.append("pant_color")
-
-        if not characteristics:  # Se nenhuma característica foi fornecida
-            print("Nenhuma característica fornecida")
-            return None
-
-        for variable in none_variables:
-            if variable == "age":
-                age = 'Between18_32'
-                characteristics.append(age)
-            elif variable == "gender":
-                gender = "Male"
-                characteristics.append(gender)
-            elif variable == "race":
-                race = "Caucasian"
-                characteristics.append(race)
-            elif variable == "height":
-                height = "Taller than me"
-                characteristics.append(height)
-            elif variable == "shirt_color":
-                shirt_color = "White"
-                characteristics.append(shirt_color)
-            elif variable == "pant_color":
-                pass  # Deixa a cor da calça vazia
-            else:
-                print("Empty:", variable)
-
+            age = age.replace(' ', '_')
+        else: # If the robot can not compute, it guesses the following
+            age = 'Between18_32'
         
-
+        if gender != "None": # Minor corrections to value received
+            pass
+        else: # If the robot can not compute, it guesses the following
+            gender = "Male"
+        
+        # print("height is ", height)
+        temp_height_string = ""
+        if height != 0.0: # Minor corrections to value received
+            if height > 1.55: 
+                temp_height_string='taller'
+            elif height < 1.40:
+                temp_height_string='smaller'
+            else:
+                temp_height_string='equal'
+        else: # If the robot can not compute, it guesses the following
+            temp_height_string = "taller"
+        
+        if shirt_color != "None": # Minor corrections to value received
+            pass
+        else: # If the robot can not compute, it guesses the following
+            shirt_color = "White"
+        
+        if pants_color != "None": # Minor corrections to value received
+            pass
+        else: # If the robot can not compute, it guesses the following
+            pants_color = "Blue"
+        
         self.set_speech(filename="receptionist/the_first_guest_is", wait_for_end_of=True)
         self.set_speech(filename="receptionist/characteristics/race_"+race.lower(), wait_for_end_of=True)
         self.set_speech(filename="receptionist/characteristics/gender_"+gender.lower(), wait_for_end_of=True)
         self.set_speech(filename="receptionist/characteristics/age_"+age.lower(), wait_for_end_of=True)
-        self.set_speech(filename="receptionist/characteristics/height_"+height.lower(), wait_for_end_of=True)
-        # self.set_speech(filename="receptionist/the_shirt_color_is", wait_for_end_of=True)
-        # self.set_speech(filename="receptionist/color_"+shirt_color.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/characteristics/height_"+temp_height_string.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/the_shirt_color_is", wait_for_end_of=True)
+        self.set_speech(filename="receptionist/characteristics/color_"+shirt_color.lower(), wait_for_end_of=True)
+
+        # Not using the pants color at the moment, since the robot had to look down and 
+        # we lose time that we do not actually since the other 5 characteristics are one more than enough 
+        # self.set_speech(filename="receptionist/the_pants_color_is", wait_for_end_of=True)
+        # self.set_speech(filename="receptionist/characteristics/color_"+pants_color.lower(), wait_for_end_of=True)
 
     def charmie_face_recognition(self, image):
        

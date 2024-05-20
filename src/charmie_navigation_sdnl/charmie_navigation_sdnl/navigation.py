@@ -816,12 +816,13 @@ class NavSDNLNode(Node):
         if self.detected_people.num_person > 0 or self.check_person_depth_head():
             self.PERSON_IN_FRONT = True
             
-            omni_move = Vector3()
-            omni_move.x = float(0.0)
-            omni_move.y = float(0.0)
-            omni_move.z = float(100.0)
-            self.omni_move_publisher.publish(omni_move)
-            self.set_rgb(RED+SET_COLOUR)
+            if self.nav.nav_target.avoid_people:
+                omni_move = Vector3()
+                omni_move.x = float(0.0)
+                omni_move.y = float(0.0)
+                omni_move.z = float(100.0)
+                self.omni_move_publisher.publish(omni_move)
+                self.set_rgb(RED+SET_COLOUR)
 
         else:
             self.PERSON_IN_FRONT = False
