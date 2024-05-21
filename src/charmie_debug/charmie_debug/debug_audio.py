@@ -288,14 +288,58 @@ class RestaurantMain():
                 # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
                 # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
+                
+                is_command_confirmed = False
+                while is_command_confirmed:
 
-                ### GPSR EXAMPLE
-                print("Started")
-                command = self.get_audio(gpsr=True, question="gpsr/gpsr_question", wait_for_end_of=True)
-                print("Finished:", command)
-                self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
-                self.set_speech(command=command, wait_for_end_of=True)
-                self.set_speech(filename="gpsr/gpsr_can_not_execute", wait_for_end_of=True)
+                    ### GPSR EXAMPLE
+                    print("Started")
+                    command = self.get_audio(gpsr=True, question="gpsr/gpsr_question", wait_for_end_of=True)
+                    print("Finished:", command)
+
+                    ##### SPEAK: "Please give me a moment to process your command"
+                    self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
+                    
+                    self.set_speech(command=command, wait_for_end_of=True)
+
+                    ##### SPEAK: Is the follwing command correct?
+
+                    ##### SPEAK: commando gerado pelo gpsr 
+                    
+                    ##### SPEAK: Please say yes robot or no robot to confirm.
+                    # trocar para a frase em cima
+                    ##### AUDIO: Listen "YES" OR "NO"
+                    ##### "Please say yes or no to confirm the order"
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+
+                    ##### Verifica a resposta recebida
+                    if confirmation.lower() == "yes":
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+
+                        # Speak: Reforçar que ouvi o comando, repetir mais uma vez
+                        # algo do género:
+                        # "I confirm that the requested comand is:"
+                        #  voltar a dizer o comando
+                        # I am analysing the whole task to check all sub tasks that are necessary to be performed 
+
+                        # Trocar para: Unfortunately the task you require me to do, has some parts that I still need to learn how to perform.
+                        # So I am unable not help you at this time. I am sorry for this. I will keep moving and search for new commands.
+
+                        # Speak: Unfortunately I can not execute that command. Searching for new tasks.
+                        self.set_speech(filename="gpsr/gpsr_can_not_execute", wait_for_end_of=True)  
+                        
+                        is_command_confirmed = True
+
+                    else:
+                        self.set_rgb(command=RED+BLINK_LONG)
+                        ##### SPEAK: Sorry for my mistake, lets try again.
+                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+                    
+                        # self.set_rgb(command=YELLOW+BLINK_LONG)
+                        ##### ERROR
+                        # print("ERROR")
+
                 
 
                 ### CALIBRATION EXAMPLE

@@ -155,15 +155,16 @@ class RestaurantNode(Node):
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
 
-        current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
-        current_frame_draw = current_frame.copy()
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
 
 
         # img = [0:720, 0:1280]
-        corr_image = False
-        thresh_h = 50
-        thresh_v = 200
+        # corr_image = False
+        # thresh_h = 50
+        # thresh_v = 200
 
+        """
         if self.detected_objects.num_objects > 0:
 
             x_min = 1280
@@ -220,6 +221,7 @@ class RestaurantNode(Node):
             cv2.imshow("c", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)])
             cv2.waitKey(10)
             pass
+        """
         # cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
         # cv2.waitKey(10)
 
