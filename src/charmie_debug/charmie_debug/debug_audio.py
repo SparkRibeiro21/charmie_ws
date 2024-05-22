@@ -357,8 +357,10 @@ class RestaurantMain():
                 # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
                 # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
-                self.save_speech(command=["Please look for Emely at the entrance, and guide her to the kitchen."], filename=["str_test2"])
-
+                self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
+                self.save_speech(command=["Please look for James at the entrance, and guide him to the kitchen."], filename=["str_test_new"])
+                self.set_speech(filename="temp/str_test_new", wait_for_end_of=False)
+                
                 while True:
                     pass
                 
