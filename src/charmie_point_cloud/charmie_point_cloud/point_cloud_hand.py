@@ -170,8 +170,8 @@ class PointCloudNode(Node):
         self.get_logger().info("Initialised CHARMIE PointCloud Node")
         
         # Intel Realsense Subscribers
-        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_head_callback, 10)
+        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
         
         # Neck Position
         self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
@@ -206,7 +206,7 @@ class PointCloudNode(Node):
 
     def callback_point_cloud(self, request, response):
 
-        # print(request)
+        print(request)
 
         # Type of service received:
         # BoundingBoxAndPoints[] data # bounding box and specific points inside the bounding box  

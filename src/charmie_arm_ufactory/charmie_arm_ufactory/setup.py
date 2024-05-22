@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             "arm_demonstration = charmie_arm_ufactory.arm_demonstration:main",
+            "arm_open_doors = charmie_arm_ufactory.arm_open_doors:main",
             "arm_debug = charmie_arm_ufactory.arm_debug:main",
             "arm_cutlery = charmie_arm_ufactory.arm_cutlery:main",
             "arm_hello = charmie_arm_ufactory.arm_hello:main",

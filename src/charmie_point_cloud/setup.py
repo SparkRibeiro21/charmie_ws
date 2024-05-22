@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
 		"point_cloud = charmie_point_cloud.point_cloud:main",
+        "point_cloud_hand = charmie_point_cloud.point_cloud_hand:main",
 		"save_images_test_point_cloud = charmie_point_cloud.save_images_test_point_cloud:main",
 		"temp = charmie_point_cloud.temp_arm_transformations:main"
         ],
