@@ -5,6 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Int16
 from charmie_interfaces.srv import GetAudio, CalibrateAudio, SpeechCommand, SaveSpeechCommand
 
+from datetime import datetime
 import threading
 import time
 
@@ -206,9 +207,7 @@ class RestaurantMain():
     def __init__(self, node: TestNode):
         self.node = node
         
-        # VARS ...
-        self.state = 0
-    
+
     def set_rgb(self, command="", wait_for_end_of=True):
         
         temp = Int16()
@@ -317,6 +316,10 @@ class RestaurantMain():
         Delivering_order_to_client = 6
         Final_State = 7
 
+        # VARS ...
+        self.state = Waiting_for_start_button
+    
+
         print("IN NEW MAIN")
         # time.sleep(2)
 
@@ -357,29 +360,36 @@ class RestaurantMain():
                 # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
                 # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
-                self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
-                self.save_speech(command=["Please look for James at the entrance, and guide him to the kitchen."], filename=["str_test_new"])
-                self.set_speech(filename="temp/str_test_new", wait_for_end_of=False)
+                # self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
+                # self.save_speech(command=["Please look for James at the entrance, and guide him to the kitchen."], filename=["str_test_new"])
+                # self.set_speech(filename="temp/str_test_new", wait_for_end_of=False)
                 
-                while True:
-                    pass
+                # while True:
+                #     pass
                 
                 is_command_confirmed = False
-                while is_command_confirmed:
+                while not is_command_confirmed:
 
                     ### GPSR EXAMPLE
-                    print("Started")
-                    command = self.get_audio(gpsr=True, question="gpsr/gpsr_question", wait_for_end_of=True)
-                    print("Finished:", command)
+                    ##### SPEAK: "Hello, you seem to be needing my help. How can I help you?"
+                    audio_gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question", wait_for_end_of=True)
+                    print("Finished:", audio_gpsr_command)
 
                     ##### SPEAK: "Please give me a moment to process your command"
                     self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
                     
-                    self.set_speech(command=command, wait_for_end_of=True)
+                    current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+                    self.save_speech(command=audio_gpsr_command, filename=current_datetime)
+                
+
+
+                    # self.set_speech(command=command, wait_for_end_of=True)
 
                     ##### SPEAK: Is the follwing command correct?
 
                     ##### SPEAK: commando gerado pelo gpsr 
+                    self.set_speech(filename="temp/"+current_datetime, wait_for_end_of=False)
+                    
                     
                     ##### SPEAK: Please say yes robot or no robot to confirm.
                     # trocar para a frase em cima
@@ -398,7 +408,7 @@ class RestaurantMain():
                         #  voltar a dizer o comando
                         # I am analysing the whole task to check all sub tasks that are necessary to be performed 
 
-                        # Trocar para: Unfortunately the task you require me to do, has some parts that I still need to learn how to perform.
+                        # Trocar para: I have yndersttod your command, but unfortunately the task you require me to do, has some parts that I still need to learn how to perform.
                         # So I am unable not help you at this time. I am sorry for this. I will keep moving and search for new commands.
 
                         # Speak: Unfortunately I can not execute that command. Searching for new tasks.
