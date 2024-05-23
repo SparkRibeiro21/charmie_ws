@@ -3,8 +3,9 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Int16
-from charmie_interfaces.srv import GetAudio, CalibrateAudio, SpeechCommand
+from charmie_interfaces.srv import GetAudio, CalibrateAudio, SpeechCommand, SaveSpeechCommand
 
+from datetime import datetime
 import threading
 import time
 
@@ -29,6 +30,7 @@ class TestNode(Node):
 
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
         
         while not self.get_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Audio Server...")
@@ -36,15 +38,20 @@ class TestNode(Node):
             self.get_logger().warn("Waiting for Calibrate Audio Server...")
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
+        while not self.save_speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Save Speech Command...")
 
         # Variables
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
         self.waited_for_end_of_speaking = False
+        self.waited_for_end_of_save_speaking = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
         self.speech_message = ""
+        self.save_speech_success = True
+        self.save_speech_message = ""
         self.rgb_success = True
         self.rgb_message = ""
         self.calibrate_audio_success = True
@@ -134,8 +141,6 @@ class TestNode(Node):
             self.speech_success = True
             self.speech_message = "Wait for answer not needed"
     
-
-
     def callback_call_speech_command(self, future): #, a, b):
 
         try:
@@ -150,6 +155,39 @@ class TestNode(Node):
             self.waited_for_end_of_speaking = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
+
+
+    #### SAVE SPEECH SERVER FUNCTIONS #####
+    def call_save_speech_command_server(self, filename="", command="", wait_for_end_of=True):
+        request = SaveSpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+    
+        future = self.save_speech_command_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_save_speech_command)
+        else:
+            self.speech_success = True
+            self.speech_message = "Wait for answer not needed"
+    
+    def callback_call_save_speech_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.save_speech_success = response.success
+            self.save_speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_save_speaking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
 
 
 def main(args=None):
@@ -169,9 +207,7 @@ class RestaurantMain():
     def __init__(self, node: TestNode):
         self.node = node
         
-        # VARS ...
-        self.state = 0
-    
+
     def set_rgb(self, command="", wait_for_end_of=True):
         
         temp = Int16()
@@ -234,11 +270,41 @@ class RestaurantMain():
         self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
         
         if wait_for_end_of:
-          while not self.node.waited_for_end_of_speaking:
-            pass
+            while not self.node.waited_for_end_of_speaking:
+                pass
         self.node.waited_for_end_of_speaking = False
 
         return self.node.speech_success, self.node.speech_message
+
+    def save_speech(self, filename="", command="", wait_for_end_of=True):
+
+        # the commands should be lists, because you can send a list of commands and a list of filenames,
+        # making it possible to create multiple temp commands with one instruction
+        # But if by mistake someone sends them as a string (beause set_speech is done that way) I correct it  
+        file = []
+        comm = [] 
+        if isinstance(filename, str) and isinstance(command, str):
+            file.append(filename)
+            comm.append(command)
+        elif isinstance(filename, list) and isinstance(command, list):
+            file = filename
+            comm = command
+        
+        if len(file) > 0 and len(comm) > 0:
+
+            self.node.call_save_speech_command_server(filename=file, command=comm, wait_for_end_of=wait_for_end_of)
+            
+            if wait_for_end_of:
+                while not self.node.waited_for_end_of_save_speaking:
+                    pass
+            self.node.waited_for_end_of_save_speaking = False
+
+            return self.node.save_speech_success, self.node.save_speech_message
+
+        else:
+
+            self.node.get_logger().error("Could not generate save speech as as filename and command types are incompatible.")
+            return False, "Could not generate save speech as as filename and command types are incompatible."
 
     def main(self):
         Waiting_for_start_button = 0
@@ -249,6 +315,10 @@ class RestaurantMain():
         Collect_order_from_barman = 5
         Delivering_order_to_client = 6
         Final_State = 7
+
+        # VARS ...
+        self.state = Waiting_for_start_button
+    
 
         print("IN NEW MAIN")
         # time.sleep(2)
@@ -264,6 +334,8 @@ class RestaurantMain():
             # State 4 = Receive Order - Listening and Confirm
             # State 5 = Collect Order
             # State 6 = Final Speech
+
+
 
             if self.state == Waiting_for_start_button:
                 #print('State 0 = Initial')
@@ -288,23 +360,36 @@ class RestaurantMain():
                 # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
                 # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
+                # self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
+                # self.save_speech(command=["Please look for James at the entrance, and guide him to the kitchen."], filename=["str_test_new"])
+                # self.set_speech(filename="temp/str_test_new", wait_for_end_of=False)
+                
+                # while True:
+                #     pass
                 
                 is_command_confirmed = False
-                while is_command_confirmed:
+                while not is_command_confirmed:
 
                     ### GPSR EXAMPLE
-                    print("Started")
-                    command = self.get_audio(gpsr=True, question="gpsr/gpsr_question", wait_for_end_of=True)
-                    print("Finished:", command)
+                    ##### SPEAK: "Hello, you seem to be needing my help. How can I help you?"
+                    audio_gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question", wait_for_end_of=True)
+                    print("Finished:", audio_gpsr_command)
 
                     ##### SPEAK: "Please give me a moment to process your command"
                     self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
                     
-                    self.set_speech(command=command, wait_for_end_of=True)
+                    current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+                    self.save_speech(command=audio_gpsr_command, filename=current_datetime)
+                
+
+
+                    # self.set_speech(command=command, wait_for_end_of=True)
 
                     ##### SPEAK: Is the follwing command correct?
 
                     ##### SPEAK: commando gerado pelo gpsr 
+                    self.set_speech(filename="temp/"+current_datetime, wait_for_end_of=False)
+                    
                     
                     ##### SPEAK: Please say yes robot or no robot to confirm.
                     # trocar para a frase em cima
@@ -323,7 +408,7 @@ class RestaurantMain():
                         #  voltar a dizer o comando
                         # I am analysing the whole task to check all sub tasks that are necessary to be performed 
 
-                        # Trocar para: Unfortunately the task you require me to do, has some parts that I still need to learn how to perform.
+                        # Trocar para: I have yndersttod your command, but unfortunately the task you require me to do, has some parts that I still need to learn how to perform.
                         # So I am unable not help you at this time. I am sorry for this. I will keep moving and search for new commands.
 
                         # Speak: Unfortunately I can not execute that command. Searching for new tasks.

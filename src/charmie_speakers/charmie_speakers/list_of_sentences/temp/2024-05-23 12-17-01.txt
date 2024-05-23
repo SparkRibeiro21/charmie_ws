@@ -1,0 +1,1 @@
+Count the number of snacks on the dishwasher.
