@@ -623,8 +623,8 @@ class RestaurantMain():
                 self.state = Searching_for_clients
 
             elif self.state == Searching_for_clients:
+    
                 #print('State 1 = Hand Raising Detect')
-
                 # your code here ...
 
                 # self.detected_people = det_people
@@ -660,7 +660,6 @@ class RestaurantMain():
                 pass
 
     def check_door_depth(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist = 400, near_max_dist_1=350, near_max_dist_2 = 900):
-
         overall = False
         DEBUG = True
 
@@ -722,29 +721,57 @@ class RestaurantMain():
                         # time.sleep(3)
                         self.set_arm(command="go_down", wait_for_end_of=True)
                         # time.sleep(3) """
+                        arm_value = Float32()
 
-                        if error_x_bbox < -30.0:
+
+
+                        if error_x_bbox < -20.0:
                             print('move right')
-                            self.node.arm_value_publisher.publish(-error_x_bbox)
+                            arm_value.data = abs(error_x_bbox)
+                            self.node.arm_value_publisher.publish(arm_value)
+                            print(arm_value)
                             self.set_arm(command="go_right", wait_for_end_of=True)
-                        elif error_x_bbox > 30.0: 
+                            print('---------------------------- \n \n --------------------------')
+                            
+                        elif error_x_bbox > 20.0: 
                             print('move left')
+                            arm_value.data = -error_x_bbox
+                            self.node.arm_value_publisher.publish(arm_value)
+                            print(arm_value)
                             self.set_arm(command="go_left", wait_for_end_of=True)
-                        elif error_y_bbox < -30.0:
-                            print('move up')
-                            self.set_arm(command="go_down", wait_for_end_of=True)
-                        elif error_y_bbox > 30.0:
+                            print('---------------------------- \n \n --------------------------')
+                        elif error_y_bbox < -20.0:
                             print('move down')
+                            arm_value.data = error_y_bbox
+                            self.node.arm_value_publisher.publish(arm_value)
+                            print(arm_value)
+                            self.set_arm(command="go_down", wait_for_end_of=True)
+
+                            print('---------------------------- \n \n --------------------------')
+                        elif error_y_bbox > 20.0:
+                            print('move up')
+                            arm_value.data = error_y_bbox
+                            self.node.arm_value_publisher.publish(arm_value)
+                            print(arm_value)
                             self.set_arm(command="go_up", wait_for_end_of=True)
+                            print('---------------------------- \n \n --------------------------')
+
+
+                            
                         else:
                             print('Cheguei')
+                            while True:
+                                pass
+                       
                         """ if error_x_bbox < 30.0 and error_y_bbox < 30.0:
                             print('CHEGAMOS')
                             print(error_x_bbox, error_y_bbox)
                             time.sleep(3)
                         else:
                             print('segue jogo') """
-                    
+                        
+                        print('\n \n \n \n')
+                        # time.sleep(5)
             
             """ i = 0
             j = 0

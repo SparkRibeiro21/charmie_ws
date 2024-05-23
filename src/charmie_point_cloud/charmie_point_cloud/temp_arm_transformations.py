@@ -1090,7 +1090,11 @@ class ServeBreakfastMain():
             AA[1] = AA[1] * 10
             AA[2] = AA[2] * 10
             my_formatted_list = [ '%.2f' % elem for elem in AA ] """
+            ### VALOR DO Z ESTÀ INVERSO AO QUE EU DEVO PASSAR PARA O BRAÇO EM AA !!!
+            
             print('Ponto em relação ao braço:', AA)
+            print('y = ', AA[1]*10)
+
             print('\n\n')
 
     # main state-machine function

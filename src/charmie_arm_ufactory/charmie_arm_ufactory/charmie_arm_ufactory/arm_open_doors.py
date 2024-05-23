@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool, Int16, String
+from example_interfaces.msg import Bool, Int16, String, Float32
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from geometry_msgs.msg import Pose, Point, Quaternion
 from charmie_interfaces.msg import RobotSpeech
@@ -21,6 +21,7 @@ class ArmUfactory(Node):
 
 		# ARM TOPICS
 		self.arm_command_subscriber = self.create_subscription(String, "arm_command", self.arm_command_callback, 10)
+		self.arm_value_subscriber = self.create_subscription(Float32, "arm_value", self.arm_value_callback, 10)
 		self.flag_arm_finish_publisher = self.create_publisher(Bool, 'arm_finished_movement', 10)
 
 		# ARM SERVICES
@@ -96,6 +97,7 @@ class ArmUfactory(Node):
 		self.gripper_tr = 0.0
 		self.gripper_opening = []
 		self.estado_tr = 0
+		self.value = -10.0
 
 		# initial debug movement 
   		# self.next_arm_movement = "debug_initial"
@@ -117,6 +119,9 @@ class ArmUfactory(Node):
 		response.message = "Arm Trigger"
 		return response
 
+	def arm_value_callback(self, value: Float32):
+		self.get_logger().info(f"Received value selection: {value.data}")
+		self.value = value.data
 
 	def arm_command_callback(self, move: String):
 		self.get_logger().info(f"Received movement selection: {move.data}")
@@ -462,9 +467,9 @@ class ArmUfactory(Node):
 
 		return self.gripper_reached_target.data
 
-	def go_left(self):
+	def go_left(self, value):
 		if self.estado_tr == 0:
-			self.move_line_tool_req.pose = [0.0, -40.0, 0.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.pose = [0.0, value, 0.0, 0.0, 0.0, 0.0]
 			self.move_line_tool_req.speed = 40.0
 			self.move_line_tool_req.acc = 500.0
 			self.move_line_tool_req.wait = True
@@ -481,7 +486,7 @@ class ArmUfactory(Node):
 
 	def go_right(self, value):
 		if self.estado_tr == 0:
-			self.move_line_tool_req.pose = [0.0, 40.0, 0.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.pose = [0.0, value, 0.0, 0.0, 0.0, 0.0]
 			self.move_line_tool_req.speed = 40.0
 			self.move_line_tool_req.acc = 500.0
 			self.move_line_tool_req.wait = True
@@ -496,9 +501,9 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 	
-	def go_up(self):
+	def go_up(self, value):
 		if self.estado_tr == 0:
-			self.move_line_tool_req.pose = [40.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.pose = [value, 0.0, 0.0, 0.0, 0.0, 0.0]
 			self.move_line_tool_req.speed = 40.0
 			self.move_line_tool_req.acc = 500.0
 			self.move_line_tool_req.wait = True
@@ -513,9 +518,9 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
-	def go_down(self):
+	def go_down(self, value):
 		if self.estado_tr == 0:
-			self.move_line_tool_req.pose = [-40.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.pose = [value, 0.0, 0.0, 0.0, 0.0, 0.0]
 			self.move_line_tool_req.speed = 40.0
 			self.move_line_tool_req.acc = 500.0
 			self.move_line_tool_req.wait = True
@@ -543,20 +548,21 @@ class ArmUfactory(Node):
 		elif self.next_arm_movement == "close_gripper_with_check_object":
 			self.close_gripper_with_check_object()
 		elif self.next_arm_movement == "go_left":
-			self.go_left()
+			self.go_left(self.value)
 		elif self.next_arm_movement == "go_right":
-			self.go_right()
+			self.go_right(self.value)
 		elif self.next_arm_movement == "go_up":
-			self.go_up()
+			self.go_up(self.value)
 		elif self.next_arm_movement == "go_down":
-			self.go_down()
-
-
+			self.go_down(self.value)
 
 		else:
 			self.wrong_movement_received = True
 			print('Wrong Movement Received - ', self.next_arm_movement)	
 		
+		self.value = 0.0
+
+
 def main(args=None):
 	rclpy.init(args=args)
 	node = ArmUfactory()
