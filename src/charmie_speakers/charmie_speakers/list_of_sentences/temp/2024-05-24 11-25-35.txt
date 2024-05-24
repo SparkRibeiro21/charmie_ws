@@ -1,0 +1,1 @@
+Please count the number of snacks in the end table.

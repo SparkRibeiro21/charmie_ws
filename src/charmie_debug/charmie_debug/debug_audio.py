@@ -360,13 +360,7 @@ class RestaurantMain():
                 # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
                 # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
-                # self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
-                # self.save_speech(command=["Please look for James at the entrance, and guide him to the kitchen."], filename=["str_test_new"])
-                # self.set_speech(filename="temp/str_test_new", wait_for_end_of=False)
-                
-                # while True:
-                #     pass
-                
+                ### EGPSR EXAMPLE
                 is_command_confirmed = False
                 while not is_command_confirmed:
 
@@ -376,56 +370,60 @@ class RestaurantMain():
                     print("Finished:", audio_gpsr_command)
 
                     ##### SPEAK: "Please give me a moment to process your command"
-                    self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
+                    self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=True)
                     
+                    ##### SAVE SPEAK
                     current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
                     self.save_speech(command=audio_gpsr_command, filename=current_datetime)
-                
-
-
-                    # self.set_speech(command=command, wait_for_end_of=True)
-
-                    ##### SPEAK: Is the follwing command correct?
-
-                    ##### SPEAK: commando gerado pelo gpsr 
-                    self.set_speech(filename="temp/"+current_datetime, wait_for_end_of=False)
                     
+                    ##### SPEAK: "I have understood the following command."
+                    self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
+
+                    ##### SPEAK: (repeats the command)
+                    self.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True)
                     
-                    ##### SPEAK: Please say yes robot or no robot to confirm.
-                    # trocar para a frase em cima
-                    ##### AUDIO: Listen "YES" OR "NO"
-                    ##### "Please say yes or no to confirm the order"
-                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", wait_for_end_of=True)
+                    confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", wait_for_end_of=True)
                     print("Finished:", confirmation)
 
                     ##### Verifica a resposta recebida
                     if confirmation.lower() == "yes":
                         self.set_rgb(command=GREEN+BLINK_LONG)
 
-                        # Speak: Reforçar que ouvi o comando, repetir mais uma vez
-                        # algo do género:
-                        # "I confirm that the requested comand is:"
-                        #  voltar a dizer o comando
-                        # I am analysing the whole task to check all sub tasks that are necessary to be performed 
+                        ##### SPEAK: "Good. I have successfully understood your command. The requested command is."
+                        self.set_speech(filename="gpsr/sucess_hearing_command", wait_for_end_of=True)
 
-                        # Trocar para: I have yndersttod your command, but unfortunately the task you require me to do, has some parts that I still need to learn how to perform.
-                        # So I am unable not help you at this time. I am sorry for this. I will keep moving and search for new commands.
+                        ##### SPEAK: (repeats the command)
+                        self.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True)
 
-                        # Speak: Unfortunately I can not execute that command. Searching for new tasks.
-                        self.set_speech(filename="gpsr/gpsr_can_not_execute", wait_for_end_of=True)  
+                        self.set_rgb(command=WHITE+ROTATE)
+                        
+                        ##### SPEAK: "Please give me a minute to analyse the whole task. Divide in subtasks. And analyse the feasibility of all subtasks."
+                        self.set_speech(filename="gpsr/analyse_command", wait_for_end_of=True)
+                        time.sleep(2.0)
+
+                        command_feasibility = False
+
+                        if command_feasibility:
+                            self.set_rgb(command=GREEN+BREATH)
+                        else:
+                            self.set_rgb(command=RED+BREATH)
+
+                            ##### SPEAK: "I have successfully understood the command."
+                            self.set_speech(filename="gpsr/understood_command", wait_for_end_of=True)
+                        
+                            ##### SPEAK: (repeats the command)
+                            self.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True)
+
+                            ##### SPEAK: "But unfortunately the task you require me to do, has some parts that I still need to learn how to perform. So, I am unable to help you with this task. I am sorry for this. I will keep moving and search for new commands."
+                            self.set_speech(filename="gpsr/can_not_perform_command", wait_for_end_of=True)
                         
                         is_command_confirmed = True
 
                     else:
                         self.set_rgb(command=RED+BLINK_LONG)
                         ##### SPEAK: Sorry for my mistake, lets try again.
-                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+                        self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
                     
-                        # self.set_rgb(command=YELLOW+BLINK_LONG)
-                        ##### ERROR
-                        # print("ERROR")
-
-                
 
                 ### CALIBRATION EXAMPLE
                 # s, m = self.calibrate_audio(wait_for_end_of=True)
