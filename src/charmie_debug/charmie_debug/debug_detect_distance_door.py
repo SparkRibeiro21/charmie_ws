@@ -5,11 +5,13 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates
+from xarm_msgs.srv import GetFloat32List
 from sensor_msgs.msg import Image
 
 import cv2 
+from array import array
 import threading
 import time
 from cv_bridge import CvBridge
@@ -59,6 +61,8 @@ class TestNode(Node):
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         self.arm_value_publisher = self.create_publisher(Float32, 'arm_value', 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
+        self.arm_pose_subscriber = self.create_subscription(ListOfFloats, 'arm_current_pose', self.get_arm_current_pose_callback, 10)
+        self.arm_set_pose_publisher = self.create_publisher(ListOfFloats, 'arm_set_desired_pose', 10)
 
 
         ### Services (Clients) ###
@@ -119,6 +123,8 @@ class TestNode(Node):
         self.detected_objects_hand = Yolov8Objects()
         self.detected_objects = Yolov8Objects()
 
+    def get_arm_current_pose_callback(self, arm_pose: ListOfFloats):
+        self.arm_current_pose = arm_pose.pose
 
     def get_aligned_depth_image_callback(self, img: Image):
         self.depth_img = img
@@ -450,6 +456,7 @@ class RestaurantMain():
         
         # VARS ...
         self.state = 0
+        self.look_right = [-40, 0]
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -592,7 +599,11 @@ class RestaurantMain():
         Delivering_order_to_client = 6
         Final_State = 7
 
+        
+
         print("IN NEW MAIN")
+        self.set_neck(position=self.look_right, wait_for_end_of=False)
+        time.sleep(2.0)
 
         while True:
 
@@ -620,6 +631,9 @@ class RestaurantMain():
 
                 # time.sleep(2.0)
 
+                # POSICIONAR BRAÇO 
+                self.set_neck(position=self.look_right, wait_for_end_of=False)
+                time.sleep(2.0)
                 self.state = Searching_for_clients
 
             elif self.state == Searching_for_clients:
@@ -630,8 +644,7 @@ class RestaurantMain():
                 # self.detected_people = det_people
                 # if self.detected_people.num_person > 0:
 
-
-                overall = self.check_door_depth() #half_image_zero_or_near_percentage=0.4, full_image_near_percentage=0.1, near_max_dist=800)
+                overall = self.align_hand_with_object_detected_head() 
                       
                 
 
@@ -659,7 +672,7 @@ class RestaurantMain():
             else:
                 pass
 
-    def check_door_depth(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist = 400, near_max_dist_1=350, near_max_dist_2 = 900):
+    def track_object(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist = 400, near_max_dist_1=350, near_max_dist_2 = 900):
         overall = False
         DEBUG = True
 
@@ -695,10 +708,19 @@ class RestaurantMain():
             if hasattr(self.node.detected_objects_hand, 'image_rgb'):
                 if hasattr(self.node.detected_objects_hand, 'objects'): 
                     if self.node.detected_objects_hand.objects:
-                        object_detected_hand = self.node.detected_objects_hand.objects[0]
+                        # print(self.node.detected_objects_hand.objects)
+
+                        for obj in self.node.detected_objects_hand.objects:
+                            print(obj)
+                            if obj.object_name == "Tropical Juice":
+                                wanted_object = obj
+                                print('é isto')
+
+                        # object_detected_hand = self.node.detected_objects_hand.objects[0]
+                        object_detected_hand = wanted_object
                         current_frame_rgb_hand = self.node.br.imgmsg_to_cv2(self.node.detected_objects_hand.image_rgb, desired_encoding="passthrough")
                     
-                        print(self.node.detected_objects_hand.objects)
+                        # print(self.node.detected_objects_hand.objects)
 
                         error_x_bbox = width / 2 - object_detected_hand.box_center_x
                         error_y_bbox = height / 2 - object_detected_hand.box_center_y
@@ -868,6 +890,264 @@ class RestaurantMain():
         return overall
         
 
+    def Rot(self, eixo, angulo):
+        ang_rad = angulo*math.pi/180.0
+        c = math.cos(ang_rad)
+        s = math.sin(ang_rad)
+        M = np.identity(4)
+        if (eixo == 'x' or eixo == 'X'):
+            M[1][1] = M[2][2] = c
+            M[1][2] = -s
+            M[2][1] = s
+        elif (eixo == 'y' or eixo == 'Y'):
+            M[0][0] = M[2][2] = c
+            M[0][2] = s
+            M[2][0] = -s
+        elif (eixo == 'z' or eixo == 'Z'):
+            M[0][0] = M[1][1] = c
+            M[0][1] = -s
+            M[1][0] = s
+        return M
+        
+    def Trans(self, tx, ty, tz):
+        M = np.identity(4)
+        M[0][3] = tx
+        M[1][3] = ty
+        M[2][3] = tz
+        return M
+
+    
+    def transform(self, obj):
+        # C representa o ponto no espaço para onde eu quero transformar a base do braço do robô
+        # A matriz de transformação desde a  base do braço até ao centro do Robot pode ser representada por:
+        # T = Rot(z, 180) * Rot (x, -90) * Trans (3, -6, -110)
+        # a2 representa a translação desde a base do braço até ao centro do robô  (em cm)
+        # a1 representa a rotação sobre o eixo coordenadas x em -90º para alinhar os eixos coordenados
+        # a0 representa a rotação sobre o eixo coordenadas z em 180º para alinhar o eixo dos x 
+        # c representa o ponto (x,y,z) em relação ao centro do braço
+        
+        
+
+        ### nos numeros que chegam: x representa a frente do robô. y positivo vai para a esquerda do robô. z vai para cima no robô
+        ### nos numeros que saem: x vai para trás do robô. y vai para baixo no robô. z vai para a direita do robô
+        
+        
+        ### PARECE-ME QUE X E Z ESTÃO TROCADOS NO RESULTADO QUE TENHO EM RELAºÃO AO BRAÇO
+        print('\n\n')
+    
+        c = np.dot(np.identity(4), [0, 0, 0, 1])
+        # c = np.dot(np.identity(4), [90.0, -30.0, 105.0, 1])
+        new_x = obj.position_relative.x * 100
+        new_y = obj.position_relative.y * 100
+        new_z = obj.position_relative.z * 100
+        print(obj.object_name)
+        c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
+        print(f'Posição em relação ao solo:[{new_x:.2f}, {new_y:.2f}, {new_z:.2f}]')
+        a2 = self.Trans(3.0, -6.0, -110.0)
+        a1 = self.Rot('x', -90.0)
+        a0 = self.Rot('z', 180.0)
+        T = np.dot(a0, a1)
+        T = np.dot(T, a2)
+        
+        #print('T', T)
+        
+        AA = np.dot(T, c)
+        
+        # print('ex Ponto em relação ao braço:', AA)
+
+
+        aux = AA[0]
+        AA[0] = AA[2]
+        AA[2] = aux
+
+        """ AA[0] = AA[0] * 10
+        AA[1] = AA[1] * 10
+        AA[2] = AA[2] * 10
+        my_formatted_list = [ '%.2f' % elem for elem in AA ] """
+        ### VALOR DO Z ESTÀ INVERSO AO QUE EU DEVO PASSAR PARA O BRAÇO EM AA !!!
+        
+        print('Ponto em relação ao braço:', AA)
+        # print('y = ', AA[1]*10)
+
+        print('\n\n')
+
+        return AA
+
+
+    def align_hand_with_object_detected_head(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist = 400, near_max_dist_1=350, near_max_dist_2 = 900):
+        DEBUG = True
+
+        if self.node.first_depth_image_received:
+            current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
+            height, width = current_frame_depth_hand.shape
+            center_height = height / 2
+            center_width = width / 2
+
+            
+
+            # print(height, width)
+            # print(current_frame_depth_hand)
+
+            tot_pixeis = height*width 
+            
+  
+
+            if hasattr(self.node.detected_objects, 'image_rgb'):
+                head_image = self.node.detected_objects.image_rgb
+                if hasattr(self.node.detected_objects_hand, 'objects'): 
+                    if self.node.detected_objects.objects:
+                        # print(self.node.detected_objects_hand.objects)
+
+                        wanted_object = ''
+
+                        for obj in self.node.detected_objects.objects:
+                            print(obj)
+                            if obj.object_name == "Tropical Juice":
+                                wanted_object = obj
+                                print('é isto')
+
+                        if wanted_object != '':
+
+                            # object_detected_hand = self.node.detected_objects_hand.objects[0]
+                            object_detected_head = wanted_object
+                            current_frame_rgb_head = self.node.br.imgmsg_to_cv2(self.node.detected_objects.image_rgb, desired_encoding="passthrough")
+
+                           
+                            object_location = self.transform(wanted_object)
+                            
+                            object_x = (object_location[0]) * 10
+                            object_y = object_location[1] * 10
+                            object_z = - (object_location[2]) * 10
+
+                            print(object_x, object_y, object_z)
+
+                            aux_h = object_x**2 + object_z**2
+
+                            h = math.sqrt(aux_h)
+                            print('hipotenusa', h)
+                            if object_x > 0.0:
+                                new_x = math.sin(math.radians(45))*(h - 200)
+                                print('new_x: ',new_x, 'old_x:', object_x)
+                            else:
+                                new_x = - math.sin(math.radians(45))*(h - 200)
+                                print('new_x: ',new_x, 'old_x:', object_x)
+                            if object_z > 0.0:
+                                new_z = math.cos(math.radians(45))*(h-200)
+                                print('new_z: ',new_z, 'old_z:', object_z)
+                            else:
+                                new_z = - math.cos(math.radians(45))*(h-200)
+                                print('new_z: ',new_z, 'old_z:', object_z)
+
+                            a = math.sqrt(new_z**2 + new_x**2)
+                            new_y = object_y + 100 # para o braço baixar 10 cm
+                            print(a)
+                        
+
+
+                            print('a')
+
+                            self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                            time.sleep(1)
+                            print(self.node.arm_current_pose)
+
+
+
+                            set_pose_arm = ListOfFloats()
+                            set_pose_arm.pose.append(new_x)
+                            set_pose_arm.pose.append(new_y)
+                            set_pose_arm.pose.append(new_z)
+                            # set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                            
+                            self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                            self.set_arm(command="move_linear", wait_for_end_of=True)
+                            time.sleep(1)
+
+                            print('A')
+
+                            self.set_arm(command="open_gripper", wait_for_end_of=True)
+                            time.sleep(1)
+
+                            print(set_pose_arm)
+                            print(set_pose_arm.pose)
+
+                            set_pose_arm.pose[:] = array('f')
+
+                            # set_pose_arm.pose.clear()
+
+                            set_pose_arm.pose.append(object_x)
+                            set_pose_arm.pose.append(object_y)
+                            set_pose_arm.pose.append(object_z)
+                            # set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                            
+                            self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                            self.set_arm(command="move_linear", wait_for_end_of=True)
+
+                            time.sleep(3)
+                            self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                            while True:
+                                pass
+                        
+                        ### AGORA TENHO DE RETIRAR A ORIENTAÇÃO ATUAL DO BRAÇO. DEPOIS CHAMO A FUNÇÃO DE TRANSFORMAÇÃO QUE ME DIZ QUAL É O VALOR QUE O BRAÇO TEM DE ESTAR
+                        ### PARA ESTAR ALINHADO COM O OBJETO. USO ESSE VALOR PARA ALINHAR O BRAÇO EM X E Y COM O OBJETO
+
+
+
+
+                        """ self.set_arm(command="go_left", wait_for_end_of=True)
+                        # time.sleep(3)
+                        self.set_arm(command="go_up", wait_for_end_of=True)
+                        # time.sleep(3)
+
+                        self.set_arm(command="go_right", wait_for_end_of=True)
+                        # time.sleep(3)
+                        self.set_arm(command="go_down", wait_for_end_of=True)
+                        # time.sleep(3) """
+                        arm_value = Float32()
+
+
+
+                        """ if error_x_bbox < -20.0:
+                            print('move right')
+                            arm_value.data = abs(error_x_bbox)
+                            self.node.arm_value_publisher.publish(arm_value)
+                            print(arm_value)
+                            self.set_arm(command="go_right", wait_for_end_of=True)
+                            print('---------------------------- \n \n --------------------------')
+                            
+                        elif error_x_bbox > 20.0: 
+                            print('move left')
+                            arm_value.data = -error_x_bbox
+                            self.node.arm_value_publisher.publish(arm_value)
+                            print(arm_value)
+                            self.set_arm(command="go_left", wait_for_end_of=True)
+                            print('---------------------------- \n \n --------------------------')
+                        elif error_y_bbox < -20.0:
+                            print('move down')
+                            arm_value.data = error_y_bbox
+                            self.node.arm_value_publisher.publish(arm_value)
+                            print(arm_value)
+                            self.set_arm(command="go_down", wait_for_end_of=True)
+
+                            print('---------------------------- \n \n --------------------------')
+                        elif error_y_bbox > 20.0:
+                            print('move up')
+                            arm_value.data = error_y_bbox
+                            self.node.arm_value_publisher.publish(arm_value)
+                            print(arm_value)
+                            self.set_arm(command="go_up", wait_for_end_of=True)
+                            print('---------------------------- \n \n --------------------------') """
+
+
+            
+                       
+     
     def search_for_person(self, tetas, delta_t=3.0):
 
         self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)                

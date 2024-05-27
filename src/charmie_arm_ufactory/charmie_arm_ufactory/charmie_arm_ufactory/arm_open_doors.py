@@ -1,9 +1,9 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool, Int16, String, Float32
-from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
+from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint, GetFloat32List
 from geometry_msgs.msg import Pose, Point, Quaternion
-from charmie_interfaces.msg import RobotSpeech
+from charmie_interfaces.msg import RobotSpeech, ListOfFloats
 from charmie_interfaces.srv import ArmTrigger
 from std_srvs.srv import SetBool
 from functools import partial
@@ -23,11 +23,14 @@ class ArmUfactory(Node):
 		self.arm_command_subscriber = self.create_subscription(String, "arm_command", self.arm_command_callback, 10)
 		self.arm_value_subscriber = self.create_subscription(Float32, "arm_value", self.arm_value_callback, 10)
 		self.flag_arm_finish_publisher = self.create_publisher(Bool, 'arm_finished_movement', 10)
+		self.arm_pose_publisher = self.create_publisher(ListOfFloats, 'arm_current_pose', 10)
+		self.arm_set_pose_subscriber = self.create_subscription(ListOfFloats, 'arm_set_desired_pose', self.arm_desired_pose_callback, 10)
 
 		# ARM SERVICES
 		self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
 		self.set_joint_client = self.create_client(MoveJoint, '/xarm/set_servo_angle')
 		self.motion_enable_client = self.create_client(SetInt16ById, '/xarm/motion_enable')
+		self.get_position_client = self.create_client(GetFloat32List, '/xarm/get_position')
 		self.set_mode_client = self.create_client(SetInt16, '/xarm/set_mode')
 		self.set_state_client = self.create_client(SetInt16, '/xarm/set_state')
 		self.set_gripper_enable = self.create_client(SetInt16, '/xarm/set_gripper_enable')
@@ -74,6 +77,9 @@ class ArmUfactory(Node):
 
 		while not self.get_gripper_position.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
+
+		while not self.get_position_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Get Arm Position...")
 		
 
 		self.create_service(ArmTrigger, 'arm_trigger', self.arm_trigger_callback)
@@ -86,18 +92,21 @@ class ArmUfactory(Node):
 		self.position_values_req = MoveCartesian.Request()
 		self.move_line_tool_req = MoveCartesian.Request()
 		self.get_gripper_req = GetFloat32.Request()
+		self.get_position_req = GetFloat32List.Request()
 		self.set_pause_time = SetFloat32.Request()
 		self.plan_pose_req = PlanPose.Request()
 		self.plan_exec_req = PlanExec.Request()
 		self.plan_pose_resp = PlanPose.Response()
 		self.joint_plan_req = PlanJoint.Request()
 
+		self.resultado = []
 		self.wrong_movement_received = False
 		self.end_of_movement = False
 		self.gripper_tr = 0.0
 		self.gripper_opening = []
 		self.estado_tr = 0
 		self.value = -10.0
+		self.arm_pose = []
 
 		# initial debug movement 
   		# self.next_arm_movement = "debug_initial"
@@ -118,6 +127,10 @@ class ArmUfactory(Node):
 		response.success = True
 		response.message = "Arm Trigger"
 		return response
+
+	def arm_desired_pose_callback(self, arm_desired_pose: ListOfFloats):
+		self.get_logger().info(f"Received value selection: {arm_desired_pose.pose}")
+		self.arm_pose = arm_desired_pose.pose
 
 	def arm_value_callback(self, value: Float32):
 		self.get_logger().info(f"Received value selection: {value.data}")
@@ -240,7 +253,11 @@ class ArmUfactory(Node):
 
 	def callback_service_tr(self, future):
 		try:
-			print(future.result())			
+			print(future.result())
+			self.resultado = future.result()
+			print(self.resultado)
+			self.returning = future.result().ret
+			print(self.returning)
 			self.estado_tr += 1
 			print("ESTADO = ", self.estado_tr)
 			self.movement_selection()
@@ -535,6 +552,60 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def get_arm_position(self):
+		if self.estado_tr == 0: 
+			self.future = self.get_position_client.call_async(self.get_position_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('a')
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+			print('--')
+			arm_pose = self.resultado.datas
+			print('arm pose:', arm_pose)
+			print('--')
+			arm_pose_ = ListOfFloats()
+			for a in arm_pose:
+				arm_pose_.pose.append(a)
+				print(a)	
+
+			print(arm_pose_.pose)
+			self.arm_pose_publisher.publish(arm_pose_)
+
+	def move_linear(self, set_desired_pose_arm):
+		if self.estado_tr == 0:
+			print('a')
+			self.position_values_req.pose = set_desired_pose_arm
+			self.position_values_req.speed = 40.0
+			self.position_values_req.acc = 400.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 30.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def movement_selection(self):
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
@@ -555,12 +626,21 @@ class ArmUfactory(Node):
 			self.go_up(self.value)
 		elif self.next_arm_movement == "go_down":
 			self.go_down(self.value)
+		elif self.next_arm_movement == "get_arm_position":
+			self.get_arm_position()
+		elif self.next_arm_movement == "move_linear":
+			self.move_linear(self.arm_pose)
+			
+			
+
+		
 
 		else:
 			self.wrong_movement_received = True
 			print('Wrong Movement Received - ', self.next_arm_movement)	
 		
 		self.value = 0.0
+		self.arm_pose = []
 
 
 def main(args=None):
