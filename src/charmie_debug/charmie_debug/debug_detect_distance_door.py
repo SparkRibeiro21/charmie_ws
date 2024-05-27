@@ -442,29 +442,33 @@ class TestNode(Node):
         self.activate_yolo_objects_client.call_async(request)
 
     def pose_planner(self, obj):
-
         request = PlanPose.Request()
-        request.target.position.x = obj[0] * 0.001 #para ficar em mm
+        response = PlanPose.Response()
+        """ request.target.position.x = obj[0] * 0.001 #para ficar em mm
         request.target.position.y = obj[1] * 0.001 #para ficar em mm
         request.target.position.z = obj[2] * 0.001 #para ficar em mm
-        quaternion = self.euler_to_quaternion(obj[3], obj[4], obj[5]) # obj é recebido com graus em radianos
-        request.target.orientation.x = quaternion[0] 
+        quaternions = self.euler_to_quaternion(obj[3], obj[4], obj[5])
+        request.target.orientation.x = quaternion[0]
         request.target.orientation.y = quaternion[1]
         request.target.orientation.z = quaternion[2]
-        request.target.orientation.w = quaternion[3] 
-
-        print(request.target)
-
-        """
-        request.target.position.x = -0.521
-        request.target.position.y = -0.22
-        request.target.position.z = 0.48
+        request.target.orientation.w = quaternion[3] """
+        request.target.position.x = -0.5210
+        request.target.position.y = -0.2200
+        request.target.position.z = 0.4800
         request.target.orientation.x = 0.276
         request.target.orientation.y = -0.242
         request.target.orientation.z = -0.646
-        request.target.orientation.w = 0.669 """
+        request.target.orientation.w = 0.669
 
-        self.plan_pose_client.call_async(request)
+        future = self.plan_pose_client.call_async(request)
+        time.sleep(2)
+        print(future.result())
+
+        response = future.result()
+
+        # print(response.success)
+
+        return response.success
 
     def pose_exec(self):
         request = PlanExec.Request()
@@ -1029,8 +1033,9 @@ class RestaurantMain():
 
         # quero implementar contas de passar de euler para quaternion e quero testar a função pose planner com isso
 
-        # self.node.pose_planner([-521.9, -220.5, 480.5, math.radians(43.0), math.radians(1.9), math.radians(-87.2)])
+        # self.node.pose_planner(1.0)
         # self.node.pose_exec()
+
 
 
         if self.node.first_depth_image_received:
@@ -1075,16 +1080,16 @@ class RestaurantMain():
                             object_z = - (object_location[2]) * 10
 
                             print(object_x, object_y, object_z)
+
                             self.set_arm(command="get_arm_position", wait_for_end_of=True)
                             time.sleep(3)
                             print(self.node.arm_current_pose)
 
-                            self.node.pose_planner([object_x, object_y, object_z, self.node.arm_current_pose[3], self.node.arm_current_pose[4], self.node.arm_current_pose[5]])
+                            response = self.node.pose_planner([object_x, object_y, object_z, self.node.arm_current_pose[3], self.node.arm_current_pose[4], self.node.arm_current_pose[5]])
                             # self.node.pose_planner([-521.9, -220.5, 480.5, math.radians(43.0), math.radians(1.9), math.radians(-87.2)])
                             # self.node.pose_exec()
 
-                            while True:
-                                pass
+                            
 
                             """ aux_h = object_x**2 + object_z**2
 
@@ -1138,23 +1143,30 @@ class RestaurantMain():
                             print(set_pose_arm)
                             print(set_pose_arm.pose) """
 
-                            set_pose_arm.pose[:] = array('f')
+                            if response == True:
+                                print('YES')
 
-                            # set_pose_arm.pose.clear()
+                                set_pose_arm.pose[:] = array('f')
 
-                            set_pose_arm.pose.append(object_x)
-                            set_pose_arm.pose.append(object_y)
-                            set_pose_arm.pose.append(object_z)
-                            # set_pose_arm.pose.append(self.node.arm_current_pose[2])
-                            set_pose_arm.pose.append(self.node.arm_current_pose[3])
-                            set_pose_arm.pose.append(self.node.arm_current_pose[4])
-                            set_pose_arm.pose.append(self.node.arm_current_pose[5])
-                            
-                            self.node.arm_set_pose_publisher.publish(set_pose_arm)
-                            self.set_arm(command="move_linear", wait_for_end_of=True)
+                                # set_pose_arm.pose.clear()
 
-                            time.sleep(3)
-                            self.set_arm(command="close_gripper", wait_for_end_of=True)
+                                set_pose_arm.pose.append(object_x)
+                                set_pose_arm.pose.append(object_y)
+                                set_pose_arm.pose.append(object_z)
+                                # set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                                
+                                self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                                self.set_arm(command="move_linear", wait_for_end_of=True)
+
+                                time.sleep(3)
+                                self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                            else:
+                                print('NO')
+                                print(response)
 
                             while True:
                                 pass
