@@ -728,7 +728,7 @@ class ServeBreakfastMain():
         
                 self.activate_yolo_objects(activate_objects=False)
 
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
@@ -988,7 +988,7 @@ class ServeBreakfastMain():
 
             elif self.state == self.Approach_dishes_location:
 
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=False) # almost bumps into arm and is not necessary
 
@@ -1121,7 +1121,7 @@ class ServeBreakfastMain():
 
             elif self.state == self.Approach_kitchen_table:
 
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 

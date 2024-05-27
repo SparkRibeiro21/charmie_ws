@@ -547,7 +547,7 @@ class RestaurantMain():
 
                 ### SEARCH FOR PERSON EXAMPLE ###
                 
-                self.set_face(command="demo5")
+                self.set_face(command="charmie_face")
                 self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
                 time.sleep(2.0)

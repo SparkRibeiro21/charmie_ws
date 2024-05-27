@@ -1282,7 +1282,7 @@ class SticklerForTheRulesMain():
             if self.state == self.Waiting_for_start_button:
                 print('State 0 = Waiting_for_start_button')
 
-                self.set_face("demo5")
+                self.set_face("charmie_face")
                 self.activate_yolo_pose(activate=False)
 
                 #NECK: LOOKS IN FRONT

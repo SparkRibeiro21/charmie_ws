@@ -582,7 +582,7 @@ class RestaurantMain():
                     while not self.node.waited_for_end_of_audio:
                         pass
                 self.node.waited_for_end_of_audio = False
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 keywords = self.node.audio_command  
                 
@@ -1000,7 +1000,7 @@ class RestaurantMain():
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
         # self.state = self.Detecting_waving_customers
-        self.set_face("demo5")
+        self.set_face("charmie_face")
 
 
         self.all_orders = []
@@ -1037,7 +1037,7 @@ class RestaurantMain():
                 self.set_rgb(command=CYAN+ALTERNATE_QUARTERS)
 
                 # change face, to standard face
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 ##### START TURN TO BARMAN TABLE!!!
 
@@ -1219,7 +1219,7 @@ class RestaurantMain():
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
                 ##### BACK TO STANDART FACE
-                self.set_face("demo5")
+                self.set_face("charmie_face")
                 
                 ##### SPEAK: Start Movement Alert
                 self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
@@ -1316,7 +1316,7 @@ class RestaurantMain():
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
                 ##### BACK TO STANDART FACE
-                self.set_face("demo5")
+                self.set_face("charmie_face")
                 
                 ##### SPEAK: Start Movement Alert
                 self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)

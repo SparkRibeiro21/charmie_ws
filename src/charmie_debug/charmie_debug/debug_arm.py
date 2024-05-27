@@ -446,7 +446,7 @@ class DebugArmMain():
                             ##### ARM OPEN GRIPPER
                 
                 ##### SET FACE TO STANDARD FACE
-                # self.set_face("demo5")
+                # self.set_face("charmie_face")
                         
                 ##### NECK LOOK TRAY
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True)

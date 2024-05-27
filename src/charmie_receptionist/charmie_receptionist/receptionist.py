@@ -460,7 +460,7 @@ class ReceptionistMain():
                     while not self.node.waited_for_end_of_audio:
                         pass
                 self.node.waited_for_end_of_audio = False
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 keywords = self.node.audio_command  
                 
@@ -753,7 +753,7 @@ class ReceptionistMain():
 
                 time.sleep(1)
 
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.activate_yolo_pose(activate=False)
 

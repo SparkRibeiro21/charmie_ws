@@ -1287,7 +1287,7 @@ class StoringGroceriesMain():
                 time.sleep(1)
                 #print('State 0 = Initial')
 
-                #self.set_face("demo5")
+                #self.set_face("charmie_face")
                 self.set_initial_position(self.initial_position)
                 print("SET INITIAL POSITION")
 
@@ -1503,7 +1503,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                # self.set_face("demo5")
+                # self.set_face("charmie_face")
 
                 self.object_counter += 1
 
@@ -1571,7 +1571,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                # self.set_face("demo5")
+                # self.set_face("charmie_face")
 
                 self.object_counter += 1
 
@@ -1636,7 +1636,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                # self.set_face("demo5")
+                # self.set_face("charmie_face")
 
                 self.object_counter += 1
 
@@ -1701,7 +1701,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                # self.set_face("demo5")
+                # self.set_face("charmie_face")
 
                 self.object_counter += 1
 
@@ -1766,7 +1766,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.object_counter += 1
 

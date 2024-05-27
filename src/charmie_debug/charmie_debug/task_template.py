@@ -1323,7 +1323,7 @@ class ServeBreakfastMain():
                 # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)  
 
                 # change face, to standard face
-                # self.set_face("demo5")
+                # self.set_face("charmie_face")
 
                 # moves the neck to look forward
                 # self.set_neck(position=self.look_forward, wait_for_end_of=False)
@@ -1423,7 +1423,7 @@ class ServeBreakfastMain():
                             ##### ARM OPEN GRIPPER
                 
                 ##### SET FACE TO STANDARD FACE
-                # self.set_face("demo5")
+                # self.set_face("charmie_face")
                         
                 ##### NECK LOOK TRAY
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True)
