@@ -7,7 +7,7 @@ from example_interfaces.msg import Bool, Float32, Int16, String
 from geometry_msgs.msg import Point
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates
-from xarm_msgs.srv import GetFloat32List
+from xarm_msgs.srv import GetFloat32List, PlanPose, PlanExec, PlanJoint
 from sensor_msgs.msg import Image
 
 import cv2 
@@ -76,6 +76,10 @@ class TestNode(Node):
         # Yolos
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+
+        self.plan_pose_client = self.create_client(PlanPose, '/xarm_pose_plan')
+        self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
+        self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
 
         # self.objects_filtered_hand_publisher = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.hand_objects_callback, 10)
         
@@ -437,6 +441,51 @@ class TestNode(Node):
 
         self.activate_yolo_objects_client.call_async(request)
 
+    def pose_planner(self, obj):
+        request = PlanPose.Request()
+        request.target.position.x = obj[0] * 0.001 #para ficar em mm
+        request.target.position.y = obj[1] * 0.001 #para ficar em mm
+        request.target.position.z = obj[2] * 0.001 #para ficar em mm
+        quaternion = self.euler_to_quaternion(obj[3], obj[4], obj[5])
+        request.target.orientation.x = quaternion[0]
+        request.target.orientation.y = quaternion[1]
+        request.target.orientation.z = quaternion[2]
+        request.target.orientation.w = quaternion[3] 
+
+        print(request.target)
+
+        """
+        request.target.position.x = -0.521
+        request.target.position.y = -0.22
+        request.target.position.z = 0.48
+        request.target.orientation.x = 0.276
+        request.target.orientation.y = -0.242
+        request.target.orientation.z = -0.646
+        request.target.orientation.w = 0.669 """
+
+        self.plan_pose_client.call_async(request)
+
+    def pose_exec(self):
+        request = PlanExec.Request()
+        request.wait = True
+        self.exec_plan_client.call_async(request)
+
+    def euler_to_quaternion(self, roll, pitch, yaw):
+        cz = math.cos(yaw * 0.5)
+        sz = math.sin(yaw * 0.5)
+        cy = math.cos(pitch * 0.5)
+        sy = math.sin(pitch * 0.5)
+        cx = math.cos(roll * 0.5)
+        sx = math.sin(roll * 0.5)
+
+        w = cz * cy * cx + sz * sy * sx
+        x = cz * cy * sx - sz * sy * cx
+        y = cz * sy * cx + sz * cy * sx
+        z = sz * cy * cx - cz * sy * sx
+
+        return [x, y, z, w]
+
+
 def main(args=None):
     rclpy.init(args=args)
     node = TestNode()
@@ -602,8 +651,8 @@ class RestaurantMain():
         
 
         print("IN NEW MAIN")
-        self.set_neck(position=self.look_right, wait_for_end_of=False)
-        time.sleep(2.0)
+        # self.set_neck(position=self.look_right, wait_for_end_of=False)
+        # time.sleep(2.0)
 
         while True:
 
@@ -632,8 +681,8 @@ class RestaurantMain():
                 # time.sleep(2.0)
 
                 # POSICIONAR BRAÇO 
-                self.set_neck(position=self.look_right, wait_for_end_of=False)
-                time.sleep(2.0)
+                # self.set_neck(position=self.look_right, wait_for_end_of=False)
+                # time.sleep(2.0)
                 self.state = Searching_for_clients
 
             elif self.state == Searching_for_clients:
@@ -943,7 +992,7 @@ class RestaurantMain():
         print(obj.object_name)
         c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
         print(f'Posição em relação ao solo:[{new_x:.2f}, {new_y:.2f}, {new_z:.2f}]')
-        a2 = self.Trans(3.0, -6.0, -110.0)
+        a2 = self.Trans(3.0, -7.0, -110.0)
         a1 = self.Rot('x', -90.0)
         a0 = self.Rot('z', 180.0)
         T = np.dot(a0, a1)
@@ -972,10 +1021,18 @@ class RestaurantMain():
         print('\n\n')
 
         return AA
-
+    
 
     def align_hand_with_object_detected_head(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist = 400, near_max_dist_1=350, near_max_dist_2 = 900):
         DEBUG = True
+
+        # quero implementar contas de passar de euler para quaternion e quero testar a função pose planner com isso
+
+        self.node.pose_planner([-521.9, -220.5, 480.5, math.radians(43.0), math.radians(1.9), math.radians(-87.2)])
+        # self.node.pose_exec()
+
+        while True:
+            pass
 
         if self.node.first_depth_image_received:
             current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
@@ -989,7 +1046,6 @@ class RestaurantMain():
             # print(current_frame_depth_hand)
 
             tot_pixeis = height*width 
-            
   
 
             if hasattr(self.node.detected_objects, 'image_rgb'):
@@ -1012,7 +1068,7 @@ class RestaurantMain():
                             object_detected_head = wanted_object
                             current_frame_rgb_head = self.node.br.imgmsg_to_cv2(self.node.detected_objects.image_rgb, desired_encoding="passthrough")
 
-                           
+                            set_pose_arm = ListOfFloats()
                             object_location = self.transform(wanted_object)
                             
                             object_x = (object_location[0]) * 10
@@ -1021,7 +1077,7 @@ class RestaurantMain():
 
                             print(object_x, object_y, object_z)
 
-                            aux_h = object_x**2 + object_z**2
+                            """ aux_h = object_x**2 + object_z**2
 
                             h = math.sqrt(aux_h)
                             print('hipotenusa', h)
@@ -1052,7 +1108,7 @@ class RestaurantMain():
 
 
 
-                            set_pose_arm = ListOfFloats()
+                           
                             set_pose_arm.pose.append(new_x)
                             set_pose_arm.pose.append(new_y)
                             set_pose_arm.pose.append(new_z)
@@ -1071,7 +1127,7 @@ class RestaurantMain():
                             time.sleep(1)
 
                             print(set_pose_arm)
-                            print(set_pose_arm.pose)
+                            print(set_pose_arm.pose) """
 
                             set_pose_arm.pose[:] = array('f')
 
@@ -1099,16 +1155,6 @@ class RestaurantMain():
 
 
 
-
-                        """ self.set_arm(command="go_left", wait_for_end_of=True)
-                        # time.sleep(3)
-                        self.set_arm(command="go_up", wait_for_end_of=True)
-                        # time.sleep(3)
-
-                        self.set_arm(command="go_right", wait_for_end_of=True)
-                        # time.sleep(3)
-                        self.set_arm(command="go_down", wait_for_end_of=True)
-                        # time.sleep(3) """
                         arm_value = Float32()
 
 
