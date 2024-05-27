@@ -442,12 +442,13 @@ class TestNode(Node):
         self.activate_yolo_objects_client.call_async(request)
 
     def pose_planner(self, obj):
+
         request = PlanPose.Request()
         request.target.position.x = obj[0] * 0.001 #para ficar em mm
         request.target.position.y = obj[1] * 0.001 #para ficar em mm
         request.target.position.z = obj[2] * 0.001 #para ficar em mm
-        quaternion = self.euler_to_quaternion(obj[3], obj[4], obj[5])
-        request.target.orientation.x = quaternion[0]
+        quaternion = self.euler_to_quaternion(obj[3], obj[4], obj[5]) # obj é recebido com graus em radianos
+        request.target.orientation.x = quaternion[0] 
         request.target.orientation.y = quaternion[1]
         request.target.orientation.z = quaternion[2]
         request.target.orientation.w = quaternion[3] 
@@ -1028,11 +1029,9 @@ class RestaurantMain():
 
         # quero implementar contas de passar de euler para quaternion e quero testar a função pose planner com isso
 
-        self.node.pose_planner([-521.9, -220.5, 480.5, math.radians(43.0), math.radians(1.9), math.radians(-87.2)])
+        # self.node.pose_planner([-521.9, -220.5, 480.5, math.radians(43.0), math.radians(1.9), math.radians(-87.2)])
         # self.node.pose_exec()
 
-        while True:
-            pass
 
         if self.node.first_depth_image_received:
             current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
@@ -1076,6 +1075,16 @@ class RestaurantMain():
                             object_z = - (object_location[2]) * 10
 
                             print(object_x, object_y, object_z)
+                            self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                            time.sleep(3)
+                            print(self.node.arm_current_pose)
+
+                            self.node.pose_planner([object_x, object_y, object_z, self.node.arm_current_pose[3], self.node.arm_current_pose[4], self.node.arm_current_pose[5]])
+                            # self.node.pose_planner([-521.9, -220.5, 480.5, math.radians(43.0), math.radians(1.9), math.radians(-87.2)])
+                            # self.node.pose_exec()
+
+                            while True:
+                                pass
 
                             """ aux_h = object_x**2 + object_z**2
 
