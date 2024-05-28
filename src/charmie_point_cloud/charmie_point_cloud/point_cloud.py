@@ -28,6 +28,18 @@ Z_MAX_OBSTACLES = 1900 # when applying the point cloud to the obstacles, this is
 X_SHIFT = 50
 Z_SHIFT = 1260
 
+# Head camera intrinsic parameters (Data by subscribing to topic of camera parameters)
+    # self.fx = 633.811950683593  # Distancia Focal em pixels (x-direction)
+    # self.fy = 633.234680175781  # Distancia Focal em pixels (y-direction)
+    # self.cx = 629.688598632812  # Ponto Principal em pixels (x-coordinate)
+    # self.cy = 393.705749511718  # Ponto Principal em pixels (y-coordinate)
+
+# Hand camera intrinsic parameters (Data by subscribing to topic of camera parameters)
+    # self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
+    # self.fy = 658.5626897  # Distancia Focal em pixels (y-direction)
+    # self.cx = 642.88868778  # Ponto Principal em pixels (x-coordinate)
+    # self.cy = 346.93829812  # Ponto Principal em pixels (y-coordinate)
+
 class PointCloud():
     def __init__(self, fx, fy, cx, cy):
         # print("New PointCloud Class Initialised")
@@ -49,7 +61,7 @@ class PointCloud():
 
         self.teta = [  0,   0,   0] # neck values to adjust the kinematics
 
-        self.rgb_img_pc = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
+        # self.rgb_img_pc = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
         self.depth_img_pc = np.zeros((self.linhas, self.colunas), dtype=np.uint8)
 
         self.ESCALA = 16  # Por questões de eficiencia, só vamos considerar 1 pixel em cada 4
@@ -174,9 +186,13 @@ class PointCloudNode(Node):
         super().__init__("PointCloud")
         self.get_logger().info("Initialised CHARMIE PointCloud Node")
         
-        # Intel Realsense Subscribers
+        # Intel Realsense Subscribers 
+        # Head
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+        self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
+        # Hand
+        self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
+        self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)
         
         # Neck Position
         self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
@@ -189,8 +205,10 @@ class PointCloudNode(Node):
 
         # Point Cloud Instance
         self.br = CvBridge()
-        self.rgb_img = Image()
-        self.depth_img = Image()
+        self.head_rgb_img = Image()
+        self.head_depth_img = Image()
+        self.hand_rgb_img = Image()
+        self.hand_depth_img = Image()
 
         self.pcloud_head = PointCloud(fx=633.811950683593, fy=633.234680175781, cx=629.688598632812, cy=393.705749511718)
         self.pcloud_hand = PointCloud(fx=658.65612382, fy=658.5626897, cx=642.88868778, cy=346.93829812)    
@@ -200,12 +218,22 @@ class PointCloudNode(Node):
 
 
     def get_color_image_head_callback(self, img: Image):
-        self.rgb_img = img
-        # print("Received RGB Image")
+        self.head_rgb_img = img
+        # print("Received Head RGB Image")
 
-    def get_aligned_depth_image_callback(self, img: Image):
-        self.depth_img = img
-        # print("Received Depth Image")
+    def get_aligned_depth_image_head_callback(self, img: Image):
+        self.head_depth_img = img
+        # print("Received Head Depth Image")
+
+
+    def get_color_image_hand_callback(self, img: Image):
+        self.hand_rgb_img = img
+        print("Received Hand RGB Image")
+
+    def get_aligned_depth_image_hand_callback(self, img: Image):
+        self.hand_depth_img = img
+        print("Received Hand Depth Image")
+
 
     def get_neck_position_callback(self, neck_pos: NeckPosition):
         # change the axis to fit the kinematics
@@ -223,20 +251,20 @@ class PointCloudNode(Node):
         # ---
         # PointCloudCoordinates[] coords # returns the selected 3D points (the bounding box center, the custom ones and the full bounding box)
         
-        if self.depth_img.height > 0 and self.rgb_img.height > 0: # prevents doing this code before receiving images
+        if self.head_depth_img.height > 0 and self.head_rgb_img.height > 0: # prevents doing this code before receiving images
 
-            rgb_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
-            depth_frame = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
+            # rgb_frame = self.br.imgmsg_to_cv2(self.head_rgb_img, "bgr8")
+            depth_frame = self.br.imgmsg_to_cv2(self.head_depth_img, desired_encoding="passthrough")
             
-            width = self.rgb_img.width
-            height = self.rgb_img.height
+            width = self.head_rgb_img.width
+            height = self.head_rgb_img.height
 
             depth_frame_res = cv2.resize(depth_frame, (width, height), interpolation = cv2.INTER_NEAREST)
 
             depth_frame_res[depth_frame_res > MAX_DIST] = 0
             depth_frame_res[depth_frame_res < MIN_DIST] = 0
 
-            self.pcloud_head.rgb_img_pc = rgb_frame
+            # self.pcloud_head.rgb_img_pc = rgb_frame
             self.pcloud_head.depth_img_pc = depth_frame_res
         
             self.pcloud_head.RECEBO = []
