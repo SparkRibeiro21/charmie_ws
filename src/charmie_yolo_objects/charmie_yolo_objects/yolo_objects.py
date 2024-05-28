@@ -24,6 +24,8 @@ shoes_filename = "shoes_socks_v1.pt"
 doors_filename = "door_bruno.pt"
 
 MIN_OBJECT_CONF_VALUE = 0.5
+MIN_SHOES_CONF_VALUE = 0.5
+MIN_DOORS_CONF_VALUE = 0.5
 
 DRAW_OBJECT_CONF = True
 DRAW_OBJECT_ID = True
@@ -45,6 +47,9 @@ class Yolo_obj(Node):
         self.declare_parameter("activate_objects", True)
         self.declare_parameter("activate_shoes", False)
         self.declare_parameter("activate_doors", False)
+        self.declare_parameter("activate_objects_hand", True)
+        self.declare_parameter("activate_shoes_hand", False)
+        self.declare_parameter("activate_doors_hand", False)
     
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -72,12 +77,22 @@ class Yolo_obj(Node):
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.DEBUG_DRAW = self.get_parameter("debug_draw").value
+        
+        # HEAD
         # whether the activate objects flag starts as ON or OFF 
         self.ACTIVATE_YOLO_OBJECTS = self.get_parameter("activate_objects").value
         # whether the activate shoes flag starts as ON or OFF 
         self.ACTIVATE_YOLO_SHOES = self.get_parameter("activate_shoes").value
         # whether the activate doors flag starts as ON or OFF 
         self.ACTIVATE_YOLO_DOORS = self.get_parameter("activate_doors").value
+
+        # HAND
+        # whether the activate objects flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_OBJECTS_HAND = self.get_parameter("activate_objects_hand").value
+        # whether the activate shoes flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_SHOES_HAND = self.get_parameter("activate_shoes_hand").value
+        # whether the activate doors flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_DOORS_HAND = self.get_parameter("activate_doors_hand").value
 
         # Import the models, one for each category
         self.object_model = YOLO(self.complete_path + objects_filename)
@@ -206,24 +221,37 @@ class Yolo_obj(Node):
         # bool activate_objects                       # activate or deactivate yolo object detection
         # bool activate_shoes                         # activate or deactivate yolo shoes detection
         # bool activate_doors                         # activate or deactivate yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
+        # bool activate_objects_hand                  # activate or deactivate hand yolo object detection
+        # bool activate_shoes_hand                    # activate or deactivate hand yolo shoes detection
+        # bool activate_doors_hand                    # activate or deactivate hand yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
         # float64 minimum_objects_confidence          # adjust the minimum accuracy to assume as an object
         # float64 minimum_shoes_confidence            # adjust the minimum accuracy to assume as a shoe
         # float64 minimum_doors_confidence            # adjust the minimum accuracy to assume as a door or handle
         # ---
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages.
-        global MIN_OBJECT_CONF_VALUE
+        global MIN_OBJECT_CONF_VALUE, MIN_SHOES_CONF_VALUE, MIN_DOORS_CONF_VALUE
 
         self.get_logger().info("Received Activate Yolo Objects %s" %("("+str(request.activate_objects)+", "
                                                                         +str(request.activate_shoes)+", "
                                                                         +str(request.activate_doors)+", "
-                                                                        +str(request.minimum_objects_confidence)+")"))
+                                                                        +str(request.activate_objects_hand)+", "
+                                                                        +str(request.activate_shoes_hand)+", "
+                                                                        +str(request.activate_doors_hand)+", "
+                                                                        +str(request.minimum_objects_confidence)+", "
+                                                                        +str(request.minimum_shoes_confidence)+", "
+                                                                        +str(request.minimum_doors_confidence)+")"))
 
         self.ACTIVATE_YOLO_OBJECTS = request.activate_objects
         self.ACTIVATE_YOLO_SHOES = request.activate_shoes
         self.ACTIVATE_YOLO_DOORS = request.activate_doors
+        self.ACTIVATE_YOLO_OBJECTS_HAND = request.activate_objects_hand
+        self.ACTIVATE_YOLO_SHOES_HAND = request.activate_shoes_hand
+        self.ACTIVATE_YOLO_DOORS_HAND = request.activate_doors_hand
         MIN_OBJECT_CONF_VALUE = request.minimum_objects_confidence
-
+        MIN_SHOES_CONF_VALUE = request.minimum_shoes_confidence
+        MIN_DOORS_CONF_VALUE = request.minimum_doors_confidence
+        
         # returns whether the message was played and some informations regarding status
         response.success = True
         response.message = "Activated with selected parameters"
