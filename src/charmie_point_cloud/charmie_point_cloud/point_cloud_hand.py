@@ -178,7 +178,7 @@ class PointCloudNode(Node):
 
         # SERVICES:
         # Main receive commads 
-        self.server_point_cloud = self.create_service(GetPointCloud, "get_point_cloud", self.callback_point_cloud) 
+        self.server_point_cloud = self.create_service(GetPointCloud, "get_point_cloud_head", self.callback_point_cloud) 
         self.get_logger().info("Point Cloud Server has been started")
 
         # Point Cloud Instance

@@ -114,7 +114,7 @@ class YoloPoseNode(Node):
 
         ### Services (Clients) ###
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud_head")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")

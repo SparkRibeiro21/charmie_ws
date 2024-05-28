@@ -29,7 +29,7 @@ X_SHIFT = 50
 Z_SHIFT = 1260
 
 class PointCloud():
-    def __init__(self):
+    def __init__(self, fx, fy, cx, cy):
         # print("New PointCloud Class Initialised")
 
         self.linhas = 720
@@ -37,10 +37,15 @@ class PointCloud():
         # print(linhas, colunas)
         
         # Parametros intrinsecos da Camera (Dados pelo Tiago)
-        self.fx = 633.811950683593  # Distancia Focal em pixels (x-direction)
-        self.fy = 633.234680175781  # Distancia Focal em pixels (y-direction)
-        self.cx = 629.688598632812  # Ponto Principal em pixels (x-coordinate)
-        self.cy = 393.705749511718  # Ponto Principal em pixels (y-coordinate)
+        # self.fx = 633.811950683593  # Distancia Focal em pixels (x-direction)
+        # self.fy = 633.234680175781  # Distancia Focal em pixels (y-direction)
+        # self.cx = 629.688598632812  # Ponto Principal em pixels (x-coordinate)
+        # self.cy = 393.705749511718  # Ponto Principal em pixels (y-coordinate)
+        
+        self.fx = fx
+        self.fy = fy
+        self.cx = cx
+        self.cy = cy
 
         self.teta = [  0,   0,   0] # neck values to adjust the kinematics
 
@@ -178,15 +183,18 @@ class PointCloudNode(Node):
 
         # SERVICES:
         # Main receive commads 
-        self.server_point_cloud = self.create_service(GetPointCloud, "get_point_cloud", self.callback_point_cloud) 
-        self.get_logger().info("Point Cloud Server has been started")
+        self.server_point_cloud_head = self.create_service(GetPointCloud, "get_point_cloud_head", self.callback_point_cloud_head) 
+        self.server_point_cloud_hand = self.create_service(GetPointCloud, "get_point_cloud_hand", self.callback_point_cloud_hand) 
+        self.get_logger().info("Point Cloud Servers have been started")
 
         # Point Cloud Instance
         self.br = CvBridge()
         self.rgb_img = Image()
         self.depth_img = Image()
-        self.pcloud = PointCloud()
 
+        self.pcloud_head = PointCloud(fx=633.811950683593, fy=633.234680175781, cx=629.688598632812, cy=393.705749511718)
+        self.pcloud_hand = PointCloud(fx=658.65612382, fy=658.5626897, cx=642.88868778, cy=346.93829812)    
+        
         self.tempo_calculo = 0
         self.tempo_frame = 0
 
@@ -201,11 +209,11 @@ class PointCloudNode(Node):
 
     def get_neck_position_callback(self, neck_pos: NeckPosition):
         # change the axis to fit the kinematics
-        self.pcloud.teta[0] = neck_pos.pan
-        self.pcloud.teta[1] = -neck_pos.tilt
-        # print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud.teta[0], ",", self.pcloud.teta[1], ")")
+        self.pcloud_head.teta[0] = neck_pos.pan
+        self.pcloud_head.teta[1] = -neck_pos.tilt
+        # print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud_head.teta[0], ",", self.pcloud_head.teta[1], ")")
 
-    def callback_point_cloud(self, request, response):
+    def callback_point_cloud_head(self, request, response):
 
         # print(request)
 
@@ -228,10 +236,10 @@ class PointCloudNode(Node):
             depth_frame_res[depth_frame_res > MAX_DIST] = 0
             depth_frame_res[depth_frame_res < MIN_DIST] = 0
 
-            self.pcloud.rgb_img_pc = rgb_frame
-            self.pcloud.depth_img_pc = depth_frame_res
+            self.pcloud_head.rgb_img_pc = rgb_frame
+            self.pcloud_head.depth_img_pc = depth_frame_res
         
-            self.pcloud.RECEBO = []
+            self.pcloud_head.RECEBO = []
             for i in range(len(request.data)):
                 aux = []
                 aux.append([request.data[i].bbox.box_top_left_y, request.data[i].bbox.box_top_left_x, request.data[i].bbox.box_height, request.data[i].bbox.box_width])
@@ -241,14 +249,14 @@ class PointCloudNode(Node):
                     a.append([int(request.data[i].requested_point_coords[j].y), int(request.data[i].requested_point_coords[j].x)])
 
                 aux.append(a)
-                self.pcloud.RECEBO.append(aux)
+                self.pcloud_head.RECEBO.append(aux)
 
-            self.pcloud.ENVIO = []      # limpo a variavel onde vou guardar as minhas respostas, para este novo ciclo
+            self.pcloud_head.ENVIO = []      # limpo a variavel onde vou guardar as minhas respostas, para este novo ciclo
             self.tempo_calculo = time.perf_counter()
 
             # calculo dos vários Bounding Boxes
-            self.pcloud.robo() 
-            for bbox in self.pcloud.RECEBO:
+            self.pcloud_head.robo() 
+            for bbox in self.pcloud_head.RECEBO:
 
                 # le os dados da BouundingBox
                 # u_inicial, v_inicial, HEIGHT, WIDTH = bbox[0]
@@ -260,16 +268,16 @@ class PointCloudNode(Node):
                 # we are trying to compute the mean of the points that interest us, since the center point of the bounding box may
                 # be in the object/person we are tryng to get the position
                 # old version - using the center of the bounding box:
-                # resp_centro = self.pcloud.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2)
+                # resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2)
                 # new version:
 
                 resp_todos = []
-                resp_todos = self.pcloud.converter_2D_3D(u_inicial, v_inicial, bb_height, bb_width)
+                resp_todos = self.pcloud_head.converter_2D_3D(u_inicial, v_inicial, bb_height, bb_width)
                 uteis = [row for row in resp_todos if (row[0]!=0 or row[1]!=0 or row[2]!=0)] # limpa os elementos [0, 0, 0]
                 # print(uteis, len(uteis))
                 
                 if len(uteis) == 0:
-                    resp_centro = self.pcloud.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
+                    resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
                 else:
                     x_coord = np.array(uteis)[:, 0]                             # Extrai a coordenada X
                     y_coord = np.array(uteis)[:, 1]  # Extrai a coordenada X
@@ -283,7 +291,7 @@ class PointCloudNode(Node):
                     z_max = z_max - (z_max-z_min)*0.05
                     uteis = [row for row in uteis if ((row[1]>y_min and row[1]<y_max) and (row[2]>z_min and row[2]<z_max))] # limpa os elementos [0, 0, 0]
                     if len(uteis) == 0:
-                        resp_centro = self.pcloud.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
+                        resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
                     else:
                         bin_edges = np.arange(min(x_coord), max(x_coord) + 100, 100)    # Cria a lista de limites para o histograma
                         hist, bin_edges = np.histogram(x_coord, bins=bin_edges)     # Usa np.histogram para contar as ocorrencias
@@ -303,7 +311,7 @@ class PointCloudNode(Node):
                         centroid = np.mean(uteis_uteis, axis=0)
 
                         if np.isnan(centroid).any():
-                            resp_centro = self.pcloud.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
+                            resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
                         else:
                             resp_centro = centroid
                                     
@@ -314,7 +322,7 @@ class PointCloudNode(Node):
                 # calcula a lista de pontos
                 resp_outros = []
                 for i in bbox[1]:
-                    temp = self.pcloud.converter_2D_3D_unico(i[0], i[1])
+                    temp = self.pcloud_head.converter_2D_3D_unico(i[0], i[1])
                     resp_outros.append(temp)
 
                 # Guarda todas as respostas na variavel ENVIO
@@ -322,12 +330,12 @@ class PointCloudNode(Node):
                 temp.append(resp_centro)
                 temp.append(resp_outros)
                 temp.append(resp_todos)
-                self.pcloud.ENVIO.append(temp)
+                self.pcloud_head.ENVIO.append(temp)
 
             # convert ENVIO into RetrievePointCloud ROS Variable
             ret = []
-            if len(self.pcloud.ENVIO) > 0:
-                for cc in self.pcloud.ENVIO:
+            if len(self.pcloud_head.ENVIO) > 0:
+                for cc in self.pcloud_head.ENVIO:
                     # print(cc)
 
                     pcc = PointCloudCoordinates()
@@ -379,6 +387,23 @@ class PointCloudNode(Node):
         
         # print(response)
         return response
+
+
+    def callback_point_cloud_hand(self, request, response):
+
+        # print(request)
+
+        # Type of service received:
+        # BoundingBoxAndPoints[] data # bounding box and specific points inside the bounding box  
+        # bool retrieve_bbox # if it is intended to get the full bounding box of 3D points returned, saves data transitions 
+        # ---
+        # PointCloudCoordinates[] coords # returns the selected 3D points (the bounding box center, the custom ones and the full bounding box)
+        
+
+        
+        
+        return response
+
 
 
 def main(args=None):
