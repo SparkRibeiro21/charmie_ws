@@ -12,7 +12,6 @@ from cv_bridge import CvBridge
 import cv2 
 import cvzone
 import json
-import threading
 
 from pathlib import Path
 
@@ -119,9 +118,7 @@ class Yolo_obj(Node):
         self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
         self.objects_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered_hand', 10)
         self.doors_filtered_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered', 10)
-        self.doors_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered_hand', 10)
         self.shoes_filtered_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered', 10)
-        self.shoes_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered_hand', 10)
         
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
@@ -260,7 +257,323 @@ class Yolo_obj(Node):
         response.message = "Activated with selected parameters"
         return response
 
+    # def get_minimum_object_confidence_callback(self, state: Float32):
+    #     global MIN_OBJECT_CONF_VALUE
+    #     # print(state.data)
+    #     if 0.0 <= state.data <= 1.0:
+    #         MIN_OBJECT_CONF_VALUE = state.data
+    #         self.get_logger().info('NEW MIN_OBJECT_CONF_VALUE RECEIVED')    
+    #     else:
+    #         self.get_logger().info('ERROR SETTING MIN_OBJECT_CONF_VALUE')   
 
+    def get_color_image_hand_callback(self, img: Image):
+        # only when activated via service, the model computes the person detection
+        if self.ACTIVATE_YOLO_OBJECTS:
+
+            # self.get_logger().info('Receiving color video frame head')
+            self.tempo_total_hand = time.perf_counter()
+            self.hand_rgb = img
+
+            # ROS2 Image Bridge for OpenCV
+            current_frame = self.br.imgmsg_to_cv2(self.hand_rgb, "bgr8")
+            current_frame_draw = current_frame.copy()
+            
+            # Getting image dimensions
+            self.img_width_hand = img.width
+            self.img_height_hand = img.height
+
+            # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
+            # results = self.object_model(current_frame, stream = True)
+            self.object_results_hand = self.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+
+            # type(results) = <class 'list'>
+            # type(results[0]) = <class 'ultralytics.engine.results.Results'>
+            # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
+            
+            # /*** ultralytics.engine.results.Results ***/
+            # A class for storing and manipulating inference results.
+            # Attributes:
+            # Name 	        Type 	    Description
+            # orig_img 	    ndarray 	The original image as a numpy array.
+            # orig_shape 	tuple 	    The original image shape in (height, width) format.
+            # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
+            # masks 	    Masks 	    A Masks object containing the detection masks.
+            # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
+            # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
+            # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
+            # names 	    dict 	    A dictionary of class names.
+            # path 	        str 	    The path to the image file.
+            # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
+
+            # /*** ultralytics.engine.results.Boxes ***/
+            # A class for storing and manipulating detection boxes.
+            # Attributes:
+            # Name      Type                Description
+            # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
+            # conf 	    Tensor | ndarray 	The confidence values of the boxes.
+            # cls 	    Tensor | ndarray 	The class values of the boxes.
+            # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
+            # xywh 	    Tensor | ndarray 	The boxes in xywh format.
+            # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
+            # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
+            # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
+
+            """
+            num_obj = len(self.object_results[0])
+            # self.get_logger().info(f"Objects detected: {num_obj}")
+
+            requested_objects = []
+            for object_idx in range(num_obj):
+
+                boxes_id = self.object_results[0].boxes[object_idx]
+                
+                bb = BoundingBox()
+                bb.box_top_left_x = int(boxes_id.xyxy[0][0])
+                bb.box_top_left_y = int(boxes_id.xyxy[0][1])
+                bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
+                bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+
+                get_pc = BoundingBoxAndPoints()
+                get_pc.bbox = bb
+
+                requested_objects.append(get_pc)
+
+            self.waiting_for_pcloud = True
+            self.call_point_cloud_server(requested_objects)
+            """
+        
+            # current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
+            # annotated_frame = self.object_results[0].plot()
+
+            # Calculate the number of persons detected
+            num_obj = len(self.object_results_hand[0])
+
+            # yolov8_obj = Yolov8Objects() # test removed person_pose (non-filtered)
+            yolov8_obj_filtered = Yolov8Objects()
+            num_objects_filtered = 0
+
+            # print(num_obj)
+            # print(self.object_results[0])
+            # print(self.object_results[0].boxes)
+
+            for object_idx in range(num_obj):
+                boxes_id = self.object_results_hand[0].boxes[object_idx]
+                # print(self.object_results[0].boxes)
+
+                ALL_CONDITIONS_MET = 1
+
+                object_name = self.objects_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
+                object_class = self.objects_class_names_dict[object_name]
+
+                # adds object to "object_pose" without any restriction
+                new_object = DetectedObject()
+                temp_point_cloud = Point()
+                new_object = self.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, temp_point_cloud)
+                # yolov8_obj.objects.append(new_object) # test removed person_pose (non-filtered)
+
+                object_id = boxes_id.id
+                if boxes_id.id == None:
+                    object_id = 0 
+
+                # checks whether the person confidence is above a defined level
+                if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
+                    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                    # print("- Misses minimum person confidence level")
+
+                if ALL_CONDITIONS_MET:
+                    num_objects_filtered+=1
+
+                    yolov8_obj_filtered.objects.append(new_object)
+
+                    if self.DEBUG_DRAW:
+
+                        red_yp = (56, 56, 255)
+                        lblue_yp = (255,194,0)
+                        blue_yp = (255,0,0)
+                        green_yp = (0,255,0)
+                        dgreen_yp = (50,204,50)
+                        orange_yp = (51,153,255)
+                        magenta_yp = (255, 51, 255)
+                        purple_yp = (255, 56, 132)
+                        white_yp = (255, 255, 255)
+                        grey_yp = (190,190,190)
+
+                        if object_class == "Cleaning Supplies":
+                            bb_color = dgreen_yp
+                        elif object_class == "Drinks":
+                            bb_color = purple_yp
+                        elif object_class == "Foods":
+                            bb_color = lblue_yp
+                        elif object_class == "Fruits":
+                            bb_color = orange_yp
+                        elif object_class == "Toys":
+                            bb_color = blue_yp
+                        elif object_class == "Snacks":
+                            bb_color = magenta_yp
+                        elif object_class == "Dishes":
+                            bb_color = grey_yp
+                        else:
+                            bb_color = red_yp
+                        
+                        # creates the points for alternative TR visual representation 
+                        start_point = (int(boxes_id.xyxy[0][0]), int(boxes_id.xyxy[0][1]))
+                        end_point = (int(boxes_id.xyxy[0][2]), int(boxes_id.xyxy[0][3]))
+                        start_point_text_rect = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]))
+
+                        if int(boxes_id.xyxy[0][1]) < 30: # depending on the height of the box, so it is either inside or outside
+                            start_point_text = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]+25))
+                            # end_point_text_rect = (int(per.xyxy[0][0]+75), int(per.xyxy[0][1]+30)) # if '0.95'
+                            end_point_text_rect = (int(boxes_id.xyxy[0][0]+50), int(boxes_id.xyxy[0][1]+30)) # if '.95'
+                        else:
+                            start_point_text = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]-5))
+                            # end_point_text_rect = (int(per.xyxy[0][0]+75), int(per.xyxy[0][1]-30)) # if '0.95'
+                            end_point_text_rect = (int(boxes_id.xyxy[0][0]+50), int(boxes_id.xyxy[0][1]-30)) # if '.95'
+
+                        ### CHANGE COLOR ACCORDING TO CLASS NAME
+                        if DRAW_OBJECT_BOX:
+                            # draws the bounding box around the person
+                            cv2.rectangle(current_frame_draw, start_point, end_point, bb_color , 4) 
+                        
+                        if DRAW_OBJECT_CONF and not DRAW_OBJECT_ID:
+                            # draws the background for the confidence of each person
+                            cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, bb_color , -1) 
+                            
+                            # draws the confidence next to each person, without the initial '0' for easier visualization
+                            current_frame_draw = cv2.putText(
+                                current_frame_draw,
+                                # f"{round(float(per.conf),2)}",
+                                f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
+                                (start_point_text[0], start_point_text[1]),
+                                cv2.FONT_HERSHEY_DUPLEX,
+                                1,
+                                (255, 255, 255),
+                                1,
+                                cv2.LINE_AA
+                            ) 
+                            
+                        elif not DRAW_OBJECT_CONF and DRAW_OBJECT_ID:
+                            if object_id != 0:
+
+                                # draws the background for the confidence of each person
+                                cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+10, end_point_text_rect[1]) , bb_color , -1) 
+                                
+                                current_frame_draw = cv2.putText(
+                                    current_frame_draw,
+                                    # f"{round(float(per.conf),2)}",
+                                    f"{str(int(object_id))}",
+                                    (start_point_text[0], start_point_text[1]),
+                                    cv2.FONT_HERSHEY_DUPLEX,
+                                    1,
+                                    (0, 0, 0),
+                                    1,
+                                    cv2.LINE_AA
+                                ) 
+
+                        elif DRAW_OBJECT_CONF and DRAW_OBJECT_ID:
+                            if object_id != 0:
+
+                                # draws the background for the confidence of each person
+                                cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+70, end_point_text_rect[1]) , bb_color , -1) 
+                                
+                                current_frame_draw = cv2.putText(
+                                    current_frame_draw,
+                                    # f"{round(float(per.conf),2)}",
+                                    f"{str(int(object_id))}",
+                                    (start_point_text[0], start_point_text[1]),
+                                    cv2.FONT_HERSHEY_DUPLEX,
+                                    1,
+                                    (0, 0, 0),
+                                    1,
+                                    cv2.LINE_AA
+                                ) 
+
+                                # draws the confidence next to each person, without the initial '0' for easier visualization
+                                current_frame_draw = cv2.putText(
+                                    current_frame_draw,
+                                    # f"{round(float(per.conf),2)}",
+                                    f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
+                                    (start_point_text[0]+70, start_point_text[1]),
+                                    cv2.FONT_HERSHEY_DUPLEX,
+                                    1,
+                                    (255, 255, 255),
+                                    1,
+                                    cv2.LINE_AA
+                                ) 
+
+                            else:
+                                # draws the background for the confidence of each person
+                                cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, bb_color , -1) 
+                                
+                                # draws the confidence next to each person, without the initial '0' for easier visualization
+                                current_frame_draw = cv2.putText(
+                                    current_frame_draw,
+                                    # f"{round(float(per.conf),2)}",
+                                    f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
+                                    (start_point_text[0], start_point_text[1]),
+                                    cv2.FONT_HERSHEY_DUPLEX,
+                                    1,
+                                    (255, 255, 255),
+                                    1,
+                                    cv2.LINE_AA
+                                ) 
+
+                        if DRAW_OBJECT_NAME:
+
+                            ### draws the name of the object
+                            current_frame_draw = cv2.putText(
+                                current_frame_draw,
+                                # f"{round(float(per.conf),2)}",
+                                f"{object_name}",
+                                (start_point[0], end_point[1]),
+                                cv2.FONT_HERSHEY_DUPLEX,
+                                1,
+                                (0,0,0),
+                                1,
+                                cv2.LINE_AA
+                            ) 
+                        
+                        if DRAW_OBJECT_LOCATION_COORDS:
+                            cv2.putText(current_frame_draw, '('+str(round(new_object.position_relative.x,2))+
+                                        ', '+str(round(new_object.position_relative.y,2))+
+                                        ', '+str(round(new_object.position_relative.z,2))+')',
+                                        (new_object.box_center_x, new_object.box_center_y), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
+                            
+                        # if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
+                        #     cv2.putText(current_frame_draw, new_object.room_location+" - "+new_object.furniture_location,
+                        #                 (new_object.box_center_x, new_object.box_center_y+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+            
+            # must add also for hand 
+            # yolov8_obj.image_rgb = self.head_rgb # test removed person_pose (non-filtered)
+            # yolov8_obj.num_objects = num_obj # test removed person_pose (non-filtered)
+            # self.objects_publisher.publish(yolov8_obj) # test removed person_pose (non-filtered)
+
+            # must add also for hand
+            yolov8_obj_filtered.image_rgb = self.hand_rgb
+            yolov8_obj_filtered.num_objects = num_objects_filtered
+            self.objects_filtered_hand_publisher.publish(yolov8_obj_filtered)
+            
+            self.new_frame_time_hand = time.time()
+            self.fps_hand = round(1/(self.new_frame_time_hand-self.prev_frame_time_hand), 2)
+            self.prev_frame_time_hand = self.new_frame_time_hand
+
+            self.fps_hand = str(self.fps_hand)
+
+            if self.DEBUG_DRAW:
+                # putting the FPS count on the frame
+                cv2.putText(current_frame_draw, 'fps:' + self.fps_hand, (0, self.img_height_hand-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                cv2.putText(current_frame_draw, 'np:' + str(num_objects_filtered) + '/' + str(num_obj), (180, self.img_height_hand-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
+                # cv2.imshow("Yolo Object Detection", annotated_frame)
+                # cv2.imshow("Camera Image", current_frame)
+                cv2.waitKey(1)
+            
+            ### TEM QUE PASSAR PARA A FUNCAO do Point Cloud
+            # self.waiting_for_pcloud = False
+
+            self.get_logger().info(f"Objects detected Hand: {num_obj}/{num_objects_filtered}")
+            self.get_logger().info(f"Time Yolo_Objects Hand: {round(time.perf_counter() - self.tempo_total_hand,2)}")
+
+            
     def get_color_image_head_callback(self, img: Image):
         
         if self.ACTIVATE_YOLO_SHOES:
@@ -660,7 +973,262 @@ class Yolo_obj(Node):
                 furniture_location = furniture['name'] 
 
         return room_location, furniture_location
- 
+    
+
+
+    """
+    def get_color_image_head_callback(self, img: Image):
+        self.get_logger().info('Receiving color video frame head')
+        current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
+        
+        self.img_width = img.width
+        self.img_height = img.height
+        # cv2.imshow("Intel RealSense Current Frame", current_frame)
+        # cv2.waitKey(1)
+        
+        
+        # self.obj.objects = []
+        # self.obj.confidence = []
+        # self.obj.distance = []
+        # self.obj.position = []
+
+        # minimum value of confidence for object to be accepted as true and sent via topic
+        
+        # results = self.object_model(current_frame, stream = True)
+        results = self.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+
+        annotated_frame = results[0].plot()
+
+
+        threshold = self.object_threshold
+        classNames = self.objects_classNames
+
+        #print(results)
+
+        # this for only does 1 time ...
+        for r in results:
+            boxes = r.boxes
+
+            for box in boxes:
+                cls = int(box.cls[0])
+                conf = math.ceil(box.conf[0] * 100) / 100
+                
+                if self.DEBUG_DRAW:
+                    x1, y1, x2, y2 = box.xyxy[0]
+                    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                    #center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
+
+                    w, h = x2 - x1, y2 - y1
+                    if conf >= threshold:
+                        cvzone.cornerRect(current_frame, (x1, y1, w, h), l=15)    
+                        cvzone.putTextRect(current_frame, f"{classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
+                    
+                        print(classNames[cls], 'confidence = ' + str(conf))
+                
+                else:
+                    pass
+
+        # # minimum value of confidence for object to be accepted as true and sent via topic
+        # results = self.shoes_model(current_frame, stream = True)
+        # 
+        # threshold = self.shoes_threshold
+        # classNames = self.shoes_socks_classname                
+        # 
+        # # this for only does 1 time ...
+        # for r in results:
+        #     boxes = r.boxes
+        # 
+        #     for box in boxes:
+        #         cls = int(box.cls[0])
+        #         conf = math.ceil(box.conf[0] * 100) / 100
+        #         
+        #         if self.DEBUG_DRAW:
+        #             x1, y1, x2, y2 = box.xyxy[0]
+        #             x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+        #             #center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
+        # 
+        #             w, h = x2 - x1, y2 - y1
+        #             if conf >= threshold:
+        #                 cvzone.cornerRect(current_frame, (x1, y1, w, h), l=15)    
+        #                 cvzone.putTextRect(current_frame, f"{classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
+        #    
+        #                 print(classNames[cls], 'confidence = ' + str(conf))
+        #         
+        #         else:
+        #             pass
+        
+        self.new_frame_time = time.time()
+        self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
+        self.prev_frame_time = self.new_frame_time
+
+        self.fps = str(self.fps)
+
+        if self.DEBUG_DRAW:
+            # putting the FPS count on the frame
+            # cv2.putText(current_frame, 'fps = ' + self.fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.putText(current_frame, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.imshow('Output_head', current_frame) # Exibir a imagem capturada
+            cv2.imshow("Yolo Detection", annotated_frame)
+            cv2.waitKey(1)
+
+            # THIS CODE IS TO SAVE IMAGES TO TEST WITHOUT THE ROBOT, IT SABES JPG AND RAW with object detection
+            # cv2.imshow("Intel RealSense Current Frame", current_frame)
+            # cv2.waitKey(1)
+            # with open("yolo_objects.raw", "wb") as f:
+            #     f.write(current_frame.tobytes())
+            # height, width, channels = current_frame.shape
+            # print(height, width, channels)
+            # cv2.imwrite("yolo_objects.jpg", current_frame) 
+            # time.sleep(1)
+
+    """
+    """
+    def get_color_image_hand_callback(self, img: Image):
+        self.get_logger().info('Receiving color video frame hand')
+        current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
+
+        # cv2.imshow("Intel RealSense Current Frame", current_frame)
+        # cv2.waitKey(1)
+        
+        
+        # self.obj.objects = []
+        # self.obj.confidence = []
+        # self.obj.distance = []
+        # self.obj.position = []
+
+        # minimum value of confidence for object to be accepted as true and sent via topic
+        
+        results = self.object_model(current_frame, stream = True)
+
+        threshold = self.object_threshold
+        classNames = self.objects_classNames
+
+        #print(results)
+
+        # this for only does 1 time ...
+
+        for r in results:
+            boxes = r.boxes
+
+            for box in boxes:
+                cls = int(box.cls[0])
+                conf = math.ceil(box.conf[0] * 100) / 100
+                
+                if self.DEBUG_DRAW:
+                    x1, y1, x2, y2 = box.xyxy[0]
+                    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                    #center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
+
+                    w, h = x2 - x1, y2 - y1
+                    if conf >= threshold:
+                        cvzone.cornerRect(current_frame, (x1, y1, w, h), l=15)    
+                        cvzone.putTextRect(current_frame, f"{classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
+                    
+                        print(classNames[cls], 'confidence = ' + str(conf))
+                
+                else:
+                    pass
+        
+        self.new_frame_time = time.time()
+        self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
+        self.prev_frame_time = self.new_frame_time
+
+        self.fps = str(self.fps)
+
+        if self.DEBUG_DRAW:
+            # putting the FPS count on the frame
+            # cv2.putText(current_frame, 'fps = ' + self.fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.imshow('Output_hand', current_frame) # Exibir a imagem capturada
+            cv2.waitKey(1)
+
+            # THIS CODE IS TO SAVE IMAGES TO TEST WITHOUT THE ROBOT, IT SABES JPG AND RAW with object detection
+            # cv2.imshow("Intel RealSense Current Frame", current_frame)
+            # cv2.waitKey(1)
+            # with open("yolo_objects.raw", "wb") as f:
+            #     f.write(current_frame.tobytes())
+            # height, width, channels = current_frame.shape
+            # print(height, width, channels)
+            # cv2.imwrite("yolo_objects.jpg", current_frame) 
+            # time.sleep(1)
+        """
+    """
+    def cropped_image_callback(self, msg_list_of_images: ListOfImages):
+        #convert msg to useful image 
+
+        list_of_strings = ListOfStrings()
+        # object_detected = ""
+        list_of_cv2_images = []
+        best_object_detected = ""
+        best_object_detected_confidence = 0.0
+        img_ctr = 0
+        for msg in msg_list_of_images.images:
+            img_ctr += 1
+            img = self.br.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+
+            list_of_cv2_images.append(img)
+            #execute detection
+
+            if img_ctr > 0 and img_ctr < 4:
+                results = self.object_model(img)
+                classNames = self.objects_class_names
+                threshold = self.object_threshold
+            else:
+                results = self.shoes_model(img)
+                classNames = self.shoes_class_names
+                threshold = self.shoes_threshold
+            
+            msg = String()
+            
+            best_object_detected = ""
+            best_object_detected_confidence = 0.0
+            # object_detected = ""
+            if results:
+                for r in results:
+                    boxes = r.boxes
+                    for box in boxes: 
+                        cls = int(box.cls[0])
+                        conf = math.ceil(box.conf[0]*100) / 100
+                        
+                        if self.DEBUG_DRAW:
+                            x1, y1, x2, y2 = box.xyxy[0]
+                            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                            #center_point = round((x1 + x2) / 2), round((y1 + y2) / 2)
+
+                            w, h = x2 - x1, y2 - y1
+                            if conf >= threshold:
+                                cvzone.cornerRect(img, (x1, y1, w, h), l=15)    
+                                cvzone.putTextRect(img, f"{classNames[cls]} {conf}", (max(0, x1), max(35, y1)), scale=1.5, thickness=1, offset=3)
+                            
+                                # print(self.classNames[cls], 'confidence = ' + str(conf))
+                
+                        if conf >= threshold:  # Threshold for detection confidence
+                        
+                            if conf > best_object_detected_confidence:
+                                best_object_detected = classNames[int(cls)]
+                                best_object_detected_confidence = conf
+
+                        print("Possible:", classNames[int(cls)], conf)
+                
+            print("Selected:", best_object_detected, best_object_detected_confidence)
+            list_of_strings.strings.append(best_object_detected)
+
+        if self.DEBUG_DRAW:
+            if len(list_of_cv2_images) > 1:
+                cv2.imshow('Left Hand', list_of_cv2_images[0]) # Exibir a imagem capturada
+                cv2.waitKey(5)
+                cv2.imshow('Right Hand', list_of_cv2_images[1]) # Exibir a imagem capturada
+                cv2.waitKey(5)
+                cv2.imshow('Surrounding Floor', list_of_cv2_images[2]) # Exibir a imagem capturada
+                cv2.waitKey(5)
+                cv2.imshow('Left Foot', list_of_cv2_images[3]) # Exibir a imagem capturada
+                cv2.waitKey(5)
+                cv2.imshow('Right Foot', list_of_cv2_images[4]) # Exibir a imagem capturada
+                cv2.waitKey(5)
+
+        print("----------")
+        self.cropped_image_object_detected_publisher.publish(list_of_strings)
+    """
+    
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
         self.robot_y = pose.y
@@ -672,33 +1240,3 @@ def main(args=None):
     node = Yolo_obj()
     rclpy.spin(node)
     rclpy.shutdown()
-
-
-# main function that already creates the thread for the task state machine
-def main(args=None):
-    rclpy.init(args=args)
-    node = Yolo_obj()
-    th_main = threading.Thread(target=ThreadMainYoloObjects, args=(node,), daemon=True)
-    th_main.start()
-    rclpy.spin(node)
-    rclpy.shutdown()
-
-def ThreadMainYoloObjects(node: Yolo_obj):
-    main = YoloObjectsMain(node)
-    main.main()
-
-
-class YoloObjectsMain():
-
-    def __init__(self, node: Yolo_obj):
-        # create a node instance so all variables ros related can be acessed
-        self.node = node
-
-        # main state-machine function
-    def main(self):
-        
-        # debug print to know we are on the main start of the task
-        self.node.get_logger().info("In YoloObjects Main...")
-
-        while True:
-            pass
