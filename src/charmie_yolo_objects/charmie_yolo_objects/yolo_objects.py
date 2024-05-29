@@ -159,6 +159,8 @@ class Yolo_obj(Node):
         self.br = CvBridge()
         self.head_rgb = Image()
         self.hand_rgb = Image()
+        self.new_head_rgb = False
+        self.new_hand_rgb = False
 
         flag_diagn = Bool()
         flag_diagn.data = True
@@ -217,7 +219,6 @@ class Yolo_obj(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
-
     def callback_activate_yolo_objects(self, request, response):
         
         # Type of service received: 
@@ -260,9 +261,17 @@ class Yolo_obj(Node):
         response.message = "Activated with selected parameters"
         return response
 
+    def get_color_image_hand_callback(self, img: Image):
+        
+        self.hand_rgb = img
+        self.new_hand_rgb = True
 
     def get_color_image_head_callback(self, img: Image):
         
+        self.head_rgb = img
+        self.new_head_rgb = True
+
+        """
         if self.ACTIVATE_YOLO_SHOES:
             print("Shoes Activated - Debug")
         if self.ACTIVATE_YOLO_DOORS:
@@ -340,7 +349,7 @@ class Yolo_obj(Node):
 
                 self.waiting_for_pcloud = True
                 self.call_point_cloud_server(requested_objects)
-            
+        """
 
     def post_receiving_pcloud(self, new_pcloud):
 
@@ -577,7 +586,6 @@ class Yolo_obj(Node):
         self.get_logger().info(f"Objects detected: {num_obj}/{num_objects_filtered}")
         self.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
 
-
     def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates):
 
         object_id = boxes_id.id
@@ -635,7 +643,6 @@ class Yolo_obj(Node):
         new_object.camera = "Head"   # still missing... (says which camera is being used)
 
         return new_object
-
 
     def position_to_house_rooms_and_furniture(self, person_pos):
         
@@ -701,4 +708,22 @@ class YoloObjectsMain():
         self.node.get_logger().info("In YoloObjects Main...")
 
         while True:
-            pass
+
+            if self.node.new_head_rgb:
+
+                if self.node.ACTIVATE_YOLO_OBJECTS:
+                    print("should return head yolo objects")
+                if self.node.ACTIVATE_YOLO_DOORS:
+                    print("should return head yolo doors")
+                if self.node.ACTIVATE_YOLO_SHOES:
+                    print("should return head yolo shoes")
+
+            if self.node.new_hand_rgb:
+
+                if self.node.ACTIVATE_YOLO_OBJECTS_HAND:
+                    print("should return hand yolo objects")
+                if self.node.ACTIVATE_YOLO_DOORS_HAND:
+                    print("should return hand yolo doors")
+                if self.node.ACTIVATE_YOLO_SHOES_HAND:
+                    print("should return hand yolo shoes")
+
