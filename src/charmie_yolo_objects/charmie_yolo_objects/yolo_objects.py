@@ -674,13 +674,6 @@ class Yolo_obj(Node):
         self.robot_t = pose.theta
 
         
-def main(args=None):
-    rclpy.init(args=args)
-    node = Yolo_obj()
-    rclpy.spin(node)
-    rclpy.shutdown()
-
-
 # main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
@@ -709,10 +702,87 @@ class YoloObjectsMain():
 
         while True:
 
+            # type(results) = <class 'list'>
+            # type(results[0]) = <class 'ultralytics.engine.results.Results'>
+            # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
+            
+            # /*** ultralytics.engine.results.Results ***/
+            # A class for storing and manipulating inference results.
+            # Attributes:
+            # Name 	        Type 	    Description
+            # orig_img 	    ndarray 	The original image as a numpy array.
+            # orig_shape 	tuple 	    The original image shape in (height, width) format.
+            # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
+            # masks 	    Masks 	    A Masks object containing the detection masks.
+            # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
+            # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
+            # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
+            # names 	    dict 	    A dictionary of class names.
+            # path 	        str 	    The path to the image file.
+            # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
+
+            # /*** ultralytics.engine.results.Boxes ***/
+            # A class for storing and manipulating detection boxes.
+            # Attributes:
+            # Name      Type                Description
+            # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
+            # conf 	    Tensor | ndarray 	The confidence values of the boxes.
+            # cls 	    Tensor | ndarray 	The class values of the boxes.
+            # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
+            # xywh 	    Tensor | ndarray 	The boxes in xywh format.
+            # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
+            # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
+            # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
+
             if self.node.new_head_rgb:
 
                 if self.node.ACTIVATE_YOLO_OBJECTS:
                     print("should return head yolo objects")
+
+                    # self.get_logger().info('Receiving color video frame head')
+                    self.tempo_total = time.perf_counter()
+                    
+                    # ROS2 Image Bridge for OpenCV
+                    current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+                    
+                    # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
+                    # results = self.object_model(current_frame, stream = True)
+                    object_results = self.node.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+
+                    num_obj = len(object_results[0])
+                    # self.get_logger().info(f"Objects detected: {num_obj}")
+
+                    requested_objects = []
+                    for object_idx in range(num_obj):
+
+                        boxes_id = object_results[0].boxes[object_idx]
+                        
+                        bb = BoundingBox()
+                        bb.box_top_left_x = int(boxes_id.xyxy[0][0])
+                        bb.box_top_left_y = int(boxes_id.xyxy[0][1])
+                        bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
+                        bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+
+                        get_pc = BoundingBoxAndPoints()
+                        get_pc.bbox = bb
+
+                        requested_objects.append(get_pc)
+
+                    self.waiting_for_pcloud = True
+                    self.node.call_point_cloud_server(requested_objects)
+
+
+
+
+
+
+
+
+
+
+
+
+
                 if self.node.ACTIVATE_YOLO_DOORS:
                     print("should return head yolo doors")
                 if self.node.ACTIVATE_YOLO_SHOES:
@@ -727,3 +797,4 @@ class YoloObjectsMain():
                 if self.node.ACTIVATE_YOLO_SHOES_HAND:
                     print("should return hand yolo shoes")
 
+            time.sleep(0.05)

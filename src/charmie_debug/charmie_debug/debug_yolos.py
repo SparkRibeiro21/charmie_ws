@@ -226,7 +226,7 @@ class TestNode(Node):
         self.activate_yolo_pose_client.call_async(request)
 
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, activate_objects_hand=True, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
+    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
         request = ActivateYoloObjects.Request()
         request.activate_objects = activate_objects
         request.activate_shoes = activate_shoes
@@ -281,7 +281,7 @@ class RestaurantMain():
 
         return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, activate_objects_hand=True, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
         self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
 
@@ -371,98 +371,22 @@ class RestaurantMain():
                 # print("deactivated yolo pose - right in front")
                 # time.sleep(5)
 
-                self.activate_yolo_objects(activate_objects=False, activate_objects_hand=True)
-
                 while True:
-                    pass
-
-                """
-                s, m = self.set_rgb(RED+MOON)
-                print(s, m)
-                success, message = self.set_speech(filename="arm/arm_close_gripper", command="", wait_for_end_of=True)
-                print(success, message)
-                time.sleep(5)
-                self.set_rgb(BLUE+ROTATE)
-                success, message = self.set_speech(filename="arm/introduction_full", command="", wait_for_end_of=False)
-                print(success, message)
-                time.sleep(5)
-                self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-                success, message = self.set_speech(filename="arm/arm_close_grippe", command="", wait_for_end_of=True)
-                print(success, message)
-                time.sleep(5)
-
-                """
-
-                """
-                files = ["recep_characteristic_1", "recep_characteristic_2", "recep_characteristic_3", "recep_characteristic_4"]
-                commands = ["The first guest shirt is black", "Its age is between 23 and 32", "The guest is a bit taller than me", "and its ethnicity is white."]
-                self.save_speech(files, commands)
-                print("...")
-                time.sleep(5)
-                print("...")
-
-
-                self.set_speech(filename="temp/recep_characteristic_1", wait_for_end_of=True)
+                    
+                    self.activate_yolo_objects(activate_objects=False, activate_objects_hand=True)
+                    time.sleep(3)
                 
-
-                # self.set_speech(command="Hello brother", wait_for_end_of=True)
+                    self.activate_yolo_objects(activate_objects=True, activate_objects_hand=False)
+                    time.sleep(3)
                 
-                # self.set_speech(filename="generic/introduction_full", command="", wait_for_end_of=True)
-                # time.sleep(2)
-
-                self.set_speech(filename="receptionist/recep_drink_milk", command="", wait_for_end_of=True)
-                self.set_face("help_pick_cup")
-                time.sleep(3)
-
-
-                # self.set_speech(filename="generic/introduction_ful", command="", wait_for_end_of=True)
-
-
-
-
-                # self.node.test_custom_image_face_str.data = "clients_temp"
-                # self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
-                # time.sleep(5)
-
-                # self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
+                    self.activate_yolo_objects(activate_shoes=True, activate_shoes_hand=True)
+                    time.sleep(3)
                 
-                # self.set_face(custom="clients_temp")
-                # time.sleep(3)
-
-
-                self.set_face("help_pick_bowl")
-                time.sleep(3)
-
-                self.set_speech(filename="receptionist/recep_drink_orange_juice", show_in_face=True, wait_for_end_of=True)
-
-
-                self.set_face("demo8")
-                time.sleep(3)
-
-                self.set_face(custom="clients_tem")
-                time.sleep(3)
-
-                # self.set_speech(filename="arm/arm_close_gripper", command="", wait_for_end_of=True)
-                # time.sleep(2)
-
-
-                self.set_speech(filename="receptionist/recep_drink_red_wine", wait_for_end_of=True)
-
-                self.set_face("help_pick_milk")
-                time.sleep(3)
-
-                self.set_face("help_pick_spoon")
-                time.sleep(3)
-
-
-                self.set_speech(filename="generic/introduction_full", show_in_face=True, wait_for_end_of=True)
-                # start = time.time()
-                # while time.time() < start + 3: # in seconds
-                #     pass
-                    # print(",", end='')
-                # print()
-
-                """
+                    self.activate_yolo_objects(activate_doors=True, activate_doors_hand=True)
+                    time.sleep(3)
+                
+                    self.activate_yolo_objects()
+                    time.sleep(3)
 
                 #print('State 0 = Initial')
 
