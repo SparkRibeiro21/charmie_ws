@@ -228,11 +228,11 @@ class PointCloudNode(Node):
 
     def get_color_image_hand_callback(self, img: Image):
         self.hand_rgb_img = img
-        print("Received Hand RGB Image")
+        # print("Received Hand RGB Image")
 
     def get_aligned_depth_image_hand_callback(self, img: Image):
         self.hand_depth_img = img
-        print("Received Hand Depth Image")
+        # print("Received Hand Depth Image")
 
 
     def get_neck_position_callback(self, neck_pos: NeckPosition):

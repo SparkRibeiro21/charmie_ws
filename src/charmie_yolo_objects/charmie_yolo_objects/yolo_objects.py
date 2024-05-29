@@ -19,7 +19,6 @@ from pathlib import Path
 import math
 import time
 
-objects_filename = "m_size_model_300_epochs_after_nandinho.pt"
 objects_filename = "segmentation_M_size_model_600_epochs.pt"
 shoes_filename = "shoes_socks_v1.pt"
 doors_filename = "door_bruno.pt"
@@ -98,6 +97,7 @@ class Yolo_obj(Node):
         # Import the models, one for each category
         self.object_model = YOLO(self.complete_path + objects_filename)
         self.shoes_model = YOLO(self.complete_path + shoes_filename)
+        self.doors_model = YOLO(self.complete_path + doors_filename)
 
         ### Topics ###
         # Intel Realsense
@@ -352,7 +352,8 @@ class Yolo_obj(Node):
         """
 
     def post_receiving_pcloud(self, new_pcloud):
-
+        pass
+        """
         current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
         current_frame_draw = current_frame.copy()
         # annotated_frame = self.object_results[0].plot()
@@ -585,7 +586,8 @@ class Yolo_obj(Node):
 
         self.get_logger().info(f"Objects detected: {num_obj}/{num_objects_filtered}")
         self.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
-
+    """
+        
     def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates):
 
         object_id = boxes_id.id
@@ -694,6 +696,51 @@ class YoloObjectsMain():
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
+    def detect_with_yolo_model(self, mode):
+
+        # self.get_logger().info('Receiving color video frame head')
+        self.tempo_total = time.perf_counter()
+        
+        # ROS2 Image Bridge for OpenCV
+        current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+        
+        # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
+        # results = self.object_model(current_frame, stream = True)
+        mode = mode.lower()
+        print(mode)
+        if mode == "objects":  
+            object_results = self.node.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+        elif mode == "shoes":  
+            object_results = self.node.shoes_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+        if mode == "doors":  
+            object_results = self.node.doors_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+        else: # just so there is no error in case of wrong model name
+            object_results = self.node.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+
+        num_obj = len(object_results[0])
+        # self.get_logger().info(f"Objects detected: {num_obj}")
+
+        requested_objects = []
+        for object_idx in range(num_obj):
+
+            boxes_id = object_results[0].boxes[object_idx]
+            
+            bb = BoundingBox()
+            bb.box_top_left_x = int(boxes_id.xyxy[0][0])
+            bb.box_top_left_y = int(boxes_id.xyxy[0][1])
+            bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
+            bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+
+            get_pc = BoundingBoxAndPoints()
+            get_pc.bbox = bb
+
+            requested_objects.append(get_pc)
+
+        self.waiting_for_pcloud = True
+        self.node.call_point_cloud_server(requested_objects)
+
+
+
         # main state-machine function
     def main(self):
         
@@ -737,55 +784,13 @@ class YoloObjectsMain():
             if self.node.new_head_rgb:
 
                 if self.node.ACTIVATE_YOLO_OBJECTS:
+                    self.detect_with_yolo_model(mode="ObJectS")
                     print("should return head yolo objects")
-
-                    # self.get_logger().info('Receiving color video frame head')
-                    self.tempo_total = time.perf_counter()
-                    
-                    # ROS2 Image Bridge for OpenCV
-                    current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
-                    
-                    # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
-                    # results = self.object_model(current_frame, stream = True)
-                    object_results = self.node.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-
-                    num_obj = len(object_results[0])
-                    # self.get_logger().info(f"Objects detected: {num_obj}")
-
-                    requested_objects = []
-                    for object_idx in range(num_obj):
-
-                        boxes_id = object_results[0].boxes[object_idx]
-                        
-                        bb = BoundingBox()
-                        bb.box_top_left_x = int(boxes_id.xyxy[0][0])
-                        bb.box_top_left_y = int(boxes_id.xyxy[0][1])
-                        bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
-                        bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
-
-                        get_pc = BoundingBoxAndPoints()
-                        get_pc.bbox = bb
-
-                        requested_objects.append(get_pc)
-
-                    self.waiting_for_pcloud = True
-                    self.node.call_point_cloud_server(requested_objects)
-
-
-
-
-
-
-
-
-
-
-
-
-
                 if self.node.ACTIVATE_YOLO_DOORS:
+                    self.detect_with_yolo_model(mode="ShoEs")
                     print("should return head yolo doors")
                 if self.node.ACTIVATE_YOLO_SHOES:
+                    self.detect_with_yolo_model(mode="DOORS")
                     print("should return head yolo shoes")
 
             if self.node.new_hand_rgb:
