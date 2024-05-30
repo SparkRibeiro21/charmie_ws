@@ -73,15 +73,16 @@ class TestNode(Node):
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
-        current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-        current_frame_draw = current_frame.copy()
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
         
-        cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-        cv2.waitKey(10)
+        # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
+        # cv2.waitKey(10)
 
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
 
+        """
         current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
         current_frame_draw = current_frame.copy()
 
@@ -151,6 +152,7 @@ class TestNode(Node):
 
         # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         # cv2.waitKey(10)
+        """
 
     #### NECK SERVER FUNCTIONS #####
     def call_neck_track_person_server(self, person, body_part="Head", wait_for_end_of=True):

@@ -2,15 +2,13 @@
 from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool, String, Float32
+from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
-from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import DetectedObject, Yolov8Objects, ListOfImages, ListOfStrings, PointCloudCoordinates, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.msg import DetectedObject, Yolov8Objects, BoundingBox, BoundingBoxAndPoints
 from charmie_interfaces.srv import GetPointCloud, ActivateYoloObjects
 from cv_bridge import CvBridge
 import cv2 
-import cvzone
 import json
 import threading
 
@@ -103,13 +101,6 @@ class Yolo_obj(Node):
         # Intel Realsense
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
-
-        # For individual images
-        # self.cropped_image_subscription = self.create_subscription(ListOfImages, '/cropped_image', self.cropped_image_callback, 10)
-        # self.cropped_image_object_detected_publisher = self.create_publisher(ListOfStrings, '/cropped_image_object_detected', 10)
-
-        # Subscriber (Yolov8_Objects TR Parameters)
-        # self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_obj_conf", self.get_minimum_object_confidence_callback, 10)
         
         # Diagnostics        
         self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
@@ -141,26 +132,14 @@ class Yolo_obj(Node):
         # robot localization
         self.robot_x = 0.0
         self.robot_y = 0.0
-        self.robot_t = 0.0 # math.pi/2
-
-        # to calculate the FPS
-        self.prev_frame_time = 0 # used to record the time when we processed last frame
-        self.prev_frame_time_hand = 0 # used to record the time when we processed last frame
-        self.new_frame_time = 0 # used to record the time at which we processed current frame
-        self.new_frame_time_hand = 0 # used to record the time at which we processed current frame
-
-        self.object_yolo_threshold = 0.2
-        self.shoes_yolo_threshold = 0.5
-
-        # self.object_results = []
-        self.object_list = []
-        self.waiting_for_pcloud = False
+        self.robot_t = 0.0
         
         self.br = CvBridge()
         self.head_rgb = Image()
         self.hand_rgb = Image()
         self.new_head_rgb = False
         self.new_hand_rgb = False
+        self.waiting_for_pcloud = False
         self.point_cloud_response = GetPointCloud.Response()
 
         flag_diagn = Bool()
@@ -186,15 +165,7 @@ class Yolo_obj(Node):
 
         self.objects_class_names_dict = {}
         self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
-        
-        # depending on the filename selected, the class names change
-        # if objects_filename == 'vfinal.pt' or objects_filename == 'M_300epochs.pt' or objects_filename == "m_size_model_300_epochs_after_nandinho.pt":
-        #     self.objects_classNames = self.lar_v_final_classname
-        # elif objects_filename == 'serve_breakfast_v1.pt':
-        #     self.objects_classNames = self.serve_breakfast_classname
-        # else:
-        #     print('Something is wrong with your model name or directory. Please check if the variable filename fits the name of your model and if the loaded directory is the correct.')
-        # print(self.objects_classNames_dict
+    
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, req, camera):
@@ -262,94 +233,12 @@ class Yolo_obj(Node):
         return response
 
     def get_color_image_hand_callback(self, img: Image):
-        
         self.hand_rgb = img
         self.new_hand_rgb = True
 
     def get_color_image_head_callback(self, img: Image):
-        
         self.head_rgb = img
         self.new_head_rgb = True
-
-        """
-        if self.ACTIVATE_YOLO_SHOES:
-            print("Shoes Activated - Debug")
-        if self.ACTIVATE_YOLO_DOORS:
-            print("Doors Activated - Debug")
-        
-        # only when activated via service, the model computes the person detection
-        if self.ACTIVATE_YOLO_OBJECTS:
-
-            if not self.waiting_for_pcloud:
-                # self.get_logger().info('Receiving color video frame head')
-                self.tempo_total = time.perf_counter()
-                self.head_rgb = img
-
-                # ROS2 Image Bridge for OpenCV
-                current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
-                
-                # Getting image dimensions
-                self.img_width = img.width
-                self.img_height = img.height
-
-                # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
-                # results = self.object_model(current_frame, stream = True)
-                self.object_results = self.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-
-                # type(results) = <class 'list'>
-                # type(results[0]) = <class 'ultralytics.engine.results.Results'>
-                # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
-                
-                # /*** ultralytics.engine.results.Results ***/
-                # A class for storing and manipulating inference results.
-                # Attributes:
-                # Name 	        Type 	    Description
-                # orig_img 	    ndarray 	The original image as a numpy array.
-                # orig_shape 	tuple 	    The original image shape in (height, width) format.
-                # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
-                # masks 	    Masks 	    A Masks object containing the detection masks.
-                # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
-                # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
-                # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
-                # names 	    dict 	    A dictionary of class names.
-                # path 	        str 	    The path to the image file.
-                # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
-
-                # /*** ultralytics.engine.results.Boxes ***/
-                # A class for storing and manipulating detection boxes.
-                # Attributes:
-                # Name      Type                Description
-                # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
-                # conf 	    Tensor | ndarray 	The confidence values of the boxes.
-                # cls 	    Tensor | ndarray 	The class values of the boxes.
-                # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
-                # xywh 	    Tensor | ndarray 	The boxes in xywh format.
-                # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
-                # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
-                # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
-
-                num_obj = len(self.object_results[0])
-                # self.get_logger().info(f"Objects detected: {num_obj}")
-
-                requested_objects = []
-                for object_idx in range(num_obj):
-
-                    boxes_id = self.object_results[0].boxes[object_idx]
-                    
-                    bb = BoundingBox()
-                    bb.box_top_left_x = int(boxes_id.xyxy[0][0])
-                    bb.box_top_left_y = int(boxes_id.xyxy[0][1])
-                    bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
-                    bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
-
-                    get_pc = BoundingBoxAndPoints()
-                    get_pc.bbox = bb
-
-                    requested_objects.append(get_pc)
-
-                self.waiting_for_pcloud = True
-                self.call_point_cloud_server(requested_objects)
-        """
 
     def post_receiving_pcloud(self, new_pcloud):
         pass
@@ -716,23 +605,13 @@ class YoloObjectsMain():
         model = model.lower()
         camera = camera.lower()
         
-        # ROS2 Image Bridge for OpenCV
-        # if camera == "head":
-        #     current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
-        # elif camera == "hand":
-        #     current_frame = self.node.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
-        # else: # just so there is no error in case of wrong model name
-        #     current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
-        # current_frame_draw = current_frame.copy()
-        
         # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
         # results = self.object_model(current_frame, stream = True)
-        # print(model)
         if model == "objects":  
             object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
         elif model == "shoes":  
             object_results = self.node.shoes_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
-        if model == "doors":  
+        elif model == "doors":  
             object_results = self.node.doors_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
         else: # just so there is no error in case of wrong model name
             object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
@@ -765,24 +644,16 @@ class YoloObjectsMain():
 
         new_pcloud = self.node.point_cloud_response.coords
 
-        # current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
-        # current_frame_draw = current_frame.copy()
-        # annotated_frame = self.object_results[0].plot()
-
-        # Calculate the number of persons detected
-        # num_obj = len(self.object_results[0])
-
-        # yolov8_obj = Yolov8Objects() # test removed person_pose (non-filtered)
         yolov8_obj_filtered = Yolov8Objects()
         num_objects_filtered = 0
 
         # print(num_obj)
-        # print(self.object_results[0])
-        # print(self.object_results[0].boxes)
+        # print(object_results[0])
+        # print(object_results[0].boxes)
 
         for object_idx in range(num_obj):
             boxes_id = object_results[0].boxes[object_idx]
-            # print(self.object_results[0].boxes)
+            # print(object_results[0].boxes)
 
             ALL_CONDITIONS_MET = 1
 
@@ -793,11 +664,6 @@ class YoloObjectsMain():
             new_object = DetectedObject()
             self.node.get_logger().info(f"Objects detected: {new_pcloud[object_idx].center_coords}")
             new_object = self.node.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, new_pcloud[object_idx].center_coords, camera)
-            # yolov8_obj.objects.append(new_object) # test removed person_pose (non-filtered)
-
-            # object_id = boxes_id.id
-            # if boxes_id.id == None:
-            #     object_id = 0 
 
             # checks whether the person confidence is above a defined level
             if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
@@ -808,12 +674,6 @@ class YoloObjectsMain():
                 num_objects_filtered+=1
                 yolov8_obj_filtered.objects.append(new_object)
 
-        # must add also for hand 
-        # yolov8_obj.image_rgb = self.head_rgb # test removed person_pose (non-filtered)
-        # yolov8_obj.num_objects = num_obj # test removed person_pose (non-filtered)
-        # self.objects_publisher.publish(yolov8_obj) # test removed person_pose (non-filtered)
-
-        # must add also for hand
         # yolov8_obj_filtered.image_rgb = self.node.head_rgb
         yolov8_obj_filtered.num_objects = num_objects_filtered
 
@@ -834,34 +694,15 @@ class YoloObjectsMain():
         self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
     
         return num_obj, num_objects_filtered
-    
-        # self.new_frame_time = time.time()
-        # self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
-        # self.prev_frame_time = self.new_frame_time
-
-        # self.fps = str(self.fps)
-
-        # if self.DEBUG_DRAW:
-        #     # putting the FPS count on the frame
-        #     cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-        #     cv2.putText(current_frame_draw, 'np:' + str(num_objects_filtered) + '/' + str(num_obj), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-        #     cv2.imshow("Yolo Objects TR Detection HEAD", current_frame_draw)
-        #     # cv2.imshow("Yolo Object Detection", annotated_frame)
-        #     # cv2.imshow("Camera Image", current_frame)
-        #     cv2.waitKey(1)
-        
-        ### TEM QUE PASSAR PARA A FUNCAO do Point Cloud
-        # self.waiting_for_pcloud = False
 
         # remaining code here: 
             # leitura do pc
             # publicacao no respetivo topico
+        # corrigir o pos point cloud, para os 3 tipos ...
         # desenhar as deteções
         # LIMITADOR DE QUANDO SE ESTá a ANALISAR A IMAGEM NO MAIN THREAD NÃO ALTERAR o head_rgb...
 
-
-
-        # main state-machine function
+    # main state-machine function
     def main(self):
         
         # debug print to know we are on the main start of the task
@@ -926,6 +767,7 @@ class YoloObjectsMain():
                     total_filtered_obj += tfs
                     print("should return head yolo shoes")
 
+
                 self.new_head_frame_time = time.time()
                 self.head_fps = str(round(1/(self.new_head_frame_time-self.prev_head_frame_time), 2))
                 self.prev_head_frame_time = self.new_head_frame_time
@@ -935,6 +777,8 @@ class YoloObjectsMain():
                     cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, self.node.head_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.imshow("Yolo Objects TR Detection HEAD", current_frame_draw)
                     cv2.waitKey(1)
+
+                self.node.new_head_rgb = False
 
             if self.node.new_hand_rgb:
 
@@ -972,4 +816,6 @@ class YoloObjectsMain():
                     cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
                     cv2.waitKey(1)
 
-            time.sleep(0.05)
+                self.node.new_hand_rgb = False
+            
+            # time.sleep(0.05)
