@@ -698,9 +698,11 @@ class YoloObjectsMain():
         # remaining code here: 
             # leitura do pc
             # publicacao no respetivo topico
+        
         # corrigir o pos point cloud, para os 3 tipos ...
         # desenhar as deteções
         # LIMITADOR DE QUANDO SE ESTá a ANALISAR A IMAGEM NO MAIN THREAD NÃO ALTERAR o head_rgb...
+        # dentro do PC criar o caso para cada câmara
 
     # main state-machine function
     def main(self):
@@ -756,13 +758,13 @@ class YoloObjectsMain():
                     print("should return head yolo objects")
                 
                 if self.node.ACTIVATE_YOLO_DOORS:
-                    td, tfd = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw)
+                    td, tfd = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw)
                     total_obj += td
                     total_filtered_obj += tfd
                     print("should return head yolo doors")
                 
                 if self.node.ACTIVATE_YOLO_SHOES:
-                    ts, tfs = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw)
+                    ts, tfs = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw)
                     total_obj += ts
                     total_filtered_obj += tfs
                     print("should return head yolo shoes")
@@ -794,13 +796,13 @@ class YoloObjectsMain():
                     print("should return hand yolo objects")
                 
                 if self.node.ACTIVATE_YOLO_DOORS_HAND:
-                    td, tfd = self.detect_with_yolo_model(model="shoes", camera="hand", current_frame_draw=current_frame_draw)
+                    td, tfd = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += td
                     total_filtered_obj += tfd
                     print("should return hand yolo doors")
                 
                 if self.node.ACTIVATE_YOLO_SHOES_HAND:
-                    ts, tfs = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw)
+                    ts, tfs = self.detect_with_yolo_model(model="shoes", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += ts
                     total_filtered_obj += tfs
                     print("should return hand yolo shoes")
