@@ -927,11 +927,11 @@ class YoloObjectsMain():
                     print("should return head yolo shoes")
 
                 self.new_head_frame_time = time.time()
-                self.head_fps = round(1/(self.new_head_frame_time-self.prev_head_frame_time), 2)
+                self.head_fps = str(round(1/(self.new_head_frame_time-self.prev_head_frame_time), 2))
                 self.prev_head_frame_time = self.new_head_frame_time
 
                 if self.node.DEBUG_DRAW:
-                    cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.node.head_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'fps:' + self.head_fps, (0, self.node.head_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, self.node.head_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.imshow("Yolo Objects TR Detection HEAD", current_frame_draw)
                     cv2.waitKey(1)
@@ -963,11 +963,11 @@ class YoloObjectsMain():
 
 
                 self.new_hand_frame_time = time.time()
-                self.hand_fps = round(1/(self.new_hand_frame_time-self.prev_hand_frame_time), 2)
+                self.hand_fps = str(round(1/(self.new_hand_frame_time-self.prev_hand_frame_time), 2))
                 self.prev_hand_frame_time = self.new_hand_frame_time
 
                 if self.node.DEBUG_DRAW:
-                    cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.node.hand_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'fps:' + self.hand_fps, (0, self.node.hand_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, self.node.hand_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
                     cv2.waitKey(1)
