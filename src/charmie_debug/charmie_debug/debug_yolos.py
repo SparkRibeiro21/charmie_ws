@@ -371,8 +371,12 @@ class RestaurantMain():
                 # print("deactivated yolo pose - right in front")
                 # time.sleep(5)
 
+                self.activate_yolo_objects(activate_objects=True, activate_shoes=True, activate_doors=True, activate_objects_hand=True)
+
                 while True:
-                    
+                    pass
+                
+                    """
                     self.activate_yolo_objects(activate_objects=False, activate_objects_hand=True)
                     time.sleep(3)
                 
@@ -387,6 +391,7 @@ class RestaurantMain():
                 
                     self.activate_yolo_objects()
                     time.sleep(3)
+                    """
 
                 #print('State 0 = Initial')
 

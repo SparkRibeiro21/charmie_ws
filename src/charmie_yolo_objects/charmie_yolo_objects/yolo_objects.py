@@ -128,7 +128,7 @@ class Yolo_obj(Node):
 
         ### Services (Clients) ###
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud_head")
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
@@ -161,6 +161,7 @@ class Yolo_obj(Node):
         self.hand_rgb = Image()
         self.new_head_rgb = False
         self.new_hand_rgb = False
+        self.point_cloud_response = GetPointCloud.Response()
 
         flag_diagn = Bool()
         flag_diagn.data = True
@@ -196,14 +197,13 @@ class Yolo_obj(Node):
         # print(self.objects_classNames_dict
 
     # request point cloud information from point cloud node
-    def call_point_cloud_server(self, req):
+    def call_point_cloud_server(self, req, camera):
         request = GetPointCloud.Request()
         request.data = req
         request.retrieve_bbox = False
+        request.camera = camera
     
         future = self.point_cloud_client.call_async(request)
-        #print("Sent Command")
-
         future.add_done_callback(self.callback_call_point_cloud)
 
     def callback_call_point_cloud(self, future):
@@ -212,8 +212,8 @@ class Yolo_obj(Node):
             # in this function the order of the line of codes matter
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            self.post_receiving_pcloud(response.coords)
+            self.point_cloud_response = future.result()
+            # self.post_receiving_pcloud(response.coords)
             self.waiting_for_pcloud = False
             # print("Received Back")
         except Exception as e:
@@ -588,7 +588,7 @@ class Yolo_obj(Node):
         self.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
     """
         
-    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates):
+    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates, camera):
 
         object_id = boxes_id.id
         if boxes_id.id == None:
@@ -633,17 +633,18 @@ class Yolo_obj(Node):
         new_object.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
         new_object.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
-        new_object.room_location = "None"      # still missing... (says on which room a detected object is)
-        new_object.furniture_location = "None" # still missing... (says if an object location is associated with some furniture, on a table, sofa, counter, ...)
+        # new_object.room_location = "None"      # still missing... (says on which room a detected object is)
+        # new_object.furniture_location = "None" # still missing... (says if an object location is associated with some furniture, on a table, sofa, counter, ...)
 
         new_object.room_location, new_object.furniture_location = self.position_to_house_rooms_and_furniture(object_abs_pos)
 
         new_object.box_center_x = new_object.box_top_left_x + new_object.box_width//2
         new_object.box_center_y = new_object.box_top_left_y + new_object.box_height//2
 
-        new_object.orientation = 0.0 # still missing... (says the object angle so the gripper can adjust to correctly pick up the object)
-        new_object.camera = "Head"   # still missing... (says which camera is being used)
+        new_object.camera = camera
 
+        new_object.orientation = 0.0 # still missing... (says the object angle so the gripper can adjust to correctly pick up the object)
+        
         return new_object
 
     def position_to_house_rooms_and_furniture(self, person_pos):
@@ -696,23 +697,29 @@ class YoloObjectsMain():
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
-    def detect_with_yolo_model(self, mode):
+    def detect_with_yolo_model(self, model, camera):
 
         # self.get_logger().info('Receiving color video frame head')
         self.tempo_total = time.perf_counter()
         
         # ROS2 Image Bridge for OpenCV
-        current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
-        
+        camera = camera.lower()
+        if camera == "head":
+            current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+        elif camera == "hand":
+            current_frame = self.node.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
+        else: # just so there is no error in case of wrong model name
+            current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+
         # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
         # results = self.object_model(current_frame, stream = True)
-        mode = mode.lower()
-        print(mode)
-        if mode == "objects":  
+        model = model.lower()
+        # print(model)
+        if model == "objects":  
             object_results = self.node.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-        elif mode == "shoes":  
+        elif model == "shoes":  
             object_results = self.node.shoes_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-        if mode == "doors":  
+        if model == "doors":  
             object_results = self.node.doors_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
         else: # just so there is no error in case of wrong model name
             object_results = self.node.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
@@ -736,8 +743,93 @@ class YoloObjectsMain():
 
             requested_objects.append(get_pc)
 
-        self.waiting_for_pcloud = True
-        self.node.call_point_cloud_server(requested_objects)
+
+        self.node.waiting_for_pcloud = True
+        self.node.call_point_cloud_server(requested_objects, camera)
+
+        while self.node.waiting_for_pcloud:
+            pass
+
+        new_pcloud = self.node.point_cloud_response.coords
+
+        # current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
+        # annotated_frame = self.object_results[0].plot()
+
+        # Calculate the number of persons detected
+        # num_obj = len(self.object_results[0])
+
+        # yolov8_obj = Yolov8Objects() # test removed person_pose (non-filtered)
+        yolov8_obj_filtered = Yolov8Objects()
+        num_objects_filtered = 0
+
+        # print(num_obj)
+        # print(self.object_results[0])
+        # print(self.object_results[0].boxes)
+
+        for object_idx in range(num_obj):
+            boxes_id = self.object_results[0].boxes[object_idx]
+            # print(self.object_results[0].boxes)
+
+            ALL_CONDITIONS_MET = 1
+
+            object_name = self.node.objects_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
+            object_class = self.node.objects_class_names_dict[object_name]
+
+            # adds object to "object_pose" without any restriction
+            new_object = DetectedObject()
+            self.node.get_logger().info(f"Objects detected: {new_pcloud[object_idx].center_coords}")
+            new_object = self.node.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, new_pcloud[object_idx].center_coords, camera)
+            # yolov8_obj.objects.append(new_object) # test removed person_pose (non-filtered)
+
+            object_id = boxes_id.id
+            if boxes_id.id == None:
+                object_id = 0 
+
+            # checks whether the person confidence is above a defined level
+            if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
+                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                # print("- Misses minimum person confidence level")
+
+            if ALL_CONDITIONS_MET:
+                num_objects_filtered+=1
+                yolov8_obj_filtered.objects.append(new_object)
+
+        # must add also for hand 
+        # yolov8_obj.image_rgb = self.head_rgb # test removed person_pose (non-filtered)
+        # yolov8_obj.num_objects = num_obj # test removed person_pose (non-filtered)
+        # self.objects_publisher.publish(yolov8_obj) # test removed person_pose (non-filtered)
+
+        # must add also for hand
+        # yolov8_obj_filtered.image_rgb = self.node.head_rgb
+        yolov8_obj_filtered.num_objects = num_objects_filtered
+        self.node.objects_filtered_publisher.publish(yolov8_obj_filtered)
+        
+        self.new_frame_time = time.time()
+        self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
+        self.prev_frame_time = self.new_frame_time
+
+        # self.fps = str(self.fps)
+
+        # if self.DEBUG_DRAW:
+        #     # putting the FPS count on the frame
+        #     cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+        #     cv2.putText(current_frame_draw, 'np:' + str(num_objects_filtered) + '/' + str(num_obj), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+        #     cv2.imshow("Yolo Objects TR Detection HEAD", current_frame_draw)
+        #     # cv2.imshow("Yolo Object Detection", annotated_frame)
+        #     # cv2.imshow("Camera Image", current_frame)
+        #     cv2.waitKey(1)
+        
+        ### TEM QUE PASSAR PARA A FUNCAO do Point Cloud
+        # self.waiting_for_pcloud = False
+
+        self.node.get_logger().info(f"Objects detected: {num_obj}/{num_objects_filtered}")
+        self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
+    
+        # remaining code here: 
+        # leitura do pc
+        # publicacao no respetivo topico
+        # return das vars para posteriormente serem desenhadas
 
 
 
@@ -784,22 +876,25 @@ class YoloObjectsMain():
             if self.node.new_head_rgb:
 
                 if self.node.ACTIVATE_YOLO_OBJECTS:
-                    self.detect_with_yolo_model(mode="ObJectS")
+                    self.detect_with_yolo_model(model="objects", camera="head")
                     print("should return head yolo objects")
                 if self.node.ACTIVATE_YOLO_DOORS:
-                    self.detect_with_yolo_model(mode="ShoEs")
+                    self.detect_with_yolo_model(model="shoes", camera="head")
                     print("should return head yolo doors")
                 if self.node.ACTIVATE_YOLO_SHOES:
-                    self.detect_with_yolo_model(mode="DOORS")
+                    self.detect_with_yolo_model(model="doors", camera="head")
                     print("should return head yolo shoes")
 
             if self.node.new_hand_rgb:
 
                 if self.node.ACTIVATE_YOLO_OBJECTS_HAND:
+                    self.detect_with_yolo_model(model="objects", camera="hand")
                     print("should return hand yolo objects")
                 if self.node.ACTIVATE_YOLO_DOORS_HAND:
+                    self.detect_with_yolo_model(model="shoes", camera="hand")
                     print("should return hand yolo doors")
                 if self.node.ACTIVATE_YOLO_SHOES_HAND:
+                    self.detect_with_yolo_model(model="doors", camera="hand")
                     print("should return hand yolo shoes")
 
             time.sleep(0.05)
