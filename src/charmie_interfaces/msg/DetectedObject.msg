@@ -17,5 +17,8 @@ string furniture_location
 int32 box_center_x
 int32 box_center_y
 
-float32 orientation
 string camera
+
+float32 orientation
+
+sensor_msgs/Image image_rgb_frame
