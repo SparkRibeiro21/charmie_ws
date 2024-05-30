@@ -645,6 +645,11 @@ class Yolo_obj(Node):
 
         new_object.orientation = 0.0 # still missing... (says the object angle so the gripper can adjust to correctly pick up the object)
         
+        if camera == "head":
+            new_object.image_rgb_frame = self.head_rgb
+        else:
+            new_object.image_rgb_frame = self.hand_rgb
+            
         return new_object
 
     def position_to_house_rooms_and_furniture(self, person_pos):
@@ -697,32 +702,40 @@ class YoloObjectsMain():
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
-    def detect_with_yolo_model(self, model, camera):
+        self.new_head_frame_time = time.time()
+        self.prev_head_frame_time = time.time()
+        self.new_hand_frame_time = time.time()
+        self.prev_hand_frame_time = time.time()
+        
+
+    def detect_with_yolo_model(self, model, camera, current_frame_draw):
 
         # self.get_logger().info('Receiving color video frame head')
         self.tempo_total = time.perf_counter()
         
-        # ROS2 Image Bridge for OpenCV
+        model = model.lower()
         camera = camera.lower()
-        if camera == "head":
-            current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
-        elif camera == "hand":
-            current_frame = self.node.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
-        else: # just so there is no error in case of wrong model name
-            current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
-
+        
+        # ROS2 Image Bridge for OpenCV
+        # if camera == "head":
+        #     current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+        # elif camera == "hand":
+        #     current_frame = self.node.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
+        # else: # just so there is no error in case of wrong model name
+        #     current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
+        
         # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
         # results = self.object_model(current_frame, stream = True)
-        model = model.lower()
         # print(model)
         if model == "objects":  
-            object_results = self.node.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+            object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
         elif model == "shoes":  
-            object_results = self.node.shoes_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+            object_results = self.node.shoes_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
         if model == "doors":  
-            object_results = self.node.doors_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+            object_results = self.node.doors_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
         else: # just so there is no error in case of wrong model name
-            object_results = self.node.object_model.track(current_frame, persist=True, tracker="bytetrack.yaml")
+            object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
 
         num_obj = len(object_results[0])
         # self.get_logger().info(f"Objects detected: {num_obj}")
@@ -768,7 +781,7 @@ class YoloObjectsMain():
         # print(self.object_results[0].boxes)
 
         for object_idx in range(num_obj):
-            boxes_id = self.object_results[0].boxes[object_idx]
+            boxes_id = object_results[0].boxes[object_idx]
             # print(self.object_results[0].boxes)
 
             ALL_CONDITIONS_MET = 1
@@ -782,9 +795,9 @@ class YoloObjectsMain():
             new_object = self.node.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, new_pcloud[object_idx].center_coords, camera)
             # yolov8_obj.objects.append(new_object) # test removed person_pose (non-filtered)
 
-            object_id = boxes_id.id
-            if boxes_id.id == None:
-                object_id = 0 
+            # object_id = boxes_id.id
+            # if boxes_id.id == None:
+            #     object_id = 0 
 
             # checks whether the person confidence is above a defined level
             if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
@@ -803,11 +816,28 @@ class YoloObjectsMain():
         # must add also for hand
         # yolov8_obj_filtered.image_rgb = self.node.head_rgb
         yolov8_obj_filtered.num_objects = num_objects_filtered
-        self.node.objects_filtered_publisher.publish(yolov8_obj_filtered)
+
+        if model == "objects" and camera == "head":
+            self.node.objects_filtered_publisher.publish(yolov8_obj_filtered)
+        if model == "objects" and camera == "hand":
+            self.node.objects_filtered_hand_publisher.publish(yolov8_obj_filtered)
+        if model == "doors" and camera == "head":
+            self.node.doors_filtered_publisher.publish(yolov8_obj_filtered)
+        if model == "doors" and camera == "hand":
+            self.node.doors_filtered_hand_publisher.publish(yolov8_obj_filtered)
+        if model == "shoes" and camera == "head":
+            self.node.shoes_filtered_publisher.publish(yolov8_obj_filtered)
+        if model == "shoes" and camera == "hand":
+            self.node.shoes_filtered_hand_publisher.publish(yolov8_obj_filtered)
         
-        self.new_frame_time = time.time()
-        self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
-        self.prev_frame_time = self.new_frame_time
+        self.node.get_logger().info(f"Objects detected: {num_obj}/{num_objects_filtered}")
+        self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
+    
+        return num_obj, num_objects_filtered
+    
+        # self.new_frame_time = time.time()
+        # self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
+        # self.prev_frame_time = self.new_frame_time
 
         # self.fps = str(self.fps)
 
@@ -823,13 +853,11 @@ class YoloObjectsMain():
         ### TEM QUE PASSAR PARA A FUNCAO do Point Cloud
         # self.waiting_for_pcloud = False
 
-        self.node.get_logger().info(f"Objects detected: {num_obj}/{num_objects_filtered}")
-        self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
-    
         # remaining code here: 
-        # leitura do pc
-        # publicacao no respetivo topico
-        # return das vars para posteriormente serem desenhadas
+            # leitura do pc
+            # publicacao no respetivo topico
+        # desenhar as deteções
+        # LIMITADOR DE QUANDO SE ESTá a ANALISAR A IMAGEM NO MAIN THREAD NÃO ALTERAR o head_rgb...
 
 
 
@@ -875,26 +903,73 @@ class YoloObjectsMain():
 
             if self.node.new_head_rgb:
 
+                total_obj = 0
+                total_filtered_obj = 0
+                current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+                current_frame_draw = current_frame.copy()
+                    
                 if self.node.ACTIVATE_YOLO_OBJECTS:
-                    self.detect_with_yolo_model(model="objects", camera="head")
+                    to, tfo = self.detect_with_yolo_model(model="objects", camera="head", current_frame_draw=current_frame_draw)
+                    total_obj += to
+                    total_filtered_obj += tfo
                     print("should return head yolo objects")
+                
                 if self.node.ACTIVATE_YOLO_DOORS:
-                    self.detect_with_yolo_model(model="shoes", camera="head")
+                    td, tfd = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw)
+                    total_obj += td
+                    total_filtered_obj += tfd
                     print("should return head yolo doors")
+                
                 if self.node.ACTIVATE_YOLO_SHOES:
-                    self.detect_with_yolo_model(model="doors", camera="head")
+                    ts, tfs = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw)
+                    total_obj += ts
+                    total_filtered_obj += tfs
                     print("should return head yolo shoes")
+
+                self.new_head_frame_time = time.time()
+                self.head_fps = round(1/(self.new_head_frame_time-self.prev_head_frame_time), 2)
+                self.prev_head_frame_time = self.new_head_frame_time
+
+                if self.node.DEBUG_DRAW:
+                    cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.node.head_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, self.node.head_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.imshow("Yolo Objects TR Detection HEAD", current_frame_draw)
+                    cv2.waitKey(1)
 
             if self.node.new_hand_rgb:
 
+                total_obj = 0
+                total_filtered_obj = 0
+                current_frame = self.node.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
+                current_frame_draw = current_frame.copy()
+
                 if self.node.ACTIVATE_YOLO_OBJECTS_HAND:
-                    self.detect_with_yolo_model(model="objects", camera="hand")
+                    to, tfo = self.detect_with_yolo_model(model="objects", camera="hand", current_frame_draw=current_frame_draw)
+                    total_obj += to
+                    total_filtered_obj += tfo
                     print("should return hand yolo objects")
+                
                 if self.node.ACTIVATE_YOLO_DOORS_HAND:
-                    self.detect_with_yolo_model(model="shoes", camera="hand")
+                    td, tfd = self.detect_with_yolo_model(model="shoes", camera="hand", current_frame_draw=current_frame_draw)
+                    total_obj += td
+                    total_filtered_obj += tfd
                     print("should return hand yolo doors")
+                
                 if self.node.ACTIVATE_YOLO_SHOES_HAND:
-                    self.detect_with_yolo_model(model="doors", camera="hand")
+                    ts, tfs = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw)
+                    total_obj += ts
+                    total_filtered_obj += tfs
                     print("should return hand yolo shoes")
+
+
+                self.new_hand_frame_time = time.time()
+                self.hand_fps = round(1/(self.new_hand_frame_time-self.prev_hand_frame_time), 2)
+                self.prev_hand_frame_time = self.new_hand_frame_time
+
+                if self.node.DEBUG_DRAW:
+                    cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.node.hand_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, self.node.hand_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
+                    cv2.waitKey(1)
 
             time.sleep(0.05)
