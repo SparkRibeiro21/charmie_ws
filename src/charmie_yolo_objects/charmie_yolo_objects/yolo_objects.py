@@ -30,8 +30,8 @@ DRAW_OBJECT_ID = True
 DRAW_OBJECT_BOX = True
 DRAW_OBJECT_NAME = True
 DRAW_OBJECT_CLASS = True
-DRAW_OBJECT_LOCATION_COORDS = True
-DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = True
+DRAW_OBJECT_LOCATION_COORDS = False
+DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = False
 
 
 class Yolo_obj(Node):
@@ -596,7 +596,6 @@ class YoloObjectsMain():
         self.new_hand_frame_time = time.time()
         self.prev_hand_frame_time = time.time()
         
-
     def detect_with_yolo_model(self, model, camera, current_frame_draw):
 
         # self.get_logger().info('Receiving color video frame head')
@@ -692,7 +691,10 @@ class YoloObjectsMain():
         
         self.node.get_logger().info(f"Objects detected: {num_obj}/{num_objects_filtered}")
         self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
-    
+
+        if self.node.DEBUG_DRAW:
+            self.draw_detected_objects(yolov8_obj_filtered, current_frame_draw)
+
         return num_obj, num_objects_filtered
 
         # remaining code here: 
@@ -700,10 +702,169 @@ class YoloObjectsMain():
             # publicacao no respetivo topico
         
         # corrigir o pos point cloud, para os 3 tipos ...
+        # adicionar os object class: furniture, footwear
         # desenhar as deteções
         # LIMITADOR DE QUANDO SE ESTá a ANALISAR A IMAGEM NO MAIN THREAD NÃO ALTERAR o head_rgb...
         # dentro do PC criar o caso para cada câmara
 
+    def draw_detected_objects(self, yolov8_objects, current_frame_draw):
+        
+        red_yp =     ( 56,   56, 255)
+        lblue_yp =   ( 255, 194,   0)
+        blue_yp =    ( 255,   0,   0)
+        green_yp =   (   0, 255,   0)
+        dgreen_yp =  (  50, 204,  50)
+        orange_yp =  (  51, 153, 255)
+        magenta_yp = ( 255,  51, 255)
+        purple_yp =  ( 255,  56, 132)
+        white_yp =   ( 255, 255, 255)
+        grey_yp =    ( 190, 190, 190)
+
+        for object in yolov8_objects.objects:
+
+            if object.object_class == "Cleaning Supplies":
+                bb_color = dgreen_yp
+            elif object.object_class == "Drinks":
+                bb_color = purple_yp
+            elif object.object_class == "Foods":
+                bb_color = lblue_yp
+            elif object.object_class == "Fruits":
+                bb_color = orange_yp
+            elif object.object_class == "Toys":
+                bb_color = blue_yp
+            elif object.object_class == "Snacks":
+                bb_color = magenta_yp
+            elif object.object_class == "Dishes":
+                bb_color = grey_yp
+            else:
+                bb_color = red_yp
+
+            # creates the points for alternative TR visual representation 
+            start_point = (object.box_top_left_x, object.box_top_left_y)
+            end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
+            start_point_text_rect = (object.box_top_left_x-2, object.box_top_left_y)
+
+            if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
+                start_point_text = object.box_top_left_x-2, object.box_top_left_y+25
+                end_point_text_rect = object.box_top_left_x+50, object.box_top_left_y+30
+            else:
+                start_point_text = object.box_top_left_x-2, object.box_top_left_y-5
+                end_point_text_rect = object.box_top_left_x+50, object.box_top_left_y-30
+
+            ### CHANGE COLOR ACCORDING TO CLASS NAME
+            if DRAW_OBJECT_BOX:
+                # draws the bounding box around the person
+                cv2.rectangle(current_frame_draw, start_point, end_point, bb_color , 4) 
+
+            if DRAW_OBJECT_CONF and not DRAW_OBJECT_ID:
+                # draws the background for the confidence of each person
+                cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, bb_color , -1) 
+                
+                # draws the confidence next to each person, without the initial '0' for easier visualization
+                current_frame_draw = cv2.putText(
+                    current_frame_draw,
+                    # f"{round(float(per.conf),2)}",
+                    f"{'.'+str(int((object.confidence+0.005)*100))}",
+                    (start_point_text[0], start_point_text[1]),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    1,
+                    (255, 255, 255),
+                    1,
+                    cv2.LINE_AA
+                ) 
+                
+            elif not DRAW_OBJECT_CONF and DRAW_OBJECT_ID:
+                if object.index != 0:
+
+                    # draws the background for the confidence of each person
+                    cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+10, end_point_text_rect[1]) , bb_color , -1) 
+                    
+                    current_frame_draw = cv2.putText(
+                        current_frame_draw,
+                        # f"{round(float(per.conf),2)}",
+                        f"{str(int(object.index))}",
+                        (start_point_text[0], start_point_text[1]),
+                        cv2.FONT_HERSHEY_DUPLEX,
+                        1,
+                        (0, 0, 0),
+                        1,
+                        cv2.LINE_AA
+                    ) 
+
+            elif DRAW_OBJECT_CONF and DRAW_OBJECT_ID:
+                if object.index != 0:
+
+                    # draws the background for the confidence of each person
+                    cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+70, end_point_text_rect[1]) , bb_color , -1) 
+                    
+                    current_frame_draw = cv2.putText(
+                        current_frame_draw,
+                        # f"{round(float(per.conf),2)}",
+                        f"{str(int(object.index))}",
+                        (start_point_text[0], start_point_text[1]),
+                        cv2.FONT_HERSHEY_DUPLEX,
+                        1,
+                        (0, 0, 0),
+                        1,
+                        cv2.LINE_AA
+                    ) 
+
+                    # draws the confidence next to each person, without the initial '0' for easier visualization
+                    current_frame_draw = cv2.putText(
+                        current_frame_draw,
+                        # f"{round(float(per.conf),2)}",
+                        f"{'.'+str(int((object.confidence+0.005)*100))}",
+                        (start_point_text[0]+70, start_point_text[1]),
+                        cv2.FONT_HERSHEY_DUPLEX,
+                        1,
+                        (255, 255, 255),
+                        1,
+                        cv2.LINE_AA
+                    ) 
+
+                else:
+                    # draws the background for the confidence of each person
+                    cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, bb_color , -1) 
+                    
+                    # draws the confidence next to each person, without the initial '0' for easier visualization
+                    current_frame_draw = cv2.putText(
+                        current_frame_draw,
+                        # f"{round(float(per.conf),2)}",
+                        f"{'.'+str(int((object.confidence+0.005)*100))}",
+                        (start_point_text[0], start_point_text[1]),
+                        cv2.FONT_HERSHEY_DUPLEX,
+                        1,
+                        (255, 255, 255),
+                        1,
+                        cv2.LINE_AA
+                    ) 
+
+            if DRAW_OBJECT_NAME:
+
+                ### draws the name of the object
+                current_frame_draw = cv2.putText(
+                    current_frame_draw,
+                    # f"{round(float(per.conf),2)}",
+                    f"{object.object_name}",
+                    (start_point[0], end_point[1]),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    1,
+                    (0,0,0),
+                    1,
+                    cv2.LINE_AA
+                ) 
+            
+            if DRAW_OBJECT_LOCATION_COORDS:
+                cv2.putText(current_frame_draw, '('+str(round(object.position_relative.x,2))+
+                            ', '+str(round(object.position_relative.y,2))+
+                            ', '+str(round(object.position_relative.z,2))+')',
+                            (object.box_center_x, object.box_center_y), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
+                
+
+            if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
+                    cv2.putText(current_frame_draw, object.room_location+" - "+object.furniture_location,
+                        (object.box_center_x, object.box_center_y+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+    
     # main state-machine function
     def main(self):
         
