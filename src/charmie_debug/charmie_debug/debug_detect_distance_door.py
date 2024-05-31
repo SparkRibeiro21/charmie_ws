@@ -700,6 +700,8 @@ class RestaurantMain():
                 # self.detected_people = det_people
                 # if self.detected_people.num_person > 0:
 
+                self.find_wardrobe_door_open()
+
                 overall = self.align_hand_with_object_detected_head() 
                       
                 
@@ -1257,10 +1259,103 @@ class RestaurantMain():
                             self.set_arm(command="go_up", wait_for_end_of=True)
                             print('---------------------------- \n \n --------------------------') """
 
+    def find_wardrobe_door_open(self):
+        if self.node.first_depth_image_received:
+            current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
+            height, width = current_frame_depth_hand.shape
 
-            
+            if hasattr(self.node.detected_objects, 'image_rgb'):
+                head_image = self.node.detected_objects.image_rgb
+                if hasattr(self.node.detected_objects_hand, 'objects'): 
+                    if self.node.detected_objects.objects:
+                        # print(self.node.detected_objects_hand.objects)
+
+                        wanted_object = ''
+
+                        for obj in self.node.detected_objects.objects:
+                            # print(obj)
+                            if obj.object_name == "Wardrobe_Doors":
+                                wanted_object = obj
+                                print('é isto')
+                                while True:
+                                    pass
+
+                        if wanted_object != '':
+
+                            # object_detected_hand = self.node.detected_objects_hand.objects[0]
+                            object_detected_head = wanted_object
+                            current_frame_rgb_head = self.node.br.imgmsg_to_cv2(self.node.detected_objects.image_rgb, desired_encoding="passthrough")
+
+                            set_pose_arm = ListOfFloats()
+                            object_location = self.transform(wanted_object)
+                            
+                            object_x = object_location[0]
+                            object_y = object_location[1]
+                            object_z = object_location[2]
+
+                            print(object_x, object_y, object_z)   
+
+                            self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                            time.sleep(3)
+                            print(self.node.arm_current_pose)
+
+                            # self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+                            """ set_pose_arm.pose[:] = array('f')
+
+                                # set_pose_arm.pose.clear()
+
+                            # set_pose_arm.pose.append(-650.0)
+                            # set_pose_arm.pose.append(340.0)
+                            # set_pose_arm.pose.append(165.0)
+                            set_pose_arm.pose.append(object_x)
+                            set_pose_arm.pose.append(object_y)
+                            set_pose_arm.pose.append(object_z)
+                            # set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                            
+                            self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                            self.set_arm(command="debug", wait_for_end_of=True)
+
+                            time.sleep(3) """
+
+
+                            response = self.node.pose_planner([object_x, object_y, object_z, self.node.arm_current_pose[3], self.node.arm_current_pose[4], self.node.arm_current_pose[5]])
                        
-     
+                            if response == True:
+                                print('YES')
+
+                                set_pose_arm.pose[:] = array('f')
+
+                                # set_pose_arm.pose.clear()
+
+                                set_pose_arm.pose.append(object_x)
+                                set_pose_arm.pose.append(object_y)
+                                set_pose_arm.pose.append(object_z)
+                                # set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                                
+                                self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                                self.set_arm(command="move_linear", wait_for_end_of=True)
+
+                                time.sleep(3)
+                                self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                            else:
+                                print('NO')
+                                print(response)
+
+                            while True:
+                                pass
+                                
+                        
+                      
+
+
     def search_for_person(self, tetas, delta_t=3.0):
 
         self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)                
