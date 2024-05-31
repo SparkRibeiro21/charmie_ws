@@ -24,7 +24,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 rgb_demonstration = [100, 0, 13, 24, 35, 46, 57, 68, 79, 100, 101, 102, 103, 104, 105, 106, 255]
 
 # rgb leds used for demonstration, can be added any other necessary for demonstration
-face_demonstration = ["demo1", "demo2", "demo3", "demo4", "demo5", "demo6", "demo7", "demo8", "demo9"]
+face_demonstration = ["charmie_face", "charmie_face_green", "help_pick_spoon", "help_pick_milk", "help_pick_cornflakes", "help_pick_bowl"]
 
 # Controller Class, what communicates with the physical controller
 class MyController(Controller):
@@ -434,7 +434,7 @@ class ControllerNode(Node):
 
         if self.CONTROL_FACE:
             self.face_mode = String()
-            self.face_mode.data = "demo5"
+            self.face_mode.data = "charmie_face"
             self.image_to_face_publisher.publish(self.face_mode)
 
         self.watchdog_timer = 0

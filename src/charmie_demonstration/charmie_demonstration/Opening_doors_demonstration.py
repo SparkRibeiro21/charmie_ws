@@ -341,7 +341,7 @@ class OpenDoorsDemoMain():
             if self.state == self.Waiting_for_task_start:
                 #print('State 0 = Initial')
 
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.set_speech(filename="open_doors_demo/od_ready_start", show_in_face=True, wait_for_end_of=True)
 
@@ -488,7 +488,7 @@ class OpenDoorsDemoMain():
                         
                             ##### ARM OPEN GRIPPER
                 
-                self.set_face("demo5")
+                self.set_face("charmie_face")
                         
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True)
                 

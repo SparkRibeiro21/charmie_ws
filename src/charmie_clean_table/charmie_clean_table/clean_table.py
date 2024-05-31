@@ -699,7 +699,7 @@ class ServeBreakfastMain():
         
                 self.activate_yolo_objects(activate_objects=False)
 
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
 

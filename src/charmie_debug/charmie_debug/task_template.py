@@ -164,7 +164,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
 
 import cv2 
 import threading
@@ -219,6 +219,7 @@ class ServeBreakfastNode(Node):
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
         # Audio
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
@@ -241,6 +242,8 @@ class ServeBreakfastNode(Node):
         # Speakers
         # while not self.speech_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Speech Command...")
+        # while not self.save_speech_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Save Speech Command...")
         # Audio
         # while not self.get_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Audio Server...")
@@ -276,6 +279,7 @@ class ServeBreakfastNode(Node):
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
         self.waited_for_end_of_speaking = False
+        self.waited_for_end_of_save_speaking = False
         self.waited_for_end_of_neck_pos = False
         self.waited_for_end_of_neck_coords = False
         self.waited_for_end_of_get_neck = False
@@ -293,6 +297,8 @@ class ServeBreakfastNode(Node):
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
         self.speech_message = ""
+        self.save_speech_success = True
+        self.save_speech_message = ""
         self.rgb_success = True
         self.rgb_message = ""
         self.calibrate_audio_success = True
@@ -482,6 +488,38 @@ class ServeBreakfastNode(Node):
             self.waited_for_end_of_speaking = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
+
+
+    #### SAVE SPEECH SERVER FUNCTIONS #####
+    def call_save_speech_command_server(self, filename="", command="", wait_for_end_of=True):
+        request = SaveSpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+    
+        future = self.save_speech_command_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_save_speech_command)
+        else:
+            self.speech_success = True
+            self.speech_message = "Wait for answer not needed"
+    
+    def callback_call_save_speech_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.save_speech_success = response.success
+            self.save_speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_save_speaking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
 
     #### AUDIO SERVER FUNCTIONS #####
@@ -729,6 +767,36 @@ class ServeBreakfastMain():
         self.node.waited_for_end_of_speaking = False
 
         return self.node.speech_success, self.node.speech_message
+    
+    def save_speech(self, filename="", command="", wait_for_end_of=True):
+
+        # the commands should be lists, because you can send a list of commands and a list of filenames,
+        # making it possible to create multiple temp commands with one instruction
+        # But if by mistake someone sends them as a string (beause set_speech is done that way) I correct it  
+        file = []
+        comm = [] 
+        if isinstance(filename, str) and isinstance(command, str):
+            file.append(filename)
+            comm.append(command)
+        elif isinstance(filename, list) and isinstance(command, list):
+            file = filename
+            comm = command
+        
+        if len(file) > 0 and len(comm) > 0:
+
+            self.node.call_save_speech_command_server(filename=file, command=comm, wait_for_end_of=wait_for_end_of)
+            
+            if wait_for_end_of:
+                while not self.node.waited_for_end_of_save_speaking:
+                    pass
+            self.node.waited_for_end_of_save_speaking = False
+
+            return self.node.save_speech_success, self.node.save_speech_message
+
+        else:
+
+            self.node.get_logger().error("Could not generate save speech as as filename and command types are incompatible.")
+            return False, "Could not generate save speech as as filename and command types are incompatible."
 
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -1255,7 +1323,7 @@ class ServeBreakfastMain():
                 # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)  
 
                 # change face, to standard face
-                # self.set_face("demo5")
+                # self.set_face("charmie_face")
 
                 # moves the neck to look forward
                 # self.set_neck(position=self.look_forward, wait_for_end_of=False)
@@ -1355,7 +1423,7 @@ class ServeBreakfastMain():
                             ##### ARM OPEN GRIPPER
                 
                 ##### SET FACE TO STANDARD FACE
-                # self.set_face("demo5")
+                # self.set_face("charmie_face")
                         
                 ##### NECK LOOK TRAY
                 # self.set_neck(position=self.look_tray, wait_for_end_of=True)

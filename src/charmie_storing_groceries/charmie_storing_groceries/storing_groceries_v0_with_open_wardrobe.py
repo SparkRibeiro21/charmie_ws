@@ -1088,7 +1088,7 @@ class StoringGroceriesMain():
             if self.state == self.Waiting_for_task_start:
                 #print('State 0 = Initial')
 
-                #self.set_face("demo5")
+                #self.set_face("charmie_face")
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
@@ -1308,7 +1308,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.object_counter += 1
                                             
@@ -1370,7 +1370,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.object_counter += 1
 
@@ -1429,7 +1429,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.object_counter += 1
 
@@ -1488,7 +1488,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.object_counter += 1
 
@@ -1547,7 +1547,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False) """
-                self.set_face("demo5")
+                self.set_face("charmie_face")
 
                 self.object_counter += 1
 

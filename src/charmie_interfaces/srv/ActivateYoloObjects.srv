@@ -3,6 +3,9 @@
 bool activate_objects                       # activate or deactivate yolo object detection
 bool activate_shoes                         # activate or deactivate yolo shoes detection
 bool activate_doors                         # activate or deactivate yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
+bool activate_objects_hand                  # activate or deactivate hand yolo object detection
+bool activate_shoes_hand                    # activate or deactivate hand yolo shoes detection
+bool activate_doors_hand                    # activate or deactivate hand yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
 float64 minimum_objects_confidence          # adjust the minimum accuracy to assume as an object
 float64 minimum_shoes_confidence            # adjust the minimum accuracy to assume as a shoe
 float64 minimum_doors_confidence            # adjust the minimum accuracy to assume as a door or handle

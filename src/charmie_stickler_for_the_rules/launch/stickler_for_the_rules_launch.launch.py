@@ -67,7 +67,7 @@ def generate_launch_description():
                 parameters=[
                     {'show_speech': True},
                     {'after_speech_timer': 1.0},
-                    {'initial_face': 'demo5'},
+                    {'initial_face': 'charmie_face'},
                     ],
                 emulate_tty=True
                 )

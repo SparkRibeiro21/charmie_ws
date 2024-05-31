@@ -73,15 +73,16 @@ class TestNode(Node):
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
-        current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-        current_frame_draw = current_frame.copy()
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
         
-        cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-        cv2.waitKey(10)
+        # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
+        # cv2.waitKey(10)
 
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
 
+        """
         current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
         current_frame_draw = current_frame.copy()
 
@@ -151,6 +152,7 @@ class TestNode(Node):
 
         # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         # cv2.waitKey(10)
+        """
 
     #### NECK SERVER FUNCTIONS #####
     def call_neck_track_person_server(self, person, body_part="Head", wait_for_end_of=True):
@@ -226,12 +228,17 @@ class TestNode(Node):
         self.activate_yolo_pose_client.call_async(request)
 
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
+    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
         request = ActivateYoloObjects.Request()
         request.activate_objects = activate_objects
         request.activate_shoes = activate_shoes
         request.activate_doors = activate_doors
+        request.activate_objects_hand = activate_objects_hand
+        request.activate_shoes_hand = activate_shoes_hand
+        request.activate_doors_hand = activate_doors_hand
         request.minimum_objects_confidence = minimum_objects_confidence
+        request.minimum_shoes_confidence = minimum_shoes_confidence
+        request.minimum_doors_confidence = minimum_doors_confidence
 
         self.activate_yolo_objects_client.call_async(request)
 
@@ -276,10 +283,9 @@ class RestaurantMain():
 
         return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
-        # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
-        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_objects_confidence=minimum_objects_confidence)
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
 
         self.node.activate_yolo_objects_success = True
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
@@ -319,10 +325,10 @@ class RestaurantMain():
         Final_State = 7
 
         print("IN NEW MAIN")
-        time.sleep(2)
+        # time.sleep(2)
 
 
-        p_ = DetectedPerson()
+        # p_ = DetectedPerson()
 
         while True:
 
@@ -354,7 +360,7 @@ class RestaurantMain():
                 #     time.sleep(5)
 
                 ### EXAMPLES TO ACTIVATE/DEACTIVATE AND CONFIGURE YOLO POSE AND TOLO OBJECTS 
-                self.activate_yolo_pose(activate=True)
+                # self.activate_yolo_pose(activate=True)
                 # self.activate_yolo_objects(activate_objects=False)
                 # print("activated yolo pose")
                 # time.sleep(10)
@@ -367,96 +373,29 @@ class RestaurantMain():
                 # print("deactivated yolo pose - right in front")
                 # time.sleep(5)
 
+                self.activate_yolo_objects(activate_objects=True, activate_shoes=True, activate_doors=False,
+                                           activate_objects_hand=True, activate_shoes_hand=False, activate_doors_hand=False,
+                                           minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
+                
                 while True:
                     pass
-
-                """
-                s, m = self.set_rgb(RED+MOON)
-                print(s, m)
-                success, message = self.set_speech(filename="arm/arm_close_gripper", command="", wait_for_end_of=True)
-                print(success, message)
-                time.sleep(5)
-                self.set_rgb(BLUE+ROTATE)
-                success, message = self.set_speech(filename="arm/introduction_full", command="", wait_for_end_of=False)
-                print(success, message)
-                time.sleep(5)
-                self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-                success, message = self.set_speech(filename="arm/arm_close_grippe", command="", wait_for_end_of=True)
-                print(success, message)
-                time.sleep(5)
-
-                """
-
-                """
-                files = ["recep_characteristic_1", "recep_characteristic_2", "recep_characteristic_3", "recep_characteristic_4"]
-                commands = ["The first guest shirt is black", "Its age is between 23 and 32", "The guest is a bit taller than me", "and its ethnicity is white."]
-                self.save_speech(files, commands)
-                print("...")
-                time.sleep(5)
-                print("...")
-
-
-                self.set_speech(filename="temp/recep_characteristic_1", wait_for_end_of=True)
                 
-
-                # self.set_speech(command="Hello brother", wait_for_end_of=True)
+                    """
+                    self.activate_yolo_objects(activate_objects=False, activate_objects_hand=True)
+                    time.sleep(3)
                 
-                # self.set_speech(filename="generic/introduction_full", command="", wait_for_end_of=True)
-                # time.sleep(2)
-
-                self.set_speech(filename="receptionist/recep_drink_milk", command="", wait_for_end_of=True)
-                self.set_face("help_pick_cup")
-                time.sleep(3)
-
-
-                # self.set_speech(filename="generic/introduction_ful", command="", wait_for_end_of=True)
-
-
-
-
-                # self.node.test_custom_image_face_str.data = "clients_temp"
-                # self.node.custom_image_to_face_publisher.publish(self.node.test_custom_image_face_str)
-                # time.sleep(5)
-
-                # self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
+                    self.activate_yolo_objects(activate_objects=True, activate_objects_hand=False)
+                    time.sleep(3)
                 
-                # self.set_face(custom="clients_temp")
-                # time.sleep(3)
-
-
-                self.set_face("help_pick_bowl")
-                time.sleep(3)
-
-                self.set_speech(filename="receptionist/recep_drink_orange_juice", show_in_face=True, wait_for_end_of=True)
-
-
-                self.set_face("demo8")
-                time.sleep(3)
-
-                self.set_face(custom="clients_tem")
-                time.sleep(3)
-
-                # self.set_speech(filename="arm/arm_close_gripper", command="", wait_for_end_of=True)
-                # time.sleep(2)
-
-
-                self.set_speech(filename="receptionist/recep_drink_red_wine", wait_for_end_of=True)
-
-                self.set_face("help_pick_milk")
-                time.sleep(3)
-
-                self.set_face("help_pick_spoon")
-                time.sleep(3)
-
-
-                self.set_speech(filename="generic/introduction_full", show_in_face=True, wait_for_end_of=True)
-                # start = time.time()
-                # while time.time() < start + 3: # in seconds
-                #     pass
-                    # print(",", end='')
-                # print()
-
-                """
+                    self.activate_yolo_objects(activate_shoes=True, activate_shoes_hand=True)
+                    time.sleep(3)
+                
+                    self.activate_yolo_objects(activate_doors=True, activate_doors_hand=True)
+                    time.sleep(3)
+                
+                    self.activate_yolo_objects()
+                    time.sleep(3)
+                    """
 
                 #print('State 0 = Initial')
 

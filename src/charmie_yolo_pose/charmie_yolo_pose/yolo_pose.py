@@ -167,6 +167,7 @@ class YoloPoseNode(Node):
         request = GetPointCloud.Request()
         request.data = req
         request.retrieve_bbox = False
+        request.camera = "head"
     
         future = self.point_cloud_client.call_async(request)
         #print("Sent Command")
