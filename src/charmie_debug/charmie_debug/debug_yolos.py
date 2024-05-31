@@ -325,10 +325,10 @@ class RestaurantMain():
         Final_State = 7
 
         print("IN NEW MAIN")
-        time.sleep(2)
+        # time.sleep(2)
 
 
-        p_ = DetectedPerson()
+        # p_ = DetectedPerson()
 
         while True:
 
@@ -373,7 +373,9 @@ class RestaurantMain():
                 # print("deactivated yolo pose - right in front")
                 # time.sleep(5)
 
-                self.activate_yolo_objects(activate_objects=True, activate_shoes=True, activate_doors=False, activate_objects_hand=True, activate_shoes_hand=False, activate_doors_hand=False)
+                self.activate_yolo_objects(activate_objects=True, activate_shoes=True, activate_doors=False,
+                                           activate_objects_hand=True, activate_shoes_hand=False, activate_doors_hand=False,
+                                           minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
                 
                 while True:
                     pass

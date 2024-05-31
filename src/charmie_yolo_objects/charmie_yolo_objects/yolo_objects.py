@@ -96,6 +96,10 @@ class Yolo_obj(Node):
         self.object_model = YOLO(self.complete_path + objects_filename)
         self.shoes_model = YOLO(self.complete_path + shoes_filename)
         self.doors_model = YOLO(self.complete_path + doors_filename)
+        # it needs to have a different model for head and hand image because of the track parameter, otherwise it is always creating new track ids
+        self.object_model_hand = YOLO(self.complete_path + objects_filename)
+        self.shoes_model_hand = YOLO(self.complete_path + shoes_filename)
+        self.doors_model_hand = YOLO(self.complete_path + doors_filename)
 
         ### Topics ###
         # Intel Realsense
@@ -158,7 +162,7 @@ class Yolo_obj(Node):
         #                             'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
         #                             'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
         
-        self.shoes_class_names = ['shoe', 'sock']    
+        self.shoes_class_names = ['Shoe', 'Sock']    
         
         self.doors_class_names = ['Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
 
@@ -605,14 +609,26 @@ class YoloObjectsMain():
         
         # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
         # results = self.object_model(current_frame, stream = True)
-        if model == "objects":  
-            object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
-        elif model == "shoes":  
-            object_results = self.node.shoes_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
-        elif model == "doors":  
-            object_results = self.node.doors_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
-        # else: # just so there is no error in case of wrong model name
-        #     object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+
+        if camera == "head:":
+            if model == "objects":  
+                object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+            elif model == "shoes":  
+                object_results = self.node.shoes_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+            elif model == "doors":  
+                object_results = self.node.doors_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+            # else: # just so there is no error in case of wrong model name
+            #     object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+        else: # camera == "hand" 
+            if model == "objects":  
+                object_results = self.node.object_model_hand.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+            elif model == "shoes":  
+                object_results = self.node.shoes_model_hand.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+            elif model == "doors":  
+                object_results = self.node.doors_model_hand.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+            # else: # just so there is no error in case of wrong model name
+            #     object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+        
 
         num_obj = len(object_results[0])
         # self.get_logger().info(f"Objects detected: {num_obj}")
@@ -723,9 +739,9 @@ class YoloObjectsMain():
         return num_obj, num_objects_filtered
 
         # test:
-        # percentagens individuais miimas de erro de cada categoria
-        # nomes dos objectos e categoria dos objectos
-        # cor das categorias novas
+            # DONE percentagens individuais miimas de erro de cada categoria
+            # DONE nomes dos objectos e categoria dos objectos
+            # DONE cor das categorias novas
 
 
 
