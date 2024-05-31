@@ -1055,6 +1055,8 @@ class ServeBreakfastMain():
         ### nos numeros que chegam: x representa a frente do robô. y positivo vai para a esquerda do robô. z vai para cima no robô
         ### nos numeros que saem: x vai para trás do robô. y vai para baixo no robô. z vai para a direita do robô
         
+
+        ## transformada é do eixo de coordenadas da base (x para a frente y para a esquerda) para o do braço
         
         ### PARECE-ME QUE X E Z ESTÃO TROCADOS NO RESULTADO QUE TENHO EM RELAºÃO AO BRAÇO
         object_ = self.node.objects

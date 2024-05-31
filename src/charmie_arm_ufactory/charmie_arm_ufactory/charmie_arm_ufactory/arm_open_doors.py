@@ -576,6 +576,25 @@ class ArmUfactory(Node):
 			print(arm_pose_.pose)
 			self.arm_pose_publisher.publish(arm_pose_)
 
+	def debug(self, set_desired_pose_arm):
+		if self.estado_tr == 0:
+			print('a')
+			self.position_values_req.pose = set_desired_pose_arm
+			self.position_values_req.speed = 40.0
+			self.position_values_req.acc = 400.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 30.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def move_linear(self, set_desired_pose_arm):
 		if self.estado_tr == 0:
 			print('a')
@@ -630,6 +649,8 @@ class ArmUfactory(Node):
 			self.get_arm_position()
 		elif self.next_arm_movement == "move_linear":
 			self.move_linear(self.arm_pose)
+		elif self.next_arm_movement == "debug":
+			self.debug(self.arm_pose)
 			
 			
 

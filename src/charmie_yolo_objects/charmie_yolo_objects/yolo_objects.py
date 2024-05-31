@@ -811,9 +811,9 @@ class Yolo_obj(Node):
                             ) 
                         
                         if DRAW_OBJECT_LOCATION_COORDS:
-                            cv2.putText(current_frame_draw, '('+str(round(new_object.position_relative.x,2))+
-                                        ', '+str(round(new_object.position_relative.y,2))+
-                                        ', '+str(round(new_object.position_relative.z,2))+')',
+                            cv2.putText(current_frame_draw, '('+str(round(new_object.position_relative.x,3))+
+                                        ', '+str(round(new_object.position_relative.y,3))+
+                                        ', '+str(round(new_object.position_relative.z,3))+')',
                                         (new_object.box_center_x, new_object.box_center_y), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
                             
                         # if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:
@@ -1402,7 +1402,8 @@ class Yolo_obj(Node):
                             cv2.putText(current_frame_draw, '('+str(round(new_object.position_relative.x,2))+
                                         ', '+str(round(new_object.position_relative.y,2))+
                                         ', '+str(round(new_object.position_relative.z,2))+')',
-                                        (new_object.box_center_x, new_object.box_center_y), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
+                                        (new_object.box_center_x, new_object.box_center_y), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA) 
+                            cv2.circle(current_frame_draw, (new_object.box_center_x, new_object.box_center_y), 10, (0, 0, 255), 2)        
                             
             
                         if DRAW_OBJECT_LOCATION_HOUSE_FURNITURE:

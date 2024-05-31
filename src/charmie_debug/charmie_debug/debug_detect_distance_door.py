@@ -511,6 +511,8 @@ class RestaurantMain():
         # VARS ...
         self.state = 0
         self.look_right = [-40, 0]
+        self.look_down = [0, -20]
+        self.look_navigation = [0, -30]
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -656,7 +658,7 @@ class RestaurantMain():
         
 
         print("IN NEW MAIN")
-        # self.set_neck(position=self.look_right, wait_for_end_of=False)
+        # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
         # time.sleep(2.0)
 
         while True:
@@ -686,7 +688,7 @@ class RestaurantMain():
                 # time.sleep(2.0)
 
                 # POSICIONAR BRAÇO 
-                # self.set_neck(position=self.look_right, wait_for_end_of=False)
+                # self.set_neck(position=self.look_down, wait_for_end_of=False)
                 # time.sleep(2.0)
                 self.state = Searching_for_clients
 
@@ -991,13 +993,14 @@ class RestaurantMain():
     
         c = np.dot(np.identity(4), [0, 0, 0, 1])
         # c = np.dot(np.identity(4), [90.0, -30.0, 105.0, 1])
-        new_x = obj.position_relative.x * 100
-        new_y = obj.position_relative.y * 100
-        new_z = obj.position_relative.z * 100
+        ### ESTAS TRANSFORMAÇÕES SEGUINTES SÃO NECESSÁRIAS PORQUE O ROBOT TEM EIXO COORDENADAS COM Y PARA A FRENTE E X PARA A DIREITA E AS TRANSFORMAÇÕES DA CAMARA SÃO FEITAS COM X PARA A FRENTE Y PARA A ESQUERDA
+        new_x = obj.position_relative.y * 1000
+        new_y = -obj.position_relative.x * 1000
+        new_z = obj.position_relative.z * 1000
         print(obj.object_name)
         c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
         print(f'Posição em relação ao solo:[{new_x:.2f}, {new_y:.2f}, {new_z:.2f}]')
-        a2 = self.Trans(3.0, -7.0, -110.0)
+        a2 = self.Trans(30.0, -60.0, -1100.0)
         a1 = self.Rot('x', -90.0)
         a0 = self.Rot('z', 180.0)
         T = np.dot(a0, a1)
@@ -1007,20 +1010,20 @@ class RestaurantMain():
         
         AA = np.dot(T, c)
         
-        # print('ex Ponto em relação ao braço:', AA)
+        print('Ponto em relação ao braço:', AA)
 
 
-        aux = AA[0]
-        AA[0] = AA[2]
-        AA[2] = aux
+        # aux = AA[0]
+        # AA[0] = AA[2]
+        # AA[2] = aux
 
-        """ AA[0] = AA[0] * 10
-        AA[1] = AA[1] * 10
-        AA[2] = AA[2] * 10
-        my_formatted_list = [ '%.2f' % elem for elem in AA ] """
+        # AA[0] = AA[0] * 10
+        # AA[1] = AA[1] * 10
+        # AA[2] = AA[2] * 10
+        # my_formatted_list = [ '%.2f' % elem for elem in AA ]
         ### VALOR DO Z ESTÀ INVERSO AO QUE EU DEVO PASSAR PARA O BRAÇO EM AA !!!
         
-        print('Ponto em relação ao braço:', AA)
+        # print('Ponto em relação ao braço:', AA)
         # print('y = ', AA[1]*10)
 
         print('\n\n')
@@ -1061,8 +1064,8 @@ class RestaurantMain():
                         wanted_object = ''
 
                         for obj in self.node.detected_objects.objects:
-                            print(obj)
-                            if obj.object_name == "Tropical Juice":
+                            # print(obj)
+                            if obj.object_name == "Cleanser":
                                 wanted_object = obj
                                 print('é isto')
 
@@ -1075,15 +1078,58 @@ class RestaurantMain():
                             set_pose_arm = ListOfFloats()
                             object_location = self.transform(wanted_object)
                             
-                            object_x = (object_location[0]) * 10
-                            object_y = object_location[1] * 10
-                            object_z = - (object_location[2]) * 10
+                            object_x = object_location[0]
+                            object_y = object_location[1]
+                            object_z = object_location[2]
 
-                            print(object_x, object_y, object_z)
+                            print(object_x, object_y, object_z)   
 
                             self.set_arm(command="get_arm_position", wait_for_end_of=True)
                             time.sleep(3)
                             print(self.node.arm_current_pose)
+
+                            # self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+                            """ set_pose_arm.pose[:] = array('f')
+
+                                # set_pose_arm.pose.clear()
+
+                            # set_pose_arm.pose.append(-650.0)
+                            # set_pose_arm.pose.append(340.0)
+                            # set_pose_arm.pose.append(165.0)
+                            set_pose_arm.pose.append(object_x)
+                            set_pose_arm.pose.append(object_y)
+                            set_pose_arm.pose.append(object_z)
+                            # set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                            
+                            self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                            self.set_arm(command="debug", wait_for_end_of=True)
+
+                            time.sleep(3) """
+
+                            set_pose_arm.pose[:] = array('f')
+
+                                # set_pose_arm.pose.clear()
+
+                            new_x = object_x + 100.0
+                            new_y = object_y + 100.0
+                            set_pose_arm.pose.append(new_x)
+                            set_pose_arm.pose.append(new_y)
+                            set_pose_arm.pose.append(object_z)
+                            # set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                            set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                            
+                            self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                            self.set_arm(command="debug", wait_for_end_of=True)
+                            # self.set_arm(command="close_gripper", wait_for_end_of=True)
+                            
+                            while True:
+                                pass
 
                             response = self.node.pose_planner([object_x, object_y, object_z, self.node.arm_current_pose[3], self.node.arm_current_pose[4], self.node.arm_current_pose[5]])
                             # self.node.pose_planner([-521.9, -220.5, 480.5, math.radians(43.0), math.radians(1.9), math.radians(-87.2)])
