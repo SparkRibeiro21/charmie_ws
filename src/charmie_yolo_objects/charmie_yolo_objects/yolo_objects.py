@@ -106,7 +106,6 @@ class Yolo_obj(Node):
         self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
  
         # Publish Results
-        # self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10) # test removed person_pose (non-filtered)
         self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
         self.objects_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered_hand', 10)
         self.doors_filtered_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered', 10)
@@ -161,7 +160,7 @@ class Yolo_obj(Node):
         
         self.shoes_class_names = ['shoe', 'sock']    
         
-        self.door_class_names = ['Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
+        self.doors_class_names = ['Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
 
         self.objects_class_names_dict = {}
         self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
@@ -500,16 +499,16 @@ class Yolo_obj(Node):
         new_object.position_relative = object_rel_pos
         
         # calculate the absolute position according to the robot localisation
-        angle_person = math.atan2(object_rel_pos.x, object_rel_pos.y)
-        dist_person = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
+        angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
+        dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
 
-        theta_aux = math.pi/2 - (angle_person - self.robot_t)
+        theta_aux = math.pi/2 - (angle_obj - self.robot_t)
 
-        target_x = dist_person * math.cos(theta_aux) + self.robot_x
-        target_y = dist_person * math.sin(theta_aux) + self.robot_y
+        target_x = dist_obj * math.cos(theta_aux) + self.robot_x
+        target_y = dist_obj * math.sin(theta_aux) + self.robot_y
 
         a_ref = (target_x, target_y)
-        # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
+        # print("Rel:", (object_rel_pos.x, object_rel_pos.y), "Abs:", a_ref)
 
         object_abs_pos = Point()
         object_abs_pos.x = target_x
@@ -612,8 +611,8 @@ class YoloObjectsMain():
             object_results = self.node.shoes_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
         elif model == "doors":  
             object_results = self.node.doors_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
-        else: # just so there is no error in case of wrong model name
-            object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+        # else: # just so there is no error in case of wrong model name
+        #     object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
 
         num_obj = len(object_results[0])
         # self.get_logger().info(f"Objects detected: {num_obj}")
@@ -654,21 +653,47 @@ class YoloObjectsMain():
             boxes_id = object_results[0].boxes[object_idx]
             # print(object_results[0].boxes)
 
-            ALL_CONDITIONS_MET = 1
-
-            object_name = self.node.objects_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
-            object_class = self.node.objects_class_names_dict[object_name]
-
+            if model == "objects":  
+                object_name = self.node.objects_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
+                object_class = self.node.objects_class_names_dict[object_name]
+            elif model == "shoes":  
+                object_name = self.node.shoes_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
+                object_class = "Footwear"
+            elif model == "doors":  
+                object_name = self.node.doors_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
+                object_class = "Furniture"
+        
             # adds object to "object_pose" without any restriction
             new_object = DetectedObject()
             self.node.get_logger().info(f"Objects detected: {new_pcloud[object_idx].center_coords}")
             new_object = self.node.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, new_pcloud[object_idx].center_coords, camera)
 
-            # checks whether the person confidence is above a defined level
-            if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
-                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                # print("- Misses minimum person confidence level")
+            ALL_CONDITIONS_MET = 1
 
+            if model == "objects":   
+                # checks whether the object confidence is above a selected level
+                if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
+                    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                    # print("- Misses minimum object confidence level")
+
+            elif model == "shoes":     
+                # checks whether the shoes confidence is above a selected level
+                if not boxes_id.conf >= MIN_SHOES_CONF_VALUE:
+                    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                    # print("- Misses minimum shoe confidence level")
+
+            elif model == "doors":  
+                # checks whether the doors confidence is above a selected level
+                if not boxes_id.conf >= MIN_DOORS_CONF_VALUE:
+                    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                    # print("- Misses minimum door confidence level")
+
+            # checks whether the detected object confidence is above a defined level
+            # if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
+            #     ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+            #     # print("- Misses minimum detected object confidence level")
+
+            # if the object detection passes all selected conditions, the detected object is added to the publishing list
             if ALL_CONDITIONS_MET:
                 num_objects_filtered+=1
                 yolov8_obj_filtered.objects.append(new_object)
@@ -697,6 +722,22 @@ class YoloObjectsMain():
 
         return num_obj, num_objects_filtered
 
+        # test:
+        # percentagens individuais miimas de erro de cada categoria
+        # nomes dos objectos e categoria dos objectos
+        # cor das categorias novas
+
+
+
+
+
+
+
+
+
+
+
+
         # remaining code here: 
             # leitura do pc
             # publicacao no respetivo topico
@@ -719,6 +760,7 @@ class YoloObjectsMain():
         purple_yp =  ( 255,  56, 132)
         white_yp =   ( 255, 255, 255)
         grey_yp =    ( 190, 190, 190)
+        black_yp =   (   0,   0,   0)
 
         for object in yolov8_objects.objects:
 
@@ -736,8 +778,12 @@ class YoloObjectsMain():
                 bb_color = magenta_yp
             elif object.object_class == "Dishes":
                 bb_color = grey_yp
-            else:
+            elif object.object_class == "Footwear":
                 bb_color = red_yp
+            elif object.object_class == "Furniture":
+                bb_color = green_yp
+            else:
+                bb_color = black_yp
 
             # creates the points for alternative TR visual representation 
             start_point = (object.box_top_left_x, object.box_top_left_y)
@@ -753,14 +799,14 @@ class YoloObjectsMain():
 
             ### CHANGE COLOR ACCORDING TO CLASS NAME
             if DRAW_OBJECT_BOX:
-                # draws the bounding box around the person
+                # draws the bounding box around the detected object
                 cv2.rectangle(current_frame_draw, start_point, end_point, bb_color , 4) 
 
             if DRAW_OBJECT_CONF and not DRAW_OBJECT_ID:
-                # draws the background for the confidence of each person
+                # draws the background for the confidence of each detected object
                 cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, bb_color , -1) 
                 
-                # draws the confidence next to each person, without the initial '0' for easier visualization
+                # draws the confidence next to each detected object, without the initial '0' for easier visualization
                 current_frame_draw = cv2.putText(
                     current_frame_draw,
                     # f"{round(float(per.conf),2)}",
@@ -776,7 +822,7 @@ class YoloObjectsMain():
             elif not DRAW_OBJECT_CONF and DRAW_OBJECT_ID:
                 if object.index != 0:
 
-                    # draws the background for the confidence of each person
+                    # draws the background for the confidence of each detected object
                     cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+10, end_point_text_rect[1]) , bb_color , -1) 
                     
                     current_frame_draw = cv2.putText(
@@ -794,7 +840,7 @@ class YoloObjectsMain():
             elif DRAW_OBJECT_CONF and DRAW_OBJECT_ID:
                 if object.index != 0:
 
-                    # draws the background for the confidence of each person
+                    # draws the background for the confidence of each detected object
                     cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+70, end_point_text_rect[1]) , bb_color , -1) 
                     
                     current_frame_draw = cv2.putText(
@@ -809,7 +855,7 @@ class YoloObjectsMain():
                         cv2.LINE_AA
                     ) 
 
-                    # draws the confidence next to each person, without the initial '0' for easier visualization
+                    # draws the confidence next to each detected object, without the initial '0' for easier visualization
                     current_frame_draw = cv2.putText(
                         current_frame_draw,
                         # f"{round(float(per.conf),2)}",
@@ -823,10 +869,10 @@ class YoloObjectsMain():
                     ) 
 
                 else:
-                    # draws the background for the confidence of each person
+                    # draws the background for the confidence of each detected object
                     cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, bb_color , -1) 
                     
-                    # draws the confidence next to each person, without the initial '0' for easier visualization
+                    # draws the confidence next to each detected object, without the initial '0' for easier visualization
                     current_frame_draw = cv2.putText(
                         current_frame_draw,
                         # f"{round(float(per.conf),2)}",
