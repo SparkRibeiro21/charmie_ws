@@ -1330,6 +1330,8 @@ class RestaurantMain():
                             self.node.arm_set_pose_publisher.publish(set_pose_arm)
                             print(set_pose_arm)
                             self.set_arm(command="change_height_front_robot", wait_for_end_of=True)
+                            # ISTO ALINHA BRAÇO COM PORTA DO LADO DRT. FAZER O MESMO PARA O LADO ESQUERDO.
+                            # APÓS ISSO ANALISAR CÂMARA DE DISTÂNCIA
 
                             print('a')
 
