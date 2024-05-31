@@ -169,6 +169,7 @@ class ArmUfactory(Node):
 		self.get_order_position_joints = 				[ -161.0,   20.0,  -63.0,  256.0,   13.0,   24.0]
 		self.get_lower_order_position_joints = 			[ -184.9,   17.5,  -62.0,  115.2,    4.9,  148.0]
 		self.initial_position_joints = 					[ -224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
+		self.front_robot = 								[ -191.7,   17.1,  -50.6,   164.9,   58.2,  97.0] 
 
 		# SET POSITIONS VARIABLES
 		self.get_order_position_linear = 				[ -581.4, -211.5,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
@@ -595,6 +596,65 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def front_robot_oriented_front(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.front_robot)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def change_height_front_robot(self, height):
+		if self.estado_tr == 0:
+			print('a')
+			self.position_values_req.pose = [ -643.5, height[1],  222.0, math.radians( 88.1), math.radians(2.9), math.radians(-90.1)]
+			self.position_values_req.speed = 40.0
+			self.position_values_req.acc = 400.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 30.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def move_linear(self, set_desired_pose_arm):
 		if self.estado_tr == 0:
 			print('a')
@@ -651,6 +711,10 @@ class ArmUfactory(Node):
 			self.move_linear(self.arm_pose)
 		elif self.next_arm_movement == "debug":
 			self.debug(self.arm_pose)
+		elif self.next_arm_movement == "front_robot_oriented_front":
+			self.front_robot_oriented_front()
+		elif self.next_arm_movement == "change_height_front_robot":
+			self.change_height_front_robot(self.arm_pose)
 			
 			
 

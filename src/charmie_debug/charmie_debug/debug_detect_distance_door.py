@@ -38,7 +38,7 @@ class TestNode(Node):
 
         # Intel Realsense Subscribers
         # self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
 
         ### Topics (Publisher and Subscribers) ###  
         # Yolo Pose
@@ -46,6 +46,8 @@ class TestNode(Node):
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered_hand", self.object_detected_filtered_hand_callback, 10)
+        self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
+        self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered_hand", self.doors_detected_filtered_hand_callback, 10)
 
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
@@ -126,6 +128,9 @@ class TestNode(Node):
         self.detected_people = Yolov8Pose()
         self.detected_objects_hand = Yolov8Objects()
         self.detected_objects = Yolov8Objects()
+        self.detected_doors = Yolov8Objects()
+        self.detected_doors_hand= Yolov8Objects()
+
 
     def get_arm_current_pose_callback(self, arm_pose: ListOfFloats):
         self.arm_current_pose = arm_pose.pose
@@ -143,6 +148,12 @@ class TestNode(Node):
         # current_frame_draw = current_frame.copy()
         # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
         # cv2.waitKey(10)
+
+    def doors_detected_filtered_callback(self, det_object: Yolov8Objects):
+        self.detected_doors = det_object
+
+    def doors_detected_filtered_hand_callback(self, det_object_hand: Yolov8Objects):
+        self.detected_doors_hand = det_object_hand
 
     def object_detected_filtered_hand_callback(self, det_object_hand: Yolov8Objects):
         self.detected_objects_hand = det_object_hand
@@ -702,7 +713,7 @@ class RestaurantMain():
 
                 self.find_wardrobe_door_open()
 
-                overall = self.align_hand_with_object_detected_head() 
+                # overall = self.align_hand_with_object_detected_head() 
                       
                 
 
@@ -1066,7 +1077,7 @@ class RestaurantMain():
                         wanted_object = ''
 
                         for obj in self.node.detected_objects.objects:
-                            # print(obj)
+                            print(obj)
                             if obj.object_name == "Cleanser":
                                 wanted_object = obj
                                 print('é isto')
@@ -1261,31 +1272,32 @@ class RestaurantMain():
 
     def find_wardrobe_door_open(self):
         if self.node.first_depth_image_received:
+            print('bbb')
+            
             current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
-            height, width = current_frame_depth_hand.shape
 
-            if hasattr(self.node.detected_objects, 'image_rgb'):
-                head_image = self.node.detected_objects.image_rgb
-                if hasattr(self.node.detected_objects_hand, 'objects'): 
-                    if self.node.detected_objects.objects:
-                        # print(self.node.detected_objects_hand.objects)
-
+            if hasattr(self.node.detected_doors, 'image_rgb'):
+                head_image = self.node.detected_doors.image_rgb
+                
+                if hasattr(self.node.detected_doors, 'objects'): 
+                    # print(self.node.detected_doors)
+                    
+                    if self.node.detected_doors.objects:
+                        # print(self.node.detected_doors.objects)
+                        print('ddd')
+        
                         wanted_object = ''
 
-                        for obj in self.node.detected_objects.objects:
-                            # print(obj)
-                            if obj.object_name == "Wardrobe_Doors":
+                        for obj in self.node.detected_doors.objects:
+                            print(obj.object_name)
+                            if obj.object_name == "Wardrobe Door":
                                 wanted_object = obj
                                 print('é isto')
-                                while True:
-                                    pass
+                                print(wanted_object.position_relative)
+                                print(wanted_object.confidence)
+                                
 
                         if wanted_object != '':
-
-                            # object_detected_hand = self.node.detected_objects_hand.objects[0]
-                            object_detected_head = wanted_object
-                            current_frame_rgb_head = self.node.br.imgmsg_to_cv2(self.node.detected_objects.image_rgb, desired_encoding="passthrough")
-
                             set_pose_arm = ListOfFloats()
                             object_location = self.transform(wanted_object)
                             
@@ -1293,21 +1305,20 @@ class RestaurantMain():
                             object_y = object_location[1]
                             object_z = object_location[2]
 
-                            print(object_x, object_y, object_z)   
+                            print('x y e z do objeto:',object_x, object_y, object_z)   
 
                             self.set_arm(command="get_arm_position", wait_for_end_of=True)
                             time.sleep(3)
-                            print(self.node.arm_current_pose)
+                            # print(self.node.arm_current_pose)
+
+                            self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
+                            
 
                             # self.set_arm(command="open_gripper", wait_for_end_of=True)
 
-                            """ set_pose_arm.pose[:] = array('f')
+                            set_pose_arm.pose[:] = array('f')
 
-                                # set_pose_arm.pose.clear()
-
-                            # set_pose_arm.pose.append(-650.0)
-                            # set_pose_arm.pose.append(340.0)
-                            # set_pose_arm.pose.append(165.0)
+                            # set_pose_arm.pose.clear()
                             set_pose_arm.pose.append(object_x)
                             set_pose_arm.pose.append(object_y)
                             set_pose_arm.pose.append(object_z)
@@ -1317,9 +1328,15 @@ class RestaurantMain():
                             set_pose_arm.pose.append(self.node.arm_current_pose[5])
                             
                             self.node.arm_set_pose_publisher.publish(set_pose_arm)
-                            self.set_arm(command="debug", wait_for_end_of=True)
+                            print(set_pose_arm)
+                            self.set_arm(command="change_height_front_robot", wait_for_end_of=True)
 
-                            time.sleep(3) """
+                            print('a')
+
+                            while True:
+                                pass
+
+                            time.sleep(3)
 
 
                             response = self.node.pose_planner([object_x, object_y, object_z, self.node.arm_current_pose[3], self.node.arm_current_pose[4], self.node.arm_current_pose[5]])
@@ -1351,8 +1368,7 @@ class RestaurantMain():
 
                             while True:
                                 pass
-                                
-                        
+
                       
 
 
