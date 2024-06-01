@@ -742,6 +742,14 @@ class YoloObjectsMain():
             # DONE percentagens individuais miimas de erro de cada categoria
             # DONE nomes dos objectos e categoria dos objectos
             # DONE cor das categorias novas
+            # DONE corrigir o pos point cloud, para os 3 tipos ...
+            # DONE adicionar os object class: furniture, footwear
+            # DONE desenhar as deteções
+        
+
+            # verificar 6 topicos publicados no terminal e confirmar name e class
+            # nao estava a dar o ID dos objetos na camara da mao (shoes e doors não testados)
+             
 
 
 
@@ -758,9 +766,6 @@ class YoloObjectsMain():
             # leitura do pc
             # publicacao no respetivo topico
         
-        # corrigir o pos point cloud, para os 3 tipos ...
-        # adicionar os object class: furniture, footwear
-        # desenhar as deteções
         # LIMITADOR DE QUANDO SE ESTá a ANALISAR A IMAGEM NO MAIN THREAD NÃO ALTERAR o head_rgb...
         # dentro do PC criar o caso para cada câmara
 

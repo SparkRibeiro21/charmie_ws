@@ -575,7 +575,7 @@ class RestaurantMain():
             while keywords=="ERROR":
                 
                 self.set_speech(filename=question, wait_for_end_of=True)
-                self.set_face("demo7")
+                self.set_face("charmie_face_green")
                 self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
                 
                 if wait_for_end_of:
