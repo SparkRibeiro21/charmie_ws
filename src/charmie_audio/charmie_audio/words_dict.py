@@ -66,7 +66,7 @@ foods_dict = {
     "Pear":             ["pear", "pair", "pier", "beer", "bare"],
     "Plum":             ["plum", "clump", "blam", "blum", "plumb"],
     "Peach":            ["peach"],
-    "Lemon":            ["lemon"],
+    "Lemon":            ["lemon", "lammon"],
     "Orange":           ["orange", "orton"],
     "Strawberry":       ["strawberr"],
     "Banana":           ["banana"],

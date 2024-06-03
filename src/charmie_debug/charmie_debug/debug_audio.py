@@ -223,7 +223,7 @@ class RestaurantMain():
 
         return self.node.rgb_success, self.node.rgb_message
  
-    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", wait_for_end_of=True):
+    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", face_hearing="charmie_face_green", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
 
@@ -233,7 +233,7 @@ class RestaurantMain():
             while keywords=="ERROR":
                 
                 self.set_speech(filename=question, wait_for_end_of=True)
-                self.set_face("charmie_face_green")
+                self.set_face(face_hearing)
                 self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
                 
                 if wait_for_end_of:
@@ -364,24 +364,31 @@ class RestaurantMain():
 
 
                 ### RESTAURANT EXAMPLE
-                # print("Started")
-                # command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
-                # print("Finished:", command)
-                # keyword_list= command.split(" ")
-                # self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
-                # for kw in keyword_list:
-                #     print(kw)
-                #     self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
+                print("Started")
+                command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
+                print("Finished:", command)
+                keyword_list= command.split(" ")
+                self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
+                for kw in keyword_list:
+                    print(kw)
+                    self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
+
+
+
 
                 ### RECEPTIONIST EXAMPLE
                 # print("Started")
-                # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
+                # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
                 # print("Finished:", command)
                 # keyword_list= command.split(" ")
                 # print(keyword_list[0], keyword_list[1])
-                # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
-                # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
+
+
+
+                """
                 ### EGPSR EXAMPLE
                 is_command_confirmed = False
                 while not is_command_confirmed:
@@ -404,7 +411,7 @@ class RestaurantMain():
                     ##### SPEAK: (repeats the command)
                     self.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True)
                     
-                    confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", wait_for_end_of=True)
+                    confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", face_hearing="charmie_face_green_yes_no" ,wait_for_end_of=True)
                     print("Finished:", confirmation)
 
                     ##### Verifica a resposta recebida
@@ -450,10 +457,13 @@ class RestaurantMain():
                 ### CALIBRATION EXAMPLE
                 # s, m = self.calibrate_audio(wait_for_end_of=True)
                 # print("Finished:", s, m)
+                """
+                
 
                 time.sleep(5)
                 pass
-                                
+                
+
                 # next state
                 # self.state = Searching_for_clients
 
