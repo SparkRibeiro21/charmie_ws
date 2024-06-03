@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Int16
+from example_interfaces.msg import Int16, String
 from charmie_interfaces.srv import GetAudio, CalibrateAudio, SpeechCommand, SaveSpeechCommand
 
 from datetime import datetime
@@ -27,7 +27,9 @@ class TestNode(Node):
         # Audio
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
-
+        # Face
+        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
+        self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
@@ -57,6 +59,8 @@ class TestNode(Node):
         self.calibrate_audio_success = True
         self.calibrate_audio_message = ""
         self.audio_command = ""
+        self.face_success = True
+        self.face_message = ""
 
 
     #### AUDIO SERVER FUNCTIONS #####
@@ -229,12 +233,14 @@ class RestaurantMain():
             while keywords=="ERROR":
                 
                 self.set_speech(filename=question, wait_for_end_of=True)
+                self.set_face("charmie_face_green")
                 self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
                 
                 if wait_for_end_of:
                     while not self.node.waited_for_end_of_audio:
                         pass
                 self.node.waited_for_end_of_audio = False
+                self.set_face("charmie_face")
 
                 keywords = self.node.audio_command  
                 
@@ -306,6 +312,22 @@ class RestaurantMain():
             self.node.get_logger().error("Could not generate save speech as as filename and command types are incompatible.")
             return False, "Could not generate save speech as as filename and command types are incompatible."
 
+    def set_face(self, command="", custom="", wait_for_end_of=True):
+        
+        if custom == "":
+            temp = String()
+            temp.data = command
+            self.node.image_to_face_publisher.publish(temp)
+        else:
+            temp = String()
+            temp.data = custom
+            self.node.custom_image_to_face_publisher.publish(temp)
+
+        self.node.face_success = True
+        self.node.face_message = "Value Sucessfully Sent"
+
+        return self.node.face_success, self.node.face_message
+    
     def main(self):
         Waiting_for_start_button = 0
         Searching_for_clients = 1
