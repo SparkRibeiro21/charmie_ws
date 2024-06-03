@@ -222,7 +222,7 @@ class RestaurantMain():
         self.node.rgb_message = "Value Sucessfully Sent"
 
         return self.node.rgb_success, self.node.rgb_message
- 
+
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", face_hearing="charmie_face_green", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
@@ -365,6 +365,7 @@ class RestaurantMain():
 
                 ### RESTAURANT EXAMPLE
                 print("Started")
+                self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                 command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
                 print("Finished:", command)
                 keyword_list= command.split(" ")
@@ -378,6 +379,7 @@ class RestaurantMain():
 
                 ### RECEPTIONIST EXAMPLE
                 # print("Started")
+                # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                 # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
                 # print("Finished:", command)
                 # keyword_list= command.split(" ")
@@ -394,6 +396,7 @@ class RestaurantMain():
                 while not is_command_confirmed:
 
                     ### GPSR EXAMPLE
+                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                     ##### SPEAK: "Hello, you seem to be needing my help. How can I help you?"
                     audio_gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question", wait_for_end_of=True)
                     print("Finished:", audio_gpsr_command)
