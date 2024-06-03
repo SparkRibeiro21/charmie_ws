@@ -414,7 +414,7 @@ class RestaurantMain():
                     ##### SPEAK: (repeats the command)
                     self.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True)
                     
-                    confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", face_hearing="charmie_face_green_yes_no" ,wait_for_end_of=True)
+                    confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                     print("Finished:", confirmation)
 
                     ##### Verifica a resposta recebida

@@ -821,10 +821,9 @@ class ReceptionistMain():
                 
                 self.get_characteristics(race=self.guest1_ethnicity, age=self.guest1_age, gender=self.guest1_gender, height=self.guest1_height, shirt_color=self.guest1_shirt_color, pants_color=self.guest1_pants_color)
                 
-                
-                self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
-
-                command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
+                # old: self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
+                self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
                 print("Finished:", command)
                 keyword_list= command.split(" ")
                 self.guest1_name = keyword_list[0] 
@@ -959,9 +958,9 @@ class ReceptionistMain():
 
                 self.activate_yolo_pose(activate=False)
 
-                self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
-
-                command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
+                # old: self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
+                self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
                 print("Finished:", command)
                 keyword_list= command.split(" ")
                 self.guest2_name = keyword_list[0] 

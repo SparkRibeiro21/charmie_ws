@@ -1247,10 +1247,10 @@ class RestaurantMain():
 
                     self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
 
-                    self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
-
+                    # old: self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
+                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                     ##### AUDIO: Listen the order and repeat for confirmation
-                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
+                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
                     print("Finished:", command)
                     keyword_list = command.split(" ")
                     self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
@@ -1260,7 +1260,7 @@ class RestaurantMain():
 
                     ##### AUDIO: Listen "YES" OR "NO"
                     ##### "Please say yes or no to confirm the order"
-                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", wait_for_end_of=True)
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                     print("Finished:", confirmation)
 
                     ##### Verifica a resposta recebida
@@ -1342,10 +1342,10 @@ class RestaurantMain():
 
                     self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
 
-                    self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
-
+                    # old: self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
+                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                     ##### AUDIO: Listen the order and repeat for confirmation
-                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
+                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
                     print("Finished:", command)
                     keyword_list = command.split(" ")
                     self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
@@ -1355,7 +1355,7 @@ class RestaurantMain():
 
                     ##### AUDIO: Listen "YES" OR "NO"
                     ##### "Please say yes or no to confirm the order"
-                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", wait_for_end_of=True)
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                     print("Finished:", confirmation)
 
                     ##### Verifica a resposta recebida
