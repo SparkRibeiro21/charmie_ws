@@ -1,0 +1,7 @@
+# Service to send a the name of a file to the robot face (tablet) 
+
+string command # type of face that is commonly used and is always the same, already in face (tablet) SD card (i.e. hearing face and standard blinking eyes face)
+string custom # type of face that is custom, not previously in face (tablet) SD card (i.e. show detected person or object in the moment)
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.
