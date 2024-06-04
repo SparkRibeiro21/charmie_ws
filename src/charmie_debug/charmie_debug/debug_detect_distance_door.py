@@ -66,6 +66,7 @@ class TestNode(Node):
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
         self.arm_pose_subscriber = self.create_subscription(ListOfFloats, 'arm_current_pose', self.get_arm_current_pose_callback, 10)
         self.arm_set_pose_publisher = self.create_publisher(ListOfFloats, 'arm_set_desired_pose', 10)
+        self.arm_set_height_publisher = self.create_publisher(Float32, 'arm_set_desired_height', 10)
 
 
         ### Services (Clients) ###
@@ -133,6 +134,10 @@ class TestNode(Node):
         self.detected_objects = Yolov8Objects()
         self.detected_doors = Yolov8Objects()
         self.detected_doors_hand= Yolov8Objects()
+
+        self.wardrobe_width = 0.9
+        self.door_width = self.wardrobe_width // 2
+        self.third_shelf_height = 0.95
 
 
     def get_arm_current_pose_callback(self, arm_pose: ListOfFloats):
@@ -530,7 +535,7 @@ class RestaurantMain():
         # VARS ...
         self.state = 0
         self.look_right = [-40, 0]
-        self.look_down = [0, -20]
+        self.look_down = [-40, -40]
         self.look_navigation = [0, -30]
     
     def set_rgb(self, command="", wait_for_end_of=True):
@@ -707,8 +712,8 @@ class RestaurantMain():
                 # time.sleep(2.0)
 
                 # POSICIONAR BRAÇO 
-                # self.set_neck(position=self.look_down, wait_for_end_of=False)
-                # time.sleep(2.0)
+                self.set_neck(position=self.look_down, wait_for_end_of=True)
+                time.sleep(2.0)
                 self.state = Searching_for_clients
 
             elif self.state == Searching_for_clients:
@@ -719,10 +724,9 @@ class RestaurantMain():
                 # self.detected_people = det_people
                 # if self.detected_people.num_person > 0:
 
-                self.check_person_depth_head()
+                # self.check_door_depth_hand()
 
-
-                # self.find_wardrobe_door_open()
+                self.find_wardrobe_door_open()
 
                 # overall = self.align_hand_with_object_detected_head() 
                       
@@ -996,6 +1000,61 @@ class RestaurantMain():
         M[2][3] = tz
         return M
 
+    def transform_coordinates(self, x, y, z):
+        # C representa o ponto no espaço para onde eu quero transformar a base do braço do robô
+        # A matriz de transformação desde a  base do braço até ao centro do Robot pode ser representada por:
+        # T = Rot(z, 180) * Rot (x, -90) * Trans (3, -6, -110)
+        # a2 representa a translação desde a base do braço até ao centro do robô  (em cm)
+        # a1 representa a rotação sobre o eixo coordenadas x em -90º para alinhar os eixos coordenados
+        # a0 representa a rotação sobre o eixo coordenadas z em 180º para alinhar o eixo dos x 
+        # c representa o ponto (x,y,z) em relação ao centro do braço
+        
+        
+
+        ### nos numeros que chegam: x representa a frente do robô. y positivo vai para a esquerda do robô. z vai para cima no robô
+        ### nos numeros que saem: x vai para trás do robô. y vai para baixo no robô. z vai para a direita do robô
+        
+        
+        ### PARECE-ME QUE X E Z ESTÃO TROCADOS NO RESULTADO QUE TENHO EM RELAºÃO AO BRAÇO
+        print('\n\n')
+    
+        c = np.dot(np.identity(4), [0, 0, 0, 1])
+        # c = np.dot(np.identity(4), [90.0, -30.0, 105.0, 1])
+        ### ESTAS TRANSFORMAÇÕES SEGUINTES SÃO NECESSÁRIAS PORQUE O ROBOT TEM EIXO COORDENADAS COM Y PARA A FRENTE E X PARA A DIREITA E AS TRANSFORMAÇÕES DA CAMARA SÃO FEITAS COM X PARA A FRENTE Y PARA A ESQUERDA
+        new_x = x * 1000
+        new_y = y * 1000
+        new_z = z * 1000
+        c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
+        print(f'Posição em relação ao solo:[{new_x:.2f}, {new_y:.2f}, {new_z:.2f}]')
+        a2 = self.Trans(30.0, -60.0, -1100.0)
+        a1 = self.Rot('x', -90.0)
+        a0 = self.Rot('z', 180.0)
+        T = np.dot(a0, a1)
+        T = np.dot(T, a2)
+        
+        #print('T', T)
+        
+        AA = np.dot(T, c)
+        
+        print('Ponto em relação ao braço:', AA)
+
+
+        # aux = AA[0]
+        # AA[0] = AA[2]
+        # AA[2] = aux
+
+        # AA[0] = AA[0] * 10
+        # AA[1] = AA[1] * 10
+        # AA[2] = AA[2] * 10
+        # my_formatted_list = [ '%.2f' % elem for elem in AA ]
+        ### VALOR DO Z ESTÀ INVERSO AO QUE EU DEVO PASSAR PARA O BRAÇO EM AA !!!
+        
+        # print('Ponto em relação ao braço:', AA)
+        # print('y = ', AA[1]*10)
+
+        print('\n\n')
+
+        return AA
     
     def transform(self, obj):
         # C representa o ponto no espaço para onde eu quero transformar a base do braço do robô
@@ -1054,7 +1113,6 @@ class RestaurantMain():
 
         return AA
     
-
     def align_hand_with_object_detected_head(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist = 400, near_max_dist_1=350, near_max_dist_2 = 900):
         DEBUG = True
 
@@ -1332,7 +1390,7 @@ class RestaurantMain():
                 cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
                 cv2.rectangle(blank_image, (width//3, height//4), (width - width//3, height - height//4), (0, 255, 0), 3)
                 cv2.imshow("New Img Distance Inspection", blank_image)
-                cv2.waitKey(10)
+                cv2.waitKey(0)
 
             half_image_zero_or_near = False
             half_image_zero_or_near_err = 0.0
@@ -1363,12 +1421,13 @@ class RestaurantMain():
             # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
             # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
         
-        return center_image_near_err
+            return center_image_near_err
 
     def find_wardrobe_door_open(self):
         if self.node.first_depth_image_received:
             print('bbb')
-            
+
+                        
             current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
 
             if hasattr(self.node.detected_doors, 'image_rgb'):
@@ -1395,6 +1454,10 @@ class RestaurantMain():
                         if wanted_object != '':
                             set_pose_arm = ListOfFloats()
                             object_location = self.transform(wanted_object)
+                            #Value of height I want the arm to go to not touch in shelfs:
+                            desired_height = 1100.0 - (self.node.third_shelf_height - 0.2) * 1000
+                            new_height = Float32()
+                            new_height.data = desired_height
                             
                             object_x = object_location[0]
                             object_y = object_location[1]
@@ -1405,41 +1468,50 @@ class RestaurantMain():
                             self.set_arm(command="get_arm_position", wait_for_end_of=True)
                             time.sleep(3)
                             # print(self.node.arm_current_pose)
-
-                            self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
                             
 
-                            # self.set_arm(command="open_gripper", wait_for_end_of=True)
-
+                            self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
+                        
                             set_pose_arm.pose[:] = array('f')
 
-                            # set_pose_arm.pose.clear()
+                            # Set the pose values
                             set_pose_arm.pose.append(object_x)
                             set_pose_arm.pose.append(object_y)
                             set_pose_arm.pose.append(object_z)
-                            # set_pose_arm.pose.append(self.node.arm_current_pose[2])
                             set_pose_arm.pose.append(self.node.arm_current_pose[3])
                             set_pose_arm.pose.append(self.node.arm_current_pose[4])
                             set_pose_arm.pose.append(self.node.arm_current_pose[5])
-                            
+
+                            # Publish the pose
                             self.node.arm_set_pose_publisher.publish(set_pose_arm)
                             print(set_pose_arm)
-                            self.set_arm(command="change_height_front_robot", wait_for_end_of=True)
-                            # ISTO ALINHA BRAÇO COM PORTA DO LADO DRT. FAZER O MESMO PARA O LADO ESQUERDO.
-                            # APÓS ISSO ANALISAR CÂMARA DE DISTÂNCIA
-                            # COLOCAR CORES DIFERENTES PARA VALORES A MAIS DE 50 CM
 
-                            near_percentage = self.check_door_depth_hand()
+                            # Set arm and check door depth
+                            self.set_arm(command="change_height_front_robot", wait_for_end_of=True)
+                            near_percentage = -1.0
+                            while near_percentage == -1.0:
+                                near_percentage = self.check_door_depth_hand()
+
                             print(near_percentage * 100)
+
+                            left_door = False
+                            right_door = False
+
+                            # Check if the door is near
                             if near_percentage < 0.5:
+                                right_door = True
                                 print('Porta aberta creio eu')
+
                             else:
+                                right_door = False
                                 print('Porta fechada creio eu')
 
 
-                            time.sleep(3)
+    
+                            
 
-                            self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
+
+                            # self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
 
                             # self.set_arm(command="open_gripper", wait_for_end_of=True)
 
@@ -1461,9 +1533,106 @@ class RestaurantMain():
                             near_percentage = self.check_door_depth_hand()
                             print(near_percentage * 100)
                             if near_percentage < 0.5:
+                                left_door = True
                                 print('Porta aberta creio eu')
                             else:
+                                left_door = False
                                 print('Porta fechada creio eu')
+
+                            
+                            # print(right_door, right_door_pose)
+                            arm_value = Float32()
+
+                            if right_door == True:
+                                print('a')
+                                print('desired height', new_height)
+                                time.sleep(2)
+                                self.node.arm_set_height_publisher.publish(new_height)
+                                self.set_arm(command="change_height_front_robot_value", wait_for_end_of=True)
+
+                                time.sleep(2)
+                                
+                                # print('move forward')
+                                # arm_value.data = 100.0
+                                # self.node.arm_value_publisher.publish(arm_value)
+                                # print(arm_value)
+                                # self.set_arm(command="go_front", wait_for_end_of=True)
+
+
+                                ### Ver onde tenho braço em comparação ao ponto inicial detetado como sendo a porta. Quando o braço estiver para lá da porta,
+                                ### inclino o braço com ângulo que a consiga pegar desde trás
+
+                                near_percentage = -1.0
+                                while near_percentage < 0.5:
+                                    near_percentage = self.check_door_depth_hand(near_max_dist=350)
+
+                                    print(near_percentage * 100)
+                                    print('move forward')
+                                    arm_value.data = 50.0
+                                    self.node.arm_value_publisher.publish(arm_value)
+                                    print(arm_value)
+                                    self.set_arm(command="go_front", wait_for_end_of=True)
+
+                                    time.sleep(2)
+
+                                print('hey')
+
+                                self.set_arm(command="open_left_door", wait_for_end_of=True)
+
+                            elif left_door == True:
+
+                                print('a')
+                                print('desired height', new_height)
+                                time.sleep(2)
+                                self.node.arm_set_height_publisher.publish(new_height)
+                                self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
+
+
+                                near_percentage = -1.0
+                                while near_percentage < 0.5:
+                                    near_percentage = self.check_door_depth_hand(near_max_dist=450)
+
+                                    print(near_percentage * 100)
+                                    print('move forward')
+                                    arm_value.data = 50.0
+                                    self.node.arm_value_publisher.publish(arm_value)
+                                    print(arm_value)
+                                    self.set_arm(command="go_front", wait_for_end_of=True)
+
+                                    time.sleep(2)
+
+                                print('hey')
+
+                                
+
+                            """ time.sleep(2)
+                            arm_value = Float32()
+                            # print('move forward')
+                            # arm_value.data = 100.0
+                            # self.node.arm_value_publisher.publish(arm_value)
+                            # print(arm_value)
+                            # self.set_arm(command="go_front", wait_for_end_of=True)
+
+
+                            ### Ver onde tenho braço em comparação ao ponto inicial detetado como sendo a porta. Quando o braço estiver para lá da porta,
+                            ### inclino o braço com ângulo que a consiga pegar desde trás
+
+                            near_percentage = -1.0
+                            while near_percentage < 0.5:
+                                near_percentage = self.check_door_depth_hand(near_max_dist=350)
+
+                                print(near_percentage * 100)
+                                print('move forward')
+                                arm_value.data = 50.0
+                                self.node.arm_value_publisher.publish(arm_value)
+                                print(arm_value)
+                                self.set_arm(command="go_front", wait_for_end_of=True)
+
+                                time.sleep(2)
+
+                            print('hey')
+
+                            self.set_arm(command="open_left_door", wait_for_end_of=True) """
 
 
                             while True:
