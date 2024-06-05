@@ -365,7 +365,7 @@ class RestaurantMain():
         Final_State = 5
 
         # VARS ...
-        self.state = Audio_receptionist
+        self.state = Audio_restaurant
     
         print("IN NEW MAIN")
         self.set_face("charmie_face")
@@ -399,15 +399,39 @@ class RestaurantMain():
                 print('State 2 = Audio Restaurant')
 
                 ### RESTAURANT EXAMPLE
-                print("Started")
-                self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-                command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
-                print("Finished:", command)
-                keyword_list= command.split(" ")
-                self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
-                for kw in keyword_list:
-                    print(kw)
-                    self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
+                is_command_confirmed = False
+                while not is_command_confirmed:
+                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
+                    print("Finished:", command)
+                    keyword_list= command.split(" ")
+                    self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
+                    for kw in keyword_list:
+                        print(kw)
+                        self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
+
+                    ##### AUDIO: Listen "YES" OR "NO"
+                    ##### "Please say yes or no to confirm the order"
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+
+                    ##### Verifica a resposta recebida
+                    if confirmation.lower() == "yes":
+                        # self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+
+                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                        for kw in keyword_list:
+                            print(kw)
+                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+                        ##### SPEAK: Thank you
+                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                        is_command_confirmed = True
+
+                    else: #  confirmation.lower() == "no":
+                        self.set_rgb(command=RED+BLINK_LONG)
+                        ##### SPEAK: Sorry, TRY AGAIN
+                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
 
                 time.sleep(5)
                 
