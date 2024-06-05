@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 from example_interfaces.msg import String
+from charmie_interfaces.srv import SetFace
 
 import time
 import os
@@ -79,10 +80,13 @@ class FaceNode(Node):
         # Receive speech strings to show in face
         self.speech_to_face_subscriber = self.create_subscription(String, "display_speech_face", self.speech_to_face_callback, 10)
         # Receive image or video files name to show in face
-        self.image_to_face_subscriber = self.create_subscription(String, "display_image_face", self.image_to_face_callback, 10)
+        # self.image_to_face_subscriber = self.create_subscription(String, "display_image_face", self.image_to_face_callback, 10)
         # Receive custom image name to send to tablet and show in face
-        self.custom_image_to_face_subscriber = self.create_subscription(String, "display_custom_image_face", self.custom_image_to_face_callback, 10)
+        # self.custom_image_to_face_subscriber = self.create_subscription(String, "display_custom_image_face", self.custom_image_to_face_callback, 10)
       
+        self.server_face_command = self.create_service(SetFace, "face_command", self.callback_face_command) 
+        self.get_logger().info("Face Servers have been started")
+
         # whether or not it is intended to show the speech strings on the face while the robot talks
         self.SHOW_SPEECH = self.get_parameter("show_speech").value
         # the time after every speaked sentence, that the face remains the speech after finished the speakers (float) 
@@ -101,7 +105,48 @@ class FaceNode(Node):
         # custom_face_debug = String()
         # custom_face_debug.data = "object_detected_test4"
         # self.custom_image_to_face_callback(custom_face_debug)
+    
+
+    # Main Function regarding received commands
+    def callback_face_command(self, request, response):
+        print("Received request")
+ 
+        # Type of service received: 
+        # string command # type of face that is commonly used and is always the same, already in face (tablet) SD card (i.e. hearing face and standard blinking eyes face)
+        # string custom # type of face that is custom, not previously in face (tablet) SD card (i.e. show detected person or object in the moment)
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        """
+        # if filename comes empty it is automatically assumed that it is intended to use the load and play mode
+        print("show_in_face:", request.show_in_face)
+
+
+        if request.filename == "":
+            # speakers mode where received string must be synthesized and played now
+            self.get_logger().info("SPEAKERS received (custom) - %s" %request.command)
+            success, message = self.charmie_speech.load_and_play_command(request.command, request.quick_voice, request.show_in_face)
         
+        else:
+            # speakers mode where received filename must be played
+            success, message = self.charmie_speech.play_command(request.filename, request.show_in_face)
+            if success == False:
+                self.get_logger().error("SPEAKERS received (file) does not exist! - %s" %request.filename)
+            else:
+                self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
+
+        # returns whether the message was played and some informations regarding status
+        response.success = success
+        response.message = message
+        """
+
+        response.success = True
+        response.message = "Received message..."
+        
+
+        return response
+
     # Receive speech strings to show in face  
     def speech_to_face_callback(self, command: String):
 

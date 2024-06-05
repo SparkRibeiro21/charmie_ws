@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Int16, String
-from charmie_interfaces.srv import GetAudio, CalibrateAudio, SpeechCommand, SaveSpeechCommand
+from charmie_interfaces.srv import GetAudio, CalibrateAudio, SpeechCommand, SaveSpeechCommand, SetFace
 
 from datetime import datetime
 import threading
@@ -28,26 +28,30 @@ class TestNode(Node):
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
         # Face
-        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
-        self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
+        self.face_command_client = self.create_client(SetFace, "face_command")
+        # self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
+        # self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
         
-        while not self.get_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Audio Server...")
-        while not self.calibrate_audio_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Calibrate Audio Server...")
-        while not self.speech_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Speech Command...")
-        while not self.save_speech_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Save Speech Command...")
+        # while not self.get_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Audio Server...")
+        # while not self.calibrate_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        # while not self.speech_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Speech Command...")
+        # while not self.save_speech_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Save Speech Command...")
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
 
         # Variables
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_save_speaking = False
+        self.waited_for_end_of_face = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -123,6 +127,36 @@ class TestNode(Node):
             # self.track_object_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_calibrate_audio = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+    #### FACE SERVER FUNCTIONS #####
+    def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
+        request = SetFace.Request()
+        request.command = command
+        request.custom = custom
+        
+        future = self.face_command_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_face_command)
+        else:
+            self.face_success = True
+            self.face_message = "Wait for answer not needed"
+    
+    def callback_call_face_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.face_success = response.success
+            self.face_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_face = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -314,6 +348,16 @@ class RestaurantMain():
 
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
+        self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_face:
+                pass
+        self.node.waited_for_end_of_face = False
+
+        return self.node.face_success, self.node.face_message
+    
+        """
         if custom == "":
             temp = String()
             temp.data = command
@@ -327,7 +371,8 @@ class RestaurantMain():
         self.node.face_message = "Value Sucessfully Sent"
 
         return self.node.face_success, self.node.face_message
-    
+        """
+
     def main(self):
         Waiting_for_start_button = 0
         Searching_for_clients = 1
@@ -360,19 +405,21 @@ class RestaurantMain():
 
 
             if self.state == Waiting_for_start_button:
-                #print('State 0 = Initial')
+                print('State 0 = Initial')
 
 
                 ### RESTAURANT EXAMPLE
-                print("Started")
-                self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-                command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
-                print("Finished:", command)
-                keyword_list= command.split(" ")
-                self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
-                for kw in keyword_list:
-                    print(kw)
-                    self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
+                # print("Started")
+                # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                # command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
+                # print("Finished:", command)
+                # keyword_list= command.split(" ")
+                # self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
+                # for kw in keyword_list:
+                #     print(kw)
+                #     self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
+
+
 
 
 
@@ -462,10 +509,10 @@ class RestaurantMain():
                 # print("Finished:", s, m)
                 """
                 
-
+                s, m = self.set_face(command="charmie_face")
+                print(s, m)
                 time.sleep(5)
                 pass
-                
 
                 # next state
                 # self.state = Searching_for_clients
