@@ -534,9 +534,9 @@ class RestaurantMain():
         
         # VARS ...
         self.state = 0
-        self.look_right = [-40, 0]
-        self.look_down = [-40, -40]
-        self.look_navigation = [0, -30]
+        self.look_right = [-90, -40]
+        self.look_down = [0, -40]
+        self.look_navigation= [0, -30]
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -712,7 +712,7 @@ class RestaurantMain():
                 # time.sleep(2.0)
 
                 # POSICIONAR BRAÇO 
-                self.set_neck(position=self.look_down, wait_for_end_of=True)
+                self.set_neck(position=self.look_right, wait_for_end_of=True)
                 time.sleep(2.0)
                 self.state = Searching_for_clients
 
@@ -1390,7 +1390,7 @@ class RestaurantMain():
                 cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
                 cv2.rectangle(blank_image, (width//3, height//4), (width - width//3, height - height//4), (0, 255, 0), 3)
                 cv2.imshow("New Img Distance Inspection", blank_image)
-                cv2.waitKey(0)
+                cv2.waitKey(20)
 
             half_image_zero_or_near = False
             half_image_zero_or_near_err = 0.0
@@ -1470,7 +1470,8 @@ class RestaurantMain():
                             # print(self.node.arm_current_pose)
                             
 
-                            self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
+                            # self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
+                            self.set_arm(command="front_robot_oriented_side", wait_for_end_of=True)
                         
                             set_pose_arm.pose[:] = array('f')
 
@@ -1487,7 +1488,8 @@ class RestaurantMain():
                             print(set_pose_arm)
 
                             # Set arm and check door depth
-                            self.set_arm(command="change_height_front_robot", wait_for_end_of=True)
+                            # self.set_arm(command="change_height_front_robot", wait_for_end_of=True)
+                            self.set_arm(command="change_height_side_robot", wait_for_end_of=True)
                             near_percentage = -1.0
                             while near_percentage == -1.0:
                                 near_percentage = self.check_door_depth_hand()
@@ -1528,7 +1530,8 @@ class RestaurantMain():
                             
                             self.node.arm_set_pose_publisher.publish(set_pose_arm)
                             print(set_pose_arm)
-                            self.set_arm(command="change_height_front_left_robot", wait_for_end_of=True)
+                            # self.set_arm(command="change_height_front_left_robot", wait_for_end_of=True)
+                            self.set_arm(command="change_height_side_left_robot", wait_for_end_of=True)
 
                             near_percentage = self.check_door_depth_hand()
                             print(near_percentage * 100)
@@ -1548,8 +1551,8 @@ class RestaurantMain():
                                 print('desired height', new_height)
                                 time.sleep(2)
                                 self.node.arm_set_height_publisher.publish(new_height)
-                                self.set_arm(command="change_height_front_robot_value", wait_for_end_of=True)
-
+                                # self.set_arm(command="change_height_front_robot_value", wait_for_end_of=True)
+                                self.set_arm(command="change_height_side_robot_value", wait_for_end_of=True)
                                 time.sleep(2)
                                 
                                 # print('move forward')
@@ -1577,7 +1580,11 @@ class RestaurantMain():
 
                                 print('hey')
 
-                                self.set_arm(command="open_left_door", wait_for_end_of=True)
+                                # self.set_arm(command="open_left_door", wait_for_end_of=True)
+                                self.set_arm(command="open_left_door_from_side", wait_for_end_of=True)
+
+                                while True:
+                                    pass
 
                             elif left_door == True:
 
@@ -1585,7 +1592,8 @@ class RestaurantMain():
                                 print('desired height', new_height)
                                 time.sleep(2)
                                 self.node.arm_set_height_publisher.publish(new_height)
-                                self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
+                                # self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
+                                self.set_arm(command="change_height_side_left_robot_value", wait_for_end_of=True)
 
 
                                 near_percentage = -1.0
@@ -1602,7 +1610,8 @@ class RestaurantMain():
                                     time.sleep(2)
 
                                 print('hey')
-
+                                while True:
+                                    pass
                                 
 
                             """ time.sleep(2)

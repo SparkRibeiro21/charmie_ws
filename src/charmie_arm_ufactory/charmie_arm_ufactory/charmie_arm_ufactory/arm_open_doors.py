@@ -178,12 +178,19 @@ class ArmUfactory(Node):
 		# self.front_robot = 								[ -191.7,   17.1,  -50.6,   164.9,   58.2,  97.0]
 		# self.front_robot = 								[ -221.7,   -20.7, -48.3,   151.6,  77.8,  127.0] 
 		self.front_robot = 								[ -234.5,   -27.5, -27.3,   145.8,  95.7,  129.8] 
+		self.side_robot = 								[ -213.5,   -5.8, -40.1,   177.7,  136.5,  122.2] 
 		self.inside_wardrobe = [-218.4, 12.6, -112.5, 95.4, 35.3, 178.9]
 		self.inside_wardrobe_1 = [-216.7, 24.2, -127.6, 55.8, 39.7, 212.8]
 		self.inside_wardrobe_2 = [-216.8, 25.5, -130.4, 54.5, 40.6, 302.1]
 		self.inside_wardrobe_mid_open = [-218.1, 21.7, -117.1, 32.0, 50.4, 321.8]
 		self.inside_wardrobe_final = [-215.4, 41.1, -119.8, 3.7, 62.0, 326.8]
 		self.inside_wardrobe_final_2 = [-214.6, 54.9, -124.3, 4.0, 52.7, 326.7]
+
+		self.inside_wardrobe_side = [-303.8, -3.8, -114.7, 132.0, 98.9, 220.7]
+		self.inside_wardrobe_side_1 = [-275.7, -8.1, -116.8, 116.7, 76.0, 211.8]
+		self.pulling_door_side = [-283.6, -8.2, -115.2, 103.5, 93.3, 214.5]
+		self.pulling_door_side_1 = [-249.3, -20.8, -81.8, 73.9, 68.5, 196.4]
+		self.pulling_door_side_2 = [-234.1, -17.4, -65.9, 82.6, 49.8, 177.5]
 
 
 
@@ -675,6 +682,34 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def front_robot_oriented_side(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.side_robot)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
 
 	def open_left_door(self):
 		if self.estado_tr == 0:
@@ -753,6 +788,63 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def open_left_door_from_side(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_side)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		if self.estado_tr == 1:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_side_1)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.pulling_door_side)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 3:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.pulling_door_side_1)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 4:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.pulling_door_side_2)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 5:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
 
 	# def change_height_front_robot(self, height):
 	# 	if self.estado_tr == 0:
@@ -788,6 +880,36 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.position_values_req.pose = [ -352.0, height[1],  558.0, math.radians( 41.6), math.radians(3.2), math.radians(-93.0)]
+			self.position_values_req.speed = 40.0
+			self.position_values_req.acc = 400.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 30.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def change_height_side_robot(self, height):
+		if self.estado_tr == 0:
+			print('a')
+			self.position_values_req.pose = [ 100.0, height[1],  665.0, math.radians( -2.1), math.radians(3.2), math.radians(-93.0)]
 			self.position_values_req.speed = 40.0
 			self.position_values_req.acc = 400.0
 			self.position_values_req.wait = True
@@ -874,6 +996,36 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def change_height_side_robot_value(self, height):
+		if self.estado_tr == 0:
+			print('a')
+			self.position_values_req.pose = [ 100.0, height,  665.0, math.radians( -2.1), math.radians(3.2), math.radians(-93.0)]
+			self.position_values_req.speed = 40.0
+			self.position_values_req.acc = 400.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 30.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	# def change_height_front_left_robot(self, height):
 	# 	if self.estado_tr == 0:
 	# 		print('a')
@@ -908,6 +1060,37 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.position_values_req.pose = [ -580.1, height[1], 354.7, math.radians( 41.6), math.radians(3.2), math.radians(-93.0)]
+			self.position_values_req.speed = 40.0
+			self.position_values_req.acc = 400.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 30.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def change_height_side_left_robot(self, height):
+		if self.estado_tr == 0:
+			print('a')
+			self.position_values_req.pose = [ -330.0, height[1],  665.0, math.radians( -2.1), math.radians(3.2), math.radians(-93.0)]
 			self.position_values_req.speed = 40.0
 			self.position_values_req.acc = 400.0
 			self.position_values_req.wait = True
@@ -1026,16 +1209,26 @@ class ArmUfactory(Node):
 			self.debug(self.arm_pose)
 		elif self.next_arm_movement == "front_robot_oriented_front":
 			self.front_robot_oriented_front()
+		elif self.next_arm_movement == "front_robot_oriented_side":
+			self.front_robot_oriented_side()
 		elif self.next_arm_movement == "change_height_front_robot":
 			self.change_height_front_robot(self.arm_pose)
+		elif self.next_arm_movement == "change_height_side_robot":
+			self.change_height_side_robot(self.arm_pose)
 		elif self.next_arm_movement == "change_height_front_left_robot":
 			self.change_height_front_left_robot(self.arm_pose)
+		elif self.next_arm_movement == "change_height_side_left_robot":
+			self.change_height_side_left_robot(self.arm_pose)
 		elif self.next_arm_movement == "change_height_front_robot_value":
 			print(self.arm_height)
 			self.change_height_front_robot_value(self.arm_height)
+		elif self.next_arm_movement == "change_height_side_robot_value":
+			print(self.arm_height)
+			self.change_height_side_robot_value(self.arm_height)
 		elif self.next_arm_movement == "open_left_door":
 			self.open_left_door()
-			
+		elif self.next_arm_movement == "open_left_door_from_side":
+			self.open_left_door_from_side()	
 			
 			
 			

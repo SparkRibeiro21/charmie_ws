@@ -260,8 +260,8 @@ class ServeBreakfastNode(Node):
         while not self.activate_yolo_objects_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         """
-        while not self.activate_yolo_objects_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        """ while not self.activate_yolo_objects_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...") """
         # Arm (CHARMIE)
         # while not self.arm_trigger_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
@@ -1059,45 +1059,48 @@ class ServeBreakfastMain():
         ## transformada é do eixo de coordenadas da base (x para a frente y para a esquerda) para o do braço
         
         ### PARECE-ME QUE X E Z ESTÃO TROCADOS NO RESULTADO QUE TENHO EM RELAºÃO AO BRAÇO
-        object_ = self.node.objects
-        print(object_)
+        # object_ = self.node.objects
+        # print(object_)
+        # print('\n\n')
+        # for o in object_:
+        c = np.dot(np.identity(4), [0, 0, 0, 1])
+        # c = np.dot(np.identity(4), [90.0, -30.0, 105.0, 1])
+        new_x = 100.0 * 100
+        new_y = 200.0 * 100
+        new_z = 250.0 * 100
+        # print(o.object_name)
+        c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
+        print('c', c)
+        print(f'Posição em relação ao solo:[{new_x:.2f}, {new_y:.2f}, {new_z:.2f}]')
+        a2 = self.Trans(3.0, -6.0, -110.0)
+        a1 = self.Rot('x', -90.0)
+        a0 = self.Rot('z', 180.0)
+        print('\n a0', a0,'\n a1', a1,'\n a2', a2)
+        T = np.dot(a0, a1)
+        print('\n a0 * a1', T)
+        T = np.dot(T, a2)
+        print('\n T*a2', T)
+        #print('T', T)
+        
+        AA = np.dot(T, c)
+        
+        # print('ex Ponto em relação ao braço:', AA)
+
+
+        aux = AA[0]
+        AA[0] = AA[2]
+        AA[2] = aux
+
+        """ AA[0] = AA[0] * 10
+        AA[1] = AA[1] * 10
+        AA[2] = AA[2] * 10
+        my_formatted_list = [ '%.2f' % elem for elem in AA ] """
+        ### VALOR DO Z ESTÀ INVERSO AO QUE EU DEVO PASSAR PARA O BRAÇO EM AA !!!
+        
+        print('Ponto em relação ao braço:', AA)
+        print('y = ', AA[1]*10)
+
         print('\n\n')
-        for o in object_:
-            c = np.dot(np.identity(4), [0, 0, 0, 1])
-            # c = np.dot(np.identity(4), [90.0, -30.0, 105.0, 1])
-            new_x = o.position_relative.x * 100
-            new_y = o.position_relative.y * 100
-            new_z = o.position_relative.z * 100
-            print(o.object_name)
-            c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
-            print(f'Posição em relação ao solo:[{new_x:.2f}, {new_y:.2f}, {new_z:.2f}]')
-            a2 = self.Trans(3.0, -6.0, -110.0)
-            a1 = self.Rot('x', -90.0)
-            a0 = self.Rot('z', 180.0)
-            T = np.dot(a0, a1)
-            T = np.dot(T, a2)
-            
-            #print('T', T)
-            
-            AA = np.dot(T, c)
-            
-            # print('ex Ponto em relação ao braço:', AA)
-
-
-            aux = AA[0]
-            AA[0] = AA[2]
-            AA[2] = aux
-
-            """ AA[0] = AA[0] * 10
-            AA[1] = AA[1] * 10
-            AA[2] = AA[2] * 10
-            my_formatted_list = [ '%.2f' % elem for elem in AA ] """
-            ### VALOR DO Z ESTÀ INVERSO AO QUE EU DEVO PASSAR PARA O BRAÇO EM AA !!!
-            
-            print('Ponto em relação ao braço:', AA)
-            print('y = ', AA[1]*10)
-
-            print('\n\n')
 
     # main state-machine function
     def main(self):
@@ -1140,12 +1143,12 @@ class ServeBreakfastMain():
 
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
-                if hasattr(self.node, 'objects') and self.node.objects:
-                    self.transform()
+                # if hasattr(self.node, 'objects') and self.node.objects:
+                self.transform()
 
 
-                    while True:
-                        pass
+                while True:
+                    pass
 
                 ### RECEPTIONIST AUDIO EXAMPLE
                 # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
