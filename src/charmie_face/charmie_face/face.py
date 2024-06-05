@@ -67,7 +67,6 @@ class FaceNode(Node):
         super().__init__("Face")
         self.get_logger().info("Initialised CHARMIE FACE Node")
 
-        # Create Face object
         self.face = Face()
 
         ### ROS2 Parameters ###
@@ -79,11 +78,8 @@ class FaceNode(Node):
         ### Topics (Subscribers) ###   
         # Receive speech strings to show in face
         self.speech_to_face_subscriber = self.create_subscription(String, "display_speech_face", self.speech_to_face_callback, 10)
-        # Receive image or video files name to show in face
-        # self.image_to_face_subscriber = self.create_subscription(String, "display_image_face", self.image_to_face_callback, 10)
-        # Receive custom image name to send to tablet and show in face
-        # self.custom_image_to_face_subscriber = self.create_subscription(String, "display_custom_image_face", self.custom_image_to_face_callback, 10)
-      
+        
+        ### Services (Server) ###   
         self.server_face_command = self.create_service(SetFace, "face_command", self.callback_face_command) 
         self.get_logger().info("Face Servers have been started")
 
@@ -102,8 +98,8 @@ class FaceNode(Node):
         # easier debug when testing custom faces 
         # self.image_to_face("charmie_face_green")
     
-    
-    # Main Function regarding received commands
+
+    # Callback for all face commands received
     def callback_face_command(self, request, response):
         print("Received request", request.command)
  
@@ -119,7 +115,8 @@ class FaceNode(Node):
         elif request.custom != "":
             response.success, response.message = self.custom_image_to_face(command=request.custom)
         else:
-            pass
+            response.success = False
+            response.message = "No standard or custom face received."
 
         return response
 
@@ -135,9 +132,8 @@ class FaceNode(Node):
                 time.sleep(self.AFTER_SPEECH_TIMER)
                 # after receiving the end of speech command, it sends to the face the latest face sent before the speech command
                 self.face.save_text_file(self.face.last_face_path)
-                # print(self.face.last_face_path)
-                # print("Back to Standard face")
-
+                # print("Back to last face:", self.face.last_face_path)
+                
     # Receive image or video files name to show in face
     def image_to_face(self, command):
         
@@ -171,13 +167,11 @@ class FaceNode(Node):
             new_filename = self.face.get_filename(command, ".jpg")
             
             # the name afther complete path is received from the topic 
-            # self.face.copy_file(self.face.complete_path+"clients_temp.jpg", new_filename)
             self.face.copy_file(self.face.complete_path + command + ".jpg", new_filename + ".jpg")
             
             # checks if file exist on the tablet SD card and writes in file so it will appear on face
             self.face.save_text_file("temp/" + new_filename)
             # print("File copied successfully.")
-            
             return True, "Face received (custom) sucessfully displayed"
 
         else:
