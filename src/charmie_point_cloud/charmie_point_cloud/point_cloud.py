@@ -18,18 +18,18 @@ import time
 # z increases from the floor to the ceiling
 
 # maximum and minimum distnace considered, outside this range is 0
-MAX_DIST_HEAD = 6000
-MIN_DIST_HEAD = 300
+# MAX_DIST_HEAD = 6000
+# MIN_DIST_HEAD = 300
 
-MAX_DIST_HAND = 6000
-MIN_DIST_HAND = 300
+# MAX_DIST_HAND = 6000
+# MIN_DIST_HAND = 300
 
 Z_MIN_OBSTACLES = 200 # when applying the point cloud to the obstacles, this is the minimum height to be considered an object, filter the floor
 Z_MAX_OBSTACLES = 1900 # when applying the point cloud to the obstacles, this is the minimum height to be considered an object, filter the ceiling
 
 # shifts from the center of the bottom servo to the center of the robot platform
-X_SHIFT = 50
-Z_SHIFT = 1260
+# X_SHIFT = 50
+# Z_SHIFT = 1260
 
 # Head camera intrinsic parameters (Data by subscribing to topic of camera parameters)
     # self.fx = 633.811950683593  # Distancia Focal em pixels (x-direction)
@@ -59,11 +59,24 @@ class PointCloud():
             self.fy = 633.234680175781  # Distancia Focal em pixels (y-direction)
             self.cx = 629.688598632812  # Ponto Principal em pixels (x-coordinate)
             self.cy = 393.705749511718  # Ponto Principal em pixels (y-coordinate)
+            # maximum and minimum distnace considered, outside this range is 0
+            self.MAX_DIST = 6000
+            self.MIN_DIST = 300
+            # shifts from the center of the bottom servo to the center of the robot platform
+            self.X_SHIFT = 50
+            self.Z_SHIFT = 1260
+
         else: #  self.camera == "hand":
             self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
             self.fy = 658.56268970  # Distancia Focal em pixels (y-direction)
             self.cx = 642.88868778  # Ponto Principal em pixels (x-coordinate)
             self.cy = 346.93829812  # Ponto Principal em pixels (y-coordinate)
+            # maximum and minimum distnace considered, outside this range is 0
+            self.MAX_DIST = 1000
+            self.MIN_DIST = 70
+            # shifts from the center of the bottom servo to the center of the robot platform
+            self.X_SHIFT = 0
+            self.Z_SHIFT = 0
         
         self.teta = [  0,   0,   0] # neck values to adjust the kinematics
 
@@ -161,8 +174,8 @@ class PointCloud():
         yn = -X
         zn = -Y
         result = np.dot(self.T, [xn, yn, zn, 1])
-        result[0] += X_SHIFT
-        result[2] += Z_SHIFT  # Z=0 is the floor
+        result[0] += self.X_SHIFT
+        result[2] += self.Z_SHIFT  # Z=0 is the floor
 
         result = result[0:3].astype(np.int16)
         result = result.tolist()
@@ -189,8 +202,8 @@ class PointCloud():
                     zn = -Y
 
                     result = np.dot(self.T, [xn, yn, zn, 1])
-                    result[0] += X_SHIFT
-                    result[2] += Z_SHIFT  # Z=0 is the floor
+                    result[0] += self.X_SHIFT
+                    result[2] += self.Z_SHIFT  # Z=0 is the floor
 
                     result = result[0:3].astype(np.int16)
                     result = result.tolist()
@@ -283,8 +296,8 @@ class PointCloudNode(Node):
 
                 depth_frame_res = cv2.resize(depth_frame, (width, height), interpolation = cv2.INTER_NEAREST)
 
-                depth_frame_res[depth_frame_res > MAX_DIST_HEAD] = 0
-                depth_frame_res[depth_frame_res < MIN_DIST_HEAD] = 0
+                depth_frame_res[depth_frame_res > self.pcloud_head.MAX_DIST] = 0
+                depth_frame_res[depth_frame_res < self.pcloud_head.MIN_DIST] = 0
 
                 # self.pcloud_head.rgb_img_pc = rgb_frame
                 self.pcloud_head.depth_img_pc = depth_frame_res
@@ -449,8 +462,8 @@ class PointCloudNode(Node):
 
                 depth_frame_res = cv2.resize(depth_frame, (width, height), interpolation = cv2.INTER_NEAREST)
 
-                depth_frame_res[depth_frame_res > MAX_DIST_HAND] = 0
-                depth_frame_res[depth_frame_res < MIN_DIST_HAND] = 0
+                depth_frame_res[depth_frame_res > self.pcloud_hand.MAX_DIST] = 0
+                depth_frame_res[depth_frame_res < self.pcloud_hand.MIN_DIST] = 0
 
                 self.pcloud_hand.depth_img_pc = depth_frame_res
             
