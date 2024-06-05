@@ -18,8 +18,11 @@ import time
 # z increases from the floor to the ceiling
 
 # maximum and minimum distnace considered, outside this range is 0
-MAX_DIST = 6000
-MIN_DIST = 300
+MAX_DIST_HEAD = 6000
+MIN_DIST_HEAD = 300
+
+MAX_DIST_HAND = 6000
+MIN_DIST_HAND = 300
 
 Z_MIN_OBSTACLES = 200 # when applying the point cloud to the obstacles, this is the minimum height to be considered an object, filter the floor
 Z_MAX_OBSTACLES = 1900 # when applying the point cloud to the obstacles, this is the minimum height to be considered an object, filter the ceiling
@@ -41,24 +44,27 @@ Z_SHIFT = 1260
     # self.cy = 346.93829812  # Ponto Principal em pixels (y-coordinate)
 
 class PointCloud():
-    def __init__(self, fx, fy, cx, cy):
+    def __init__(self, camera):
         # print("New PointCloud Class Initialised")
+
+        self.camera = camera
 
         self.linhas = 720
         self.colunas = 1280
         # print(linhas, colunas)
         
         # Parametros intrinsecos da Camera (Dados pelo Tiago)
-        # self.fx = 633.811950683593  # Distancia Focal em pixels (x-direction)
-        # self.fy = 633.234680175781  # Distancia Focal em pixels (y-direction)
-        # self.cx = 629.688598632812  # Ponto Principal em pixels (x-coordinate)
-        # self.cy = 393.705749511718  # Ponto Principal em pixels (y-coordinate)
+        if self.camera == "head":
+            self.fx = 633.811950683593  # Distancia Focal em pixels (x-direction)
+            self.fy = 633.234680175781  # Distancia Focal em pixels (y-direction)
+            self.cx = 629.688598632812  # Ponto Principal em pixels (x-coordinate)
+            self.cy = 393.705749511718  # Ponto Principal em pixels (y-coordinate)
+        else: #  self.camera == "hand":
+            self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
+            self.fy = 658.56268970  # Distancia Focal em pixels (y-direction)
+            self.cx = 642.88868778  # Ponto Principal em pixels (x-coordinate)
+            self.cy = 346.93829812  # Ponto Principal em pixels (y-coordinate)
         
-        self.fx = fx
-        self.fy = fy
-        self.cx = cx
-        self.cy = cy
-
         self.teta = [  0,   0,   0] # neck values to adjust the kinematics
 
         # self.rgb_img_pc = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
@@ -70,8 +76,11 @@ class PointCloud():
         self.ENVIO = []
 
         self.T = np.identity(4)
-        self.robo()
 
+        if self.camera == "head":
+            self.robo_head()
+        else: # self.camera == "hand":
+            pass
             
     def Trans(self, tx, ty, tz):
         M = np.identity(4)
@@ -100,7 +109,7 @@ class PointCloud():
         return M
 
 
-    def robo(self):
+    def robo_head(self):
         A4 = self.Trans(90, 11.5, 195)
         A3 = self.Rot('y', self.teta[1])
         A2 = self.Trans(30, 0, 25)
@@ -200,7 +209,7 @@ class PointCloudNode(Node):
         # SERVICES:
         # Main receive commads 
         self.server_point_cloud_head = self.create_service(GetPointCloud, "get_point_cloud", self.callback_point_cloud_head) 
-        self.server_point_cloud_hand = self.create_service(GetPointCloud, "get_point_cloud_hand", self.callback_point_cloud_hand) 
+        # self.server_point_cloud_hand = self.create_service(GetPointCloud, "get_point_cloud_hand", self.callback_point_cloud_hand) 
         self.get_logger().info("Point Cloud Servers have been started")
 
         # Point Cloud Instance
@@ -210,8 +219,8 @@ class PointCloudNode(Node):
         self.hand_rgb_img = Image()
         self.hand_depth_img = Image()
 
-        self.pcloud_head = PointCloud(fx=633.811950683593, fy=633.234680175781, cx=629.688598632812, cy=393.705749511718)
-        self.pcloud_hand = PointCloud(fx=658.65612382, fy=658.5626897, cx=642.88868778, cy=346.93829812)    
+        self.pcloud_head = PointCloud(camera="head")
+        self.pcloud_hand = PointCloud(camera="hand")    
         
         self.tempo_calculo = 0
         self.tempo_frame = 0
@@ -247,7 +256,8 @@ class PointCloudNode(Node):
 
         # Type of service received:
         # BoundingBoxAndPoints[] data # bounding box and specific points inside the bounding box  
-        # bool retrieve_bbox # if it is intended to get the full bounding box of 3D points returned, saves data transitions 
+        # bool retrieve_bbox # if it is intended to get the full bounding box of 3D points returned, saves data transitions  
+        # string camera # which camera is being used (head or hand camera)
         # ---
         # PointCloudCoordinates[] coords # returns the selected 3D points (the bounding box center, the custom ones and the full bounding box)
         
@@ -261,8 +271,8 @@ class PointCloudNode(Node):
 
             depth_frame_res = cv2.resize(depth_frame, (width, height), interpolation = cv2.INTER_NEAREST)
 
-            depth_frame_res[depth_frame_res > MAX_DIST] = 0
-            depth_frame_res[depth_frame_res < MIN_DIST] = 0
+            depth_frame_res[depth_frame_res > MAX_DIST_HEAD] = 0
+            depth_frame_res[depth_frame_res < MIN_DIST_HEAD] = 0
 
             # self.pcloud_head.rgb_img_pc = rgb_frame
             self.pcloud_head.depth_img_pc = depth_frame_res
@@ -283,7 +293,7 @@ class PointCloudNode(Node):
             self.tempo_calculo = time.perf_counter()
 
             # calculo dos vários Bounding Boxes
-            self.pcloud_head.robo() 
+            self.pcloud_head.robo_head() 
             for bbox in self.pcloud_head.RECEBO:
 
                 # le os dados da BouundingBox
@@ -417,7 +427,7 @@ class PointCloudNode(Node):
         return response
 
 
-    def callback_point_cloud_hand(self, request, response):
+    # def callback_point_cloud_hand(self, request, response):
 
         # print(request)
 
@@ -427,10 +437,7 @@ class PointCloudNode(Node):
         # ---
         # PointCloudCoordinates[] coords # returns the selected 3D points (the bounding box center, the custom ones and the full bounding box)
         
-
-        
-        
-        return response
+        # return response
 
 
 
