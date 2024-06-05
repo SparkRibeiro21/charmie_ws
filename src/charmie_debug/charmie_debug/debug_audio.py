@@ -515,15 +515,21 @@ class RestaurantMain():
                 pass
 
                 # next state
-                # self.state = Searching_for_clients
+                self.state = Searching_for_clients
 
             elif self.state == Searching_for_clients:
                 #print('State 1 = Hand Raising Detect')
 
                 # your code here ...
+                # s, m = self.set_face(command="charmie_face_green")
+                s, m = self.set_face(custom="2024-05-15 11-40-30 120")
+                print(s, m)
+                time.sleep(5)
+                pass
                                 
                 # next state
-                self.state = Final_State
+                self.state = Waiting_for_start_button
+                # self.state = Final_State
             
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 

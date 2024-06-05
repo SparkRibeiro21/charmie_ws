@@ -97,19 +97,15 @@ class FaceNode(Node):
         self.get_logger().info("Initial Face Received is: %s" %self.INITIAL_FACE)
 
         # sends initial face
-        first_face = String()
-        first_face.data = self.INITIAL_FACE
-        self.image_to_face_callback(first_face)
+        self.image_to_face(self.INITIAL_FACE)
 
         # easier debug when testing custom faces 
-        # custom_face_debug = String()
-        # custom_face_debug.data = "object_detected_test4"
-        # self.custom_image_to_face_callback(custom_face_debug)
+        # self.image_to_face("charmie_face_green")
     
-
+    
     # Main Function regarding received commands
     def callback_face_command(self, request, response):
-        print("Received request")
+        print("Received request", request.command)
  
         # Type of service received: 
         # string command # type of face that is commonly used and is always the same, already in face (tablet) SD card (i.e. hearing face and standard blinking eyes face)
@@ -118,32 +114,12 @@ class FaceNode(Node):
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
 
-        """
-        # if filename comes empty it is automatically assumed that it is intended to use the load and play mode
-        print("show_in_face:", request.show_in_face)
-
-
-        if request.filename == "":
-            # speakers mode where received string must be synthesized and played now
-            self.get_logger().info("SPEAKERS received (custom) - %s" %request.command)
-            success, message = self.charmie_speech.load_and_play_command(request.command, request.quick_voice, request.show_in_face)
-        
+        if request.command != "":
+            response.success, response.message = self.image_to_face(command=request.command)
+        elif request.custom != "":
+            response.success, response.message = self.custom_image_to_face(command=request.custom)
         else:
-            # speakers mode where received filename must be played
-            success, message = self.charmie_speech.play_command(request.filename, request.show_in_face)
-            if success == False:
-                self.get_logger().error("SPEAKERS received (file) does not exist! - %s" %request.filename)
-            else:
-                self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
-
-        # returns whether the message was played and some informations regarding status
-        response.success = success
-        response.message = message
-        """
-
-        response.success = True
-        response.message = "Received message..."
-        
+            pass
 
         return response
 
@@ -162,48 +138,51 @@ class FaceNode(Node):
                 # print(self.face.last_face_path)
                 # print("Back to Standard face")
 
-
     # Receive image or video files name to show in face
-    def image_to_face_callback(self, command: String):
+    def image_to_face(self, command):
         
         # since the extension is not known, a system to check all filenames disregarding the extension had to be created
         file_exists = False
         files = os.listdir(self.face.destination_media)
         for file in files:
             file_name, file_extension = os.path.splitext(file)
-            if file_name == command.data:
+            if file_name == command:
                 file_exists = True
 
         if file_exists:
-            self.get_logger().info("FACE received (standard) - %s" %command.data)
-            self.face.save_text_file("media/" + command.data)
+            self.get_logger().info("FACE received (standard) - %s" %command)
+            self.face.save_text_file("media/" + command)
+            return True, "Face received (standard) sucessfully displayed"
 
         else:
-            self.get_logger().error("FACE received (standard) does not exist! - %s" %command.data)
-
-
+            self.get_logger().error("FACE received (standard) does not exist! - %s" %command)
+            return False, "FACE received (standard) does not exist."
+    
     # Receive custom image name to send to tablet and show in face
-    def custom_image_to_face_callback(self, command: String):
+    def custom_image_to_face(self, command):
 
         # checks whether file exists, maybe there was some typo 
-        file_exists = os.path.exists(self.face.complete_path + command.data + ".jpg")
+        file_exists = os.path.exists(self.face.complete_path + command + ".jpg")
         
         if file_exists:
-            self.get_logger().info("FACE received (custom) - %s" %command.data)
+            self.get_logger().info("FACE received (custom) - %s" %command)
             
             # checks the filename of custom faces being sent and changes the name so there is no conflict in files with similar names
-            new_filename = self.face.get_filename(command.data, ".jpg")
+            new_filename = self.face.get_filename(command, ".jpg")
             
             # the name afther complete path is received from the topic 
             # self.face.copy_file(self.face.complete_path+"clients_temp.jpg", new_filename)
-            self.face.copy_file(self.face.complete_path + command.data + ".jpg", new_filename + ".jpg")
+            self.face.copy_file(self.face.complete_path + command + ".jpg", new_filename + ".jpg")
             
             # checks if file exist on the tablet SD card and writes in file so it will appear on face
             self.face.save_text_file("temp/" + new_filename)
             # print("File copied successfully.")
+            
+            return True, "Face received (custom) sucessfully displayed"
 
         else:
-            self.get_logger().error("FACE received (custom) does not exist! - %s" %command.data)
+            self.get_logger().error("FACE received (custom) does not exist! - %s" %command)
+            return False, "FACE received (custom) does not exist."
 
 
 def main(args=None):
