@@ -357,14 +357,15 @@ class RestaurantMain():
 
 
     def main(self):
-        Waiting_for_start_button = 0
-        Audio_restaurant = 1
-        Audio_receptionist = 2
+        # Waiting_for_start_button = 0
+        Audio_receptionist = 1
+        Audio_restaurant = 2
         Audio_egpsr = 3
-        Final_State = 4
+        Calibrate_audio = 4
+        Final_State = 5
 
         # VARS ...
-        self.state = Waiting_for_start_button
+        self.state = Audio_receptionist
     
         print("IN NEW MAIN")
         self.set_face("charmie_face")
@@ -373,31 +374,14 @@ class RestaurantMain():
 
             # State Machine
             # State 0 = Initial
-            # State 1 = Hand Raising Detect
-            # State 2 = Navigation to Person
-            # State 3 = Receive Order - Receive Order - Speech
-            # State 4 = Receive Order - Listening and Confirm
-            # State 5 = Collect Order
-            # State 6 = Final Speech
+            # State 1 = Audio Receptionist
+            # State 2 = Audio Restaurant
+            # State 3 = Audio EGPSR
+            # State 4 = Calibrate Audio
+            # State 5 = Final Speech
 
-            if self.state == Waiting_for_start_button:
-                print('State 0 = Initial')
-
-                ### RESTAURANT EXAMPLE
-                # print("Started")
-                # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-                # command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
-                # print("Finished:", command)
-                # keyword_list= command.split(" ")
-                # self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
-                # for kw in keyword_list:
-                #     print(kw)
-                #     self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
-
-
-
-
-
+            if self.state == Audio_receptionist:
+                print('State 1 = Audio Receptionist')
 
                 ### RECEPTIONIST EXAMPLE
                 print("Started")
@@ -409,9 +393,27 @@ class RestaurantMain():
                 self.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
                 self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
+                time.sleep(5)
+                
+            if self.state == Audio_restaurant:
+                print('State 2 = Audio Restaurant')
 
+                ### RESTAURANT EXAMPLE
+                print("Started")
+                self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
+                print("Finished:", command)
+                keyword_list= command.split(" ")
+                self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
+                for kw in keyword_list:
+                    print(kw)
+                    self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
 
-                """
+                time.sleep(5)
+                
+            if self.state == Audio_egpsr:
+                print('State 3 = Audio Restaurant')
+
                 ### EGPSR EXAMPLE
                 is_command_confirmed = False
                 while not is_command_confirmed:
@@ -477,27 +479,17 @@ class RestaurantMain():
                         ##### SPEAK: Sorry for my mistake, lets try again.
                         self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
                     
+                time.sleep(5)
+
+            
+            elif self.state == Calibrate_audio:
 
                 ### CALIBRATION EXAMPLE
-                # s, m = self.calibrate_audio(wait_for_end_of=True)
-                # print("Finished:", s, m)
-                """
+                s, m = self.calibrate_audio(wait_for_end_of=True)
+                print("Finished:", s, m)
                 
-                # s, m = self.set_face(command="charmie_face")
-                # print(s, m)
-                time.sleep(5)
-                # pass
-
                 # next state
-                # self.state = Searching_for_clients
-
-            # elif self.state == Searching_for_clients:
-            #     #print('State 1 = Hand Raising Detect')
-
-                # your code here ...
-                                
-                # next state
-            #     self.state = Final_State
+                self.state = Final_State
             
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 
