@@ -8,7 +8,7 @@ import threading
 import time
 
 from example_interfaces.msg import String, Int16
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, SetFace
 from sensor_msgs.msg import Image
 
 # Constant Variables to ease RGB_MODE coding
@@ -23,10 +23,6 @@ class TestNode(Node):
         self.get_logger().info("Initialised CHARMIE Test Speakers and Face Node")
 
         ### Topics (Publisher and Subscribers) ###  
-        # Face
-        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
-        self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
-
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
 
@@ -34,14 +30,19 @@ class TestNode(Node):
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
-
+        # Face
+        self.face_command_client = self.create_client(SetFace, "face_command")
+        
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
         while not self.save_speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
 
         # Variables
         self.waited_for_end_of_speaking = False
+        self.waited_for_end_of_face = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -52,6 +53,36 @@ class TestNode(Node):
         self.rgb_message = ""
         self.face_success = True
         self.face_message = ""
+
+
+    #### FACE SERVER FUNCTIONS #####
+    def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
+        request = SetFace.Request()
+        request.command = command
+        request.custom = custom
+        
+        future = self.face_command_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_face_command)
+        else:
+            self.face_success = True
+            self.face_message = "Wait for answer not needed"
+    
+    def callback_call_face_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.face_success = response.success
+            self.face_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_face = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
@@ -71,7 +102,6 @@ class TestNode(Node):
             self.speech_success = True
             self.speech_message = "Wait for answer not needed"
     
-
 
     def callback_call_speech_command(self, future): #, a, b):
 
@@ -163,29 +193,14 @@ class RestaurantMain():
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
-        if custom == "":
-            temp = String()
-            temp.data = command
-            self.node.image_to_face_publisher.publish(temp)
-        else:
-            temp = String()
-            temp.data = custom
-            self.node.custom_image_to_face_publisher.publish(temp)
-
-        self.node.face_success = True
-        self.node.face_message = "Value Sucessfully Sent"
+        self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_face:
+                pass
+        self.node.waited_for_end_of_face = False
 
         return self.node.face_success, self.node.face_message
-
-
-    # def wait_for_end_of_speaking(self):
-    #     while not self.node.waited_for_end_of_speaking:
-    #         pass
-    #     self.node.waited_for_end_of_speaking = False
-        
-        
-
-        # wait_for_end_of functions ...
 
     def main(self):
         Waiting_for_start_button = 0

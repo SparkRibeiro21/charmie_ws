@@ -29,20 +29,18 @@ class TestNode(Node):
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
         # Face
         self.face_command_client = self.create_client(SetFace, "face_command")
-        # self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
-        # self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
         
-        # while not self.get_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Audio Server...")
-        # while not self.calibrate_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
-        # while not self.speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Speech Command...")
-        # while not self.save_speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Save Speech Command...")
+        while not self.get_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Audio Server...")
+        while not self.calibrate_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
+        while not self.save_speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Save Speech Command...")
         while not self.face_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Face Command...")
 
@@ -356,41 +354,21 @@ class RestaurantMain():
         self.node.waited_for_end_of_face = False
 
         return self.node.face_success, self.node.face_message
-    
-        """
-        if custom == "":
-            temp = String()
-            temp.data = command
-            self.node.image_to_face_publisher.publish(temp)
-        else:
-            temp = String()
-            temp.data = custom
-            self.node.custom_image_to_face_publisher.publish(temp)
 
-        self.node.face_success = True
-        self.node.face_message = "Value Sucessfully Sent"
-
-        return self.node.face_success, self.node.face_message
-        """
 
     def main(self):
         Waiting_for_start_button = 0
-        Searching_for_clients = 1
-        Navigation_to_person = 2
-        Receiving_order_speach = 3
-        Receiving_order_listen_and_confirm = 4
-        Collect_order_from_barman = 5
-        Delivering_order_to_client = 6
-        Final_State = 7
+        Audio_restaurant = 1
+        Audio_receptionist = 2
+        Audio_egpsr = 3
+        Final_State = 4
 
         # VARS ...
         self.state = Waiting_for_start_button
     
-
         print("IN NEW MAIN")
-        # time.sleep(2)
-
-
+        self.set_face("charmie_face")
+        
         while True:
 
             # State Machine
@@ -402,11 +380,8 @@ class RestaurantMain():
             # State 5 = Collect Order
             # State 6 = Final Speech
 
-
-
             if self.state == Waiting_for_start_button:
                 print('State 0 = Initial')
-
 
                 ### RESTAURANT EXAMPLE
                 # print("Started")
@@ -425,15 +400,14 @@ class RestaurantMain():
 
 
                 ### RECEPTIONIST EXAMPLE
-                # print("Started")
-                # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-                # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
-                # print("Finished:", command)
-                # keyword_list= command.split(" ")
-                # print(keyword_list[0], keyword_list[1])
-                # self.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
-                # self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
-
+                print("Started")
+                self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+                print("Finished:", command)
+                keyword_list= command.split(" ")
+                print(keyword_list[0], keyword_list[1])
+                self.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
 
 
@@ -509,27 +483,21 @@ class RestaurantMain():
                 # print("Finished:", s, m)
                 """
                 
-                s, m = self.set_face(command="charmie_face")
-                print(s, m)
+                # s, m = self.set_face(command="charmie_face")
+                # print(s, m)
                 time.sleep(5)
-                pass
+                # pass
 
                 # next state
-                self.state = Searching_for_clients
+                # self.state = Searching_for_clients
 
-            elif self.state == Searching_for_clients:
-                #print('State 1 = Hand Raising Detect')
+            # elif self.state == Searching_for_clients:
+            #     #print('State 1 = Hand Raising Detect')
 
                 # your code here ...
-                # s, m = self.set_face(command="charmie_face_green")
-                s, m = self.set_face(custom="2024-05-15 11-40-30 120")
-                print(s, m)
-                time.sleep(5)
-                pass
                                 
                 # next state
-                self.state = Waiting_for_start_button
-                # self.state = Final_State
+            #     self.state = Final_State
             
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 
