@@ -6,7 +6,7 @@ from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, SetFace
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, SetFace, SpeechCommand
 from sensor_msgs.msg import Image
 
 import cv2 
@@ -54,6 +54,8 @@ class TestNode(Node):
 
         ### Services (Clients) ###
         
+        # Speakers
+        self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         # Neck
         self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
         self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
@@ -66,6 +68,9 @@ class TestNode(Node):
         # Face
         self.face_command_client = self.create_client(SetFace, "face_command")
         
+        # Speakers
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
@@ -87,10 +92,13 @@ class TestNode(Node):
         self.waited_for_end_of_neck_pos = False
         self.waited_for_end_of_neck_coords = False
         self.waited_for_end_of_face = False
+        self.waited_for_end_of_speaking = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.rgb_success = True
         self.rgb_message = ""
+        self.speech_success = True
+        self.speech_message = ""
         self.face_success = True
         self.face_message = ""
         self.neck_success = True
@@ -169,6 +177,38 @@ class TestNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+    #### SPEECH SERVER FUNCTIONS #####
+    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
+        request = SpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+        request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
+    
+        future = self.speech_command_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_speech_command)
+        else:
+            self.speech_success = True
+            self.speech_message = "Wait for answer not needed"
+    
+    def callback_call_speech_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.speech_success = response.success
+            self.speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_speaking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     #### SET NECK POSITION SERVER FUNCTIONS #####
     def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
@@ -408,6 +448,17 @@ class RestaurantMain():
         self.node.rgb_message = "Value Sucessfully Sent"
 
         return self.node.rgb_success, self.node.rgb_message
+
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
+
+        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_speaking:
+                pass
+        self.node.waited_for_end_of_speaking = False
+
+        return self.node.speech_success, self.node.speech_message
 
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
@@ -796,6 +847,209 @@ class RestaurantMain():
 
         return filtered_persons
         """
+
+
+    def search_for_milk(self):
+
+
+        # self.detect_object_total_milk = DetectedObject()
+        # self.images_of_detected_object_total_milk = Image()
+        # self.flag_object_total_milk = False 
+
+
+        all_objects_detected = False
+
+        # TOTAL_OBJ = 4
+        # list_sb_objects=[
+        #     "spoon",
+        #     "milk",
+        #     "cornflakes",
+        #     "bowl"
+        # ]
+
+        while not all_objects_detected:
+
+            # FIRST TYPE OF SEARCH: JUST THE NECK WITH SMALL ADJUSTEMENTS
+            list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
+
+            self.activate_yolo_objects(activate_objects=True)
+            finished_detection = False
+            for pos in list_of_neck_position_search:
+
+                print(pos)
+                new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
+                self.set_neck(position=new_neck_pos, wait_for_end_of=True)
+                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
+                # time.sleep(1)
+
+                finished_detection = self.detect_just_milk(delta_t=2.0, with_hand=False)    
+                # finished_detection = self.detect_four_serve_breakfast_objects(delta_t=1.0, with_hand=False)    
+
+                if finished_detection:
+                    break
+
+                if self.flag_object_total_milk:
+                    print("FINISHED!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    break
+
+            # if finished_detection:
+            #     self.set_neck(position=self.look_judge, wait_for_end_of=False)
+            #     # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+            #     self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+            #     self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
+            #     self.set_speech(filename="objects_names/spoon", wait_for_end_of=True)  
+            #     self.set_speech(filename="objects_names/milk", wait_for_end_of=True)  
+            #     self.set_speech(filename="objects_names/cornflakes", wait_for_end_of=True)  
+            #     self.set_speech(filename="objects_names/bowl", wait_for_end_of=True)  
+            #     all_objects_detected = True 
+
+            if self.flag_object_total_milk:
+                self.create_image_just_milk() 
+                # self.create_image_four_sb_objects_separately() 
+                # self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+                # self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
+                # self.create_image_four_sb_objects_separately() 
+                all_objects_detected = True
+
+            if all_objects_detected:
+                self.activate_yolo_objects(activate_objects=False)
+                break
+
+            print("SEARCH TYPE 2")
+            """
+            # SECOND TYPE OF SEARCH: ARM WITH SMALL ADJUSTEMENTS AND NECK WITH BIGGER ADJUSTEMENTS
+            list_of_neck_position_search = [[0, 0], [15,10], [-15,10], [-15,-10], [15,-10]]
+
+            self.activate_yolo_objects(activate_objects=True)
+            finished_detection = False
+            for pos in list_of_neck_position_search:
+                print(pos)
+                new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
+                self.set_neck(position=new_neck_pos, wait_for_end_of=True)
+                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
+                # time.sleep(1)
+
+                finished_detection = self.detect_just_milk(delta_t=2.0, with_hand=False)    
+                # finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=True)    
+
+                if finished_detection:
+                    break
+
+                if self.flag_object_total_milk:
+                    print("FINISHED!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    break
+
+            # if finished_detection:
+            #     self.set_neck(position=self.look_judge, wait_for_end_of=False)
+            #     self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+            #     self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+            #     self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
+            #     self.set_speech(filename="objects_names/spoon", wait_for_end_of=True)  
+            #     self.set_speech(filename="objects_names/milk", wait_for_end_of=True)  
+            #     self.set_speech(filename="objects_names/cornflakes", wait_for_end_of=True)  
+            #     self.set_speech(filename="objects_names/bowl", wait_for_end_of=True)  
+            #     all_objects_detected = True 
+
+            if self.flag_object_total_milk:
+                self.create_image_just_milk() 
+                # self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
+                # self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
+                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
+                # self.create_image_four_sb_objects_separately() 
+                all_objects_detected = True
+
+            if all_objects_detected:
+                self.activate_yolo_objects(activate_objects=False)
+                break
+            """
+            
+            self.set_neck(position=self.look_judge, wait_for_end_of=False)
+            # if i can not detect both times, i will ask the judge to move and rotate the objects I could not detect
+            self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
+            self.set_speech(filename="objects_names/milk", wait_for_end_of=False)  
+
+
+    def detect_just_milk(self, delta_t, with_hand=False):
+
+        actual_object = "milk"
+        actual_object_with_spaces = "MILK      "
+        # TOTAL_OBJ = 1
+
+        # self.detect_object_total_milk = DetectedObject()
+        # self.images_of_detected_object_total_milk = Image()
+        # self.flag_object_total_milk = False 
+
+        detect_as = ["Milk", "Cleanser"] # detect as 'milk'
+
+        detect_object = DetectedObject()
+        flag_object = False 
+
+        # print("WHAT?")
+        
+        start_time = time.time()
+        while (time.time() - start_time) < delta_t:        
+            local_detected_objects = self.node.detected_objects
+            for object in local_detected_objects.objects:
+                # for obj in range(TOTAL_OBJ):
+
+                print(object.object_name)
+
+                if object.object_name in detect_as:
+                    print("Decteting milk")
+                    
+                    if self.MULTIPLE_IMAGES_FACE_SAME_TIME: # JOHANNES said that this is not the correct deus ex machina ask for help to help with handing over the objects
+                        if object.confidence > detect_object.confidence:
+                            # print(" - ", object.object_name, "-", object.confidence, "-", object.index)
+                            detect_object = object
+                            detect_object.object_name = actual_object
+                            flag_object = True
+                        
+                    if object.confidence > self.detect_object_total_milk.confidence:
+                        print("INSIDEEEEEEEEE")
+                        self.detect_object_total_milk = object
+                        self.detect_object_total_milk.object_name = actual_object
+                        self.flag_object_total_milk = True
+                        self.images_of_detected_object_total_milk = local_detected_objects.image_rgb
+                        # flag_object_total_milk
+            
+            local_detected_objects_hand = self.node.detected_objects_hand
+            for object in local_detected_objects_hand.objects:
+                # for obj in range(TOTAL_OBJ):
+                if object.object_name in detect_as:
+                    # print(object.object_name, "-", object.confidence, "-", object.index)
+
+                    # The hand objects can not be considered for the show the four objects in the same image case since the images are not the same
+                    # if object.confidence > detect_object[obj].confidence:
+                    #     # print(" - ", object.object_name, "-", object.confidence, "-", object.index)
+                    #     detect_object[obj] = object
+                    #     flag_object[obj] = True
+                    
+                    if object.confidence > self.detect_object_total_milk.confidence:
+                        self.detect_object_total_milk = object
+                        self.detect_object_total_milk.object_name = actual_object
+                        self.flag_object_total_milk = True
+                        self.images_of_detected_object_total_milk = local_detected_objects_hand.image_rgb
+        
+        # for obj in range(TOTAL_OBJ):
+        #     print(actual_object_with_spaces[obj], "|", detect_object[obj].object_name, "-", detect_object[obj].confidence, "-", detect_object[obj].index, "-", flag_object[obj] )
+
+        # for obj in range(TOTAL_OBJ):
+        print(actual_object_with_spaces, "|", self.detect_object_total_milk.object_name, "-", self.detect_object_total_milk.confidence, "-", self.detect_object_total_milk.index, "-", self.flag_object_total_milk)
+
+        # print("FINAL:", all(flag_object))
+
+        if flag_object:
+            # self.create_image_four_sb_objects_same_time(local_detected_objects.image_rgb, detect_object) # sends the last image analysed 
+            # self.create_image_just_one_object(local_detected_objects.image_rgb, detect_object)
+            return True
+        else:
+            return False
+        
+
+
 
 
     def search_for_person(self, tetas, delta_t=3.0):
