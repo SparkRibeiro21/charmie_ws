@@ -706,8 +706,8 @@ class RestaurantMain():
                 # self.set_face(command="please_say_receptionist")
                 # self.set_neck(position=[0.0, -20.0], wait_for_end_of=True)
 
-                # while True:
-                #     pass
+                while True:
+                    self.check_door_depth_hand_washing_machine()
 
                 # time.sleep(2.0)
 
@@ -1422,6 +1422,98 @@ class RestaurantMain():
             # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
         
             return center_image_near_err
+
+    def check_door_depth_hand_washing_machine(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=400, far_max_dist = 1000):
+
+        overall = False
+        DEBUG = True
+
+        if self.node.first_depth_image_hand_received:
+            current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img_hand, desired_encoding="passthrough")
+            height, width = current_frame_depth_hand.shape
+            current_frame_depth_hand_half = current_frame_depth_hand[height//2:height,:]
+            current_frame_depth_hand_center = current_frame_depth_hand[height//4:height-height//4, width//3:width-width//3]
+            # FOR THE FULL IMAGE
+
+            # tot_pixeis = height*width 
+            # tot_pixeis = (height-height//4 -height//4) * (width-width//3 - width//3)
+            mask_zero = (current_frame_depth_hand == 0)
+            mask_near = (current_frame_depth_hand > 0) & (current_frame_depth_hand <= near_max_dist)
+            mask_far = (current_frame_depth_hand > 0) & (current_frame_depth_hand >= far_max_dist)
+            # mask_zero_center = (current_frame_depth_hand_center == 0)
+            # mask_near_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center <= near_max_dist)
+            # mask_far_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center >= far_max_dist)
+            
+            if DEBUG:
+                mask_remaining = near_max_dist < current_frame_depth_hand.any() <= far_max_dist # just for debug
+                blank_image = np.zeros((height,width,3), np.uint8)
+                blank_image[mask_zero] = [255,255,255]
+                blank_image[mask_near] = [255,0,0] # blue
+                blank_image[mask_far]  = [0, 0, 255] # green
+                blank_image[mask_remaining] = [0, 255, 0]
+            # pixel_count_zeros = np.count_nonzero(mask_zero)
+            # pixel_count_near = np.count_nonzero(mask_near)
+            # pixel_count_far = np.count_nonzero(mask_far)
+            # pixel_count_zeros_center = np.count_nonzero(mask_zero_center)
+
+            # FOR THE BOTTOM HALF OF THE IMAGE
+
+            # mask_zero_half = (current_frame_depth_hand_half == 0)
+            # mask_near_half = (current_frame_depth_hand_half > 0) & (current_frame_depth_hand_half <= near_max_dist)
+            # mask_near_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center <= near_max_dist)
+            # mask_far_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center >= far_max_dist)
+            # mask_far_half = (current_frame_depth_hand_half > 0) & (current_frame_depth_hand_half >= far_max_dist)
+            
+            # if DEBUG:
+            #     mask_remaining_half = (current_frame_depth_hand_half > near_max_dist) & (current_frame_depth_hand_half < far_max_dist)# just for debug
+            #     blank_image_half = np.zeros((height//2,width,3), np.uint8)
+            #     blank_image_half[mask_zero_half] = [255,255,255]
+            #     blank_image_half[mask_near_half] = [255,0,0]
+            #     blank_image_half[mask_far_half]  = [0, 255, 0]
+            #     blank_image_half[mask_remaining_half] = [0,0,255]
+                    
+            # pixel_count_zeros_half = np.count_nonzero(mask_zero_half)
+            # pixel_count_near_half = np.count_nonzero(mask_near_half)
+            # pixel_count_far_half = np.count_nonzero(mask_far_half)
+            # pixel_count_near_center = np.count_nonzero(mask_near_center)
+            # pixel_count_far_center = np.count_nonzero(mask_far_center)
+            
+            if DEBUG:
+                # cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
+                cv2.rectangle(blank_image, (width//3, height//4), (width - width//3, height - height//4), (0, 255, 0), 3)
+                cv2.imshow("New Img Distance Inspection", blank_image)
+                cv2.waitKey(20)
+
+            """ half_image_zero_or_near = False
+            half_image_zero_or_near_err = 0.0
+            
+            full_image_near = False
+            full_image_near_err = 0.0
+
+
+            half_image_zero_or_near_err = (pixel_count_zeros_half+pixel_count_near_half)/(tot_pixeis//2)
+            if half_image_zero_or_near_err >= half_image_zero_or_near_percentage:
+                half_image_zero_or_near = True
+            
+            full_image_near_err = pixel_count_near/tot_pixeis
+            if full_image_near_err >= full_image_near_percentage:
+                full_image_near = True
+
+            center_image_near_err = pixel_count_near_center / tot_pixeis
+            print(center_image_near_err*100)
+            center_image_zeros = pixel_count_zeros_center/tot_pixeis
+            #print(center_image_zeros*100)
+            if full_image_near_err >= full_image_near_percentage:
+                center_image_near = True
+            
+            if half_image_zero_or_near or full_image_near:
+                overall = True """
+
+            # just for debug
+            # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
+            # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
+        
+            # return center_image_near_err
 
     def find_wardrobe_door_open(self):
         if self.node.first_depth_image_received:
