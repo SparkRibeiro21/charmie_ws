@@ -466,11 +466,6 @@ class YoloObjectsMain():
                     ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                     # print("- Misses minimum door confidence level")
 
-            # checks whether the detected object confidence is above a defined level
-            # if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
-            #     ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-            #     # print("- Misses minimum detected object confidence level")
-
             # if the object detection passes all selected conditions, the detected object is added to the publishing list
             if ALL_CONDITIONS_MET:
                 num_objects_filtered+=1
@@ -499,29 +494,6 @@ class YoloObjectsMain():
             self.draw_detected_objects(yolov8_obj_filtered, current_frame_draw)
 
         return num_obj, num_objects_filtered
-
-        # test:
-            # DONE percentagens individuais miimas de erro de cada categoria
-            # DONE nomes dos objectos e categoria dos objectos
-            # DONE cor das categorias novas
-            # DONE corrigir o pos point cloud, para os 3 tipos ...
-            # DONE adicionar os object class: furniture, footwear
-            # DONE desenhar as deteções
-            # DONE nao estava a dar o ID dos objetos na camara da mao (shoes e doors não testados)
-            
-
-            # verificar 6 topicos publicados no terminal e confirmar name e class
-             
-
-
-
-
-        # remaining code here: 
-            # leitura do pc
-            # publicacao no respetivo topico
-        
-        # LIMITADOR DE QUANDO SE ESTá a ANALISAR A IMAGEM NO MAIN THREAD NÃO ALTERAR o head_rgb...
-        # dentro do PC criar o caso para cada câmara
 
     def draw_detected_objects(self, yolov8_objects, current_frame_draw):
         
