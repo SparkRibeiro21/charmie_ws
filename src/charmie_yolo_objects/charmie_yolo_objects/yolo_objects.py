@@ -287,9 +287,6 @@ class Yolo_obj(Node):
         new_object.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
         new_object.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
-        # new_object.room_location = "None"      # still missing... (says on which room a detected object is)
-        # new_object.furniture_location = "None" # still missing... (says if an object location is associated with some furniture, on a table, sofa, counter, ...)
-
         new_object.room_location, new_object.furniture_location = self.position_to_house_rooms_and_furniture(object_abs_pos)
 
         new_object.box_center_x = new_object.box_top_left_x + new_object.box_width//2
@@ -503,6 +500,7 @@ class YoloObjectsMain():
         green_yp =   (   0, 255,   0)
         dgreen_yp =  (  50, 204,  50)
         orange_yp =  (  51, 153, 255)
+        yellow_yp =  (   0, 255, 255)
         magenta_yp = ( 255,  51, 255)
         purple_yp =  ( 255,  56, 132)
         white_yp =   ( 255, 255, 255)
@@ -512,7 +510,7 @@ class YoloObjectsMain():
         for object in yolov8_objects.objects:
 
             if object.object_class == "Cleaning Supplies":
-                bb_color = dgreen_yp
+                bb_color = yellow_yp
             elif object.object_class == "Drinks":
                 bb_color = purple_yp
             elif object.object_class == "Foods":
