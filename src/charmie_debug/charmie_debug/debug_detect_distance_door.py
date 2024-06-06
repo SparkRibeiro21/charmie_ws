@@ -17,6 +17,11 @@ import time
 from cv_bridge import CvBridge
 import math
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+from sklearn.cluster import DBSCAN
+from sklearn.linear_model import RANSACRegressor
 from pathlib import Path
 from datetime import datetime
 
@@ -40,7 +45,7 @@ class TestNode(Node):
         # self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
         self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_hand_image_callback, 10)
-
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_callback, 10)
         ### Topics (Publisher and Subscribers) ###  
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
@@ -143,9 +148,419 @@ class TestNode(Node):
     def get_arm_current_pose_callback(self, arm_pose: ListOfFloats):
         self.arm_current_pose = arm_pose.pose
 
+    def distance(p1, p2):
+            return np.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
+    
+    def get_color_image_callback(self, img: Image):
+
+        current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
+        current_frame_draw = current_frame.copy()
+
+        # Convert the image to grayscale
+        gray = cv2.cvtColor(current_frame_draw, cv2.COLOR_BGR2GRAY)
+
+        # Apply Gaussian blur to reduce noise
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+        # Perform edge detection
+        edges = cv2.Canny(blurred, 50, 150)
+
+        edge_image = np.zeros_like(current_frame_draw)
+
+        # Draw edges in r_d on the blank image
+        edge_image[:, :, 2] = edges
+
+        cv2.imshow('Detected Edges', edge_image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=100, minLineLength=100, maxLineGap=10)
+        # Create a blank image of the same size as the original image
+        line_image = np.zeros_like(current_frame_draw)
+
+        print("Number of lines detected:", len(lines))
+
+
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            # Calculate slope
+            slope = (y2 - y1) / (x2 - x1 + 1e-5)
+            # Filter horizontal lines (slope close to 0)
+            if abs(slope) < 0.2:
+                # Draw lines on the blank image
+                cv2.line(current_frame_draw, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+        # Display the detected horizontal lines
+        cv2.imshow('Horizontal Lines', current_frame_draw)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        # Find contours in the edge-detected image
+        # contours, _ = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        mask = np.zeros_like(gray)
+
+        print("Mask shape:", mask.shape)
+
+
+        # Apply binary threshold to the mask
+        binary_mask = cv2.adaptiveThreshold(mask, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+
+        # Print the minimum and maximum values in the mask array
+        print("Minimum value in mask:", np.min(binary_mask))
+        print("Maximum value in mask:", np.max(binary_mask))
+
+        # Display the binary mask
+        cv2.imshow('Binary Mask', binary_mask)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        # Find contours in the binary mask
+        contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Iterate through detected contours
+        for contour in contours:
+            print('aaaaaa')
+            # Approximate the contour to a polygon
+            area = cv2.contourArea(contour)
+            
+            # If the contour has 4 vertices (possible rectangle)
+            if area > 10:
+                # Draw a green rectangle around the detected contour
+                cv2.drawContours(current_frame_draw, [contour], -1, (0, 255, 0), 2)
+
+        # Display the result
+        cv2.imshow('Plane Detection', current_frame_draw)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
     def get_aligned_depth_image_callback(self, img: Image):
+
+        print('a')
         self.depth_img = img
         self.first_depth_image_received = True
+        
+        """ 
+        CÓDIGO QUE COLOCA LINHAS EM ZONAS QUE ESTÃO ALINHADAS!
+        
+        self.depth_img = img
+        self.first_depth_image_received = True
+
+        current_frame = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
+        current_frame_draw = current_frame.copy()
+        # cv2.imshow("Aligned Depth Head", current_frame_draw)
+        # cv2.waitKey(10)
+
+        depth_image_normalized = cv2.normalize(current_frame_draw, None, 0, 255, cv2.NORM_MINMAX)
+        depth_image_normalized = np.uint8(depth_image_normalized)
+
+        # Apply a median filter to reduce noise
+        depth_image_filtered = cv2.medianBlur(depth_image_normalized, 5)
+
+        # Apply Canny edge detection
+        edges = cv2.Canny(depth_image_filtered, 25, 50)
+
+        # Detect lines using Hough Line Transform
+        lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=100)
+
+        # Plot the detected lines on top of the edges
+        plt.figure(figsize=(8, 6))
+
+        # Plot the edges
+        plt.imshow(edges, cmap='gray')
+
+        # Plot the detected lines
+        if lines is not None:
+            for rho, theta in lines[:, 0]:
+                a = np.cos(theta)
+                b = np.sin(theta)
+                x0 = a * rho
+                y0 = b * rho
+                x1 = int(x0 + 1000 * (-b))
+                y1 = int(y0 + 1000 * (a))
+                x2 = int(x0 - 1000 * (-b))
+                y2 = int(y0 - 1000 * (a))
+                plt.plot([x1, x2], [y1, y2], color='blue')
+
+        plt.title('Edges with Detected Lines')
+        plt.axis('off')  # Turn off axis
+        plt.show() """
+
+        """ 
+        Tentativa falhada de detetar planos
+        
+        self.depth_img = img
+        self.first_depth_image_received = True
+
+        current_frame = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
+        current_frame_draw = current_frame.copy()
+        # cv2.imshow("Aligned Depth Head", current_frame_draw)
+        # cv2.waitKey(10)
+
+        depth_image_normalized = cv2.normalize(current_frame_draw, None, 0, 255, cv2.NORM_MINMAX)
+        depth_image_normalized = np.uint8(depth_image_normalized)
+
+        # Apply a median filter to reduce noise
+        depth_image_filtered = cv2.medianBlur(depth_image_normalized, 5)
+
+        # Apply Canny edge detection
+        edges = cv2.Canny(depth_image_filtered, 25, 50)
+
+        # Detect lines using Hough Line Transform
+        lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=100)
+
+        # Plot the detected lines on top of the edges
+        plt.figure(figsize=(8, 6))
+
+        # Plot the edges
+        plt.imshow(edges, cmap='gray')
+
+        # Plot the detected lines
+        if lines is not None:
+            for line in lines:
+                rho, theta = line[0]
+                
+                # Convert theta to degrees
+                theta_degrees = np.degrees(theta)
+                
+                # Exclude lines with theta angle greater than 30 degrees (π/6 radians)
+                if abs(theta_degrees) <= 160 and abs(theta_degrees) >= 30:
+                    a = np.cos(theta)
+                    b = np.sin(theta)
+                    x0 = a * rho
+                    y0 = b * rho
+                    x1 = int(x0 + 1000 * (-b))
+                    y1 = int(y0 + 1000 * (a))
+                    x2 = int(x0 - 1000 * (-b))
+                    y2 = int(y0 - 1000 * (a))
+
+                    # Ensure endpoints of the line are within image boundaries
+                    x1 = max(0, min(x1, edges.shape[1]-1))
+                    y1 = max(0, min(y1, edges.shape[0]-1))
+                    x2 = max(0, min(x2, edges.shape[1]-1))
+                    y2 = max(0, min(y2, edges.shape[0]-1))
+
+                    plt.plot([x1, x2], [y1, y2], color='blue')
+
+        plt.title('Edges with Detected Lines')
+        plt.axis('off')  # Turn off axis
+        plt.show()
+
+        
+        current_frame_uint8 = cv2.convertScaleAbs(current_frame_draw)
+        depth_colored = cv2.applyColorMap(current_frame_uint8, cv2.COLORMAP_JET)
+
+        # Iterate over adjacent lines
+        for i in range(len(lines) - 1):
+            # Get endpoints of current and next lines
+            rho1, theta1 = lines[i][0]
+            rho2, theta2 = lines[i+1][0]
+            a1, b1 = np.cos(theta1), np.sin(theta1)
+            a2, b2 = np.cos(theta2), np.sin(theta2)
+            x01, y01 = a1 * rho1, b1 * rho1
+            x02, y02 = a2 * rho2, b2 * rho2
+            p1 = (int(x01), int(y01))
+            p2 = (int(x02), int(y02))
+
+            # Check if the lines are approximately horizontal
+            if abs(theta1 - np.pi / 2) < np.pi / 6 and abs(theta2 - np.pi / 2) < np.pi / 6:
+                # Define ROI between the lines
+                roi = edges[max(p1[1], p2[1]): min(p1[1], p2[1]), :]
+
+                # Extract depth values from the ROI
+                depth_values = current_frame_draw[max(p1[1], p2[1]): min(p1[1], p2[1]), :].flatten()
+
+                # Analyze the consistency of depth values within the ROI
+                # You can use statistical measures such as variance to determine if the region is planar
+                # For simplicity, let's assume it's planar if the variance is below a threshold
+                variance_threshold = 100  # Adjust this threshold as needed
+                print(np.var(depth_values))
+                if np.var(depth_values) < variance_threshold:
+                    print('bbb')
+                    # If the depth values within the ROI exhibit characteristics of a planar surface,
+                    # consider it as part of a plane
+
+                    # Visualize the planes in the depth image by drawing a rectangle
+                    cv2.rectangle(depth_colored, (0, max(p1[1], p2[1])), (depth_colored.shape[1], min(p1[1], p2[1])), (255, 255, 255), -1)
+
+        # Display the depth image with highlighted planes
+        cv2.imshow('Depth Image with Highlighted Planes', depth_colored)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        while True:
+            pass """
+
+
+        # print('b')
+
+        # # Normalize the depth image for better visualization
+        # depth_image_normalized = cv2.normalize(current_frame_draw, None, 0, 255, cv2.NORM_MINMAX)
+        # depth_image_normalized = np.uint8(depth_image_normalized)
+
+        # print('c')
+
+        # # Apply a median filter to reduce noise
+        # depth_image_filtered = cv2.medianBlur(depth_image_normalized, 5)
+
+        # print('d')
+
+
+        # Apply Canny edge detection
+        # You can adjust these thresholds to better suit your specific depth image
+        """ lower_threshold = 50
+        upper_threshold = 150
+        edges = cv2.Canny(depth_image_filtered, lower_threshold, upper_threshold)
+
+        # Calculate gradient magnitude
+        sobelx = cv2.Sobel(depth_image_filtered, cv2.CV_64F, 1, 0, ksize=3)
+        sobely = cv2.Sobel(depth_image_filtered, cv2.CV_64F, 0, 1, ksize=3)
+        gradient_magnitude = np.sqrt(sobelx**2 + sobely**2)
+
+        # Normalize gradient magnitude for visualization
+        gradient_magnitude_normalized = cv2.normalize(gradient_magnitude, None, 0, 255, cv2.NORM_MINMAX)
+        gradient_magnitude_normalized = np.uint8(gradient_magnitude_normalized)
+
+        # Display the gradient magnitude image
+        plt.imshow(gradient_magnitude_normalized, cmap='gray')
+        plt.title('Gradient Magnitude')
+        plt.colorbar()
+        plt.show() """
+
+        # threshold_1 = 25
+        # threshold_2 = 50
+
+        # # Create binary edge map based on the thresholds
+        # edges_of_interest = np.zeros_like(depth_image_normalized)
+        # edges_of_interest[(depth_image_normalized >= threshold_1) & (depth_image_normalized <= threshold_2)] = 255
+
+        # # Display the binary edge map
+        # plt.imshow(edges_of_interest, cmap='gray')
+        # plt.title('Edges of Interest')
+        # plt.colorbar()
+        # plt.show()
+
+
+
+
+
+        """ 
+        CÓDIGO QUE MOSTRA OS LIMITES QUANDO ROBÔ ESTÁ EM FRENTE A MÁQUINA DE LAVAR
+
+        self.depth_img = img
+        self.first_depth_image_received = True
+
+        current_frame = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
+        current_frame_draw = current_frame.copy()
+        # cv2.imshow("Aligned Depth Head", current_frame_draw)
+        # cv2.waitKey(10)
+
+        # Normalize the depth image for better visualization
+        depth_image_normalized = cv2.normalize(current_frame_draw, None, 0, 255, cv2.NORM_MINMAX)
+        depth_image_normalized = np.uint8(depth_image_normalized)
+
+        # Apply a median filter to reduce noise
+        depth_image_filtered = cv2.medianBlur(depth_image_normalized, 5)
+        # Display the normalized and filtered depth image
+        plt.imshow(depth_image_filtered, cmap='gray')
+        plt.title('Normalized and Filtered Depth Image')
+        plt.colorbar()
+        plt.show()
+
+        # Step 2: Apply edge detection
+        edges = cv2.Canny(depth_image_filtered, 25, 50)
+
+        # Display the edges
+        plt.imshow(edges, cmap='gray')
+        plt.title('Edges Detected in Depth Image')
+        plt.colorbar()
+        plt.show()
+
+        # Step 3: Overlay edges on the colored depth image
+        colored_depth_image = cv2.applyColorMap(depth_image_normalized, cv2.COLORMAP_JET)
+
+        # Overlay edges on the colored depth image
+        colored_depth_with_edges = colored_depth_image.copy()
+        colored_depth_with_edges[edges > 0] = [0, 0, 255]  # Red edges
+
+        # Display the colored depth image with edges
+        plt.imshow(cv2.cvtColor(colored_depth_with_edges, cv2.COLOR_BGR2RGB))
+        plt.title('Colored Depth Image with Edges')
+        plt.show() """
+
+
+
+        # # Apply Canny edge detection
+        # edges = cv2.Canny(depth_image_filtered, 25, 50)
+
+        # print('e')
+
+        # # Prepare data for RANSAC
+        # points = np.column_stack(np.nonzero(depth_image_filtered))
+
+        # print('f')
+
+        # # Define the RANSAC model
+        # model_robust, inliers = ransac(points, LineModelND, min_samples=2, residual_threshold=1, max_trials=1000)
+
+        # print('g')
+
+        # # Extract inlier points
+        # inlier_points = points[inliers]
+        # print("Number of inlier points:", len(inlier_points))
+
+        # # Plot the edges
+        # plt.figure(figsize=(10, 5))
+        # plt.subplot(1, 2, 1)
+        # plt.imshow(edges, cmap='gray')
+        # plt.title('Edges in Depth Image')
+        # plt.show()
+
+        
+
+        # # Plot the detected lines
+        # plt.subplot(1, 2, 2)
+        # plt.imshow(depth_image_filtered, cmap='gray')
+        # plt.plot(inlier_points[:, 1], inlier_points[:, 0], 'r.', markersize=2)
+        # for line in model_robust:
+        #     p0, p1 = line
+        #     print("Line:", p0, p1)
+        #     plt.plot([p0[1], p1[1]], [p0[0], p1[0]], color='blue')
+        # plt.title('Detected Lines')
+        
+
+        # plt.show()
+        
+        
+        """ self.depth_img = img
+        self.first_depth_image_received = True
+
+        current_frame = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
+        current_frame_draw = current_frame.copy()
+        # cv2.imshow("Aligned Depth Head", current_frame_draw)
+        # cv2.waitKey(10)
+
+        depth_image_normalized = cv2.normalize(current_frame_draw, None, 0, 255, cv2.NORM_MINMAX)
+        depth_image_normalized = np.uint8(depth_image_normalized)
+
+        # Apply a colormap (e.g., COLORMAP_JET) to the normalized depth image
+        colored_depth_image = cv2.applyColorMap(depth_image_normalized, cv2.COLORMAP_JET)
+
+        # Display the image using OpenCV
+        cv2.imshow('Colored Depth Image', colored_depth_image)
+        cv2.waitKey(10)
+        cv2.destroyAllWindows()
+
+        # Display the depth image using Matplotlib
+        plt.imshow(current_frame_draw, cmap='jet')
+        plt.colorbar()
+        plt.title('Depth Image')
+        plt.show()
+         """
+
+
+
+        
+        
         # print("Received Depth Image")
 
     def get_aligned_depth_hand_image_callback(self, img: Image):
@@ -535,7 +950,7 @@ class RestaurantMain():
         # VARS ...
         self.state = 0
         self.look_right = [-90, -40]
-        self.look_down = [0, -40]
+        self.look_down = [0, -50]
         self.look_navigation= [0, -30]
     
     def set_rgb(self, command="", wait_for_end_of=True):
@@ -705,10 +1120,13 @@ class RestaurantMain():
                 # self.set_face(command="please_say_yes_or_no")
                 # self.set_face(command="please_say_receptionist")
                 # self.set_neck(position=[0.0, -20.0], wait_for_end_of=True)
+                self.set_neck(position=self.look_down, wait_for_end_of=True)
 
                 while True:
-                    self.check_door_depth_hand_washing_machine()
-
+                    # self.check_door_depth_hand_washing_machine()
+                    pass
+                    
+                
                 # time.sleep(2.0)
 
                 # POSICIONAR BRAÇO 
@@ -1423,7 +1841,7 @@ class RestaurantMain():
         
             return center_image_near_err
 
-    def check_door_depth_hand_washing_machine(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=400, far_max_dist = 1000):
+    def check_door_depth_hand_washing_machine(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=200, far_max_dist = 900):
 
         overall = False
         DEBUG = True
@@ -1433,10 +1851,13 @@ class RestaurantMain():
             height, width = current_frame_depth_hand.shape
             current_frame_depth_hand_half = current_frame_depth_hand[height//2:height,:]
             current_frame_depth_hand_center = current_frame_depth_hand[height//4:height-height//4, width//3:width-width//3]
+            current_frame_depth_hand_center_top = current_frame_depth_hand[height//4:height//2, width//3:width-width//3]
+            current_frame_depth_hand_center_bottom = current_frame_depth_hand[height//2:height-height//4, width//3:width-width//3]
             # FOR THE FULL IMAGE
 
             # tot_pixeis = height*width 
-            # tot_pixeis = (height-height//4 -height//4) * (width-width//3 - width//3)
+            tot_pixeis_top = (height//2 -height//4) * (width-width//3 - width//3)
+            tot_pixeis_bottom = (height-height//4 -height//2) * (width-width//3 - width//3)
             mask_zero = (current_frame_depth_hand == 0)
             mask_near = (current_frame_depth_hand > 0) & (current_frame_depth_hand <= near_max_dist)
             mask_far = (current_frame_depth_hand > 0) & (current_frame_depth_hand >= far_max_dist)
@@ -1458,11 +1879,20 @@ class RestaurantMain():
 
             # FOR THE BOTTOM HALF OF THE IMAGE
 
-            # mask_zero_half = (current_frame_depth_hand_half == 0)
-            # mask_near_half = (current_frame_depth_hand_half > 0) & (current_frame_depth_hand_half <= near_max_dist)
-            # mask_near_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center <= near_max_dist)
-            # mask_far_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center >= far_max_dist)
-            # mask_far_half = (current_frame_depth_hand_half > 0) & (current_frame_depth_hand_half >= far_max_dist)
+            mask_zero_half = (current_frame_depth_hand_half == 0)
+            mask_near_half = (current_frame_depth_hand_half > 0) & (current_frame_depth_hand_half <= near_max_dist)
+            mask_near_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center <= near_max_dist)
+            mask_far_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center >= far_max_dist)
+            mask_far_half = (current_frame_depth_hand_half > 0) & (current_frame_depth_hand_half >= far_max_dist)
+        
+            mask_zero_top = (current_frame_depth_hand_center_top == 0)
+            mask_near_center_top = (current_frame_depth_hand_center_top > 0) & (current_frame_depth_hand_center_top <= near_max_dist)
+            mask_far_center_top = (current_frame_depth_hand_center_top > 0) & (current_frame_depth_hand_center_top >= far_max_dist)
+            mask_remaining_center_top = (current_frame_depth_hand_center_top > 0) & (near_max_dist <= current_frame_depth_hand_center_top) & (current_frame_depth_hand_center_top <= far_max_dist)
+            mask_zero_bottom = (current_frame_depth_hand_center_bottom == 0)
+            mask_near_center_bottom = (current_frame_depth_hand_center_bottom > 0) & (current_frame_depth_hand_center_bottom <= near_max_dist)
+            mask_far_center_bottom = (current_frame_depth_hand_center_bottom > 0) & (current_frame_depth_hand_center_bottom >= far_max_dist)
+            mask_remaining_center_bottom = (current_frame_depth_hand_center_bottom > 0) & (near_max_dist <= current_frame_depth_hand_center_bottom) &  (current_frame_depth_hand_center_bottom <= far_max_dist)
             
             # if DEBUG:
             #     mask_remaining_half = (current_frame_depth_hand_half > near_max_dist) & (current_frame_depth_hand_half < far_max_dist)# just for debug
@@ -1477,12 +1907,42 @@ class RestaurantMain():
             # pixel_count_far_half = np.count_nonzero(mask_far_half)
             # pixel_count_near_center = np.count_nonzero(mask_near_center)
             # pixel_count_far_center = np.count_nonzero(mask_far_center)
+            pixel_count_zeros_half_top = np.count_nonzero(mask_zero_top)
+            pixel_count_near_center_top = np.count_nonzero(mask_near_center_top)
+            pixel_count_far_center_top = np.count_nonzero(mask_far_center_top)
+            pixel_count_remaining_center_top = np.count_nonzero(mask_remaining_center_top)
+            pixel_count_zeros_half_bottom = np.count_nonzero(mask_zero_bottom)
+            pixel_count_near_center_bottom = np.count_nonzero(mask_near_center_bottom)
+            pixel_count_far_center_bottom = np.count_nonzero(mask_far_center_bottom)
+            pixel_count_remaining_center_bottom = np.count_nonzero(mask_remaining_center_bottom)
+
             
             if DEBUG:
-                # cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
+                cv2.line(blank_image, (width//3, height//2), (width - width//3, height//2), (0,0,0), 3)
                 cv2.rectangle(blank_image, (width//3, height//4), (width - width//3, height - height//4), (0, 255, 0), 3)
                 cv2.imshow("New Img Distance Inspection", blank_image)
                 cv2.waitKey(20)
+
+
+            half_image_zero_or_near_err_top = (pixel_count_zeros_half_top+pixel_count_near_center_top)/(tot_pixeis_top)
+            half_image_far_err_top = (pixel_count_far_center_top)/(tot_pixeis_top)
+            half_image_remaining_err_top = (pixel_count_remaining_center_top)/(tot_pixeis_top)
+            half_image_zero_or_near_err_bottom = (pixel_count_zeros_half_bottom+pixel_count_near_center_bottom)/(tot_pixeis_bottom)
+            half_image_far_err_bottom = (pixel_count_far_center_bottom)/(tot_pixeis_bottom)
+            half_image_remaining_err_bottom = (pixel_count_remaining_center_bottom)/(tot_pixeis_bottom)
+
+
+
+
+            print('top near:', half_image_zero_or_near_err_top * 100)
+            print('top far:', half_image_far_err_top * 100)
+            print('top remaining:', half_image_remaining_err_top * 100)
+            print('bottom near:', half_image_zero_or_near_err_bottom * 100)
+            print('bottom far:', half_image_far_err_bottom * 100)
+            print('bottom remaining:', half_image_remaining_err_bottom * 100)
+
+            print('\n\n\n\n\n\n\n')
+
 
             """ half_image_zero_or_near = False
             half_image_zero_or_near_err = 0.0
