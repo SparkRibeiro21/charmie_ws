@@ -397,8 +397,6 @@ class RestaurantMain():
     def __init__(self, node: TestNode):
         self.node = node
         
-        # VARS ...
-        self.state = 0
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -506,13 +504,12 @@ class RestaurantMain():
 
     def main(self):
         Waiting_for_start_button = 0
-        Searching_for_clients = 1
-        Navigation_to_person = 2
-        Receiving_order_speach = 3
-        Receiving_order_listen_and_confirm = 4
-        Collect_order_from_barman = 5
-        Delivering_order_to_client = 6
-        Final_State = 7
+        Search_for_person = 1
+        Search_for_objects = 2
+        Final_State = 3
+
+        # VARS ...
+        self.state = Search_for_person
 
         print("IN NEW MAIN")
 
@@ -529,6 +526,15 @@ class RestaurantMain():
 
             if self.state == Waiting_for_start_button:
                 # print('State 0 = Initial')
+
+                pass
+                # your code here
+
+                # next state                  
+                # self.state = Searching_for_clients
+
+
+            elif self.state == Search_for_person:
 
                 ### SEARCH FOR PERSON EXAMPLE ###
                 
@@ -559,17 +565,49 @@ class RestaurantMain():
                 for p in people_found:
                     self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
                     time.sleep(4)
-                                    
-                self.state = Searching_for_clients
+                                
+                # next state
+                self.state = Final_State
 
-            elif self.state == Searching_for_clients:
-                #print('State 1 = Hand Raising Detect')
+            
+            elif self.state == Search_for_objects:
+                
+                ### SEARCH FOR OBJECTS EXAMPLE ###
+                
+                self.set_face(command="charmie_face")
+                self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
-                # your code here ...
+                time.sleep(2.0)
+
+                tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
+                # tetas = [-45, 0, 60]
+                people_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["milk", "cornflakes"], objects_detected_as=[["cleanser", "dishwasher_tab"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
+                
+                """
+                print("FOUND:", len(people_found)) 
+                for p in people_found:
+                    print("ID:", p.index_person)
+
+                self.set_rgb(BLUE+HALF_ROTATE)
+                self.set_neck(position=[0, 0], wait_for_end_of=True)
+                time.sleep(0.5)
+
+                for p in people_found:
+                    path = self.detected_person_to_face_path(person=p, send_to_face=True)
+                    time.sleep(4)
+
+                self.set_rgb(CYAN+HALF_ROTATE)
+                time.sleep(0.5)
+
+                for p in people_found:
+                    self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
+                    time.sleep(4)
+                """
                                 
                 # next state
                 self.state = Final_State
             
+
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 
                 # self.node.speaker_publisher.publish(self.node.speech_str)
@@ -581,6 +619,183 @@ class RestaurantMain():
 
             else:
                 pass
+
+
+    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
+
+        self.activate_yolo_objects(activate_objects=True, activate_shoes=False, activate_doors=False,
+                                    activate_objects_hand=True, activate_shoes_hand=False, activate_doors_hand=False,
+                                    minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
+        
+        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+        time.sleep(0.5)
+        
+        total_person_detected = []
+        person_detected = []
+        people_ctr = 0
+
+        ### MOVES NECK AND SAVES DETECTED PEOPLE ###
+        
+        
+        
+        for t in tetas:
+            self.set_rgb(RED+SET_COLOUR)
+            self.set_neck(position=t, wait_for_end_of=True)
+            time.sleep(1.0) # 0.5
+            self.set_rgb(WHITE+SET_COLOUR)
+
+            start_time = time.time()
+            while (time.time() - start_time) < delta_t:        
+                local_detected_people = self.node.detected_people
+                for temp_people in local_detected_people.persons:
+                    
+                    is_already_in_list = False
+                    person_already_in_list = DetectedPerson()
+                    for people in person_detected:
+
+                        if temp_people.index_person == people.index_person:
+                            is_already_in_list = True
+                            person_already_in_list = people
+
+                    if is_already_in_list:
+                        person_detected.remove(person_already_in_list)
+                    elif temp_people.index_person > 0: # debug
+                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
+                        self.set_rgb(GREEN+SET_COLOUR)
+                    
+                    if temp_people.index_person > 0:
+                        person_detected.append(temp_people)
+                        people_ctr+=1
+
+            # DEBUG
+            # print("people in this neck pos:")
+            # for people in person_detected:
+            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+        
+            total_person_detected.append(person_detected.copy())
+            # print("Total number of people detected:", len(person_detected), people_ctr)
+            person_detected.clear()          
+
+        self.activate_yolo_pose(activate=False)
+        
+        
+        """
+        for t in tetas:
+            self.set_rgb(RED+SET_COLOUR)
+            self.set_neck(position=t, wait_for_end_of=True)
+            time.sleep(1.0) # 0.5
+            self.set_rgb(WHITE+SET_COLOUR)
+
+            start_time = time.time()
+            while (time.time() - start_time) < delta_t:        
+                local_detected_people = self.node.detected_people
+                for temp_people in local_detected_people.persons:
+                    
+                    is_already_in_list = False
+                    person_already_in_list = DetectedPerson()
+                    for people in person_detected:
+
+                        if temp_people.index_person == people.index_person:
+                            is_already_in_list = True
+                            person_already_in_list = people
+
+                    if is_already_in_list:
+                        person_detected.remove(person_already_in_list)
+                    elif temp_people.index_person > 0: # debug
+                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
+                        self.set_rgb(GREEN+SET_COLOUR)
+                    
+                    if temp_people.index_person > 0:
+                        person_detected.append(temp_people)
+                        people_ctr+=1
+
+            # DEBUG
+            # print("people in this neck pos:")
+            # for people in person_detected:
+            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+        
+            total_person_detected.append(person_detected.copy())
+            # print("Total number of people detected:", len(person_detected), people_ctr)
+            person_detected.clear()          
+
+        self.activate_yolo_pose(activate=False)
+        # print(total_person_detected)
+
+        # DEBUG
+        # print("TOTAL people in this neck pos:")
+        # for frame in total_person_detected:
+        #     for people in frame:    
+        #         print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+        #     print("-")
+
+        ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
+        
+        filtered_persons = []
+
+        for frame in range(len(total_person_detected)):
+
+            to_append = []
+            to_remove = []
+
+            if not len(filtered_persons):
+                # print("NO PEOPLE", frame)
+                for person in range(len(total_person_detected[frame])):
+                    to_append.append(total_person_detected[frame][person])
+            else:
+                # print("YES PEOPLE", frame)
+
+                MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same person
+
+                for person in range(len(total_person_detected[frame])):
+                    same_person_ctr = 0
+
+                    for filtered in range(len(filtered_persons)):
+
+                        dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
+                        # print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
+                        
+                        if dist < MIN_DIST:
+                            same_person_ctr+=1
+                            same_person_old = filtered_persons[filtered]
+                            same_person_new = total_person_detected[frame][person]
+                            # print("SAME PERSON")                        
+                    
+                    if same_person_ctr > 0:
+
+                        same_person_old_distance_center = abs(1280/2 - same_person_old.body_center_x) 
+                        same_person_new_distance_center = abs(1280/2 - same_person_new.body_center_x) 
+
+                        # print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
+                        # print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
+
+                        if same_person_new_distance_center < same_person_old_distance_center: # person from newer frame is more centered with camera center
+                            to_remove.append(same_person_old)
+                            to_append.append(same_person_new)
+                        else: # person from older frame is more centered with camera center
+                            pass # that person is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
+
+                    else:
+                        to_append.append(total_person_detected[frame][person])
+
+            for p in to_remove:
+                if p in filtered_persons:
+                    # print("REMOVED: ", p.index_person)
+                    filtered_persons.remove(p)
+                # else:
+                    # print("TRIED TO REMOVE TWICE THE SAME PERSON")
+            to_remove.clear()  
+
+            for p in to_append:
+                # print("ADDED: ", p.index_person)
+                filtered_persons.append(p)
+            to_append.clear()
+
+        # print("FILTERED:")
+        # for p in filtered_persons:
+        #     print(p.index_person)
+
+        return filtered_persons
+        """
 
 
     def search_for_person(self, tetas, delta_t=3.0):
