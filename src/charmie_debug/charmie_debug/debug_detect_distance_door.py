@@ -22,6 +22,8 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 from sklearn.linear_model import RANSACRegressor
+import open3d as o3d
+
 from pathlib import Path
 from datetime import datetime
 
@@ -153,8 +155,16 @@ class TestNode(Node):
     
     def get_color_image_callback(self, img: Image):
 
+        self.rgb_img = img
+
         current_frame = self.br.imgmsg_to_cv2(img, "bgr8")
         current_frame_draw = current_frame.copy()
+
+        self.rgb_img_2 = current_frame
+
+        """ 
+        
+        TENTATIVA FALHADA DE COM IMAGEM DE CORES SACAR PLANOS
 
         # Convert the image to grayscale
         gray = cv2.cvtColor(current_frame_draw, cv2.COLOR_BGR2GRAY)
@@ -231,13 +241,275 @@ class TestNode(Node):
         # Display the result
         cv2.imshow('Plane Detection', current_frame_draw)
         cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        cv2.destroyAllWindows() """
 
+                
     def get_aligned_depth_image_callback(self, img: Image):
 
         print('a')
         self.depth_img = img
         self.first_depth_image_received = True
+
+        current_frame = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
+        frame_2 = current_frame.copy()
+        height, width = current_frame.shape[:2]
+        current_frame_draw = current_frame[:, width //2 - width // 6 : width// 2 + width // 6]
+        height, width = current_frame_draw.shape[:2]
+
+        """ cv2.imshow("Aligned Depth Head", current_frame_draw)
+        cv2.waitKey(0)
+
+        cv2.imshow("Aligned Depth Head", current_frame)
+        cv2.waitKey(0) """
+
+        depth_image_filtered = cv2.medianBlur(current_frame_draw, 5)
+        depth_image_filtered_2 = cv2.medianBlur(frame_2, 5)
+
+
+        # Normalize the depth image for visualization
+        depth_image_normalized = cv2.normalize(depth_image_filtered, None, 0, 255, cv2.NORM_MINMAX)
+        depth_image_normalized = np.uint8(depth_image_normalized)
+
+        depth_image_normalized_2 = cv2.normalize(depth_image_filtered_2, None, 0, 255, cv2.NORM_MINMAX)
+        depth_image_normalized_2 = np.uint8(depth_image_normalized_2)
+
+        colored_depth_image = cv2.applyColorMap(depth_image_normalized, cv2.COLORMAP_JET)
+        colored_depth_image_2 = cv2.applyColorMap(depth_image_normalized_2, cv2.COLORMAP_JET)
+
+        cv2.imshow("Aligned Depth Head", colored_depth_image)
+        cv2.waitKey(0)
+
+        # Apply Canny edge detection
+        edges = cv2.Canny(depth_image_normalized, 25, 50)
+
+        # Detect lines using Hough Line Transform
+        lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=120)
+
+        avg_depths = []
+        
+        if lines is not None:
+            # Sort lines based on their y-coordinate
+            lines_sorted = sorted(lines, key=lambda line: np.sin(line[0][1]) * line[0][0])
+
+            # Iterate over each pair of consecutive lines
+            for i in range(len(lines_sorted) - 1):
+                rho1, theta1 = lines_sorted[i][0]
+                a1 = np.cos(theta1)
+                b1 = np.sin(theta1)
+                x01 = a1 * rho1
+                y01 = b1 * rho1
+
+                rho2, theta2 = lines_sorted[i+1][0]
+                a2 = np.cos(theta2)
+                b2 = np.sin(theta2)
+                x02 = a2 * rho2
+                y02 = b2 * rho2
+
+                # Calculate the difference in y-coordinate between consecutive lines
+                y_diff = np.abs(y01 - y02)
+
+                # Draw lines
+                x1 = int(x01 + 1000 * (-b1))
+                y1 = int(y01 + 1000 * (a1))
+                x2 = int(x01 - 1000 * (-b1))
+                y2 = int(y01 - 1000 * (a1))
+                cv2.line(colored_depth_image, (x1, y1), (x2, y2), (255, 0, 0), 2)
+
+                print(y_diff)
+
+                roi = colored_depth_image[int(y01):int(y02), :]
+
+                k = int(y01)
+                j = 0
+                a = 0
+                zeros_ = 0
+                while k < int(y02):
+                    while j < width:
+                        a += current_frame_draw[k, j]
+                        if current_frame_draw[k, j] == 0:
+                            zeros_ += 1
+                        j += 1
+                    k += 1
+                a = a / ((width * height) - zeros_)
+                # print(a)
+
+                if y_diff > 100.0:
+
+                    avg_depths.append((a, roi, y_diff, int(y01), int(y02)))
+
+                # print('\n\n')
+
+                    
+        print('\n\n')
+        # Sort the average depths in descending order
+        avg_depths.sort(reverse=True)
+
+        # Display the ROIs in the order of decreasing average depth
+        aux_depth = 0
+        for avg_depth, roi, y_diff, y_01, y_02 in avg_depths:
+            """ cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows() """
+            if avg_depth > aux_depth:
+                aux_depth = avg_depth
+                aux_ = avg_depth, roi, y_diff, y_01, y_02
+
+        cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        cv2.imshow('Furthest plane: ', aux_[1])
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        roi_height, roi_width = aux_[1].shape[:2]
+
+        # Calculate the center coordinates of the ROI
+        roi_center_x = int(roi_height / 2)
+        roi_center_y = int(roi_width / 2)
+
+        # Calculate the radius of the circle (you can adjust the radius according to your preference)
+        radius = 10
+
+        # Draw a circle at the center of the ROI
+        cv2.circle(aux_[1], (roi_center_y, roi_center_x), radius, (0, 255, 0), -1)
+
+        cv2.imshow('Furthest plane: ', aux_[1])
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        roi_height, roi_width = aux_[1].shape[:2]
+
+        height, width = current_frame.shape[:2]
+
+        print(height, width)
+
+        # Center coordinates of the ROI
+        roi_center_y = roi_height // 2
+        roi_center_x = roi_width // 2
+
+        # Coordinates of the ROI in colored_depth_image
+        y1 = aux_[3]
+        y2 = aux_[4]
+        
+        # Coordinates of the colored_depth_image in the current_frame
+        current_frame_start_y = y1
+        current_frame_start_x = width // 2 - width // 6
+
+        # Center coordinates in the original image
+        circle_center_x = current_frame_start_x + roi_center_x
+        circle_center_y = current_frame_start_y + roi_center_y
+
+        # Draw the circle in the original image
+        radius = 10
+        cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
+
+        cv2.imshow("Original Image with Circles", colored_depth_image_2)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+
+        """ 
+        CÓDIGO QUE TENTA DETETAR PLANOS (QUASE QUASE CONSIGO)
+
+        self.depth_img = img
+        self.first_depth_image_received = True
+
+        current_frame = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
+        current_frame_draw = current_frame.copy()
+
+        depth_image_filtered = cv2.medianBlur(current_frame_draw, 5)
+
+        # Normalize the depth image for visualization
+        depth_image_normalized = cv2.normalize(current_frame_draw, None, 0, 255, cv2.NORM_MINMAX)
+        depth_image_normalized = np.uint8(depth_image_normalized)
+
+        # Apply a median filter to reduce noise
+        
+
+        # # Debug: Display the raw depth image
+        # plt.figure(figsize=(10, 8))
+        # plt.imshow(current_frame_draw, cmap='gray')
+        # plt.title('Raw Depth Image')
+        # plt.axis('off')
+        # plt.show()
+
+        # # Debug: Display the filtered depth image
+        # plt.figure(figsize=(10, 8))
+        # plt.imshow(depth_image_filtered, cmap='gray')
+        # plt.title('Filtered Depth Image')
+        # plt.axis('off')
+        # plt.show()
+
+        # Step 2: Use RANSAC to Fit Planes
+        # Prepare data for RANSAC
+        height, width = depth_image_normalized.shape
+        xx, yy = np.meshgrid(np.arange(width), np.arange(height))
+        X = np.vstack((xx.flatten(), yy.flatten())).T
+        Z = depth_image_normalized.flatten()
+
+        print('c')
+
+        # Debug: Display the distribution of depth values
+        plt.figure(figsize=(10, 8))
+        plt.hist(Z, bins=50, color='blue', alpha=0.7)
+        plt.title('Histogram of Depth Values')
+        plt.xlabel('Depth Value')
+        plt.ylabel('Frequency')
+        plt.show()
+
+        # Apply RANSAC to fit planes
+        ransac = RANSACRegressor(residual_threshold=10, max_trials=1000)
+        ransac.fit(X, Z)
+
+        print('d')
+
+        # Get the fitted plane parameters
+        plane_coef = ransac.estimator_.coef_
+        plane_intercept = ransac.estimator_.intercept_
+
+        print(f"Plane Coefficients: {plane_coef}")
+        print(f"Plane Intercept: {plane_intercept}")
+
+        if np.all(plane_coef == 0) and plane_intercept == 0:
+            print("RANSAC failed to fit a meaningful plane. Try adjusting the parameters or preprocessing steps.")
+            return
+
+        # Visualize the fitted plane by drawing it on the depth image
+        a, b = plane_coef[0], plane_coef[1]
+        c = plane_intercept
+        zz = a * xx + b * yy + c
+
+        print(zz)
+        print(depth_image_normalized)
+
+        # Create a mask for the plane region
+        mask = ((depth_image_normalized - zz) < 30) & ((depth_image_normalized - zz) > 0)
+        mask = np.abs(depth_image_normalized - zz) < 10
+
+        # Debugging: Visualize the mask
+        plt.figure(figsize=(10, 8))
+        plt.imshow(mask, cmap='gray')
+        plt.title('Plane Mask')
+        plt.axis('off')
+        plt.show()
+        
+
+        # Step 3: Highlight the Detected Planes
+        # Convert depth image to a colored image
+        colored_depth_image = cv2.applyColorMap(depth_image_normalized, cv2.COLORMAP_JET)
+
+        # Paint the plane pixels white in the colored image
+        colored_depth_image[mask] = [0, 255, 0]
+        print(mask)
+
+        # Display the colored image with the highlighted plane
+        plt.figure(figsize=(10, 8))
+        plt.imshow(cv2.cvtColor(colored_depth_image, cv2.COLOR_BGR2RGB))
+        plt.title('Depth Image with Detected Plane')
+        plt.axis('off')  # Turn off axis
+        plt.show() """
+
         
         """ 
         CÓDIGO QUE COLOCA LINHAS EM ZONAS QUE ESTÃO ALINHADAS!
