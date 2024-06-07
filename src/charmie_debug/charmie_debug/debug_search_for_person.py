@@ -69,23 +69,20 @@ class TestNode(Node):
         self.face_command_client = self.create_client(SetFace, "face_command")
         
         # Speakers
-        while not self.speech_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Speech Command...")
+        # while not self.speech_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Speech Command...")
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
         # Yolos
         while not self.activate_yolo_pose_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        while not self.activate_yolo_objects_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Face
-        while not self.face_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Face Command...")
+        # while not self.face_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Face Command...")
 
-        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-        # while not self.neck_track_person_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Neck Track Person ...")
-        
         # Variables
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
@@ -437,7 +434,6 @@ class RestaurantMain():
     def __init__(self, node: TestNode):
         self.node = node
         
-    
     def set_rgb(self, command="", wait_for_end_of=True):
         
         temp = Int16()
@@ -560,7 +556,7 @@ class RestaurantMain():
         Final_State = 3
 
         # VARS ...
-        self.state = Search_for_person
+        self.state = Search_for_objects
 
         print("IN NEW MAIN")
 
@@ -681,9 +677,9 @@ class RestaurantMain():
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
         time.sleep(0.5)
         
-        total_person_detected = []
-        person_detected = []
-        people_ctr = 0
+        total_objects_detected = []
+        objects_detected = []
+        objects_ctr = 0
 
         ### MOVES NECK AND SAVES DETECTED PEOPLE ###
         
@@ -697,38 +693,39 @@ class RestaurantMain():
 
             start_time = time.time()
             while (time.time() - start_time) < delta_t:        
-                local_detected_people = self.node.detected_people
-                for temp_people in local_detected_people.persons:
+                local_detected_objects = self.node.detected_objects
+                for temp_objects in local_detected_objects.objects:
                     
                     is_already_in_list = False
-                    person_already_in_list = DetectedPerson()
-                    for people in person_detected:
+                    object_already_in_list = DetectedObject()
+                    for object in objects_detected:
 
-                        if temp_people.index_person == people.index_person:
+                        if temp_objects.index == object.index:
                             is_already_in_list = True
-                            person_already_in_list = people
+                            object_already_in_list = object
 
                     if is_already_in_list:
-                        person_detected.remove(person_already_in_list)
-                    elif temp_people.index_person > 0: # debug
-                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
+                        objects_detected.remove(object_already_in_list)
+                    elif temp_objects.index > 0: # debug
+                        # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
                         self.set_rgb(GREEN+SET_COLOUR)
                     
-                    if temp_people.index_person > 0:
-                        person_detected.append(temp_people)
-                        people_ctr+=1
+                    if temp_objects.index > 0:
+                        objects_detected.append(temp_objects)
+                        objects_ctr+=1
 
             # DEBUG
             # print("people in this neck pos:")
             # for people in person_detected:
             #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
         
-            total_person_detected.append(person_detected.copy())
+            total_objects_detected.append(objects_detected.copy())
             # print("Total number of people detected:", len(person_detected), people_ctr)
-            person_detected.clear()          
+            objects_detected.clear()          
 
-        self.activate_yolo_pose(activate=False)
-        
+        self.activate_yolo_objects(activate_objects=False, activate_shoes=False, activate_doors=False,
+                                    activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
+                                    minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
         
         """
         for t in tetas:
