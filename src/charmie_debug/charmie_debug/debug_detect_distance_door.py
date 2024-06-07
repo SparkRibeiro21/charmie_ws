@@ -364,15 +364,18 @@ class TestNode(Node):
 
         roi_height, roi_width = aux_[1].shape[:2]
 
+        roi_top_y = 0
+        roi_top_x = int(roi_width / 2)
+
         # Calculate the center coordinates of the ROI
-        roi_center_x = int(roi_height / 2)
-        roi_center_y = int(roi_width / 2)
+        roi_center_y = int(roi_height / 2)
+        roi_center_x = int(roi_width / 2)
 
         # Calculate the radius of the circle (you can adjust the radius according to your preference)
         radius = 10
 
         # Draw a circle at the center of the ROI
-        cv2.circle(aux_[1], (roi_center_y, roi_center_x), radius, (0, 255, 0), -1)
+        cv2.circle(aux_[1], (roi_center_x, roi_center_y), radius, (0, 255, 0), -1)
 
         cv2.imshow('Furthest plane: ', aux_[1])
         cv2.waitKey(0)
@@ -400,9 +403,15 @@ class TestNode(Node):
         circle_center_x = current_frame_start_x + roi_center_x
         circle_center_y = current_frame_start_y + roi_center_y
 
+        top_circle_center_y = circle_center_y - roi_center_y - 20
+
+        if top_circle_center_y < 0:
+            top_circle_center_y = 0 
+
         # Draw the circle in the original image
         radius = 10
         cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
+        cv2.circle(colored_depth_image_2, (circle_center_x, top_circle_center_y), radius, (0, 255, 0), -1)
 
         cv2.imshow("Original Image with Circles", colored_depth_image_2)
         cv2.waitKey(0)
