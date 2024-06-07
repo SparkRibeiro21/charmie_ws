@@ -4,9 +4,9 @@ import rclpy
 from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
-from geometry_msgs.msg import Point
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates
+from geometry_msgs.msg import Point, Pose2D
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, GetPointCloud
 from xarm_msgs.srv import GetFloat32List, PlanPose, PlanExec, PlanJoint
 from sensor_msgs.msg import Image
 
@@ -75,6 +75,12 @@ class TestNode(Node):
         self.arm_set_pose_publisher = self.create_publisher(ListOfFloats, 'arm_set_desired_pose', 10)
         self.arm_set_height_publisher = self.create_publisher(Float32, 'arm_set_desired_height', 10)
 
+        # Point cloud
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+
+        while not self.point_cloud_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud...")
+
 
         ### Services (Clients) ###
         
@@ -141,6 +147,8 @@ class TestNode(Node):
         self.detected_objects = Yolov8Objects()
         self.detected_doors = Yolov8Objects()
         self.detected_doors_hand= Yolov8Objects()
+        self.waiting_for_pcloud = False
+        self.point_cloud_response = GetPointCloud.Response()
 
         self.wardrobe_width = 0.9
         self.door_width = self.wardrobe_width // 2
@@ -149,6 +157,29 @@ class TestNode(Node):
 
     def get_arm_current_pose_callback(self, arm_pose: ListOfFloats):
         self.arm_current_pose = arm_pose.pose
+
+    def call_point_cloud_server(self, req, camera):
+        request = GetPointCloud.Request()
+        request.data = req
+        request.retrieve_bbox = False
+        request.camera = camera
+    
+        future = self.point_cloud_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud)
+
+
+    def callback_call_point_cloud(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            self.point_cloud_response = future.result()
+            # self.post_receiving_pcloud(response.coords)
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     def distance(p1, p2):
             return np.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
@@ -354,13 +385,13 @@ class TestNode(Node):
                 aux_depth = avg_depth
                 aux_ = avg_depth, roi, y_diff, y_01, y_02
 
-        cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
-        cv2.imshow('Furthest plane: ', aux_[1])
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imshow('Furthest plane: ', aux_[1])
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         roi_height, roi_width = aux_[1].shape[:2]
 
@@ -413,9 +444,35 @@ class TestNode(Node):
         cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
         cv2.circle(colored_depth_image_2, (circle_center_x, top_circle_center_y), radius, (0, 255, 0), -1)
 
-        cv2.imshow("Original Image with Circles", colored_depth_image_2)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imshow("Original Image with Circles", colored_depth_image_2)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
+        points = Pose2D()
+        points.x = float(circle_center_x)
+        points.y = float(top_circle_center_y)
+
+        print(points)
+
+        # Create a list to hold the Pose2D objects
+
+        requested_objects = []
+        get_pc = BoundingBoxAndPoints()
+        get_pc.requested_point_coords = [points]
+
+        requested_objects.append(get_pc)
+        camera = "head"
+
+        self.waiting_for_pcloud = True
+        self.call_point_cloud_server(requested_objects, camera)
+
+        while self.waiting_for_pcloud:
+            pass
+
+        new_pcloud = self.point_cloud_response.coords
+
+        print(new_pcloud)
+
 
 
         """ 
