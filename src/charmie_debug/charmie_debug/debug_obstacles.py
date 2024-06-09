@@ -5,6 +5,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from charmie_interfaces.msg import ObstacleInfo, Obstacles
 from example_interfaces.msg import Bool
+from sensor_msgs.msg import Image
 
 import cv2
 import numpy as np
@@ -783,9 +784,6 @@ class ObstaclesLIDAR:
         # print(tot_obs)
         return tot_obs
 
-        
-
-
 class ObstaclesNode(Node):
 
     def __init__(self):
@@ -800,9 +798,14 @@ class ObstaclesNode(Node):
         self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.lidar_callback , 10)
         self.obstacles_diagnostic_publisher = self.create_publisher(Bool, "obstacles_diagnostic", 10)
 
+        # Head Camera Depth Image
+        self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
+        
         flag_diagn = Bool()
         flag_diagn.data = True
         self.obstacles_diagnostic_publisher.publish(flag_diagn)
+
+        self.head_depth_img = Image()
 
         # Create Timers
         # self.create_timer(1, self.timer_callback)
@@ -814,6 +817,10 @@ class ObstaclesNode(Node):
         if not self.obs_detect.error_lidar_reading:
             self.obstacles_publisher.publish(self.obs_detect.obstacles_pub)
 
+
+    def get_aligned_depth_image_head_callback(self, img: Image):
+        self.head_depth_img = img
+        # print("Received Head Depth Image")
 
     """ 
     def timer_callback(self):
