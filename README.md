@@ -7,7 +7,7 @@
 
 ##
 
-* [Project Description :rocket:](#rocket-project-description)
+* [Project Description :book:](#book-project-description)
 * [Requirements :rocket:](#rocket-requirements)
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
   * [RoboCup@Home 2024 :netherlands:](#robocuphome-2024-netherlands)
@@ -16,7 +16,7 @@
 * [Results :trophy:](#trophy-results)
 * [Social Media :handshake:](#handshake-connect-with-us)
 
-## :rocket: Project Description
+## :book: Project Description
 
 CHARMIE is a domestic and healthcare service and assistive robot capable of performing tasks in non-standardized environments. The social goal for CHARMIE is to develop a robot capable of aiding in family homes, nursing homes, and healthcare facilities. The scientific objective of CHARMIE is the development of a multifaceted anthropomorphic robot capable of performing a broad set of tasks based solely on machine learning solutions that allow the robot to learn how to perform and improve tasks via observation and trial-and-error interactions with the environment. RoboCup@Home is an international robotics competition that aims to develop service and assistive robotic technology with high relevance for future personal domestic applications. The efficiency and effectiveness in the day-to-day tasks of CHARMIE are benchmarked in RoboCup@Home.
 
