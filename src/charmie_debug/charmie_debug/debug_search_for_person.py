@@ -683,8 +683,6 @@ class RestaurantMain():
 
         ### MOVES NECK AND SAVES DETECTED PEOPLE ###
         
-        
-        
         for t in tetas:
             self.set_rgb(RED+SET_COLOUR)
             self.set_neck(position=t, wait_for_end_of=True)
@@ -727,6 +725,15 @@ class RestaurantMain():
                                     activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
                                     minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
         
+
+        # DEBUG
+        print("TOTAL people in this neck pos:")
+        for frame in total_objects_detected:
+            for object in frame:    
+                print(object.index, object.position_absolute.x, object.position_absolute.y)
+            print("-")
+
+
         """
         for t in tetas:
             self.set_rgb(RED+SET_COLOUR)
