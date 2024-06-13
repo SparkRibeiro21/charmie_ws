@@ -5,7 +5,7 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point, Pose2D
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints, BoundingBox
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, GetPointCloud
 from xarm_msgs.srv import GetFloat32List, PlanPose, PlanExec, PlanJoint
 from sensor_msgs.msg import Image
@@ -162,8 +162,7 @@ class TestNode(Node):
         request = GetPointCloud.Request()
         request.data = req
         request.retrieve_bbox = False
-        request.camera = camera
-    
+        request.camera = camera    
         future = self.point_cloud_client.call_async(request)
         future.add_done_callback(self.callback_call_point_cloud)
 
@@ -277,202 +276,10 @@ class TestNode(Node):
                 
     def get_aligned_depth_image_callback(self, img: Image):
 
-        print('a')
         self.depth_img = img
         self.first_depth_image_received = True
 
-        current_frame = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
-        frame_2 = current_frame.copy()
-        height, width = current_frame.shape[:2]
-        current_frame_draw = current_frame[:, width //2 - width // 6 : width// 2 + width // 6]
-        height, width = current_frame_draw.shape[:2]
-
-        """ cv2.imshow("Aligned Depth Head", current_frame_draw)
-        cv2.waitKey(0)
-
-        cv2.imshow("Aligned Depth Head", current_frame)
-        cv2.waitKey(0) """
-
-        depth_image_filtered = cv2.medianBlur(current_frame_draw, 5)
-        depth_image_filtered_2 = cv2.medianBlur(frame_2, 5)
-
-
-        # Normalize the depth image for visualization
-        depth_image_normalized = cv2.normalize(depth_image_filtered, None, 0, 255, cv2.NORM_MINMAX)
-        depth_image_normalized = np.uint8(depth_image_normalized)
-
-        depth_image_normalized_2 = cv2.normalize(depth_image_filtered_2, None, 0, 255, cv2.NORM_MINMAX)
-        depth_image_normalized_2 = np.uint8(depth_image_normalized_2)
-
-        colored_depth_image = cv2.applyColorMap(depth_image_normalized, cv2.COLORMAP_JET)
-        colored_depth_image_2 = cv2.applyColorMap(depth_image_normalized_2, cv2.COLORMAP_JET)
-
-        cv2.imshow("Aligned Depth Head", colored_depth_image)
-        cv2.waitKey(0)
-
-        # Apply Canny edge detection
-        edges = cv2.Canny(depth_image_normalized, 25, 50)
-
-        # Detect lines using Hough Line Transform
-        lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=120)
-
-        avg_depths = []
         
-        if lines is not None:
-            # Sort lines based on their y-coordinate
-            lines_sorted = sorted(lines, key=lambda line: np.sin(line[0][1]) * line[0][0])
-
-            # Iterate over each pair of consecutive lines
-            for i in range(len(lines_sorted) - 1):
-                rho1, theta1 = lines_sorted[i][0]
-                a1 = np.cos(theta1)
-                b1 = np.sin(theta1)
-                x01 = a1 * rho1
-                y01 = b1 * rho1
-
-                rho2, theta2 = lines_sorted[i+1][0]
-                a2 = np.cos(theta2)
-                b2 = np.sin(theta2)
-                x02 = a2 * rho2
-                y02 = b2 * rho2
-
-                # Calculate the difference in y-coordinate between consecutive lines
-                y_diff = np.abs(y01 - y02)
-
-                # Draw lines
-                x1 = int(x01 + 1000 * (-b1))
-                y1 = int(y01 + 1000 * (a1))
-                x2 = int(x01 - 1000 * (-b1))
-                y2 = int(y01 - 1000 * (a1))
-                cv2.line(colored_depth_image, (x1, y1), (x2, y2), (255, 0, 0), 2)
-
-                print(y_diff)
-
-                roi = colored_depth_image[int(y01):int(y02), :]
-
-                k = int(y01)
-                j = 0
-                a = 0
-                zeros_ = 0
-                while k < int(y02):
-                    while j < width:
-                        a += current_frame_draw[k, j]
-                        if current_frame_draw[k, j] == 0:
-                            zeros_ += 1
-                        j += 1
-                    k += 1
-                a = a / ((width * height) - zeros_)
-                # print(a)
-
-                if y_diff > 100.0:
-
-                    avg_depths.append((a, roi, y_diff, int(y01), int(y02)))
-
-                # print('\n\n')
-
-                    
-        print('\n\n')
-        # Sort the average depths in descending order
-        avg_depths.sort(reverse=True)
-
-        # Display the ROIs in the order of decreasing average depth
-        aux_depth = 0
-        for avg_depth, roi, y_diff, y_01, y_02 in avg_depths:
-            """ cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows() """
-            if avg_depth > aux_depth:
-                aux_depth = avg_depth
-                aux_ = avg_depth, roi, y_diff, y_01, y_02
-
-        # cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-        # cv2.imshow('Furthest plane: ', aux_[1])
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-        roi_height, roi_width = aux_[1].shape[:2]
-
-        roi_top_y = 0
-        roi_top_x = int(roi_width / 2)
-
-        # Calculate the center coordinates of the ROI
-        roi_center_y = int(roi_height / 2)
-        roi_center_x = int(roi_width / 2)
-
-        # Calculate the radius of the circle (you can adjust the radius according to your preference)
-        radius = 10
-
-        # Draw a circle at the center of the ROI
-        cv2.circle(aux_[1], (roi_center_x, roi_center_y), radius, (0, 255, 0), -1)
-
-        cv2.imshow('Furthest plane: ', aux_[1])
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-        roi_height, roi_width = aux_[1].shape[:2]
-
-        height, width = current_frame.shape[:2]
-
-        print(height, width)
-
-        # Center coordinates of the ROI
-        roi_center_y = roi_height // 2
-        roi_center_x = roi_width // 2
-
-        # Coordinates of the ROI in colored_depth_image
-        y1 = aux_[3]
-        y2 = aux_[4]
-        
-        # Coordinates of the colored_depth_image in the current_frame
-        current_frame_start_y = y1
-        current_frame_start_x = width // 2 - width // 6
-
-        # Center coordinates in the original image
-        circle_center_x = current_frame_start_x + roi_center_x
-        circle_center_y = current_frame_start_y + roi_center_y
-
-        top_circle_center_y = circle_center_y - roi_center_y - 20
-
-        if top_circle_center_y < 0:
-            top_circle_center_y = 0 
-
-        # Draw the circle in the original image
-        radius = 10
-        cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
-        cv2.circle(colored_depth_image_2, (circle_center_x, top_circle_center_y), radius, (0, 255, 0), -1)
-
-        # cv2.imshow("Original Image with Circles", colored_depth_image_2)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-        points = Pose2D()
-        points.x = float(circle_center_x)
-        points.y = float(top_circle_center_y)
-
-        print(points)
-
-        # Create a list to hold the Pose2D objects
-
-        requested_objects = []
-        get_pc = BoundingBoxAndPoints()
-        get_pc.requested_point_coords = [points]
-
-        requested_objects.append(get_pc)
-        camera = "head"
-
-        self.waiting_for_pcloud = True
-        self.call_point_cloud_server(requested_objects, camera)
-
-        while self.waiting_for_pcloud:
-            pass
-
-        new_pcloud = self.point_cloud_response.coords
-
-        print(new_pcloud)
-
 
 
         """ 
@@ -1458,10 +1265,10 @@ class RestaurantMain():
                 # self.set_face(command="please_say_yes_or_no")
                 # self.set_face(command="please_say_receptionist")
                 # self.set_neck(position=[0.0, -20.0], wait_for_end_of=True)
-                self.set_neck(position=self.look_down, wait_for_end_of=True)
+                # self.set_neck(position=self.look_down, wait_for_end_of=True)
 
                 while True:
-                    # self.check_door_depth_hand_washing_machine()
+                    self.check_door_depth_hand_washing_machine()
                     pass
                     
                 
@@ -2181,137 +1988,210 @@ class RestaurantMain():
 
     def check_door_depth_hand_washing_machine(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=200, far_max_dist = 900):
 
-        overall = False
-        DEBUG = True
+        if self.node.first_depth_image_received:
+            print('b')
+            current_frame = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
+            frame_2 = current_frame.copy()
+            height, width = current_frame.shape[:2]
+            current_frame_draw = current_frame[:, width //2 - width // 6 : width// 2 + width // 6]
+            height, width = current_frame_draw.shape[:2]
 
-        if self.node.first_depth_image_hand_received:
-            current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img_hand, desired_encoding="passthrough")
-            height, width = current_frame_depth_hand.shape
-            current_frame_depth_hand_half = current_frame_depth_hand[height//2:height,:]
-            current_frame_depth_hand_center = current_frame_depth_hand[height//4:height-height//4, width//3:width-width//3]
-            current_frame_depth_hand_center_top = current_frame_depth_hand[height//4:height//2, width//3:width-width//3]
-            current_frame_depth_hand_center_bottom = current_frame_depth_hand[height//2:height-height//4, width//3:width-width//3]
-            # FOR THE FULL IMAGE
+            # cv2.imshow("Aligned Depth Head", current_frame_draw)
+            # cv2.waitKey(0)
 
-            # tot_pixeis = height*width 
-            tot_pixeis_top = (height//2 -height//4) * (width-width//3 - width//3)
-            tot_pixeis_bottom = (height-height//4 -height//2) * (width-width//3 - width//3)
-            mask_zero = (current_frame_depth_hand == 0)
-            mask_near = (current_frame_depth_hand > 0) & (current_frame_depth_hand <= near_max_dist)
-            mask_far = (current_frame_depth_hand > 0) & (current_frame_depth_hand >= far_max_dist)
-            # mask_zero_center = (current_frame_depth_hand_center == 0)
-            # mask_near_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center <= near_max_dist)
-            # mask_far_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center >= far_max_dist)
+            # cv2.imshow("Aligned Depth Head", current_frame)
+            # cv2.waitKey(0)
+
+            depth_image_filtered = cv2.medianBlur(current_frame_draw, 5)
+            depth_image_filtered_2 = cv2.medianBlur(frame_2, 5)
+
+
+            # Normalize the depth image for visualization
+            depth_image_normalized = cv2.normalize(depth_image_filtered, None, 0, 255, cv2.NORM_MINMAX)
+            depth_image_normalized = np.uint8(depth_image_normalized)
+
+            depth_image_normalized_2 = cv2.normalize(depth_image_filtered_2, None, 0, 255, cv2.NORM_MINMAX)
+            depth_image_normalized_2 = np.uint8(depth_image_normalized_2)
+
+            colored_depth_image = cv2.applyColorMap(depth_image_normalized, cv2.COLORMAP_JET)
+            colored_depth_image_2 = cv2.applyColorMap(depth_image_normalized_2, cv2.COLORMAP_JET)
+
+            # cv2.imshow("Aligned Depth Head", colored_depth_image)
+            # cv2.waitKey(0)
+
+            # Apply Canny edge detection
+            edges = cv2.Canny(depth_image_normalized, 25, 50)
+
+            # Detect lines using Hough Line Transform
+            lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=120)
+
+            avg_depths = []
             
-            if DEBUG:
-                mask_remaining = near_max_dist < current_frame_depth_hand.any() <= far_max_dist # just for debug
-                blank_image = np.zeros((height,width,3), np.uint8)
-                blank_image[mask_zero] = [255,255,255]
-                blank_image[mask_near] = [255,0,0] # blue
-                blank_image[mask_far]  = [0, 0, 255] # green
-                blank_image[mask_remaining] = [0, 255, 0]
-            # pixel_count_zeros = np.count_nonzero(mask_zero)
-            # pixel_count_near = np.count_nonzero(mask_near)
-            # pixel_count_far = np.count_nonzero(mask_far)
-            # pixel_count_zeros_center = np.count_nonzero(mask_zero_center)
+            if lines is not None:
+                # Sort lines based on their y-coordinate
+                lines_sorted = sorted(lines, key=lambda line: np.sin(line[0][1]) * line[0][0])
 
-            # FOR THE BOTTOM HALF OF THE IMAGE
+                # Iterate over each pair of consecutive lines
+                for i in range(len(lines_sorted) - 1):
+                    rho1, theta1 = lines_sorted[i][0]
+                    a1 = np.cos(theta1)
+                    b1 = np.sin(theta1)
+                    x01 = a1 * rho1
+                    y01 = b1 * rho1
 
-            mask_zero_half = (current_frame_depth_hand_half == 0)
-            mask_near_half = (current_frame_depth_hand_half > 0) & (current_frame_depth_hand_half <= near_max_dist)
-            mask_near_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center <= near_max_dist)
-            mask_far_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center >= far_max_dist)
-            mask_far_half = (current_frame_depth_hand_half > 0) & (current_frame_depth_hand_half >= far_max_dist)
-        
-            mask_zero_top = (current_frame_depth_hand_center_top == 0)
-            mask_near_center_top = (current_frame_depth_hand_center_top > 0) & (current_frame_depth_hand_center_top <= near_max_dist)
-            mask_far_center_top = (current_frame_depth_hand_center_top > 0) & (current_frame_depth_hand_center_top >= far_max_dist)
-            mask_remaining_center_top = (current_frame_depth_hand_center_top > 0) & (near_max_dist <= current_frame_depth_hand_center_top) & (current_frame_depth_hand_center_top <= far_max_dist)
-            mask_zero_bottom = (current_frame_depth_hand_center_bottom == 0)
-            mask_near_center_bottom = (current_frame_depth_hand_center_bottom > 0) & (current_frame_depth_hand_center_bottom <= near_max_dist)
-            mask_far_center_bottom = (current_frame_depth_hand_center_bottom > 0) & (current_frame_depth_hand_center_bottom >= far_max_dist)
-            mask_remaining_center_bottom = (current_frame_depth_hand_center_bottom > 0) & (near_max_dist <= current_frame_depth_hand_center_bottom) &  (current_frame_depth_hand_center_bottom <= far_max_dist)
+                    rho2, theta2 = lines_sorted[i+1][0]
+                    a2 = np.cos(theta2)
+                    b2 = np.sin(theta2)
+                    x02 = a2 * rho2
+                    y02 = b2 * rho2
+
+                    # Calculate the difference in y-coordinate between consecutive lines
+                    y_diff = np.abs(y01 - y02)
+
+                    # Draw lines
+                    x1 = int(x01 + 1000 * (-b1))
+                    y1 = int(y01 + 1000 * (a1))
+                    x2 = int(x01 - 1000 * (-b1))
+                    y2 = int(y01 - 1000 * (a1))
+                    cv2.line(colored_depth_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+                    print(y_diff)
+
+                    roi = colored_depth_image[int(y01):int(y02), :]
+
+                    k = int(y01)
+                    j = 0
+                    a = 0
+                    zeros_ = 0
+                    while k < int(y02):
+                        while j < width:
+                            a += current_frame_draw[k, j]
+                            if current_frame_draw[k, j] == 0:
+                                zeros_ += 1
+                            j += 1
+                        k += 1
+                    a = a / ((width * height) - zeros_)
+                    # print(a)
+
+                    if y_diff > 100.0:
+
+                        avg_depths.append((a, roi, y_diff, int(y01), int(y02)))
+
+                    # print('\n\n')
+
+                        
+            print('\n\n')
+            # Sort the average depths in descending order
+            avg_depths.sort(reverse=True)
+
+            # Display the ROIs in the order of decreasing average depth
+            aux_depth = 0
+            for avg_depth, roi, y_diff, y_01, y_02 in avg_depths:
+                """ cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows() """
+                if avg_depth < 1.0:
+                    if avg_depth > aux_depth:
+                        aux_depth = avg_depth
+                        aux_ = avg_depth, roi, y_diff, y_01, y_02
+                        print(avg_depth)
+
+            # cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+
+            # cv2.imshow('Furthest plane: ', aux_[1])
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+
+            roi_height, roi_width = aux_[1].shape[:2]
+
+            roi_top_y = 0
+            roi_top_x = int(roi_width / 2)
+
+            # Calculate the center coordinates of the ROI
+            roi_center_y = int(roi_height / 2)
+            roi_center_x = int(roi_width / 2)
+
+            # Calculate the radius of the circle (you can adjust the radius according to your preference)
+            radius = 10
+
+            # Draw a circle at the center of the ROI
+            cv2.circle(aux_[1], (roi_center_x, roi_center_y), radius, (0, 255, 0), -1)
+
+            # cv2.imshow('Furthest plane: ', aux_[1])
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+
+            roi_height, roi_width = aux_[1].shape[:2]
+
+            height, width = current_frame.shape[:2]
+
+            print(height, width)
+
+            # Center coordinates of the ROI
+            roi_center_y = roi_height // 2
+            roi_center_x = roi_width // 2
+
+            # Coordinates of the ROI in colored_depth_image
+            y1 = aux_[3]
+            y2 = aux_[4]
             
-            # if DEBUG:
-            #     mask_remaining_half = (current_frame_depth_hand_half > near_max_dist) & (current_frame_depth_hand_half < far_max_dist)# just for debug
-            #     blank_image_half = np.zeros((height//2,width,3), np.uint8)
-            #     blank_image_half[mask_zero_half] = [255,255,255]
-            #     blank_image_half[mask_near_half] = [255,0,0]
-            #     blank_image_half[mask_far_half]  = [0, 255, 0]
-            #     blank_image_half[mask_remaining_half] = [0,0,255]
-                    
-            # pixel_count_zeros_half = np.count_nonzero(mask_zero_half)
-            # pixel_count_near_half = np.count_nonzero(mask_near_half)
-            # pixel_count_far_half = np.count_nonzero(mask_far_half)
-            # pixel_count_near_center = np.count_nonzero(mask_near_center)
-            # pixel_count_far_center = np.count_nonzero(mask_far_center)
-            pixel_count_zeros_half_top = np.count_nonzero(mask_zero_top)
-            pixel_count_near_center_top = np.count_nonzero(mask_near_center_top)
-            pixel_count_far_center_top = np.count_nonzero(mask_far_center_top)
-            pixel_count_remaining_center_top = np.count_nonzero(mask_remaining_center_top)
-            pixel_count_zeros_half_bottom = np.count_nonzero(mask_zero_bottom)
-            pixel_count_near_center_bottom = np.count_nonzero(mask_near_center_bottom)
-            pixel_count_far_center_bottom = np.count_nonzero(mask_far_center_bottom)
-            pixel_count_remaining_center_bottom = np.count_nonzero(mask_remaining_center_bottom)
+            # Coordinates of the colored_depth_image in the current_frame
+            current_frame_start_y = y1
+            current_frame_start_x = width // 2 - width // 6
 
-            
-            if DEBUG:
-                cv2.line(blank_image, (width//3, height//2), (width - width//3, height//2), (0,0,0), 3)
-                cv2.rectangle(blank_image, (width//3, height//4), (width - width//3, height - height//4), (0, 255, 0), 3)
-                cv2.imshow("New Img Distance Inspection", blank_image)
-                cv2.waitKey(20)
+            # Center coordinates in the original image
+            circle_center_x = current_frame_start_x + roi_center_x
+            circle_center_y = current_frame_start_y + roi_center_y
 
+            top_circle_center_y = circle_center_y - roi_center_y - 40
 
-            half_image_zero_or_near_err_top = (pixel_count_zeros_half_top+pixel_count_near_center_top)/(tot_pixeis_top)
-            half_image_far_err_top = (pixel_count_far_center_top)/(tot_pixeis_top)
-            half_image_remaining_err_top = (pixel_count_remaining_center_top)/(tot_pixeis_top)
-            half_image_zero_or_near_err_bottom = (pixel_count_zeros_half_bottom+pixel_count_near_center_bottom)/(tot_pixeis_bottom)
-            half_image_far_err_bottom = (pixel_count_far_center_bottom)/(tot_pixeis_bottom)
-            half_image_remaining_err_bottom = (pixel_count_remaining_center_bottom)/(tot_pixeis_bottom)
+            if top_circle_center_y < 0:
+                top_circle_center_y = 0 
 
+            # Draw the circle in the original image
+            radius = 10
+            cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
+            cv2.circle(colored_depth_image_2, (circle_center_x, top_circle_center_y), radius, (0, 255, 0), -1)
 
+            cv2.imshow("Original Image with Circles", colored_depth_image_2)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
+            points = Pose2D()
+            points.x = float(circle_center_x)
+            points.y = float(top_circle_center_y)
 
-            print('top near:', half_image_zero_or_near_err_top * 100)
-            print('top far:', half_image_far_err_top * 100)
-            print('top remaining:', half_image_remaining_err_top * 100)
-            print('bottom near:', half_image_zero_or_near_err_bottom * 100)
-            print('bottom far:', half_image_far_err_bottom * 100)
-            print('bottom remaining:', half_image_remaining_err_bottom * 100)
+            print(points)
 
-            print('\n\n\n\n\n\n\n')
+            # Create a list to hold the Pose2D objects
 
+            requested_objects = []
 
-            """ half_image_zero_or_near = False
-            half_image_zero_or_near_err = 0.0
-            
-            full_image_near = False
-            full_image_near_err = 0.0
+            bb = BoundingBox()
+            bb.box_top_left_x = circle_center_x - 5
+            bb.box_top_left_y = top_circle_center_y - 5 
+            bb.box_width = 10
+            bb.box_height = 10
 
+            get_pc = BoundingBoxAndPoints()
+            get_pc.requested_point_coords = [points]
+            get_pc.bbox = bb
 
-            half_image_zero_or_near_err = (pixel_count_zeros_half+pixel_count_near_half)/(tot_pixeis//2)
-            if half_image_zero_or_near_err >= half_image_zero_or_near_percentage:
-                half_image_zero_or_near = True
-            
-            full_image_near_err = pixel_count_near/tot_pixeis
-            if full_image_near_err >= full_image_near_percentage:
-                full_image_near = True
+            requested_objects.append(get_pc)
+            camera = "head"
 
-            center_image_near_err = pixel_count_near_center / tot_pixeis
-            print(center_image_near_err*100)
-            center_image_zeros = pixel_count_zeros_center/tot_pixeis
-            #print(center_image_zeros*100)
-            if full_image_near_err >= full_image_near_percentage:
-                center_image_near = True
-            
-            if half_image_zero_or_near or full_image_near:
-                overall = True """
+            self.node.waiting_for_pcloud = True
+            self.node.call_point_cloud_server(requested_objects, camera)
 
-            # just for debug
-            # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
-            # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
-        
-            # return center_image_near_err
+            while self.node.waiting_for_pcloud:
+                pass
+
+            new_pcloud = self.node.point_cloud_response.coords
+
+            print('--', new_pcloud)
+
 
     def find_wardrobe_door_open(self):
         if self.node.first_depth_image_received:
