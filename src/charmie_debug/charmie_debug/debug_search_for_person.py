@@ -781,22 +781,22 @@ class RestaurantMain():
                     else:
                         to_append.append(total_objects_detected[frame][object])
 
-            for p in to_remove:
-                if p in filtered_objects:
-                    # print("REMOVED: ", p.index)
-                    filtered_objects.remove(p)
+            for o in to_remove:
+                if o in filtered_objects:
+                    # print("REMOVED: ", o.index)
+                    filtered_objects.remove(o)
                 # else:
                     # print("TRIED TO REMOVE TWICE THE SAME OBJECT")
             to_remove.clear()  
 
-            for p in to_append:
+            for o in to_append:
                 # print("ADDED: ", p.index)
-                filtered_objects.append(p)
+                filtered_objects.append(o)
             to_append.clear()
 
         # print("FILTERED:")
-        # for p in filtered_objects:
-        #     print(p.index)
+        # for o in filtered_objects:
+        #     print(o.index)
 
         return filtered_objects    
 
