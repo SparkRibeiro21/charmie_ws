@@ -670,7 +670,7 @@ class RestaurantMain():
     def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
 
         self.activate_yolo_objects(activate_objects=True, activate_shoes=False, activate_doors=False,
-                                    activate_objects_hand=True, activate_shoes_hand=False, activate_doors_hand=False,
+                                    activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
                                     minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
         
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
@@ -742,11 +742,11 @@ class RestaurantMain():
             to_remove = []
 
             if not len(filtered_objects):
-                # print("NO OBJECTS", frame)
+                print("NO OBJECTS", frame)
                 for object in range(len(total_objects_detected[frame])):
                     to_append.append(total_objects_detected[frame][object])
             else:
-                # print("YES OBJECTS", frame)
+                print("YES OBJECTS", frame)
 
                 MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same objects
 
@@ -756,21 +756,21 @@ class RestaurantMain():
                     for filtered in range(len(filtered_objects)):
 
                         dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
-                        # print("new:", total_objects_detected[frame][object].index, "old:", filtered_objects[filtered].index, dist)
+                        print("new:", total_objects_detected[frame][object].index, "old:", filtered_objects[filtered].index, dist)
                         
                         if dist < MIN_DIST:
                             same_object_ctr+=1
                             same_object_old = filtered_objects[filtered]
                             same_object_new = total_objects_detected[frame][object]
-                            # print("SAME OBKECT")                        
+                            print("SAME OBJECT")                        
                     
                     if same_object_ctr > 0:
 
                         same_object_old_distance_center = abs(1280/2 - same_object_old.box_center_x) 
                         same_object_new_distance_center = abs(1280/2 - same_object_new.box_center_x) 
 
-                        # print("OLD (pixel):", same_object_old.body_center_x, same_object_old_distance_center)
-                        # print("NEW (pixel):", same_object_new.body_center_x, same_object_new_distance_center)
+                        print("OLD (pixel):", same_object_old.body_center_x, same_object_old_distance_center)
+                        print("NEW (pixel):", same_object_new.body_center_x, same_object_new_distance_center)
 
                         if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
                             to_remove.append(same_object_old)
@@ -783,20 +783,20 @@ class RestaurantMain():
 
             for o in to_remove:
                 if o in filtered_objects:
-                    # print("REMOVED: ", o.index)
+                    print("REMOVED: ", o.index)
                     filtered_objects.remove(o)
-                # else:
-                    # print("TRIED TO REMOVE TWICE THE SAME OBJECT")
+                else:
+                    print("TRIED TO REMOVE TWICE THE SAME OBJECT")
             to_remove.clear()  
 
             for o in to_append:
-                # print("ADDED: ", p.index)
+                print("ADDED: ", o.index)
                 filtered_objects.append(o)
             to_append.clear()
 
-        # print("FILTERED:")
-        # for o in filtered_objects:
-        #     print(o.index)
+        print("FILTERED:")
+        for o in filtered_objects:
+            print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
 
         return filtered_objects    
 
