@@ -75,8 +75,8 @@ class TestNode(Node):
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
         # Yolos
-        while not self.activate_yolo_pose_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         while not self.activate_yolo_objects_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Face
@@ -591,7 +591,6 @@ class RestaurantMain():
                 time.sleep(2.0)
 
                 tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                # tetas = [-45, 0, 60]
                 people_found = self.search_for_person(tetas=tetas, delta_t=3.0)
 
                 print("FOUND:", len(people_found)) 
@@ -621,13 +620,13 @@ class RestaurantMain():
                 
                 ### SEARCH FOR OBJECTS EXAMPLE ###
                 
-                self.set_face(command="charmie_face")
+                # self.set_face(command="charmie_face")
                 self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
                 time.sleep(2.0)
 
-                tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                # tetas = [-45, 0, 60]
+                # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
+                tetas = [[0, -45], [0, -15], [0, 15]]
                 people_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["milk", "cornflakes"], objects_detected_as=[["cleanser", "dishwasher_tab"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
                 
                 """
@@ -730,7 +729,7 @@ class RestaurantMain():
         print("TOTAL people in this neck pos:")
         for frame in total_objects_detected:
             for object in frame:    
-                print(object.index, object.position_absolute.x, object.position_absolute.y)
+                print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
             print("-")
 
 
