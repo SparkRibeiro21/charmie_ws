@@ -2161,9 +2161,7 @@ class RestaurantMain():
                     cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
                     cv2.circle(colored_depth_image_2, (circle_center_x, top_circle_center_y), radius, (0, 255, 0), -1)
 
-                    cv2.imshow("Original Image with Circles", colored_depth_image_2)
-                    cv2.waitKey(0)
-                    cv2.destroyAllWindows()
+                    
 
                     points = Pose2D()
                     points.x = float(circle_center_x)
@@ -2176,16 +2174,34 @@ class RestaurantMain():
                     requested_objects = []
 
                     bb = BoundingBox()
-                    bb.box_top_left_x = circle_center_x - 5
-                    bb.box_top_left_y = top_circle_center_y - 5 
-                    bb.box_width = 10
-                    bb.box_height = 10
+                    bb.box_top_left_x = circle_center_x - 20
+                    bb.box_top_left_y = top_circle_center_y - 20 
+                    bb.box_width = 40
+                    bb.box_height = 40
+
+                    bb_2 = BoundingBox()
+                    bb_2.box_top_left_x = circle_center_x - 20
+                    bb_2.box_top_left_y = circle_center_y - 20 
+                    bb_2.box_width = 40
+                    bb_2.box_height = 40
+
+                    cv2.rectangle(colored_depth_image_2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x + bb.box_width, bb.box_top_left_y + bb.box_height), (255, 0, 0), 2)
+                    cv2.rectangle(colored_depth_image_2, (bb_2.box_top_left_x, bb_2.box_top_left_y), (bb_2.box_top_left_x + bb_2.box_width, bb_2.box_top_left_y + bb_2.box_height), (255, 0, 0), 2)
+
+                    cv2.imshow("Original Image with Circles", colored_depth_image_2)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
 
                     get_pc = BoundingBoxAndPoints()
-                    get_pc.requested_point_coords = [points]
+                    # get_pc.requested_point_coords = [points]
                     get_pc.bbox = bb
 
+                    get_pc_2 = BoundingBoxAndPoints()
+                    # get_pc_2.requested_point_coords = [points]
+                    get_pc_2.bbox = bb_2
+
                     requested_objects.append(get_pc)
+                    requested_objects.append(get_pc_2)
                     camera = "head"
 
                     self.node.waiting_for_pcloud = True
