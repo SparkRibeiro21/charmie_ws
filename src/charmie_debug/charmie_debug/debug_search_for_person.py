@@ -680,7 +680,7 @@ class RestaurantMain():
         objects_detected = []
         objects_ctr = 0
 
-        ### MOVES NECK AND SAVES DETECTED PEOPLE ###
+        ### MOVES NECK AND SAVES DETECTED OBJECTS ###
         
         for t in tetas:
             self.set_rgb(RED+SET_COLOUR)
@@ -712,12 +712,12 @@ class RestaurantMain():
                         objects_ctr+=1
 
             # DEBUG
-            # print("people in this neck pos:")
-            # for people in person_detected:
-            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+            # print("obejcts in this neck pos:")
+            # for object in objects_detected:
+            #     print(object.index, object.position_absolute.x, object.position_absolute.y)
         
             total_objects_detected.append(objects_detected.copy())
-            # print("Total number of people detected:", len(person_detected), people_ctr)
+            # print("Total number of objects detected:", len(objects_detected), objects_ctr)
             objects_detected.clear()          
 
         self.activate_yolo_objects(activate_objects=False, activate_shoes=False, activate_doors=False,
@@ -726,130 +726,79 @@ class RestaurantMain():
         
 
         # DEBUG
-        print("TOTAL people in this neck pos:")
+        print("TOTAL objects in this neck pos:")
         for frame in total_objects_detected:
             for object in frame:    
                 print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
             print("-")
 
-
-        """
-        for t in tetas:
-            self.set_rgb(RED+SET_COLOUR)
-            self.set_neck(position=t, wait_for_end_of=True)
-            time.sleep(1.0) # 0.5
-            self.set_rgb(WHITE+SET_COLOUR)
-
-            start_time = time.time()
-            while (time.time() - start_time) < delta_t:        
-                local_detected_people = self.node.detected_people
-                for temp_people in local_detected_people.persons:
-                    
-                    is_already_in_list = False
-                    person_already_in_list = DetectedPerson()
-                    for people in person_detected:
-
-                        if temp_people.index_person == people.index_person:
-                            is_already_in_list = True
-                            person_already_in_list = people
-
-                    if is_already_in_list:
-                        person_detected.remove(person_already_in_list)
-                    elif temp_people.index_person > 0: # debug
-                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
-                        self.set_rgb(GREEN+SET_COLOUR)
-                    
-                    if temp_people.index_person > 0:
-                        person_detected.append(temp_people)
-                        people_ctr+=1
-
-            # DEBUG
-            # print("people in this neck pos:")
-            # for people in person_detected:
-            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+        ### DETECTS ALL THE OBJECTS SHOW IN EVERY FRAME ###
         
-            total_person_detected.append(person_detected.copy())
-            # print("Total number of people detected:", len(person_detected), people_ctr)
-            person_detected.clear()          
+        filtered_objects = []
 
-        self.activate_yolo_pose(activate=False)
-        # print(total_person_detected)
-
-        # DEBUG
-        # print("TOTAL people in this neck pos:")
-        # for frame in total_person_detected:
-        #     for people in frame:    
-        #         print(people.index_person, people.position_absolute.x, people.position_absolute.y)
-        #     print("-")
-
-        ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
-        
-        filtered_persons = []
-
-        for frame in range(len(total_person_detected)):
+        for frame in range(len(total_objects_detected)):
 
             to_append = []
             to_remove = []
 
-            if not len(filtered_persons):
-                # print("NO PEOPLE", frame)
-                for person in range(len(total_person_detected[frame])):
-                    to_append.append(total_person_detected[frame][person])
+            if not len(filtered_objects):
+                # print("NO OBJECTS", frame)
+                for object in range(len(total_objects_detected[frame])):
+                    to_append.append(total_objects_detected[frame][object])
             else:
-                # print("YES PEOPLE", frame)
+                # print("YES OBJECTS", frame)
 
-                MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same person
+                MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same objects
 
-                for person in range(len(total_person_detected[frame])):
-                    same_person_ctr = 0
+                for object in range(len(total_objects_detected[frame])):
+                    same_object_ctr = 0
 
-                    for filtered in range(len(filtered_persons)):
+                    for filtered in range(len(filtered_objects)):
 
-                        dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
-                        # print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
+                        dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
+                        # print("new:", total_objects_detected[frame][object].index, "old:", filtered_objects[filtered].index, dist)
                         
                         if dist < MIN_DIST:
-                            same_person_ctr+=1
-                            same_person_old = filtered_persons[filtered]
-                            same_person_new = total_person_detected[frame][person]
-                            # print("SAME PERSON")                        
+                            same_object_ctr+=1
+                            same_object_old = filtered_objects[filtered]
+                            same_object_new = total_objects_detected[frame][object]
+                            # print("SAME OBKECT")                        
                     
-                    if same_person_ctr > 0:
+                    if same_object_ctr > 0:
 
-                        same_person_old_distance_center = abs(1280/2 - same_person_old.body_center_x) 
-                        same_person_new_distance_center = abs(1280/2 - same_person_new.body_center_x) 
+                        same_object_old_distance_center = abs(1280/2 - same_object_old.box_center_x) 
+                        same_object_new_distance_center = abs(1280/2 - same_object_new.box_center_x) 
 
-                        # print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
-                        # print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
+                        # print("OLD (pixel):", same_object_old.body_center_x, same_object_old_distance_center)
+                        # print("NEW (pixel):", same_object_new.body_center_x, same_object_new_distance_center)
 
-                        if same_person_new_distance_center < same_person_old_distance_center: # person from newer frame is more centered with camera center
-                            to_remove.append(same_person_old)
-                            to_append.append(same_person_new)
-                        else: # person from older frame is more centered with camera center
-                            pass # that person is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
+                        if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
+                            to_remove.append(same_object_old)
+                            to_append.append(same_object_new)
+                        else: # object from older frame is more centered with camera center
+                            pass # that object is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
 
                     else:
-                        to_append.append(total_person_detected[frame][person])
+                        to_append.append(total_objects_detected[frame][object])
 
             for p in to_remove:
-                if p in filtered_persons:
-                    # print("REMOVED: ", p.index_person)
-                    filtered_persons.remove(p)
+                if p in filtered_objects:
+                    # print("REMOVED: ", p.index)
+                    filtered_objects.remove(p)
                 # else:
-                    # print("TRIED TO REMOVE TWICE THE SAME PERSON")
+                    # print("TRIED TO REMOVE TWICE THE SAME OBJECT")
             to_remove.clear()  
 
             for p in to_append:
-                # print("ADDED: ", p.index_person)
-                filtered_persons.append(p)
+                # print("ADDED: ", p.index)
+                filtered_objects.append(p)
             to_append.clear()
 
         # print("FILTERED:")
-        # for p in filtered_persons:
-        #     print(p.index_person)
+        # for p in filtered_objects:
+        #     print(p.index)
 
-        return filtered_persons
-        """
+        return filtered_objects    
 
 
     def search_for_milk(self):
