@@ -1265,7 +1265,7 @@ class RestaurantMain():
                 # self.set_face(command="please_say_yes_or_no")
                 # self.set_face(command="please_say_receptionist")
                 # self.set_neck(position=[0.0, -20.0], wait_for_end_of=True)
-                # self.set_neck(position=self.look_down, wait_for_end_of=True)
+                self.set_neck(position=self.look_down, wait_for_end_of=True)
 
                 while True:
                     self.check_door_depth_hand_washing_machine()
@@ -1996,11 +1996,11 @@ class RestaurantMain():
             current_frame_draw = current_frame[:, width //2 - width // 6 : width// 2 + width // 6]
             height, width = current_frame_draw.shape[:2]
 
-            # cv2.imshow("Aligned Depth Head", current_frame_draw)
-            # cv2.waitKey(0)
+            cv2.imshow("Aligned Depth Head", current_frame_draw)
+            cv2.waitKey(0)
 
-            # cv2.imshow("Aligned Depth Head", current_frame)
-            # cv2.waitKey(0)
+            cv2.imshow("Aligned Depth Head", current_frame)
+            cv2.waitKey(0)
 
             depth_image_filtered = cv2.medianBlur(current_frame_draw, 5)
             depth_image_filtered_2 = cv2.medianBlur(frame_2, 5)
@@ -2016,8 +2016,8 @@ class RestaurantMain():
             colored_depth_image = cv2.applyColorMap(depth_image_normalized, cv2.COLORMAP_JET)
             colored_depth_image_2 = cv2.applyColorMap(depth_image_normalized_2, cv2.COLORMAP_JET)
 
-            # cv2.imshow("Aligned Depth Head", colored_depth_image)
-            # cv2.waitKey(0)
+            cv2.imshow("Aligned Depth Head", colored_depth_image)
+            cv2.waitKey(0)
 
             # Apply Canny edge detection
             edges = cv2.Canny(depth_image_normalized, 25, 50)
@@ -2030,9 +2030,13 @@ class RestaurantMain():
             if lines is not None:
                 # Sort lines based on their y-coordinate
                 lines_sorted = sorted(lines, key=lambda line: np.sin(line[0][1]) * line[0][0])
+                print('nr de linhas:', len(lines_sorted))
+                print(range(len(lines_sorted)))
+                print(len(range(len(lines_sorted))))
 
                 # Iterate over each pair of consecutive lines
                 for i in range(len(lines_sorted) - 1):
+                    print(lines_sorted[i][0])
                     rho1, theta1 = lines_sorted[i][0]
                     a1 = np.cos(theta1)
                     b1 = np.sin(theta1)
@@ -2053,7 +2057,7 @@ class RestaurantMain():
                     y1 = int(y01 + 1000 * (a1))
                     x2 = int(x01 - 1000 * (-b1))
                     y2 = int(y01 - 1000 * (a1))
-                    cv2.line(colored_depth_image, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                    cv2.line(colored_depth_image, (x1, y1), (x2, y2), (0, 0, 255), 1)
 
                     print(y_diff)
 
@@ -2078,119 +2082,124 @@ class RestaurantMain():
                         avg_depths.append((a, roi, y_diff, int(y01), int(y02)))
 
                     # print('\n\n')
+      
+                print('\n\n')
+                # Sort the average depths in descending order
+                avg_depths.sort(reverse=True)
 
-                        
-            print('\n\n')
-            # Sort the average depths in descending order
-            avg_depths.sort(reverse=True)
+                # Display the ROIs in the order of decreasing average depth
+                aux_depth = 0
+                lines_detected = False
+                for avg_depth, roi, y_diff, y_01, y_02 in avg_depths:
+                    cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
+                    if avg_depth < 1.0:
+                        if avg_depth > aux_depth:
+                            aux_depth = avg_depth
+                            lines_detected = True
+                            aux_ = avg_depth, roi, y_diff, y_01, y_02
+                            print(avg_depth)
 
-            # Display the ROIs in the order of decreasing average depth
-            aux_depth = 0
-            for avg_depth, roi, y_diff, y_01, y_02 in avg_depths:
-                """ cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
+                cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
                 cv2.waitKey(0)
-                cv2.destroyAllWindows() """
-                if avg_depth < 1.0:
-                    if avg_depth > aux_depth:
-                        aux_depth = avg_depth
-                        aux_ = avg_depth, roi, y_diff, y_01, y_02
-                        print(avg_depth)
+                cv2.destroyAllWindows()
 
-            # cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
+                if lines_detected == True:
+                    cv2.imshow('Furthest plane: ', aux_[1])
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
 
-            # cv2.imshow('Furthest plane: ', aux_[1])
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
+                    roi_height, roi_width = aux_[1].shape[:2]
 
-            roi_height, roi_width = aux_[1].shape[:2]
+                    roi_top_y = 0
+                    roi_top_x = int(roi_width / 2)
 
-            roi_top_y = 0
-            roi_top_x = int(roi_width / 2)
+                    # Calculate the center coordinates of the ROI
+                    roi_center_y = int(roi_height / 2)
+                    roi_center_x = int(roi_width / 2)
 
-            # Calculate the center coordinates of the ROI
-            roi_center_y = int(roi_height / 2)
-            roi_center_x = int(roi_width / 2)
+                    # Calculate the radius of the circle (you can adjust the radius according to your preference)
+                    radius = 10
 
-            # Calculate the radius of the circle (you can adjust the radius according to your preference)
-            radius = 10
+                    # Draw a circle at the center of the ROI
+                    cv2.circle(aux_[1], (roi_center_x, roi_center_y), radius, (0, 255, 0), -1)
 
-            # Draw a circle at the center of the ROI
-            cv2.circle(aux_[1], (roi_center_x, roi_center_y), radius, (0, 255, 0), -1)
+                    cv2.imshow('Furthest plane: ', aux_[1])
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
 
-            # cv2.imshow('Furthest plane: ', aux_[1])
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
+                    roi_height, roi_width = aux_[1].shape[:2]
 
-            roi_height, roi_width = aux_[1].shape[:2]
+                    height, width = current_frame.shape[:2]
 
-            height, width = current_frame.shape[:2]
+                    print(height, width)
 
-            print(height, width)
+                    # Center coordinates of the ROI
+                    roi_center_y = roi_height // 2
+                    roi_center_x = roi_width // 2
 
-            # Center coordinates of the ROI
-            roi_center_y = roi_height // 2
-            roi_center_x = roi_width // 2
+                    # Coordinates of the ROI in colored_depth_image
+                    y1 = aux_[3]
+                    y2 = aux_[4]
+                    
+                    # Coordinates of the colored_depth_image in the current_frame
+                    current_frame_start_y = y1
+                    current_frame_start_x = width // 2 - width // 6
 
-            # Coordinates of the ROI in colored_depth_image
-            y1 = aux_[3]
-            y2 = aux_[4]
-            
-            # Coordinates of the colored_depth_image in the current_frame
-            current_frame_start_y = y1
-            current_frame_start_x = width // 2 - width // 6
+                    # Center coordinates in the original image
+                    circle_center_x = current_frame_start_x + roi_center_x
+                    circle_center_y = current_frame_start_y + roi_center_y
 
-            # Center coordinates in the original image
-            circle_center_x = current_frame_start_x + roi_center_x
-            circle_center_y = current_frame_start_y + roi_center_y
+                    top_circle_center_y = circle_center_y - roi_center_y - 40
 
-            top_circle_center_y = circle_center_y - roi_center_y - 40
+                    if top_circle_center_y < 0:
+                        top_circle_center_y = 0 
 
-            if top_circle_center_y < 0:
-                top_circle_center_y = 0 
+                    # Draw the circle in the original image
+                    radius = 10
+                    cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
+                    cv2.circle(colored_depth_image_2, (circle_center_x, top_circle_center_y), radius, (0, 255, 0), -1)
 
-            # Draw the circle in the original image
-            radius = 10
-            cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
-            cv2.circle(colored_depth_image_2, (circle_center_x, top_circle_center_y), radius, (0, 255, 0), -1)
+                    cv2.imshow("Original Image with Circles", colored_depth_image_2)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
 
-            cv2.imshow("Original Image with Circles", colored_depth_image_2)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+                    points = Pose2D()
+                    points.x = float(circle_center_x)
+                    points.y = float(top_circle_center_y)
 
-            points = Pose2D()
-            points.x = float(circle_center_x)
-            points.y = float(top_circle_center_y)
+                    print(points)
 
-            print(points)
+                    # Create a list to hold the Pose2D objects
 
-            # Create a list to hold the Pose2D objects
+                    requested_objects = []
 
-            requested_objects = []
+                    bb = BoundingBox()
+                    bb.box_top_left_x = circle_center_x - 5
+                    bb.box_top_left_y = top_circle_center_y - 5 
+                    bb.box_width = 10
+                    bb.box_height = 10
 
-            bb = BoundingBox()
-            bb.box_top_left_x = circle_center_x - 5
-            bb.box_top_left_y = top_circle_center_y - 5 
-            bb.box_width = 10
-            bb.box_height = 10
+                    get_pc = BoundingBoxAndPoints()
+                    get_pc.requested_point_coords = [points]
+                    get_pc.bbox = bb
 
-            get_pc = BoundingBoxAndPoints()
-            get_pc.requested_point_coords = [points]
-            get_pc.bbox = bb
+                    requested_objects.append(get_pc)
+                    camera = "head"
 
-            requested_objects.append(get_pc)
-            camera = "head"
+                    self.node.waiting_for_pcloud = True
+                    self.node.call_point_cloud_server(requested_objects, camera)
 
-            self.node.waiting_for_pcloud = True
-            self.node.call_point_cloud_server(requested_objects, camera)
+                    while self.node.waiting_for_pcloud:
+                        pass
 
-            while self.node.waiting_for_pcloud:
-                pass
+                    new_pcloud = self.node.point_cloud_response.coords
 
-            new_pcloud = self.node.point_cloud_response.coords
+                    print('--', new_pcloud)
 
-            print('--', new_pcloud)
+                else:
+                    print('\n\n Not enough lines, please move me a bit \n\n')
 
 
     def find_wardrobe_door_open(self):
