@@ -2062,6 +2062,7 @@ class RestaurantMain():
                     print(y_diff)
 
                     roi = colored_depth_image[int(y01):int(y02), :]
+                    roi_depth = current_frame_draw[int(y01):int(y02), :]
 
                     k = int(y01)
                     j = 0
@@ -2078,8 +2079,9 @@ class RestaurantMain():
                     # print(a)
 
                     if y_diff > 100.0:
+                        if y_diff < 400.0:
 
-                        avg_depths.append((a, roi, y_diff, int(y01), int(y02)))
+                            avg_depths.append((a, roi, y_diff, int(y01), int(y02), roi_depth))
 
                     # print('\n\n')
       
@@ -2088,22 +2090,34 @@ class RestaurantMain():
                 avg_depths.sort(reverse=True)
 
                 # Display the ROIs in the order of decreasing average depth
-                aux_depth = 0
+                aux_depth = 1.0
+                std_dev_aux = 0.0
                 lines_detected = False
-                for avg_depth, roi, y_diff, y_01, y_02 in avg_depths:
+                for avg_depth, roi, y_diff, y_01, y_02, roi_depth in avg_depths:
+                    cv2.imshow(f"ROI with Average Depth {avg_depth}", roi_depth)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
                     cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
-                    if avg_depth < 1.0:
-                        if avg_depth > aux_depth:
+                    std_dev = np.std(roi_depth)
+                    print('standard deviation', std_dev)
+                    print('depth', avg_depth)
+                    if avg_depth < 1.15:
+                        if std_dev > std_dev_aux:
                             aux_depth = avg_depth
+                            std_dev_aux = std_dev
                             lines_detected = True
-                            aux_ = avg_depth, roi, y_diff, y_01, y_02
-                            print(avg_depth)
+                            
+                            aux_ = avg_depth, roi, y_diff, y_01, y_02, roi_depth
+                            # print('depth', avg_depth)
 
                 cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
+
+
+                print(lines_detected)
 
                 if lines_detected == True:
                     cv2.imshow('Furthest plane: ', aux_[1])
@@ -2145,13 +2159,16 @@ class RestaurantMain():
                     
                     # Coordinates of the colored_depth_image in the current_frame
                     current_frame_start_y = y1
+                    current_frame_end_y = y2
                     current_frame_start_x = width // 2 - width // 6
 
                     # Center coordinates in the original image
                     circle_center_x = current_frame_start_x + roi_center_x
                     circle_center_y = current_frame_start_y + roi_center_y
+                    bottom_circle_center_y = current_frame_end_y + roi_center_y
 
                     top_circle_center_y = circle_center_y - roi_center_y - 40
+                    bottom_circle_center_y = bottom_circle_center_y - roi_center_y + 40
 
                     if top_circle_center_y < 0:
                         top_circle_center_y = 0 
@@ -2160,6 +2177,7 @@ class RestaurantMain():
                     radius = 10
                     cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
                     cv2.circle(colored_depth_image_2, (circle_center_x, top_circle_center_y), radius, (0, 255, 0), -1)
+                    cv2.circle(colored_depth_image_2, (circle_center_x, bottom_circle_center_y), radius, (0, 255, 0), -1)
 
                     
 
@@ -2185,8 +2203,16 @@ class RestaurantMain():
                     bb_2.box_width = 40
                     bb_2.box_height = 40
 
+                    bb_3 = BoundingBox()
+                    bb_3.box_top_left_x = circle_center_x - 20
+                    bb_3.box_top_left_y = bottom_circle_center_y - 20 
+                    bb_3.box_width = 40
+                    bb_3.box_height = 40
+
                     cv2.rectangle(colored_depth_image_2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x + bb.box_width, bb.box_top_left_y + bb.box_height), (255, 0, 0), 2)
                     cv2.rectangle(colored_depth_image_2, (bb_2.box_top_left_x, bb_2.box_top_left_y), (bb_2.box_top_left_x + bb_2.box_width, bb_2.box_top_left_y + bb_2.box_height), (255, 0, 0), 2)
+                    cv2.rectangle(colored_depth_image_2, (bb_3.box_top_left_x, bb_3.box_top_left_y), (bb_3.box_top_left_x + bb_3.box_width, bb_3.box_top_left_y + bb_3.box_height), (255, 0, 0), 2)
+
 
                     cv2.imshow("Original Image with Circles", colored_depth_image_2)
                     cv2.waitKey(0)
@@ -2200,8 +2226,13 @@ class RestaurantMain():
                     # get_pc_2.requested_point_coords = [points]
                     get_pc_2.bbox = bb_2
 
+                    get_pc_3 = BoundingBoxAndPoints()
+                    # get_pc_2.requested_point_coords = [points]
+                    get_pc_3.bbox = bb_3
+
                     requested_objects.append(get_pc)
                     requested_objects.append(get_pc_2)
+                    requested_objects.append(get_pc_3)
                     camera = "head"
 
                     self.node.waiting_for_pcloud = True
