@@ -627,8 +627,12 @@ class RestaurantMain():
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-45, -45], [-45, -15], [-45, 15]]
-                people_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["milk", "cornflakes"], objects_detected_as=[["cleanser"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
+                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["milk", "cornflakes"], objects_detected_as=[["cleanser"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
                 
+                print("LIST OF DETECTED OBJECTS:")
+                for o in objects_found:
+                    print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
+
                 """
                 print("FOUND:", len(people_found)) 
                 for p in people_found:
@@ -730,14 +734,15 @@ class RestaurantMain():
                     for frame in range(len(total_objects_detected)):
                         for object in range(len(total_objects_detected[frame])):
                             
-                            if object.object_name == m_object:
+                            if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
                                 is_in_mandatory_list = True
-                            print(m_object, object.object_name, object.index, is_in_mandatory_list)
+                            # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
                 
                     if is_in_mandatory_list:
                         mandatory_ctr += 1
+                    print(m_object, is_in_mandatory_list)
 
-                if mandatory_ctr == len(list_of_objects):
+                if mandatory_ctr == len(list_of_objects): # if all objects are already in the detected list 
                     break
 
 
@@ -823,7 +828,23 @@ class RestaurantMain():
         for o in filtered_objects:
             print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
 
-        return filtered_objects    
+
+        final_objects = []
+        if list_of_objects: #only does this if there are items in the list of mandatory detection objects
+            
+            for m_object in list_of_objects:
+                for object in filtered_objects:
+                    if object.object_name.lower() == m_object.lower():
+                        final_objects.append(object)
+                        break
+                    
+        else:
+            final_objects = filtered_objects
+
+
+        self.set_neck(position=(0,0), wait_for_end_of=False)
+            
+        return final_objects    
 
 
     def search_for_milk(self):
