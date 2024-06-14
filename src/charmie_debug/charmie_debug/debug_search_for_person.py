@@ -759,7 +759,7 @@ class RestaurantMain():
 
                             # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
                             dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
-                            print("new:", total_objects_detected[frame][object].index, "old:", filtered_objects[filtered].index, dist) # , dist_xy) 
+                            print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, dist) # , dist_xy) 
                             
                             if dist < MIN_DIST:
                                 same_object_ctr+=1
@@ -769,9 +769,10 @@ class RestaurantMain():
                     
                     if same_object_ctr > 0:
 
-                        same_object_old_distance_center = abs(1280/2 - same_object_old.box_center_x) 
-                        same_object_new_distance_center = abs(1280/2 - same_object_new.box_center_x) 
-
+                        image_center = (1280/2, 720/2)
+                        same_object_old_distance_center = math.dist(image_center, (same_object_old.box_center_x, same_object_old.box_center_y))
+                        same_object_new_distance_center = math.dist(image_center, (same_object_new.box_center_x, same_object_new.box_center_y))
+                        
                         print("OLD (pixel):", same_object_old.object_name, same_object_old.box_center_x, same_object_old_distance_center)
                         print("NEW (pixel):", same_object_new.object_name, same_object_new.box_center_x, same_object_new_distance_center)
 
