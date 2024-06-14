@@ -1065,9 +1065,9 @@ class ServeBreakfastMain():
         # for o in object_:
         c = np.dot(np.identity(4), [0, 0, 0, 1])
         # c = np.dot(np.identity(4), [90.0, -30.0, 105.0, 1])
-        new_x = 100.0 * 100
-        new_y = 200.0 * 100
-        new_z = 250.0 * 100
+        new_x = 0.895 * 100
+        new_y = 0.004 * 100
+        new_z = 0.900 * 100
         # print(o.object_name)
         c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
         print('c', c)

@@ -1264,8 +1264,8 @@ class RestaurantMain():
                 # self.set_face(command="please_say_restaurant")
                 # self.set_face(command="please_say_yes_or_no")
                 # self.set_face(command="please_say_receptionist")
-                # self.set_neck(position=[0.0, -20.0], wait_for_end_of=True)
-                self.set_neck(position=self.look_down, wait_for_end_of=True)
+                self.set_neck(position=[0.0, -60.0], wait_for_end_of=True)
+                # self.set_neck(position=self.look_down, wait_for_end_of=True)
 
                 while True:
                     self.check_door_depth_hand_washing_machine()
@@ -1618,7 +1618,26 @@ class RestaurantMain():
         print('\n\n')
 
         return AA
-    
+
+    def transform_temp(self, obj):
+        new_x = obj.y * 1000
+        new_y = -obj.x * 1000
+        new_z = obj.z * 1000
+        c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
+        print(f'Posição em relação ao solo:[{new_x:.2f}, {new_y:.2f}, {new_z:.2f}]')
+        a2 = self.Trans(30.0, -60.0, -1100.0)
+        a1 = self.Rot('x', -90.0)
+        a0 = self.Rot('z', 180.0)
+        T = np.dot(a0, a1)
+        T = np.dot(T, a2)
+        
+        #print('T', T)
+        
+        AA = np.dot(T, c)
+        
+        print('Ponto em relação ao braço:', AA)
+        return AA
+
     def transform(self, obj):
         # C representa o ponto no espaço para onde eu quero transformar a base do braço do robô
         # A matriz de transformação desde a  base do braço até ao centro do Robot pode ser representada por:
@@ -2244,6 +2263,75 @@ class RestaurantMain():
                     new_pcloud = self.node.point_cloud_response.coords
 
                     print('--', new_pcloud)
+
+                    print('Initial', new_pcloud[0])
+                    auxiliar = new_pcloud[0].center_coords.x
+                    new_pcloud[0].center_coords.x = -new_pcloud[0].center_coords.y / 1000
+                    new_pcloud[0].center_coords.y = auxiliar/ 1000
+                    new_pcloud[0].center_coords.z = new_pcloud[0].center_coords.z / 1000
+
+                    print('Final', new_pcloud[0])
+
+                    object_location = self.transform_temp(new_pcloud[0].center_coords)
+                    print('...', object_location)
+                    
+                    arm_height = object_location[1]
+                    arm_centered_x = 110.0
+                    # arm_depth retira 20 cm ao ponto acima da máq de lavar que é onde eu quero teoricamente ir para abrir
+                    arm_depth = object_location[0] + 200.0
+
+
+                    set_pose_arm = ListOfFloats()
+                    """ new_depth = Float32()
+                    new_depth.data = arm_depth """
+                    
+                    object_x = arm_depth
+                    object_y = object_location[1]
+                    object_z = arm_centered_x
+
+                    print('x y e z do ponto que quero alcançar:',object_x, object_y, object_z)   
+
+                    
+                    # print(self.node.arm_current_pose)
+                    
+                    # self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
+                    self.set_arm(command="arm_side_of_washing_machine", wait_for_end_of=True)
+
+                    time.sleep(3)
+                    self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                    time.sleep(3)
+                
+                    set_pose_arm.pose[:] = array('f')
+
+                    # Set the pose values
+                    set_pose_arm.pose.append(object_x)
+                    set_pose_arm.pose.append(object_y)
+                    set_pose_arm.pose.append(object_z)
+                    set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                    set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                    set_pose_arm.pose.append(self.node.arm_current_pose[5])
+
+                    # Publish the pose
+                    self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                    print(set_pose_arm)
+
+                    self.set_arm(command="change_depth_to_open_washing_machine", wait_for_end_of=True)
+
+                    set_pose_arm.pose.append(object_x)
+                    set_pose_arm.pose.append(500.0)
+                    set_pose_arm.pose.append(object_z)
+                    set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                    set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                    set_pose_arm.pose.append(self.node.arm_current_pose[5])
+
+                    # Publish the pose
+                    self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                    print(set_pose_arm)
+                    
+                    self.set_arm(command="move_linear", wait_for_end_of=True)
+                    # Desde aqui quero baixar linearmente o braço, andar com robô para trás enquanto baixo mais braço e baixo corpo
+
+
 
                 else:
                     print('\n\n Not enough lines, please move me a bit \n\n')

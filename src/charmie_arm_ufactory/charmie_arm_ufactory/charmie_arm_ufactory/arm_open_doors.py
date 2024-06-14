@@ -192,10 +192,14 @@ class ArmUfactory(Node):
 		self.pulling_door_side_1 = [-249.3, -20.8, -81.8, 73.9, 68.5, 196.4]
 		self.pulling_door_side_2 = [-234.1, -17.4, -65.9, 82.6, 49.8, 177.5]
 
+		self.side_washing_machine = [-169.4, 31.6, -69.6, 274.9, 97.7, 55.8]
+		self.side_washing_machine_2 = [-145.9, 2.6, -60.6, 285.5, 119.1, 39.3]
+
 
 
 		# SET POSITIONS VARIABLES
 		self.get_order_position_linear = 				[ -581.4, -211.5,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
+		self.oriented_floor = [math.radians(89.8), math.radians(0.1), math.radians(179.4)]
 		
 		print('Nada')
 
@@ -1177,6 +1181,55 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def change_depth_to_open_washing_machine(self, set_desired_pose_arm):
+		if self.estado_tr == 0:
+			print('a')
+			print(set_desired_pose_arm)
+			self.position_values_req.pose = [set_desired_pose_arm[0], set_desired_pose_arm[1], set_desired_pose_arm[2], self.oriented_floor[0],self.oriented_floor[1], self.oriented_floor[2]]
+			self.position_values_req.speed = 40.0
+			self.position_values_req.acc = 400.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 30.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def arm_side_of_washing_machine(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.side_washing_machine)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def movement_selection(self):
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
@@ -1229,6 +1282,12 @@ class ArmUfactory(Node):
 			self.open_left_door()
 		elif self.next_arm_movement == "open_left_door_from_side":
 			self.open_left_door_from_side()	
+		elif self.next_arm_movement == "change_depth_to_open_washing_machine":
+			print('---', self.arm_pose)
+			self.change_depth_to_open_washing_machine(self.arm_pose)
+		elif self.next_arm_movement == "arm_side_of_washing_machine":
+			self.arm_side_of_washing_machine()
+		
 			
 			
 			
