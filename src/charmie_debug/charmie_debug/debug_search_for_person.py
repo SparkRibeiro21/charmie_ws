@@ -627,7 +627,7 @@ class RestaurantMain():
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-45, -45], [-45, -15], [-45, 15]]
-                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["milk", "cornflakes"], objects_detected_as=[["cleanser"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
+                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], objects_detected_as=[["cleanser"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
@@ -679,168 +679,190 @@ class RestaurantMain():
         
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
         time.sleep(0.5)
+
+        final_objects = []
+        mandatory_object_detected_flags = [False for _ in list_of_objects]
+        print(mandatory_object_detected_flags)
+        DETECTED_ALL_LIST_OF_OBJECTS = False
         
         total_objects_detected = []
         objects_detected = []
         objects_ctr = 0
 
-        ### MOVES NECK AND SAVES DETECTED OBJECTS ###
-        
-        for t in tetas:
-            self.set_rgb(RED+SET_COLOUR)
-            self.set_neck(position=t, wait_for_end_of=True)
-            time.sleep(1.0) # 0.5
-            self.set_rgb(WHITE+SET_COLOUR)
+        while not DETECTED_ALL_LIST_OF_OBJECTS:
+            ### MOVES NECK AND SAVES DETECTED OBJECTS ###
+            for t in tetas:
+                self.set_rgb(RED+SET_COLOUR)
+                self.set_neck(position=t, wait_for_end_of=True)
+                time.sleep(1.0) # 0.5
+                self.set_rgb(WHITE+SET_COLOUR)
 
-            start_time = time.time()
-            while (time.time() - start_time) < delta_t:        
-                local_detected_objects = self.node.detected_objects
-                for temp_objects in local_detected_objects.objects:
+                start_time = time.time()
+                while (time.time() - start_time) < delta_t:        
+                    local_detected_objects = self.node.detected_objects
+                    for temp_objects in local_detected_objects.objects:
+                        
+                        is_already_in_list = False
+                        object_already_in_list = DetectedObject()
+                        for object in objects_detected:
+
+                            if temp_objects.index == object.index and object.index > 0:
+                                is_already_in_list = True
+                                object_already_in_list = object
+
+                        if is_already_in_list:
+                            objects_detected.remove(object_already_in_list)
+                        else:
+                        # elif temp_objects.index > 0: # debug
+                            # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
+                            self.set_rgb(GREEN+SET_COLOUR)
+                        
+                        # if temp_objects.index > 0:
+                        objects_detected.append(temp_objects)
+                        objects_ctr+=1
+
+                # DEBUG
+                # print("obejcts in this neck pos:")
+                # for object in objects_detected:
+                #     print(object.index, object.position_absolute.x, object.position_absolute.y)
+            
+                total_objects_detected.append(objects_detected.copy())
+                # print("Total number of objects detected:", len(objects_detected), objects_ctr)
+                objects_detected.clear()   
+
+                if list_of_objects: #only does this if there are items in the list of mandatory detection objects
                     
-                    is_already_in_list = False
-                    object_already_in_list = DetectedObject()
-                    for object in objects_detected:
-
-                        if temp_objects.index == object.index and object.index > 0:
-                            is_already_in_list = True
-                            object_already_in_list = object
-
-                    if is_already_in_list:
-                        objects_detected.remove(object_already_in_list)
-                    else:
-                    # elif temp_objects.index > 0: # debug
-                        # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                        self.set_rgb(GREEN+SET_COLOUR)
+                    mandatory_ctr = 0
+                    for m_object in list_of_objects:
+                        is_in_mandatory_list = False
+                        
+                        for frame in range(len(total_objects_detected)):
+                            for object in range(len(total_objects_detected[frame])):
+                                
+                                if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
+                                    is_in_mandatory_list = True
+                                # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
                     
-                    # if temp_objects.index > 0:
-                    objects_detected.append(temp_objects)
-                    objects_ctr+=1
+                        if is_in_mandatory_list:
+                            mandatory_ctr += 1
+                        print(m_object, is_in_mandatory_list)
+
+                    if mandatory_ctr == len(list_of_objects): # if all objects are already in the detected list 
+                        break
+
+
+            self.activate_yolo_objects(activate_objects=False, activate_shoes=False, activate_doors=False,
+                                        activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
+                                        minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
+            
 
             # DEBUG
-            # print("obejcts in this neck pos:")
-            # for object in objects_detected:
-            #     print(object.index, object.position_absolute.x, object.position_absolute.y)
-        
-            total_objects_detected.append(objects_detected.copy())
-            # print("Total number of objects detected:", len(objects_detected), objects_ctr)
-            objects_detected.clear()   
+            print("TOTAL objects in this neck pos:")
+            for frame in total_objects_detected:
+                for object in frame:    
+                    print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
+                print("-")
+
+            ### DETECTS ALL THE OBJECTS SHOW IN EVERY FRAME ###
+            
+            filtered_objects = []
+
+            for frame in range(len(total_objects_detected)):
+
+                to_append = []
+                to_remove = []
+
+                if not len(filtered_objects):
+                    print("NO OBJECTS", frame)
+                    for object in range(len(total_objects_detected[frame])):
+                        to_append.append(total_objects_detected[frame][object])
+                else:
+                    print("YES OBJECTS", frame)
+
+                    MIN_DIST = 0.3 # maximum distance for the robot to assume it is the same objects
+
+                    for object in range(len(total_objects_detected[frame])):
+                        same_object_ctr = 0
+
+                        for filtered in range(len(filtered_objects)):
+
+                            if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name: 
+
+                                # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
+                                dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
+                                print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
+                                
+                                if dist < MIN_DIST:
+                                    same_object_ctr+=1
+                                    same_object_old = filtered_objects[filtered]
+                                    same_object_new = total_objects_detected[frame][object]
+                                    print("SAME OBJECT")                        
+                        
+                        if same_object_ctr > 0:
+
+                            image_center = (1280/2, 720/2)
+                            same_object_old_distance_center = math.dist(image_center, (same_object_old.box_center_x, same_object_old.box_center_y))
+                            same_object_new_distance_center = math.dist(image_center, (same_object_new.box_center_x, same_object_new.box_center_y))
+                            
+                            print("OLD (pixel):", same_object_old.index, same_object_old.object_name, ", dist_2_center:", round(same_object_old_distance_center,2))
+                            print("NEW (pixel):", same_object_new.index, same_object_new.object_name, ", dist_2_center:", round(same_object_new_distance_center,2))
+
+                            if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
+                                to_remove.append(same_object_old)
+                                to_append.append(same_object_new)
+                            else: # object from older frame is more centered with camera center
+                                pass # that object is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
+
+                        else:
+                            to_append.append(total_objects_detected[frame][object])
+
+                for o in to_remove:
+                    if o in filtered_objects:
+                        print("REMOVED: ", o.index, o.object_name)
+                        filtered_objects.remove(o)
+                    else:
+                        print("TRIED TO REMOVE TWICE THE SAME OBJECT")
+                to_remove.clear()  
+
+                for o in to_append:
+                    print("ADDED: ", o.index, o.object_name)
+                    filtered_objects.append(o)
+                to_append.clear()
+
+            print("FILTERED:")
+            for o in filtered_objects:
+                print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
+
 
             if list_of_objects: #only does this if there are items in the list of mandatory detection objects
                 
-                mandatory_ctr = 0
                 for m_object in list_of_objects:
-                    is_in_mandatory_list = False
-                    
-                    for frame in range(len(total_objects_detected)):
-                        for object in range(len(total_objects_detected[frame])):
-                            
-                            if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
-                                is_in_mandatory_list = True
-                            # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
+                    for object in filtered_objects:
+
+                        if not final_objects: # if final_objects is empty
+
+                            if object.object_name.lower() == m_object.lower():
+                                final_objects.append(object)
+                                mandatory_object_detected_flags.append(True)
+                                break
+                            else:
+                                mandatory_object_detected_flags.append(False)
+
+                        else:
+                            pass
                 
-                    if is_in_mandatory_list:
-                        mandatory_ctr += 1
-                    print(m_object, is_in_mandatory_list)
+                print(list_of_objects)
+                print(mandatory_object_detected_flags)
+                
+                if not all(mandatory_object_detected_flags):
+                    self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
+                    for obj in range(len(list_of_objects)):
+                        if not mandatory_object_detected_flags[obj]:
+                            self.set_speech(filename="objects_names/"+list_of_objects[obj], wait_for_end_of=True)
 
-                if mandatory_ctr == len(list_of_objects): # if all objects are already in the detected list 
-                    break
-
-
-        self.activate_yolo_objects(activate_objects=False, activate_shoes=False, activate_doors=False,
-                                    activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
-                                    minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
-        
-
-        # DEBUG
-        print("TOTAL objects in this neck pos:")
-        for frame in total_objects_detected:
-            for object in frame:    
-                print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
-            print("-")
-
-        ### DETECTS ALL THE OBJECTS SHOW IN EVERY FRAME ###
-        
-        filtered_objects = []
-
-        for frame in range(len(total_objects_detected)):
-
-            to_append = []
-            to_remove = []
-
-            if not len(filtered_objects):
-                print("NO OBJECTS", frame)
-                for object in range(len(total_objects_detected[frame])):
-                    to_append.append(total_objects_detected[frame][object])
             else:
-                print("YES OBJECTS", frame)
-
-                MIN_DIST = 0.3 # maximum distance for the robot to assume it is the same objects
-
-                for object in range(len(total_objects_detected[frame])):
-                    same_object_ctr = 0
-
-                    for filtered in range(len(filtered_objects)):
-
-                        if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name: 
-
-                            # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
-                            dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
-                            print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
-                            
-                            if dist < MIN_DIST:
-                                same_object_ctr+=1
-                                same_object_old = filtered_objects[filtered]
-                                same_object_new = total_objects_detected[frame][object]
-                                print("SAME OBJECT")                        
-                    
-                    if same_object_ctr > 0:
-
-                        image_center = (1280/2, 720/2)
-                        same_object_old_distance_center = math.dist(image_center, (same_object_old.box_center_x, same_object_old.box_center_y))
-                        same_object_new_distance_center = math.dist(image_center, (same_object_new.box_center_x, same_object_new.box_center_y))
-                        
-                        print("OLD (pixel):", same_object_old.index, same_object_old.object_name, ", \dist_2_center:", round(same_object_old_distance_center,2))
-                        print("NEW (pixel):", same_object_new.index, same_object_new.object_name,  ", dist_2_center:", round(same_object_new_distance_center,2))
-
-                        if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
-                            to_remove.append(same_object_old)
-                            to_append.append(same_object_new)
-                        else: # object from older frame is more centered with camera center
-                            pass # that object is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
-
-                    else:
-                        to_append.append(total_objects_detected[frame][object])
-
-            for o in to_remove:
-                if o in filtered_objects:
-                    print("REMOVED: ", o.index, o.object_name)
-                    filtered_objects.remove(o)
-                else:
-                    print("TRIED TO REMOVE TWICE THE SAME OBJECT")
-            to_remove.clear()  
-
-            for o in to_append:
-                print("ADDED: ", o.index, o.object_name)
-                filtered_objects.append(o)
-            to_append.clear()
-
-        print("FILTERED:")
-        for o in filtered_objects:
-            print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
-
-
-        final_objects = []
-        if list_of_objects: #only does this if there are items in the list of mandatory detection objects
-            
-            for m_object in list_of_objects:
-                for object in filtered_objects:
-                    if object.object_name.lower() == m_object.lower():
-                        final_objects.append(object)
-                        break
-                    
-        else:
-            final_objects = filtered_objects
-
+                final_objects = filtered_objects
+                DETECTED_ALL_LIST_OF_OBJECTS = True
 
         self.set_neck(position=(0,0), wait_for_end_of=False)
             
@@ -968,6 +990,14 @@ class RestaurantMain():
             # if i can not detect both times, i will ask the judge to move and rotate the objects I could not detect
             self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
             self.set_speech(filename="objects_names/milk", wait_for_end_of=False)  
+
+
+            # self.set_neck(position=self.look_judge, wait_for_end_of=False)
+            # # if i can not detect both times, i will ask the judge to move and rotate the objects I could not detect
+            # self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
+            #  for obj in range(TOTAL_OBJ):
+            #     if not self.flag_object_total[obj]:
+            #         self.set_speech(filename="objects_names/"+list_sb_objects[obj], wait_for_end_of=False)  
 
 
     def detect_just_milk(self, delta_t, with_hand=False):
