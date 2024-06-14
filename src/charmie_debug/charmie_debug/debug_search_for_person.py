@@ -748,7 +748,7 @@ class RestaurantMain():
             else:
                 print("YES OBJECTS", frame)
 
-                MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same objects
+                MIN_DIST = 0.3 # maximum distance for the robot to assume it is the same objects
 
                 for object in range(len(total_objects_detected[frame])):
                     same_object_ctr = 0
@@ -756,9 +756,10 @@ class RestaurantMain():
                     for filtered in range(len(filtered_objects)):
 
                         if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name: 
-                            
-                            dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
-                            print("new:", total_objects_detected[frame][object].index, "old:", filtered_objects[filtered].index, dist)
+
+                            # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
+                            dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
+                            print("new:", total_objects_detected[frame][object].index, "old:", filtered_objects[filtered].index, dist) # , dist_xy) 
                             
                             if dist < MIN_DIST:
                                 same_object_ctr+=1
@@ -771,8 +772,8 @@ class RestaurantMain():
                         same_object_old_distance_center = abs(1280/2 - same_object_old.box_center_x) 
                         same_object_new_distance_center = abs(1280/2 - same_object_new.box_center_x) 
 
-                        print("OLD (pixel):", same_object_old.box_center_x, same_object_old_distance_center)
-                        print("NEW (pixel):", same_object_new.box_center_x, same_object_new_distance_center)
+                        print("OLD (pixel):", same_object_old.object_name, same_object_old.box_center_x, same_object_old_distance_center)
+                        print("NEW (pixel):", same_object_new.object_name, same_object_new.box_center_x, same_object_new_distance_center)
 
                         if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
                             to_remove.append(same_object_old)
@@ -785,14 +786,14 @@ class RestaurantMain():
 
             for o in to_remove:
                 if o in filtered_objects:
-                    print("REMOVED: ", o.index)
+                    print("REMOVED: ", o.index, o.object_name)
                     filtered_objects.remove(o)
                 else:
                     print("TRIED TO REMOVE TWICE THE SAME OBJECT")
             to_remove.clear()  
 
             for o in to_append:
-                print("ADDED: ", o.index)
+                print("ADDED: ", o.index, o.object_name)
                 filtered_objects.append(o)
             to_append.clear()
 
