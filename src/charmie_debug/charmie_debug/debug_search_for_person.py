@@ -626,7 +626,7 @@ class RestaurantMain():
                 time.sleep(2.0)
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                tetas = [[0, -45], [0, -15], [0, 15]]
+                tetas = [[-45, -45], [-45, -15], [-45, 15]]
                 people_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["milk", "cornflakes"], objects_detected_as=[["cleanser", "dishwasher_tab"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
                 
                 """
@@ -697,7 +697,7 @@ class RestaurantMain():
                     object_already_in_list = DetectedObject()
                     for object in objects_detected:
 
-                        if temp_objects.index == object.index:
+                        if temp_objects.index == object.index and object.index > 0:
                             is_already_in_list = True
                             object_already_in_list = object
 
@@ -755,22 +755,24 @@ class RestaurantMain():
 
                     for filtered in range(len(filtered_objects)):
 
-                        dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
-                        print("new:", total_objects_detected[frame][object].index, "old:", filtered_objects[filtered].index, dist)
-                        
-                        if dist < MIN_DIST:
-                            same_object_ctr+=1
-                            same_object_old = filtered_objects[filtered]
-                            same_object_new = total_objects_detected[frame][object]
-                            print("SAME OBJECT")                        
+                        if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name: 
+                            
+                            dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
+                            print("new:", total_objects_detected[frame][object].index, "old:", filtered_objects[filtered].index, dist)
+                            
+                            if dist < MIN_DIST:
+                                same_object_ctr+=1
+                                same_object_old = filtered_objects[filtered]
+                                same_object_new = total_objects_detected[frame][object]
+                                print("SAME OBJECT")                        
                     
                     if same_object_ctr > 0:
 
                         same_object_old_distance_center = abs(1280/2 - same_object_old.box_center_x) 
                         same_object_new_distance_center = abs(1280/2 - same_object_new.box_center_x) 
 
-                        print("OLD (pixel):", same_object_old.body_center_x, same_object_old_distance_center)
-                        print("NEW (pixel):", same_object_new.body_center_x, same_object_new_distance_center)
+                        print("OLD (pixel):", same_object_old.box_center_x, same_object_old_distance_center)
+                        print("NEW (pixel):", same_object_new.box_center_x, same_object_new_distance_center)
 
                         if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
                             to_remove.append(same_object_old)
