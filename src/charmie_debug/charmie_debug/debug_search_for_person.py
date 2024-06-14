@@ -627,7 +627,7 @@ class RestaurantMain():
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-45, -45], [-45, -15], [-45, 15]]
-                people_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["milk", "cornflakes"], objects_detected_as=[["cleanser", "dishwasher_tab"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
+                people_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["milk", "cornflakes"], objects_detected_as=[["cleanser"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
                 
                 """
                 print("FOUND:", len(people_found)) 
@@ -703,13 +703,14 @@ class RestaurantMain():
 
                     if is_already_in_list:
                         objects_detected.remove(object_already_in_list)
-                    elif temp_objects.index > 0: # debug
+                    else:
+                    # elif temp_objects.index > 0: # debug
                         # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
                         self.set_rgb(GREEN+SET_COLOUR)
                     
-                    if temp_objects.index > 0:
-                        objects_detected.append(temp_objects)
-                        objects_ctr+=1
+                    # if temp_objects.index > 0:
+                    objects_detected.append(temp_objects)
+                    objects_ctr+=1
 
             # DEBUG
             # print("obejcts in this neck pos:")
@@ -718,7 +719,27 @@ class RestaurantMain():
         
             total_objects_detected.append(objects_detected.copy())
             # print("Total number of objects detected:", len(objects_detected), objects_ctr)
-            objects_detected.clear()          
+            objects_detected.clear()   
+
+            if list_of_objects: #only does this if there are items in the list of mandatory detection objects
+                
+                mandatory_ctr = 0
+                for m_object in list_of_objects:
+                    is_in_mandatory_list = False
+                    
+                    for frame in range(len(total_objects_detected)):
+                        for object in range(len(total_objects_detected[frame])):
+                            
+                            if object.object_name == m_object:
+                                is_in_mandatory_list = True
+                            print(m_object, object.object_name, object.index, is_in_mandatory_list)
+                
+                    if is_in_mandatory_list:
+                        mandatory_ctr += 1
+
+                if mandatory_ctr == len(list_of_objects):
+                    break
+
 
         self.activate_yolo_objects(activate_objects=False, activate_shoes=False, activate_doors=False,
                                     activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
@@ -759,7 +780,7 @@ class RestaurantMain():
 
                             # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
                             dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
-                            print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, dist) # , dist_xy) 
+                            print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
                             
                             if dist < MIN_DIST:
                                 same_object_ctr+=1
@@ -773,8 +794,8 @@ class RestaurantMain():
                         same_object_old_distance_center = math.dist(image_center, (same_object_old.box_center_x, same_object_old.box_center_y))
                         same_object_new_distance_center = math.dist(image_center, (same_object_new.box_center_x, same_object_new.box_center_y))
                         
-                        print("OLD (pixel):", same_object_old.object_name, same_object_old.box_center_x, same_object_old_distance_center)
-                        print("NEW (pixel):", same_object_new.object_name, same_object_new.box_center_x, same_object_new_distance_center)
+                        print("OLD (pixel):", same_object_old.index, same_object_old.object_name, ", \dist_2_center:", round(same_object_old_distance_center,2))
+                        print("NEW (pixel):", same_object_new.index, same_object_new.object_name,  ", dist_2_center:", round(same_object_new_distance_center,2))
 
                         if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
                             to_remove.append(same_object_old)
