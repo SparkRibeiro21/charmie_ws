@@ -673,23 +673,24 @@ class RestaurantMain():
 
     def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
 
-        self.activate_yolo_objects(activate_objects=True, activate_shoes=False, activate_doors=False,
-                                    activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
-                                    minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
-        
-        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-        time.sleep(0.5)
-
         final_objects = []
         mandatory_object_detected_flags = [False for _ in list_of_objects]
         print(mandatory_object_detected_flags)
         DETECTED_ALL_LIST_OF_OBJECTS = False
         
-        total_objects_detected = []
-        objects_detected = []
-        objects_ctr = 0
-
         while not DETECTED_ALL_LIST_OF_OBJECTS:
+
+            total_objects_detected = []
+            objects_detected = []
+            objects_ctr = 0
+
+            self.activate_yolo_objects(activate_objects=True, activate_shoes=False, activate_doors=False,
+                                        activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
+                                        minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
+            
+            self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+            time.sleep(0.5)
+
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
             for t in tetas:
                 self.set_rgb(RED+SET_COLOUR)
@@ -739,10 +740,17 @@ class RestaurantMain():
                         for frame in range(len(total_objects_detected)):
                             for object in range(len(total_objects_detected[frame])):
                                 
+                                # compares to local detected frame
                                 if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
                                     is_in_mandatory_list = True
-                                # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
+                                    # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
                     
+                                # compares to overall final detected objects
+                                for final_obj in final_objects:
+                                    if final_obj.object_name.lower() == m_object.lower():
+                                        is_in_mandatory_list = True
+                                        # print(m_object, final_obj.object_name, final_obj.index, is_in_mandatory_list)
+
                         if is_in_mandatory_list:
                             mandatory_ctr += 1
                         print(m_object, is_in_mandatory_list)
@@ -859,9 +867,9 @@ class RestaurantMain():
                     self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
                     for obj in range(len(list_of_objects)):
                         if not mandatory_object_detected_flags[obj]:
-                            self.set_speech(filename="objects_names/"+list_of_objects[obj], wait_for_end_of=True)
+                            self.set_speech(filename="objects_names/"+list_of_objects[obj].lower(), wait_for_end_of=True)
                 else:
-                    DETECTED_ALL_LIST_OF_OBJECTS
+                    DETECTED_ALL_LIST_OF_OBJECTS = True
 
             else:
                 final_objects = filtered_objects
