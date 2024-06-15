@@ -627,7 +627,7 @@ class RestaurantMain():
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-45, -45], [-45, -15], [-45, 15]]
-                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], objects_detected_as=[["cleanser"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
+                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
@@ -671,12 +671,20 @@ class RestaurantMain():
                 pass
 
 
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
+    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
 
         final_objects = []
         mandatory_object_detected_flags = [False for _ in list_of_objects]
         print(mandatory_object_detected_flags)
         DETECTED_ALL_LIST_OF_OBJECTS = False
+        
+        merged_lists = []
+        for obj, detected_as in zip(list_of_objects, list_of_objects_detected_as):
+            merged_lists.append([obj] + detected_as)
+        merged_lists = [[item.lower() for item in sublist] for sublist in merged_lists]
+        # print(merged_lists)
+        # for merged_list in merged_lists:
+        #     print(merged_list)
         
         while not DETECTED_ALL_LIST_OF_OBJECTS:
 
@@ -734,20 +742,23 @@ class RestaurantMain():
                 if list_of_objects: #only does this if there are items in the list of mandatory detection objects
                     
                     mandatory_ctr = 0
-                    for m_object in list_of_objects:
+                    # for m_object in list_of_objects:
+                    for m_object in merged_lists:
                         is_in_mandatory_list = False
                         
                         for frame in range(len(total_objects_detected)):
                             for object in range(len(total_objects_detected[frame])):
                                 
                                 # compares to local detected frame
-                                if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
+                                # if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
+                                if total_objects_detected[frame][object].object_name.lower() in m_object:
                                     is_in_mandatory_list = True
                                     # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
                     
                                 # compares to overall final detected objects
                                 for final_obj in final_objects:
-                                    if final_obj.object_name.lower() == m_object.lower():
+                                    # if final_obj.object_name.lower() == m_object.lower():
+                                    if final_obj.object_name.lower() in m_object:
                                         is_in_mandatory_list = True
                                         # print(m_object, final_obj.object_name, final_obj.index, is_in_mandatory_list)
 
@@ -849,7 +860,8 @@ class RestaurantMain():
 
                         # if not final_objects: # if final_objects is empty
 
-                        if object.object_name.lower() == list_of_objects[l_object].lower() and not mandatory_object_detected_flags[l_object]:
+                        # if object.object_name.lower() == list_of_objects[l_object].lower() and not mandatory_object_detected_flags[l_object]:
+                        if object.object_name.lower() in merged_lists[l_object] and not mandatory_object_detected_flags[l_object]:
                             final_objects.append(object)
                             # mandatory_object_detected_flags.append(True)
                             mandatory_object_detected_flags[l_object] = True
