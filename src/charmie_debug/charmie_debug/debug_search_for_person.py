@@ -836,20 +836,21 @@ class RestaurantMain():
 
             if list_of_objects: #only does this if there are items in the list of mandatory detection objects
                 
-                for m_object in list_of_objects:
+                for l_object in range(len(list_of_objects)):
                     for object in filtered_objects:
 
-                        if not final_objects: # if final_objects is empty
+                        # if not final_objects: # if final_objects is empty
 
-                            if object.object_name.lower() == m_object.lower():
-                                final_objects.append(object)
-                                mandatory_object_detected_flags.append(True)
-                                break
-                            else:
-                                mandatory_object_detected_flags.append(False)
+                        if object.object_name.lower() == list_of_objects[l_object].lower() and not mandatory_object_detected_flags[l_object]:
+                            final_objects.append(object)
+                            # mandatory_object_detected_flags.append(True)
+                            mandatory_object_detected_flags[l_object] = True
+                            # break
+                            # else:
+                            #     mandatory_object_detected_flags.append(False)
 
-                        else:
-                            pass
+                        # else:
+                        #     pass
                 
                 print(list_of_objects)
                 print(mandatory_object_detected_flags)
@@ -859,6 +860,8 @@ class RestaurantMain():
                     for obj in range(len(list_of_objects)):
                         if not mandatory_object_detected_flags[obj]:
                             self.set_speech(filename="objects_names/"+list_of_objects[obj], wait_for_end_of=True)
+                else:
+                    DETECTED_ALL_LIST_OF_OBJECTS
 
             else:
                 final_objects = filtered_objects
