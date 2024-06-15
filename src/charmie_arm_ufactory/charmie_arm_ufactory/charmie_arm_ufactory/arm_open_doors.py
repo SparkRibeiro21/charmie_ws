@@ -134,11 +134,10 @@ class ArmUfactory(Node):
 		return response
 
 	def get_joints_robot_callback(self, robot_joints: RobotMsg):
-		self.get_logger().info(f"Received joints selection: {robot_joints.pose}")
-		self.robot_joints = robot_joints.pose
+		self.robot_joints = robot_joints.angle
   		
 	def arm_desired_pose_callback(self, arm_desired_pose: ListOfFloats):
-		self.get_logger().info(f"Received value selection: {arm_desired_pose.pose}")
+		self.get_logger().info(f"Received pose selection: {arm_desired_pose.pose}")
 		self.arm_pose = arm_desired_pose.pose
 
 	def arm_desired_height_callback(self, arm_desired_height: Float32):
@@ -201,13 +200,14 @@ class ArmUfactory(Node):
 
 		self.side_washing_machine = [-169.4, 31.6, -69.6, 274.9, 97.7, 55.8]
 		self.side_washing_machine_2 = [-145.9, 2.6, -60.6, 285.5, 119.1, 39.3]
+		self.final_open_washing_machine = [-233.6, 75.2, -133.8, 234.3, 46.4, 137.0]
 
 
 
 		# SET POSITIONS VARIABLES
 		self.get_order_position_linear = 				[ -581.4, -211.5,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
 		self.oriented_floor = [math.radians(89.8), math.radians(0.1), math.radians(179.4)]
-		self.oriented_floor = [math.radians(-81.2), math.radians(88.4), math.radians(8.2)]
+		self.oriented_floor = [math.radians(23.7), math.radians(-89.7), math.radians(-114.3)]
 		
 		print('Nada')
 
@@ -906,9 +906,11 @@ class ArmUfactory(Node):
 				print('no')
 				self.estado_tr = 0
 				self.movement_selection()
+				
 			else:
 				print('yes')
 				self.estado_tr = 2
+				self.arm_pose = []
 				self.movement_selection()
 
 		elif self.estado_tr == 2:
@@ -938,6 +940,7 @@ class ArmUfactory(Node):
 				self.movement_selection()
 			else:
 				print('yes')
+				self.arm_pose = []
 				self.estado_tr = 2
 				self.movement_selection()
 
@@ -1088,6 +1091,7 @@ class ArmUfactory(Node):
 				self.movement_selection()
 			else:
 				print('yes')
+				self.arm_pose = []
 				self.estado_tr = 2
 				self.movement_selection()
 
@@ -1119,6 +1123,7 @@ class ArmUfactory(Node):
 				self.movement_selection()
 			else:
 				print('yes')
+				self.arm_pose = []
 				self.estado_tr = 2
 				self.movement_selection()
 
@@ -1180,6 +1185,7 @@ class ArmUfactory(Node):
 			else:
 				print('yes')
 				self.estado_tr = 2
+				self.arm_pose = []
 				self.movement_selection()
 
 		elif self.estado_tr == 2:
@@ -1191,27 +1197,42 @@ class ArmUfactory(Node):
    
 	def lower_arm_close_washing_machine(self, joint_1):
 		if self.estado_tr == 0:
+			
 			print('a')
-			self.position_values_req.pose = [joint_1, self.robot_joints[1], self.robot_joints[2], self.robot_joints[3], self.robot_joints[4], self.robot_joints[5]]
-			self.position_values_req.speed = 40.0
-			self.position_values_req.acc = 400.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 30.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
+			print(self.robot_joints)
+			
+			joint_1 = math.radians(joint_1)
+			self.robot_joints[1] = float(self.robot_joints[1])
+			self.robot_joints[2] = float(self.robot_joints[2])
+			self.robot_joints[3] = float(self.robot_joints[3])
+			self.robot_joints[4] = float(self.robot_joints[4])
+			self.robot_joints[5] = float(self.robot_joints[5])
+			# self.position_values_req.pose = [joint_1, self.robot_joints[1], self.robot_joints[2], self.robot_joints[3], self.robot_joints[4], self.robot_joints[5]]
+			print([joint_1, self.robot_joints[1], self.robot_joints[2], self.robot_joints[3], self.robot_joints[4], self.robot_joints[5]])
+			a = [float(val) for val in [joint_1, self.robot_joints[1], self.robot_joints[2], self.robot_joints[3], self.robot_joints[4], self.robot_joints[5]]]
+
+			self.joint_values_req.angles = a
+			self.joint_values_req.speed = 0.1
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 			print('b')
-		elif self.estado_tr == 1:
-			print('.')
-			if self.returning != 0:
-				print('no')
-				self.estado_tr = 0
-				self.movement_selection()
-			else:
-				print('yes')
-				self.estado_tr = 2
-				self.movement_selection()
 
-		elif self.estado_tr == 2:
+
+
+		# elif self.estado_tr == 1:
+		# 	print('.')
+		# 	if self.returning != 0:
+		# 		print('no')
+		# 		self.estado_tr = 0
+		# 		self.movement_selection()
+		# 	else:
+		# 		print('yes')
+		# 		self.estado_tr = 2
+		# 		self.movement_selection()
+
+		elif self.estado_tr == 1:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -1223,7 +1244,7 @@ class ArmUfactory(Node):
 			print('a')
 			print(set_desired_pose_arm)
 			self.position_values_req.pose = [set_desired_pose_arm[0], set_desired_pose_arm[1], set_desired_pose_arm[2], self.oriented_floor[0],self.oriented_floor[1], self.oriented_floor[2]]
-			self.position_values_req.speed = 40.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 400.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 30.0
@@ -1239,6 +1260,7 @@ class ArmUfactory(Node):
 				self.movement_selection()
 			else:
 				print('yes')
+				self.arm_pose = []
 				self.estado_tr = 2
 				self.movement_selection()
 
@@ -1253,7 +1275,37 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.side_washing_machine)
-			self.joint_values_req.speed = 0.2
+			self.joint_values_req.speed = 0.5
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.arm_pose = []
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def end_opening_washing_machine(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.final_open_washing_machine)
+			self.joint_values_req.speed = 0.3
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1327,7 +1379,8 @@ class ArmUfactory(Node):
 		elif self.next_arm_movement == "lower_arm_close_washing_machine":
 			print('Joint1:', self.value)
 			self.lower_arm_close_washing_machine(self.value)
-		
+		elif self.next_arm_movement == "end_opening_washing_machine":
+			self.end_opening_washing_machine()
 			
 			
 			
@@ -1339,7 +1392,6 @@ class ArmUfactory(Node):
 			print('Wrong Movement Received - ', self.next_arm_movement)	
 		
 		self.value = 0.0
-		self.arm_pose = []
 
 
 def main(args=None):

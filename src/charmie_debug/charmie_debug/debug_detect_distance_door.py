@@ -5,7 +5,7 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point, Pose2D
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints, BoundingBox
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints, BoundingBox, TarNavSDNL
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, GetPointCloud
 from xarm_msgs.srv import GetFloat32List, PlanPose, PlanExec, PlanJoint
 from sensor_msgs.msg import Image
@@ -66,6 +66,11 @@ class TestNode(Node):
 
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
+        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
+
+        # Navigation
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)          
 
         # Arm 
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
@@ -136,6 +141,9 @@ class TestNode(Node):
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.flag_navigation_reached = False
+        self.navigation_success = True
+        self.navigation_message = ""
 
         self.br = CvBridge()
         self.depth_img = Image()
@@ -166,6 +174,9 @@ class TestNode(Node):
         future = self.point_cloud_client.call_async(request)
         future.add_done_callback(self.callback_call_point_cloud)
 
+    ### NAVIGATION ###
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.flag_navigation_reached = flag
 
     def callback_call_point_cloud(self, future):
 
@@ -1135,6 +1146,49 @@ class RestaurantMain():
         self.node.waited_for_end_of_neck_pos = False
 
         return self.node.neck_success, self.node.neck_message
+    
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_time=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" :   
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # bool follow_me
+
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = absolute_angle
+            navigation.flag_not_obs = flag_not_obs
+            navigation.reached_radius = reached_radius
+            navigation.avoid_people = False
+            navigation.adjust_time = adjust_time
+            navigation.adjust_direction = adjust_direction
+            navigation.adjust_min_dist = adjust_min_dist
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.navigation_success, self.navigation_message   
 
     def set_arm(self, command="", wait_for_end_of=True):
         
@@ -1257,10 +1311,8 @@ class RestaurantMain():
             # State 6 = Final Speech
 
             if self.state == Waiting_for_start_button:
-                # print('State 0 = Initial')
+                print('State 0 = Initial')
 
-                ### SEARCH FOR PERSON EXAMPLE ###
-                
                 # self.set_face(command="please_say_restaurant")
                 # self.set_face(command="please_say_yes_or_no")
                 # self.set_face(command="please_say_receptionist")
@@ -2042,7 +2094,7 @@ class RestaurantMain():
             edges = cv2.Canny(depth_image_normalized, 25, 50)
 
             # Detect lines using Hough Line Transform
-            lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=120)
+            lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=100)
 
             avg_depths = []
             
@@ -2123,13 +2175,14 @@ class RestaurantMain():
                     print('standard deviation', std_dev)
                     print('depth', avg_depth)
                     if avg_depth < 1.15:
-                        if std_dev > std_dev_aux:
-                            aux_depth = avg_depth
-                            std_dev_aux = std_dev
-                            lines_detected = True
-                            
-                            aux_ = avg_depth, roi, y_diff, y_01, y_02, roi_depth
-                            # print('depth', avg_depth)
+                        if std_dev > 300:
+                            if std_dev > std_dev_aux:
+                                aux_depth = avg_depth
+                                std_dev_aux = std_dev
+                                lines_detected = True
+                                
+                                aux_ = avg_depth, roi, y_diff, y_01, y_02, roi_depth
+                                # print('depth', avg_depth)
 
                 cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
                 cv2.waitKey(0)
@@ -2325,16 +2378,32 @@ class RestaurantMain():
                     # set_pose_arm.pose.append(self.node.arm_current_pose[5])
                     
                     arm_value = Float32()
-                    arm_value.data = 150.0
+                    arm_value.data = 300.0
                     self.node.arm_value_publisher.publish(arm_value)
                     print(arm_value)                    
                     self.set_arm(command="go_front", wait_for_end_of=True)
                     # Desde aqui quero baixar linearmente o braço, andar com robô para trás enquanto baixo mais braço e baixo corpo
                     
-                    arm_value.data = -215.0 #valor que quero que a primeira junta tenha antes de eu andar para trás
-                    self.node.arm_value_publisher.publish(arm_value)
-                    print(arm_value)                    
-                    self.set_arm(command="lower_arm_close_washing_machine", wait_for_end_of=True)
+                    print('mover-se')
+
+                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=1.75, adjust_direction=180.0, wait_for_end_of=True)
+                
+                    print('moveu-se')
+                    self.torso_pos = Pose2D()
+                    self.torso_pos.x = -1.0
+                    self.node.torso_test_publisher.publish(self.torso_pos)
+
+                    time.sleep(30)
+
+                    self.torso_pos.x = 0.0
+                    self.node.torso_test_publisher.publish(self.torso_pos)
+
+                    self.set_arm(command="end_opening_washing_machine", wait_for_end_of=True)
+
+                    # arm_value.data = -215.0 #valor que quero que a primeira junta tenha antes de eu andar para trás
+                    # self.node.arm_value_publisher.publish(arm_value)
+                    # print(arm_value)                    
+                    # self.set_arm(command="lower_arm_close_washing_machine", wait_for_end_of=True)
 
 
 
