@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool, Int16, String, Float32
+from xarm_msgs.msg import RobotMsg
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint, GetFloat32List
 from geometry_msgs.msg import Pose, Point, Quaternion
 from charmie_interfaces.msg import RobotSpeech, ListOfFloats
@@ -24,6 +25,7 @@ class ArmUfactory(Node):
 		self.arm_value_subscriber = self.create_subscription(Float32, "arm_value", self.arm_value_callback, 10)
 		self.flag_arm_finish_publisher = self.create_publisher(Bool, 'arm_finished_movement', 10)
 		self.arm_pose_publisher = self.create_publisher(ListOfFloats, 'arm_current_pose', 10)
+		self.get_joints_robot_subscriber = self.create_subscription(RobotMsg, '/xarm/robot_states', self.get_joints_robot_callback, 10)
 		self.arm_set_pose_subscriber = self.create_subscription(ListOfFloats, 'arm_set_desired_pose', self.arm_desired_pose_callback, 10)
 		self.arm_set_height_subscriber = self.create_subscription(Float32, 'arm_set_desired_height', self.arm_desired_height_callback, 10)
 
@@ -109,6 +111,7 @@ class ArmUfactory(Node):
 		self.value = -10.0
 		self.arm_pose = []
 		self.arm_height = 0.0
+		self.robot_joints = []
 
 		# initial debug movement 
   		# self.next_arm_movement = "debug_initial"
@@ -130,6 +133,10 @@ class ArmUfactory(Node):
 		response.message = "Arm Trigger"
 		return response
 
+	def get_joints_robot_callback(self, robot_joints: RobotMsg):
+		self.get_logger().info(f"Received joints selection: {robot_joints.pose}")
+		self.robot_joints = robot_joints.pose
+  		
 	def arm_desired_pose_callback(self, arm_desired_pose: ListOfFloats):
 		self.get_logger().info(f"Received value selection: {arm_desired_pose.pose}")
 		self.arm_pose = arm_desired_pose.pose
@@ -200,6 +207,7 @@ class ArmUfactory(Node):
 		# SET POSITIONS VARIABLES
 		self.get_order_position_linear = 				[ -581.4, -211.5,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
 		self.oriented_floor = [math.radians(89.8), math.radians(0.1), math.radians(179.4)]
+		self.oriented_floor = [math.radians(-81.2), math.radians(88.4), math.radians(8.2)]
 		
 		print('Nada')
 
@@ -1180,6 +1188,35 @@ class ArmUfactory(Node):
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
+   
+	def lower_arm_close_washing_machine(self, joint_1):
+		if self.estado_tr == 0:
+			print('a')
+			self.position_values_req.pose = [joint_1, self.robot_joints[1], self.robot_joints[2], self.robot_joints[3], self.robot_joints[4], self.robot_joints[5]]
+			self.position_values_req.speed = 40.0
+			self.position_values_req.acc = 400.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 30.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
 
 	def change_depth_to_open_washing_machine(self, set_desired_pose_arm):
 		if self.estado_tr == 0:
@@ -1287,6 +1324,9 @@ class ArmUfactory(Node):
 			self.change_depth_to_open_washing_machine(self.arm_pose)
 		elif self.next_arm_movement == "arm_side_of_washing_machine":
 			self.arm_side_of_washing_machine()
+		elif self.next_arm_movement == "lower_arm_close_washing_machine":
+			print('Joint1:', self.value)
+			self.lower_arm_close_washing_machine(self.value)
 		
 			
 			

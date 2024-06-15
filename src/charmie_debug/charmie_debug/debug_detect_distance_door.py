@@ -2276,7 +2276,7 @@ class RestaurantMain():
                     print('...', object_location)
                     
                     arm_height = object_location[1]
-                    arm_centered_x = 110.0
+                    arm_centered_x = 130.0
                     # arm_depth retira 20 cm ao ponto acima da máq de lavar que é onde eu quero teoricamente ir para abrir
                     arm_depth = object_location[0] + 200.0
 
@@ -2286,7 +2286,7 @@ class RestaurantMain():
                     new_depth.data = arm_depth """
                     
                     object_x = arm_depth
-                    object_y = object_location[1]
+                    object_y = arm_height
                     object_z = arm_centered_x
 
                     print('x y e z do ponto que quero alcançar:',object_x, object_y, object_z)   
@@ -2313,23 +2313,28 @@ class RestaurantMain():
 
                     # Publish the pose
                     self.node.arm_set_pose_publisher.publish(set_pose_arm)
-                    print(set_pose_arm)
+                    print('Desired pose:', set_pose_arm)
 
                     self.set_arm(command="change_depth_to_open_washing_machine", wait_for_end_of=True)
 
-                    set_pose_arm.pose.append(object_x)
-                    set_pose_arm.pose.append(500.0)
-                    set_pose_arm.pose.append(object_z)
-                    set_pose_arm.pose.append(self.node.arm_current_pose[3])
-                    set_pose_arm.pose.append(self.node.arm_current_pose[4])
-                    set_pose_arm.pose.append(self.node.arm_current_pose[5])
-
-                    # Publish the pose
-                    self.node.arm_set_pose_publisher.publish(set_pose_arm)
-                    print(set_pose_arm)
+                    # set_pose_arm.pose.append(object_x)
+                    # set_pose_arm.pose.append(500.0)
+                    # set_pose_arm.pose.append(object_z)
+                    # set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                    # set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                    # set_pose_arm.pose.append(self.node.arm_current_pose[5])
                     
-                    self.set_arm(command="move_linear", wait_for_end_of=True)
+                    arm_value = Float32()
+                    arm_value.data = 150.0
+                    self.node.arm_value_publisher.publish(arm_value)
+                    print(arm_value)                    
+                    self.set_arm(command="go_front", wait_for_end_of=True)
                     # Desde aqui quero baixar linearmente o braço, andar com robô para trás enquanto baixo mais braço e baixo corpo
+                    
+                    arm_value.data = -215.0 #valor que quero que a primeira junta tenha antes de eu andar para trás
+                    self.node.arm_value_publisher.publish(arm_value)
+                    print(arm_value)                    
+                    self.set_arm(command="lower_arm_close_washing_machine", wait_for_end_of=True)
 
 
 
