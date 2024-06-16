@@ -201,6 +201,8 @@ class ArmUfactory(Node):
 		self.side_washing_machine = [-169.4, 31.6, -69.6, 274.9, 97.7, 55.8]
 		self.side_washing_machine_2 = [-145.9, 2.6, -60.6, 285.5, 119.1, 39.3]
 		self.final_open_washing_machine = [-233.6, 75.2, -133.8, 234.3, 46.4, 137.0]
+		self.inside_wardrobe_to_open_right_door = [-216.9, 82.5, -106.8, 152.4, 117.4, 23.0]
+		self.finish_inside_wardrobe_to_open_right_door = [-214.1, 74.3, -104.4, 161.0, 123.1, 27.3]
 
 
 
@@ -795,7 +797,7 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
-	def open_left_door_from_inside(self):
+	""" def open_left_door_from_inside(self):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe)
@@ -866,6 +868,65 @@ class ArmUfactory(Node):
 			print('b')
 
 		elif self.estado_tr == 7:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+ 	"""
+
+	def finish_open_right_door_from_inside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.finish_inside_wardrobe_to_open_right_door)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def open_right_door_from_inside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_to_open_right_door)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -1532,6 +1593,10 @@ class ArmUfactory(Node):
 			self.open_left_door()
 		elif self.next_arm_movement == "open_left_door_from_inside":
 			self.open_left_door_from_inside()
+		elif self.next_arm_movement == "open_right_door_from_inside":
+			self.open_right_door_from_inside()
+		elif self.next_arm_movement == "finish_open_right_door_from_inside":
+			self.finish_open_right_door_from_inside()
 		elif self.next_arm_movement == "open_left_door_from_side":
 			self.open_left_door_from_side()	
 		elif self.next_arm_movement == "change_depth_to_open_washing_machine":

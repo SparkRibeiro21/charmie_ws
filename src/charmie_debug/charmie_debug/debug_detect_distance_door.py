@@ -2750,7 +2750,10 @@ class RestaurantMain():
                             # self.set_arm(command="change_height_front_left_robot", wait_for_end_of=True)
                             self.set_arm(command="change_height_front_left_robot", wait_for_end_of=True)
 
-                            near_percentage = self.check_door_depth_hand()
+                            near_percentage = -1.0
+                            while near_percentage == -1.0:
+                                near_percentage = self.check_door_depth_hand()
+
                             print(near_percentage * 100)
                             if near_percentage < 0.5:
                                 left_door = True
@@ -2785,8 +2788,15 @@ class RestaurantMain():
                                 ### O VALOR DO TEMPO AQUI DEVERIA DEPENDER DA DISTÂNCIA A QUE ESTOU DO ARMÁRIO - OU SEJA EU SEI 
                                 ### a DISTANCIA DO ARMÁRIO EM RELAÇÃO AO CENTRO DO ROBÔ, ENTÃO DEVERIA IR SEMPRE EM FRENTE TENDO ISSO EM CONTA
                                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=2.0, adjust_direction=0.0, wait_for_end_of=True)
-                
+
+                                self.set_arm(command="open_right_door_from_inside", wait_for_end_of=True)
                                 
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=2.0, adjust_direction=0.0, wait_for_end_of=True)
+
+                                self.set_arm(command="finish_open_right_door_from_inside", wait_for_end_of=True)
+
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=2.0, adjust_direction=0.0, wait_for_end_of=True)
+
                                 
                                 while True:
                                     pass
@@ -2821,7 +2831,11 @@ class RestaurantMain():
                                 # self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
                                 self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
 
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=2.0, adjust_direction=0.0, wait_for_end_of=True)
+                
+
                                 while True:
+
                                     pass
 
                                 near_percentage = -1.0
