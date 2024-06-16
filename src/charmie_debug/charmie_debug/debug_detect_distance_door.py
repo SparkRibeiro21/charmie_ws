@@ -1316,12 +1316,16 @@ class RestaurantMain():
                 # self.set_face(command="please_say_restaurant")
                 # self.set_face(command="please_say_yes_or_no")
                 # self.set_face(command="please_say_receptionist")
-                self.set_neck(position=[0.0, -60.0], wait_for_end_of=True)
-                # self.set_neck(position=self.look_down, wait_for_end_of=True)
+                # self.set_neck(position=[0.0, -60.0], wait_for_end_of=True)
+                # self.set_neck(position=[0.0, -40.0], wait_for_end_of=True)
+                self.set_neck(position=self.look_down, wait_for_end_of=True)
+                
 
                 while True:
-                    self.check_door_depth_hand_washing_machine()
-                    pass
+                    # self.close_washing_machine_door()
+                    # self.open_washing_machine_door()
+                    self.find_wardrobe_door_open()
+                    # pass
                     
                 
                 # time.sleep(2.0)
@@ -2056,8 +2060,11 @@ class RestaurantMain():
             # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
         
             return center_image_near_err
+        else:
+            return -1.0
 
-    def check_door_depth_hand_washing_machine(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=200, far_max_dist = 900):
+
+    def open_washing_machine_door(self):
 
         if self.node.first_depth_image_received:
             print('b')
@@ -2386,14 +2393,18 @@ class RestaurantMain():
                     
                     print('mover-se')
 
-                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=1.75, adjust_direction=180.0, wait_for_end_of=True)
+                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=1.5, adjust_direction=180.0, wait_for_end_of=True)
                 
                     print('moveu-se')
                     self.torso_pos = Pose2D()
                     self.torso_pos.x = -1.0
                     self.node.torso_test_publisher.publish(self.torso_pos)
 
-                    time.sleep(30)
+                    time.sleep(15)
+                
+                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=1.0, adjust_direction=180.0, wait_for_end_of=True)
+
+                    time.sleep(15)
 
                     self.torso_pos.x = 0.0
                     self.node.torso_test_publisher.publish(self.torso_pos)
@@ -2411,6 +2422,221 @@ class RestaurantMain():
                     print('\n\n Not enough lines, please move me a bit \n\n')
 
 
+    def close_washing_machine_door(self):
+
+        if self.node.first_depth_image_received:
+            print('b')
+            current_frame = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
+            frame_2 = current_frame.copy()
+            height, width = current_frame.shape[:2]
+   
+
+            # cv2.imshow("Aligned Depth Head", frame_2)
+            # cv2.waitKey(0)
+
+            # cv2.imshow("Aligned Depth Head", current_frame)
+            # cv2.waitKey(0)
+
+            depth_image_filtered = cv2.medianBlur(frame_2, 5)
+            depth_image_filtered_2 = cv2.medianBlur(frame_2, 5)
+
+
+            # Normalize the depth image for visualization
+            depth_image_normalized = cv2.normalize(depth_image_filtered, None, 0, 255, cv2.NORM_MINMAX)
+            depth_image_normalized = np.uint8(depth_image_normalized)
+
+            depth_image_normalized_2 = cv2.normalize(depth_image_filtered_2, None, 0, 255, cv2.NORM_MINMAX)
+            depth_image_normalized_2 = np.uint8(depth_image_normalized_2)
+
+            colored_depth_image = cv2.applyColorMap(depth_image_normalized, cv2.COLORMAP_JET)
+            colored_depth_image_2 = cv2.applyColorMap(depth_image_normalized_2, cv2.COLORMAP_JET)
+
+            # cv2.imshow("Aligned Depth Head", colored_depth_image)
+            # cv2.waitKey(0)
+
+            while True:
+                if hasattr(self.node.detected_doors, 'image_rgb'):
+                    head_image = self.node.detected_doors.image_rgb
+                    
+                    if hasattr(self.node.detected_doors, 'objects'): 
+                        # print(self.node.detected_doors)
+                        
+                        if self.node.detected_doors.objects:
+                            # print(self.node.detected_doors.objects)
+                            print('ddd')
+            
+                            wanted_object = ''
+                            requested_objects = []
+
+                            for obj in self.node.detected_doors.objects:
+                                print(obj.object_name)
+                                if obj.object_name == "Dishwasher":
+                                    wanted_object = obj
+                                    print('é isto')
+                                    print(wanted_object.position_relative)
+                                    print(wanted_object.confidence)
+                                    bb = BoundingBox()
+                                    bb.box_height = int(wanted_object.box_height / 10)
+                                    bb.box_width = wanted_object.box_width
+                                    bb.box_top_left_y = wanted_object.box_top_left_y + wanted_object.box_height - bb.box_height
+                                    bb.box_top_left_x = wanted_object.box_top_left_x
+                                    print(bb)
+                                    get_pc = BoundingBoxAndPoints()
+                                    # get_pc.requested_point_coords = [points]
+                                    get_pc.bbox = bb
+                                    requested_objects.append(get_pc)
+                                    camera = "head"
+                                    self.node.waiting_for_pcloud = True
+                                    self.node.call_point_cloud_server(requested_objects, camera)
+
+                                    while self.node.waiting_for_pcloud:
+                                        pass
+
+                                    new_pcloud = self.node.point_cloud_response.coords
+
+                                    print('--', new_pcloud)
+
+                                    cv2.rectangle(colored_depth_image_2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x + bb.box_width, bb.box_top_left_y + bb.box_height), (255, 0, 0), 2)
+                                    cv2.imshow("Aligned Depth Head", colored_depth_image_2)
+                                    cv2.waitKey(0)
+
+                                    print('Initial', new_pcloud[0])
+                                    auxiliar = new_pcloud[0].center_coords.x
+                                    new_pcloud[0].center_coords.x = -new_pcloud[0].center_coords.y / 1000
+                                    new_pcloud[0].center_coords.y = auxiliar/ 1000
+                                    new_pcloud[0].center_coords.z = new_pcloud[0].center_coords.z / 1000
+
+                                    print('Final', new_pcloud[0])
+
+                                    object_location = self.transform_temp(new_pcloud[0].center_coords)
+                                    print('...', object_location)
+                     
+
+                else:
+                    print('else')
+            
+
+            bb = BoundingBox()
+
+            get_pc = BoundingBoxAndPoints()
+            # get_pc.requested_point_coords = [points]
+            get_pc.bbox = bb
+
+            get_pc_2 = BoundingBoxAndPoints()
+            # get_pc_2.requested_point_coords = [points]
+            get_pc_2.bbox = bb_2
+
+            get_pc_3 = BoundingBoxAndPoints()
+            # get_pc_2.requested_point_coords = [points]
+            get_pc_3.bbox = bb_3
+
+            requested_objects.append(get_pc)
+            requested_objects.append(get_pc_2)
+            requested_objects.append(get_pc_3)
+            camera = "head"
+            
+            self.node.waiting_for_pcloud = True
+            self.node.call_point_cloud_server(requested_objects, camera)
+
+            while self.node.waiting_for_pcloud:
+                pass
+
+            new_pcloud = self.node.point_cloud_response.coords
+
+            print('--', new_pcloud)
+
+            print('Initial', new_pcloud[0])
+            auxiliar = new_pcloud[0].center_coords.x
+            new_pcloud[0].center_coords.x = -new_pcloud[0].center_coords.y / 1000
+            new_pcloud[0].center_coords.y = auxiliar/ 1000
+            new_pcloud[0].center_coords.z = new_pcloud[0].center_coords.z / 1000
+
+            print('Final', new_pcloud[0])
+
+            object_location = self.transform_temp(new_pcloud[0].center_coords)
+            print('...', object_location)
+            
+            arm_height = object_location[1]
+            arm_centered_x = 130.0
+            # arm_depth retira 20 cm ao ponto acima da máq de lavar que é onde eu quero teoricamente ir para abrir
+            arm_depth = object_location[0] + 200.0
+
+
+            set_pose_arm = ListOfFloats()
+            """ new_depth = Float32()
+            new_depth.data = arm_depth """
+            
+            object_x = arm_depth
+            object_y = arm_height
+            object_z = arm_centered_x
+
+            print('x y e z do ponto que quero alcançar:',object_x, object_y, object_z)   
+
+            
+            # print(self.node.arm_current_pose)
+            
+            # self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
+            self.set_arm(command="arm_side_of_washing_machine", wait_for_end_of=True)
+
+            time.sleep(3)
+            self.set_arm(command="get_arm_position", wait_for_end_of=True)
+            time.sleep(3)
+        
+            set_pose_arm.pose[:] = array('f')
+
+            # Set the pose values
+            set_pose_arm.pose.append(object_x)
+            set_pose_arm.pose.append(object_y)
+            set_pose_arm.pose.append(object_z)
+            set_pose_arm.pose.append(self.node.arm_current_pose[3])
+            set_pose_arm.pose.append(self.node.arm_current_pose[4])
+            set_pose_arm.pose.append(self.node.arm_current_pose[5])
+
+            # Publish the pose
+            self.node.arm_set_pose_publisher.publish(set_pose_arm)
+            print('Desired pose:', set_pose_arm)
+
+            self.set_arm(command="change_depth_to_open_washing_machine", wait_for_end_of=True)
+
+            # set_pose_arm.pose.append(object_x)
+            # set_pose_arm.pose.append(500.0)
+            # set_pose_arm.pose.append(object_z)
+            # set_pose_arm.pose.append(self.node.arm_current_pose[3])
+            # set_pose_arm.pose.append(self.node.arm_current_pose[4])
+            # set_pose_arm.pose.append(self.node.arm_current_pose[5])
+            
+            arm_value = Float32()
+            arm_value.data = 300.0
+            self.node.arm_value_publisher.publish(arm_value)
+            print(arm_value)                    
+            self.set_arm(command="go_front", wait_for_end_of=True)
+            # Desde aqui quero baixar linearmente o braço, andar com robô para trás enquanto baixo mais braço e baixo corpo
+            
+            print('mover-se')
+
+            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=1.5, adjust_direction=180.0, wait_for_end_of=True)
+        
+            print('moveu-se')
+            self.torso_pos = Pose2D()
+            self.torso_pos.x = -1.0
+            self.node.torso_test_publisher.publish(self.torso_pos)
+
+            time.sleep(15)
+        
+            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=1.0, adjust_direction=180.0, wait_for_end_of=True)
+
+            time.sleep(15)
+
+            self.torso_pos.x = 0.0
+            self.node.torso_test_publisher.publish(self.torso_pos)
+
+            self.set_arm(command="end_opening_washing_machine", wait_for_end_of=True)
+
+            # arm_value.data = -215.0 #valor que quero que a primeira junta tenha antes de eu andar para trás
+            # self.node.arm_value_publisher.publish(arm_value)
+            # print(arm_value)                    
+            # self.set_arm(command="lower_arm_close_washing_machine", wait_for_end_of=True)
+
     def find_wardrobe_door_open(self):
         if self.node.first_depth_image_received:
             print('bbb')
@@ -2420,13 +2646,14 @@ class RestaurantMain():
 
             if hasattr(self.node.detected_doors, 'image_rgb'):
                 head_image = self.node.detected_doors.image_rgb
+                print('ccc')
                 
                 if hasattr(self.node.detected_doors, 'objects'): 
-                    # print(self.node.detected_doors)
+                    print('ddd')
                     
                     if self.node.detected_doors.objects:
                         # print(self.node.detected_doors.objects)
-                        print('ddd')
+                        print('eee')
         
                         wanted_object = ''
 
@@ -2456,10 +2683,12 @@ class RestaurantMain():
                             self.set_arm(command="get_arm_position", wait_for_end_of=True)
                             time.sleep(3)
                             # print(self.node.arm_current_pose)
+
+                            self.set_arm(command="arm_side_of_washing_machine", wait_for_end_of=True)
                             
 
                             # self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
-                            self.set_arm(command="front_robot_oriented_side", wait_for_end_of=True)
+                            self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
                         
                             set_pose_arm.pose[:] = array('f')
 
@@ -2477,7 +2706,7 @@ class RestaurantMain():
 
                             # Set arm and check door depth
                             # self.set_arm(command="change_height_front_robot", wait_for_end_of=True)
-                            self.set_arm(command="change_height_side_robot", wait_for_end_of=True)
+                            self.set_arm(command="change_height_front_robot", wait_for_end_of=True)
                             near_percentage = -1.0
                             while near_percentage == -1.0:
                                 near_percentage = self.check_door_depth_hand()
@@ -2490,11 +2719,11 @@ class RestaurantMain():
                             # Check if the door is near
                             if near_percentage < 0.5:
                                 right_door = True
-                                print('Porta aberta creio eu')
+                                print('Porta direita aberta creio eu')
 
                             else:
                                 right_door = False
-                                print('Porta fechada creio eu')
+                                print('Porta direita fechada creio eu')
 
 
     
@@ -2519,16 +2748,16 @@ class RestaurantMain():
                             self.node.arm_set_pose_publisher.publish(set_pose_arm)
                             print(set_pose_arm)
                             # self.set_arm(command="change_height_front_left_robot", wait_for_end_of=True)
-                            self.set_arm(command="change_height_side_left_robot", wait_for_end_of=True)
+                            self.set_arm(command="change_height_front_left_robot", wait_for_end_of=True)
 
                             near_percentage = self.check_door_depth_hand()
                             print(near_percentage * 100)
                             if near_percentage < 0.5:
                                 left_door = True
-                                print('Porta aberta creio eu')
+                                print('Porta esquerda aberta creio eu')
                             else:
                                 left_door = False
-                                print('Porta fechada creio eu')
+                                print('Porta esquerda fechada creio eu')
 
                             
                             # print(right_door, right_door_pose)
@@ -2540,7 +2769,7 @@ class RestaurantMain():
                                 time.sleep(2)
                                 self.node.arm_set_height_publisher.publish(new_height)
                                 # self.set_arm(command="change_height_front_robot_value", wait_for_end_of=True)
-                                self.set_arm(command="change_height_side_robot_value", wait_for_end_of=True)
+                                self.set_arm(command="change_height_front_robot_value", wait_for_end_of=True)
                                 time.sleep(2)
                                 
                                 # print('move forward')
@@ -2552,6 +2781,15 @@ class RestaurantMain():
 
                                 ### Ver onde tenho braço em comparação ao ponto inicial detetado como sendo a porta. Quando o braço estiver para lá da porta,
                                 ### inclino o braço com ângulo que a consiga pegar desde trás
+                                
+                                ### O VALOR DO TEMPO AQUI DEVERIA DEPENDER DA DISTÂNCIA A QUE ESTOU DO ARMÁRIO - OU SEJA EU SEI 
+                                ### a DISTANCIA DO ARMÁRIO EM RELAÇÃO AO CENTRO DO ROBÔ, ENTÃO DEVERIA IR SEMPRE EM FRENTE TENDO ISSO EM CONTA
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=2.0, adjust_direction=0.0, wait_for_end_of=True)
+                
+                                
+                                
+                                while True:
+                                    pass
 
                                 near_percentage = -1.0
                                 while near_percentage < 0.5:
@@ -2569,7 +2807,7 @@ class RestaurantMain():
                                 print('hey')
 
                                 # self.set_arm(command="open_left_door", wait_for_end_of=True)
-                                self.set_arm(command="open_left_door_from_side", wait_for_end_of=True)
+                                self.set_arm(command="open_left_door_from_front", wait_for_end_of=True)
 
                                 while True:
                                     pass
@@ -2581,8 +2819,10 @@ class RestaurantMain():
                                 time.sleep(2)
                                 self.node.arm_set_height_publisher.publish(new_height)
                                 # self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
-                                self.set_arm(command="change_height_side_left_robot_value", wait_for_end_of=True)
+                                self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
 
+                                while True:
+                                    pass
 
                                 near_percentage = -1.0
                                 while near_percentage < 0.5:
