@@ -627,7 +627,7 @@ class RestaurantMain():
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-45, -45], [-45, -15], [-45, 15]]
-                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jellow", "chocolate_jellow"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
+                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
@@ -677,7 +677,9 @@ class RestaurantMain():
         mandatory_object_detected_flags = [False for _ in list_of_objects]
         print(mandatory_object_detected_flags)
         DETECTED_ALL_LIST_OF_OBJECTS = False
-        
+        MIN_DIST_DIFFERENT_FRAMES = 0.3 # maximum distance for the robot to assume it is the same objects
+        MIN_DIST_SAME_FRAME = 0.1 
+
         merged_lists = []
         for obj, detected_as in zip(list_of_objects, list_of_objects_detected_as):
             merged_lists.append([obj] + detected_as)
@@ -715,9 +717,17 @@ class RestaurantMain():
                         object_already_in_list = DetectedObject()
                         for object in objects_detected:
 
+                            # filters by same index
                             if temp_objects.index == object.index and object.index > 0:
                                 is_already_in_list = True
                                 object_already_in_list = object
+
+                            # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
+                            if temp_objects.object_name == object.object_name: # and 
+                                dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
+                                if dist < MIN_DIST_SAME_FRAME:
+                                    is_already_in_list = True
+                                    object_already_in_list = object
 
                         if is_already_in_list:
                             objects_detected.remove(object_already_in_list)
@@ -798,8 +808,6 @@ class RestaurantMain():
                 else:
                     print("YES OBJECTS", frame)
 
-                    MIN_DIST = 0.3 # maximum distance for the robot to assume it is the same objects
-
                     for object in range(len(total_objects_detected[frame])):
                         same_object_ctr = 0
 
@@ -811,7 +819,7 @@ class RestaurantMain():
                                 dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
                                 print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
                                 
-                                if dist < MIN_DIST:
+                                if dist < MIN_DIST_DIFFERENT_FRAMES:
                                     same_object_ctr+=1
                                     same_object_old = filtered_objects[filtered]
                                     same_object_new = total_objects_detected[frame][object]
