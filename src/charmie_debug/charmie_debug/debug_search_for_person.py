@@ -678,7 +678,7 @@ class RestaurantMain():
         print(mandatory_object_detected_flags)
         DETECTED_ALL_LIST_OF_OBJECTS = False
         MIN_DIST_DIFFERENT_FRAMES = 0.3 # maximum distance for the robot to assume it is the same objects
-        MIN_DIST_SAME_FRAME = 0.1 
+        MIN_DIST_SAME_FRAME = 0.2
 
         merged_lists = []
         for obj, detected_as in zip(list_of_objects, list_of_objects_detected_as):
@@ -692,9 +692,11 @@ class RestaurantMain():
 
             total_objects_detected = []
             objects_detected = []
+            shoes_detected = []
+            furniture_detected = []
             objects_ctr = 0
 
-            self.activate_yolo_objects(activate_objects=True, activate_shoes=False, activate_doors=False,
+            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_doors,
                                         activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
                                         minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
             
@@ -709,45 +711,80 @@ class RestaurantMain():
                 self.set_rgb(WHITE+SET_COLOUR)
 
                 start_time = time.time()
-                while (time.time() - start_time) < delta_t:        
-                    local_detected_objects = self.node.detected_objects
-                    for temp_objects in local_detected_objects.objects:
-                        
-                        is_already_in_list = False
-                        object_already_in_list = DetectedObject()
-                        for object in objects_detected:
+                while (time.time() - start_time) < delta_t:      
 
-                            # filters by same index
-                            if temp_objects.index == object.index and object.index > 0:
-                                is_already_in_list = True
-                                object_already_in_list = object
+                    if detect_objects: 
+                        local_detected_objects = self.node.detected_objects
+                        for temp_objects in local_detected_objects.objects:
+                            
+                            is_already_in_list = False
+                            object_already_in_list = DetectedObject()
+                            for object in objects_detected:
 
-                            # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                            if temp_objects.object_name == object.object_name: # and 
-                                dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                if dist < MIN_DIST_SAME_FRAME:
+                                # filters by same index
+                                if temp_objects.index == object.index and object.index > 0:
                                     is_already_in_list = True
                                     object_already_in_list = object
 
-                        if is_already_in_list:
-                            objects_detected.remove(object_already_in_list)
-                        else:
-                        # elif temp_objects.index > 0: # debug
-                            # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                            self.set_rgb(GREEN+SET_COLOUR)
+                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
+                                if temp_objects.object_name == object.object_name: # and 
+                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
+                                    if dist < MIN_DIST_SAME_FRAME:
+                                        is_already_in_list = True
+                                        object_already_in_list = object
+
+                            if is_already_in_list:
+                                objects_detected.remove(object_already_in_list)
+                            else:
+                            # elif temp_objects.index > 0: # debug
+                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
+                                self.set_rgb(GREEN+SET_COLOUR)
+                            
+                            # if temp_objects.index > 0:
+                            objects_detected.append(temp_objects)
+                            objects_ctr+=1
+
                         
-                        # if temp_objects.index > 0:
-                        objects_detected.append(temp_objects)
-                        objects_ctr+=1
+                    if detect_shoes: 
+                        local_detected_objects = self.node.detected_shoes
+                        for temp_objects in local_detected_objects.objects:
+                            
+                            is_already_in_list = False
+                            object_already_in_list = DetectedObject()
+                            for object in shoes_detected:
+
+                                # filters by same index
+                                if temp_objects.index == object.index and object.index > 0:
+                                    is_already_in_list = True
+                                    object_already_in_list = object
+
+                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
+                                if temp_objects.object_name == object.object_name and temp_objects.index != object.index: 
+                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
+                                    if dist < MIN_DIST_SAME_FRAME:
+                                        is_already_in_list = True
+                                        object_already_in_list = object
+
+                            if is_already_in_list:
+                                shoes_detected.remove(object_already_in_list)
+                            else:
+                            # elif temp_objects.index > 0: # debug
+                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
+                                self.set_rgb(GREEN+SET_COLOUR)
+                            
+                            # if temp_objects.index > 0:
+                            shoes_detected.append(temp_objects)
+                            objects_ctr+=1
 
                 # DEBUG
                 # print("objects in this neck pos:")
                 # for object in objects_detected:
                 #     print(object.index, object.position_absolute.x, object.position_absolute.y)
             
-                total_objects_detected.append(objects_detected.copy())
+                total_objects_detected.append(objects_detected.copy()+shoes_detected.copy())
                 # print("Total number of objects detected:", len(objects_detected), objects_ctr)
                 objects_detected.clear()   
+                shoes_detected.clear()
 
                 if list_of_objects: #only does this if there are items in the list of mandatory detection objects
                     

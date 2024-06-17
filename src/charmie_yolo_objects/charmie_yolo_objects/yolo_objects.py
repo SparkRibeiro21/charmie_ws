@@ -17,8 +17,8 @@ from pathlib import Path
 import math
 import time
 
-# objects_filename = "segmentation_M_size_model_600_epochs.pt"
-objects_filename = "lar_dataset_post_fnr2024.pt"
+objects_filename = "segmentation_M_size_model_600_epochs.pt"
+# objects_filename = "lar_dataset_post_fnr2024.pt"
 shoes_filename = "shoes_socks_v1.pt"
 doors_filename = "door_bruno.pt"
 
