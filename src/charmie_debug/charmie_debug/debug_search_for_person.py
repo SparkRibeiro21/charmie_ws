@@ -9,7 +9,7 @@ from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, De
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, SetFace, SpeechCommand
 from sensor_msgs.msg import Image
 
-import cv2 
+import cv2
 import threading
 import time
 from cv_bridge import CvBridge
@@ -681,7 +681,7 @@ class RestaurantMain():
         merged_lists = []
         for obj, detected_as in zip(list_of_objects, list_of_objects_detected_as):
             merged_lists.append([obj] + detected_as)
-        merged_lists = [[item.lower() for item in sublist] for sublist in merged_lists]
+        merged_lists = [[item.replace(" ","_").lower() for item in sublist] for sublist in merged_lists]
         # print(merged_lists)
         # for merged_list in merged_lists:
         #     print(merged_list)
@@ -731,7 +731,7 @@ class RestaurantMain():
                         objects_ctr+=1
 
                 # DEBUG
-                # print("obejcts in this neck pos:")
+                # print("objects in this neck pos:")
                 # for object in objects_detected:
                 #     print(object.index, object.position_absolute.x, object.position_absolute.y)
             
@@ -751,14 +751,14 @@ class RestaurantMain():
                                 
                                 # compares to local detected frame
                                 # if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
-                                if total_objects_detected[frame][object].object_name.lower() in m_object:
+                                if total_objects_detected[frame][object].object_name.replace(" ","_").lower() in m_object:
                                     is_in_mandatory_list = True
                                     # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
                     
                                 # compares to overall final detected objects
                                 for final_obj in final_objects:
                                     # if final_obj.object_name.lower() == m_object.lower():
-                                    if final_obj.object_name.lower() in m_object:
+                                    if final_obj.object_name.replace(" ","_").lower() in m_object:
                                         is_in_mandatory_list = True
                                         # print(m_object, final_obj.object_name, final_obj.index, is_in_mandatory_list)
 
@@ -861,7 +861,7 @@ class RestaurantMain():
                         # if not final_objects: # if final_objects is empty
 
                         # if object.object_name.lower() == list_of_objects[l_object].lower() and not mandatory_object_detected_flags[l_object]:
-                        if object.object_name.lower() in merged_lists[l_object] and not mandatory_object_detected_flags[l_object]:
+                        if object.object_name.replace(" ","_").lower() in merged_lists[l_object] and not mandatory_object_detected_flags[l_object]:
                             final_objects.append(object)
                             # mandatory_object_detected_flags.append(True)
                             mandatory_object_detected_flags[l_object] = True
@@ -879,7 +879,7 @@ class RestaurantMain():
                     self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
                     for obj in range(len(list_of_objects)):
                         if not mandatory_object_detected_flags[obj]:
-                            self.set_speech(filename="objects_names/"+list_of_objects[obj].lower(), wait_for_end_of=True)
+                            self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
                 else:
                     DETECTED_ALL_LIST_OF_OBJECTS = True
 
