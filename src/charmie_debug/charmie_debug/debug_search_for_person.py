@@ -693,7 +693,7 @@ class RestaurantMain():
             total_objects_detected = []
             objects_detected = []
             shoes_detected = []
-            furniture_detected = []
+            doors_detected = []
             objects_ctr = 0
 
             self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_doors,
@@ -722,7 +722,7 @@ class RestaurantMain():
                             for object in objects_detected:
 
                                 # filters by same index
-                                if temp_objects.index == object.index and object.index > 0:
+                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
                                     is_already_in_list = True
                                     object_already_in_list = object
 
@@ -754,7 +754,7 @@ class RestaurantMain():
                             for object in shoes_detected:
 
                                 # filters by same index
-                                if temp_objects.index == object.index and object.index > 0:
+                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
                                     is_already_in_list = True
                                     object_already_in_list = object
 
@@ -776,15 +776,49 @@ class RestaurantMain():
                             shoes_detected.append(temp_objects)
                             objects_ctr+=1
 
+                        
+                    if detect_doors: 
+                        local_detected_objects = self.node.detected_doors
+                        for temp_objects in local_detected_objects.objects:
+                            
+                            is_already_in_list = False
+                            object_already_in_list = DetectedObject()
+                            for object in doors_detected:
+
+                                # filters by same index
+                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
+                                    is_already_in_list = True
+                                    object_already_in_list = object
+
+                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
+                                if temp_objects.object_name == object.object_name and temp_objects.index != object.index: 
+                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
+                                    if dist < MIN_DIST_SAME_FRAME:
+                                        is_already_in_list = True
+                                        object_already_in_list = object
+
+                            if is_already_in_list:
+                                doors_detected.remove(object_already_in_list)
+                            else:
+                            # elif temp_objects.index > 0: # debug
+                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
+                                self.set_rgb(GREEN+SET_COLOUR)
+                            
+                            # if temp_objects.index > 0:
+                            doors_detected.append(temp_objects)
+                            objects_ctr+=1
+
+
                 # DEBUG
                 # print("objects in this neck pos:")
                 # for object in objects_detected:
                 #     print(object.index, object.position_absolute.x, object.position_absolute.y)
             
-                total_objects_detected.append(objects_detected.copy()+shoes_detected.copy())
+                total_objects_detected.append(objects_detected.copy() + shoes_detected.copy() + doors_detected.copy())
                 # print("Total number of objects detected:", len(objects_detected), objects_ctr)
                 objects_detected.clear()   
                 shoes_detected.clear()
+                doors_detected.clear()
 
                 if list_of_objects: #only does this if there are items in the list of mandatory detection objects
                     
