@@ -888,6 +888,9 @@ class RestaurantMain():
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
         self.set_neck(position=(0,0), wait_for_end_of=False)
+        self.set_speech(filename="generic/found_following_items")
+        for obj in final_objects:
+            self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
             
         return final_objects    
 
