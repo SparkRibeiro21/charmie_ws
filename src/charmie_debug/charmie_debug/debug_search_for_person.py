@@ -961,6 +961,10 @@ class RestaurantMain():
                             self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
                 else:
                     DETECTED_ALL_LIST_OF_OBJECTS = True
+                    # forces the change of objects name for possible detected_as_object 
+                    # (i.e. might detect cleanser as milk, but we need it as milk for the DEM show in face)
+                    for o in range(len(list_of_objects)): 
+                        final_objects[o].object_name = list_of_objects[o]
 
             else:
                 final_objects = filtered_objects
