@@ -772,6 +772,9 @@ class NavSDNLNode(Node):
         self.MIN_DIST_OBS = 0.0
         self.detected_people = Yolov8Pose()
         self.PERSON_IN_FRONT = False
+        self.latest_localisation_x = 0.0
+        self.latest_localisation_y = 0.0
+        self.latest_localisation_t = 0.0
 
         self.navigation_diagnostic_publisher = self.create_publisher(Bool, "navigation_diagnostic", 10)
 
@@ -852,7 +855,7 @@ class NavSDNLNode(Node):
         # string message  # informational, e.g. for error messages
         
         response.success = True
-        response.message = "Arm Trigger"
+        response.message = "Nav Trigger"
         return response
 
 
@@ -912,6 +915,9 @@ class NavSDNLNode(Node):
         self.nav.dist_to_target = self.nav.upload_move_dist_to_target()
         self.nav.ang_to_target = self.nav.upload_rot_ang_to_target()
         self.nav.nav_threshold_dist = nav.reached_radius # in meters
+        self.latest_localisation_x = self.nav.robot_x
+        self.latest_localisation_y = self.nav.robot_y
+        self.latest_localisation_t = self.nav.robot_t
         self.navigation_state = 0
 
 
@@ -1008,9 +1014,7 @@ class NavSDNLNode(Node):
             
             if self.navigation_state == 0:
 
-
-                #     self.node.nav_tar_sdnl.move_or_rotate = "MOVE"
-                # if self.nav
+                print(self.latest_localisation_x, self.latest_localisation_y, self.latest_localisation_t)
             
                 if self.nav.nav_target.move_or_rotate.lower() == "rotate":
 
