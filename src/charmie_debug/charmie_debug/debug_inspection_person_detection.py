@@ -6,7 +6,7 @@ from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, SetFace
 from sensor_msgs.msg import Image
 
 import cv2 
@@ -44,10 +44,6 @@ class TestNode(Node):
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
 
-        # Face
-        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
-        self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
-        
         # Search for Person debug publisher
         self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
 
@@ -65,7 +61,8 @@ class TestNode(Node):
         # Yolos
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
-        
+        # Face
+        self.face_command_client = self.create_client(SetFace, "face_command")
         # Neck 
         # while not self.set_neck_position_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Set Neck Position Command...")
@@ -77,12 +74,16 @@ class TestNode(Node):
         #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # while not self.neck_track_person_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Neck Track Person ...")
+        # while not self.face_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Face Command...")
+
         
         # Variables
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
         self.waited_for_end_of_neck_pos = False
         self.waited_for_end_of_neck_coords = False
+        self.waited_for_end_of_face = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.rgb_success = True
@@ -196,6 +197,37 @@ class TestNode(Node):
         # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         # cv2.waitKey(10)
         """
+
+
+    #### FACE SERVER FUNCTIONS #####
+    def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
+        request = SetFace.Request()
+        request.command = command
+        request.custom = custom
+        
+        future = self.face_command_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_face_command)
+        else:
+            self.face_success = True
+            self.face_message = "Wait for answer not needed"
+    
+    def callback_call_face_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.face_success = response.success
+            self.face_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_face = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
 
     #### SET NECK POSITION SERVER FUNCTIONS #####
     def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
@@ -393,12 +425,17 @@ class TestNode(Node):
         self.activate_yolo_pose_client.call_async(request)
 
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
+    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
         request = ActivateYoloObjects.Request()
         request.activate_objects = activate_objects
         request.activate_shoes = activate_shoes
         request.activate_doors = activate_doors
+        request.activate_objects_hand = activate_objects_hand
+        request.activate_shoes_hand = activate_shoes_hand
+        request.activate_doors_hand = activate_doors_hand
         request.minimum_objects_confidence = minimum_objects_confidence
+        request.minimum_shoes_confidence = minimum_shoes_confidence
+        request.minimum_doors_confidence = minimum_doors_confidence
 
         self.activate_yolo_objects_client.call_async(request)
 
@@ -435,20 +472,15 @@ class RestaurantMain():
 
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
-        if custom == "":
-            temp = String()
-            temp.data = command
-            self.node.image_to_face_publisher.publish(temp)
-        else:
-            temp = String()
-            temp.data = custom
-            self.node.custom_image_to_face_publisher.publish(temp)
-
-        self.node.face_success = True
-        self.node.face_message = "Value Sucessfully Sent"
+        self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_face:
+                pass
+        self.node.waited_for_end_of_face = False
 
         return self.node.face_success, self.node.face_message
-    
+
     def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
         self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
@@ -500,10 +532,9 @@ class RestaurantMain():
 
         return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
-        # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
-        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_objects_confidence=minimum_objects_confidence)
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
 
         self.node.activate_yolo_objects_success = True
         self.node.activate_yolo_objects_message = "Activated with selected parameters"

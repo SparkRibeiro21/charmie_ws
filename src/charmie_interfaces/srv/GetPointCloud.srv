@@ -2,6 +2,6 @@
 
 BoundingBoxAndPoints[] data # bounding box and specific points inside the bounding box  
 bool retrieve_bbox # if it is intended to get the full bounding box of 3D points returned, saves data transitions 
-string camera
+string camera # which camera is being used (head or hand camera)
 ---
 PointCloudCoordinates[] coords # returns the selected 3D points (the bounding box center, the custom ones and the full bounding box)

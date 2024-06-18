@@ -23,7 +23,7 @@ names_dict = {
     "Unique":   ["unique", "vinik", "yoonique", "eunik", " unic ", "henic", "eunich"],
     "Luca":     ["luca", "luka", "loga", "mocha"],
     "Evelyn":   ["evelyn", "evelin", "hevelin", "heavily", " evan "],
-    "Jayden":   ["jayden", "j don", "jaden", "haydn", " haidan", "hayden"],
+    "Jayden":   ["jayden", "j don", "jaden", "haydn", " haidan", "hayden", "jayvin"],
     "James":    ["james", "denise", "hamis", "hamiz"],
     "Riley":    ["riley", "really", "dryland", "rylan", "rylu"],
     "Harper":   ["harper", "khadipah", "harpur", "arper", "arthur", "harpe"],
@@ -40,7 +40,7 @@ drinks_dict = {
     "Juice_Pack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
                        "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
                        "peck", "druspek", "drip spec", "juicy pek", "juice but", "respect", " juspe ", "jeez park"],
-    "Cola":           [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold", "kohler", "kala", "gola"],
+    "Cola":           [" cola", "coke", "coca", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold", "kohler", "kala", "gola", "kohla"],
     "Tropical_Juice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
     "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
 	"Iced_Tea":       [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
@@ -66,7 +66,7 @@ foods_dict = {
     "Pear":             ["pear", "pair", "pier", "beer", "bare"],
     "Plum":             ["plum", "clump", "blam", "blum", "plumb"],
     "Peach":            ["peach"],
-    "Lemon":            ["lemon"],
+    "Lemon":            ["lemon", "lammon"],
     "Orange":           ["orange", "orton"],
     "Strawberry":       ["strawberr"],
     "Banana":           ["banana"],

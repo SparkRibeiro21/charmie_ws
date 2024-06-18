@@ -1,2 +1,3 @@
 string command
-float32 height
+float32 adjust_position
+float32[] pose

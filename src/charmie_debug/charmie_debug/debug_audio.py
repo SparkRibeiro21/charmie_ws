@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Int16, String
-from charmie_interfaces.srv import GetAudio, CalibrateAudio, SpeechCommand, SaveSpeechCommand
+from charmie_interfaces.srv import GetAudio, CalibrateAudio, SpeechCommand, SaveSpeechCommand, SetFace
 
 from datetime import datetime
 import threading
@@ -28,8 +28,7 @@ class TestNode(Node):
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
         # Face
-        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
-        self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
+        self.face_command_client = self.create_client(SetFace, "face_command")
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
@@ -42,12 +41,15 @@ class TestNode(Node):
             self.get_logger().warn("Waiting for Server Speech Command...")
         while not self.save_speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Save Speech Command...")
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
 
         # Variables
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_save_speaking = False
+        self.waited_for_end_of_face = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -123,6 +125,36 @@ class TestNode(Node):
             # self.track_object_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_calibrate_audio = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+    #### FACE SERVER FUNCTIONS #####
+    def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
+        request = SetFace.Request()
+        request.command = command
+        request.custom = custom
+        
+        future = self.face_command_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_face_command)
+        else:
+            self.face_success = True
+            self.face_message = "Wait for answer not needed"
+    
+    def callback_call_face_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.face_success = response.success
+            self.face_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_face = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -222,8 +254,8 @@ class RestaurantMain():
         self.node.rgb_message = "Value Sucessfully Sent"
 
         return self.node.rgb_success, self.node.rgb_message
- 
-    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", wait_for_end_of=True):
+
+    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", face_hearing="charmie_face_green", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
 
@@ -233,7 +265,7 @@ class RestaurantMain():
             while keywords=="ERROR":
                 
                 self.set_speech(filename=question, wait_for_end_of=True)
-                self.set_face("charmie_face_green")
+                self.set_face(face_hearing)
                 self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
                 
                 if wait_for_end_of:
@@ -314,79 +346,104 @@ class RestaurantMain():
 
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
-        if custom == "":
-            temp = String()
-            temp.data = command
-            self.node.image_to_face_publisher.publish(temp)
-        else:
-            temp = String()
-            temp.data = custom
-            self.node.custom_image_to_face_publisher.publish(temp)
-
-        self.node.face_success = True
-        self.node.face_message = "Value Sucessfully Sent"
+        self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_face:
+                pass
+        self.node.waited_for_end_of_face = False
 
         return self.node.face_success, self.node.face_message
-    
+
+
     def main(self):
-        Waiting_for_start_button = 0
-        Searching_for_clients = 1
-        Navigation_to_person = 2
-        Receiving_order_speach = 3
-        Receiving_order_listen_and_confirm = 4
-        Collect_order_from_barman = 5
-        Delivering_order_to_client = 6
-        Final_State = 7
+        # Waiting_for_start_button = 0
+        Audio_receptionist = 1
+        Audio_restaurant = 2
+        Audio_egpsr = 3
+        Calibrate_audio = 4
+        Final_State = 5
 
         # VARS ...
-        self.state = Waiting_for_start_button
+        self.state = Audio_restaurant
     
-
         print("IN NEW MAIN")
-        # time.sleep(2)
-
-
+        self.set_face("charmie_face")
+        
         while True:
 
             # State Machine
             # State 0 = Initial
-            # State 1 = Hand Raising Detect
-            # State 2 = Navigation to Person
-            # State 3 = Receive Order - Receive Order - Speech
-            # State 4 = Receive Order - Listening and Confirm
-            # State 5 = Collect Order
-            # State 6 = Final Speech
+            # State 1 = Audio Receptionist
+            # State 2 = Audio Restaurant
+            # State 3 = Audio EGPSR
+            # State 4 = Calibrate Audio
+            # State 5 = Final Speech
 
-
-
-            if self.state == Waiting_for_start_button:
-                #print('State 0 = Initial')
-
-
-                ### RESTAURANT EXAMPLE
-                # print("Started")
-                # command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
-                # print("Finished:", command)
-                # keyword_list= command.split(" ")
-                # self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
-                # for kw in keyword_list:
-                #     print(kw)
-                #     self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
+            if self.state == Audio_receptionist:
+                print('State 1 = Audio Receptionist')
 
                 ### RECEPTIONIST EXAMPLE
-                # print("Started")
-                # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
-                # print("Finished:", command)
-                # keyword_list= command.split(" ")
-                # print(keyword_list[0], keyword_list[1])
-                # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
-                # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
+                print("Started")
+                self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+                print("Finished:", command)
+                keyword_list= command.split(" ")
+                print(keyword_list[0], keyword_list[1])
+                self.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
+                self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
+
+                time.sleep(5)
+                
+            if self.state == Audio_restaurant:
+                print('State 2 = Audio Restaurant')
+
+                ### RESTAURANT EXAMPLE
+                is_command_confirmed = False
+                while not is_command_confirmed:
+                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
+                    print("Finished:", command)
+                    keyword_list= command.split(" ")
+                    self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
+                    for kw in keyword_list:
+                        print(kw)
+                        self.set_speech(filename="objects_names/"+kw.lower(), wait_for_end_of=True)
+
+                    ##### AUDIO: Listen "YES" OR "NO"
+                    ##### "Please say yes or no to confirm the order"
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+
+                    ##### Verifica a resposta recebida
+                    if confirmation.lower() == "yes":
+                        # self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+
+                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                        for kw in keyword_list:
+                            print(kw)
+                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+                        ##### SPEAK: Thank you
+                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                        is_command_confirmed = True
+
+                    else: #  confirmation.lower() == "no":
+                        self.set_rgb(command=RED+BLINK_LONG)
+                        ##### SPEAK: Sorry, TRY AGAIN
+                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+
+                time.sleep(5)
+                
+            if self.state == Audio_egpsr:
+                print('State 3 = Audio Restaurant')
 
                 ### EGPSR EXAMPLE
                 is_command_confirmed = False
                 while not is_command_confirmed:
 
                     ### GPSR EXAMPLE
+                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                     ##### SPEAK: "Hello, you seem to be needing my help. How can I help you?"
                     audio_gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question", wait_for_end_of=True)
                     print("Finished:", audio_gpsr_command)
@@ -404,7 +461,7 @@ class RestaurantMain():
                     ##### SPEAK: (repeats the command)
                     self.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True)
                     
-                    confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", wait_for_end_of=True)
+                    confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                     print("Finished:", confirmation)
 
                     ##### Verifica a resposta recebida
@@ -446,22 +503,15 @@ class RestaurantMain():
                         ##### SPEAK: Sorry for my mistake, lets try again.
                         self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
                     
+                time.sleep(5)
+
+            
+            elif self.state == Calibrate_audio:
 
                 ### CALIBRATION EXAMPLE
-                # s, m = self.calibrate_audio(wait_for_end_of=True)
-                # print("Finished:", s, m)
-
-                time.sleep(5)
-                pass
-                                
-                # next state
-                # self.state = Searching_for_clients
-
-            elif self.state == Searching_for_clients:
-                #print('State 1 = Hand Raising Detect')
-
-                # your code here ...
-                                
+                s, m = self.calibrate_audio(wait_for_end_of=True)
+                print("Finished:", s, m)
+                
                 # next state
                 self.state = Final_State
             

@@ -8,7 +8,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from geometry_msgs.msg import Point
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfPoints
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace
 
 import cv2 
 import threading
@@ -43,9 +43,6 @@ class RestaurantNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
-        # Face
-        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
-        self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -65,6 +62,8 @@ class RestaurantNode(Node):
         # Audio
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
+        # Face
+        self.face_command_client = self.create_client(SetFace, "face_command")
         # Neck
         self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
         self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
@@ -81,11 +80,14 @@ class RestaurantNode(Node):
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
         # Audio
-        
         while not self.get_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Audio Server...")
         while not self.calibrate_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        # Face
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
+
        
         """
         # Neck 
@@ -114,6 +116,7 @@ class RestaurantNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_face = False
 
         self.br = CvBridge()
         self.detected_people = Yolov8Pose()
@@ -251,15 +254,49 @@ class RestaurantNode(Node):
         self.activate_yolo_pose_client.call_async(request)
 
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
+    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
         request = ActivateYoloObjects.Request()
         request.activate_objects = activate_objects
         request.activate_shoes = activate_shoes
         request.activate_doors = activate_doors
+        request.activate_objects_hand = activate_objects_hand
+        request.activate_shoes_hand = activate_shoes_hand
+        request.activate_doors_hand = activate_doors_hand
         request.minimum_objects_confidence = minimum_objects_confidence
+        request.minimum_shoes_confidence = minimum_shoes_confidence
+        request.minimum_doors_confidence = minimum_doors_confidence
 
         self.activate_yolo_objects_client.call_async(request)
+
+    #### FACE SERVER FUNCTIONS #####
+    def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
+        request = SetFace.Request()
+        request.command = command
+        request.custom = custom
         
+        future = self.face_command_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_face_command)
+        else:
+            self.face_success = True
+            self.face_message = "Wait for answer not needed"
+    
+    def callback_call_face_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.face_success = response.success
+            self.face_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_face = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
     #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
         request = SpeechCommand.Request()
@@ -564,8 +601,8 @@ class RestaurantMain():
 
         t.data = False 
         self.node.flag_start_button_publisher.publish(t)
-        
-    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", wait_for_end_of=True):
+
+    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", face_hearing="charmie_face_green", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
 
@@ -575,7 +612,7 @@ class RestaurantMain():
             while keywords=="ERROR":
                 
                 self.set_speech(filename=question, wait_for_end_of=True)
-                self.set_face("charmie_face_green")
+                self.set_face(face_hearing)
                 self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
                 
                 if wait_for_end_of:
@@ -615,20 +652,15 @@ class RestaurantMain():
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
-        if custom == "":
-            temp = String()
-            temp.data = command
-            self.node.image_to_face_publisher.publish(temp)
-        else:
-            temp = String()
-            temp.data = custom
-            self.node.custom_image_to_face_publisher.publish(temp)
-
-        self.node.face_success = True
-        self.node.face_message = "Value Sucessfully Sent"
+        self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_face:
+                pass
+        self.node.waited_for_end_of_face = False
 
         return self.node.face_success, self.node.face_message
-    
+
     def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
         self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
@@ -680,10 +712,9 @@ class RestaurantMain():
 
         return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
-        # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
-        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_objects_confidence=minimum_objects_confidence)
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
 
         self.node.activate_yolo_objects_success = True
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
@@ -928,10 +959,9 @@ class RestaurantMain():
 
         return filtered_persons, filenames
     
-    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
 
-
-        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
 
             self.navigation_success = False
@@ -945,7 +975,14 @@ class RestaurantMain():
             # string move_or_rotate
             # float32 orientation_absolute
             # bool flag_not_obs
-            # bool follow_me
+            # float32 reached_radius
+            # bool avoid_people
+            # float32 adjust_distance
+            # float32 adjust_direction
+            # float32 adjust_min_dist
+
+            if adjust_direction < 0:
+                adjust_direction += 360
 
             navigation.target_coordinates.x = target[0]
             navigation.target_coordinates.y = target[1]
@@ -954,6 +991,9 @@ class RestaurantMain():
             navigation.flag_not_obs = flag_not_obs
             navigation.reached_radius = reached_radius
             navigation.avoid_people = False
+            navigation.adjust_distance = adjust_distance
+            navigation.adjust_direction = adjust_direction
+            navigation.adjust_min_dist = adjust_min_dist
 
             self.node.flag_navigation_reached = False
             
@@ -967,7 +1007,7 @@ class RestaurantMain():
             self.navigation_success = True
             self.navigation_message = "Arrived at selected location"
 
-        return self.node.navigation_success, self.node.navigation_message
+        return self.node.navigation_success, self.node.navigation_message   
 
     # main state-machine function
     def main(self):
@@ -1247,10 +1287,10 @@ class RestaurantMain():
 
                     self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
 
-                    self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
-
+                    # old: self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
+                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                     ##### AUDIO: Listen the order and repeat for confirmation
-                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
+                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
                     print("Finished:", command)
                     keyword_list = command.split(" ")
                     self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
@@ -1260,7 +1300,7 @@ class RestaurantMain():
 
                     ##### AUDIO: Listen "YES" OR "NO"
                     ##### "Please say yes or no to confirm the order"
-                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", wait_for_end_of=True)
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                     print("Finished:", confirmation)
 
                     ##### Verifica a resposta recebida
@@ -1342,10 +1382,10 @@ class RestaurantMain():
 
                     self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
 
-                    self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
-
+                    # old: self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
+                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                     ##### AUDIO: Listen the order and repeat for confirmation
-                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", wait_for_end_of=True)
+                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
                     print("Finished:", command)
                     keyword_list = command.split(" ")
                     self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
@@ -1355,7 +1395,7 @@ class RestaurantMain():
 
                     ##### AUDIO: Listen "YES" OR "NO"
                     ##### "Please say yes or no to confirm the order"
-                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", wait_for_end_of=True)
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                     print("Finished:", confirmation)
 
                     ##### Verifica a resposta recebida

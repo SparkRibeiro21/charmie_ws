@@ -7,8 +7,8 @@ import threading
 
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D
-from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects
 from charmie_interfaces.msg import Yolov8Objects, DetectedObject
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, SetFace
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
@@ -66,10 +66,6 @@ class StoringGroceriesNode(Node):
         ### Topics (Publisher and Subscribers) ###  
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
 
-        # Face
-        self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
-        self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
-
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
@@ -98,7 +94,10 @@ class StoringGroceriesNode(Node):
 
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
-
+        
+        # Face
+        self.face_command_client = self.create_client(SetFace, "face_command")
+        
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Neck 
         # while not self.set_neck_position_client.wait_for_service(1.0):
@@ -121,6 +120,7 @@ class StoringGroceriesNode(Node):
         self.waited_for_end_of_neck_pos = False
         self.waited_for_end_of_neck_coords = False
         self.waited_for_end_of_get_neck = False
+        self.waited_for_end_of_face = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -153,6 +153,9 @@ class StoringGroceriesNode(Node):
             self.get_logger().warn("Waiting for Server Get Neck Position Command...")
         while not self.set_neck_coordinates_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        # Face
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
         # Arm (CHARMIE)
         """ while not self.arm_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Arm Trigger Command...") """
@@ -166,16 +169,50 @@ class StoringGroceriesNode(Node):
 
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
-    
+
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
+    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
         request = ActivateYoloObjects.Request()
         request.activate_objects = activate_objects
         request.activate_shoes = activate_shoes
         request.activate_doors = activate_doors
+        request.activate_objects_hand = activate_objects_hand
+        request.activate_shoes_hand = activate_shoes_hand
+        request.activate_doors_hand = activate_doors_hand
         request.minimum_objects_confidence = minimum_objects_confidence
+        request.minimum_shoes_confidence = minimum_shoes_confidence
+        request.minimum_doors_confidence = minimum_doors_confidence
 
         self.activate_yolo_objects_client.call_async(request)
+
+    #### FACE SERVER FUNCTIONS #####
+    def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
+        request = SetFace.Request()
+        request.command = command
+        request.custom = custom
+        
+        future = self.face_command_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_face_command)
+        else:
+            self.face_success = True
+            self.face_message = "Wait for answer not needed"
+    
+    def callback_call_face_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.face_success = response.success
+            self.face_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_face = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
@@ -475,17 +512,12 @@ class StoringGroceriesMain():
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
-        if custom == "":
-            temp = String()
-            temp.data = command
-            self.node.image_to_face_publisher.publish(temp)
-        else:
-            temp = String()
-            temp.data = custom
-            self.node.custom_image_to_face_publisher.publish(temp)
-
-        self.node.face_success = True
-        self.node.face_message = "Value Sucessfully Sent"
+        self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_face:
+                pass
+        self.node.waited_for_end_of_face = False
 
         return self.node.face_success, self.node.face_message
 
@@ -1068,10 +1100,9 @@ class StoringGroceriesMain():
 
         # print(f"Saved image with rectangle for object {detected_object.object_name} as {image_name}")
 
-    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
-        # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
-        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_objects_confidence=minimum_objects_confidence)
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
 
         self.node.activate_yolo_objects_success = True
         self.node.activate_yolo_objects_message = "Activated with selected parameters"

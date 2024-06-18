@@ -181,15 +181,20 @@ class CarryMyLuggageNode(Node):
         self.activate_yolo_pose_client.call_async(request)
 
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_objects_server(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5):
+    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
         request = ActivateYoloObjects.Request()
         request.activate_objects = activate_objects
         request.activate_shoes = activate_shoes
         request.activate_doors = activate_doors
+        request.activate_objects_hand = activate_objects_hand
+        request.activate_shoes_hand = activate_shoes_hand
+        request.activate_doors_hand = activate_doors_hand
         request.minimum_objects_confidence = minimum_objects_confidence
+        request.minimum_shoes_confidence = minimum_shoes_confidence
+        request.minimum_doors_confidence = minimum_doors_confidence
 
         self.activate_yolo_objects_client.call_async(request)
-        
+
     #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
         request = SpeechCommand.Request()
@@ -484,16 +489,15 @@ class CarryMyLuggageMain():
 
         return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-    def activate_yolo_objects(self, activate_objects=True, activate_shoes=False, activate_doors=False, minimum_objects_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
-        # self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, characteristics=characteristics)
-        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, minimum_objects_confidence=minimum_objects_confidence)
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
 
         self.node.activate_yolo_objects_success = True
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
-
+    
     def track_person(self, person, body_part="Head", wait_for_end_of=True):
 
         self.node.call_neck_track_person_server(person=person, body_part=body_part, wait_for_end_of=wait_for_end_of)
@@ -536,10 +540,9 @@ class CarryMyLuggageMain():
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
 
-    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, wait_for_end_of=True):
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
 
-
-        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate":
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
 
             self.navigation_success = False
@@ -553,7 +556,14 @@ class CarryMyLuggageMain():
             # string move_or_rotate
             # float32 orientation_absolute
             # bool flag_not_obs
-            # bool follow_me
+            # float32 reached_radius
+            # bool avoid_people
+            # float32 adjust_distance
+            # float32 adjust_direction
+            # float32 adjust_min_dist
+
+            if adjust_direction < 0:
+                adjust_direction += 360
 
             navigation.target_coordinates.x = target[0]
             navigation.target_coordinates.y = target[1]
@@ -562,6 +572,9 @@ class CarryMyLuggageMain():
             navigation.flag_not_obs = flag_not_obs
             navigation.reached_radius = reached_radius
             navigation.avoid_people = False
+            navigation.adjust_distance = adjust_distance
+            navigation.adjust_direction = adjust_direction
+            navigation.adjust_min_dist = adjust_min_dist
 
             self.node.flag_navigation_reached = False
             

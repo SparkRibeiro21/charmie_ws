@@ -772,6 +772,9 @@ class NavSDNLNode(Node):
         self.MIN_DIST_OBS = 0.0
         self.detected_people = Yolov8Pose()
         self.PERSON_IN_FRONT = False
+        self.latest_localisation_x = 0.0
+        self.latest_localisation_y = 0.0
+        self.latest_localisation_t = 0.0
 
         self.navigation_diagnostic_publisher = self.create_publisher(Bool, "navigation_diagnostic", 10)
 
@@ -852,7 +855,7 @@ class NavSDNLNode(Node):
         # string message  # informational, e.g. for error messages
         
         response.success = True
-        response.message = "Arm Trigger"
+        response.message = "Nav Trigger"
         return response
 
 
@@ -907,11 +910,14 @@ class NavSDNLNode(Node):
 
     def target_pos_callback(self, nav: TarNavSDNL):
         # calculates the velocities and sends them to the motors considering the latest obstacles and odometry position
-        print(nav)
+        # print(nav)
         self.nav.navigation_msg_to_position(nav)
         self.nav.dist_to_target = self.nav.upload_move_dist_to_target()
         self.nav.ang_to_target = self.nav.upload_rot_ang_to_target()
         self.nav.nav_threshold_dist = nav.reached_radius # in meters
+        self.latest_localisation_x = self.nav.robot_x
+        self.latest_localisation_y = self.nav.robot_y
+        self.latest_localisation_t = self.nav.robot_t
         self.navigation_state = 0
 
 
@@ -1008,10 +1014,6 @@ class NavSDNLNode(Node):
             
             if self.navigation_state == 0:
 
-
-                #     self.node.nav_tar_sdnl.move_or_rotate = "MOVE"
-                # if self.nav
-            
                 if self.nav.nav_target.move_or_rotate.lower() == "rotate":
 
                     self.nav.max_ang_speed = 20.0 # speed # 20.0
@@ -1022,6 +1024,7 @@ class NavSDNLNode(Node):
                     # print("ANG_ERR:", self.nav.ang_to_target) 
                     if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
                         self.navigation_state = 2
+
 
                 elif self.nav.nav_target.move_or_rotate.lower() == "move":
         
@@ -1047,6 +1050,7 @@ class NavSDNLNode(Node):
                     if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
                         self.navigation_state = 2
                 
+
                 elif self.nav.nav_target.move_or_rotate.lower() == "orientate":
 
                     self.nav.max_ang_speed = 20.0 # speed # 20.0
@@ -1059,29 +1063,31 @@ class NavSDNLNode(Node):
                         self.navigation_state = 2
 
 
-
-
                 elif self.nav.nav_target.move_or_rotate.lower() == "adjust":
 
                     print("Entrei adjust NORMAL")
-                    print(self.nav.nav_target.adjust_time, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
-
-
+                    print("Adjust params:", self.nav.nav_target.adjust_distance, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
+                    print("Latest Localisation:", self.latest_localisation_x, self.latest_localisation_y, self.latest_localisation_t)
+            
                     omni_move = Vector3()
                     omni_move.x = float(self.nav.nav_target.adjust_direction)
-                    omni_move.y = float(15.0)
+                    omni_move.y = float(5.0)
                     omni_move.z = float(100.0) 
-                    self.omni_move_publisher.publish(omni_move)
-                    time.sleep(self.nav.nav_target.adjust_time)
-                    self.navigation_state = 2
+                    
+                    dist = math.dist((self.latest_localisation_x, self.latest_localisation_y),(self.nav.robot_x, self.nav.robot_y))
+                    if dist >= self.nav.nav_target.adjust_distance - 0.08: # this values is used to compensate the error made by the decceleration ramp by the motor controller
+                        omni_move.x = float(0.0)
+                        omni_move.y = float(0.0)
+                        omni_move.z = float(100.0)
+                        self.navigation_state = 2
 
+                    self.omni_move_publisher.publish(omni_move)
 
 
                 elif self.nav.nav_target.move_or_rotate.lower() == "adjust_obstacle":
 
                     print("Entrei adjust OBSTACLE")
-                    print(self.nav.nav_target.adjust_time, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
-
+                    print(self.nav.nav_target.adjust_distance, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
 
                     omni_move = Vector3()
                     omni_move.x = float(self.nav.nav_target.adjust_direction)
@@ -1095,47 +1101,13 @@ class NavSDNLNode(Node):
                         omni_move.y = float(0.0)
                         self.navigation_state = 2
 
-
                     self.omni_move_publisher.publish(omni_move)
-
 
 
                 else:
                     # ERROR
                     self.navigation_state = 2
 
-            
-
-
-
-                # print(self.nav.nav_target.follow_me)
-
-                # if self.nav.nav_target.follow_me:
-                #     if self.nav.dist_to_target <= self.nav.nav_threshold_dist_follow_me:
-                #         self.navigation_state = 1                        
-                #         print("INSIDE1")
-                #     else:
-                #         print("OUTSIDE1")
-                # else:
-                #     if self.nav.dist_to_target <= self.nav.nav_threshold_dist:
-                #         self.navigation_state = 1
-            
-
-
-            # if self.navigation_state == 1:
-            #     omni_move = self.nav.sdnl_main("rot")
-            #     self.omni_move_publisher.publish(omni_move)
-            # 
-            #     if self.nav.nav_target.follow_me:
-            #         if self.nav.ang_to_target <= self.nav.nav_threshold_ang_follow_me:
-            #             self.navigation_state = 2
-            #             print("INSIDE2")
-            #         else:
-            #             print("OUTSIDE2")
-            #     else:
-            #         if self.nav.ang_to_target <= self.nav.nav_threshold_ang:
-            #             self.navigation_state = 2
-                    
 
             if self.navigation_state == 2:
                 # publica no topico a dizer que acabou
