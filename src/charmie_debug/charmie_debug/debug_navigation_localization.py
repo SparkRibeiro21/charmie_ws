@@ -158,9 +158,7 @@ class RestaurantMain():
     # 
     #     return self.node.track_object_success, self.node.track_object_message   
     
-    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_time=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
-
-
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
 
         if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
@@ -176,7 +174,14 @@ class RestaurantMain():
             # string move_or_rotate
             # float32 orientation_absolute
             # bool flag_not_obs
-            # bool follow_me
+            # float32 reached_radius
+            # bool avoid_people
+            # float32 adjust_distance
+            # float32 adjust_direction
+            # float32 adjust_min_dist
+
+            if adjust_direction < 0:
+                adjust_direction += 360
 
             navigation.target_coordinates.x = target[0]
             navigation.target_coordinates.y = target[1]
@@ -185,7 +190,7 @@ class RestaurantMain():
             navigation.flag_not_obs = flag_not_obs
             navigation.reached_radius = reached_radius
             navigation.avoid_people = False
-            navigation.adjust_time = adjust_time
+            navigation.adjust_distance = adjust_distance
             navigation.adjust_direction = adjust_direction
             navigation.adjust_min_dist = adjust_min_dist
 
@@ -277,11 +282,11 @@ class RestaurantMain():
 
                 # time.sleep(3)
                 
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=8.0, adjust_direction=135.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=8.0, adjust_direction=135.0, wait_for_end_of=True)
 
                 self.set_navigation(movement="orientate", absolute_angle=-45.0, flag_not_obs=True, wait_for_end_of=True)
 
-                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_time=1.0, adjust_direction=-45.0+360, adjust_min_dist=0.5, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_distance=1.0, adjust_direction=-45.0+360, adjust_min_dist=0.5, wait_for_end_of=True)
 
                 while True:
                     pass

@@ -1064,7 +1064,7 @@ class NavSDNLNode(Node):
                 elif self.nav.nav_target.move_or_rotate.lower() == "adjust":
 
                     print("Entrei adjust NORMAL")
-                    print(self.nav.nav_target.adjust_time, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
+                    print(self.nav.nav_target.adjust_distance, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
 
 
                     omni_move = Vector3()
@@ -1072,7 +1072,7 @@ class NavSDNLNode(Node):
                     omni_move.y = float(15.0)
                     omni_move.z = float(100.0) 
                     self.omni_move_publisher.publish(omni_move)
-                    time.sleep(self.nav.nav_target.adjust_time)
+                    time.sleep(self.nav.nav_target.adjust_distance)
                     self.navigation_state = 2
 
 
@@ -1080,7 +1080,7 @@ class NavSDNLNode(Node):
                 elif self.nav.nav_target.move_or_rotate.lower() == "adjust_obstacle":
 
                     print("Entrei adjust OBSTACLE")
-                    print(self.nav.nav_target.adjust_time, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
+                    print(self.nav.nav_target.adjust_distance, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
 
 
                     omni_move = Vector3()
