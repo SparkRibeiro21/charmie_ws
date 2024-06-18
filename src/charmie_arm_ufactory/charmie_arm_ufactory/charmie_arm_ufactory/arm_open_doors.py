@@ -204,12 +204,16 @@ class ArmUfactory(Node):
 		self.inside_wardrobe_to_open_right_door = [-216.9, 82.5, -106.8, 152.4, 117.4, 23.0]
 		self.finish_inside_wardrobe_to_open_right_door = [-214.1, 74.3, -104.4, 161.0, 123.1, 27.3]
 
+		self.prepare_drawer = [-154.1, 39.8, -85.0, 285.3, 109.0, 136.8]
+
 
 
 		# SET POSITIONS VARIABLES
 		self.get_order_position_linear = 				[ -581.4, -211.5,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
 		self.oriented_floor = [math.radians(89.8), math.radians(0.1), math.radians(179.4)]
 		self.oriented_floor = [math.radians(23.7), math.radians(-89.7), math.radians(-114.3)]
+
+		self.orientation_open_drawer = [math.radians(34.6), math.radians(-86.4), math.radians(-123.5)]
 		
 		print('Nada')
 
@@ -1449,6 +1453,38 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def change_height_open_drawer(self, set_desired_pose_arm):
+		if self.estado_tr == 0:
+			print('a')
+			print(set_desired_pose_arm)
+			self.position_values_req.pose = [set_desired_pose_arm[0], set_desired_pose_arm[1], set_desired_pose_arm[2], self.orientation_open_drawer[0],self.orientation_open_drawer[1], self.orientation_open_drawer[2]]
+			self.position_values_req.speed = 80.0
+			self.position_values_req.acc = 400.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 30.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.arm_pose = []
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+	
 	def change_depth_to_open_washing_machine(self, set_desired_pose_arm):
 		if self.estado_tr == 0:
 			print('a')
@@ -1480,6 +1516,38 @@ class ArmUfactory(Node):
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def arm_prepare_open_drawer(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.prepare_drawer)
+			self.joint_values_req.speed = 0.5
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.arm_pose = []
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
 
 	def arm_side_of_washing_machine(self):
 		if self.estado_tr == 0:
@@ -1598,12 +1666,17 @@ class ArmUfactory(Node):
 		elif self.next_arm_movement == "finish_open_right_door_from_inside":
 			self.finish_open_right_door_from_inside()
 		elif self.next_arm_movement == "open_left_door_from_side":
-			self.open_left_door_from_side()	
+			self.open_left_door_from_side()
+		elif self.next_arm_movement == "change_height_open_drawer":
+			print('---', self.arm_pose)
+			self.change_height_open_drawer(self.arm_pose)		
 		elif self.next_arm_movement == "change_depth_to_open_washing_machine":
 			print('---', self.arm_pose)
 			self.change_depth_to_open_washing_machine(self.arm_pose)
 		elif self.next_arm_movement == "arm_side_of_washing_machine":
 			self.arm_side_of_washing_machine()
+		elif self.next_arm_movement == "arm_prepare_open_drawer":
+			self.arm_prepare_open_drawer()
 		elif self.next_arm_movement == "lower_arm_close_washing_machine":
 			print('Joint1:', self.value)
 			self.lower_arm_close_washing_machine(self.value)

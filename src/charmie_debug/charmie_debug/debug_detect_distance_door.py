@@ -2681,7 +2681,7 @@ class RestaurantMain():
             cv2.destroyAllWindows()
 
             # Detect lines using Hough Line Transform
-            lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=80)
+            lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold=70)
 
             avg_depths = []
             
@@ -2722,30 +2722,47 @@ class RestaurantMain():
                     roi = colored_depth_image[int(y01):int(y02), :]
                     roi_depth = current_frame_draw[int(y01):int(y02), :]
 
-                    k = int(y01)
-                    j = 0
-                    a = 0
-                    zeros_ = 0
-                    while k < int(y02):
-                        while j < width:
-                            a += current_frame_draw[k, j]
-                            if current_frame_draw[k, j] == 0:
-                                zeros_ += 1
-                            j += 1
-                        k += 1
-                    a = a / ((width * height) - zeros_)
-                    # print(a)
-
                     if y_diff > 40.0:
                         if y_diff < 250.0:
 
-                            avg_depths.append((a, roi, y_diff, int(y01), int(y02), roi_depth))
+                            total_depth = 0
+                            valid_pixel_count = 0
 
-                    # print('\n\n')
+
+                            for k in range(int(y01), int(y02)):
+                                for j in range(width):
+                                    depth_value = current_frame_draw[k, j]
+                                    if depth_value > 0:  # Ignore zero depth values
+                                        total_depth += depth_value
+                                        valid_pixel_count += 1
+
+                            if valid_pixel_count > 0:
+                                avg_depth = total_depth / valid_pixel_count
+                            else:
+                                avg_depth = 0
+
+                            print(f"Average depth: {avg_depth}")
+                            print('y2', int(y02))
+                            print('y1', int(y01))
+                            print('valid_pixel_count', valid_pixel_count)
+
+                            # Display the ROI with average depth
+                            cv2.imshow(f"ROI with Average Depth {avg_depth}", roi_depth)
+                            cv2.waitKey(0)
+                            cv2.destroyAllWindows()
+
+                            cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
+                            cv2.waitKey(0)
+                            cv2.destroyAllWindows()
+                            avg_depths.append((avg_depth, roi, y_diff, int(y01), int(y02), roi_depth))
+
+                                    # print('\n\n')
       
                 print('\n\n')
                 # Sort the average depths in descending order
                 avg_depths.sort(reverse=True)
+
+                print(avg_depths)
 
                 # Display the ROIs in the order of decreasing average depth
                 aux_depth = 0.0
@@ -2753,27 +2770,23 @@ class RestaurantMain():
                 lines_detected = False
                 for avg_depth, roi, y_diff, y_01, y_02, roi_depth in avg_depths:
                     if roi_depth is not None and roi_depth.size > 0:
-                        cv2.imshow(f"ROI with Average Depth {avg_depth}", roi_depth)
-                        cv2.waitKey(0)
-                        cv2.destroyAllWindows()
-                        cv2.imshow(f"ROI with Average Depth {avg_depth}", roi_depth)
-                        cv2.waitKey(0)
-                        cv2.destroyAllWindows()
-                        cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
-                        cv2.waitKey(0)
-                        cv2.destroyAllWindows()
+                        # cv2.imshow(f"ROI with Average Depth {avg_depth}", roi_depth)
+                        # cv2.waitKey(0)
+                        # cv2.destroyAllWindows()
+                        # cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
+                        # cv2.waitKey(0)
+                        # cv2.destroyAllWindows()
                         std_dev = np.std(roi_depth)
                         print('standard deviation', std_dev)
                         print('depth', avg_depth)
-                        if avg_depth < 1.35:
-                            if std_dev > 100:
-                                if avg_depth > aux_depth:
-                                    aux_depth = avg_depth
-                                    std_dev_aux = std_dev
-                                    lines_detected = True
-                                    
-                                    aux_ = avg_depth, roi, y_diff, y_01, y_02, roi_depth
-                                    # print('depth', avg_depth)
+                        if avg_depth < 1245:
+                            if avg_depth > aux_depth:
+                                aux_depth = avg_depth
+                                std_dev_aux = std_dev
+                                lines_detected = True
+                                
+                                aux_ = avg_depth, roi, y_diff, y_01, y_02, roi_depth
+                                # print('depth', avg_depth)
                     else:
                         print(f"Skipping ROI with Average Depth {avg_depth}: roi_depth is empty or not properly defined")
 
@@ -2784,6 +2797,8 @@ class RestaurantMain():
 
 
                 print(lines_detected)
+
+                print('\n\n')
 
                 if lines_detected == True:
                     cv2.imshow('Furthest plane: ', aux_[1])
@@ -2815,200 +2830,184 @@ class RestaurantMain():
 
 
 
-                #     roi_height, roi_width = aux_[1].shape[:2]
+                    roi_height, roi_width = aux_[1].shape[:2]
 
-                #     height, width = current_frame.shape[:2]
+                    height, width = current_frame.shape[:2]
 
-                #     print(height, width)
+                    print(height, width)
 
-                #     # Center coordinates of the ROI
-                #     roi_center_y = roi_height // 2
-                #     roi_center_x = roi_width // 2
+                    # Center coordinates of the ROI
+                    roi_center_y = roi_height // 2
+                    roi_center_x = roi_width // 2
 
-                #     # Coordinates of the ROI in colored_depth_image
-                #     y1 = aux_[3]
-                #     y2 = aux_[4]
+                    # Coordinates of the ROI in colored_depth_image
+                    y1 = aux_[3]
+                    y2 = aux_[4]
                     
-                #     # Coordinates of the colored_depth_image in the current_frame
-                #     current_frame_start_y = y1
-                #     current_frame_end_y = y2
-                #     current_frame_start_x = width // 2 - width // 6
+                    # Coordinates of the colored_depth_image in the current_frame
+                    current_frame_start_y = y1
+                    current_frame_end_y = y2
+                    current_frame_start_x = width // 2 - width // 6
 
-                #     # Center coordinates in the original image
-                #     circle_center_x = current_frame_start_x + roi_center_x
-                #     circle_center_y = current_frame_start_y + roi_center_y
-                #     bottom_circle_center_y = current_frame_end_y + roi_center_y
+                    # Center coordinates in the original image
+                    circle_center_x = current_frame_start_x + roi_center_x
+                    circle_center_y = current_frame_start_y + roi_center_y
+                    bottom_circle_center_y = current_frame_end_y + roi_center_y
 
-                #     top_circle_center_y = circle_center_y - roi_center_y - 40
-                #     bottom_circle_center_y = bottom_circle_center_y - roi_center_y + 40
+                    top_circle_center_y = circle_center_y - roi_center_y - 40
+                    bottom_circle_center_y = bottom_circle_center_y - roi_center_y + 40
 
-                #     if top_circle_center_y < 0:
-                #         top_circle_center_y = 0 
+                    if top_circle_center_y < 0:
+                        top_circle_center_y = 0 
 
-                #     # Draw the circle in the original image
-                #     radius = 10
-                #     cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
-                #     cv2.circle(colored_depth_image_2, (circle_center_x, top_circle_center_y), radius, (0, 255, 0), -1)
-                #     cv2.circle(colored_depth_image_2, (circle_center_x, bottom_circle_center_y), radius, (0, 255, 0), -1)
-
-                    
-
-                #     points = Pose2D()
-                #     points.x = float(circle_center_x)
-                #     points.y = float(top_circle_center_y)
-
-                #     print(points)
-
-                #     # Create a list to hold the Pose2D objects
-
-                #     requested_objects = []
-
-                #     bb = BoundingBox()
-                #     bb.box_top_left_x = circle_center_x - 20
-                #     bb.box_top_left_y = top_circle_center_y - 20 
-                #     bb.box_width = 40
-                #     bb.box_height = 40
-
-                #     bb_2 = BoundingBox()
-                #     bb_2.box_top_left_x = circle_center_x - 20
-                #     bb_2.box_top_left_y = circle_center_y - 20 
-                #     bb_2.box_width = 40
-                #     bb_2.box_height = 40
-
-                #     bb_3 = BoundingBox()
-                #     bb_3.box_top_left_x = circle_center_x - 20
-                #     bb_3.box_top_left_y = bottom_circle_center_y - 20 
-                #     bb_3.box_width = 40
-                #     bb_3.box_height = 40
-
-                #     cv2.rectangle(colored_depth_image_2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x + bb.box_width, bb.box_top_left_y + bb.box_height), (255, 0, 0), 2)
-                #     cv2.rectangle(colored_depth_image_2, (bb_2.box_top_left_x, bb_2.box_top_left_y), (bb_2.box_top_left_x + bb_2.box_width, bb_2.box_top_left_y + bb_2.box_height), (255, 0, 0), 2)
-                #     cv2.rectangle(colored_depth_image_2, (bb_3.box_top_left_x, bb_3.box_top_left_y), (bb_3.box_top_left_x + bb_3.box_width, bb_3.box_top_left_y + bb_3.box_height), (255, 0, 0), 2)
-
-
-                #     cv2.imshow("Original Image with Circles", colored_depth_image_2)
-                #     cv2.waitKey(0)
-                #     cv2.destroyAllWindows()
-
-                #     get_pc = BoundingBoxAndPoints()
-                #     # get_pc.requested_point_coords = [points]
-                #     get_pc.bbox = bb
-
-                #     get_pc_2 = BoundingBoxAndPoints()
-                #     # get_pc_2.requested_point_coords = [points]
-                #     get_pc_2.bbox = bb_2
-
-                #     get_pc_3 = BoundingBoxAndPoints()
-                #     # get_pc_2.requested_point_coords = [points]
-                #     get_pc_3.bbox = bb_3
-
-                #     requested_objects.append(get_pc)
-                #     requested_objects.append(get_pc_2)
-                #     requested_objects.append(get_pc_3)
-                #     camera = "head"
-
-                #     self.node.waiting_for_pcloud = True
-                #     self.node.call_point_cloud_server(requested_objects, camera)
-
-                #     while self.node.waiting_for_pcloud:
-                #         pass
-
-                #     new_pcloud = self.node.point_cloud_response.coords
-
-                #     print('--', new_pcloud)
-
-                #     print('Initial', new_pcloud[0])
-                #     auxiliar = new_pcloud[0].center_coords.x
-                #     new_pcloud[0].center_coords.x = -new_pcloud[0].center_coords.y / 1000
-                #     new_pcloud[0].center_coords.y = auxiliar/ 1000
-                #     new_pcloud[0].center_coords.z = new_pcloud[0].center_coords.z / 1000
-
-                #     print('Final', new_pcloud[0])
-
-                #     object_location = self.transform_temp(new_pcloud[0].center_coords)
-                #     print('...', object_location)
-                    
-                #     arm_height = object_location[1]
-                #     arm_centered_x = 130.0
-                #     # arm_depth retira 20 cm ao ponto acima da máq de lavar que é onde eu quero teoricamente ir para abrir
-                #     arm_depth = object_location[0] + 200.0
-
-
-                #     set_pose_arm = ListOfFloats()
-                #     """ new_depth = Float32()
-                #     new_depth.data = arm_depth """
-                    
-                #     object_x = arm_depth
-                #     object_y = arm_height
-                #     object_z = arm_centered_x
-
-                #     print('x y e z do ponto que quero alcançar:',object_x, object_y, object_z)   
+                    # Draw the circle in the original image
+                    radius = 10
+                    cv2.circle(colored_depth_image_2, (circle_center_x, circle_center_y), radius, (0, 255, 0), -1)
+                    cv2.circle(colored_depth_image_2, (circle_center_x, top_circle_center_y), radius, (0, 255, 0), -1)
+                    cv2.circle(colored_depth_image_2, (circle_center_x, bottom_circle_center_y), radius, (0, 255, 0), -1)
 
                     
-                #     # print(self.node.arm_current_pose)
-                    
-                #     # self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
-                #     self.set_arm(command="arm_side_of_washing_machine", wait_for_end_of=True)
 
-                #     time.sleep(3)
-                #     self.set_arm(command="get_arm_position", wait_for_end_of=True)
-                #     time.sleep(3)
+                    points = Pose2D()
+                    points.x = float(circle_center_x)
+                    points.y = float(top_circle_center_y)
+
+                    print(points)
+
+                    # Create a list to hold the Pose2D objects
+
+                    requested_objects = []
+
+                    bb = BoundingBox()
+                    bb.box_top_left_x = circle_center_x - 20
+                    bb.box_top_left_y = top_circle_center_y - 20 
+                    bb.box_width = 40
+                    bb.box_height = 40
+
+                    bb_2 = BoundingBox()
+                    bb_2.box_top_left_x = circle_center_x - 20
+                    bb_2.box_top_left_y = circle_center_y - 20 
+                    bb_2.box_width = 40
+                    bb_2.box_height = 40
+
+                    bb_3 = BoundingBox()
+                    bb_3.box_top_left_x = circle_center_x - 20
+                    bb_3.box_top_left_y = bottom_circle_center_y - 20 
+                    bb_3.box_width = 40
+                    bb_3.box_height = 40
+
+                    # cv2.rectangle(colored_depth_image_2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x + bb.box_width, bb.box_top_left_y + bb.box_height), (255, 0, 0), 2)
+                    cv2.rectangle(colored_depth_image_2, (bb_2.box_top_left_x, bb_2.box_top_left_y), (bb_2.box_top_left_x + bb_2.box_width, bb_2.box_top_left_y + bb_2.box_height), (255, 0, 0), 2)
+                    # cv2.rectangle(colored_depth_image_2, (bb_3.box_top_left_x, bb_3.box_top_left_y), (bb_3.box_top_left_x + bb_3.box_width, bb_3.box_top_left_y + bb_3.box_height), (255, 0, 0), 2)
+
+
+                    cv2.imshow("Original Image with Circles", colored_depth_image_2)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
+
+                    get_pc = BoundingBoxAndPoints()
+                    # get_pc.requested_point_coords = [points]
+                    get_pc.bbox = bb
+
+                    get_pc_2 = BoundingBoxAndPoints()
+                    # get_pc_2.requested_point_coords = [points]
+                    get_pc_2.bbox = bb_2
+
+                    get_pc_3 = BoundingBoxAndPoints()
+                    # get_pc_2.requested_point_coords = [points]
+                    get_pc_3.bbox = bb_3
+
+                    requested_objects.append(get_pc)
+                    requested_objects.append(get_pc_2)
+                    requested_objects.append(get_pc_3)
+                    camera = "head"
+
+                    self.node.waiting_for_pcloud = True
+                    self.node.call_point_cloud_server(requested_objects, camera)
+
+                    while self.node.waiting_for_pcloud:
+                        pass
+
+                    new_pcloud = self.node.point_cloud_response.coords
+
+                    print('--', new_pcloud)
+
+                    print('Initial', new_pcloud[0])
+                    auxiliar = new_pcloud[0].center_coords.x
+                    # auxiliar = (new_pcloud[2].center_coords.x + new_pcloud[0].center_coords.x) / 2
+                    new_pcloud[0].center_coords.x = -new_pcloud[0].center_coords.y / 1000
+                    new_pcloud[0].center_coords.y = auxiliar/ 1000
+                    new_pcloud[0].center_coords.z = new_pcloud[0].center_coords.z / 1000
+
+                    auxiliar = new_pcloud[1].center_coords.x
+                    # auxiliar = (new_pcloud[2].center_coords.x + new_pcloud[0].center_coords.x) / 2
+                    new_pcloud[1].center_coords.x = -new_pcloud[1].center_coords.y / 1000
+                    new_pcloud[1].center_coords.y = auxiliar/ 1000
+                    new_pcloud[1].center_coords.z = new_pcloud[1].center_coords.z / 1000
+
+                    auxiliar = new_pcloud[2].center_coords.x
+                    # auxiliar = (new_pcloud[2].center_coords.x + new_pcloud[0].center_coords.x) / 2
+                    new_pcloud[2].center_coords.x = -new_pcloud[2].center_coords.y / 1000
+                    new_pcloud[2].center_coords.y = auxiliar/ 1000
+                    new_pcloud[2].center_coords.z = new_pcloud[2].center_coords.z / 1000
+
+                    print('Final', new_pcloud[0])
+
+                    object_location = self.transform_temp(new_pcloud[0].center_coords)
+                    object_location_1 = self.transform_temp(new_pcloud[1].center_coords)
+                    object_location_2 = self.transform_temp(new_pcloud[2].center_coords)
+                    print('...', object_location, object_location_1, object_location_2)
+                    
+                    # arm_height = object_location[1]
+                    arm_height = (object_location_1[1] + object_location_2[1]) / 2 
+                    arm_centered_x = 130.0
+                    # arm_depth retira 20 cm ao ponto acima da máq de lavar que é onde eu quero teoricamente ir para abrir
+                    print(object_location[0], object_location_2[0])
+                    arm_depth = (object_location[0] + object_location_2[0]) / 2
+                    arm_depth = object_location_2[0] + 20.0 
+
+
+                    set_pose_arm = ListOfFloats()
+                    """ new_depth = Float32()
+                    new_depth.data = arm_depth """
+                    
+                    object_x = arm_depth
+                    object_y = arm_height
+                    object_z = arm_centered_x
+
+                    print('x y e z do ponto que quero alcançar:',object_x, object_y, object_z)   
+
+                    
+                    # print(self.node.arm_current_pose)
+                    
+                    # self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
+                    self.set_arm(command="arm_prepare_open_drawer", wait_for_end_of=True)
+                    self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+                    time.sleep(3)
+                    self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                    time.sleep(3)
                 
-                #     set_pose_arm.pose[:] = array('f')
+                    set_pose_arm.pose[:] = array('f')
 
-                #     # Set the pose values
-                #     set_pose_arm.pose.append(object_x)
-                #     set_pose_arm.pose.append(object_y)
-                #     set_pose_arm.pose.append(object_z)
-                #     set_pose_arm.pose.append(self.node.arm_current_pose[3])
-                #     set_pose_arm.pose.append(self.node.arm_current_pose[4])
-                #     set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                    # Set the pose values
+                    set_pose_arm.pose.append(object_x)
+                    set_pose_arm.pose.append(object_y)
+                    set_pose_arm.pose.append(object_z)
+                    set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                    set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                    set_pose_arm.pose.append(self.node.arm_current_pose[5])
 
-                #     # Publish the pose
-                #     self.node.arm_set_pose_publisher.publish(set_pose_arm)
-                #     print('Desired pose:', set_pose_arm)
+                    # Publish the pose
+                    self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                    print('Desired pose:', set_pose_arm)
 
-                #     self.set_arm(command="change_depth_to_open_washing_machine", wait_for_end_of=True)
+                    self.set_arm(command="change_height_open_drawer", wait_for_end_of=True)
 
-                #     # set_pose_arm.pose.append(object_x)
-                #     # set_pose_arm.pose.append(500.0)
-                #     # set_pose_arm.pose.append(object_z)
-                #     # set_pose_arm.pose.append(self.node.arm_current_pose[3])
-                #     # set_pose_arm.pose.append(self.node.arm_current_pose[4])
-                #     # set_pose_arm.pose.append(self.node.arm_current_pose[5])
-                    
-                #     arm_value = Float32()
-                #     arm_value.data = 300.0
-                #     self.node.arm_value_publisher.publish(arm_value)
-                #     print(arm_value)                    
-                #     self.set_arm(command="go_front", wait_for_end_of=True)
-                #     # Desde aqui quero baixar linearmente o braço, andar com robô para trás enquanto baixo mais braço e baixo corpo
-                    
-                #     print('mover-se')
+                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=200.0, adjust_direction=180.0, wait_for_end_of=True)
 
-                #     self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=1.5, adjust_direction=180.0, wait_for_end_of=True)
-                
-                #     print('moveu-se')
-                #     self.torso_pos = Pose2D()
-                #     self.torso_pos.x = -1.0
-                #     self.node.torso_test_publisher.publish(self.torso_pos)
-
-                #     time.sleep(15)
-                
-                #     self.set_navigation(movement="adjust", flag_not_obs=True, adjust_time=1.0, adjust_direction=180.0, wait_for_end_of=True)
-
-                #     time.sleep(15)
-
-                #     self.torso_pos.x = 0.0
-                #     self.node.torso_test_publisher.publish(self.torso_pos)
-
-                #     self.set_arm(command="end_opening_washing_machine", wait_for_end_of=True)
-
-                #     # arm_value.data = -215.0 #valor que quero que a primeira junta tenha antes de eu andar para trás
-                #     # self.node.arm_value_publisher.publish(arm_value)
-                #     # print(arm_value)                    
-                #     # self.set_arm(command="lower_arm_close_washing_machine", wait_for_end_of=True)
-
+                    while True:
+                        print('yes')
 
 
                 # else:
