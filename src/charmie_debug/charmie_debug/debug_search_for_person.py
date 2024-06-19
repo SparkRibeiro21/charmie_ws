@@ -628,31 +628,19 @@ class RestaurantMain():
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-45, -45], [-45, -15], [-45, 15]]
                 objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
+                # objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=True, detect_doors=False)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
                     print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
 
-                """
-                print("FOUND:", len(people_found)) 
-                for p in people_found:
-                    print("ID:", p.index_person)
-
                 self.set_rgb(BLUE+HALF_ROTATE)
                 self.set_neck(position=[0, 0], wait_for_end_of=True)
                 time.sleep(0.5)
 
-                for p in people_found:
-                    path = self.detected_person_to_face_path(person=p, send_to_face=True)
+                for o in objects_found:
+                    path = self.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
                     time.sleep(4)
-
-                self.set_rgb(CYAN+HALF_ROTATE)
-                time.sleep(0.5)
-
-                for p in people_found:
-                    self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                    time.sleep(4)
-                """
                                 
                 # next state
                 self.state = Final_State
@@ -986,12 +974,7 @@ class RestaurantMain():
         current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
         cf = self.node.br.imgmsg_to_cv2(object.image_rgb_frame, "bgr8")
         
-        # ???
-        x_min = min(1280, object.box_top_left_x)
-        x_max = max(0, object.box_top_left_x+object.box_width)
-        y_min = min(1280, object.box_top_left_y)
-        y_max = max(0, object.box_top_left_y+object.box_height)
-        
+        # checks whether the text has to start inside the bounding box or can start outside (image boundaries)
         start_point = (object.box_top_left_x, object.box_top_left_y)
         end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
         cv2.rectangle(cf, start_point, end_point, bb_color , 4) 
@@ -1004,14 +987,14 @@ class RestaurantMain():
             
         text_size, _ = cv2.getTextSize(f"{object.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
         text_w, text_h = text_size
-        cv2.rectangle(cf, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
+        cv2.rectangle(cf, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), bb_color, -1)
         cv2.putText(cf, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
     
-        object_image = cf[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]
+        object_image = cf[max(object.box_top_left_y-thresh_v,0):min(object.box_top_left_y+object.box_height+thresh_v,720), max(object.box_top_left_x-thresh_h,0):min(object.box_top_left_x+object.box_width+thresh_h,1280)]
         # cv2.imshow("Search for Person", object_image)
         # cv2.waitKey(100)
         
-        face_path = current_datetime + str(object.index_person) + str(object.object_name)
+        face_path = current_datetime + str(object.index) + str(object.object_name)
         
         cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", object_image) 
         time.sleep(0.5)
