@@ -849,10 +849,13 @@ class RestaurantMain():
         just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
         # cv2.imshow("Search for Person", just_person_image)
         # cv2.waitKey(100)
-        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + str(person.index_person) + ".jpg", just_person_image) 
+        
+        face_path = current_datetime + str(person.index_person)
+        
+        cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
         time.sleep(0.5)
-        
+
         if send_to_face:
-            self.set_face(custom=current_datetime + str(person.index_person))
+            self.set_face(custom=face_path)
         
-        return current_datetime + str(person.index_person)
+        return face_path
