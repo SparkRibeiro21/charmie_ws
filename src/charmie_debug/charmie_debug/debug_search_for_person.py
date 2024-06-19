@@ -965,7 +965,6 @@ class RestaurantMain():
             
         return final_objects    
 
-
     def detected_object_to_face_path(self, object, send_to_face, bb_color=(0,0,255)):
 
         thresh_h = 220
@@ -1004,7 +1003,6 @@ class RestaurantMain():
         
         return face_path
     
-
     def search_for_person(self, tetas, delta_t=3.0):
 
         self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)
@@ -1132,7 +1130,6 @@ class RestaurantMain():
         #     print(p.index_person)
 
         return filtered_persons
-
 
     def detected_person_to_face_path(self, person, send_to_face):
 
