@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-from ultralytics import YOLO
+# from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool
+# from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedObject, Yolov8Objects, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.msg import DetectedObject, Yolov8Objects, BoundingBox, BoundingBoxAndPoints, PointCloudCoordinates
 from charmie_interfaces.srv import GetPointCloud, ActivateYoloObjects
 from cv_bridge import CvBridge
-import cv2 
-import json
+# import cv2 
+# import json
 import threading
-
-from pathlib import Path
-
-import math
+# from pathlib import Path
+# import math
 import time
 
 
@@ -61,7 +59,7 @@ class Yolo_obj(Node):
     def call_point_cloud_server(self, req, camera):
         request = GetPointCloud.Request()
         request.data = req
-        request.retrieve_bbox = False
+        request.retrieve_bbox = True
         request.camera = camera
     
         future = self.point_cloud_client.call_async(request)
@@ -121,6 +119,31 @@ class YoloObjectsMain():
     def __init__(self, node: Yolo_obj):
         # create a node instance so all variables ros related can be acessed
         self.node = node
+        # self.new_pcloud = PointCloudCoordinates()
+
+    def get_point_cloud(self, wait_for_end_of=True):
+
+        requested_objects = []
+            
+        bb = BoundingBox()
+        bb.box_top_left_x = 0
+        bb.box_top_left_y = 0
+        bb.box_width = 1280
+        bb.box_height = 720
+
+        get_pc = BoundingBoxAndPoints()
+        get_pc.bbox = bb
+
+        requested_objects.append(get_pc)
+
+        self.node.waiting_for_pcloud = True
+        self.node.call_point_cloud_server(requested_objects, "head")
+
+        while self.node.waiting_for_pcloud:
+            pass
+
+        # self.new_pcloud = self.node.point_cloud_response.coords
+        return self.node.point_cloud_response.coords
 
     # main state-machine function
     def main(self):
@@ -129,4 +152,7 @@ class YoloObjectsMain():
         self.node.get_logger().info("In Debug Obstacles Main...")
 
         while True:
-            pass
+            ### change resp_todos to uteis in point_cloud to remove all (0.0, 0.0, 0.0) from pcloud points ###
+            pc = self.get_point_cloud() 
+            print(pc)
+            time.sleep(1.0)
