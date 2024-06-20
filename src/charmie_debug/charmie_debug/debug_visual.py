@@ -233,7 +233,7 @@ class Robot():
                 theta_aux = math.pi/2 - (angle_obj - self.robot_t)
 
                 target_x = dist_obj * math.cos(theta_aux) + self.robot_x
-                target_y = dist_obj * math .sin(theta_aux) + self.robot_y
+                target_y = dist_obj * math.sin(theta_aux) + self.robot_y
                 target_z = object_rel_pos.z
 
 
@@ -373,6 +373,7 @@ class DebugVisualNode(Node):
     def get_camera_obstacles_callback(self, points: ListOfPoints):
         self.robot.camera_obstacle_points = points
         # print("Received Points")
+        print
         
 
     def lidar_callback(self, scan: LaserScan):

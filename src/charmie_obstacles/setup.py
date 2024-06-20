@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "obstacles_lidar = charmie_obstacles.obstacles_lidar:main"
+            "obstacles_lidar = charmie_obstacles.obstacles_lidar:main",
+            "obstacles_fusion = charmie_obstacles.obstacles_fusion:main"
         ],
     },
 )

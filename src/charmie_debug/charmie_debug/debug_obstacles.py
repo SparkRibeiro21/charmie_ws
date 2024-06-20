@@ -164,9 +164,11 @@ class YoloObjectsMain():
 
             pc_lp = ListOfPoints()
 
+            # print(len(pc[0].bbox_point_coords))
+
             for p in pc[0].bbox_point_coords:
                 # print(p)
                 pc_lp.coords.append(p)
             
             self.node.temp_camera_obstacles_publisher.publish(pc_lp)
-            time.sleep(1.0)
+            time.sleep(0.1)
