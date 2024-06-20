@@ -392,7 +392,7 @@ class PointCloudNode(Node):
                     temp = []
                     temp.append(resp_centro)
                     temp.append(resp_outros)
-                    temp.append(resp_todos)
+                    temp.append(uteis)
                     self.pcloud_head.ENVIO.append(temp)
 
                 # convert ENVIO into RetrievePointCloud ROS Variable
@@ -557,7 +557,7 @@ class PointCloudNode(Node):
                     temp = []
                     temp.append(resp_centro)
                     temp.append(resp_outros)
-                    temp.append(resp_todos)
+                    temp.append(uteis)
                     self.pcloud_hand.ENVIO.append(temp)
 
                 # convert ENVIO into RetrievePointCloud ROS Variable
