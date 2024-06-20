@@ -3,13 +3,16 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
-from charmie_interfaces.msg import ObstacleInfo, Obstacles
+# from sensor_msgs.msg import Image
+from charmie_interfaces.msg import ObstacleInfo, Obstacles, BoundingBox, BoundingBoxAndPoints, PointCloudCoordinates, ListOfPoints
+from charmie_interfaces.srv import GetPointCloud
 from example_interfaces.msg import Bool
 
 import cv2
 import numpy as np
 import math
 import time
+import threading
 
 class ObstaclesLIDAR:
 
@@ -32,6 +35,7 @@ class ObstaclesLIDAR:
 
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
         self.test_image2 = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
+        self.test_image3 = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
 
         self.DEBUG_DRAW_IMAGE = False
         self.DEBUG_PRINT = True
@@ -63,6 +67,7 @@ class ObstaclesLIDAR:
             if self.DEBUG_DRAW_IMAGE:
                 self.test_image[:, :] = 0  # limpa a imagem
                 self.test_image2[:, :] = 0  # limpa a imagem
+                # self.test_image3[:, :] = 0  # limpa a imagem
 
             if self.is_TRFilter:
                 self.TRFilter()
@@ -79,23 +84,27 @@ class ObstaclesLIDAR:
                 
                 # corpo lidar
                 cv2.circle(self.test_image, (self.xc, self.yc), (int)(self.lidar_radius*self.scale), (255, 255, 255), 1)
+                # cv2.circle(self.test_image3, (self.xc, self.yc), (int)(self.lidar_radius*self.scale), (255, 255, 255), 1)
                 # centro robo
                 cv2.circle(self.test_image, (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale)), (int)(self.robot_radius*self.scale/10), (255, 255, 255), 1)
+                # cv2.circle(self.test_image3, (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale)), (int)(self.robot_radius*self.scale/10), (255, 255, 255), 1)
                 # corpo robo
                 cv2.circle(self.test_image, (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale)), (int)(self.robot_radius*self.scale), (255, 255, 255), 1)
+                # cv2.circle(self.test_image3, (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale)), (int)(self.robot_radius*self.scale), (255, 255, 255), 1)
                 
                 # cv2.imshow("LIDAR Linear", self.test_image2)
                 cv2.imshow("LIDAR Circular", self.test_image)
+                # cv2.imshow("Obstacles Fusion LIDAR", self.test_image3)
 
                 # if self.stop_image_for_debug:
                 #     self.stop_image_for_debug = False
                 #     time.sleep(5)
                 
-                k = cv2.waitKey(1)
-                if k == ord('+'):
-                    self.scale /= 0.8
-                if k == ord('-'):
-                    self.scale *= 0.8
+                # k = cv2.waitKey(1)
+                # if k == ord('+'):
+                #     self.scale /= 0.8
+                # if k == ord('-'):
+                #     self.scale *= 0.8
 
             # return self.data_ready_to_publish(obs_dict_v)
             # self.obstacles_pub_ant = self.obstacles_pub
@@ -186,6 +195,14 @@ class ObstaclesLIDAR:
                     cv2.line(self.test_image2, (self.test_image.shape[1] - self.centre_data - value, self.yc + 100),
                              (self.test_image.shape[1] - self.centre_data - value, int(self.yc + 100 - self.scale * self.valores_dict[key])),
                              (0, 0, 255))
+                # cv2.line(self.test_image3, (self.xc, self.yc), (int(self.xc - self.scale * self.valores_dict[key] * math.cos(math.radians(-key + 90))),
+                #                                 int(self.yc - self.scale * self.valores_dict[key] * math.sin(math.radians(-key + 90)))),
+                #             (255, 0, 0))
+                # cv2.circle(self.test_image3, (int(self.xc - self.scale * self.valores_dict[key] * math.cos(math.radians(-key + 90))),
+                #                                 int(self.yc - self.scale * self.valores_dict[key] * math.sin(math.radians(-key + 90)))),
+                #             2, (255, 0, 0), -1)
+                
+            
         
             # #### V2.0 #### #
             if value == 0:  # first angle case, since there is no previous value
@@ -782,9 +799,21 @@ class ObstaclesLIDAR:
         
         # print(tot_obs)
         return tot_obs
+    
+    def draw_obstacles_fusion_lidar(self):
 
-        
-
+        for key, value in self.valores_id.items():
+            cv2.circle(self.test_image3, (int(self.xc - self.scale * self.valores_dict[key] * math.cos(math.radians(-key + 90))),
+                                            int(self.yc - self.scale * self.valores_dict[key] * math.sin(math.radians(-key + 90)))),
+                                            2, (255, 0, 0), -1)
+            
+            # corpo lidar
+            cv2.circle(self.test_image3, (self.xc, self.yc), (int)(self.lidar_radius*self.scale), (255, 255, 255), 1)
+            # centro robo
+            cv2.circle(self.test_image3, (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale)), (int)(self.robot_radius*self.scale/10), (255, 255, 255), 1)
+            # corpo robo
+            cv2.circle(self.test_image3, (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale)), (int)(self.robot_radius*self.scale), (255, 255, 255), 1)
+            
 
 class ObstaclesNode(Node):
 
@@ -799,14 +828,26 @@ class ObstaclesNode(Node):
         self.obstacles_publisher = self.create_publisher(Obstacles, "obs_lidar", 10)
         self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.lidar_callback , 10)
         self.obstacles_diagnostic_publisher = self.create_publisher(Bool, "obstacles_diagnostic", 10)
-
+        
+        # Camera Obstacles
+        self.temp_camera_obstacles_publisher = self.create_publisher(ListOfPoints, "camera_obstacles", 10)
+       
         flag_diagn = Bool()
         flag_diagn.data = True
         self.obstacles_diagnostic_publisher.publish(flag_diagn)
 
         # Create Timers
         # self.create_timer(1, self.timer_callback)
-        
+
+        ### Services (Clients) ###
+        # Point Cloud
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+
+        while not self.point_cloud_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud...")
+
+        self.waiting_for_pcloud = False
+        self.point_cloud_response = GetPointCloud.Response()
 
     def lidar_callback(self, scan:LaserScan):
         self.obs_detect.lidar_readings_to_obstacles(scan)
@@ -814,38 +855,109 @@ class ObstaclesNode(Node):
         if not self.obs_detect.error_lidar_reading:
             self.obstacles_publisher.publish(self.obs_detect.obstacles_pub)
 
+    # request point cloud information from point cloud node
+    def call_point_cloud_server(self, req, camera):
+        request = GetPointCloud.Request()
+        request.data = req
+        request.retrieve_bbox = True
+        request.camera = camera
+    
+        future = self.point_cloud_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud)
 
-    """ 
-    def timer_callback(self):
-        # print("Pubed Obstacles")
-        a = Obstacles()
+    def callback_call_point_cloud(self, future):
 
-        b1 = ObstacleInfo()
-        b2 = ObstacleInfo()
-        b3 = ObstacleInfo()
-
-        b1.alfa = 1.0
-        b1.dist = 2.0
-        b1.length_cm = 3.0
-        b1.length_degrees = 4.0
-        
-        b2.alfa = 5.0
-        b2.dist = 6.0
-        b2.length_cm = 7.0
-        b2.length_degrees = 8.0
-        
-        a.obstacles.append(b1)
-        a.obstacles.append(b2)
-        a.obstacles.append(b3)
-        a.no_obstacles=len(a.obstacles)
-
-        self.obstacles_publisher.publish(a)
-    """
-
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            self.point_cloud_response = future.result()
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = ObstaclesNode()
+    th_main = threading.Thread(target=ThreadMainObstaclesFusion, args=(node,), daemon=True)
+    th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
+
+
+def ThreadMainObstaclesFusion(node: ObstaclesNode):
+    main = ObstaclesFusionMain(node)
+    main.main()
+
+
+class ObstaclesFusionMain():
+
+    def __init__(self, node: ObstaclesNode):
+        # create a node instance so all variables ros related can be acessed
+        self.node = node
+        # self.new_pcloud = PointCloudCoordinates()
+
+    def get_point_cloud(self, wait_for_end_of=True):
+
+        requested_objects = []
+            
+        bb = BoundingBox()
+        bb.box_top_left_x = 0
+        bb.box_top_left_y = 0
+        bb.box_width = 1280
+        bb.box_height = 720
+
+        get_pc = BoundingBoxAndPoints()
+        get_pc.bbox = bb
+
+        requested_objects.append(get_pc)
+
+        self.node.waiting_for_pcloud = True
+        self.node.call_point_cloud_server(requested_objects, "head")
+
+        while self.node.waiting_for_pcloud:
+            pass
+
+        # self.new_pcloud = self.node.point_cloud_response.coords
+        return self.node.point_cloud_response.coords
+
+    # main state-machine function
+    def main(self):
+        
+        # debug print to know we are on the main start of the task
+        self.node.get_logger().info("In Debug Obstacles Main...")
+
+        time.sleep(5)
+
+        while True:
+            ### change resp_todos to uteis in point_cloud to remove all (0.0, 0.0, 0.0) from pcloud points ###
+            pc = self.get_point_cloud() 
+            # print(type(pc[0].bbox_point_coords))
+            # print((pc[0].bbox_point_coords[0]))
+
+            pc_lp = ListOfPoints()
+
+            # print(len(pc[0].bbox_point_coords))
+
+            for p in pc[0].bbox_point_coords:
+                # print(p)
+                pc_lp.coords.append(p)
+            
+            self.node.temp_camera_obstacles_publisher.publish(pc_lp)
+            # time.sleep(0.1)
+
+
+            # if self.node.obs_detect.DEBUG_DRAW_IMAGE:
+                
+            self.node.obs_detect.test_image3[:, :] = 0
+            self.node.obs_detect.draw_obstacles_fusion_lidar()
+            cv2.imshow("Obstacles Fusion LIDAR", self.node.obs_detect.test_image3)
+
+            k = cv2.waitKey(1)
+            if k == ord('+'):
+                self.node.obs_detect.scale /= 0.8
+            if k == ord('-'):
+                self.node.obs_detect.scale *= 0.8
+
