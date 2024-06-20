@@ -5,7 +5,7 @@ from rclpy.node import Node
 # from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedObject, Yolov8Objects, BoundingBox, BoundingBoxAndPoints, PointCloudCoordinates
+from charmie_interfaces.msg import DetectedObject, Yolov8Objects, BoundingBox, BoundingBoxAndPoints, PointCloudCoordinates, ListOfPoints
 from charmie_interfaces.srv import GetPointCloud, ActivateYoloObjects
 from cv_bridge import CvBridge
 # import cv2 
@@ -32,7 +32,10 @@ class Yolo_obj(Node):
         
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-
+        
+        # Camera Obstacles
+        self.temp_camera_obstacles_publisher = self.create_publisher(ListOfPoints, "camera_obstacles", 10)
+       
         ### Services (Clients) ###
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
@@ -151,8 +154,19 @@ class YoloObjectsMain():
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Debug Obstacles Main...")
 
+        time.sleep(5)
+
         while True:
             ### change resp_todos to uteis in point_cloud to remove all (0.0, 0.0, 0.0) from pcloud points ###
             pc = self.get_point_cloud() 
-            print(pc)
+            # print(type(pc[0].bbox_point_coords))
+            # print((pc[0].bbox_point_coords[0]))
+
+            pc_lp = ListOfPoints()
+
+            for p in pc[0].bbox_point_coords:
+                # print(p)
+                pc_lp.coords.append(p)
+            
+            self.node.temp_camera_obstacles_publisher.publish(pc_lp)
             time.sleep(1.0)
