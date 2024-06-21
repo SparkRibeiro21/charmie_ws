@@ -213,7 +213,22 @@ class ArmUfactory(Node):
 		self.inside_wardrobe_left_door_3 = [-215.5, 48.3, -79.9, 10.8, 9.3, 314.0]
 
 		self.wardrobe_left_door_outside = [-225.4, 76.0, -99.4, -31.3, 20.5, 346.1]
-		
+
+		self.close_right_door_outside = [-188.0, 83.4, -65.0, -0.5, 74.9, 270.0]
+		self.close_right_door_outside_waypoint = [-161.0, 20.0, -63.0, 256.0, 13.0, 24.0]
+		self.close_right_door_outside_2 = [-145.9, 2.5, -60.5, 285.5, 119.1, 130.3]
+		self.close_right_door_outside_3 = [-197.0, 28.4, -84.7, 256.1, 76.0, 130.0]
+
+		self.pre_initial_position_from_closing_cabinet = [-203.8, 4.8, -38.6, 165.8, 71.8, 185.8]
+
+
+		self.close_left_door_outside = [-188.0, 83.4, -65.0, -0.5, 74.9, 270.0]
+		self.close_left_door_outside_2 = [-164.9, 85.5, -110.0, 281.2, 97.8, 335.9]
+		self.close_left_door_outside_3 = [-184.0, 87.6, -119.7, 263.6, 89.0, 328.3]
+
+		self.pre_initial_position_from_closing_cabinet_left = [-184.3, 54.0, -72.0, 263.1, 90.4, 342.2]
+
+		self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 250.6]
 
 
 
@@ -779,7 +794,7 @@ class ArmUfactory(Node):
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.front_robot)
 			self.joint_values_req.speed = 0.4
-			self.joint_values_req.wait = False
+			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
@@ -808,7 +823,7 @@ class ArmUfactory(Node):
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.side_robot)
 			self.joint_values_req.speed = 0.2
-			self.joint_values_req.wait = False
+			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
@@ -831,6 +846,126 @@ class ArmUfactory(Node):
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def finish_close_right_door_from_outside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_initial_position_from_closing_cabinet)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def finish_close_left_door_from_outside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_initial_position_from_closing_cabinet_left)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+	
+
+	def close_right_door_from_outside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.close_right_door_outside)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			self.joint_values_req.angles = self.deg_to_rad(self.close_right_door_outside_waypoint)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
+			self.joint_values_req.angles = self.deg_to_rad(self.close_right_door_outside_2)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 3:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.close_right_door_outside_3)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 4:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def close_left_door_from_outside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.close_left_door_outside)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			self.joint_values_req.angles = self.deg_to_rad(self.close_left_door_outside_2)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
+			self.joint_values_req.angles = self.deg_to_rad(self.close_left_door_outside_3)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 3:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 
 	def open_left_door_from_inside(self):
 		if self.estado_tr == 0:
@@ -973,7 +1108,7 @@ class ArmUfactory(Node):
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.finish_inside_wardrobe_to_open_right_door)
 			self.joint_values_req.speed = 0.2
-			self.joint_values_req.wait = False
+			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
@@ -1002,7 +1137,7 @@ class ArmUfactory(Node):
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_to_open_right_door)
 			self.joint_values_req.speed = 0.2
-			self.joint_values_req.wait = False
+			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
@@ -1031,7 +1166,7 @@ class ArmUfactory(Node):
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe)
 			self.joint_values_req.speed = 0.2
-			self.joint_values_req.wait = False
+			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
@@ -1772,7 +1907,45 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def prepare_to_close_dishwasher(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.side_washing_machine)
+			self.joint_values_req.speed = 0.5
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
 
+		elif self.estado_tr == 1:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.close_dishwasher)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.arm_pose = []
+				self.estado_tr = 3
+				self.movement_selection()
+
+		elif self.estado_tr == 3:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
 
 	def arm_side_of_washing_machine(self):
 		if self.estado_tr == 0:
@@ -1868,6 +2041,8 @@ class ArmUfactory(Node):
 			self.front_robot_oriented_front()
 		elif self.next_arm_movement == "front_robot_oriented_side":
 			self.front_robot_oriented_side()
+		elif self.next_arm_movement == "prepare_to_close_dishwasher":
+			self.prepare_to_close_dishwasher()
 		elif self.next_arm_movement == "change_height_front_robot":
 			print(self.arm_pose)
 			self.change_height_front_robot(self.arm_pose)
@@ -1887,6 +2062,14 @@ class ArmUfactory(Node):
 			self.open_left_door()
 		elif self.next_arm_movement == "open_left_door_from_inside":
 			self.open_left_door_from_inside()
+		elif self.next_arm_movement == "close_right_door_from_outside":
+			self.close_right_door_from_outside()
+		elif self.next_arm_movement == "finish_close_right_door_from_outside":
+			self.finish_close_right_door_from_outside()
+		elif self.next_arm_movement == "close_left_door_from_outside":
+			self.close_left_door_from_outside()
+		elif self.next_arm_movement == "finish_close_left_door_from_outside":
+			self.finish_close_left_door_from_outside()
 		elif self.next_arm_movement == "finish_open_left_door_from_inside":
 			self.finish_open_left_door_from_inside()
 		elif self.next_arm_movement == "open_right_door_from_inside":

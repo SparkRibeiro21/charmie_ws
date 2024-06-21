@@ -1332,10 +1332,10 @@ class RestaurantMain():
             
 
                 while True:
-                    # self.close_washing_machine_door()
+                    self.close_dishwasher_door()
                     # self.open_washing_machine_door()
                     # self.open_cabinet_door()
-                    self.close_cabinet_door()
+                    # self.close_cabinet_door()
                     # self.check_door_depth_hand()
                     # self.open_drawer()
                     # self.close_drawer()
@@ -1989,7 +1989,7 @@ class RestaurantMain():
                             self.set_arm(command="go_up", wait_for_end_of=True)
                             print('---------------------------- \n \n --------------------------') """
 
-    def check_door_depth_hand(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=400):
+    def check_door_depth_hand(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=600):
 
         overall = False
         DEBUG = True
@@ -2433,10 +2433,11 @@ class RestaurantMain():
                 else:
                     print('\n\n Not enough lines, please move me a bit \n\n')
 
-    def close_washing_machine_door(self):
-
+    def close_dishwasher_door(self):
         if self.node.first_depth_image_received:
             print('b')
+            self.set_neck(position=[0.0, -40.0], wait_for_end_of=True)
+            time.sleep(2)
             current_frame = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
             frame_2 = current_frame.copy()
             height, width = current_frame.shape[:2]
@@ -2491,7 +2492,7 @@ class RestaurantMain():
                                     bb.box_width = wanted_object.box_width
                                     bb.box_top_left_y = wanted_object.box_top_left_y + wanted_object.box_height - bb.box_height
                                     bb.box_top_left_x = wanted_object.box_top_left_x
-                                    print(bb)
+                                    print('Bounding box: ', bb)
                                     get_pc = BoundingBoxAndPoints()
                                     # get_pc.requested_point_coords = [points]
                                     get_pc.bbox = bb
@@ -2505,22 +2506,62 @@ class RestaurantMain():
 
                                     new_pcloud = self.node.point_cloud_response.coords
 
-                                    print('--', new_pcloud)
+                                    print('Distância ao centro da bbox', new_pcloud)
 
                                     cv2.rectangle(colored_depth_image_2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x + bb.box_width, bb.box_top_left_y + bb.box_height), (255, 0, 0), 2)
                                     cv2.imshow("Aligned Depth Head", colored_depth_image_2)
                                     cv2.waitKey(0)
 
-                                    print('Initial', new_pcloud[0])
+                                    print('Distância em y da bbox ao robô', new_pcloud[0])
                                     auxiliar = new_pcloud[0].center_coords.x
                                     new_pcloud[0].center_coords.x = -new_pcloud[0].center_coords.y / 1000
                                     new_pcloud[0].center_coords.y = auxiliar/ 1000
                                     new_pcloud[0].center_coords.z = new_pcloud[0].center_coords.z / 1000
 
-                                    print('Final', new_pcloud[0])
+                                    print('Distância final', new_pcloud[0])
 
                                     object_location = self.transform_temp(new_pcloud[0].center_coords)
-                                    print('...', object_location)
+                                    print('Distância da bbox ao braço: ', object_location)
+
+                                    print('moveu-se')
+                                    self.torso_pos = Pose2D()
+                                    self.torso_pos.x = -1.0
+                                    self.node.torso_test_publisher.publish(self.torso_pos)
+                                    
+                                    time.sleep(30)
+                                    self.torso_pos.x = 0.0
+                                    self.node.torso_test_publisher.publish(self.torso_pos)
+
+                                    self.set_arm(command="prepare_to_close_dishwasher", wait_for_end_of=True)
+
+                                    time.sleep(1)
+
+                                    self.torso_pos.y = -1.0
+                                    self.node.torso_test_publisher.publish(self.torso_pos)
+                                    
+                                    time.sleep(19.5)
+
+                                    self.torso_pos.y = 0.0
+                                    self.node.torso_test_publisher.publish(self.torso_pos)
+
+                                    #NAVIGATION
+
+                                    time.sleep(1)
+
+                                    self.torso_pos.y = 1.0
+                                    self.node.torso_test_publisher.publish(self.torso_pos)
+
+                                    #Navigation
+
+                                    self.set_arm(command="go_initial_position", wait_for_end_of=True)
+
+
+
+
+                                    while True:
+                                        pass
+
+
                      
 
                 else:
@@ -3438,6 +3479,7 @@ class RestaurantMain():
                             if obj.object_name == "Wardrobe Door":
                                 wanted_object = obj
                                 print('é isto')
+                                door_position = wanted_object.position_relative
                                 print(wanted_object.position_relative)
                                 print(wanted_object.confidence)
                                 
@@ -3461,16 +3503,54 @@ class RestaurantMain():
                             distance_to_close = abs(object_x)/1000 
                             print('Distance I am from door', distance_to_close)
 
+                            distance_x_to_center = door_position.x - self.node.wardrobe_width/4 
+                            ### ISTO CENTRA QD PORTA FECHADA É A ESQUERDA. -> door_position.x + self.node.wardrobe_width/4 
+                            ###  SE PORTA FECHADA FOR A DIREITA, TENHO DE TROCAR SINAL PARA -> door_position.x - self.node.wardrobe_width/4 
+                            if distance_x_to_center < 0.0:
+                                move_side = 90.0
+                            else:
+                                move_side = -90.0 + 360.0
 
-                            self.set_arm(command="get_arm_position", wait_for_end_of=True)
-                            time.sleep(3)
+                            print('distancia lateral:', distance_x_to_center)
+                            distance_x_to_center = abs(abs(distance_x_to_center) - 0.1)
+
+
+                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_x_to_center, adjust_direction=move_side, wait_for_end_of=True)
+                            time.sleep(2)
+
+
+                            
                             # print(self.node.arm_current_pose)
 
                             # self.set_arm(command="arm_side_of_washing_machine", wait_for_end_of=True)
 
                             self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
+                            time.sleep(2)
 
-                        
+                            self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                            time.sleep(1)
+
+
+
+                            distance_y = object_x - self.node.arm_current_pose[0]
+                            print('distancia em y a andar: ', distance_y)
+                            distance_y = abs(distance_y)
+                            if distance_y > 400.0:
+                                navigation_orientation = 0.0
+                            else:
+                                navigation_orientation = 180.0
+                            
+                            distance_y = 400.0 - distance_y
+
+                            print(distance_y)
+
+                            distance_y = abs(distance_y) / 1000
+
+                            self.set_neck(position=self.look_down, wait_for_end_of=True)
+
+                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_y, adjust_direction=navigation_orientation, wait_for_end_of=True)
+                            time.sleep(1)
+                            
                             set_pose_arm.pose[:] = array('f')
 
                             # Set the pose values
@@ -3527,11 +3607,6 @@ class RestaurantMain():
                             else:
                                 right_door = False
                                 print('Porta direita fechada creio eu')
-
-
-    
-                            
-
 
                             # self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
 
@@ -3666,25 +3741,34 @@ class RestaurantMain():
                                 # self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
                                 self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
 
+                                
+
                                 self.set_arm(command="get_arm_position", wait_for_end_of=True)
                                 time.sleep(1)
 
                                 print('x do braço', self.node.arm_current_pose[0])
-                                distance_to_close = object_x/1000 - self.node.arm_current_pose[0]/1000
-                                distance_to_close = abs(distance_to_close) + 0.15
+                                print('object_x', object_x)
+                                print('distance_y', distance_y)
+                                distance_to_close = abs(object_x/1000) - abs(distance_y) - abs(self.node.arm_current_pose[0]/1000) + 0.15
+                                distance_to_close = abs(distance_to_close)
                                 print('Distance I am from door', distance_to_close)
 
+
+
                                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_to_close, adjust_direction=0.0, wait_for_end_of=True)
-                                time.sleep(1)
+                                time.sleep(2)
                                 
                                 self.set_arm(command="open_right_door_from_inside", wait_for_end_of=True)
                                 
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=180.0, wait_for_end_of=True)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.2, adjust_direction=180.0, wait_for_end_of=True)
                                 time.sleep(1)
 
                                 self.set_arm(command="finish_open_right_door_from_inside", wait_for_end_of=True)
 
                                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=180.0, wait_for_end_of=True)
+
+                                self.set_arm(command="go_initial_position", wait_for_end_of=True)
+                                time.sleep(1)
 
                                 while True:
                                     pass
@@ -3824,14 +3908,17 @@ class RestaurantMain():
                             print(self.node.wardrobe_width)
                             print(self.node.wardrobe_width/4)
 
-                            distance_x_to_center = abs(door_position.x) - self.node.wardrobe_width/4
-                            if door_position.x < 0:
+                            distance_x_to_center = door_position.x + self.node.wardrobe_width/4 
+                            ### ISTO CENTRA QD PORTA FECHADA É A ESQUERDA. -> door_position.x + self.node.wardrobe_width/4 
+                            ###  SE PORTA FECHADA FOR A DIREITA, TENHO DE TROCAR SINAL PARA -> door_position.x - self.node.wardrobe_width/4 
+                            if distance_x_to_center < 0.0:
                                 move_side = 90.0
                             else:
                                 move_side = -90.0 + 360.0
 
                             print('distancia lateral:', distance_x_to_center)
                             distance_x_to_center = abs(distance_x_to_center)
+
 
                             self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_x_to_center, adjust_direction=move_side, wait_for_end_of=True)
                             time.sleep(2)
@@ -3957,12 +4044,15 @@ class RestaurantMain():
                                 print('Distancia a andar para estar do lado de lá da porta javardo', self.node.wardrobe_width)
 
                                 print('distancia da porta ao robot: ', second_door_position.y - self.node.door_width/4 - 0.3)
-                                distance_y = door_position.y - self.node.wardrobe_width/2 - 0.4
+                                distance_y = door_position.y - self.node.wardrobe_width/2 - 0.5
                                 print('distancia em y a andar: ', distance_y)
                                 if distance_y > 0.0:
                                     navigation_orientation = 0.0
                                 else:
                                     navigation_orientation = 180.0
+                                    distance_y = abs(distance_y)
+
+                                self.set_neck(position=self.look_down, wait_for_end_of=True)
 
                                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_y, adjust_direction=navigation_orientation, wait_for_end_of=True)
                                 time.sleep(1)
@@ -3970,90 +4060,30 @@ class RestaurantMain():
                                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=self.node.wardrobe_width/2, adjust_direction=-90.0 + 360.0, wait_for_end_of=True)
                                 time.sleep(1)
 
-
-                                while True:
-                                    pass
-
-
-
-
-
-
-                                self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                                self.set_arm(command="close_right_door_from_outside", wait_for_end_of=True)
                                 time.sleep(1)
 
-                                print('x do braço', self.node.arm_current_pose[0])
-                                distance_to_close = object_x/1000 - self.node.arm_current_pose[0]/1000
-                                distance_to_close = abs(distance_to_close) + 0.15
-                                print('Distance I am from door', distance_to_close)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance= 0.2 + self.node.wardrobe_width/2, adjust_direction=90.0, wait_for_end_of=True)
+                                time.sleep(1)  
 
-                                print('---')
-                                print('Current pose', self.node.arm_current_pose)
-                                print('x do objeto', object_x)
-                                print('y do objeto', object_y)
-                                print('z do objeto', object_z)
-
-
-                                while True:
-                                    pass
-                                
-                                ### Ver onde tenho braço em comparação ao ponto inicial detetado como sendo a porta. Quando o braço estiver para lá da porta,
-                                ### inclino o braço com ângulo que a consiga pegar desde trás
-                                
-                                ### O VALOR DO TEMPO AQUI DEVERIA DEPENDER DA DISTÂNCIA A QUE ESTOU DO ARMÁRIO - OU SEJA EU SEI 
-                                ### a DISTANCIA DO ARMÁRIO EM RELAÇÃO AO CENTRO DO ROBÔ, ENTÃO DEVERIA IR SEMPRE EM FRENTE TENDO ISSO EM CONTA
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_to_close, adjust_direction=0.0, wait_for_end_of=True)
-                                time.sleep(2)
-                                
-                                self.set_arm(command="open_left_door_from_inside", wait_for_end_of=True)
-                                time.sleep(1)
-                                
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.2, adjust_direction=180.0, wait_for_end_of=True)
-                                time.sleep(2)
-                                
-
-                                self.set_arm(command="finish_open_left_door_from_inside", wait_for_end_of=True)
-                                time.sleep(1)
-
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=180.0, wait_for_end_of=True)
-                                time.sleep(2)
+                                self.set_arm(command="finish_close_right_door_from_outside", wait_for_end_of=True)
+                                time.sleep(1)    
 
                                 self.set_arm(command="go_initial_position", wait_for_end_of=True)
-                                time.sleep(1)
-                                
-                                
-                                
-                                while True:
-                                    pass
-
-                                near_percentage = -1.0
-                                while near_percentage < 0.5:
-                                    near_percentage = self.check_door_depth_hand(near_max_dist=350)
-
-                                    print(near_percentage * 100)
-                                    print('move forward')
-                                    arm_value.data = 50.0
-                                    self.node.arm_value_publisher.publish(arm_value)
-                                    print(arm_value)
-                                    self.set_arm(command="go_front", wait_for_end_of=True)
-
-                                    time.sleep(2)
-
-                                print('hey')
-
-                                # self.set_arm(command="open_left_door", wait_for_end_of=True)
-                                self.set_arm(command="open_left_door_from_front", wait_for_end_of=True)
+                                time.sleep(1)                            
 
                                 while True:
                                     pass
+
+
 
                             elif left_door == True:
 
                                 print('a')
-                                print('desired height', new_height)
+                                # print('desired height', new_height)
                                 
-                                self.node.arm_set_height_publisher.publish(new_height)
-                                time.sleep(2)
+                                # self.node.arm_set_height_publisher.publish(new_height)
+                                # time.sleep(2)
                                 # self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
                                 # self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
 
@@ -4063,80 +4093,59 @@ class RestaurantMain():
                                 self.set_neck(position=[45.0, -50.0], wait_for_end_of=True)
                                 time.sleep(2)
 
-                                self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                                wanted_object_2 = ''
+                                while wanted_object_2 == '':
+                                    for obj in self.node.detected_doors.objects:
+                                        print(obj.object_name)
+                                        if obj.object_name == "Wardrobe Door":
+                                            wanted_object_2 = obj
+                                            print('é isto')
+                                            print(wanted_object_2.position_relative)
+                                            second_door_position = wanted_object_2.position_relative
+                                            print(wanted_object_2.confidence)
+                                
+                                distance_to_move_to_close = abs(second_door_position.x) + 0.3
+
+                                print('Distancia a andar para estar do lado de lá da porta', distance_to_move_to_close)
+                                print('Distancia a andar para estar do lado de lá da porta javardo', self.node.wardrobe_width)
+
+                                print('distancia da porta ao robot: ', second_door_position.y - self.node.door_width/4 - 0.3)
+                                distance_y = door_position.y - self.node.wardrobe_width/2 - 0.5
+                                print('distancia em y a andar: ', distance_y)
+                                if distance_y > 0.0:
+                                    navigation_orientation = 0.0
+                                else:
+                                    navigation_orientation = 180.0
+                                    distance_y = abs(distance_y)
+
+                                self.set_neck(position=self.look_down, wait_for_end_of=True)
+
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_y, adjust_direction=navigation_orientation, wait_for_end_of=True)
                                 time.sleep(1)
 
-                                print('x do braço', self.node.arm_current_pose[0])
-                                distance_to_close = object_x/1000 - self.node.arm_current_pose[0]/1000
-                                distance_to_close = abs(distance_to_close) + 0.15
-                                print('Distance I am from door', distance_to_close)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=self.node.wardrobe_width/2, adjust_direction=90.0, wait_for_end_of=True)
+                                time.sleep(1)
+
+                                self.set_arm(command="close_left_door_from_outside", wait_for_end_of=True)
+                                time.sleep(1)
+
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance= 0.2 + self.node.wardrobe_width/2, adjust_direction=-90.0 + 360.0, wait_for_end_of=True)
+                                time.sleep(1)  
+
+                                self.set_arm(command="finish_close_left_door_from_outside", wait_for_end_of=True)
+                                time.sleep(1)    
+
+                                self.set_arm(command="go_initial_position", wait_for_end_of=True)
+                                time.sleep(1)                            
 
                                 while True:
                                     pass
 
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_to_close, adjust_direction=0.0, wait_for_end_of=True)
-                                time.sleep(1)
-                                
-                                self.set_arm(command="open_right_door_from_inside", wait_for_end_of=True)
-                                
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=180.0, wait_for_end_of=True)
-                                time.sleep(1)
-
-                                self.set_arm(command="finish_open_right_door_from_inside", wait_for_end_of=True)
-
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=180.0, wait_for_end_of=True)
 
                                 while True:
                                     pass
 
-                                near_percentage = -1.0
-                                while near_percentage < 0.5:
-                                    near_percentage = self.check_door_depth_hand(near_max_dist=450)
-
-                                    print(near_percentage * 100)
-                                    print('move forward')
-                                    arm_value.data = 50.0
-                                    self.node.arm_value_publisher.publish(arm_value)
-                                    print(arm_value)
-                                    self.set_arm(command="go_front", wait_for_end_of=True)
-
-                                    time.sleep(2)
-
-                                print('hey')
-                                while True:
-                                    pass
-                                
-
-                            """ time.sleep(2)
-                            arm_value = Float32()
-                            # print('move forward')
-                            # arm_value.data = 100.0
-                            # self.node.arm_value_publisher.publish(arm_value)
-                            # print(arm_value)
-                            # self.set_arm(command="go_front", wait_for_end_of=True)
-
-
-                            ### Ver onde tenho braço em comparação ao ponto inicial detetado como sendo a porta. Quando o braço estiver para lá da porta,
-                            ### inclino o braço com ângulo que a consiga pegar desde trás
-
-                            near_percentage = -1.0
-                            while near_percentage < 0.5:
-                                near_percentage = self.check_door_depth_hand(near_max_dist=350)
-
-                                print(near_percentage * 100)
-                                print('move forward')
-                                arm_value.data = 50.0
-                                self.node.arm_value_publisher.publish(arm_value)
-                                print(arm_value)
-                                self.set_arm(command="go_front", wait_for_end_of=True)
-
-                                time.sleep(2)
-
-                            print('hey')
-
-                            self.set_arm(command="open_left_door", wait_for_end_of=True) """
-
-
+                        
                             while True:
                                 pass
 
