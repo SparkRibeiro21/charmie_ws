@@ -93,6 +93,8 @@ class Robot():
         self.camera_obstacle_points = []
         self.camera_obstacle_points_adjusted = []
 
+        self.lidar_obstacle_points = []
+
         self.NORTE = 319.1 ### ????
         self.imu_orientation_norm_rad = 0.0
 
@@ -184,32 +186,24 @@ class Robot():
             #     cv2.circle(self.test_image, (int(self.xc_adj + self.navigation.target_coordinates.x*self.scale),
             #         int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.navigation.reached_radius), (0, 255, 0), 1)
             
-            for key, value in self.valores_dict.items():
-                # print(f"Ang: {key}, Dist: {value}")
-                
-                
-                
-                if value > 0.1: 
-                    obs_x = value * math.cos(key + self.robot_t + math.pi/2)
-                    obs_y = value * math.sin(key + self.robot_t + math.pi/2)
+            for points in self.lidar_obstacle_points:
 
-                    adj_x = (self.robot_radius - self.lidar_radius)*math.cos(self.robot_t + math.pi/2)
-                    adj_y = (self.robot_radius - self.lidar_radius)*math.sin(self.robot_t + math.pi/2)
-
-                    cv2.circle(self.test_image, (int(self.xc_adj + self.scale * (self.robot_x + obs_x + adj_x)),
-                                                int(self.yc_adj - self.scale * (self.robot_y + obs_y + adj_y))),
-                                                4, (0, 0, 255), -1)
-                        
-                    # por como pontos genericos!!!!
-
+                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                                        int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                                        4, (0, 0, 255), -1)
 
 
             for points in self.camera_obstacle_points_adjusted:
 
-                if points.z > 0.3:
+                # if points.z > 0.3 and points.z < 1.7:
                     cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
                                             int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
                                             4, (255, 0, 0), -1)
+
+                # elif points.z >= 1.7:
+                #     cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                #                             int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                #                             4, (255, 255, 255), -1)
 
             """
             for points in self.camera_obstacle_points:
@@ -409,12 +403,30 @@ class DebugVisualNode(Node):
         START_RAD = scan.angle_min
         STEP_RAD = scan.angle_increment
 
+        self.robot.lidar_obstacle_points.clear()
 
         for i in range(len(scan.ranges)):
             # print(x)
             # i = i + 1
             # self.valores_id[START_RAD+i*STEP_RAD] = i
             self.robot.valores_dict[START_RAD+i*STEP_RAD] = scan.ranges[i]
+
+            value = scan.ranges[i]
+            key = START_RAD+i*STEP_RAD
+
+            if value > 0.1: 
+                obs_x = value * math.cos(key + self.robot.robot_t + math.pi/2)
+                obs_y = value * math.sin(key + self.robot.robot_t + math.pi/2)
+
+                adj_x = (self.robot.robot_radius - self.robot.lidar_radius)*math.cos(self.robot.robot_t + math.pi/2)
+                adj_y = (self.robot.robot_radius - self.robot.lidar_radius)*math.sin(self.robot.robot_t + math.pi/2)
+
+                target = Point()
+                target.x = self.robot.robot_x + obs_x + adj_x
+                target.y = self.robot.robot_y + obs_y + adj_y
+                target.z = 0.35 # lidar height on the robot
+
+                self.robot.lidar_obstacle_points.append(target)
 
         # print(self.robot.valores_dict, "\n")
 
@@ -532,20 +544,26 @@ class DebugVisualMain():
                 object_rel_pos.x =  -p.y/1000
                 object_rel_pos.y =  p.x/1000
                 object_rel_pos.z =  p.z/1000
-                
-                # calculate the absolute position according to the robot localisation
-                angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
-                dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
 
-                theta_aux = math.pi/2 - (angle_obj - self.node.robot.robot_t)
+                if object_rel_pos.z >= 0.3 and object_rel_pos.z <= 1.7: # filters the floor and the ceiling
+                    
+                    # calculate the absolute position according to the robot localisation
+                    dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
 
-                target = Point()
-                target.x = dist_obj * math.cos(theta_aux) + self.node.robot.robot_x
-                target.y = dist_obj * math.sin(theta_aux) + self.node.robot.robot_y
-                target.z = object_rel_pos.z
-    
-                self.node.robot.camera_obstacle_points_adjusted.append(target)
+                    if dist_obj < 2.5:
+
+                        angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
+                        theta_aux = math.pi/2 - (angle_obj - self.node.robot.robot_t)
+
+                        target = Point()
+                        target.x = dist_obj * math.cos(theta_aux) + self.node.robot.robot_x
+                        target.y = dist_obj * math.sin(theta_aux) + self.node.robot.robot_y
+                        target.z = object_rel_pos.z
+
+                        self.node.robot.camera_obstacle_points_adjusted.append(target)
             
+            print(len(self.node.robot.camera_obstacle_points_adjusted))
+
             self.node.robot.update_debug_drawings()
 
 
