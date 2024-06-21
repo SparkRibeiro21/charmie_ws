@@ -2510,7 +2510,7 @@ class RestaurantMain():
 
                                     cv2.rectangle(colored_depth_image_2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x + bb.box_width, bb.box_top_left_y + bb.box_height), (255, 0, 0), 2)
                                     cv2.imshow("Aligned Depth Head", colored_depth_image_2)
-                                    cv2.waitKey(0)
+                                    cv2.waitKey(10)
 
                                     print('Distância em y da bbox ao robô', new_pcloud[0])
                                     auxiliar = new_pcloud[0].center_coords.x
@@ -2519,6 +2519,9 @@ class RestaurantMain():
                                     new_pcloud[0].center_coords.z = new_pcloud[0].center_coords.z / 1000
 
                                     print('Distância final', new_pcloud[0])
+
+                                    distance_to_navigate = new_pcloud[0].center_coords.y - 0.6
+                                    print('I MUST NAVIGATE: ', distance_to_navigate)
 
                                     object_location = self.transform_temp(new_pcloud[0].center_coords)
                                     print('Distância da bbox ao braço: ', object_location)
@@ -2539,24 +2542,30 @@ class RestaurantMain():
                                     self.torso_pos.y = -1.0
                                     self.node.torso_test_publisher.publish(self.torso_pos)
                                     
-                                    time.sleep(19.5)
+                                    time.sleep(20.5)
 
                                     self.torso_pos.y = 0.0
                                     self.node.torso_test_publisher.publish(self.torso_pos)
 
                                     #NAVIGATION
-
+                                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_to_navigate, adjust_direction=0.0, wait_for_end_of=True)
                                     time.sleep(1)
 
                                     self.torso_pos.y = 1.0
                                     self.node.torso_test_publisher.publish(self.torso_pos)
 
+                                    time.sleep(20.5)
+
+                                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.2, adjust_direction=0.0, wait_for_end_of=True)
+
+                                    time.sleep(1)
+
                                     #Navigation
+                                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_to_navigate, adjust_direction=180.0, wait_for_end_of=True)
+
+                                    time.sleep(1)                                    
 
                                     self.set_arm(command="go_initial_position", wait_for_end_of=True)
-
-
-
 
                                     while True:
                                         pass

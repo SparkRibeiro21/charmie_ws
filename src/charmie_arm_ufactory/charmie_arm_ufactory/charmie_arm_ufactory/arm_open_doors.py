@@ -228,7 +228,7 @@ class ArmUfactory(Node):
 
 		self.pre_initial_position_from_closing_cabinet_left = [-184.3, 54.0, -72.0, 263.1, 90.4, 342.2]
 
-		self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 250.6]
+		self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 70.6]
 
 
 
