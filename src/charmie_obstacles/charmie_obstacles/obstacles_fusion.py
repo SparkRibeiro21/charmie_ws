@@ -29,6 +29,7 @@ class Robot():
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
+        self.test_image_ = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
         self.scale = 0.063*1000
         self.xx_shift = -110
         self.yy_shift = -370
@@ -176,7 +177,6 @@ class Robot():
                      (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4)),
                       int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
                        
-
             # if self.is_navigating:
             #     pass
             
@@ -306,6 +306,47 @@ class Robot():
                 self.all_pos_y_val.clear()
 
             self.test_image[:, :] = 0
+
+    def update_debug_drawings2(self):
+        
+        
+        self.lidar_to_robot_center = 0.255
+        self.OBS_THRESH = 1.0
+            
+
+
+        cv2.circle(self.test_image_, (self.xc, self.yc), (int)(self.OBS_THRESH*self.scale), (0, 255, 255), 1)
+        # corpo lidar
+        cv2.circle(self.test_image_, (self.xc, self.yc), (int)(self.lidar_radius*self.scale), (255, 255, 255), 1)
+        # centro robo
+        cv2.circle(self.test_image_, (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale)), (int)(self.robot_radius*self.scale/10), (255, 255, 255), 1)
+        # corpo robo
+        cv2.circle(self.test_image_, (self.xc, int(self.yc+self.lidar_to_robot_center*self.scale)), (int)(self.robot_radius*self.scale), (255, 255, 255), 1)
+        
+
+
+        for key, value in self.valores_dict.items():
+            # print(value, ":", key, ":", self.valores_dict[key])
+
+            # ### key is the reading ID
+            # ### value is the reading angle
+            # ### valores_dict[value] is the reading distance
+    
+            # draws two LIDAR graphs, the circular one and the linear one
+            # from right to left
+            cv2.line(self.test_image_, (self.xc, self.yc), (int(self.xc - self.scale * self.valores_dict[key] * math.cos(math.radians(-key + 90))),
+                                                    int(self.yc - self.scale * self.valores_dict[key] * math.sin(math.radians(-key + 90)))),
+                             (255, 0, 0))
+                   
+        cv2.imshow("Person Localization 2", self.test_image_)
+        
+
+        self.test_image_[:, :] = 0
+
+
+
+
+
 
 
 class DebugVisualNode(Node):
@@ -564,7 +605,31 @@ class DebugVisualMain():
             
             print(len(self.node.robot.camera_obstacle_points_adjusted))
 
+
+            to_remove = []
+            for p in self.node.robot.camera_obstacle_points_adjusted:
+                p_ctr = 0
+                for i in self.node.robot.camera_obstacle_points_adjusted:
+                    # dist = math.dist((p.x, p.y, p.z),(i.x, i.y, i.z))  
+                    dist = math.dist((p.x, p.y),(i.x, i.y))  
+                    if dist < 0.3:
+                        p_ctr +=1
+                # print(p_ctr, end='\t')
+                if p_ctr < 5:
+                    to_remove.append(p)
+            
+            for p in to_remove:
+                self.node.robot.camera_obstacle_points_adjusted.remove(p)
+            # print("\n")
+
             self.node.robot.update_debug_drawings()
+            self.node.robot.update_debug_drawings2()
+
+            # for points in to_remove:
+            #     cv2.circle(self.node.robot.test_image, (int(self.node.robot.xc_adj + self.node.robot.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+            #                             int(self.node.robot.yc_adj - self.node.robot.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+            #                             4, (255, 255, 255), -1)
+
 
 
 
