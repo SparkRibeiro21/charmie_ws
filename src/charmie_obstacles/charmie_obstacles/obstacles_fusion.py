@@ -93,6 +93,7 @@ class Robot():
 
         self.camera_obstacle_points = []
         self.camera_obstacle_points_adjusted = []
+        self.camera_obstacle_points_adjusted_relative = []
 
         self.lidar_obstacle_points = []
 
@@ -313,9 +314,9 @@ class Robot():
         self.lidar_to_robot_center = 0.255
         self.OBS_THRESH = 1.0
             
-
-
-        cv2.circle(self.test_image_, (self.xc, self.yc), (int)(self.OBS_THRESH*self.scale), (0, 255, 255), 1)
+        """
+        # margem obstaculos
+        # cv2.circle(self.test_image_, (self.xc, self.yc), (int)(self.OBS_THRESH*self.scale), (0, 255, 255), 1)
         # corpo lidar
         cv2.circle(self.test_image_, (self.xc, self.yc), (int)(self.lidar_radius*self.scale), (255, 255, 255), 1)
         # centro robo
@@ -325,8 +326,9 @@ class Robot():
         
 
 
+
         for key, value in self.valores_dict.items():
-            # print(value, ":", key, ":", self.valores_dict[key])
+            print(value, ":", key, ":", self.valores_dict[key])
 
             # ### key is the reading ID
             # ### value is the reading angle
@@ -334,13 +336,77 @@ class Robot():
     
             # draws two LIDAR graphs, the circular one and the linear one
             # from right to left
-            cv2.line(self.test_image_, (self.xc, self.yc), (int(self.xc - self.scale * self.valores_dict[key] * math.cos(math.radians(-key + 90))),
-                                                    int(self.yc - self.scale * self.valores_dict[key] * math.sin(math.radians(-key + 90)))),
+            cv2.line(self.test_image_, (self.xc, self.yc), (int(self.xc - self.scale * value * math.cos(math.radians(math.degrees(-key) + 90))),
+                                                    int(self.yc - self.scale * value * math.sin(math.radians(math.degrees(-key) + 90)))),
                              (255, 0, 0))
                    
-        cv2.imshow("Person Localization 2", self.test_image_)
+        
+        """
+
+        # margem obstaculos
+        # cv2.circle(self.test_image_, (self.xc, self.yc), (int)(self.OBS_THRESH*self.scale), (0, 255, 255), 1)
+        # corpo lidar
+        cv2.circle(self.test_image_, (self.xc, int(self.yc-self.lidar_to_robot_center*self.scale)), (int)(self.lidar_radius*self.scale), (0, 0, 255), 1)
+        # centro robo
+        cv2.circle(self.test_image_, (self.xc, self.yc), (int)(self.robot_radius*self.scale/10), (0, 0, 255), 1)
+        # corpo robo
+        cv2.circle(self.test_image_, (self.xc, self.yc), (int)(self.robot_radius*self.scale), (0, 0, 255), 1)
         
 
+        
+        """
+        for key, value in self.valores_dict.items():
+            print(value, ":", key, ":", self.valores_dict[key])
+
+            # ### key is the reading ID
+            # ### value is the reading angle
+            # ### valores_dict[value] is the reading distance
+    
+            # draws two LIDAR graphs, the circular one and the linear one
+            # from right to left
+            cv2.line(self.test_image_, (self.xc, int(self.yc-self.lidar_to_robot_center*self.scale)), (int(self.xc - self.scale * value * math.cos(math.radians(math.degrees(-key) + 90))),
+                                                    int(int(self.yc-self.lidar_to_robot_center*self.scale) - self.scale * value * math.sin(math.radians(math.degrees(-key) + 90)))),
+                             (0, 255, 0))
+                   
+        
+        for key, value in self.valores_dict.items():
+            print(value, ":", key, ":", self.valores_dict[key])
+
+            # ### key is the reading ID
+            # ### value is the reading angle
+            # ### valores_dict[value] is the reading distance
+    
+            # draws two LIDAR graphs, the circular one and the linear one
+            # from right to left
+            cv2.line(self.test_image_, (self.xc, self.yc), (int(self.xc - self.scale * value * math.cos(math.radians(math.degrees(-key) + 90))),
+                                                    int(int(self.yc-self.lidar_to_robot_center*self.scale) - self.scale * value * math.sin(math.radians(math.degrees(-key) + 90)))),
+                             (0, 255, 255))
+            
+                             
+    """
+        # for key, value in self.valores_dict.items(): 
+        #     cv2.circle(self.test_image_, (int(self.xc - self.scale * value * math.cos(math.radians(math.degrees(-key) + 90))),
+        #                                             int(int(self.yc-self.lidar_to_robot_center*self.scale) - self.scale * value * math.sin(math.radians(math.degrees(-key) + 90)))),
+        #                      4, (255, 255, 255), -1)
+        
+        for key, value in self.valores_dict.items(): 
+            cv2.circle(self.test_image_, (int(self.xc - self.scale * value * math.cos(math.radians(math.degrees(-key) + 90))),
+                                                    int(self.yc - self.scale * (self.lidar_to_robot_center + value * math.sin(math.radians(math.degrees(-key) + 90))))),
+                             5, (0, 0, 255), 1)
+        
+        
+
+        for points in self.camera_obstacle_points_adjusted_relative:
+
+            # if points.z > 0.3 and points.z < 1.7:
+            cv2.circle(self.test_image_, (int(self.xc + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                                        int(self.yc - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                                        5, (255, 0, 0), 1)
+
+        
+        
+        
+        cv2.imshow("Person Localization 2", self.test_image_)
         self.test_image_[:, :] = 0
 
 
@@ -443,6 +509,8 @@ class DebugVisualNode(Node):
 
         START_RAD = scan.angle_min
         STEP_RAD = scan.angle_increment
+        self.min_dist_error = 0.1
+        self.max_dist_error = 5.0
 
         self.robot.lidar_obstacle_points.clear()
 
@@ -450,11 +518,15 @@ class DebugVisualNode(Node):
             # print(x)
             # i = i + 1
             # self.valores_id[START_RAD+i*STEP_RAD] = i
-            self.robot.valores_dict[START_RAD+i*STEP_RAD] = scan.ranges[i]
-
+            
             value = scan.ranges[i]
             key = START_RAD+i*STEP_RAD
-
+            
+            if scan.ranges[i] < self.min_dist_error or scan.ranges[i] > self.max_dist_error:
+                scan.ranges[i] = 8.0
+            self.robot.valores_dict[START_RAD+i*STEP_RAD] = scan.ranges[i]
+            
+            
             if value > 0.1: 
                 obs_x = value * math.cos(key + self.robot.robot_t + math.pi/2)
                 obs_y = value * math.sin(key + self.robot.robot_t + math.pi/2)
@@ -578,6 +650,7 @@ class DebugVisualMain():
             # self.node.robot.camera_obstacle_points = pc[0].bbox_point_coords
 
             self.node.robot.camera_obstacle_points_adjusted.clear()
+            self.node.robot.camera_obstacle_points_adjusted_relative.clear()
                         
             for p in pc[0].bbox_point_coords:
 
@@ -602,10 +675,58 @@ class DebugVisualMain():
                         target.z = object_rel_pos.z
 
                         self.node.robot.camera_obstacle_points_adjusted.append(target)
+                        self.node.robot.camera_obstacle_points_adjusted_relative.append(object_rel_pos)
+
+
             
-            print(len(self.node.robot.camera_obstacle_points_adjusted))
+            # print(len(self.node.robot.camera_obstacle_points_adjusted))
+
+            neighbour_filter_distance = 0.2
+
+            to_remove = []
+            to_remove_rel = []
+            for p in range(len(self.node.robot.camera_obstacle_points_adjusted)):
+                p_ctr = 0
+                for i in range(len(self.node.robot.camera_obstacle_points_adjusted)):
+                    # dist = math.dist((p.x, p.y, p.z),(i.x, i.y, i.z))  
+                    dist = math.dist((self.node.robot.camera_obstacle_points_adjusted[p].x, self.node.robot.camera_obstacle_points_adjusted[p].y),
+                                     (self.node.robot.camera_obstacle_points_adjusted[i].x, self.node.robot.camera_obstacle_points_adjusted[i].y))  
+                    if dist < neighbour_filter_distance:
+                        p_ctr +=1
+                # print(p_ctr, end='\t')
+                if p_ctr < 5:
+                    to_remove.append(self.node.robot.camera_obstacle_points_adjusted[p])
+                    to_remove_rel.append(self.node.robot.camera_obstacle_points_adjusted_relative[p])
+            
+            for p in to_remove:
+                self.node.robot.camera_obstacle_points_adjusted.remove(p)
+            for p in to_remove_rel:
+                self.node.robot.camera_obstacle_points_adjusted_relative.remove(p)
+            
+            for p in to_remove:
+                cv2.circle(self.node.robot.test_image, (int(self.node.robot.xc_adj + self.node.robot.scale * p.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                                        int(self.node.robot.yc_adj - self.node.robot.scale * p.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                                        5, (255, 255, 255), -1)
+
+                cv2.circle(self.node.robot.test_image, (int(self.node.robot.xc_adj + self.node.robot.scale * p.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                                        int(self.node.robot.yc_adj - self.node.robot.scale * p.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                                        int(self.node.robot.scale*neighbour_filter_distance), (255, 255, 255), 1)
+
+            for p in to_remove_rel:
+            
+                cv2.circle(self.node.robot.test_image_, (int(self.node.robot.xc + self.node.robot.scale * p.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                                            int(self.node.robot.yc - self.node.robot.scale * p.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                                            5, (255, 255, 255), 1)
+
+                cv2.circle(self.node.robot.test_image_, (int(self.node.robot.xc + self.node.robot.scale * p.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                                            int(self.node.robot.yc - self.node.robot.scale * p.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                                            int(self.node.robot.scale*neighbour_filter_distance), (255, 255, 255), 1)
 
 
+            print(len(self.node.robot.camera_obstacle_points_adjusted)+len(to_remove), "-", len(to_remove), "=", len(self.node.robot.camera_obstacle_points_adjusted))
+
+
+            """
             to_remove = []
             for p in self.node.robot.camera_obstacle_points_adjusted:
                 p_ctr = 0
@@ -621,6 +742,7 @@ class DebugVisualMain():
             for p in to_remove:
                 self.node.robot.camera_obstacle_points_adjusted.remove(p)
             # print("\n")
+            """
 
             self.node.robot.update_debug_drawings()
             self.node.robot.update_debug_drawings2()
