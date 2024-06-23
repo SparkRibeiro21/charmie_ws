@@ -4,10 +4,8 @@ from rclpy.node import Node
 
 from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
-from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, LaserScan
-from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, DetectedPerson, NeckPosition, ListOfPoints, TarNavSDNL
-from geometry_msgs.msg import PoseWithCovarianceStamped
+from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -37,6 +35,8 @@ class Robot():
 
         self.robot_radius = 0.560/2 # meter
         self.lidar_radius = 0.050/2 # meter
+        self.lidar_to_robot_center = 0.255
+
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.robot_t = 0.0 # math.pi/4
@@ -89,7 +89,9 @@ class Robot():
         self.scan = LaserScan()
         self.valores_dict = {}
 
-        self.camera_obstacle_points = ListOfPoints()
+        self.camera_obstacle_points = []
+        self.final_obstacle_points = []
+        self.lidar_obstacle_points = []
 
         self.NORTE = 319.1 ### ????
         self.imu_orientation_norm_rad = 0.0
@@ -182,10 +184,43 @@ class Robot():
                     int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.navigation.reached_radius), (0, 255, 0), 1)
             
 
+
+
+            for points in self.lidar_obstacle_points:
+
+                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                                        int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                                        3, (0, 0, 255), -1)
+
+
+            for points in self.camera_obstacle_points:
+            
+                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                                        int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                                        3, (0, 165, 255), -1)
+                       
+            for points in self.final_obstacle_points:
+
+                # calculate the absolute position according to the robot localisation
+                dist_obj = math.sqrt(points.x**2 + points.y**2)
+
+                # if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
+                angle_obj = math.atan2(points.x, points.y)
+                theta_aux = math.pi/2 - (angle_obj - self.robot_t)
+
+                target = Point()
+                target.x = dist_obj * math.cos(theta_aux) + self.robot_x
+                target.y = dist_obj * math.sin(theta_aux) + self.robot_y
+                target.z = points.z
+
+                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * target.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                                    int(self.yc_adj - self.scale * target.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                                    3, (255, 255, 255), -1)
+            
             # print(self.robot_t, self.imu_orientation_norm_rad)
 
             # self.robot_t = -self.imu_orientation_norm_rad
-
+            """
             for key, value in self.valores_dict.items():
                 # print(f"Ang: {key}, Dist: {value}")
 
@@ -255,7 +290,7 @@ class Robot():
 
 
 
-
+            """
             for person in self.search_for_person.coords:
                 # print(person.position_relative.x/1000, person.position_relative.y/1000)
 
@@ -353,8 +388,11 @@ class DebugVisualNode(Node):
         self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
        
         # Camera Obstacles
-        self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_obstacles", self.get_camera_obstacles_callback, 10)
-       
+        self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_head_obstacles", self.get_camera_obstacles_callback, 10)
+
+        # Obstacles
+        self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
+
         self.robot = Robot()
 
 
@@ -371,15 +409,19 @@ class DebugVisualNode(Node):
 
         
     def get_camera_obstacles_callback(self, points: ListOfPoints):
-        self.robot.camera_obstacle_points = points
+        self.robot.camera_obstacle_points = points.coords
         # print("Received Points")
-        print
+        # print
         
+    def get_final_obstacles_callback(self, points: ListOfPoints):
+        self.robot.final_obstacle_points = points.coords
+        # print("Received Points")
+        # print(self.robot.final_obstacle_points)
 
     def lidar_callback(self, scan: LaserScan):
         self.robot.scan = scan
         # print(scan)
-
+        """
         START_RAD = scan.angle_min
         STEP_RAD = scan.angle_increment
 
@@ -391,6 +433,42 @@ class DebugVisualNode(Node):
             self.robot.valores_dict[START_RAD+i*STEP_RAD] = scan.ranges[i]
 
         # print(self.robot.valores_dict, "\n")
+        """
+        START_RAD = scan.angle_min
+        STEP_RAD = scan.angle_increment
+        self.min_dist_error = 0.1
+        self.max_dist_error = 5.0
+
+        self.robot.lidar_obstacle_points.clear()
+
+        # calculates list of lidar obstacle points
+        for i in range(len(scan.ranges)):
+            
+            value = scan.ranges[i]
+            key = START_RAD+i*STEP_RAD
+            
+            if value > self.min_dist_error: # and value < self.max_dist_error:
+
+                # object_rel_pos = Point()
+                # object_rel_pos.x =  -value * math.cos(-key + math.pi/2)
+                # object_rel_pos.y =  self.robot.lidar_to_robot_center + value * math.sin(-key + math.pi/2)
+                # object_rel_pos.z =  0.35 # lidar height on the robot
+                
+                # calculate the absolute position according to the robot localisation
+                # dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
+
+                obs_x = value * math.cos(key + self.robot.robot_t + math.pi/2)
+                obs_y = value * math.sin(key + self.robot.robot_t + math.pi/2)
+
+                adj_x = (self.robot.robot_radius - self.robot.lidar_radius)*math.cos(self.robot.robot_t + math.pi/2)
+                adj_y = (self.robot.robot_radius - self.robot.lidar_radius)*math.sin(self.robot.robot_t + math.pi/2)
+
+                target = Point()
+                target.x = self.robot.robot_x + obs_x + adj_x
+                target.y = self.robot.robot_y + obs_y + adj_y
+                target.z = 0.35 # lidar height on the robot
+
+                self.robot.lidar_obstacle_points.append(target)
 
 
     def target_pos_callback(self, nav: TarNavSDNL):

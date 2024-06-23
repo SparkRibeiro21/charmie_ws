@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 # from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, LaserScan
-from charmie_interfaces.msg import NeckPosition, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.msg import NeckPosition, BoundingBox, BoundingBoxAndPoints, ListOfPoints
 from charmie_interfaces.srv import GetPointCloud, ActivateObstacles
 # from geometry_msgs.msg import PoseWithCovarianceStamped
 # from cv_bridge import CvBridge, CvBridgeError
@@ -26,7 +26,7 @@ class Robot():
 
         self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.DEBUG_DRAW_IMAGE_OVERALL = False
-        self.DEBUG_DRAW_JUST_CALCULATION_POINTS = True
+        self.DEBUG_DRAW_JUST_CALCULATION_POINTS = False
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
@@ -276,19 +276,16 @@ class Robot():
                         closes_inter = inter_p
 
             if max_dist < self.MAX_OBS_DISTANCE:
-
                 self.final_obstacle_points.append(closes_inter)
             
 
         if self.DEBUG_DRAW_IMAGE:    
-            for p in  self.final_obstacle_points:
+            for p in self.final_obstacle_points:
                 cv2.circle(self.test_image_, (int(self.xc + self.scale * p[0]),
                                               int(self.yc - self.scale * p[1])),
                                               3, (0, 255, 0), -1)
 
-
-        # criar um activate obstacles que permite escolher os obstaculos (lidar ou camera) em qql situação, assim só ligamos câmara quando o robô sair de casa
-        # add code to create sdnl obstacles 
+        return self.final_obstacle_points
 
     def update_image_shown(self):
 
@@ -372,6 +369,10 @@ class DebugVisualNode(Node):
         # IMU
         self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
        
+        # Obstacles
+        self.camera_head_obstacles_publisher = self.create_publisher(ListOfPoints, "camera_head_obstacles", 10)
+        self.final_obstacles_publisher = self.create_publisher(ListOfPoints, "final_obstacles", 10)
+
         ### Services (Clients) ###
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
@@ -557,9 +558,10 @@ class DebugVisualNode(Node):
         self.robot.camera_obstacle_points_rel.clear()
         if self.robot.DEBUG_DRAW_IMAGE:
             self.robot.camera_obstacle_points_rel_draw.clear()
-        if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
-            self.robot.camera_obstacle_points.clear()
-                    
+        # if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
+        self.robot.camera_obstacle_points.clear()
+        
+        temp_cam_head_obs = ListOfPoints()
         for p in pc[0].bbox_point_coords:
 
             object_rel_pos = Point()
@@ -573,12 +575,10 @@ class DebugVisualNode(Node):
                 dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
 
                 if dist_obj < self.robot.MAX_OBS_DISTANCE and object_rel_pos.y > 0.0: 
+
                     self.robot.camera_obstacle_points_rel.append(object_rel_pos)
 
-                if self.robot.DEBUG_DRAW_IMAGE:
-                    self.robot.camera_obstacle_points_rel_draw.append(object_rel_pos)
-
-                if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
+                    # if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
                     angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
                     theta_aux = math.pi/2 - (angle_obj - self.robot.robot_t)
 
@@ -589,7 +589,10 @@ class DebugVisualNode(Node):
 
                     self.robot.camera_obstacle_points.append(target)
 
+                if self.robot.DEBUG_DRAW_IMAGE:
+                    self.robot.camera_obstacle_points_rel_draw.append(object_rel_pos)
 
+                
         neighbour_filter_distance = 0.2
         to_remove = []
         to_remove_rel = []
@@ -604,14 +607,21 @@ class DebugVisualNode(Node):
             # print(p_ctr, end='\t')
             if p_ctr < 5:
                 to_remove_rel.append(self.robot.camera_obstacle_points_rel[p])
-                if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
-                    to_remove.append(self.robot.camera_obstacle_points[p])
+                # if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
+                to_remove.append(self.robot.camera_obstacle_points[p])
             
         for p in to_remove_rel:
             self.robot.camera_obstacle_points_rel.remove(p)
-        if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
-            for p in to_remove:
-                self.robot.camera_obstacle_points.remove(p)
+        # if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
+        for p in to_remove:
+            self.robot.camera_obstacle_points.remove(p)
+
+        for p in self.robot.camera_obstacle_points:
+            temp_cam_head_obs.coords.append(p)
+
+        self.camera_head_obstacles_publisher.publish(temp_cam_head_obs)
+        # temp_cam_head_obs.coords.clear()
+        # print(len(temp_cam_head_obs.coords), len(self.robot.camera_obstacle_points))
         
         # this is a debug display of all the points without neighbours that are removed from the lisr
         """
@@ -646,15 +656,21 @@ class DebugVisualNode(Node):
             self.robot.update_debug_drawings()
             self.robot.update_debug_drawings2()
 
-        self.robot.calculate_obstacle_points()
-        
+        f_p = self.robot.calculate_obstacle_points()
+        temp_lp = ListOfPoints()
+        for p in f_p:
+            t = Point()
+            t.x = p[0]
+            t.y = p[1]
+            temp_lp.coords.append(t)
+        self.final_obstacles_publisher.publish(temp_lp)
+
         if self.robot.DEBUG_DRAW_IMAGE:
             self.robot.update_image_shown()
 
         # print("elapsed time =", time.time()-init_time)
         print("elapsed time =", time.time()-post_pc_time)
-        print(self.robot.scale)
-
+        
 
 def main(args=None):
     rclpy.init(args=args)
