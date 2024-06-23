@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 # from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, LaserScan
-from charmie_interfaces.msg import NeckPosition, BoundingBox, BoundingBoxAndPoints, ListOfPoints
+from charmie_interfaces.msg import NeckPosition, BoundingBox, BoundingBoxAndPoints, ListOfPoints, Obstacles, ObstacleInfo
 from charmie_interfaces.srv import GetPointCloud, ActivateObstacles
 # from geometry_msgs.msg import PoseWithCovarianceStamped
 # from cv_bridge import CvBridge, CvBridgeError
@@ -26,7 +26,7 @@ class Robot():
 
         self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.DEBUG_DRAW_IMAGE_OVERALL = False
-        self.DEBUG_DRAW_JUST_CALCULATION_POINTS = False
+        self.DEBUG_DRAW_JUST_CALCULATION_POINTS = True
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
@@ -49,6 +49,7 @@ class Robot():
 
         self.MAX_OBS_DISTANCE = 2.5
         self.OBSTACLE_RADIUS_THRESHOLD = 0.05
+        self.D_TETA = 0.0
         
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -232,7 +233,7 @@ class Robot():
 
         step_size = (math.radians(end_angle-lateral_corr_angle) - math.radians(start_angle+lateral_corr_angle)) / (n_lines - 1)  # Calculate the step size
         values = [math.radians(start_angle+lateral_corr_angle) + i * step_size for i in range(n_lines)]
-        
+        self.D_TETA = step_size
         # print(values)
 
         # print("===")
@@ -370,6 +371,7 @@ class DebugVisualNode(Node):
         self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
        
         # Obstacles
+        self.obstacles_publisher = self.create_publisher(Obstacles, "obs_lidar2", 10)
         self.camera_head_obstacles_publisher = self.create_publisher(ListOfPoints, "camera_head_obstacles", 10)
         self.final_obstacles_publisher = self.create_publisher(ListOfPoints, "final_obstacles", 10)
 
@@ -657,12 +659,25 @@ class DebugVisualNode(Node):
             self.robot.update_debug_drawings2()
 
         f_p = self.robot.calculate_obstacle_points()
+        tot_obs = Obstacles()
+        tot_obs.no_obstacles = len(f_p)
         temp_lp = ListOfPoints()
         for p in f_p:
+
+            obs_info = ObstacleInfo()
+            obs_info.alfa = math.atan2(p[0], p[1])
+            obs_info.dist = math.sqrt(p[0]**2 + p[1]**2) - self.robot.robot_radius
+            obs_info.length_degrees = self.robot.D_TETA
+            obs_info.length_cm = 0.05
+            tot_obs.obstacles.append(obs_info)
+
+
             t = Point()
             t.x = p[0]
             t.y = p[1]
             temp_lp.coords.append(t)
+
+        self.obstacles_publisher.publish(tot_obs)
         self.final_obstacles_publisher.publish(temp_lp)
 
         if self.robot.DEBUG_DRAW_IMAGE:

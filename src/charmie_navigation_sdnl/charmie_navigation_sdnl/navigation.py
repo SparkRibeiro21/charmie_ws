@@ -80,7 +80,7 @@ class NavigationSDNLClass:
 
 
         # visual debug
-        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.MAX_DIST_FOR_OBS = 0.7
         self.xc = 400
         self.yc = 400
@@ -738,7 +738,7 @@ class NavSDNLNode(Node):
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         # Create PUBs/SUBs
-        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
+        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar2", self.obs_lidar_callback, 10)
         
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
