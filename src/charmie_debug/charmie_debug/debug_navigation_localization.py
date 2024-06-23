@@ -5,7 +5,7 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SpeechCommand, NavTrigger
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SpeechCommand, NavTrigger, ActivateObstacles
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import numpy as np
@@ -43,12 +43,16 @@ class TestNode(Node):
         # Navigation
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
-        # Navigation
-        while not self.nav_trigger_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+        # Obstacles
+        self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
 
-        
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
+        # Navigation
+        # while not self.nav_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+        # Obstacles
+        while not self.activate_obstacles_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
         # Speakers
         # while not self.speech_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Speech Command...")
@@ -68,6 +72,8 @@ class TestNode(Node):
         self.speech_message = ""
         self.navigation_success = True
         self.navigation_message = ""
+        self.activate_obstacles_success = True
+        self.activate_obstacles_message = ""
 
 
     def flag_navigation_reached_callback(self, flag: Bool):
@@ -106,6 +112,15 @@ class TestNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
+
+    ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
+    def call_activate_obstacles_server(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False):
+        request = ActivateObstacles.Request()
+        request.activate_lidar_up = obstacles_lidar_up
+        request.activate_lidar_bottom = obstacles_lidar_bottom
+        request.activate_camera_head = obstacles_camera_head
+
+        self.activate_obstacles_client.call_async(request)
 
 def main(args=None):
     rclpy.init(args=args)
@@ -242,6 +257,14 @@ class RestaurantMain():
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
+    def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
+        
+        self.node.call_activate_obstacles_server(obstacles_lidar_up=obstacles_lidar_up, obstacles_lidar_bottom=obstacles_lidar_bottom, obstacles_camera_head=obstacles_camera_head)
+
+        self.node.activate_obstacles_success = True
+        self.node.activate_obstacles_message = "Activated with selected parameters"
+
+        return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     def main(self):
         Waiting_for_start_button = 0
@@ -270,9 +293,9 @@ class RestaurantMain():
 
                 # If initial position is inside while loop you are telling the robot the wrong localisation.
                 # This command must only be sent once, at the start of the task
-                self.set_initial_position(self.initial_position)
+                # self.set_initial_position(self.initial_position)
 
-                time.sleep(5)
+                # time.sleep(5)
 
                 # next state
                 self.state = Searching_for_clients
@@ -281,7 +304,18 @@ class RestaurantMain():
                 #print('State 1 = Hand Raising Detect')
 
                 # time.sleep(3)
-                
+
+                while True:
+                    
+                    self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=True, obstacles_camera_head=True)
+                    time.sleep(5)
+                    self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False)
+                    time.sleep(5)
+                    self.activate_obstacles(obstacles_lidar_up=False, obstacles_lidar_bottom=False, obstacles_camera_head=True)
+                    time.sleep(5)
+
+
+
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=8.0, adjust_direction=135.0, wait_for_end_of=True)
 
                 self.set_navigation(movement="orientate", absolute_angle=-45.0, flag_not_obs=True, wait_for_end_of=True)

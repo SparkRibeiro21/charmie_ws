@@ -6,10 +6,10 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 # from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, LaserScan
-from charmie_interfaces.msg import Yolov8Pose, Yolov8Objects, DetectedPerson, NeckPosition, ListOfPoints, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, PointCloudCoordinates, ListOfPoints
-from charmie_interfaces.srv import GetPointCloud
+from charmie_interfaces.msg import NeckPosition, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.srv import GetPointCloud, ActivateObstacles
 # from geometry_msgs.msg import PoseWithCovarianceStamped
-from cv_bridge import CvBridge, CvBridgeError
+# from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
 import numpy as np
@@ -74,6 +74,10 @@ class Robot():
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
+        
+        self.ACTIVATE_LIDAR_UP = True
+        self.ACTIVATE_LIDAR_BOTTOM = False
+        self.ACTIVATE_CAMERA_HEAD = False
 
         self.scan = LaserScan()
         self.valores_dict = {}
@@ -233,6 +237,8 @@ class Robot():
 
         # print("===")
         # print(values)
+        self.final_obstacle_points.clear()
+
         for v in values:
             if self.DEBUG_DRAW_IMAGE:
                 cv2.line(self.test_image_, (self.xc, self.yc), 
@@ -244,45 +250,43 @@ class Robot():
             # print("line", m, c)
                 
             max_dist = self.MAX_OBS_DISTANCE
-            for p in self.lidar_obstacle_points_rel:
-                # get line from two points
-                # print("circle", p.x, p.y)
-                inter_p = self.find_intersection_circle_line(p.x, p.y, self.OBSTACLE_RADIUS_THRESHOLD, m, c)
-                # print("inter_p", inter_p)
 
-                t = np.sqrt(inter_p[0]**2 + inter_p[1]**2)
-                if t < max_dist and t > 0 and inter_p[1] > 0:
-                    max_dist = t
-                    closes_inter = inter_p
+            if self.ACTIVATE_LIDAR_UP:
+                for p in self.lidar_obstacle_points_rel:
+                    # get line from two points
+                    # print("circle", p.x, p.y)
+                    inter_p = self.find_intersection_circle_line(p.x, p.y, self.OBSTACLE_RADIUS_THRESHOLD, m, c)
+                    # print("inter_p", inter_p)
+
+                    t = np.sqrt(inter_p[0]**2 + inter_p[1]**2)
+                    if t < max_dist and t > 0 and inter_p[1] > 0:
+                        max_dist = t
+                        closes_inter = inter_p
             
+            if self.ACTIVATE_CAMERA_HEAD:
+                for p in self.camera_obstacle_points_rel:
+                    # get line from two points
+                    # print("circle", p.x, p.y)
+                    inter_p = self.find_intersection_circle_line(p.x, p.y, self.OBSTACLE_RADIUS_THRESHOLD, m, c)
+                    # print("inter_p", inter_p)
 
-            for p in self.camera_obstacle_points_rel:
-                # get line from two points
-                # print("circle", p.x, p.y)
-                inter_p = self.find_intersection_circle_line(p.x, p.y, self.OBSTACLE_RADIUS_THRESHOLD, m, c)
-                # print("inter_p", inter_p)
-
-                t = np.sqrt(inter_p[0]**2 + inter_p[1]**2)
-                if t < max_dist and t > 0 and inter_p[1] > 0:
-                    max_dist = t
-                    closes_inter = inter_p
+                    t = np.sqrt(inter_p[0]**2 + inter_p[1]**2)
+                    if t < max_dist and t > 0 and inter_p[1] > 0:
+                        max_dist = t
+                        closes_inter = inter_p
 
             if max_dist < self.MAX_OBS_DISTANCE:
 
                 self.final_obstacle_points.append(closes_inter)
             
-                if self.DEBUG_DRAW_IMAGE:
-                    cv2.circle(self.test_image_, (int(self.xc + self.scale * closes_inter[0]),
-                                        int(self.yc - self.scale * closes_inter[1])),
-                                        3, (0, 255, 0), -1)
+
+        if self.DEBUG_DRAW_IMAGE:    
+            for p in  self.final_obstacle_points:
+                cv2.circle(self.test_image_, (int(self.xc + self.scale * p[0]),
+                                              int(self.yc - self.scale * p[1])),
+                                              3, (0, 255, 0), -1)
 
 
-            # all imshow cv2.circle and line in an if debug
-            # remover pontos a mais, acima do limite máximo que quero detetar medir tempos
-            # take obstacle intersection point calculations from drawing function
-            # all obstacle related variables as "global" and not 0.1 everywhere
-            # remover o threading 
-            # subscrever camara de profundidade para ter a certeza que a primeria imagem ja chegou, para não crachar a fazer pedidos ao point cloud sem nenhuma imagem ter sido publicada
         # criar um activate obstacles que permite escolher os obstaculos (lidar ou camera) em qql situação, assim só ligamos câmara quando o robô sair de casa
         # add code to create sdnl obstacles 
 
@@ -372,6 +376,8 @@ class DebugVisualNode(Node):
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
 
+        self.server_activate_obstacles = self.create_service(ActivateObstacles, "activate_obstacles", self.callback_activate_obstacles) 
+
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
 
@@ -407,6 +413,28 @@ class DebugVisualNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+    def callback_activate_obstacles(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # bool activate_lidar_up     # activate lidar from robot body
+        # bool activate_lidar_bottom # activate lidar to see floor objects
+        # bool activate_camera_head  # activate head camera for 3D obstacles  
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+        self.get_logger().info("Received Activate Obstacles %s" %("("+str(request.activate_lidar_up)+", "
+                                                                     +str(request.activate_lidar_bottom)+", "
+                                                                     +str(request.activate_camera_head)+")"))
+
+        self.robot.ACTIVATE_LIDAR_UP = request.activate_lidar_up
+        self.robot.ACTIVATE_LIDAR_BOTTOM = request.activate_lidar_bottom
+        self.robot.ACTIVATE_CAMERA_HEAD = request.activate_camera_head
+        
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Activated with selected parameters"
+        return response
 
     def get_orientation_callback(self, orientation: Float32):
         # self.robot.imu_orientation = orientation.data

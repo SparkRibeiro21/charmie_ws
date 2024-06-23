@@ -1,0 +1,8 @@
+# Service to choose which type of sensors should be used for obstacles
+
+bool activate_lidar_up     # activate lidar from robot body
+bool activate_lidar_bottom # activate lidar to see floor objects
+bool activate_camera_head  # activate head camera for 3D obstacles  
+---
+bool success    # indicate successful run of triggered service
+string message  # informational, e.g. for error messages.
