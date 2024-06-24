@@ -231,9 +231,21 @@ class ArmUfactory(Node):
 		self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 70.6]
 
 
+		self.place_arm_right_side_door_0 = [-182.6, -14.0, -53.2, 116.9, -0.7, 238.8]
+		self.place_arm_right_side_door = [-182.3, 57.0, -124.2, 78.9, -0.7, 277.5]
+		self.place_arm_right_side_door_2 = [-188.6, 68.6, -138.3, 0.3, 37.5, 352.8]
+		self.place_arm_right_side_door_3 = [-196.9, 44.7, -53.2, 165.9, 23.7, 180.5]
+		self.place_arm_right_side_door_4 = [-186.8, 100.4, -109.2, 58.9, -0.7, 295.5]
+
+		self.place_arm_left_side_door = [-195.0, 112.0, -141.0, 170.5, 75.0, -0.5]
+		self.place_arm_left_side_door_2 = [-182.0, 106.0, -137.0, 182.5, 87.5, -3.5]
+		self.place_arm_left_side_door_3 = [-160.0, -68.0, -28.5, 220.0, 33.0, -53.5]
+
+
+
 
 		# SET POSITIONS VARIABLES
-		self.get_order_position_linear = 				[ -581.4, -211.5,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
+		self.get_order_position_linear = 				[-581.4, -211.5, 121.8, math.radians(132.1), math.radians(1.9), math.radians(-87.1)]
 		self.oriented_floor = [math.radians(89.8), math.radians(0.1), math.radians(179.4)]
 		self.oriented_floor = [math.radians(23.7), math.radians(-89.7), math.radians(-114.3)]
 
@@ -604,7 +616,7 @@ class ArmUfactory(Node):
 	def go_right(self, value):
 		if self.estado_tr == 0:
 			self.move_line_tool_req.pose = [0.0, value, 0.0, 0.0, 0.0, 0.0]
-			self.move_line_tool_req.speed = 40.0
+			self.move_line_tool_req.speed = 100.0
 			self.move_line_tool_req.acc = 500.0
 			self.move_line_tool_req.wait = True
 			self.move_line_tool_req.timeout = 4.0
@@ -1813,6 +1825,38 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def change_position_arm(self, set_desired_pose_arm):
+		if self.estado_tr == 0:
+			print('a')
+			print(set_desired_pose_arm)
+			self.position_values_req.pose = [set_desired_pose_arm[0], set_desired_pose_arm[1], set_desired_pose_arm[2], set_desired_pose_arm[3], set_desired_pose_arm[4], set_desired_pose_arm[5]]
+			self.position_values_req.speed = 80.0
+			self.position_values_req.acc = 400.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 30.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.arm_pose = []
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def change_height_open_drawer(self, set_desired_pose_arm):
 		if self.estado_tr == 0:
 			print('a')
@@ -1977,12 +2021,138 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def open_door_pull_handler_left(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_left_side_door)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_left_side_door_2)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_left_side_door_3)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 3:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def open_door_pull_handler_right(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_right_side_door_0)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_right_side_door)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+		
+		elif self.estado_tr == 2:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_right_side_door_2)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 3:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_right_side_door_3)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 4:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_right_side_door_4)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 5:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def orient_to_door_front(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.orient_to_table)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def end_opening_washing_machine(self):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.final_open_washing_machine)
 			self.joint_values_req.speed = 0.3
-			self.joint_values_req.wait = False
+			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
@@ -2100,7 +2270,15 @@ class ArmUfactory(Node):
 			self.lower_arm_close_washing_machine(self.value)
 		elif self.next_arm_movement == "end_opening_washing_machine":
 			self.end_opening_washing_machine()
-			
+		elif self.next_arm_movement == "orient_to_door_front":
+			self.orient_to_door_front()
+		elif self.next_arm_movement == "change_position_arm":
+			print('---', self.arm_pose)
+			self.change_position_arm(self.arm_pose)
+		elif self.next_arm_movement == "open_door_pull_handler_right":
+			self.open_door_pull_handler_right()
+		elif self.next_arm_movement == "open_door_pull_handler_left":
+			self.open_door_pull_handler_left()
 		
 		
 
