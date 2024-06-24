@@ -112,8 +112,7 @@ class TestNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
-
-    ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
+    ### ACTIVATE OBJECTS SERVER FUNCTIONS ###
     def call_activate_obstacles_server(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False):
         request = ActivateObstacles.Request()
         request.activate_lidar_up = obstacles_lidar_up
@@ -121,6 +120,7 @@ class TestNode(Node):
         request.activate_camera_head = obstacles_camera_head
 
         self.activate_obstacles_client.call_async(request)
+
 
 def main(args=None):
     rclpy.init(args=args)

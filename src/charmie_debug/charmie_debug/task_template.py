@@ -164,7 +164,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles
 
 import cv2 
 import threading
@@ -235,6 +235,8 @@ class ServeBreakfastNode(Node):
         self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
         # Navigation
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+        # Obstacles
+        self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
 
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
@@ -274,7 +276,10 @@ class ServeBreakfastNode(Node):
         # Navigation
         # while not self.nav_trigger_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
-
+        # Obstacles
+        # while not self.activate_obstacles_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
+       
         
         # Variables 
         self.waited_for_end_of_audio = False
@@ -322,6 +327,8 @@ class ServeBreakfastNode(Node):
         self.arm_message = ""
         self.navigation_success = True
         self.navigation_message = ""
+        self.activate_obstacles_success = True
+        self.activate_obstacles_message = ""
 
         self.get_neck_position = [1.0, 1.0]
 
@@ -462,6 +469,15 @@ class ServeBreakfastNode(Node):
         request.minimum_doors_confidence = minimum_doors_confidence
 
         self.activate_yolo_objects_client.call_async(request)
+
+    ### ACTIVATE OBJECTS SERVER FUNCTIONS ###
+    def call_activate_obstacles_server(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False):
+        request = ActivateObstacles.Request()
+        request.activate_lidar_up = obstacles_lidar_up
+        request.activate_lidar_bottom = obstacles_lidar_bottom
+        request.activate_camera_head = obstacles_camera_head
+
+        self.activate_obstacles_client.call_async(request)
 
 
     #### FACE SERVER FUNCTIONS #####
@@ -1610,6 +1626,15 @@ class ServeBreakfastMain():
         
         return face_path
 
+    def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
+        
+        self.node.call_activate_obstacles_server(obstacles_lidar_up=obstacles_lidar_up, obstacles_lidar_bottom=obstacles_lidar_bottom, obstacles_camera_head=obstacles_camera_head)
+
+        self.node.activate_obstacles_success = True
+        self.node.activate_obstacles_message = "Activated with selected parameters"
+
+        return self.node.activate_obstacles_success, self.node.activate_obstacles_message
+    
 
     # main state-machine function
     def main(self):
