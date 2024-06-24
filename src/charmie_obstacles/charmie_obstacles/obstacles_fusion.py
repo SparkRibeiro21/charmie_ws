@@ -667,8 +667,7 @@ class DebugVisualNode(Node):
             obs_info = ObstacleInfo()
             obs_info.alfa = math.atan2(p[0], p[1])
             obs_info.dist = math.sqrt(p[0]**2 + p[1]**2) - self.robot.robot_radius
-            obs_info.length_degrees = self.robot.D_TETA
-            obs_info.length_cm = 0.05
+            obs_info.length_angular = self.robot.D_TETA
             tot_obs.obstacles.append(obs_info)
 
 

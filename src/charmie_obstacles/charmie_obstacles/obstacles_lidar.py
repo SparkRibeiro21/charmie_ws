@@ -776,7 +776,7 @@ class ObstaclesLIDAR:
             obs.alfa = obs_dict_v[o]['alfa']
             obs.dist = obs_dict_v[o]['dist']
             obs.length_cm = obs_dict_v[o]['length_cm']
-            obs.length_degrees = obs_dict_v[o]['length_deg']
+            obs.length_angular = obs_dict_v[o]['length_deg']
 
             tot_obs.obstacles.append(obs)
         
@@ -813,35 +813,6 @@ class ObstaclesNode(Node):
 
         if not self.obs_detect.error_lidar_reading:
             self.obstacles_publisher.publish(self.obs_detect.obstacles_pub)
-
-
-    """ 
-    def timer_callback(self):
-        # print("Pubed Obstacles")
-        a = Obstacles()
-
-        b1 = ObstacleInfo()
-        b2 = ObstacleInfo()
-        b3 = ObstacleInfo()
-
-        b1.alfa = 1.0
-        b1.dist = 2.0
-        b1.length_cm = 3.0
-        b1.length_degrees = 4.0
-        
-        b2.alfa = 5.0
-        b2.dist = 6.0
-        b2.length_cm = 7.0
-        b2.length_degrees = 8.0
-        
-        a.obstacles.append(b1)
-        a.obstacles.append(b2)
-        a.obstacles.append(b3)
-        a.no_obstacles=len(a.obstacles)
-
-        self.obstacles_publisher.publish(a)
-    """
-
 
 
 def main(args=None):

@@ -273,7 +273,7 @@ class NavigationSDNLClass:
                 # print(obs)
                 aux_obs['psi_obs'] = phi_ - obs.alfa
                 aux_obs['dis_obs'] = obs.dist
-                aux_obs['del_tet'] = obs.length_degrees
+                aux_obs['del_tet'] = obs.length_angular
 
                 obstacles.append(aux_obs.copy())
 
@@ -486,14 +486,14 @@ class NavigationSDNLClass:
                     # aux variables
                     aux_ang = self.all_obs_val[j].obstacles[i].alfa
                     aux_dist = self.all_obs_val[j].obstacles[i].dist + self.robot_radius
-                    aux_len_cm = self.all_obs_val[j].obstacles[i].length_cm
+                    aux_new_obs_len = self.all_obs_val[j].obstacles[i].dist * math.tan(self.all_obs_val[j].obstacles[i].length_angular)
                     thickness = 20
 
                     # line length of obstacle at dist and alfa detected
-                    cv2.line(self.test_image, (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
-                                               int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
-                                              (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
-                                               int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
+                    cv2.line(self.test_image, (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
+                                               int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
+                                              (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
+                                               int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
                                               (0, 165, 255), int(1.0 + thickness*self.scale/1000))
             """
 
@@ -504,7 +504,7 @@ class NavigationSDNLClass:
                 # aux variables
                 aux_ang = self.aux_obstacles_l.obstacles[i].alfa
                 aux_dist = self.aux_obstacles_l.obstacles[i].dist + self.robot_radius
-                aux_len_cm = self.aux_obstacles_l.obstacles[i].length_cm
+                aux_new_obs_len = self.aux_obstacles_l.obstacles[i].dist * math.tan(self.aux_obstacles_l.obstacles[i].length_angular)
 
                 #line robot center to obstacle center
                 # cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)),
@@ -520,10 +520,10 @@ class NavigationSDNLClass:
                                           (255, 255, 255))
                 
                 # line length of obstacle at dist and alfa detected
-                cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2))),
-                                        int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) - self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
-                                        (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2)) - self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2))),
-                                        int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
+                cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2))),
+                                        int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
+                                        (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2))),
+                                        int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
                                         (0, 0, 255), int(1.0 + thickness*self.scale/1000))
                   
             
