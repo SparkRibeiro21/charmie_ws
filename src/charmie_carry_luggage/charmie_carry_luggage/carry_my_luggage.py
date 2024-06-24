@@ -253,8 +253,8 @@ class CarryMyLuggageNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_success = response.success
-            self.speech_message = response.message
+            self.neck_success = response.success
+            self.neck_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_neck_pos = True
         except Exception as e:
@@ -288,8 +288,8 @@ class CarryMyLuggageNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.speech_sucecss = response.success
-            self.speech_message = response.message
+            self.neck_success = response.success
+            self.neck_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_neck_coords = True
         except Exception as e:
