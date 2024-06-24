@@ -32,6 +32,10 @@ class NavigationSDNLClass:
         self.beta1 = 140 # 9
         self.beta2 = 0.15 # 7
 
+        self.lambda_target = 5 # 12
+        self.beta1 = 120 # 9
+        self.beta2 = 0.15 # 7
+
         # configurable other parameters
         self.nav_threshold_dist = 0.6 # in meters
         # self.nav_threshold_dist_follow_me = 1.2 # in meters
@@ -44,6 +48,7 @@ class NavigationSDNLClass:
         self.min_speed_obs = 6.0 # speed
         self.decay_rate_initial_speed_ramp = 2.0 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
+        self.MAX_DIST_FOR_OBS = 1.0
 
         self.obstacles = Obstacles()
         self.aux_obstacles_l = Obstacles()
@@ -81,7 +86,6 @@ class NavigationSDNLClass:
 
         # visual debug
         self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
-        self.MAX_DIST_FOR_OBS = 0.7
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
@@ -759,7 +763,7 @@ class NavSDNLNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         
         # Obstacles 
-        self.obstacles_subscriber = self.create_subscription(Obstacles, 'obs_lidar', self.obstacles_callback, 10)
+        # self.obstacles_subscriber = self.create_subscription(Obstacles, 'obs_lidar', self.obstacles_callback, 10)
 
         self.create_timer(0.1, self.timer_callback)
 
@@ -792,19 +796,19 @@ class NavSDNLNode(Node):
         self.rgb_success = True
         self.rgb_message = ""
 
-    def obstacles_callback(self, obs:Obstacles):
-        self.obstacles = obs
-            
-        self.MIN_DIST_OBS = 10.0
-
-        # if len(self.obstacles.obstacles) == 0:
-        #     print("NO OBSTACLES")
-        # else:
-        for obs in self.obstacles.obstacles:
-            if obs.dist < self.MIN_DIST_OBS:
-                self.MIN_DIST_OBS = obs.dist
-
-        # print(self.MIN_DIST_OBS)        
+    # def obstacles_callback(self, obs:Obstacles):
+    #     self.obstacles = obs
+    #         
+    #     self.MIN_DIST_OBS = 10.0
+    # 
+    #     # if len(self.obstacles.obstacles) == 0:
+    #     #     print("NO OBSTACLES")
+    #     # else:
+    #     for obs in self.obstacles.obstacles:
+    #         if obs.dist < self.MIN_DIST_OBS:
+    #             self.MIN_DIST_OBS = obs.dist
+    # 
+    #     # print(self.MIN_DIST_OBS)        
 
     def get_aligned_depth_image_callback(self, img: Image):
         self.depth_img = img
@@ -865,6 +869,18 @@ class NavSDNLNode(Node):
         # self.nav.sdnl_main()
         # self.nav.update_debug_drawings()
         # print("here")
+
+        print("===")
+        for o in obs.obstacles:
+            print("alfa", o.alfa)
+            print("dist", o.dist)
+            print("l_ang", o.length_angular)
+            print("l_cm", o.length_cm)
+        print("---")
+
+        for obs in self.obstacles.obstacles:
+            if obs.dist < self.MIN_DIST_OBS:
+                self.MIN_DIST_OBS = obs.dist
 
     def robot_localisation_callback(self, pose: Pose2D):
         self.nav.robot_x = pose.x

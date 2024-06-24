@@ -93,7 +93,7 @@ class Robot():
         self.final_obstacle_points = []
         self.lidar_obstacle_points = []
 
-        self.NORTE = 319.1 ### ????
+        self.NORTE = 338.0
         self.imu_orientation_norm_rad = 0.0
 
         self.linhas = 720

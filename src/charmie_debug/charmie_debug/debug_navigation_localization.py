@@ -2,19 +2,15 @@
 
 import rclpy
 from rclpy.node import Node
-from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SpeechCommand, NavTrigger, ActivateObstacles
-from sensor_msgs.msg import Image
+from charmie_interfaces.msg import TarNavSDNL
+from charmie_interfaces.srv import SpeechCommand, NavTrigger, ActivateObstacles, SetNeckCoordinates, SetNeckPosition
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import numpy as np
 import math
 
-import cv2 
 import threading
 import time
-from cv_bridge import CvBridge
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -46,6 +42,10 @@ class TestNode(Node):
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
 
+        # Neck
+        self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
+        self.set_neck_coordinates_client = self.create_client(SetNeckCoordinates, "neck_to_coords")
+        
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Navigation
         # while not self.nav_trigger_client.wait_for_service(1.0):
@@ -61,6 +61,8 @@ class TestNode(Node):
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
         self.waited_for_end_of_speaking = False
+        self.waited_for_end_of_neck_pos = False
+        self.waited_for_end_of_neck_coords = False
 
         # Code Variables
         self.flag_navigation_reached = False
@@ -74,6 +76,8 @@ class TestNode(Node):
         self.navigation_message = ""
         self.activate_obstacles_success = True
         self.activate_obstacles_message = ""
+        self.neck_success = True
+        self.neck_message = ""
 
 
     def flag_navigation_reached_callback(self, flag: Bool):
@@ -112,7 +116,7 @@ class TestNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
-    ### ACTIVATE OBJECTS SERVER FUNCTIONS ###
+    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
     def call_activate_obstacles_server(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False):
         request = ActivateObstacles.Request()
         request.activate_lidar_up = obstacles_lidar_up
@@ -120,6 +124,73 @@ class TestNode(Node):
         request.activate_camera_head = obstacles_camera_head
 
         self.activate_obstacles_client.call_async(request)
+
+
+    #### SET NECK POSITION SERVER FUNCTIONS #####
+    def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
+        request = SetNeckPosition.Request()
+        request.pan = float(position[0])
+        request.tilt = float(position[1])
+        
+        future = self.set_neck_position_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_set_neck_command)
+        else:
+            self.neck_success = True
+            self.neck_message = "Wait for answer not needed"
+    
+    def callback_call_set_neck_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.neck_success = response.success
+            self.neck_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_neck_pos = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
+
+
+    #### SET NECK COORDINATES SERVER FUNCTIONS #####
+    def call_neck_coordinates_server(self, x, y, z, tilt, flag, wait_for_end_of=True):
+        request = SetNeckCoordinates.Request()
+        request.coords.x = float(x)
+        request.coords.y = float(y)
+        request.coords.z = float(z)
+        request.is_tilt = flag
+        request.tilt = float(tilt)
+        
+        future = self.set_neck_coordinates_client.call_async(request)
+        # print("Sent Command")
+
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_set_neck_coords_command)
+        else:
+            self.neck_success = True
+            self.neck_message = "Wait for answer not needed"
+    
+    def callback_call_set_neck_coords_command(self, future): #, a, b):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.neck_success = response.success
+            self.neck_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_neck_coords = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
 
 
 def main(args=None):
@@ -161,17 +232,36 @@ class RestaurantMain():
         self.node.waited_for_end_of_speaking = False
 
         return self.node.speech_success, self.node.speech_message
+    
+    def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
-    # def track_object(self, object, wait_for_end_of=True):
-    # 
-    #     self.node.call_neck_track_object_server(object=object, wait_for_end_of=wait_for_end_of)
-    #     
-    #     if wait_for_end_of:
-    #        while not self.node.waited_for_end_of_track_object:
-    #         pass
-    #     self.node.waited_for_end_of_track_object = False
-    # 
-    #     return self.node.track_object_success, self.node.track_object_message   
+        self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_neck_pos:
+            pass
+        self.node.waited_for_end_of_neck_pos = False
+
+        return self.node.neck_success, self.node.neck_message
+    
+    def set_neck_coords(self, position=[], ang=0.0, wait_for_end_of=True):
+
+        if len(position) == 2:
+            self.node.call_neck_coordinates_server(x=position[0], y=position[1], z=0.0, tilt=ang, flag=True, wait_for_end_of=wait_for_end_of)
+        elif len(position) == 3:
+            print("You tried neck to coordintes using (x,y,z) please switch to (x,y,theta)")
+            pass
+            # The following line is correct, however since the functionality is not implemented yet, should not be called
+            # self.node.call_neck_coordinates_server(x=position[0], y=position[1], z=position[2], tilt=0.0, flag=False, wait_for_end_of=wait_for_end_of)
+        else:
+            print("Something went wrong")
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_neck_coords:
+            pass
+        self.node.waited_for_end_of_neck_coords = False
+
+        return self.node.neck_success, self.node.neck_message
     
     def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
 
@@ -277,7 +367,7 @@ class RestaurantMain():
         Final_State = 7
         
         # self.initial_position = [-2.5, 1.5, 0]
-        self.initial_position = [0.5, 9.5, 45.0]
+        self.initial_position = [0.0, 0.1, 0.0]
 
         # navigation positions
         self.front_of_sofa = [-2.5, 1.5]
@@ -293,9 +383,12 @@ class RestaurantMain():
 
                 # If initial position is inside while loop you are telling the robot the wrong localisation.
                 # This command must only be sent once, at the start of the task
-                # self.set_initial_position(self.initial_position)
+                self.set_initial_position(self.initial_position)
+
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False)
 
                 # time.sleep(5)
+                self.set_neck(position=[0-0, -20.0], wait_for_end_of=True)
 
                 # next state
                 self.state = Searching_for_clients
@@ -303,43 +396,47 @@ class RestaurantMain():
             elif self.state == Searching_for_clients:
                 #print('State 1 = Hand Raising Detect')
 
-                # time.sleep(3)
+                time.sleep(2)
+                
+                self.set_navigation(movement="move", target=[0.0, 3.0], reached_radius=0.5, wait_for_end_of=True)
 
                 while True:
-                    
-                    self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=True, obstacles_camera_head=True)
-                    time.sleep(5)
-                    self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False)
-                    time.sleep(5)
-                    self.activate_obstacles(obstacles_lidar_up=False, obstacles_lidar_bottom=False, obstacles_camera_head=True)
-                    time.sleep(5)
+                    pass    
+
+
+                #     self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=True, obstacles_camera_head=True)
+                #     time.sleep(5)
+                #     self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False)
+                #     time.sleep(5)
+                #     self.activate_obstacles(obstacles_lidar_up=False, obstacles_lidar_bottom=False, obstacles_camera_head=True)
+                #     time.sleep(5)
 
 
 
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=8.0, adjust_direction=135.0, wait_for_end_of=True)
+                # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=8.0, adjust_direction=135.0, wait_for_end_of=True)
 
-                self.set_navigation(movement="orientate", absolute_angle=-45.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle=-45.0, flag_not_obs=True, wait_for_end_of=True)
 
-                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_distance=1.0, adjust_direction=-45.0+360, adjust_min_dist=0.5, wait_for_end_of=True)
+                # self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_distance=1.0, adjust_direction=-45.0+360, adjust_min_dist=0.5, wait_for_end_of=True)
 
-                while True:
-                    pass
+                # while True:
+                #     pass
 
                 # this gives an error because "orient" is a non-existing movement type and does not send anything to navigation 
                 
-                print("2 move")
+                # print("2 move")
 
-                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
 
-                print("3 move")
+                # print("3 move")
 
-                self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
 
-                print("4 move")
+                # print("4 move")
 
-                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
 
-                print("5 move")
+                # print("5 move")
 
                 # your code here ...
                                 
