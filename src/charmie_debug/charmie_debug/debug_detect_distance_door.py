@@ -4316,7 +4316,7 @@ class RestaurantMain():
                             elif handler_z > 0.0: # handler está à minha drt
                                 adjust_x = abs(handler_z)/1000
                                 print('Adjusting to the right in ', adjust_x, 'meters')
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=adjust_x, adjust_direction=-90.0 + 360.0, wait_for_end_of=True)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=adjust_x - 0.2, adjust_direction=-90.0 + 360.0, wait_for_end_of=True)
                                 time.sleep(1)
                             
                             ### NAVEGAR PARA O HANDLER
@@ -4413,7 +4413,7 @@ class RestaurantMain():
                             arm_value.data = handler.position_relative.x * 1000
                             self.node.arm_value_publisher.publish(arm_value)
                             print('Go right: ', arm_value)                    
-                            self.set_arm(command="go_right", wait_for_end_of=True)
+                            self.set_arm(command="go_left", wait_for_end_of=True)
                             self.set_rgb(command=GREEN+BLINK_QUICK)
                             time.sleep(1)
 
@@ -4486,7 +4486,7 @@ class RestaurantMain():
                             arm_value.data = -70.0
                             self.node.arm_value_publisher.publish(arm_value)
                             print(arm_value)                    
-                            self.set_arm(command="go_left", wait_for_end_of=True)
+                            self.set_arm(command="go_right", wait_for_end_of=True)
                             self.set_rgb(command=GREEN+BLINK_QUICK)
                             time.sleep(1)
 
@@ -4501,7 +4501,7 @@ class RestaurantMain():
                             arm_value.data = 70.0
                             self.node.arm_value_publisher.publish(arm_value)
                             print(arm_value)                    
-                            self.set_arm(command="go_right", wait_for_end_of=True)
+                            self.set_arm(command="go_left", wait_for_end_of=True)
                             self.set_rgb(command=GREEN+BLINK_QUICK)
                             time.sleep(1)
                         
