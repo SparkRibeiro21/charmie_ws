@@ -43,6 +43,7 @@ class ArmUfactory(Node):
 		self.set_pause_time_client = self.create_client(SetFloat32, '/xarm/set_pause_time')
 		self.get_gripper_position = self.create_client(GetFloat32,'/xarm/get_gripper_position')
 		self.move_tool_line = self.create_client(MoveCartesian, '/xarm/set_tool_position')
+		self.set_collisiton_sensitivity_client = self.create_client(SetInt16, '/xarm/set_collision_sensitivity')
 		#self.plan_pose_client = self.create_client(PlanPose, '/xarm_pose_plan')
 		#self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
 		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
@@ -83,6 +84,9 @@ class ArmUfactory(Node):
 
 		while not self.get_position_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Arm Position...")
+
+		while not self.set_collisiton_sensitivity_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Collision sensitivity...")
 		
 
 		self.create_service(ArmTrigger, 'arm_trigger', self.arm_trigger_callback)
@@ -237,9 +241,9 @@ class ArmUfactory(Node):
 		self.place_arm_right_side_door_3 = [-196.9, 44.7, -53.2, 165.9, 23.7, 180.5]
 		self.place_arm_right_side_door_4 = [-186.8, 100.4, -109.2, 58.9, -0.7, 295.5]
 
-		self.place_arm_left_side_door = [-195.0, 112.0, -141.0, 170.5, 75.0, -0.5]
-		self.place_arm_left_side_door_2 = [-182.0, 106.0, -137.0, 182.5, 87.5, -3.5]
-		self.place_arm_left_side_door_3 = [-160.0, -68.0, -28.5, 220.0, 33.0, -53.5]
+		self.place_arm_left_side_door = [-178.0, 95.0, -99.0, 185.5, 88.0, -5.0]
+		self.place_arm_left_side_door_2 = [-178.7, 97.3, -116.7, 182.7, 85.9, -1.1]
+		self.place_arm_left_side_door_3 = [-176.0, 65.7, -63.8, 185.5, 130.3, 0.7]
 
 
 
@@ -318,6 +322,15 @@ class ArmUfactory(Node):
 		rclpy.spin_until_future_complete(self, self.future)
 
 		print('gripper_speed')
+
+		# # Collision sensitivity varia entre 0 e 5
+
+		# set_collisiton_sensitivity_req= SetInt16.Request()
+		# set_collisiton_sensitivity_req.data = 1000
+		# self.future = self.set_collisiton_sensitivity_client.call_async(set_collisiton_sensitivity_req)
+		# rclpy.spin_until_future_complete(self, self.future)
+
+		# print('Collision_sensitivity')
 
 	def deg_to_rad(self, deg):
 		rad = [deg[0] * math.pi / 180,
@@ -616,7 +629,7 @@ class ArmUfactory(Node):
 	def go_right(self, value):
 		if self.estado_tr == 0:
 			self.move_line_tool_req.pose = [0.0, value, 0.0, 0.0, 0.0, 0.0]
-			self.move_line_tool_req.speed = 100.0
+			self.move_line_tool_req.speed = 120.0
 			self.move_line_tool_req.acc = 500.0
 			self.move_line_tool_req.wait = True
 			self.move_line_tool_req.timeout = 4.0
@@ -2021,6 +2034,35 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def open_door_pull_handler_left_2(self):
+
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_left_side_door_2)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		if self.estado_tr == 1:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_left_side_door_3)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def open_door_pull_handler_left(self):
 		if self.estado_tr == 0:
 			print('a')
@@ -2033,26 +2075,6 @@ class ArmUfactory(Node):
 			print('b')
 
 		elif self.estado_tr == 1:
-			print('a')
-			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_left_side_door_2)
-			self.joint_values_req.speed = 0.3
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('b')
-
-		elif self.estado_tr == 2:
-			print('a')
-			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_left_side_door_3)
-			self.joint_values_req.speed = 0.3
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('b')
-
-		elif self.estado_tr == 3:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -2279,6 +2301,8 @@ class ArmUfactory(Node):
 			self.open_door_pull_handler_right()
 		elif self.next_arm_movement == "open_door_pull_handler_left":
 			self.open_door_pull_handler_left()
+		elif self.next_arm_movement == "open_door_pull_handler_left_2":
+			self.open_door_pull_handler_left_2()
 		
 		
 
