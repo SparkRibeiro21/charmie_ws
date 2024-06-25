@@ -1340,7 +1340,8 @@ class RestaurantMain():
             
 
                 while True:
-                    self.open_house_door_pull()
+                    self.open_house_door_push()
+                    # self.open_house_door_pull()
                     # self.close_dishwasher_door()
                     # self.open_washing_machine_door()
                     # self.open_cabinet_door()
@@ -2083,7 +2084,6 @@ class RestaurantMain():
             return center_image_near_err
         else:
             return -1.0
-
 
     def open_washing_machine_door(self):
 
@@ -4705,6 +4705,27 @@ class RestaurantMain():
                             
                             ### NAVEGAR PARA O HANDLER
 
+                            if door_z > 0.0 and handler_z > 0.0:
+
+                                center_door = abs(door_z)/1000 - abs(handler_z)/1000
+                                center_door = abs(center_door) - 0.15
+                            
+                            elif handler_z > 0.0 and door_z < 0.0:
+
+                                center_door = abs(door_z)/1000 + abs(handler_z)/1000
+                                center_door = abs(center_door) - 0.15
+
+                            elif handler_z < 0.0 and door_z > 0.0:
+
+                                center_door = abs(door_z)/1000 + abs(handler_z)/1000
+                                center_door = abs(center_door) - 0.15
+
+                            elif door_z < 0.0 and handler_z < 0.0:
+                                center_door = abs(door_z)/1000 - abs(handler_z)/1000
+                                center_door = abs(center_door) - 0.15
+
+                            print('Mais tarde tenho de me mover em: ', center_door)
+
                             navigate_x = ( abs(handler_x) - 850.0 ) / 1000
 
                             print('I must navigate for: ', navigate_x, 'm to be at 0.7m from door')
@@ -4859,59 +4880,45 @@ class RestaurantMain():
                             time.sleep(1)
 
                             arm_value = Float32()
-                            arm_value.data = -55.0
+                            arm_value.data = -60.0
                             self.node.arm_value_publisher.publish(arm_value)
                             print(arm_value)                    
                             self.set_arm(command="go_right", wait_for_end_of=True)
                             self.set_rgb(command=GREEN+BLINK_QUICK)
                             time.sleep(1)
 
-                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.05, adjust_direction=0.0, wait_for_end_of=True)
+                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.15, adjust_direction=0.0, wait_for_end_of=True)
                             self.set_rgb(command=GREEN+BLINK_QUICK)
                             time.sleep(1)
 
-                            self.set_arm(command="get_arm_position", wait_for_end_of=True)
-                            self.set_rgb(command=GREEN+BLINK_QUICK)
-                            time.sleep(1)
+                            # self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                            # self.set_rgb(command=GREEN+BLINK_QUICK)
+                            # time.sleep(1)
 
-                            arm_value.data = 55.0
+                            arm_value.data = 60.0
                             self.node.arm_value_publisher.publish(arm_value)
                             print(arm_value)                    
                             self.set_arm(command="go_left", wait_for_end_of=True)
                             self.set_rgb(command=GREEN+BLINK_QUICK)
                             time.sleep(1)
-                        
-                            # set_pose_arm.pose[:] = array('f')
 
-                            # # Set the pose values
-                            # set_pose_arm.pose.append(self.node.arm_current_pose[0])
-                            # set_pose_arm.pose.append(self.node.arm_current_pose[1])
-                            # set_pose_arm.pose.append(self.node.arm_current_pose[2])
-                            # set_pose_arm.pose.append(math.radians(-29.6)) #### COLOCAR GARRA DE LADO
-                            # set_pose_arm.pose.append(math.radians(87.7))
-                            # set_pose_arm.pose.append(math.radians(150.7))
-
-                            # # Publish the pose
-                            # self.node.arm_set_pose_publisher.publish(set_pose_arm)
-                            # print('Desired pose:', set_pose_arm)
-
-                            # self.set_arm(command="change_position_arm", wait_for_end_of=True)
+                            # arm_value.data = -150.0
+                            # self.node.arm_value_publisher.publish(arm_value)
+                            # print(arm_value)                    
+                            # self.set_arm(command="go_back", wait_for_end_of=True)
                             # self.set_rgb(command=GREEN+BLINK_QUICK)
                             # time.sleep(1)
 
-                            arm_value.data = -150.0
-                            self.node.arm_value_publisher.publish(arm_value)
-                            print(arm_value)                    
-                            self.set_arm(command="go_back", wait_for_end_of=True)
+                            self.set_arm(command="open_door_push", wait_for_end_of=True)
                             self.set_rgb(command=GREEN+BLINK_QUICK)
                             time.sleep(1)
-    
 
                             print('left_side:', left_side)
                             print('right_side:', right_side)
 
                             if right_side == True:
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=self.node.house_door_width / 2, adjust_direction=90.0, wait_for_end_of=True)
+                                print('I must navigate to the left in: ', center_door)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=center_door, adjust_direction=90.0, wait_for_end_of=True)
                                 self.set_rgb(command=GREEN+BLINK_QUICK)
                                 time.sleep(1)
 
@@ -4921,7 +4928,8 @@ class RestaurantMain():
                                 time.sleep(1)
                             
                             elif left_side == True:
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=self.node.house_door_width / 2, adjust_direction=-90.0 + 360.0, wait_for_end_of=True)
+                                print('I must navigate to the right in: ', center_door)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=center_door, adjust_direction=-90.0 + 360.0, wait_for_end_of=True)
                                 self.set_rgb(command=GREEN+BLINK_QUICK)
                                 time.sleep(1)
 

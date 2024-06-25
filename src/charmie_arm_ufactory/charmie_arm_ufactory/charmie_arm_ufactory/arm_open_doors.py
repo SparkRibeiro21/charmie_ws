@@ -245,6 +245,8 @@ class ArmUfactory(Node):
 		self.place_arm_left_side_door_2 = [-178.7, 97.3, -116.7, 182.7, 85.9, -1.1]
 		self.place_arm_left_side_door_3 = [-176.0, 65.7, -63.8, 185.5, 130.3, 0.7]
 
+		self.arm_front_of_robot_oriented_front = [-191.1, 74.9, -124.5, 174.4, 43.1, -1.8]
+
 
 
 
@@ -2034,6 +2036,26 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+
+	def open_door_push(self):
+
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_front_of_robot_oriented_front)
+			self.joint_values_req.speed = 0.3
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def open_door_pull_handler_left_2(self):
 
 		if self.estado_tr == 0:
@@ -2046,7 +2068,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 			print('b')
 
-		if self.estado_tr == 1:
+		elif self.estado_tr == 1:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.place_arm_left_side_door_3)
 			self.joint_values_req.speed = 0.3
@@ -2303,9 +2325,8 @@ class ArmUfactory(Node):
 			self.open_door_pull_handler_left()
 		elif self.next_arm_movement == "open_door_pull_handler_left_2":
 			self.open_door_pull_handler_left_2()
-		
-		
-
+		elif self.next_arm_movement == "open_door_push":
+			self.open_door_push()
 		else:
 			self.wrong_movement_received = True
 			print('Wrong Movement Received - ', self.next_arm_movement)	
