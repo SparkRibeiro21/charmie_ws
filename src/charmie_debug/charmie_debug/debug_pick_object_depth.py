@@ -548,22 +548,8 @@ class RestaurantMain():
 
                 # your code here ...
 
-                # self.detected_people = det_people
-                # if self.detected_people.num_person > 0:
-
-
-                overall = self.get_bag_pick_cordinates() #half_image_zero_or_near_percentage=0.4, full_image_near_percentage=0.1, near_max_dist=800)
-                      
-                
-
-                if overall: 
-                    # print("STOP", overall, zeros, round(zeros_err,2), near, round(near_err,2))
-                    print("STOP")
-                else:
-                    # print("GO", overall, zeros, round(zeros_err,2), near, round(near_err,2))
-                    print("GO")
-                        
-                
+                bag_coords = self.get_bag_pick_cordinates() #half_image_zero_or_near_percentage=0.4, full_image_near_percentage=0.1, near_max_dist=800)
+                print(bag_coords)
                 
                 # next state
                 # self.state = Final_State
@@ -582,101 +568,71 @@ class RestaurantMain():
 
     def get_bag_pick_cordinates(self):
 
-        overall = False
-        DEBUG = True
+        DEBUG = False
+        f_coords = []
 
         if self.node.first_depth_hand_image_received:
             current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
             height, width = current_frame_depth_head.shape
-            current_frame_depth_head_half = current_frame_depth_head[height//4:height,:]
             
-            current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0
+            current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0 # remove the robot from the image
 
-            # current_frame_depth_head[int(0.90*height):height,int(0.28*width):int(0.72*width)] = 0
-            # FOR THE FULL IMAGE
-
-            tot_pixeis = height*width 
             mask_zero = (current_frame_depth_head == 0)
             mask_near = (current_frame_depth_head != 0) & (current_frame_depth_head >= self.top_bag_dist) & (current_frame_depth_head <= self.floor_dist)
 
-            # robot_mask = (current_frame_depth_head_half)
+            blank_image_bw = np.zeros((height,width), np.uint8)
+            blank_image_bw2 = np.zeros((height,width), np.uint8)
+            blank_image_bw[mask_near] = [255]
+
+            contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+            c_areas = []
+            for a in contours: # create list with area size 
+                # print(cv2.contourArea(a))
+                c_areas.append(cv2.contourArea(a))
+
+            cnt = contours[c_areas.index(max(c_areas))] # extracts the largest area 
+            # print(c_areas.index(max(c_areas)))
+            
+            M = cv2.moments(cnt) # calculates centroide
+            cx = int(M['m10']/M['m00'])
+            cy = int(M['m01']/M['m00'])
+
+            [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
+            theta = -math.atan2(vy,vx)
+
+            f_coords.append(cx)
+            f_coords.append(cy)
+            f_coords.append(theta)
             
             if DEBUG:
-                mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug
+                mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug, floor level
                 blank_image = np.zeros((height,width,3), np.uint8)
                 
                 blank_image[mask_zero] = [255,255,255]
                 blank_image[mask_near] = [255,0,0]
                 blank_image[mask_remaining] = [0,0,255]
 
-                blank_image_bw = np.zeros((height,width), np.uint8)
-                blank_image_bw2 = np.zeros((height,width), np.uint8)
-                # blank_image_bw[mask_zero] = [0]
-                blank_image_bw[mask_near] = [255]
-                # blank_image_bw[mask_remaining] = [0]
+                cv2.drawContours(blank_image, [cnt], 0, (0, 255, 0), 3) 
+                cv2.drawContours(blank_image_bw2, [cnt], 0, (255), thickness=cv2.FILLED) 
+                cv2.circle(blank_image, (cx, cy), 10, (0, 255, 0), -1)
+                cv2.circle(blank_image_bw2, (cx, cy), 10, (128), -1)
 
-            pixel_count_zeros = np.count_nonzero(mask_zero)
-            pixel_count_near = np.count_nonzero(mask_near)
+                xi,yi,w,h = cv2.boundingRect(cnt)
+                cv2.rectangle(blank_image,(xi,yi),(xi+w,yi+h), (255, 0, 255),2)
+                cv2.rectangle(blank_image_bw2,(xi,yi),(xi+w,yi+h),(128),2)
 
+                rows,cols = blank_image_bw2.shape[:2]
+                lefty = int((-x*vy/vx) + y)
+                righty = int(((cols-x)*vy/vx)+y)
+                cv2.line(blank_image,(cols-1,righty),(0,lefty),(255, 0, 255),2)
+                cv2.line(blank_image_bw2,(cols-1,righty),(0,lefty),(128),2)
 
-            contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+                print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
+                print("bag centroide =", cx, cy)
 
-            # print(contours)
-            c_areas = []
-            for a in contours:
-                # print(cv2.contourArea(a))
-                c_areas.append(cv2.contourArea(a))
-
-            cnt = contours[c_areas.index(max(c_areas))]
-            M = cv2.moments(cnt)
-            cx = int(M['m10']/M['m00'])
-            cy = int(M['m01']/M['m00'])
-            
-            
-            
-            # print(c_areas.index(max(c_areas)))
-            
-            cv2.drawContours(blank_image, [cnt], 0, (0, 255, 0), 3) 
-            cv2.drawContours(blank_image_bw2, [cnt], 0, (255), thickness=cv2.FILLED) 
-            cv2.circle(blank_image_bw2, (cx, cy), 10, (128), -1)
-            x,y,w,h = cv2.boundingRect(cnt)
-            cv2.rectangle(blank_image_bw2,(x,y),(x+w,y+h),(128),2)
-            rows,cols = blank_image_bw2.shape[:2]
-            [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
-            theta = -math.atan2(vy,vx)
-            print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
-            lefty = int((-x*vy/vx) + y)
-            righty = int(((cols-x)*vy/vx)+y)
-            cv2.line(blank_image_bw2,(cols-1,righty),(0,lefty),(128),2)
-
-
-
-
-            # masked_img = cv2.bitwise_and(blank_image_bw, t)
- 
-
-            """
-            # FOR THE BOTTOM HALF OF THE IMAGE
-
-            mask_zero_half = (current_frame_depth_head_half == 0)
-            mask_near_half = (current_frame_depth_head_half > 0) & (current_frame_depth_head_half <= near_max_dist)
-            
-            if DEBUG:
-                mask_remaining_half = (current_frame_depth_head_half > near_max_dist) # just for debug
-                blank_image_half = np.zeros((height//2,width,3), np.uint8)
-                blank_image_half[mask_zero_half] = [255,255,255]
-                blank_image_half[mask_near_half] = [255,0,0]
-                blank_image_half[mask_remaining_half] = [0,0,255]
-                    
-            pixel_count_zeros_half = np.count_nonzero(mask_zero_half)
-            pixel_count_near_half = np.count_nonzero(mask_near_half)
-            """
-
-            if DEBUG:
-                # cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
                 cv2.imshow("New Img Distance Inspection", blank_image)
                 cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
-                # cv2.waitKey(10)
 
                 k = cv2.waitKey(1)
                 if k == ord('w'):
@@ -690,28 +646,4 @@ class RestaurantMain():
 
                 print(self.floor_dist, self.top_bag_dist)
 
-            half_image_zero_or_near = False
-            half_image_zero_or_near_err = 0.0
-            
-            full_image_near = False
-            full_image_near_err = 0.0
-
-
-            # half_image_zero_or_near_err = (pixel_count_zeros_half+pixel_count_near_half)/(tot_pixeis//2)
-            # if half_image_zero_or_near_err >= half_image_zero_or_near_percentage:
-            #     half_image_zero_or_near = True
-            
-            # full_image_near_err = pixel_count_near/tot_pixeis
-            # if full_image_near_err >= full_image_near_percentage:
-            #     full_image_near = True
-            
-            
-            if half_image_zero_or_near or full_image_near:
-                overall = True
-
-            # just for debug
-            # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
-            # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
-        
-        return overall
-        
+        return f_coords
