@@ -12,6 +12,7 @@ from tkinter import messagebox, ttk
 from PIL import Image, ImageTk  # Make sure you have Pillow installed
 
 # Define target versions
+path_to_ws="/home/martins/Desktop/Charmie/charmie_ws"
 ubuntu_target = '22.04'
 python_version = "3.10.14"
 ultralytics_target = '8.2.20'
@@ -100,15 +101,70 @@ def install_ubuntu22():
     return check_ubuntu_version(ubuntu_target)
 
 def install_ros2():
+    global path_to_ws
     subprocess.run(['sudo', 'apt', 'install', 'software-properties-common'])
     subprocess.run(['sudo', 'add-apt-repository', 'universe'])
     subprocess.run(['sudo', 'apt', 'update', '&&', 'sudo', 'apt', 'install', 'curl', 'gnupg', 'lsb-release', '-y'])
     subprocess.run(['sudo', 'curl', '-sSL', 'https://raw.githubusercontent.com/ros/rosdistro/master/ros.key', '-o', '/usr/share/keyrings/ros-archive-keyring.gpg'])
     subprocess.run(['sudo', 'apt', 'update'])
     subprocess.run(['sudo', 'apt', 'upgrade'])
-    subprocess.run(['sudo', 'apt', 'install', 'ros-humble-desktop'])
-    subprocess.run(['echo', '"source /opt/ros/humble/setup.bash"', '>>', '~/.bashrc'])
+    subprocess.run(['sudo', 'apt', 'install', 'ros-humble-desktop','-y'])
+    #subprocess.run(['echo', '"source /opt/ros/humble/setup.bash"', '>>', '~/.bashrc'])
+    #RealSense
+    subprocess.run(['sudo', 'apt', 'install','ros-humble-realsense2*','-y'])
+    subprocess.run(['sudo', 'apt', 'install','ros-humble-realsense2-*','-y'])
+    #subprocess.run(['pip', 'install', 'ros-humble-moveit'])
+    #ROS2 pkgs
+    subprocess.run(['sudo', 'apt', 'install', 'ros-humble-gazebo-ros','-y'])
+    subprocess.run(['sudo', 'apt', 'install', 'ros-humble-camera-info-manager','-y'])
+    subprocess.run(['sudo', 'apt', 'install', 'ros-humble-control-msgs','-y'])
+    subprocess.run(['sudo', 'apt', 'install', 'ros-humble-hardware-interface','-y'])
+    subprocess.run(['sudo', 'apt', 'install', 'ros-humble-controller-manager-msgs','-y'])
+    subprocess.run(['sudo', 'apt', 'install', 'ros-humble-control-toolbox','-y'])
+    subprocess.run(['sudo', 'apt', 'install', 'ros-humble-controller-manager','-y'])
+    subprocess.run(['sudo', 'apt', 'install', 'ros-humble-moveit','-y'])
+    #subprocess.run(['pip', 'install', 'ros-foxy-xacro', 'ros-foxy-joint-state-publisher-gui'])
+    #subprocess.run(['pip', 'install', 'ros-foxy-gazebo-ros-pkgs'])
+    #subprocess.run(['pip', 'install', 'ros-foxy-ros2-control', 'ros-foxy-ros2-controllers', 'ros-foxy-gazebo-ros2-control'])
+    #colcon
+    #sudo apt install python3-colcon-common-extensions -y
+    subprocess.run(['sudo', 'apt', 'install', 'python3-colcon-common-extensions', '-y'])
+    #subprocess.run(['sudo', 'echo', '"source', '/usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash"', '>>', '~/.bashrc'])
+    bashrc_path = os.path.expanduser('~/.bashrc')
+    with open(bashrc_path, 'a') as file:
+        # Write the new line to the end of the file
+        file.write('\nsource /opt/ros/humble/setup.bash\n')
+        file.write('\nsource /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash\n')
+        file.write(f'\nsource {path_to_ws}/install/setup.bash\n')
+    subprocess.run(['cd', f'{path_to_ws}', '&&', 'colcon', 'build'],shell=True)
     return True
+
+def install_requirements():
+    subprocess.run(['pip', 'install', 'pyserial'])
+    subprocess.run(['pip', 'install', 'pyPS4Controller'])
+    subprocess.run(['pip', 'install', 'dynamixel-sdk'])
+    subprocess.run(['pip', 'install', 'keras'])
+    subprocess.run(['pip', 'install', 'SpeechRecognition'])
+    subprocess.run(['pip', 'install', 'pulsectl'])
+    subprocess.run(['sudo', 'apt-get', 'install', 'portaudio19-dev', '-y'])
+    subprocess.run(['pip', 'install', 'PyAudio'])
+    subprocess.run(['sudo', 'apt', 'update'])
+    subprocess.run(['sudo', 'apt', 'install', 'ffmpeg', '-y'])
+    subprocess.run(['pip', 'install', 'face_recognition'])
+    subprocess.run(['pip', 'install', 'TTS'])
+    subprocess.run(['pip', 'install', 'pydub'])
+    subprocess.run(['pip', 'install', 'pygame'])
+    
+    #LLM
+    subprocess.run(['pip', 'install', 'openai'])
+    subprocess.run(['pip', 'install', 'pymupdf'])
+    
+    #AUDIO
+    subprocess.run(['pip', 'install', 'openai-whisper'])
+    subprocess.run(['pip', 'install', 'sounddevice'])
+
+
+
 
 def install_ultralytics():
     subprocess.run(['pip', 'install', f'ultralytics=={ultralytics_target}'])
@@ -125,7 +181,7 @@ def check_all_versions():
         "Ubuntu": check_ubuntu_version(ubuntu_target),
         "Python": check_python_version(python_version),
         "Ultralytics": check_ultralytics_version(ultralytics_target),
-        #"TensorFlow": check_tensorflow_version(tensorflow_target),
+        "TensorFlow": check_tensorflow_version(tensorflow_target),
         "Graphic Drivers": check_graphic_drivers(),
         "PyTorch": check_pytorch_version(pytorch_target)
     }
@@ -163,12 +219,17 @@ def create_gui():
                 install_pip()
             if var_vscode.get():
                 install_vscode()
+            if var_requi.get():
+                install_requirements()
+            if var_ultralytics.get():
+                install_ultralytics()
+            if var_pytorch.get() :
+                install_pytorch()
+            if var_tensor.get():
+                subprocess.run(['pip', 'install', f'tensorflow=={tensorflow_target}'], text=True) 
             if var_ros2.get():
                 install_ros2()
-            if var_ultralytics.get() and not checks["Ultralytics"]:
-                install_ultralytics()
-            if var_pytorch.get() and not checks["PyTorch"]:
-                install_pytorch()
+            
             messagebox.showinfo("Installation", "Selected installations completed!")
             update_check_status()
     
@@ -181,8 +242,10 @@ def create_gui():
         var_python = tk.BooleanVar()
         var_pip = tk.BooleanVar()
         var_vscode = tk.BooleanVar()
+        var_requi = tk.BooleanVar()
         var_ros2 = tk.BooleanVar()
         var_ultralytics = tk.BooleanVar()
+        var_tensor = tk.BooleanVar()
         var_pytorch = tk.BooleanVar()
 
         ttk.Label(frame, text="System Setup", font=("Helvetica", 16)).pack(anchor=tk.W, pady=10)
@@ -198,10 +261,12 @@ def create_gui():
         ttk.Checkbutton(frame, text="Install Python", variable=var_python).pack(anchor=tk.W)
         ttk.Checkbutton(frame, text="Install Pip", variable=var_pip).pack(anchor=tk.W)
         ttk.Checkbutton(frame, text="Install VSCode", variable=var_vscode).pack(anchor=tk.W)
-        ttk.Checkbutton(frame, text="Install ROS2", variable=var_ros2).pack(anchor=tk.W)
         ttk.Checkbutton(frame, text="Install Ultralytics", variable=var_ultralytics).pack(anchor=tk.W)
+        ttk.Checkbutton(frame, text="Install Tensor", variable=var_tensor).pack(anchor=tk.W)
+        ttk.Checkbutton(frame, text="Install Requirements", variable=var_requi).pack(anchor=tk.W)
         ttk.Checkbutton(frame, text="Install PyTorch", variable=var_pytorch).pack(anchor=tk.W)
-
+        ttk.Checkbutton(frame, text="Install ROS2", variable=var_ros2).pack(anchor=tk.W)
+        
         ttk.Button(frame, text="Check Versions", command=update_check_status).pack(pady=5)
         ttk.Button(frame, text="Install Selected", command=install_selected).pack(pady=5)
 
