@@ -135,78 +135,6 @@ class TestNode(Node):
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
 
-        """
-        current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
-        current_frame_draw = current_frame.copy()
-
-
-        # img = [0:720, 0:1280]
-        corr_image = False
-        thresh_h = 50
-        thresh_v = 200
-
-        if self.detected_objects.num_objects > 0:
-
-            x_min = 1280
-            x_max = 0
-            y_min = 720
-            y_max = 0
-
-            for object in self.detected_objects.objects:      
-            
-                if object.object_class == "Dishes":
-                    corr_image = True
-
-                    if object.box_top_left_x < x_min:
-                        x_min = object.box_top_left_x
-                    if object.box_top_left_x+object.box_width > x_max:
-                        x_max = object.box_top_left_x+object.box_width
-
-                    if object.box_top_left_y < y_min:
-                        y_min = object.box_top_left_y
-                    if object.box_top_left_y+object.box_height > y_max:
-                        y_max = object.box_top_left_y+object.box_height
-
-                    start_point = (object.box_top_left_x, object.box_top_left_y)
-                    end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
-                    cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
-
-                    cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
-                    
-            
-            for object in self.detected_objects.objects:      
-                
-                if object.object_class == "Dishes":
-                
-                    if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
-                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
-                    else:
-                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
-                        
-                    # just to test for the "serve the breakfast" task...
-                    aux_name = object.object_name
-                    if object.object_name == "Fork" or object.object_name == "Knife":
-                        aux_name = "Spoon"
-                    elif object.object_name == "Plate" or object.object_name == "Cup":
-                        aux_name = "Bowl"
-
-                    text_size, _ = cv2.getTextSize(f"{aux_name}", cv2.FONT_HERSHEY_DUPLEX, 1, 1)
-                    text_w, text_h = text_size
-                    cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
-                    cv2.putText(current_frame_draw, f"{aux_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1, cv2.LINE_AA)
-
-        if corr_image:
-            # current_frame_draw = current_frame_draw[x_min:y_min, x_max,y_max]
-            # img = current_frame_draw[y_min:y_max, x_min,x_max]
-            cv2.imshow("c", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)])
-            cv2.waitKey(1)
-        # cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
-        # cv2.waitKey(10)
-
-        # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
-        # cv2.waitKey(10)
-        """
-
 
     #### FACE SERVER FUNCTIONS #####
     def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
@@ -466,6 +394,7 @@ class RestaurantMain():
         self.node = node
 
         self.floor_dist=600
+        self.top_bag_dist=350
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -668,19 +597,63 @@ class RestaurantMain():
 
             tot_pixeis = height*width 
             mask_zero = (current_frame_depth_head == 0)
-            mask_near = (current_frame_depth_head > 0) & (current_frame_depth_head <= self.floor_dist)
+            mask_near = (current_frame_depth_head != 0) & (current_frame_depth_head >= self.top_bag_dist) & (current_frame_depth_head <= self.floor_dist)
 
             # robot_mask = (current_frame_depth_head_half)
             
             if DEBUG:
                 mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug
                 blank_image = np.zeros((height,width,3), np.uint8)
+                
                 blank_image[mask_zero] = [255,255,255]
                 blank_image[mask_near] = [255,0,0]
                 blank_image[mask_remaining] = [0,0,255]
 
+                blank_image_bw = np.zeros((height,width), np.uint8)
+                blank_image_bw2 = np.zeros((height,width), np.uint8)
+                # blank_image_bw[mask_zero] = [0]
+                blank_image_bw[mask_near] = [255]
+                # blank_image_bw[mask_remaining] = [0]
+
             pixel_count_zeros = np.count_nonzero(mask_zero)
             pixel_count_near = np.count_nonzero(mask_near)
+
+
+            contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+            # print(contours)
+            c_areas = []
+            for a in contours:
+                # print(cv2.contourArea(a))
+                c_areas.append(cv2.contourArea(a))
+
+            cnt = contours[c_areas.index(max(c_areas))]
+            M = cv2.moments(cnt)
+            cx = int(M['m10']/M['m00'])
+            cy = int(M['m01']/M['m00'])
+            
+            
+            
+            # print(c_areas.index(max(c_areas)))
+            
+            cv2.drawContours(blank_image, [cnt], 0, (0, 255, 0), 3) 
+            cv2.drawContours(blank_image_bw2, [cnt], 0, (255), thickness=cv2.FILLED) 
+            cv2.circle(blank_image_bw2, (cx, cy), 10, (128), -1)
+            x,y,w,h = cv2.boundingRect(cnt)
+            cv2.rectangle(blank_image_bw2,(x,y),(x+w,y+h),(128),2)
+            rows,cols = blank_image_bw2.shape[:2]
+            [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
+            theta = -math.atan2(vy,vx)
+            print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
+            lefty = int((-x*vy/vx) + y)
+            righty = int(((cols-x)*vy/vx)+y)
+            cv2.line(blank_image_bw2,(cols-1,righty),(0,lefty),(128),2)
+
+
+
+
+            # masked_img = cv2.bitwise_and(blank_image_bw, t)
+ 
 
             """
             # FOR THE BOTTOM HALF OF THE IMAGE
@@ -702,15 +675,20 @@ class RestaurantMain():
             if DEBUG:
                 # cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
                 cv2.imshow("New Img Distance Inspection", blank_image)
+                cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
                 # cv2.waitKey(10)
 
                 k = cv2.waitKey(1)
-                if k == ord('+'):
+                if k == ord('w'):
                     self.floor_dist += 10
-                if k == ord('-'):
+                if k == ord('q'):
                     self.floor_dist -= 10
+                if k == ord('s'):
+                    self.top_bag_dist += 10
+                if k == ord('a'):
+                    self.top_bag_dist -= 10
 
-                print(self.floor_dist)
+                print(self.floor_dist, self.top_bag_dist)
 
             half_image_zero_or_near = False
             half_image_zero_or_near_err = 0.0
