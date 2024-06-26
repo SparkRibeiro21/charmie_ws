@@ -1114,7 +1114,8 @@ class RestaurantMain():
         
         # VARS ...
         self.state = 0
-        self.look_right = [-90, -40]
+        self.look_right = [-60, -30]
+        self.look_left = [60, -30]
         self.look_down = [0, -50]
         self.look_navigation= [0, -30]
         self.look_forward = [0, 0]
@@ -1340,7 +1341,9 @@ class RestaurantMain():
             
 
                 while True:
-                    self.open_house_door_push()
+                    self.close_house_door_push_left_side()
+                    # self.close_house_door_push_right_side()
+                    # self.open_house_door_push()
                     # self.open_house_door_pull()
                     # self.close_dishwasher_door()
                     # self.open_washing_machine_door()
@@ -4828,13 +4831,24 @@ class RestaurantMain():
                         
                             set_pose_arm.pose[:] = array('f')
 
-                            # Set the pose values
-                            set_pose_arm.pose.append(self.node.arm_current_pose[0])
-                            set_pose_arm.pose.append(self.node.arm_current_pose[1])
-                            set_pose_arm.pose.append(self.node.arm_current_pose[2])
-                            set_pose_arm.pose.append(math.radians(-29.6)) #### COLOCAR GARRA DE LADO
-                            set_pose_arm.pose.append(math.radians(87.7))
-                            set_pose_arm.pose.append(math.radians(150.7))
+                            if right_side == True:
+
+                                # Set the pose values
+                                set_pose_arm.pose.append(self.node.arm_current_pose[0])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[1])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                                set_pose_arm.pose.append(math.radians(-29.6)) #### COLOCAR GARRA DE LADO
+                                set_pose_arm.pose.append(math.radians(87.7))
+                                set_pose_arm.pose.append(math.radians(150.7))
+
+                            elif left_side == True:
+                                # Set the pose values
+                                set_pose_arm.pose.append(self.node.arm_current_pose[0])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[1])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                                set_pose_arm.pose.append(math.radians(42.2)) #### COLOCAR GARRA DE LADO SEM BATER NA PORTA
+                                set_pose_arm.pose.append(math.radians(-87.3))
+                                set_pose_arm.pose.append(math.radians(-41.8))
 
                             # Publish the pose
                             self.node.arm_set_pose_publisher.publish(set_pose_arm)
@@ -4863,44 +4877,91 @@ class RestaurantMain():
                         
                             set_pose_arm.pose[:] = array('f')
 
-                            # Set the pose values
-                            set_pose_arm.pose.append(self.node.arm_current_pose[0])
-                            set_pose_arm.pose.append(self.node.arm_current_pose[1])
-                            set_pose_arm.pose.append(self.node.arm_current_pose[2])
-                            set_pose_arm.pose.append(math.radians(-67.0)) #### COLOCAR GARRA DE LADO
-                            set_pose_arm.pose.append(math.radians(81.9))
-                            set_pose_arm.pose.append(math.radians(105.3))
+                            if right_side == True:
 
-                            # Publish the pose
-                            self.node.arm_set_pose_publisher.publish(set_pose_arm)
-                            print('Desired pose:', set_pose_arm)
+                                # Set the pose values
+                                set_pose_arm.pose.append(self.node.arm_current_pose[0])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[1])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                                set_pose_arm.pose.append(math.radians(-67.0)) #### COLOCAR GARRA DE LADO
+                                set_pose_arm.pose.append(math.radians(81.9))
+                                set_pose_arm.pose.append(math.radians(105.3))
 
-                            self.set_arm(command="change_position_arm", wait_for_end_of=True)
-                            self.set_rgb(command=GREEN+BLINK_QUICK)
-                            time.sleep(1)
+                                # Publish the pose
+                                self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                                print('Desired pose:', set_pose_arm)
 
-                            arm_value = Float32()
-                            arm_value.data = -60.0
-                            self.node.arm_value_publisher.publish(arm_value)
-                            print(arm_value)                    
-                            self.set_arm(command="go_right", wait_for_end_of=True)
-                            self.set_rgb(command=GREEN+BLINK_QUICK)
-                            time.sleep(1)
+                                self.set_arm(command="change_position_arm", wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_QUICK)
+                                time.sleep(1)
 
-                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.15, adjust_direction=0.0, wait_for_end_of=True)
-                            self.set_rgb(command=GREEN+BLINK_QUICK)
-                            time.sleep(1)
+                                arm_value = Float32()
+                                arm_value.data = -60.0
+                                self.node.arm_value_publisher.publish(arm_value)
+                                print(arm_value)                    
+                                self.set_arm(command="go_right", wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_QUICK)
+                                time.sleep(1)
 
-                            # self.set_arm(command="get_arm_position", wait_for_end_of=True)
-                            # self.set_rgb(command=GREEN+BLINK_QUICK)
-                            # time.sleep(1)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.15, adjust_direction=0.0, wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_QUICK)
+                                time.sleep(1)
 
-                            arm_value.data = 60.0
-                            self.node.arm_value_publisher.publish(arm_value)
-                            print(arm_value)                    
-                            self.set_arm(command="go_left", wait_for_end_of=True)
-                            self.set_rgb(command=GREEN+BLINK_QUICK)
-                            time.sleep(1)
+                                # self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                                # self.set_rgb(command=GREEN+BLINK_QUICK)
+                                # time.sleep(1)
+
+                                arm_value.data = 60.0
+                                self.node.arm_value_publisher.publish(arm_value)
+                                print(arm_value)                    
+                                self.set_arm(command="go_left", wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_QUICK)
+                                time.sleep(1)
+
+                                self.set_arm(command="open_door_push", wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_QUICK)
+                                time.sleep(1)
+
+
+                            elif left_side == True:
+                                # Set the pose values
+                                set_pose_arm.pose.append(self.node.arm_current_pose[0])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[1])
+                                set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                                set_pose_arm.pose.append(math.radians(66.6)) #### COLOCAR GARRA DE LADO SEM BATER NA PORTA
+                                set_pose_arm.pose.append(math.radians(-81.9))
+                                set_pose_arm.pose.append(math.radians(-74.4))
+
+                                # Publish the pose
+                                self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                                print('Desired pose:', set_pose_arm)
+
+                                self.set_arm(command="change_position_arm", wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_QUICK)
+                                time.sleep(1)
+
+                                arm_value = Float32()
+                                arm_value.data = 50.0
+                                self.node.arm_value_publisher.publish(arm_value)
+                                print(arm_value)                    
+                                self.set_arm(command="go_right", wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_QUICK)
+                                time.sleep(1)
+
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.15, adjust_direction=0.0, wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_QUICK)
+                                time.sleep(1)
+
+                                # self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                                # self.set_rgb(command=GREEN+BLINK_QUICK)
+                                # time.sleep(1)
+
+                                arm_value.data = -50.0
+                                self.node.arm_value_publisher.publish(arm_value)
+                                print(arm_value)                    
+                                self.set_arm(command="go_left", wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_QUICK)
+                                time.sleep(1)
 
                             # arm_value.data = -150.0
                             # self.node.arm_value_publisher.publish(arm_value)
@@ -4909,9 +4970,9 @@ class RestaurantMain():
                             # self.set_rgb(command=GREEN+BLINK_QUICK)
                             # time.sleep(1)
 
-                            self.set_arm(command="open_door_push", wait_for_end_of=True)
-                            self.set_rgb(command=GREEN+BLINK_QUICK)
-                            time.sleep(1)
+                                self.set_arm(command="open_door_push_left", wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_QUICK)
+                                time.sleep(1)
 
                             print('left_side:', left_side)
                             print('right_side:', right_side)
@@ -4951,7 +5012,243 @@ class RestaurantMain():
                         while True:
                             pass
                                 
+    def close_house_door_push_right_side(self):
+        if self.node.first_depth_image_received:
+            print('bbb')
 
+            self.set_neck(position=self.look_right, wait_for_end_of=True)
+
+            current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
+
+            if hasattr(self.node.detected_doors, 'image_rgb'):
+                head_image = self.node.detected_doors.image_rgb
+                print('ccc')
+                
+                if hasattr(self.node.detected_doors, 'objects'):
+                    print('ddd')
+                    
+                    if self.node.detected_doors.objects:
+                        # print(self.node.detected_doors.objects)
+                        print('eee')
+                        # set_pose_arm = ListOfFloats()
+
+
+                        objects = []
+                        seen_names = set()
+
+                        finished_detections = False
+
+                        list_of_neck_position_search = [[0, 0], [10, 0], [-10, 0], [0, -10], [0, 10]]
+                        self.activate_yolo_objects(activate_doors=True, activate_doors_hand = True)
+                        while not finished_detections:
+                            
+                            for pos in list_of_neck_position_search:
+
+                                print(pos)
+                                new_neck_pos = [self.look_right[0] + pos[0], self.look_right[1] + pos[1]]
+                                #new_neck_pos = [ pos[0],  pos[1]]
+                                print('Neck: ', new_neck_pos)
+                                self.set_neck(position=new_neck_pos, wait_for_end_of=True)
+
+                                time.sleep(1)
+                                for obj in self.node.detected_doors.objects:
+                                    print(obj.object_name)
+                                    if obj.object_name == "Levelhandler":
+                                        if obj.object_name not in seen_names:
+                                            objects.append(obj)
+                                            seen_names.add(obj.object_name)
+                                            if obj.object_name == "Levelhandler":
+                                                handler = obj
+                                                print(handler.object_name)
+                                            print('é isto')
+                                            print('posição absoluta', obj.position_absolute)
+                                            print('posição relativa', obj.position_relative)
+                                            print(obj.confidence)
+                                                    
+                                        if len(objects) == 1:
+                                            finished_detections = True
+                                    if finished_detections == True:
+                                        break
+                                if finished_detections == True:
+                                        break
+                                
+
+                        print('\n\n\n')
+                        print('posição abs:', objects[0].position_absolute, 'da ', objects[0].object_name)
+                        print('\n\n\n')
+                        
+
+                        if objects != []:
+                            set_pose_arm = ListOfFloats()
+                            # door_location = self.transform(door)
+                            handler_location = self.transform(handler)
+                            #Value of height I want the arm to go to not touch in shelfs:
+                            
+                            # desired_height = 1100.0 - (self.node.third_shelf_height - 0.2) * 1000
+                            # new_height = Float32()
+                            # new_height.data = desired_height
+                            
+                            # door_x = door_location[0]
+                            # door_y = door_location[1]
+                            # door_z = door_location[2]
+
+                            # print('x y e z da porta:',door_x, door_y, door_z)   
+
+                            handler_x = handler_location[0]
+                            handler_y = handler_location[1]
+                            # door_y = object_location[1] + 100.0
+                            # door_y = 350.0
+                            handler_z = handler_location[2]
+
+                            print('x y e z do handler:',handler_x, handler_y, handler_z)
+                            right_side = False
+                            left_side = False
+                    
+                            ### centrar com handler
+                            self.set_arm(command="orient_to_door_front", wait_for_end_of=True)
+                            time.sleep(1)
+
+                            self.set_arm(command="close_door_push_right_side", wait_for_end_of=True)
+                            time.sleep(1)
+
+                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.35, adjust_direction=0.0, wait_for_end_of=True)
+                            self.set_rgb(command=GREEN+BLINK_QUICK)
+                            time.sleep(1)
+
+                            self.set_arm(command="go_initial_position", wait_for_end_of=True)
+                            self.set_rgb(command=GREEN+BLINK_QUICK)
+                            time.sleep(1)
+
+                            self.set_arm(command="close_gripper", wait_for_end_of=True)
+                            self.set_rgb(command=GREEN+BLINK_QUICK)
+                            time.sleep(1)
+
+
+
+                        while True:
+                            pass
+
+    def close_house_door_push_left_side(self):
+        if self.node.first_depth_image_received:
+            print('bbb')
+
+            self.set_neck(position=self.look_left, wait_for_end_of=True)
+
+            current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
+
+            if hasattr(self.node.detected_doors, 'image_rgb'):
+                head_image = self.node.detected_doors.image_rgb
+                print('ccc')
+                
+                if hasattr(self.node.detected_doors, 'objects'):
+                    print('ddd')
+                    
+                    if self.node.detected_doors.objects:
+                        # print(self.node.detected_doors.objects)
+                        print('eee')
+                        # set_pose_arm = ListOfFloats()
+
+
+                        objects = []
+                        seen_names = set()
+
+                        finished_detections = False
+
+                        list_of_neck_position_search = [[0, 0], [10, 0], [-10, 0], [0, -10], [0, 10]]
+                        self.activate_yolo_objects(activate_doors=True, activate_doors_hand = True)
+                        while not finished_detections:
+                            
+                            for pos in list_of_neck_position_search:
+
+                                print(pos)
+                                new_neck_pos = [self.look_left[0] + pos[0], self.look_left[1] + pos[1]]
+                                #new_neck_pos = [ pos[0],  pos[1]]
+                                print('Neck: ', new_neck_pos)
+                                self.set_neck(position=new_neck_pos, wait_for_end_of=True)
+
+                                time.sleep(1)
+                                for obj in self.node.detected_doors.objects:
+                                    print(obj.object_name)
+                                    if obj.object_name == "Levelhandler":
+                                        if obj.object_name not in seen_names:
+                                            objects.append(obj)
+                                            seen_names.add(obj.object_name)
+                                            if obj.object_name == "Levelhandler":
+                                                handler = obj
+                                                print(handler.object_name)
+                                            print('é isto')
+                                            print('posição absoluta', obj.position_absolute)
+                                            print('posição relativa', obj.position_relative)
+                                            print(obj.confidence)
+                                                    
+                                        if len(objects) == 1:
+                                            finished_detections = True
+                                    if finished_detections == True:
+                                        break
+                                if finished_detections == True:
+                                        break
+                                
+
+                        print('\n\n\n')
+                        print('posição abs:', objects[0].position_absolute, 'da ', objects[0].object_name)
+                        print('\n\n\n')
+                        
+
+                        if objects != []:
+                            set_pose_arm = ListOfFloats()
+                            # door_location = self.transform(door)
+                            handler_location = self.transform(handler)
+                            #Value of height I want the arm to go to not touch in shelfs:
+                            
+                            # desired_height = 1100.0 - (self.node.third_shelf_height - 0.2) * 1000
+                            # new_height = Float32()
+                            # new_height.data = desired_height
+                            
+                            # door_x = door_location[0]
+                            # door_y = door_location[1]
+                            # door_z = door_location[2]
+
+                            # print('x y e z da porta:',door_x, door_y, door_z)   
+
+                            handler_x = handler_location[0]
+                            handler_y = handler_location[1]
+                            # door_y = object_location[1] + 100.0
+                            # door_y = 350.0
+                            handler_z = handler_location[2]
+
+                            print('x y e z do handler:',handler_x, handler_y, handler_z)
+                            right_side = False
+                            left_side = False
+                    
+                            ### centrar com handler
+                            self.set_arm(command="orient_to_door_front", wait_for_end_of=True)
+                            self.set_rgb(command=GREEN+BLINK_QUICK)
+                            time.sleep(1)
+
+                            self.set_arm(command="close_door_push_left_side", wait_for_end_of=True)
+                            self.set_rgb(command=GREEN+BLINK_QUICK)
+                            time.sleep(1)
+
+                            print('movement door done')
+
+                            self.set_navigation(movement="orientate", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                            self.set_rgb(command=GREEN+BLINK_QUICK)
+                            time.sleep(1)
+
+                            print('oriented')
+
+                            # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.35, adjust_direction=0.0, wait_for_end_of=True)
+                            # self.set_rgb(command=GREEN+BLINK_QUICK)
+                            # time.sleep(1)
+
+                            self.set_arm(command="go_initial_position", wait_for_end_of=True)
+                            self.set_rgb(command=GREEN+BLINK_QUICK)
+                            time.sleep(1)
+
+
+                        while True:
+                            pass
+     
 
     def search_for_person(self, tetas, delta_t=3.0):
 

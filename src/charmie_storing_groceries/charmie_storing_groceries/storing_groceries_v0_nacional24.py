@@ -109,15 +109,8 @@ class StoringGroceriesNode(Node):
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
 
         # Objects detected
-        # self.objects_filtered_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered', self.get_objects_callback, 10)
-        # Yolo Objects
-        self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-        self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
-        self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
-        self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'doors_detected_filtered_hand', self.doors_detected_filtered_hand_callback, 10)
-        self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
-        self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
-        
+        self.objects_filtered_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered', self.get_objects_callback, 10)
+
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
 
@@ -126,23 +119,23 @@ class StoringGroceriesNode(Node):
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Navigation
-        # while not self.nav_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
-        # # Speakers
-        # while not self.speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Speech Command...")
-        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-        # while not self.set_neck_position_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        # while not self.get_neck_position_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-        # while not self.set_neck_coordinates_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
-        # # Face
-        # while not self.face_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Face Command...")
-        # # Arm (CHARMIE)
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+        # Speakers
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
+        while not self.activate_yolo_objects_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        while not self.set_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+        while not self.get_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
+        while not self.set_neck_coordinates_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        # Face
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
+        # Arm (CHARMIE)
         """ while not self.arm_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Arm Trigger Command...") """
         
@@ -187,29 +180,11 @@ class StoringGroceriesNode(Node):
 
         
 
-    def object_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_objects = det_object
-
-    def object_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_objects_hand = det_object
-
-    def doors_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_doors = det_object
-
-    def doors_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_doors_hand = det_object
-
-    def shoes_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_shoes = det_object
-
-    def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_shoes_hand = det_object
-
-    # def get_objects_callback(self, objects: Yolov8Objects):
-    #     #print(objects.objects)
-    #    self.nr_objects = objects.num_objects
-    #     self.objects = objects.objects
-    #     self.image = objects.image_rgb
+    def get_objects_callback(self, objects: Yolov8Objects):
+        #print(objects.objects)
+        self.nr_objects = objects.num_objects
+        self.objects = objects.objects
+        self.image = objects.image_rgb
 
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
@@ -327,8 +302,8 @@ class StoringGroceriesNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.neck_success = response.success
-            self.neck_message = response.message
+            self.speech_success = response.success
+            self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_neck_pos = True
         except Exception as e:
@@ -362,8 +337,8 @@ class StoringGroceriesNode(Node):
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.neck_success = response.success
-            self.neck_message = response.message
+            self.speech_success = response.success
+            self.speech_message = response.message
             # time.sleep(3)
             self.waited_for_end_of_neck_coords = True
         except Exception as e:
@@ -709,350 +684,6 @@ class StoringGroceriesMain():
         task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         
         self.node.initialpose_publisher.publish(task_initialpose)
-
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
-
-        final_objects = []
-        mandatory_object_detected_flags = [False for _ in list_of_objects]
-        print(mandatory_object_detected_flags)
-        DETECTED_ALL_LIST_OF_OBJECTS = False
-        MIN_DIST_DIFFERENT_FRAMES = 0.3 # maximum distance for the robot to assume it is the same objects
-        MIN_DIST_SAME_FRAME = 0.2
-
-        merged_lists = []
-        for obj, detected_as in zip(list_of_objects, list_of_objects_detected_as):
-            merged_lists.append([obj] + detected_as)
-        merged_lists = [[item.replace(" ","_").lower() for item in sublist] for sublist in merged_lists]
-        # print(merged_lists)
-        # for merged_list in merged_lists:
-        #     print(merged_list)
-        
-        while not DETECTED_ALL_LIST_OF_OBJECTS:
-
-            total_objects_detected = []
-            objects_detected = []
-            shoes_detected = []
-            doors_detected = []
-            objects_ctr = 0
-
-            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_doors,
-                                        activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
-                                        minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
-            
-            self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-            time.sleep(0.5)
-
-            ### MOVES NECK AND SAVES DETECTED OBJECTS ###
-            for t in tetas:
-                self.set_rgb(RED+SET_COLOUR)
-                self.set_neck(position=t, wait_for_end_of=True)
-                time.sleep(1.0) # 0.5
-                self.set_rgb(WHITE+SET_COLOUR)
-
-                start_time = time.time()
-                while (time.time() - start_time) < delta_t:      
-
-                    if detect_objects: 
-                        local_detected_objects = self.node.detected_objects
-                        for temp_objects in local_detected_objects.objects:
-                            
-                            is_already_in_list = False
-                            object_already_in_list = DetectedObject()
-                            for object in objects_detected:
-
-                                # filters by same index
-                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
-                                    is_already_in_list = True
-                                    object_already_in_list = object
-
-                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                                if temp_objects.object_name == object.object_name: # and 
-                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                    if dist < MIN_DIST_SAME_FRAME:
-                                        is_already_in_list = True
-                                        object_already_in_list = object
-
-                            if is_already_in_list:
-                                objects_detected.remove(object_already_in_list)
-                            else:
-                            # elif temp_objects.index > 0: # debug
-                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                                self.set_rgb(GREEN+SET_COLOUR)
-                            
-                            # if temp_objects.index > 0:
-                            objects_detected.append(temp_objects)
-                            objects_ctr+=1
-
-                        
-                    if detect_shoes: 
-                        local_detected_objects = self.node.detected_shoes
-                        for temp_objects in local_detected_objects.objects:
-                            
-                            is_already_in_list = False
-                            object_already_in_list = DetectedObject()
-                            for object in shoes_detected:
-
-                                # filters by same index
-                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
-                                    is_already_in_list = True
-                                    object_already_in_list = object
-
-                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                                if temp_objects.object_name == object.object_name and temp_objects.index != object.index: 
-                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                    if dist < MIN_DIST_SAME_FRAME:
-                                        is_already_in_list = True
-                                        object_already_in_list = object
-
-                            if is_already_in_list:
-                                shoes_detected.remove(object_already_in_list)
-                            else:
-                            # elif temp_objects.index > 0: # debug
-                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                                self.set_rgb(GREEN+SET_COLOUR)
-                            
-                            # if temp_objects.index > 0:
-                            shoes_detected.append(temp_objects)
-                            objects_ctr+=1
-
-                        
-                    if detect_doors: 
-                        local_detected_objects = self.node.detected_doors
-                        for temp_objects in local_detected_objects.objects:
-                            
-                            is_already_in_list = False
-                            object_already_in_list = DetectedObject()
-                            for object in doors_detected:
-
-                                # filters by same index
-                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
-                                    is_already_in_list = True
-                                    object_already_in_list = object
-
-                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                                if temp_objects.object_name == object.object_name and temp_objects.index != object.index: 
-                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                    if dist < MIN_DIST_SAME_FRAME:
-                                        is_already_in_list = True
-                                        object_already_in_list = object
-
-                            if is_already_in_list:
-                                doors_detected.remove(object_already_in_list)
-                            else:
-                            # elif temp_objects.index > 0: # debug
-                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                                self.set_rgb(GREEN+SET_COLOUR)
-                            
-                            # if temp_objects.index > 0:
-                            doors_detected.append(temp_objects)
-                            objects_ctr+=1
-
-
-                # DEBUG
-                # print("objects in this neck pos:")
-                # for object in objects_detected:
-                #     print(object.index, object.position_absolute.x, object.position_absolute.y)
-            
-                total_objects_detected.append(objects_detected.copy() + shoes_detected.copy() + doors_detected.copy())
-                # print("Total number of objects detected:", len(objects_detected), objects_ctr)
-                objects_detected.clear()   
-                shoes_detected.clear()
-                doors_detected.clear()
-
-                if list_of_objects: #only does this if there are items in the list of mandatory detection objects
-                    
-                    mandatory_ctr = 0
-                    # for m_object in list_of_objects:
-                    for m_object in merged_lists:
-                        is_in_mandatory_list = False
-                        
-                        for frame in range(len(total_objects_detected)):
-                            for object in range(len(total_objects_detected[frame])):
-                                
-                                # compares to local detected frame
-                                # if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
-                                if total_objects_detected[frame][object].object_name.replace(" ","_").lower() in m_object:
-                                    is_in_mandatory_list = True
-                                    # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
-                    
-                                # compares to overall final detected objects
-                                for final_obj in final_objects:
-                                    # if final_obj.object_name.lower() == m_object.lower():
-                                    if final_obj.object_name.replace(" ","_").lower() in m_object:
-                                        is_in_mandatory_list = True
-                                        # print(m_object, final_obj.object_name, final_obj.index, is_in_mandatory_list)
-
-                        if is_in_mandatory_list:
-                            mandatory_ctr += 1
-                        print(m_object, is_in_mandatory_list)
-
-                    if mandatory_ctr == len(list_of_objects): # if all objects are already in the detected list 
-                        break
-
-
-            self.activate_yolo_objects(activate_objects=False, activate_shoes=False, activate_doors=False,
-                                        activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
-                                        minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
-            
-
-            # DEBUG
-            print("TOTAL objects in this neck pos:")
-            for frame in total_objects_detected:
-                for object in frame:    
-                    print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
-                print("-")
-
-            ### DETECTS ALL THE OBJECTS SHOW IN EVERY FRAME ###
-            
-            filtered_objects = []
-
-            for frame in range(len(total_objects_detected)):
-
-                to_append = []
-                to_remove = []
-
-                if not len(filtered_objects):
-                    print("NO OBJECTS", frame)
-                    for object in range(len(total_objects_detected[frame])):
-                        to_append.append(total_objects_detected[frame][object])
-                else:
-                    print("YES OBJECTS", frame)
-
-                    for object in range(len(total_objects_detected[frame])):
-                        same_object_ctr = 0
-
-                        for filtered in range(len(filtered_objects)):
-
-                            if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name: 
-
-                                # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
-                                dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
-                                print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
-                                
-                                if dist < MIN_DIST_DIFFERENT_FRAMES:
-                                    same_object_ctr+=1
-                                    same_object_old = filtered_objects[filtered]
-                                    same_object_new = total_objects_detected[frame][object]
-                                    print("SAME OBJECT")                        
-                        
-                        if same_object_ctr > 0:
-
-                            image_center = (1280/2, 720/2)
-                            same_object_old_distance_center = math.dist(image_center, (same_object_old.box_center_x, same_object_old.box_center_y))
-                            same_object_new_distance_center = math.dist(image_center, (same_object_new.box_center_x, same_object_new.box_center_y))
-                            
-                            print("OLD (pixel):", same_object_old.index, same_object_old.object_name, ", dist_2_center:", round(same_object_old_distance_center,2))
-                            print("NEW (pixel):", same_object_new.index, same_object_new.object_name, ", dist_2_center:", round(same_object_new_distance_center,2))
-
-                            if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
-                                to_remove.append(same_object_old)
-                                to_append.append(same_object_new)
-                            else: # object from older frame is more centered with camera center
-                                pass # that object is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
-
-                        else:
-                            to_append.append(total_objects_detected[frame][object])
-
-                for o in to_remove:
-                    if o in filtered_objects:
-                        print("REMOVED: ", o.index, o.object_name)
-                        filtered_objects.remove(o)
-                    else:
-                        print("TRIED TO REMOVE TWICE THE SAME OBJECT")
-                to_remove.clear()  
-
-                for o in to_append:
-                    print("ADDED: ", o.index, o.object_name)
-                    filtered_objects.append(o)
-                to_append.clear()
-
-            print("FILTERED:")
-            for o in filtered_objects:
-                print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
-
-
-            if list_of_objects: #only does this if there are items in the list of mandatory detection objects
-                
-                for l_object in range(len(list_of_objects)):
-                    for object in filtered_objects:
-
-                        # if not final_objects: # if final_objects is empty
-
-                        # if object.object_name.lower() == list_of_objects[l_object].lower() and not mandatory_object_detected_flags[l_object]:
-                        if object.object_name.replace(" ","_").lower() in merged_lists[l_object] and not mandatory_object_detected_flags[l_object]:
-                            final_objects.append(object)
-                            # mandatory_object_detected_flags.append(True)
-                            mandatory_object_detected_flags[l_object] = True
-                            # break
-                            # else:
-                            #     mandatory_object_detected_flags.append(False)
-
-                        # else:
-                        #     pass
-                
-                print(list_of_objects)
-                print(mandatory_object_detected_flags)
-                
-                if not all(mandatory_object_detected_flags):
-                    self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
-                    for obj in range(len(list_of_objects)):
-                        if not mandatory_object_detected_flags[obj]:
-                            self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
-                else:
-                    DETECTED_ALL_LIST_OF_OBJECTS = True
-                    # forces the change of objects name for possible detected_as_object 
-                    # (i.e. might detect cleanser as milk, but we need it as milk for the DEM show in face)
-                    for o in range(len(list_of_objects)): 
-                        final_objects[o].object_name = list_of_objects[o]
-
-            else:
-                final_objects = filtered_objects
-                DETECTED_ALL_LIST_OF_OBJECTS = True
-
-        self.set_neck(position=(0,0), wait_for_end_of=False)
-        self.set_speech(filename="generic/found_following_items")
-        for obj in final_objects:
-            self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
-            
-        return final_objects    
-
-    def detected_object_to_face_path(self, object, send_to_face, bb_color=(0,0,255)):
-
-        thresh_h = 220
-        thresh_v = 220
-
-        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
-        cf = self.node.br.imgmsg_to_cv2(object.image_rgb_frame, "bgr8")
-        
-        # checks whether the text has to start inside the bounding box or can start outside (image boundaries)
-        start_point = (object.box_top_left_x, object.box_top_left_y)
-        end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
-        cv2.rectangle(cf, start_point, end_point, bb_color , 4) 
-        # cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
-        
-        if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
-            start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
-        else:
-            start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
-            
-        text_size, _ = cv2.getTextSize(f"{object.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
-        text_w, text_h = text_size
-        cv2.rectangle(cf, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), bb_color, -1)
-        cv2.putText(cf, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
-    
-        object_image = cf[max(object.box_top_left_y-thresh_v,0):min(object.box_top_left_y+object.box_height+thresh_v,720), max(object.box_top_left_x-thresh_h,0):min(object.box_top_left_x+object.box_width+thresh_h,1280)]
-        # cv2.imshow("Search for Person", object_image)
-        # cv2.waitKey(100)
-        
-        face_path = current_datetime + str(object.index) + str(object.object_name)
-        
-        cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", object_image) 
-        time.sleep(0.5)
-        
-        if send_to_face:
-            self.set_face(custom=face_path)
-        
-        return face_path
 
   
     def analysis_cabinet(self):
@@ -1703,15 +1334,6 @@ class StoringGroceriesMain():
                 time.sleep(1)
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
-
-
-                # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                tetas = [[0, -45], [0, -30], [0, -15], [0, 0]]
-                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
-                
-                print(objects_found)
-                while True:
-                    pass
 
                 self.set_speech(filename="storing_groceries/sg_ready_start", wait_for_end_of=True)
 
