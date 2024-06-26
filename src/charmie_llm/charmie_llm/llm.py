@@ -174,7 +174,7 @@ import os
 #import playsound
 import fitz  # PyMuPDF
 
-api_key = "[OUR-KEY]"
+api_key = "OUR-KEY"
 
 # Define the instructions text
 instructions_text = """
@@ -449,7 +449,7 @@ class LLMNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info(str(response.command))
+            self.get_logger().info("User:"+str(response.command))
             self.audio_command = response.command
             # self.track_object_success = response.success
             # self.track_object_message = response.message
@@ -569,10 +569,11 @@ class LLMMain():
             keywords = "ERROR"
             while keywords=="ERROR":
                 if audio_error_counter == 0:
-                    print("Save")
-                    self.save_speech( filename="temp", command=question)
-                    print("Set")
-                    self.set_speech(filename="temp/temp",quick_voice=True, wait_for_end_of=True)
+                    #print("Save")
+                    self.save_speech(command=question, filename="temp", quick_voice=True, play_command=True, show_in_face=False, wait_for_end_of=True)
+                    #self.save_speech( filename="temp", command=question)
+                    #print("Set")
+                    #self.set_speech(filename="temp/temp",quick_voice=True, wait_for_end_of=True)
                 #self.set_face(face_hearing)
                 self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
                 
@@ -588,11 +589,11 @@ class LLMMain():
                     audio_error_counter += 1
 
                     if audio_error_counter == 2:
-                        self.set_speech(filename="generic/please_wait", wait_for_end_of=True)
+                        self.set_speech(filename="llm_low_quali/wait", quick_voice=True,wait_for_end_of=True)
                         self.calibrate_audio(wait_for_end_of=True)
                         audio_error_counter = 0
                     else:
-                        self.set_speech(filename="generic/not_understand_please_repeat", wait_for_end_of=True)
+                        self.set_speech(filename="llm_low_quali/repeat", quick_voice=True, wait_for_end_of=True)
 
             return self.node.audio_command  
 
@@ -683,17 +684,20 @@ class LLMMain():
 
         # Start the conversation loop
         max_turns = 5
-        assistant_res="How can I help you?"
+        assistant_res="Hi! I am Charmie. How can I help you?"
         while True:
-            print("State:", self.state, "- Waiting_for_task_start")
+            #print("State:", self.state, "- Just chatting")
             #self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
-            
+            self.node.get_logger().info("Charmie:"+assistant_res)
             self.calibrate_audio(wait_for_end_of=True)
             # Get user input
-            print("Assistant: ",assistant_res)
+            
+            #print("Assistant: ",assistant_res)
             command = self.get_audio(gpsr=True,question=assistant_res)
+            
+
             #(f"\nSay something: {command}")
-            print("Human: ",command)
+            #print("Human: ",command)
             # Send user input as a message in the thread
             user_message = client.beta.threads.messages.create(
                 thread_id=thread_id,
@@ -706,8 +710,8 @@ class LLMMain():
                 thread_id=thread_id,
                 assistant_id=assistant_id
             )
-            print("Thread: ", thread_id)
-            print("Assist: ", assistant_id)
+            #print("Thread: ", thread_id)
+            #print("Assist: ", assistant_id)
             # The agent loop. `max_turns` will set a limit on the number of LLM calls made inside the agent loop.
             # Its better to set a limit since LLM calls are costly.
             for turn in range(max_turns):
@@ -732,7 +736,7 @@ class LLMMain():
                         None,
                     )
 
-                    print(assistant_res)#return assistant_res
+                    #print(assistant_res)#return assistant_res
 
                 # If state is "requires_action", function calls are required. Execute the functions and send their outputs to the LLM.
                 if run.status == "requires_action":
