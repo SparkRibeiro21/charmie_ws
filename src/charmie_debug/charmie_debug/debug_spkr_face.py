@@ -186,11 +186,6 @@ class RestaurantMain():
 
         return self.node.speech_success, self.node.speech_message
     
-
-    # def save_speech(self, filename, command, quick_voice=False):
-    #     self.node.call_save_speech_command_server(filename=filename, command=command, quick_voice=quick_voice)
-    
-    
     def save_speech(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True):
 
         # the commands should be lists, because you can send a list of commands and a list of filenames,

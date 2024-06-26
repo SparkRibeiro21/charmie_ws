@@ -325,10 +325,12 @@ class SpeakerNode(Node):
 
             if request.play_command:
                 ### ADICIONAR QUE TAMBEM FOI PLAYED
-                self.charmie_speech.play_command(filename, request.show_in_face)         
-        
-        response.success = True
-        response.message = str(len(request.filename))+" new speech files saved"
+                self.charmie_speech.play_command(filename, request.show_in_face) 
+                response.success = True
+                response.message = str(len(request.filename))+" new speech files saved and sound played"
+            else:
+                response.success = True
+                response.message = str(len(request.filename))+" new speech files saved"
 
         return response
 
