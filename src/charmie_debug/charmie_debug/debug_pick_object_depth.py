@@ -422,9 +422,6 @@ class RestaurantMain():
 
     def __init__(self, node: TestNode):
         self.node = node
-
-        self.floor_dist=600
-        self.top_bag_dist=350
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -568,6 +565,9 @@ class RestaurantMain():
         # VARS ...
         self.state = Waiting_for_start_button
 
+        self.floor_dist=600
+        self.top_bag_dist=350
+
         print("IN NEW MAIN")
 
         while True:
@@ -626,98 +626,111 @@ class RestaurantMain():
         DEBUG = True
         f_coords = []
 
-        if self.node.first_depth_hand_image_received:
-            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
-            height, width = current_frame_depth_head.shape
+        self.node.first_depth_hand_image_received = False
+
+        while not self.node.first_depth_hand_image_received:
+            pass
+
+        current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
+        height, width = current_frame_depth_head.shape
+        
+        current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0 # remove the robot from the image
+
+        mask_zero = (current_frame_depth_head == 0)
+        mask_near = (current_frame_depth_head != 0) & (current_frame_depth_head >= self.top_bag_dist) & (current_frame_depth_head <= self.floor_dist)
+
+        blank_image_bw = np.zeros((height,width), np.uint8)
+        blank_image_bw2 = np.zeros((height,width), np.uint8)
+        blank_image_bw[mask_near] = [255]
+
+        contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        c_areas = []
+        for a in contours: # create list with area size 
+            # print(cv2.contourArea(a))
+            c_areas.append(cv2.contourArea(a))
+
+        cnt = contours[c_areas.index(max(c_areas))] # extracts the largest area 
+        # print(c_areas.index(max(c_areas)))
+        
+        M = cv2.moments(cnt) # calculates centroide
+        cx = int(M['m10']/M['m00'])
+        cy = int(M['m01']/M['m00'])
+
+        xi,yi,w,h = cv2.boundingRect(cnt)
+
+        [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
+        theta = -math.atan2(vy,vx)
+
+        bb_thresh = 40 
+        bb = BoundingBox() # centroide of bag bounding box 
+        bb.box_top_left_x = max(cx-bb_thresh, 0)
+        bb.box_top_left_y = max(cy-bb_thresh, 0)
+        bb.box_width = min(2*bb_thresh, width)
+        bb.box_height = min(2*bb_thresh, height)
+
+        coords_centroide = self.get_point_cloud(bb=bb)
+
+        bb = BoundingBox() # full bag bounding box
+        bb.box_top_left_x = max(xi, 0)
+        bb.box_top_left_y = max(yi, 0)
+        bb.box_width = w
+        bb.box_height = h
+
+        coords_full = self.get_point_cloud(bb=bb)
+        
+        # x = bag height
+        # y = move front and back robot, or left and right for camera
+        # y = move right and left robot, or up and down for camera
+        print("xc = ", round(coords_centroide.center_coords.x,0), "yc = ", round(coords_centroide.center_coords.y,0), "zc = ", round(coords_centroide.center_coords.z,0))
+        print("xf = ", round(coords_full.center_coords.x,0), "yf = ", round(coords_full.center_coords.y,0), "zf = ", round(coords_full.center_coords.z,0))
+
+        f_coords.append(coords_centroide.center_coords.x)
+        f_coords.append(coords_centroide.center_coords.y)
+        f_coords.append(coords_centroide.center_coords.z)
+        f_coords.append(theta)
+        
+        if DEBUG:
+            mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug, floor level
+            blank_image = np.zeros((height,width,3), np.uint8)
             
-            current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0 # remove the robot from the image
+            blank_image[mask_zero] = [255,255,255]
+            blank_image[mask_near] = [255,0,0]
+            blank_image[mask_remaining] = [0,0,255]
 
-            mask_zero = (current_frame_depth_head == 0)
-            mask_near = (current_frame_depth_head != 0) & (current_frame_depth_head >= self.top_bag_dist) & (current_frame_depth_head <= self.floor_dist)
+            cv2.drawContours(blank_image, [cnt], 0, (0, 255, 0), 3) 
+            cv2.drawContours(blank_image_bw2, [cnt], 0, (255), thickness=cv2.FILLED) 
+            cv2.circle(blank_image, (cx, cy), 10, (0, 255, 0), -1)
+            cv2.circle(blank_image_bw2, (cx, cy), 10, (128), -1)
 
-            blank_image_bw = np.zeros((height,width), np.uint8)
-            blank_image_bw2 = np.zeros((height,width), np.uint8)
-            blank_image_bw[mask_near] = [255]
+            cv2.rectangle(blank_image,(xi,yi),(xi+w,yi+h), (255, 0, 255),2)
+            cv2.rectangle(blank_image_bw2,(xi,yi),(xi+w,yi+h),(128),2)
 
-            contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            rows,cols = blank_image_bw2.shape[:2]
+            lefty = int((-x*vy/vx) + y)
+            righty = int(((cols-x)*vy/vx)+y)
+            cv2.line(blank_image,(cols-1,righty),(0,lefty),(255, 0, 255),2)
+            cv2.line(blank_image_bw2,(cols-1,righty),(0,lefty),(128),2)
 
-            c_areas = []
-            for a in contours: # create list with area size 
-                # print(cv2.contourArea(a))
-                c_areas.append(cv2.contourArea(a))
+            print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
+            # print("bag centroide =", cx, cy)
 
-            cnt = contours[c_areas.index(max(c_areas))] # extracts the largest area 
-            # print(c_areas.index(max(c_areas)))
-            
-            M = cv2.moments(cnt) # calculates centroide
-            cx = int(M['m10']/M['m00'])
-            cy = int(M['m01']/M['m00'])
+            cv2.rectangle(blank_image, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (255, 0, 255),2)
+            cv2.rectangle(blank_image_bw2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (128), 2)
 
-            [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
-            theta = -math.atan2(vy,vx)
+            cv2.imshow("New Img Distance Inspection", blank_image)
+            cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
 
-            bb_thresh = 40 
-            bb = BoundingBox() 
-            bb.box_top_left_x = max(cx-bb_thresh, 0)
-            bb.box_top_left_y = max(cy-bb_thresh, 0)
-            bb.box_width = min(2*bb_thresh, width)
-            bb.box_height = min(2*bb_thresh, height)
+            k = cv2.waitKey(1)
+            if k == ord('w'):
+                self.floor_dist += 10
+            if k == ord('q'):
+                self.floor_dist -= 10
+            if k == ord('s'):
+                self.top_bag_dist += 10
+            if k == ord('a'):
+                self.top_bag_dist -= 10
 
-            coords = self.get_point_cloud(bb=bb)
-            
-            # x = bag height
-            # y = move front and back robot, or left and right for camera
-            # y = move right and left robot, or up and down for camera
-            print("x = ", round(coords.center_coords.x,0), "y = ", round(coords.center_coords.y,0), "z = ", round(coords.center_coords.z,0))
-
-            f_coords.append(cx)
-            f_coords.append(cy)
-            f_coords.append(theta)
-            
-            if DEBUG:
-                mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug, floor level
-                blank_image = np.zeros((height,width,3), np.uint8)
-                
-                blank_image[mask_zero] = [255,255,255]
-                blank_image[mask_near] = [255,0,0]
-                blank_image[mask_remaining] = [0,0,255]
-
-                cv2.drawContours(blank_image, [cnt], 0, (0, 255, 0), 3) 
-                cv2.drawContours(blank_image_bw2, [cnt], 0, (255), thickness=cv2.FILLED) 
-                cv2.circle(blank_image, (cx, cy), 10, (0, 255, 0), -1)
-                cv2.circle(blank_image_bw2, (cx, cy), 10, (128), -1)
-
-                xi,yi,w,h = cv2.boundingRect(cnt)
-                cv2.rectangle(blank_image,(xi,yi),(xi+w,yi+h), (255, 0, 255),2)
-                cv2.rectangle(blank_image_bw2,(xi,yi),(xi+w,yi+h),(128),2)
-
-                rows,cols = blank_image_bw2.shape[:2]
-                lefty = int((-x*vy/vx) + y)
-                righty = int(((cols-x)*vy/vx)+y)
-                cv2.line(blank_image,(cols-1,righty),(0,lefty),(255, 0, 255),2)
-                cv2.line(blank_image_bw2,(cols-1,righty),(0,lefty),(128),2)
-
-                print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
-                print("bag centroide =", cx, cy)
-
-                cv2.rectangle(blank_image, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (255, 0, 255),2)
-                cv2.rectangle(blank_image_bw2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (128), 2)
-
-                cv2.imshow("New Img Distance Inspection", blank_image)
-                cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
-
-                k = cv2.waitKey(1)
-                if k == ord('w'):
-                    self.floor_dist += 10
-                if k == ord('q'):
-                    self.floor_dist -= 10
-                if k == ord('s'):
-                    self.top_bag_dist += 10
-                if k == ord('a'):
-                    self.top_bag_dist -= 10
-
-                print(self.floor_dist, self.top_bag_dist)
-
-            
+            print(self.floor_dist, self.top_bag_dist)
 
         return f_coords
