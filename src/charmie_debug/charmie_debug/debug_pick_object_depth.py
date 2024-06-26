@@ -36,8 +36,11 @@ class TestNode(Node):
 
         # Intel Realsense Subscribers
         # self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
-
+        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_head_image_callback, 10)
+        # Hand
+        # self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
+        self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_hand_image_callback, 10)
+        
         ### Topics (Publisher and Subscribers) ###  
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
@@ -102,17 +105,23 @@ class TestNode(Node):
         self.activate_yolo_objects_message = ""
 
         self.br = CvBridge()
-        self.depth_img = Image()
-        self.first_depth_image_received = False
+        self.depth_head_img = Image()
+        self.depth_hand_img = Image()
+        self.first_depth_head_image_received = False
+        self.first_depth_hand_image_received = False
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
 
 
-    def get_aligned_depth_image_callback(self, img: Image):
-        self.depth_img = img
-        self.first_depth_image_received = True
+    def get_aligned_depth_head_image_callback(self, img: Image):
+        self.depth_head_img = img
+        self.first_depth_head_image_received = True
         # print("Received Depth Image")
 
+    def get_aligned_depth_hand_image_callback(self, img: Image):
+        self.depth_hand_img = img
+        self.first_depth_hand_image_received = True
+        # print("Received Depth Image")
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -125,78 +134,6 @@ class TestNode(Node):
 
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
-
-        """
-        current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
-        current_frame_draw = current_frame.copy()
-
-
-        # img = [0:720, 0:1280]
-        corr_image = False
-        thresh_h = 50
-        thresh_v = 200
-
-        if self.detected_objects.num_objects > 0:
-
-            x_min = 1280
-            x_max = 0
-            y_min = 720
-            y_max = 0
-
-            for object in self.detected_objects.objects:      
-            
-                if object.object_class == "Dishes":
-                    corr_image = True
-
-                    if object.box_top_left_x < x_min:
-                        x_min = object.box_top_left_x
-                    if object.box_top_left_x+object.box_width > x_max:
-                        x_max = object.box_top_left_x+object.box_width
-
-                    if object.box_top_left_y < y_min:
-                        y_min = object.box_top_left_y
-                    if object.box_top_left_y+object.box_height > y_max:
-                        y_max = object.box_top_left_y+object.box_height
-
-                    start_point = (object.box_top_left_x, object.box_top_left_y)
-                    end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
-                    cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
-
-                    cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
-                    
-            
-            for object in self.detected_objects.objects:      
-                
-                if object.object_class == "Dishes":
-                
-                    if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
-                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
-                    else:
-                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
-                        
-                    # just to test for the "serve the breakfast" task...
-                    aux_name = object.object_name
-                    if object.object_name == "Fork" or object.object_name == "Knife":
-                        aux_name = "Spoon"
-                    elif object.object_name == "Plate" or object.object_name == "Cup":
-                        aux_name = "Bowl"
-
-                    text_size, _ = cv2.getTextSize(f"{aux_name}", cv2.FONT_HERSHEY_DUPLEX, 1, 1)
-                    text_w, text_h = text_size
-                    cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
-                    cv2.putText(current_frame_draw, f"{aux_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1, cv2.LINE_AA)
-
-        if corr_image:
-            # current_frame_draw = current_frame_draw[x_min:y_min, x_max,y_max]
-            # img = current_frame_draw[y_min:y_max, x_min,x_max]
-            cv2.imshow("c", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)])
-            cv2.waitKey(1)
-        # cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
-        # cv2.waitKey(10)
-
-        # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
-        # cv2.waitKey(10)
-        """
 
 
     #### FACE SERVER FUNCTIONS #####
@@ -455,9 +392,9 @@ class RestaurantMain():
 
     def __init__(self, node: TestNode):
         self.node = node
-        
-        # VARS ...
-        self.state = 0
+
+        self.floor_dist=600
+        self.top_bag_dist=350
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -572,6 +509,9 @@ class RestaurantMain():
         Collect_order_from_barman = 5
         Delivering_order_to_client = 6
         Final_State = 7
+        
+        # VARS ...
+        self.state = Waiting_for_start_button
 
         print("IN NEW MAIN")
 
@@ -608,22 +548,8 @@ class RestaurantMain():
 
                 # your code here ...
 
-                # self.detected_people = det_people
-                # if self.detected_people.num_person > 0:
-
-
-                overall = self.check_person_depth_head() #half_image_zero_or_near_percentage=0.4, full_image_near_percentage=0.1, near_max_dist=800)
-                      
-                
-
-                if overall: 
-                    # print("STOP", overall, zeros, round(zeros_err,2), near, round(near_err,2))
-                    print("STOP")
-                else:
-                    # print("GO", overall, zeros, round(zeros_err,2), near, round(near_err,2))
-                    print("GO")
-                        
-                
+                bag_coords = self.get_bag_pick_cordinates() #half_image_zero_or_near_percentage=0.4, full_image_near_percentage=0.1, near_max_dist=800)
+                print(bag_coords)
                 
                 # next state
                 # self.state = Final_State
@@ -640,222 +566,84 @@ class RestaurantMain():
             else:
                 pass
 
-    def check_person_depth_head(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=800):
+    def get_bag_pick_cordinates(self):
 
-        overall = False
-        DEBUG = True
+        DEBUG = False
+        f_coords = []
 
-        if self.node.first_depth_image_received:
-            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_img, desired_encoding="passthrough")
+        if self.node.first_depth_hand_image_received:
+            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
             height, width = current_frame_depth_head.shape
-            current_frame_depth_head_half = current_frame_depth_head[height//2:height,:]
             
-            # FOR THE FULL IMAGE
+            current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0 # remove the robot from the image
 
-            tot_pixeis = height*width 
             mask_zero = (current_frame_depth_head == 0)
-            mask_near = (current_frame_depth_head > 0) & (current_frame_depth_head <= near_max_dist)
+            mask_near = (current_frame_depth_head != 0) & (current_frame_depth_head >= self.top_bag_dist) & (current_frame_depth_head <= self.floor_dist)
+
+            blank_image_bw = np.zeros((height,width), np.uint8)
+            blank_image_bw2 = np.zeros((height,width), np.uint8)
+            blank_image_bw[mask_near] = [255]
+
+            contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+            c_areas = []
+            for a in contours: # create list with area size 
+                # print(cv2.contourArea(a))
+                c_areas.append(cv2.contourArea(a))
+
+            cnt = contours[c_areas.index(max(c_areas))] # extracts the largest area 
+            # print(c_areas.index(max(c_areas)))
+            
+            M = cv2.moments(cnt) # calculates centroide
+            cx = int(M['m10']/M['m00'])
+            cy = int(M['m01']/M['m00'])
+
+            [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
+            theta = -math.atan2(vy,vx)
+
+            f_coords.append(cx)
+            f_coords.append(cy)
+            f_coords.append(theta)
             
             if DEBUG:
-                mask_remaining = (current_frame_depth_head > near_max_dist) # just for debug
+                mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug, floor level
                 blank_image = np.zeros((height,width,3), np.uint8)
+                
                 blank_image[mask_zero] = [255,255,255]
                 blank_image[mask_near] = [255,0,0]
                 blank_image[mask_remaining] = [0,0,255]
 
-            pixel_count_zeros = np.count_nonzero(mask_zero)
-            pixel_count_near = np.count_nonzero(mask_near)
+                cv2.drawContours(blank_image, [cnt], 0, (0, 255, 0), 3) 
+                cv2.drawContours(blank_image_bw2, [cnt], 0, (255), thickness=cv2.FILLED) 
+                cv2.circle(blank_image, (cx, cy), 10, (0, 255, 0), -1)
+                cv2.circle(blank_image_bw2, (cx, cy), 10, (128), -1)
 
-            # FOR THE BOTTOM HALF OF THE IMAGE
+                xi,yi,w,h = cv2.boundingRect(cnt)
+                cv2.rectangle(blank_image,(xi,yi),(xi+w,yi+h), (255, 0, 255),2)
+                cv2.rectangle(blank_image_bw2,(xi,yi),(xi+w,yi+h),(128),2)
 
-            mask_zero_half = (current_frame_depth_head_half == 0)
-            mask_near_half = (current_frame_depth_head_half > 0) & (current_frame_depth_head_half <= near_max_dist)
-            
-            if DEBUG:
-                mask_remaining_half = (current_frame_depth_head_half > near_max_dist) # just for debug
-                blank_image_half = np.zeros((height//2,width,3), np.uint8)
-                blank_image_half[mask_zero_half] = [255,255,255]
-                blank_image_half[mask_near_half] = [255,0,0]
-                blank_image_half[mask_remaining_half] = [0,0,255]
-                    
-            pixel_count_zeros_half = np.count_nonzero(mask_zero_half)
-            pixel_count_near_half = np.count_nonzero(mask_near_half)
-            
-            if DEBUG:
-                cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
+                rows,cols = blank_image_bw2.shape[:2]
+                lefty = int((-x*vy/vx) + y)
+                righty = int(((cols-x)*vy/vx)+y)
+                cv2.line(blank_image,(cols-1,righty),(0,lefty),(255, 0, 255),2)
+                cv2.line(blank_image_bw2,(cols-1,righty),(0,lefty),(128),2)
+
+                print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
+                print("bag centroide =", cx, cy)
+
                 cv2.imshow("New Img Distance Inspection", blank_image)
-                cv2.waitKey(10)
+                cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
 
-            half_image_zero_or_near = False
-            half_image_zero_or_near_err = 0.0
-            
-            full_image_near = False
-            full_image_near_err = 0.0
+                k = cv2.waitKey(1)
+                if k == ord('w'):
+                    self.floor_dist += 10
+                if k == ord('q'):
+                    self.floor_dist -= 10
+                if k == ord('s'):
+                    self.top_bag_dist += 10
+                if k == ord('a'):
+                    self.top_bag_dist -= 10
 
+                print(self.floor_dist, self.top_bag_dist)
 
-            half_image_zero_or_near_err = (pixel_count_zeros_half+pixel_count_near_half)/(tot_pixeis//2)
-            if half_image_zero_or_near_err >= half_image_zero_or_near_percentage:
-                half_image_zero_or_near = True
-            
-            full_image_near_err = pixel_count_near/tot_pixeis
-            if full_image_near_err >= full_image_near_percentage:
-                full_image_near = True
-            
-            
-            if half_image_zero_or_near or full_image_near:
-                overall = True
-
-            # just for debug
-            # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
-            # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
-        
-        return overall
-        
-
-    def search_for_person(self, tetas, delta_t=3.0):
-
-        self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)                
-        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-        time.sleep(0.5)
-        
-        total_person_detected = []
-        person_detected = []
-        people_ctr = 0
-
-        ### MOVES NECK AND SAVES DETECTED PEOPLE ###
-        
-        for t in tetas:
-            self.set_rgb(RED+SET_COLOUR)
-            self.set_neck(position=t, wait_for_end_of=True)
-            time.sleep(1.0) # 0.5
-            self.set_rgb(WHITE+SET_COLOUR)
-
-            start_time = time.time()
-            while (time.time() - start_time) < delta_t:        
-                local_detected_people = self.node.detected_people
-                for temp_people in local_detected_people.persons:
-                    
-                    is_already_in_list = False
-                    person_already_in_list = DetectedPerson()
-                    for people in person_detected:
-
-                        if temp_people.index_person == people.index_person:
-                            is_already_in_list = True
-                            person_already_in_list = people
-
-                    if is_already_in_list:
-                        person_detected.remove(person_already_in_list)
-                    elif temp_people.index_person > 0: # debug
-                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
-                        self.set_rgb(GREEN+SET_COLOUR)
-                    
-                    if temp_people.index_person > 0:
-                        person_detected.append(temp_people)
-                        people_ctr+=1
-
-            # DEBUG
-            # print("people in this neck pos:")
-            # for people in person_detected:
-            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
-        
-            total_person_detected.append(person_detected.copy())
-            # print("Total number of people detected:", len(person_detected), people_ctr)
-            person_detected.clear()          
-
-        self.activate_yolo_pose(activate=False)
-        # print(total_person_detected)
-
-        # DEBUG
-        # print("TOTAL people in this neck pos:")
-        # for frame in total_person_detected:
-        #     for people in frame:    
-        #         print(people.index_person, people.position_absolute.x, people.position_absolute.y)
-        #     print("-")
-
-        ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
-        
-        filtered_persons = []
-
-        for frame in range(len(total_person_detected)):
-
-            to_append = []
-            to_remove = []
-
-            if not len(filtered_persons):
-                # print("NO PEOPLE", frame)
-                for person in range(len(total_person_detected[frame])):
-                    to_append.append(total_person_detected[frame][person])
-            else:
-                # print("YES PEOPLE", frame)
-
-                MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same person
-
-                for person in range(len(total_person_detected[frame])):
-                    same_person_ctr = 0
-
-                    for filtered in range(len(filtered_persons)):
-
-                        dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
-                        # print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
-                        
-                        if dist < MIN_DIST:
-                            same_person_ctr+=1
-                            same_person_old = filtered_persons[filtered]
-                            same_person_new = total_person_detected[frame][person]
-                            # print("SAME PERSON")                        
-                    
-                    if same_person_ctr > 0:
-
-                        same_person_old_distance_center = abs(1280/2 - same_person_old.body_center_x) 
-                        same_person_new_distance_center = abs(1280/2 - same_person_new.body_center_x) 
-
-                        # print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
-                        # print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
-
-                        if same_person_new_distance_center < same_person_old_distance_center: # person from newer frame is more centered with camera center
-                            to_remove.append(same_person_old)
-                            to_append.append(same_person_new)
-                        else: # person from older frame is more centered with camera center
-                            pass # that person is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
-
-                    else:
-                        to_append.append(total_person_detected[frame][person])
-
-            for p in to_remove:
-                if p in filtered_persons:
-                    # print("REMOVED: ", p.index_person)
-                    filtered_persons.remove(p)
-                # else:
-                    # print("TRIED TO REMOVE TWICE THE SAME PERSON")
-            to_remove.clear()  
-
-            for p in to_append:
-                # print("ADDED: ", p.index_person)
-                filtered_persons.append(p)
-            to_append.clear()
-
-        # print("FILTERED:")
-        # for p in filtered_persons:
-        #     print(p.index_person)
-
-        return filtered_persons
-
-
-    def detected_person_to_face_path(self, person, send_to_face):
-
-        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
-        
-        cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
-        just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
-        # cv2.imshow("Search for Person", just_person_image)
-        # cv2.waitKey(100)
-        
-        face_path = current_datetime + str(person.index_person)
-        
-        cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
-        time.sleep(0.5)
-
-        if send_to_face:
-            self.set_face(custom=face_path)
-        
-        return face_path
+        return f_coords

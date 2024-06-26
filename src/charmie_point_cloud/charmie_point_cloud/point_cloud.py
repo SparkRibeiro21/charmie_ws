@@ -63,8 +63,14 @@ class PointCloud():
             self.MAX_DIST = 6000
             self.MIN_DIST = 300
             # shifts from the center of the bottom servo to the center of the robot platform
-            self.X_SHIFT = 50
-            self.Z_SHIFT = 1260
+            # self.X_SHIFT = 50
+            # self.Z_SHIFT = 1260
+
+            # post lidar obstacles_fusion calibration
+            self.X_SHIFT = -100
+            self.Y_SHIFT = 50
+            self.Z_SHIFT = 0
+        
 
         else: #  self.camera == "hand":
             self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
@@ -76,6 +82,7 @@ class PointCloud():
             self.MIN_DIST = 70
             # shifts from the center of the bottom servo to the center of the robot platform
             self.X_SHIFT = 0
+            self.Y_SHIFT = 0
             self.Z_SHIFT = 0
         
         self.teta = [  0,   0,   0] # neck values to adjust the kinematics
@@ -175,6 +182,7 @@ class PointCloud():
         zn = -Y
         result = np.dot(self.T, [xn, yn, zn, 1])
         result[0] += self.X_SHIFT
+        result[1] += self.Y_SHIFT
         result[2] += self.Z_SHIFT  # Z=0 is the floor
 
         result = result[0:3].astype(np.int16)
@@ -203,6 +211,7 @@ class PointCloud():
 
                     result = np.dot(self.T, [xn, yn, zn, 1])
                     result[0] += self.X_SHIFT
+                    result[1] += self.Y_SHIFT
                     result[2] += self.Z_SHIFT  # Z=0 is the floor
 
                     result = result[0:3].astype(np.int16)
@@ -392,7 +401,7 @@ class PointCloudNode(Node):
                     temp = []
                     temp.append(resp_centro)
                     temp.append(resp_outros)
-                    temp.append(resp_todos)
+                    temp.append(uteis)
                     self.pcloud_head.ENVIO.append(temp)
 
                 # convert ENVIO into RetrievePointCloud ROS Variable
@@ -557,7 +566,7 @@ class PointCloudNode(Node):
                     temp = []
                     temp.append(resp_centro)
                     temp.append(resp_outros)
-                    temp.append(resp_todos)
+                    temp.append(uteis)
                     self.pcloud_hand.ENVIO.append(temp)
 
                 # convert ENVIO into RetrievePointCloud ROS Variable

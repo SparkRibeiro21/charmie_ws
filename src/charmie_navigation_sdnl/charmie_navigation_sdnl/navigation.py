@@ -32,6 +32,10 @@ class NavigationSDNLClass:
         self.beta1 = 140 # 9
         self.beta2 = 0.15 # 7
 
+        self.lambda_target = 5 # 12
+        self.beta1 = 120 # 9
+        self.beta2 = 0.15 # 7
+
         # configurable other parameters
         self.nav_threshold_dist = 0.6 # in meters
         # self.nav_threshold_dist_follow_me = 1.2 # in meters
@@ -44,6 +48,7 @@ class NavigationSDNLClass:
         self.min_speed_obs = 6.0 # speed
         self.decay_rate_initial_speed_ramp = 2.0 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
+        self.MAX_DIST_FOR_OBS = 1.0
 
         self.obstacles = Obstacles()
         self.aux_obstacles_l = Obstacles()
@@ -80,8 +85,7 @@ class NavigationSDNLClass:
 
 
         # visual debug
-        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
-        self.MAX_DIST_FOR_OBS = 0.7
+        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
@@ -273,7 +277,7 @@ class NavigationSDNLClass:
                 # print(obs)
                 aux_obs['psi_obs'] = phi_ - obs.alfa
                 aux_obs['dis_obs'] = obs.dist
-                aux_obs['del_tet'] = obs.length_degrees
+                aux_obs['del_tet'] = obs.length_angular
 
                 obstacles.append(aux_obs.copy())
 
@@ -486,14 +490,14 @@ class NavigationSDNLClass:
                     # aux variables
                     aux_ang = self.all_obs_val[j].obstacles[i].alfa
                     aux_dist = self.all_obs_val[j].obstacles[i].dist + self.robot_radius
-                    aux_len_cm = self.all_obs_val[j].obstacles[i].length_cm
+                    aux_new_obs_len = self.all_obs_val[j].obstacles[i].dist * math.tan(self.all_obs_val[j].obstacles[i].length_angular)
                     thickness = 20
 
                     # line length of obstacle at dist and alfa detected
-                    cv2.line(self.test_image, (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
-                                               int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
-                                              (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
-                                               int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
+                    cv2.line(self.test_image, (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
+                                               int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
+                                              (int(self.xc + self.scale*self.all_pos_x_val[j] - self.scale * (aux_dist) * (math.cos(aux_ang - self.all_pos_t_val[j] + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2))),
+                                               int(self.yc - self.scale*self.all_pos_y_val[j] - self.scale * (aux_dist) * (math.sin(aux_ang - self.all_pos_t_val[j] + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.all_pos_t_val[j] + math.pi/2)))),
                                               (0, 165, 255), int(1.0 + thickness*self.scale/1000))
             """
 
@@ -504,7 +508,7 @@ class NavigationSDNLClass:
                 # aux variables
                 aux_ang = self.aux_obstacles_l.obstacles[i].alfa
                 aux_dist = self.aux_obstacles_l.obstacles[i].dist + self.robot_radius
-                aux_len_cm = self.aux_obstacles_l.obstacles[i].length_cm
+                aux_new_obs_len = self.aux_obstacles_l.obstacles[i].dist * math.tan(self.aux_obstacles_l.obstacles[i].length_angular)
 
                 #line robot center to obstacle center
                 # cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)),
@@ -520,10 +524,10 @@ class NavigationSDNLClass:
                                           (255, 255, 255))
                 
                 # line length of obstacle at dist and alfa detected
-                cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2))),
-                                        int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) - self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
-                                        (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2)) - self.scale * (aux_len_cm/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2))),
-                                        int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_len_cm/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
+                cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2))),
+                                        int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
+                                        (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2))),
+                                        int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
                                         (0, 0, 255), int(1.0 + thickness*self.scale/1000))
                   
             
@@ -738,7 +742,7 @@ class NavSDNLNode(Node):
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         # Create PUBs/SUBs
-        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
+        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar2", self.obs_lidar_callback, 10)
         
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
@@ -759,7 +763,7 @@ class NavSDNLNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         
         # Obstacles 
-        self.obstacles_subscriber = self.create_subscription(Obstacles, 'obs_lidar', self.obstacles_callback, 10)
+        # self.obstacles_subscriber = self.create_subscription(Obstacles, 'obs_lidar', self.obstacles_callback, 10)
 
         self.create_timer(0.1, self.timer_callback)
 
@@ -792,19 +796,19 @@ class NavSDNLNode(Node):
         self.rgb_success = True
         self.rgb_message = ""
 
-    def obstacles_callback(self, obs:Obstacles):
-        self.obstacles = obs
-            
-        self.MIN_DIST_OBS = 10.0
-
-        # if len(self.obstacles.obstacles) == 0:
-        #     print("NO OBSTACLES")
-        # else:
-        for obs in self.obstacles.obstacles:
-            if obs.dist < self.MIN_DIST_OBS:
-                self.MIN_DIST_OBS = obs.dist
-
-        # print(self.MIN_DIST_OBS)        
+    # def obstacles_callback(self, obs:Obstacles):
+    #     self.obstacles = obs
+    #         
+    #     self.MIN_DIST_OBS = 10.0
+    # 
+    #     # if len(self.obstacles.obstacles) == 0:
+    #     #     print("NO OBSTACLES")
+    #     # else:
+    #     for obs in self.obstacles.obstacles:
+    #         if obs.dist < self.MIN_DIST_OBS:
+    #             self.MIN_DIST_OBS = obs.dist
+    # 
+    #     # print(self.MIN_DIST_OBS)        
 
     def get_aligned_depth_image_callback(self, img: Image):
         self.depth_img = img
@@ -865,6 +869,18 @@ class NavSDNLNode(Node):
         # self.nav.sdnl_main()
         # self.nav.update_debug_drawings()
         # print("here")
+
+        print("===")
+        for o in obs.obstacles:
+            print("alfa", o.alfa)
+            print("dist", o.dist)
+            print("l_ang", o.length_angular)
+            print("l_cm", o.length_cm)
+        print("---")
+
+        for obs in self.obstacles.obstacles:
+            if obs.dist < self.MIN_DIST_OBS:
+                self.MIN_DIST_OBS = obs.dist
 
     def robot_localisation_callback(self, pose: Pose2D):
         self.nav.robot_x = pose.x

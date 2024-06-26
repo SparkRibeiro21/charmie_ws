@@ -1,11 +1,11 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
-package_name = 'charmie_obstacles'
+package_name = 'charmie_llm'
 
 setup(
     name=package_name,
     version='0.0.0',
-    packages=[package_name],
+    packages=find_packages(exclude=['test']),
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -20,8 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "obstacles_lidar = charmie_obstacles.obstacles_lidar:main",
-            "obstacles_fusion = charmie_obstacles.obstacles_fusion:main"
+            "llm = charmie_llm.llm:main"
         ],
     },
 )

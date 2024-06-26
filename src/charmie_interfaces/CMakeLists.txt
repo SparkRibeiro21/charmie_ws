@@ -48,6 +48,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TarNavSDNL.msg"
   "msg/Yolov8Objects.msg"
   "msg/Yolov8Pose.msg"
+  "srv/ActivateObstacles.srv"
   "srv/ActivateYoloObjects.srv"
   "srv/ActivateYoloPose.srv"
   "srv/ArmTrigger.srv"
