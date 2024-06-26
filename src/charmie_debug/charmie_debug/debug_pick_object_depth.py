@@ -5,8 +5,8 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, SetFace
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, SetFace, GetPointCloud
 from sensor_msgs.msg import Image
 
 import cv2 
@@ -53,6 +53,9 @@ class TestNode(Node):
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
 
+        # Point Cloud
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+
         ### Services (Clients) ###
         
         # Neck
@@ -79,6 +82,9 @@ class TestNode(Node):
         #     self.get_logger().warn("Waiting for Server Neck Track Person ...")
         # while not self.face_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Face Command...")
+        # Point Cloud
+        while not self.point_cloud_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud...")
 
         
         # Variables
@@ -87,6 +93,7 @@ class TestNode(Node):
         self.waited_for_end_of_neck_pos = False
         self.waited_for_end_of_neck_coords = False
         self.waited_for_end_of_face = False
+        self.waiting_for_pcloud = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.rgb_success = True
@@ -111,6 +118,7 @@ class TestNode(Node):
         self.first_depth_hand_image_received = False
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
+        self.point_cloud_response = GetPointCloud.Response()
 
 
     def get_aligned_depth_head_image_callback(self, img: Image):
@@ -135,6 +143,28 @@ class TestNode(Node):
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
 
+
+    # request point cloud information from point cloud node
+    def call_point_cloud_server(self, req, camera):
+        request = GetPointCloud.Request()
+        request.data = req
+        request.retrieve_bbox = False
+        request.camera = camera
+    
+        future = self.point_cloud_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud)
+
+    def callback_call_point_cloud(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            self.point_cloud_response = future.result()
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     #### FACE SERVER FUNCTIONS #####
     def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
@@ -500,6 +530,31 @@ class RestaurantMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
+    def get_point_cloud(self, bb=BoundingBox(), wait_for_end_of=True):
+
+        requested_objects = []
+            
+        # bb = BoundingBox()
+        # bb.box_top_left_x = 0
+        # bb.box_top_left_y = 0
+        # bb.box_width = 1280
+        # bb.box_height = 720
+
+        get_pc = BoundingBoxAndPoints()
+        get_pc.bbox = bb
+
+        requested_objects.append(get_pc)
+
+        self.node.waiting_for_pcloud = True
+        self.node.call_point_cloud_server(requested_objects, "hand")
+
+        if wait_for_end_of:
+            while self.node.waiting_for_pcloud:
+                pass
+
+        return self.node.point_cloud_response.coords[0]
+    
+
     def main(self):
         Waiting_for_start_button = 0
         Searching_for_clients = 1
@@ -568,7 +623,7 @@ class RestaurantMain():
 
     def get_bag_pick_cordinates(self):
 
-        DEBUG = False
+        DEBUG = True
         f_coords = []
 
         if self.node.first_depth_hand_image_received:
@@ -601,6 +656,20 @@ class RestaurantMain():
             [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
             theta = -math.atan2(vy,vx)
 
+            bb_thresh = 40 
+            bb = BoundingBox() 
+            bb.box_top_left_x = max(cx-bb_thresh, 0)
+            bb.box_top_left_y = max(cy-bb_thresh, 0)
+            bb.box_width = min(2*bb_thresh, width)
+            bb.box_height = min(2*bb_thresh, height)
+
+            coords = self.get_point_cloud(bb=bb)
+            
+            # x = bag height
+            # y = move front and back robot, or left and right for camera
+            # y = move right and left robot, or up and down for camera
+            print("x = ", round(coords.center_coords.x,0), "y = ", round(coords.center_coords.y,0), "z = ", round(coords.center_coords.z,0))
+
             f_coords.append(cx)
             f_coords.append(cy)
             f_coords.append(theta)
@@ -631,6 +700,9 @@ class RestaurantMain():
                 print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
                 print("bag centroide =", cx, cy)
 
+                cv2.rectangle(blank_image, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (255, 0, 255),2)
+                cv2.rectangle(blank_image_bw2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (128), 2)
+
                 cv2.imshow("New Img Distance Inspection", blank_image)
                 cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
 
@@ -645,5 +717,7 @@ class RestaurantMain():
                     self.top_bag_dist -= 10
 
                 print(self.floor_dist, self.top_bag_dist)
+
+            
 
         return f_coords
