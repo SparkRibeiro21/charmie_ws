@@ -623,7 +623,8 @@ class RestaurantMain():
 
     def get_bag_pick_cordinates(self):
 
-        DEBUG = True
+        DEBUG = False
+        MIN_BAG_PIXEL_AREA = 40000
         f_coords = []
 
         self.node.first_depth_hand_image_received = False
@@ -631,24 +632,30 @@ class RestaurantMain():
         while not self.node.first_depth_hand_image_received:
             pass
 
-        current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
-        height, width = current_frame_depth_head.shape
-        
-        current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0 # remove the robot from the image
-
-        mask_zero = (current_frame_depth_head == 0)
-        mask_near = (current_frame_depth_head != 0) & (current_frame_depth_head >= self.top_bag_dist) & (current_frame_depth_head <= self.floor_dist)
-
-        blank_image_bw = np.zeros((height,width), np.uint8)
-        blank_image_bw2 = np.zeros((height,width), np.uint8)
-        blank_image_bw[mask_near] = [255]
-
-        contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-
         c_areas = []
-        for a in contours: # create list with area size 
-            # print(cv2.contourArea(a))
-            c_areas.append(cv2.contourArea(a))
+        
+        while not c_areas or max(c_areas) < MIN_BAG_PIXEL_AREA:
+            c_areas.clear()
+            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
+            height, width = current_frame_depth_head.shape
+            
+            # current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0 # remove the robot from the image
+
+            mask_zero = (current_frame_depth_head == 0)
+            mask_near = (current_frame_depth_head != 0) & (current_frame_depth_head >= self.top_bag_dist) & (current_frame_depth_head <= self.floor_dist)
+
+            blank_image_bw = np.zeros((height,width), np.uint8)
+            blank_image_bw2 = np.zeros((height,width), np.uint8)
+            blank_image_bw[mask_near] = [255]
+
+            contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+            print("areas")
+            for a in contours: # create list with area size 
+                print(cv2.contourArea(a))
+                c_areas.append(cv2.contourArea(a))
+            if c_areas:
+                print(max(c_areas), " ...")
 
         cnt = contours[c_areas.index(max(c_areas))] # extracts the largest area 
         # print(c_areas.index(max(c_areas)))
@@ -662,15 +669,20 @@ class RestaurantMain():
         [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
         theta = -math.atan2(vy,vx)
 
-        bb_thresh = 40 
-        bb = BoundingBox() # centroide of bag bounding box 
-        bb.box_top_left_x = max(cx-bb_thresh, 0)
-        bb.box_top_left_y = max(cy-bb_thresh, 0)
-        bb.box_width = min(2*bb_thresh, width)
-        bb.box_height = min(2*bb_thresh, height)
-
-        coords_centroide = self.get_point_cloud(bb=bb)
-
+        # bb_thresh = 40 
+        # bb = BoundingBox() # centroide of bag bounding box 
+        # bb.box_top_left_x = max(cx-bb_thresh, 0)
+        # bb.box_top_left_y = max(cy-bb_thresh, 0)
+        # if bb.box_top_left_x + 2*bb_thresh > width:
+        #     bb.box_width = width - bb.box_top_left_x 
+        # else:
+        #     bb.box_width = 2*bb_thresh
+        # if bb.box_top_left_y + 2*bb_thresh > height:
+        #     bb.box_height = height - bb.box_top_left_y 
+        # else:
+        #     bb.box_height = 2*bb_thresh
+        # coords_centroide = self.get_point_cloud(bb=bb)
+        
         bb = BoundingBox() # full bag bounding box
         bb.box_top_left_x = max(xi, 0)
         bb.box_top_left_y = max(yi, 0)
@@ -678,17 +690,28 @@ class RestaurantMain():
         bb.box_height = h
 
         coords_full = self.get_point_cloud(bb=bb)
-        
+        selected_coords = coords_full
+
+        # adds difference between camera center to gripper center
+        selected_coords.center_coords.z += 70
+
         # x = bag height
         # y = move front and back robot, or left and right for camera
-        # y = move right and left robot, or up and down for camera
-        print("xc = ", round(coords_centroide.center_coords.x,0), "yc = ", round(coords_centroide.center_coords.y,0), "zc = ", round(coords_centroide.center_coords.z,0))
+        # z = move right and left robot, or up and down for camera
+        # print("xc = ", round(coords_centroide.center_coords.x,0), "yc = ", round(coords_centroide.center_coords.y,0), "zc = ", round(coords_centroide.center_coords.z,0))
         print("xf = ", round(coords_full.center_coords.x,0), "yf = ", round(coords_full.center_coords.y,0), "zf = ", round(coords_full.center_coords.z,0))
 
-        f_coords.append(coords_centroide.center_coords.x)
-        f_coords.append(coords_centroide.center_coords.y)
-        f_coords.append(coords_centroide.center_coords.z)
+        ang_to_bag = -math.degrees(math.atan2(selected_coords.center_coords.z, selected_coords.center_coords.y))
+        dist_to_bag = (math.sqrt(selected_coords.center_coords.y**2 + selected_coords.center_coords.z**2))/1000
+        
+        f_coords.append(selected_coords.center_coords.x/1000)
+        f_coords.append(selected_coords.center_coords.y/1000)
+        f_coords.append(selected_coords.center_coords.z/1000)
+        f_coords.append(ang_to_bag)
+        f_coords.append(dist_to_bag)
         f_coords.append(theta)
+        
+        print(ang_to_bag, dist_to_bag)
         
         if DEBUG:
             mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug, floor level
