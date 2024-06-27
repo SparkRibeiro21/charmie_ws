@@ -229,6 +229,8 @@ class ArmUfactory(Node):
 
 		
 
+		
+
 	def deg_to_rad(self, deg):
 		rad = [deg[0] * math.pi / 180,
 		 deg[1] * math.pi / 180,
@@ -2050,6 +2052,16 @@ class ArmUfactory(Node):
 		#print(qx,qy,qz,qw)
   
 		return [qx, qy, qz, qw]
+	
+	def go_right(self):
+		if self.estado_tr == 0:
+			self.position_values_req.pose = self.orient_to_handler
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
 
 	def say_hello(self):
 		if self.estado_tr == 0:

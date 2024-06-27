@@ -75,6 +75,8 @@ class FaceNode(Node):
         self.declare_parameter("after_speech_timer", 0.0) 
         self.declare_parameter("initial_face", "charmie_face") 
 
+        
+
         ### Topics (Subscribers) ###   
         # Receive speech strings to show in face
         self.speech_to_face_subscriber = self.create_subscription(String, "display_speech_face", self.speech_to_face_callback, 10)

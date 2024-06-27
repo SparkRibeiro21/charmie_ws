@@ -35,11 +35,15 @@ class ArmUfactory(Node):
 		self.set_gripper = self.create_client(GripperMove, '/xarm/set_gripper_position')
 		self.set_pause_time_client = self.create_client(SetFloat32, '/xarm/set_pause_time')
 		self.get_gripper_position = self.create_client(GetFloat32,'/xarm/get_gripper_position')
+		self.move_tool_line = self.create_client(MoveCartesian, '/xarm/set_tool_position')
 		#self.plan_pose_client = self.create_client(PlanPose, '/xarm_pose_plan')
 		#self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
 		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
+  		
+		while not self.move_tool_line.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server move_tool_line...")
 
-		
+	
 		while not self.set_position_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Position...")
 

@@ -5,6 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedObject, Yolov8Objects, ListOfImages, ListOfStrings
+from charmie_interfaces.srv import ActivateYoloObjects
 from cv_bridge import CvBridge
 import cv2 
 import cvzone
@@ -52,7 +53,7 @@ class Yolo_obj(Node):
         # self.model = YOLO('/home/utilizador/charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/' + filename)
         self.object_model = YOLO(self.complete_path + objects_filename)
         
-        # self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10)
+        self.doors_filtered_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered', 10)
         # Intel Realsense
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
@@ -76,6 +77,10 @@ class Yolo_obj(Node):
         flag_diagn.data = True
         self.yolo_object_diagnostic_publisher.publish(flag_diagn)
 
+        ### Services ###
+        self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
+
+
 ### --------------------------------------------- ROUTINE EXPLANATION --------------------------------------------- ### 
 
 # The following callback runs the NN model each time the camera publishes an image. After running it, the model 
@@ -83,6 +88,35 @@ class Yolo_obj(Node):
 # and displays it on the screen. Any object detected with less than self.object_threshold(%) of confidence is ignored.
 
 ### --------------------------------------------- /////////////// --------------------------------------------- ###
+
+    def callback_activate_yolo_objects(self, request, response):
+        
+        # Type of service received: 
+        # bool activate_objects                       # activate or deactivate yolo object detection
+        # bool activate_shoes                         # activate or deactivate yolo shoes detection
+        # bool activate_doors                         # activate or deactivate yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
+        # float64 minimum_objects_confidence          # adjust the minimum accuracy to assume as an object
+        # float64 minimum_shoes_confidence            # adjust the minimum accuracy to assume as a shoe
+        # float64 minimum_doors_confidence            # adjust the minimum accuracy to assume as a door or handle
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+        global MIN_OBJECT_CONF_VALUE
+
+        self.get_logger().info("Received Activate Yolo Objects %s" %("("+str(request.activate_objects)+", "
+                                                                        +str(request.activate_shoes)+", "
+                                                                        +str(request.activate_doors)+", "
+                                                                        +str(request.minimum_objects_confidence)+")"))
+
+        self.ACTIVATE_YOLO_OBJECTS = request.activate_objects
+        self.ACTIVATE_YOLO_SHOES = request.activate_shoes
+        self.ACTIVATE_YOLO_DOORS = request.activate_doors
+        MIN_OBJECT_CONF_VALUE = request.minimum_objects_confidence
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Activated with selected parameters"
+        return response
 
     def get_color_image_head_callback(self, img: Image):
         self.get_logger().info('Receiving color video frame head')
