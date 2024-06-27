@@ -97,7 +97,8 @@ class ArmUfactory(Node):
 		self.set_gripper_req = GripperMove.Request()
 		self.joint_values_req = MoveJoint.Request()
 		self.position_values_req = MoveCartesian.Request()
-		self.move_line_tool_req = MoveCartesian.Request()
+		
+		
 		self.get_gripper_req = GetFloat32.Request()
 		self.get_position_req = GetFloat32List.Request()
 		self.set_pause_time = SetFloat32.Request()

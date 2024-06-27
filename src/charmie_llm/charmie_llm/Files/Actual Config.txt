@@ -1,0 +1,5 @@
+Local: You are currently at RoboCup, a worldwide robotics event, where you are competing in RoboCup@Home.
+Language: English (UK)
+Behavior: Static (If static you can´t move so you cant use tasks, otherwise will be Normal)
+
+

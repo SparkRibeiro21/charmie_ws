@@ -194,10 +194,13 @@ class TestNode(Node):
 
 
     #### SAVE SPEECH SERVER FUNCTIONS #####
-    def call_save_speech_command_server(self, filename="", command="", wait_for_end_of=True):
+    def call_save_speech_command_server(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True):
         request = SaveSpeechCommand.Request()
         request.filename = filename
         request.command = command
+        request.quick_voice = quick_voice
+        request.play_command = play_command
+        request.show_in_face = show_in_face
     
         future = self.save_speech_command_client.call_async(request)
         # print("Sent Command")
@@ -223,7 +226,6 @@ class TestNode(Node):
             self.waited_for_end_of_save_speaking = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
-
 
 
 def main(args=None):
@@ -314,7 +316,7 @@ class RestaurantMain():
 
         return self.node.speech_success, self.node.speech_message
 
-    def save_speech(self, filename="", command="", wait_for_end_of=True):
+    def save_speech(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True):
 
         # the commands should be lists, because you can send a list of commands and a list of filenames,
         # making it possible to create multiple temp commands with one instruction
@@ -330,7 +332,7 @@ class RestaurantMain():
         
         if len(file) > 0 and len(comm) > 0:
 
-            self.node.call_save_speech_command_server(filename=file, command=comm, wait_for_end_of=wait_for_end_of)
+            self.node.call_save_speech_command_server(filename=file, command=comm, quick_voice=quick_voice, play_command=play_command, show_in_face=show_in_face, wait_for_end_of=wait_for_end_of)
             
             if wait_for_end_of:
                 while not self.node.waited_for_end_of_save_speaking:

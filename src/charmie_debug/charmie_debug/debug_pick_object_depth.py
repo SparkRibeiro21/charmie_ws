@@ -5,8 +5,8 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, SetFace
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, SetFace, GetPointCloud
 from sensor_msgs.msg import Image
 
 import cv2 
@@ -53,6 +53,9 @@ class TestNode(Node):
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
 
+        # Point Cloud
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+
         ### Services (Clients) ###
         
         # Neck
@@ -79,6 +82,9 @@ class TestNode(Node):
         #     self.get_logger().warn("Waiting for Server Neck Track Person ...")
         # while not self.face_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Face Command...")
+        # Point Cloud
+        while not self.point_cloud_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud...")
 
         
         # Variables
@@ -87,6 +93,7 @@ class TestNode(Node):
         self.waited_for_end_of_neck_pos = False
         self.waited_for_end_of_neck_coords = False
         self.waited_for_end_of_face = False
+        self.waiting_for_pcloud = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.rgb_success = True
@@ -111,6 +118,7 @@ class TestNode(Node):
         self.first_depth_hand_image_received = False
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
+        self.point_cloud_response = GetPointCloud.Response()
 
 
     def get_aligned_depth_head_image_callback(self, img: Image):
@@ -135,6 +143,28 @@ class TestNode(Node):
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
 
+
+    # request point cloud information from point cloud node
+    def call_point_cloud_server(self, req, camera):
+        request = GetPointCloud.Request()
+        request.data = req
+        request.retrieve_bbox = False
+        request.camera = camera
+    
+        future = self.point_cloud_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud)
+
+    def callback_call_point_cloud(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            self.point_cloud_response = future.result()
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     #### FACE SERVER FUNCTIONS #####
     def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
@@ -392,9 +422,6 @@ class RestaurantMain():
 
     def __init__(self, node: TestNode):
         self.node = node
-
-        self.floor_dist=600
-        self.top_bag_dist=350
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -500,6 +527,31 @@ class RestaurantMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
+    def get_point_cloud(self, bb=BoundingBox(), wait_for_end_of=True):
+
+        requested_objects = []
+            
+        # bb = BoundingBox()
+        # bb.box_top_left_x = 0
+        # bb.box_top_left_y = 0
+        # bb.box_width = 1280
+        # bb.box_height = 720
+
+        get_pc = BoundingBoxAndPoints()
+        get_pc.bbox = bb
+
+        requested_objects.append(get_pc)
+
+        self.node.waiting_for_pcloud = True
+        self.node.call_point_cloud_server(requested_objects, "hand")
+
+        if wait_for_end_of:
+            while self.node.waiting_for_pcloud:
+                pass
+
+        return self.node.point_cloud_response.coords[0]
+    
+
     def main(self):
         Waiting_for_start_button = 0
         Searching_for_clients = 1
@@ -512,6 +564,9 @@ class RestaurantMain():
         
         # VARS ...
         self.state = Waiting_for_start_button
+
+        self.floor_dist=600
+        self.top_bag_dist=350
 
         print("IN NEW MAIN")
 
@@ -569,13 +624,22 @@ class RestaurantMain():
     def get_bag_pick_cordinates(self):
 
         DEBUG = False
+        MIN_BAG_PIXEL_AREA = 40000
         f_coords = []
 
-        if self.node.first_depth_hand_image_received:
+        self.node.first_depth_hand_image_received = False
+
+        while not self.node.first_depth_hand_image_received:
+            pass
+
+        c_areas = []
+        
+        while not c_areas or max(c_areas) < MIN_BAG_PIXEL_AREA:
+            c_areas.clear()
             current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
             height, width = current_frame_depth_head.shape
             
-            current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0 # remove the robot from the image
+            # current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0 # remove the robot from the image
 
             mask_zero = (current_frame_depth_head == 0)
             mask_near = (current_frame_depth_head != 0) & (current_frame_depth_head >= self.top_bag_dist) & (current_frame_depth_head <= self.floor_dist)
@@ -586,64 +650,110 @@ class RestaurantMain():
 
             contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-            c_areas = []
+            print("areas")
             for a in contours: # create list with area size 
-                # print(cv2.contourArea(a))
+                print(cv2.contourArea(a))
                 c_areas.append(cv2.contourArea(a))
+            if c_areas:
+                print(max(c_areas), " ...")
 
-            cnt = contours[c_areas.index(max(c_areas))] # extracts the largest area 
-            # print(c_areas.index(max(c_areas)))
+        cnt = contours[c_areas.index(max(c_areas))] # extracts the largest area 
+        # print(c_areas.index(max(c_areas)))
+        
+        M = cv2.moments(cnt) # calculates centroide
+        cx = int(M['m10']/M['m00'])
+        cy = int(M['m01']/M['m00'])
+
+        xi,yi,w,h = cv2.boundingRect(cnt)
+
+        [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
+        theta = -math.atan2(vy,vx)
+
+        # bb_thresh = 40 
+        # bb = BoundingBox() # centroide of bag bounding box 
+        # bb.box_top_left_x = max(cx-bb_thresh, 0)
+        # bb.box_top_left_y = max(cy-bb_thresh, 0)
+        # if bb.box_top_left_x + 2*bb_thresh > width:
+        #     bb.box_width = width - bb.box_top_left_x 
+        # else:
+        #     bb.box_width = 2*bb_thresh
+        # if bb.box_top_left_y + 2*bb_thresh > height:
+        #     bb.box_height = height - bb.box_top_left_y 
+        # else:
+        #     bb.box_height = 2*bb_thresh
+        # coords_centroide = self.get_point_cloud(bb=bb)
+        
+        bb = BoundingBox() # full bag bounding box
+        bb.box_top_left_x = max(xi, 0)
+        bb.box_top_left_y = max(yi, 0)
+        bb.box_width = w
+        bb.box_height = h
+
+        coords_full = self.get_point_cloud(bb=bb)
+        selected_coords = coords_full
+
+        # adds difference between camera center to gripper center
+        selected_coords.center_coords.z += 70
+
+        # x = bag height
+        # y = move front and back robot, or left and right for camera
+        # z = move right and left robot, or up and down for camera
+        # print("xc = ", round(coords_centroide.center_coords.x,0), "yc = ", round(coords_centroide.center_coords.y,0), "zc = ", round(coords_centroide.center_coords.z,0))
+        print("xf = ", round(coords_full.center_coords.x,0), "yf = ", round(coords_full.center_coords.y,0), "zf = ", round(coords_full.center_coords.z,0))
+
+        ang_to_bag = -math.degrees(math.atan2(selected_coords.center_coords.z, selected_coords.center_coords.y))
+        dist_to_bag = (math.sqrt(selected_coords.center_coords.y**2 + selected_coords.center_coords.z**2))/1000
+        
+        f_coords.append(selected_coords.center_coords.x/1000)
+        f_coords.append(selected_coords.center_coords.y/1000)
+        f_coords.append(selected_coords.center_coords.z/1000)
+        f_coords.append(ang_to_bag)
+        f_coords.append(dist_to_bag)
+        f_coords.append(theta)
+        
+        print(ang_to_bag, dist_to_bag)
+        
+        if DEBUG:
+            mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug, floor level
+            blank_image = np.zeros((height,width,3), np.uint8)
             
-            M = cv2.moments(cnt) # calculates centroide
-            cx = int(M['m10']/M['m00'])
-            cy = int(M['m01']/M['m00'])
+            blank_image[mask_zero] = [255,255,255]
+            blank_image[mask_near] = [255,0,0]
+            blank_image[mask_remaining] = [0,0,255]
 
-            [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
-            theta = -math.atan2(vy,vx)
+            cv2.drawContours(blank_image, [cnt], 0, (0, 255, 0), 3) 
+            cv2.drawContours(blank_image_bw2, [cnt], 0, (255), thickness=cv2.FILLED) 
+            cv2.circle(blank_image, (cx, cy), 10, (0, 255, 0), -1)
+            cv2.circle(blank_image_bw2, (cx, cy), 10, (128), -1)
 
-            f_coords.append(cx)
-            f_coords.append(cy)
-            f_coords.append(theta)
-            
-            if DEBUG:
-                mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug, floor level
-                blank_image = np.zeros((height,width,3), np.uint8)
-                
-                blank_image[mask_zero] = [255,255,255]
-                blank_image[mask_near] = [255,0,0]
-                blank_image[mask_remaining] = [0,0,255]
+            cv2.rectangle(blank_image,(xi,yi),(xi+w,yi+h), (255, 0, 255),2)
+            cv2.rectangle(blank_image_bw2,(xi,yi),(xi+w,yi+h),(128),2)
 
-                cv2.drawContours(blank_image, [cnt], 0, (0, 255, 0), 3) 
-                cv2.drawContours(blank_image_bw2, [cnt], 0, (255), thickness=cv2.FILLED) 
-                cv2.circle(blank_image, (cx, cy), 10, (0, 255, 0), -1)
-                cv2.circle(blank_image_bw2, (cx, cy), 10, (128), -1)
+            rows,cols = blank_image_bw2.shape[:2]
+            lefty = int((-x*vy/vx) + y)
+            righty = int(((cols-x)*vy/vx)+y)
+            cv2.line(blank_image,(cols-1,righty),(0,lefty),(255, 0, 255),2)
+            cv2.line(blank_image_bw2,(cols-1,righty),(0,lefty),(128),2)
 
-                xi,yi,w,h = cv2.boundingRect(cnt)
-                cv2.rectangle(blank_image,(xi,yi),(xi+w,yi+h), (255, 0, 255),2)
-                cv2.rectangle(blank_image_bw2,(xi,yi),(xi+w,yi+h),(128),2)
+            print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
+            # print("bag centroide =", cx, cy)
 
-                rows,cols = blank_image_bw2.shape[:2]
-                lefty = int((-x*vy/vx) + y)
-                righty = int(((cols-x)*vy/vx)+y)
-                cv2.line(blank_image,(cols-1,righty),(0,lefty),(255, 0, 255),2)
-                cv2.line(blank_image_bw2,(cols-1,righty),(0,lefty),(128),2)
+            cv2.rectangle(blank_image, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (255, 0, 255),2)
+            cv2.rectangle(blank_image_bw2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (128), 2)
 
-                print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
-                print("bag centroide =", cx, cy)
+            cv2.imshow("New Img Distance Inspection", blank_image)
+            cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
 
-                cv2.imshow("New Img Distance Inspection", blank_image)
-                cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
+            k = cv2.waitKey(1)
+            if k == ord('w'):
+                self.floor_dist += 10
+            if k == ord('q'):
+                self.floor_dist -= 10
+            if k == ord('s'):
+                self.top_bag_dist += 10
+            if k == ord('a'):
+                self.top_bag_dist -= 10
 
-                k = cv2.waitKey(1)
-                if k == ord('w'):
-                    self.floor_dist += 10
-                if k == ord('q'):
-                    self.floor_dist -= 10
-                if k == ord('s'):
-                    self.top_bag_dist += 10
-                if k == ord('a'):
-                    self.top_bag_dist -= 10
-
-                print(self.floor_dist, self.top_bag_dist)
+            print(self.floor_dist, self.top_bag_dist)
 
         return f_coords

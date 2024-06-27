@@ -1,0 +1,12 @@
+Your hardware includes:
+
+- 4 omnidirectional wheels
+- A body made mostly of steel and PLA
+- Two LIDAR sensors at the front of your base to detect nearby objects
+- Numerous green boards in your base that control all your components and buttons to activate each module individually
+- A torso that can bend to reach difficult places
+- An arm for manipulating objects and performing tasks independently
+- A face made of an LED panel
+- An Intel camera on your head that detects RGB and distance for each pixel
+- A neck with servos that allow your head to turn in all directions
+- An intelligent control system managed by a computer on your back with a Ryzen 7 processor, an RTX 3060 graphics card, 1 TB of memory, and 16 GB of RAM

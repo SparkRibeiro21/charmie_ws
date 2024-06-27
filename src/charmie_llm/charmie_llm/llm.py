@@ -167,11 +167,107 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
 
 import threading
 import time
+import json
+from openai import OpenAI
+#from gtts import gTTS
+import os
+#import playsound
+import fitz  # PyMuPDF
+
+api_key = "OUR-KEY"
+
+# Define the instructions text
+instructions_text = """
+You are a Home Assistant, your name is Charmie, and your task is to talk with people. Your body was made by the Laboratory of Automation and Robotics (LAR), which is a laboratory of the University of Minho. Your principal developer is Tiago Ribeiro. Your main tasks are: Following people, you can help them carry things since you have a manipulable arm. You can serve at tables, making your applicability vast. Or just talking. 
+
+Try to be pleasant and fun.
+
+If people talk to you in portuguese, you will speak European Portuguese, so instead of "você," use "tu," and do not use gerunds. If people talk to you in English, you will talk English(UK). People approach you with fear and hesitation, so try to break the ice and speak more at first contact. Always engage more conversation, even if they only say "olá." What you say is converted to voice, so you should write as if you are speaking and do not use special characters or emojis, except for "[]" that you can use for task commands.
+Don't use itemize or lists of data as output because your text will be transformed in Speech (Text-to-Speech). Make your message as short as possible.
+
+The Team Members are on "Actual Team Members.txt" file.
+The Tasks that you can perform are on "Assistant Tasks.txt" file.
+Your hardware overview is on "Hardware Overview.txt" file.
+Your actual local(spot), language to use and some other configs are on "Actualk Config.txt"
+You have two .pdf files that is the Team Description Paper of Charmie, read to know yourself better.
+"""
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+
+def pdf_to_text(pdf_path):
+    doc = fitz.open(pdf_path)
+    text = ""
+    for page in doc:
+        text += page.get_text()
+    return text
+
+class MaxTurnsReachedException(Exception):
+    def __init__(self):
+        super().__init__("Reached maximum number of turns")
+        
+# Define the functions which will be the part of the LLM toolkit
+def follow() -> bool:
+    print("Follow me")
+    return True
+
+def stop() -> bool:
+    print("Stop")
+    return True
+
+def multiply(a: float, b: float) -> float:
+    return a * b
+
+tool_callables = {
+    "follow": follow,
+    "stop": stop,
+    "grab": multiply
+}
+
+# declaration of tools (functions) to be passed into the OpenAI assistant
+math_tools = [
+    {
+        "function": {
+            "name": "follow",
+            "description": "Called when you want to follow a person. Returns True if following False if not.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+        "type": "function",
+    },
+    {
+        "function": {
+            "name": "stop",
+            "description": "Called when some one want to stop the task. Returns True if stop False if not. ",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+        "type": "function",
+    },
+    {
+        "function": {
+            "name": "grab",
+            "description": "Returns the product of two numbers.",
+            "parameters": {
+                "type": "object",
+                "properties": {"a": {"type": "number"}, "b": {"type": "number"}},
+                "required": ["a", "b"],
+            },
+        },
+        "type": "function",
+    },
+    {"type": "file_search"}
+]
+
+
 
 
 class LLMNode(Node):
@@ -192,7 +288,7 @@ class LLMNode(Node):
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
         # Face
-        self.face_command_client = self.create_client(SetFace, "face_command")
+        #self.face_command_client = self.create_client(SetFace, "face_command")
         
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
@@ -206,8 +302,8 @@ class LLMNode(Node):
         while not self.calibrate_audio_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # Face
-        while not self.face_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Face Command...")
+        #while not self.face_command_client.wait_for_service(1.0):
+        #    self.get_logger().warn("Waiting for Server Face Command...")
         
         # Variables 
         self.waited_for_end_of_audio = False
@@ -226,7 +322,7 @@ class LLMNode(Node):
         self.calibrate_audio_success = True
         self.calibrate_audio_message = ""
         self.audio_command = ""
-        self.face_success = True
+        self.face_success = False
         self.face_message = ""
         
 
@@ -295,10 +391,13 @@ class LLMNode(Node):
 
 
     #### SAVE SPEECH SERVER FUNCTIONS #####
-    def call_save_speech_command_server(self, filename="", command="", wait_for_end_of=True):
+    def call_save_speech_command_server(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True):
         request = SaveSpeechCommand.Request()
         request.filename = filename
         request.command = command
+        request.quick_voice = quick_voice
+        request.play_command = play_command
+        request.show_in_face = show_in_face
     
         future = self.save_speech_command_client.call_async(request)
         # print("Sent Command")
@@ -350,7 +449,7 @@ class LLMNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info(str(response.command))
+            self.get_logger().info("User:"+str(response.command))
             self.audio_command = response.command
             # self.track_object_success = response.success
             # self.track_object_message = response.message
@@ -420,7 +519,7 @@ class LLMMain():
 
         return self.node.speech_success, self.node.speech_message
     
-    def save_speech(self, filename="", command="", wait_for_end_of=True):
+    def save_speech(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True):
 
         # the commands should be lists, because you can send a list of commands and a list of filenames,
         # making it possible to create multiple temp commands with one instruction
@@ -436,7 +535,7 @@ class LLMMain():
         
         if len(file) > 0 and len(comm) > 0:
 
-            self.node.call_save_speech_command_server(filename=file, command=comm, wait_for_end_of=wait_for_end_of)
+            self.node.call_save_speech_command_server(filename=file, command=comm, quick_voice=quick_voice, play_command=play_command, show_in_face=show_in_face, wait_for_end_of=wait_for_end_of)
             
             if wait_for_end_of:
                 while not self.node.waited_for_end_of_save_speaking:
@@ -469,16 +568,20 @@ class LLMMain():
             audio_error_counter = 0
             keywords = "ERROR"
             while keywords=="ERROR":
-                
-                self.set_speech(filename=question, wait_for_end_of=True)
-                self.set_face(face_hearing)
+                if audio_error_counter == 0:
+                    #print("Save")
+                    self.save_speech(command=question, filename="temp", quick_voice=True, play_command=True, show_in_face=False, wait_for_end_of=True)
+                    #self.save_speech( filename="temp", command=question)
+                    #print("Set")
+                    #self.set_speech(filename="temp/temp",quick_voice=True, wait_for_end_of=True)
+                #self.set_face(face_hearing)
                 self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
                 
                 if wait_for_end_of:
                     while not self.node.waited_for_end_of_audio:
                         pass
                 self.node.waited_for_end_of_audio = False
-                self.set_face("charmie_face")
+                #self.set_face("charmie_face")
 
                 keywords = self.node.audio_command  
                 
@@ -486,11 +589,11 @@ class LLMMain():
                     audio_error_counter += 1
 
                     if audio_error_counter == 2:
-                        self.set_speech(filename="generic/please_wait", wait_for_end_of=True)
+                        self.set_speech(filename="llm_low_quali/wait", quick_voice=True,wait_for_end_of=True)
                         self.calibrate_audio(wait_for_end_of=True)
                         audio_error_counter = 0
-
-                    self.set_speech(filename="generic/not_understand_please_repeat", wait_for_end_of=True)
+                    else:
+                        self.set_speech(filename="llm_low_quali/repeat", quick_voice=True, wait_for_end_of=True)
 
             return self.node.audio_command  
 
@@ -543,36 +646,145 @@ class LLMMain():
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In LLM Main...")
 
+        client = OpenAI(api_key=api_key)
+        
+        # Create a thread for the conversation
+        
+        #thread = client.beta.threads.create()
+        
+
+        # Create a vector store caled "Financial Statements"
+        vector_store = client.beta.vector_stores.create(name="Financial Statements")
+        
+        # Ready the files for upload to OpenAI
+        folder_path="./src/charmie_llm/charmie_llm/Files/"
+        file_paths = ["tdp2023.pdf", "tdp2024.pdf","Actual Config.txt","Actual Team Members.txt", "Assistant Tasks.txt","Hardware Overview.txt"]  # List of your PDF files
+        file_streams = [open(folder_path+path, "rb") for path in file_paths]
+
+        # Use the upload and poll SDK helper to upload the files, add them to the vector store,
+        # and poll the status of the file batch for completion.
+        file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+        vector_store_id=vector_store.id, files=file_streams
+        )
+
+
+        thread_id= "thread_M5Ot2oA7DdtK2moSe3cglsLz"
+        assistant_id= "asst_6DJDcqFuFp1RtpSx4TFvsYsi"
+        # Create the assistant
+        '''assistant = client.beta.assistants.create(
+            name="Charmie",
+            instructions=instructions_text,
+            model="gpt-3.5-turbo-0125",
+            tools=math_tools,
+            tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+        )'''
+
+
+        ## File Upload (TDP, Articles, ....)
+
+        # Start the conversation loop
+        max_turns = 5
+        assistant_res="Hi! I am Charmie. How can I help you?"
         while True:
+            #print("State:", self.state, "- Just chatting")
+            #self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
+            self.node.get_logger().info("Charmie:"+assistant_res)
+            self.calibrate_audio(wait_for_end_of=True)
+            # Get user input
+            
+            #print("Assistant: ",assistant_res)
+            command = self.get_audio(gpsr=True,question=assistant_res)
+            
 
-            if self.state == self.Waiting_for_task_start:
-                print("State:", self.state, "- Waiting_for_task_start")
+            #(f"\nSay something: {command}")
+            #print("Human: ",command)
+            # Send user input as a message in the thread
+            user_message = client.beta.threads.messages.create(
+                thread_id=thread_id,
+                role="user",
+                content=command
+            )
 
-                # your code here ...
-                
-                self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
+            # Wait for the assistant's response
+            run = client.beta.threads.runs.create_and_poll(
+                thread_id=thread_id,
+                assistant_id=assistant_id
+            )
+            #print("Thread: ", thread_id)
+            #print("Assist: ", assistant_id)
+            # The agent loop. `max_turns` will set a limit on the number of LLM calls made inside the agent loop.
+            # Its better to set a limit since LLM calls are costly.
+            for turn in range(max_turns):
 
-                self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
-                
-                self.calibrate_audio(wait_for_end_of=True)
-                        
-                ### RECEPTIONIST AUDIO EXAMPLE
-                command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
-                print("Finished:", command)
-                keyword_list= command.split(" ")
-                print(keyword_list[0], keyword_list[1])
-                self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
-                self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)  
+                # Fetch the last message from the thread
+                messages = client.beta.threads.messages.list(
+                    thread_id=thread_id,
+                    run_id=run.id,
+                    order="desc",
+                    limit=1,
+                )
 
-                # change face, to standard face
-                self.set_face("charmie_face")
+                # Check for the terminal state of the Run.
+                # If state is "completed", exit agent loop and return the LLM response.
+                if run.status == "completed":
+                    assistant_res: str = next(
+                        (
+                            content.text.value
+                            for content in messages.data[0].content
+                            if content.type == "text"
+                        ),
+                        None,
+                    )
 
-                time.sleep(1)
+                    #print(assistant_res)#return assistant_res
 
-                # next state
-                self.state = self.Approach_kitchen_counter
+                # If state is "requires_action", function calls are required. Execute the functions and send their outputs to the LLM.
+                if run.status == "requires_action":
+                    func_tool_outputs = []
 
-            elif self.state == self.Approach_kitchen_counter:
+                    # LLM can ask for multiple functions to be executed. Execute all function calls in loop and
+                    # append the results into `func_tool_outputs` list.
+                    for tool in run.required_action.submit_tool_outputs.tool_calls:
+                        # parse the arguments required for the function call from the LLM response
+                        args = (
+                            json.loads(tool.function.arguments)
+                            if tool.function.arguments
+                            else {}
+                        )
+                        func_output = tool_callables[tool.function.name](**args)
+
+                        # OpenAI needs the output of the function call against the tool_call_id
+                        func_tool_outputs.append(
+                            {"tool_call_id": tool.id, "output": str(func_output)}
+                        )
+
+                    # Submit the function call outputs back to OpenAI
+                    run = client.beta.threads.runs.submit_tool_outputs_and_poll(
+                        thread_id=thread_id, run_id=run.id, tool_outputs=func_tool_outputs
+                    )
+
+                    # Continue the agent loop.
+                    # Agent will check the output of the function output submission as part of next iteration.
+                    continue
+
+                # Handle errors if terminal state is "failed"
+                else:
+                    if run.status == "failed":
+                        log.error(
+                            f"OpenAIFunctionAgent turn-{turn+1} | Run failure reason: {run.last_error}"
+                        )
+                    break;
+            
+            #self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
+
+            #self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
+            
+                    
+            #self.set_face("charmie_face")
+
+            
+
+            '''elif self.state == self.Approach_kitchen_counter:
                 print("State:", self.state, "- Approach_kitchen_counter")
                 # your code here ...
                                 
@@ -705,7 +917,4 @@ class LLMMain():
 
                 # Lock after finishing task
                 while True:
-                    pass
-
-            else:
-                pass
+                    pass'''
