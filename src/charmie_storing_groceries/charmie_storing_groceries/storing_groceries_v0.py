@@ -88,6 +88,9 @@ class StoringGroceriesNode(Node):
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
         
+        #DEBUG
+        self.detected_objects_publisher = self.create_publisher(DetectedObject, "objects_detected_sg", 10)
+
         # Navigation
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
@@ -968,6 +971,8 @@ class StoringGroceriesMain():
 
             print("FILTERED:")
             for o in filtered_objects:
+                self.node.detected_objects_publisher.publish(o)
+                # print('---',o)
                 print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
 
 
@@ -1014,7 +1019,7 @@ class StoringGroceriesMain():
         for obj in final_objects:
             self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
             
-        return final_objects    
+        return final_objects
 
     def detected_object_to_face_path(self, object, send_to_face, bb_color=(0,0,255)):
 
@@ -1709,10 +1714,10 @@ class StoringGroceriesMain():
                 tetas = [[0, -45], [0, -30], [0, -15], [0, 0]]
                 objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
                 
-                print(objects_found)
+                # print(objects_found)
                 while True:
-                    pass
-
+                    objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                
                 self.set_speech(filename="storing_groceries/sg_ready_start", wait_for_end_of=True)
 
                 self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=True) # must change to door open
