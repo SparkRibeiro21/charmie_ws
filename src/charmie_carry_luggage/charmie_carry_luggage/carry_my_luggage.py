@@ -7,7 +7,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Point, PoseWithCovarianceStamped, Pose2D
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ArmController
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, GetPointCloud
 
 import cv2 
@@ -47,7 +47,7 @@ class CarryMyLuggageNode(Node):
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         # Arm CHARMIE
-        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
         # Navigation
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
@@ -571,13 +571,14 @@ class CarryMyLuggageMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
-    def set_arm(self, command="", wait_for_end_of=True):
+    def set_arm(self, command="", adjust_position=0.0, wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
         self.node.waited_for_end_of_arm = False
         
-        temp = String()
-        temp.data = command
+        temp = ArmController()
+        temp.command = command
+        temp.adjust_position = adjust_position
         self.node.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:
@@ -1286,9 +1287,8 @@ class CarryMyLuggageMain():
                 # bag_coords = self.get_bag_pick_cordinates()
                 # print(bag_coords)
                 # self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
-
                 
-                s,m = self.set_arm(command="carry_my_luggage_pick_bag", wait_for_end_of=True)
+                s,m = self.set_arm(command="carry_my_luggage_pick_bag", adjust_position=-60.0, wait_for_end_of=True)
                 print("carry_my_luggage_pick_bag", s,m)
                 self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
                 time.sleep(3)

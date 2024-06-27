@@ -3,7 +3,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, Int16, String
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from geometry_msgs.msg import Pose, Point, Quaternion
-from charmie_interfaces.msg import RobotSpeech
+from charmie_interfaces.msg import RobotSpeech, ArmController
 from charmie_interfaces.srv import ArmTrigger
 from std_srvs.srv import SetBool
 from functools import partial
@@ -20,7 +20,7 @@ class ArmUfactory(Node):
 		self.get_logger().info("Initialised my test Node")	
 
 		# ARM TOPICS
-		self.arm_command_subscriber = self.create_subscription(String, "arm_command", self.arm_command_callback, 10)
+		self.arm_command_subscriber = self.create_subscription(ArmController, "arm_command", self.arm_command_callback, 10)
 		self.flag_arm_finish_publisher = self.create_publisher(Bool, 'arm_finished_movement', 10)
 
 		# ARM SERVICES
@@ -35,11 +35,14 @@ class ArmUfactory(Node):
 		self.set_gripper = self.create_client(GripperMove, '/xarm/set_gripper_position')
 		self.set_pause_time_client = self.create_client(SetFloat32, '/xarm/set_pause_time')
 		self.get_gripper_position = self.create_client(GetFloat32,'/xarm/get_gripper_position')
+		self.move_tool_line = self.create_client(MoveCartesian, '/xarm/set_tool_position')
 		#self.plan_pose_client = self.create_client(PlanPose, '/xarm_pose_plan')
 		#self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
 		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
-
 		
+		while not self.move_tool_line.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server move_tool_line...")
+
 		while not self.set_position_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Position...")
 
@@ -85,6 +88,7 @@ class ArmUfactory(Node):
 		self.plan_exec_req = PlanExec.Request()
 		self.plan_pose_resp = PlanPose.Response()
 		self.joint_plan_req = PlanJoint.Request()
+		self.move_line_tool_req = MoveCartesian.Request()
 
 		self.wrong_movement_received = False
 		self.end_of_movement = False
@@ -94,6 +98,7 @@ class ArmUfactory(Node):
 
 		# initial debug movement 
 		self.next_arm_movement = "debug_initial"
+		self.adjust_position = 0.0
 
 		self.setup()
 		print('---------')
@@ -112,9 +117,11 @@ class ArmUfactory(Node):
 		return response
 
 
-	def arm_command_callback(self, move: String):
-		self.get_logger().info(f"Received movement selection: {move.data}")
-		self.next_arm_movement = move.data
+	def arm_command_callback(self, move: ArmController):
+		self.get_logger().info(f"Received movement selection: {move}")
+		self.next_arm_movement = move.command
+		self.adjust_position = move.adjust_position
+
 		self.movement_selection()
 		# this is used when a wrong command is received
 		if self.wrong_movement_received:
@@ -298,7 +305,11 @@ class ArmUfactory(Node):
 
 	def callback_service_tr(self, future):
 		try:
-			print(future.result())			
+			# print(future.result())
+			self.resultado = future.result()
+			# print(self.resultado)
+			self.returning = future.result().ret
+			# print(self.returning)
 			self.estado_tr += 1
 			print("ESTADO = ", self.estado_tr)
 			self.movement_selection()
@@ -792,7 +803,11 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_bag_with_rotation_joints)
+
+			temp = self.pre_pick_bag_position_joints
+			temp[5] = self.adjust_position
+
+			self.joint_values_req.angles = self.deg_to_rad(temp)
 			self.joint_values_req.speed = math.radians(25)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
@@ -800,45 +815,72 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 2:
-			self.position_values_req.pose = self.pick_bag_bottom_position_joints
-			self.position_values_req.speed = 50.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
+			print("MOVED LINE DOWN")
+			self.move_line_tool_req.pose = [0.0, 0.0, 380.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.speed = 40.0
+			self.move_line_tool_req.acc = 500.0
+			self.move_line_tool_req.wait = True
+			self.move_line_tool_req.timeout = 14.0
+			self.future = self.move_tool_line.call_async(self.move_line_tool_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
 		elif self.estado_tr == 3:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 2
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 4
+				self.movement_selection()
+
+		elif self.estado_tr == 4:
 			self.set_gripper_req.pos = 0.0
 			self.set_gripper_req.wait = True
 			self.set_gripper_req.timeout = 14.0
 			self.future = self.set_gripper.call_async(self.set_gripper_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 4:
-			self.position_values_req.pose = self.pick_bag_top_position_joints
-			self.position_values_req.speed = 50.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
+		elif self.estado_tr == 5: 
+			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
+			print('valor da garra =', self.future)
+
+		elif self.estado_tr == 6:
+			print("CHECK GRIPPER POSITION:", self.gripper_tr)
+			print("MOVED LINE UP")
+			self.move_line_tool_req.pose = [0.0, 0.0, -380.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.speed = 40.0
+			self.move_line_tool_req.acc = 500.0
+			self.move_line_tool_req.wait = True
+			self.move_line_tool_req.timeout = 14.0
+			self.future = self.move_tool_line.call_async(self.move_line_tool_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 5:
+		elif self.estado_tr == 7:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 6
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 8
+				self.movement_selection()
+
+		elif self.estado_tr == 8:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_bag_position_joints)
 			self.joint_values_req.speed = math.radians(25)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('valor da garra =', self.future)
 			
-		elif self.estado_tr == 7:
+		elif self.estado_tr == 9:
 			temp = Bool()
+			
+			print("CHECK GRIPPER POSITION:", self.gripper_tr)
 
 			if self.gripper_tr >= 5.0:
 				# self.flag_object_grabbed.data = True
@@ -889,7 +931,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 2:
+		elif self.estado_tr == 1:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -945,6 +987,35 @@ class ArmUfactory(Node):
 				print('Estou com o gripper nesta posição há algumas iterações. Vou para o próximo estado. \n')
 
 		return self.gripper_reached_target.data
+
+
+	def go_front(self):
+		if self.estado_tr == 0:
+			self.move_line_tool_req.pose = [0.0, 0.0, 370.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.speed = 40.0
+			self.move_line_tool_req.acc = 500.0
+			self.move_line_tool_req.wait = True
+			self.move_line_tool_req.timeout = 4.0
+			self.future = self.move_tool_line.call_async(self.move_line_tool_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
 
 	def movement_selection(self):
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
