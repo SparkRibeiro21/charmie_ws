@@ -6,6 +6,7 @@ from functools import partial
 
 import threading
 import time
+from datetime import datetime
 
 from example_interfaces.msg import String, Int16
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, SetFace
@@ -36,12 +37,13 @@ class TestNode(Node):
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
         while not self.save_speech_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Speech Command...")
-        while not self.face_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Face Command...")
+            self.get_logger().warn("Waiting for Server Save Speech Command...")
+        # while not self.face_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Face Command...")
 
         # Variables
         self.waited_for_end_of_speaking = False
+        self.waited_for_end_of_save_speaking = False
         self.waited_for_end_of_face = False
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
@@ -101,7 +103,6 @@ class TestNode(Node):
         else:
             self.speech_success = True
             self.speech_message = "Wait for answer not needed"
-    
 
     def callback_call_speech_command(self, future): #, a, b):
 
@@ -116,21 +117,30 @@ class TestNode(Node):
             # time.sleep(3)
             self.waited_for_end_of_speaking = True
         except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
-            
+            self.get_logger().error("Service call failed %r" % (e,))   
 
-    def call_save_speech_command_server(self, filename, command):
+
+    #### SAVE SPEECH SERVER FUNCTIONS #####
+    def call_save_speech_command_server(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True):
         request = SaveSpeechCommand.Request()
         request.filename = filename
         request.command = command
-
+        request.quick_voice = quick_voice
+        request.play_command = play_command
+        request.show_in_face = show_in_face
+    
         future = self.save_speech_command_client.call_async(request)
         # print("Sent Command")
 
-        future.add_done_callback(self.callback_call_save_speech_command)
-
-
+        if wait_for_end_of:
+            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
+            future.add_done_callback(self.callback_call_save_speech_command)
+        else:
+            self.speech_success = True
+            self.speech_message = "Wait for answer not needed"
+    
     def callback_call_save_speech_command(self, future): #, a, b):
+
         try:
             # in this function the order of the line of codes matter
             # it seems that when using future variables, it creates some type of threading system
@@ -139,6 +149,8 @@ class TestNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.save_speech_success = response.success
             self.save_speech_message = response.message
+            # time.sleep(3)
+            self.waited_for_end_of_save_speaking = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -174,10 +186,35 @@ class RestaurantMain():
 
         return self.node.speech_success, self.node.speech_message
     
+    def save_speech(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True):
 
-    def save_speech(self, filename, command):
-        self.node.call_save_speech_command_server(filename=filename, command=command)
-    
+        # the commands should be lists, because you can send a list of commands and a list of filenames,
+        # making it possible to create multiple temp commands with one instruction
+        # But if by mistake someone sends them as a string (beause set_speech is done that way) I correct it  
+        file = []
+        comm = [] 
+        if isinstance(filename, str) and isinstance(command, str):
+            file.append(filename)
+            comm.append(command)
+        elif isinstance(filename, list) and isinstance(command, list):
+            file = filename
+            comm = command
+        
+        if len(file) > 0 and len(comm) > 0:
+
+            self.node.call_save_speech_command_server(filename=file, command=comm, quick_voice=quick_voice, play_command=play_command, show_in_face=show_in_face, wait_for_end_of=wait_for_end_of)
+            
+            if wait_for_end_of:
+                while not self.node.waited_for_end_of_save_speaking:
+                    pass
+            self.node.waited_for_end_of_save_speaking = False
+
+            return self.node.save_speech_success, self.node.save_speech_message
+
+        else:
+
+            self.node.get_logger().error("Could not generate save speech as as filename and command types are incompatible.")
+            return False, "Could not generate save speech as as filename and command types are incompatible."
     
     def set_rgb(self, command="", wait_for_end_of=True):
         
@@ -213,7 +250,7 @@ class RestaurantMain():
         Final_State = 7
 
         print("IN NEW MAIN")
-        time.sleep(2)
+        # time.sleep(2)
 
         while True:
 
@@ -245,13 +282,15 @@ class RestaurantMain():
 
                 """
 
+                ##### SAVE SPEAK
+                current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+                self.save_speech(command="This is just a test with a play command", filename=current_datetime, quick_voice=True, play_command=True, show_in_face=True, wait_for_end_of=True)
 
-                files = ["recep_characteristic_1", "recep_characteristic_2", "recep_characteristic_3", "recep_characteristic_4"]
-                commands = ["The first guest shirt is black", "Its age is between 23 and 32", "The guest is a bit taller than me", "and its ethnicity is white."]
-                self.save_speech(files, commands)
-                print("...")
-                time.sleep(5)
-                print("...")
+                ##### SPEAK: (repeats the command)
+                # self.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True)
+
+                while True:
+                    pass
 
 
                 self.set_speech(filename="temp/recep_characteristic_1", wait_for_end_of=True)

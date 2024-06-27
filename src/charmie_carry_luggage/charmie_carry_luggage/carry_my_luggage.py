@@ -6,8 +6,9 @@ from rclpy.node import Node
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Point, PoseWithCovarianceStamped, Pose2D
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger
+from sensor_msgs.msg import Image
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, GetPointCloud
 
 import cv2 
 import threading
@@ -34,9 +35,16 @@ class CarryMyLuggageNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
+        
+        # Intel Realsense Subscribers
+        # self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_head_image_callback, 10)
+        # Hand
+        # self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
+        self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_hand_image_callback, 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
-       # Yolo Objects
+        # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
@@ -46,6 +54,8 @@ class CarryMyLuggageNode(Node):
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+        # Point Cloud
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         
         ### Services (Clients) ###
         # Speakers
@@ -62,31 +72,35 @@ class CarryMyLuggageNode(Node):
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
 
-
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
-        while not self.speech_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Speech Command...")
+        # while not self.speech_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Speech Command...")
         # Neck 
-        while not self.set_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        while not self.get_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-        while not self.set_neck_coordinates_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
-        while not self.neck_track_person_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
-        while not self.neck_track_object_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
+        # while not self.set_neck_position_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+        # while not self.get_neck_position_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Get Neck Position Command...")
+        # while not self.set_neck_coordinates_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        # while not self.neck_track_person_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
+        # while not self.neck_track_object_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
         # Yolos
         # while not self.activate_yolo_pose_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         # while not self.activate_yolo_objects_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Arm (CHARMIE)
-        """ while not self.arm_trigger_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
-         """
+        # while not self.arm_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        
+        # Point Cloud
+        while not self.point_cloud_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud...")
+
+
         # Variables 
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_neck_pos = False
@@ -95,11 +109,17 @@ class CarryMyLuggageNode(Node):
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
         self.waited_for_end_of_arm = False
+        self.waiting_for_pcloud = False
 
         self.br = CvBridge()
+        self.depth_head_img = Image()
+        self.depth_hand_img = Image()
+        self.first_depth_head_image_received = False
+        self.first_depth_hand_image_received = False
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
+        self.point_cloud_response = GetPointCloud.Response()
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -124,6 +144,15 @@ class CarryMyLuggageNode(Node):
 
         self.get_neck_position = [1.0, 1.0]
 
+    def get_aligned_depth_head_image_callback(self, img: Image):
+        self.depth_head_img = img
+        self.first_depth_head_image_received = True
+        # print("Received Depth Image")
+
+    def get_aligned_depth_hand_image_callback(self, img: Image):
+        self.depth_hand_img = img
+        self.first_depth_hand_image_received = True
+        # print("Received Depth Image")
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -166,6 +195,28 @@ class CarryMyLuggageNode(Node):
     ### NAVIGATION ###
     def flag_navigation_reached_callback(self, flag: Bool):
         self.flag_navigation_reached = flag
+
+    # request point cloud information from point cloud node
+    def call_point_cloud_server(self, req, camera):
+        request = GetPointCloud.Request()
+        request.data = req
+        request.retrieve_bbox = False
+        request.camera = camera
+    
+        future = self.point_cloud_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud)
+
+    def callback_call_point_cloud(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            self.point_cloud_response = future.result()
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
@@ -624,6 +675,30 @@ class CarryMyLuggageMain():
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
+    def get_point_cloud(self, bb=BoundingBox(), wait_for_end_of=True):
+
+        requested_objects = []
+            
+        # bb = BoundingBox()
+        # bb.box_top_left_x = 0
+        # bb.box_top_left_y = 0
+        # bb.box_width = 1280
+        # bb.box_height = 720
+
+        get_pc = BoundingBoxAndPoints()
+        get_pc.bbox = bb
+
+        requested_objects.append(get_pc)
+
+        self.node.waiting_for_pcloud = True
+        self.node.call_point_cloud_server(requested_objects, "hand")
+
+        if wait_for_end_of:
+            while self.node.waiting_for_pcloud:
+                pass
+
+        return self.node.point_cloud_response.coords[0]
+    
 
     def detect_bag(self, position_of_referee_x, received_bag):
         correct_bag  = False
@@ -681,8 +756,150 @@ class CarryMyLuggageMain():
         self.activate_yolo_pose(activate=False)
 
         return bag_side
+
+
+    def get_bag_pick_cordinates(self):
+
+        DEBUG = False
+        MIN_BAG_PIXEL_AREA = 40000
+        f_coords = []
+
+        self.node.first_depth_hand_image_received = False
+
+        while not self.node.first_depth_hand_image_received:
+            pass
+
+        c_areas = []
         
+        while not c_areas or max(c_areas) < MIN_BAG_PIXEL_AREA:
+            c_areas.clear()
+            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
+            height, width = current_frame_depth_head.shape
+            
+            # current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0 # remove the robot from the image
+
+            mask_zero = (current_frame_depth_head == 0)
+            mask_near = (current_frame_depth_head != 0) & (current_frame_depth_head >= self.top_bag_dist) & (current_frame_depth_head <= self.floor_dist)
+
+            blank_image_bw = np.zeros((height,width), np.uint8)
+            blank_image_bw2 = np.zeros((height,width), np.uint8)
+            blank_image_bw[mask_near] = [255]
+
+            contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+            # print("areas")
+            for a in contours: # create list with area size 
+                # print(cv2.contourArea(a))
+                c_areas.append(cv2.contourArea(a))
+            # if c_areas:
+            #     print(max(c_areas), " ...")
+
+        cnt = contours[c_areas.index(max(c_areas))] # extracts the largest area 
+        # print(c_areas.index(max(c_areas)))
         
+        M = cv2.moments(cnt) # calculates centroide
+        cx = int(M['m10']/M['m00'])
+        cy = int(M['m01']/M['m00'])
+
+        xi,yi,w,h = cv2.boundingRect(cnt)
+
+        [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
+        theta = math.degrees(math.atan2(vy,vx))
+
+        if theta < 0.0:
+            theta_gripper = theta+90.0
+        else:
+            theta_gripper = theta-90.0
+
+        # bb_thresh = 40 
+        # bb = BoundingBox() # centroide of bag bounding box 
+        # bb.box_top_left_x = max(cx-bb_thresh, 0)
+        # bb.box_top_left_y = max(cy-bb_thresh, 0)
+        # if bb.box_top_left_x + 2*bb_thresh > width:
+        #     bb.box_width = width - bb.box_top_left_x 
+        # else:
+        #     bb.box_width = 2*bb_thresh
+        # if bb.box_top_left_y + 2*bb_thresh > height:
+        #     bb.box_height = height - bb.box_top_left_y 
+        # else:
+        #     bb.box_height = 2*bb_thresh
+        # coords_centroide = self.get_point_cloud(bb=bb)
+        
+        bb = BoundingBox() # full bag bounding box
+        bb.box_top_left_x = max(xi, 0)
+        bb.box_top_left_y = max(yi, 0)
+        bb.box_width = w
+        bb.box_height = h
+
+        coords_full = self.get_point_cloud(bb=bb)
+        selected_coords = coords_full
+
+        # adds difference between camera center to gripper center
+        selected_coords.center_coords.z += 70
+
+        # x = bag height
+        # y = move front and back robot, or left and right for camera
+        # z = move right and left robot, or up and down for camera
+        # print("xc = ", round(coords_centroide.center_coords.x,0), "yc = ", round(coords_centroide.center_coords.y,0), "zc = ", round(coords_centroide.center_coords.z,0))
+        # print("xf = ", round(coords_full.center_coords.x,0), "yf = ", round(coords_full.center_coords.y,0), "zf = ", round(coords_full.center_coords.z,0))
+
+        ang_to_bag = -math.degrees(math.atan2(selected_coords.center_coords.z, selected_coords.center_coords.y))
+        dist_to_bag = (math.sqrt(selected_coords.center_coords.y**2 + selected_coords.center_coords.z**2))/1000
+        
+        f_coords.append(selected_coords.center_coords.x/1000)
+        f_coords.append(selected_coords.center_coords.y/1000)
+        f_coords.append(selected_coords.center_coords.z/1000)
+        f_coords.append(ang_to_bag)
+        f_coords.append(dist_to_bag)
+        f_coords.append(theta_gripper)
+        
+        # print(ang_to_bag, dist_to_bag)
+        
+        if DEBUG:
+            mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug, floor level
+            blank_image = np.zeros((height,width,3), np.uint8)
+            
+            blank_image[mask_zero] = [255,255,255]
+            blank_image[mask_near] = [255,0,0]
+            blank_image[mask_remaining] = [0,0,255]
+
+            cv2.drawContours(blank_image, [cnt], 0, (0, 255, 0), 3) 
+            cv2.drawContours(blank_image_bw2, [cnt], 0, (255), thickness=cv2.FILLED) 
+            cv2.circle(blank_image, (cx, cy), 10, (0, 255, 0), -1)
+            cv2.circle(blank_image_bw2, (cx, cy), 10, (128), -1)
+
+            cv2.rectangle(blank_image,(xi,yi),(xi+w,yi+h), (255, 0, 255),2)
+            cv2.rectangle(blank_image_bw2,(xi,yi),(xi+w,yi+h),(128),2)
+
+            rows,cols = blank_image_bw2.shape[:2]
+            lefty = int((-x*vy/vx) + y)
+            righty = int(((cols-x)*vy/vx)+y)
+            cv2.line(blank_image,(cols-1,righty),(0,lefty),(255, 0, 255),2)
+            cv2.line(blank_image_bw2,(cols-1,righty),(0,lefty),(128),2)
+
+            # print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
+            # print("bag centroide =", cx, cy)
+
+            cv2.rectangle(blank_image, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (255, 0, 255),2)
+            cv2.rectangle(blank_image_bw2, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (128), 2)
+
+            cv2.imshow("New Img Distance Inspection", blank_image)
+            cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
+
+            k = cv2.waitKey(1)
+            if k == ord('w'):
+                self.floor_dist += 10
+            if k == ord('q'):
+                self.floor_dist -= 10
+            if k == ord('s'):
+                self.top_bag_dist += 10
+            if k == ord('a'):
+                self.top_bag_dist -= 10
+
+            # print(self.floor_dist, self.top_bag_dist)
+
+        return f_coords
+    
     # main state-machine function
     def main(self):
         
@@ -692,8 +909,12 @@ class CarryMyLuggageMain():
         self.Go_to_bag = 2
         self.Pick_bag_left = 3
         self.Pick_bag_right = 4
+        self.Camera_pick_bag = 10
         self.Final_State = 5
         
+        self.floor_dist=660
+        self.top_bag_dist=440
+
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
@@ -704,7 +925,7 @@ class CarryMyLuggageMain():
         self.INITIAL_REACHED_RADIUS = 0.9
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Waiting_for_task_to_start
+        self.state = self.Camera_pick_bag
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Carry My Luggage Main...")
@@ -939,8 +1160,6 @@ class CarryMyLuggageMain():
                             break
                     
 
-
-
                 # close claw (how?)
                 # raise arm
 
@@ -1054,6 +1273,46 @@ class CarryMyLuggageMain():
 
                 # next state
                 self.state = self.Final_State 
+
+            elif self.state == self.Camera_pick_bag:
+
+
+                
+                s,m = self.set_arm(command="carry_my_luggage_pre_pick", wait_for_end_of=True)
+                print("carry_my_luggage_pre_pick", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+                # bag_coords = self.get_bag_pick_cordinates()
+                # print(bag_coords)
+                # self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
+
+                
+                s,m = self.set_arm(command="carry_my_luggage_pick_bag", wait_for_end_of=True)
+                print("carry_my_luggage_pick_bag", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+                s,m = self.set_arm(command="carry_my_luggage_post_pick", wait_for_end_of=True)
+                print("carry_my_luggage_post_pick", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+                s,m = self.set_arm(command="carry_my_luggage_give_bag", wait_for_end_of=True)
+                print("carry_my_luggage_give_bag", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+                s,m = self.set_arm(command="open_gripper", wait_for_end_of=True)
+                print("open_gripper", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+                s,m = self.set_arm(command="carry_my_luggage_post_give_bag", wait_for_end_of=True)
+                print("carry_my_luggage_post_give_bag", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
 
             elif self.state == self.Final_State:
                 print("State:", self.state, "- Final_State")

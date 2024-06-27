@@ -1,0 +1,6 @@
+Actual Team Members:
+- Tiago Ribeiro - The principal developer of the project
+- Professor Fernando Ribeiro - The professor responsible for the Laboratory of Automation and Robotics
+- Professor Gil - Another professor responsible for the Laboratory of Automation and Robotics
+- Diogo Martins - Responsible for enabling you to serve tables in a restaurant
+- Bruno - Responsible for enabling you to open doors

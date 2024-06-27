@@ -1,0 +1,38 @@
+sudo apt install python3-colcon-common-extensions -y
+subprocess.run(['echo', '"/usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash"', '>>', '~/.bashrc'])
+
+Chat GPT
+pip install openai
+pip install pymupdf
+
+
+
+
+pip install pyserial
+pip install pyPS4Controller
+pip install dynamixel-sdk
+
+
+Arm
+sudo apt install ros-foxy-xacro ros-foxy-joint-state-publisher-gui
+sudo apt install ros-foxy-gazebo-ros-pkgs
+sudo apt install ros-foxy-ros2-control ros-foxy-ros2-controllers ros-foxy-gazebo-ros2-control
+
+
+
+pip install keras
+pip install tensorflow
+
+pip install SpeechRecognition
+pip install pulsectl
+sudo apt-get install portaudio19-dev
+pip install PyAudio
+sudo apt update
+sudo apt install ffmpeg
+
+pip install face_recognition
+
+pip install TTS
+export PATH=$PATH:/home/utilizador/.local/bin
+pip install pydub
+pip install pygame

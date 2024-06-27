@@ -288,6 +288,9 @@ class SpeakerNode(Node):
         # Type of service received: 
         # string[] filename   # name of audio file
         # string[] command    # speech command string 
+        # bool quick_voice  # if you do not want to use the pretty voice that takes more time to load, raising this flag uses the secondary quick voice
+        # bool play_command   # if you want to play the sound right after saving it 
+        # bool show_in_face   # whether or not it is intended for the speech command to be shown in the face
         # ---
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
@@ -309,13 +312,26 @@ class SpeakerNode(Node):
             # create wav file for speakers package 
             print("Initialised synthetisation.")
             init_time = time.time()
-            outputs = self.charmie_speech.syn_jenny.tts(command)
-            self.charmie_speech.syn_jenny.save_wav(outputs, self.charmie_speech.complete_path+self.filename)
-            print(time.time()-init_time)
 
-        response.success = True
-        response.message = str(len(request.filename))+" new speech files saved"
-        
+            if request.quick_voice:
+                outputs = self.charmie_speech.syn_taco.tts(command)
+                self.charmie_speech.syn_taco.save_wav(outputs, self.charmie_speech.complete_path+self.filename)
+                print(time.time()-init_time)
+            else:
+                init_time = time.time()
+                outputs = self.charmie_speech.syn_jenny.tts(command)
+                self.charmie_speech.syn_jenny.save_wav(outputs, self.charmie_speech.complete_path+self.filename)
+                print(time.time()-init_time)
+
+            if request.play_command:
+                ### ADICIONAR QUE TAMBEM FOI PLAYED
+                self.charmie_speech.play_command(filename, request.show_in_face) 
+                response.success = True
+                response.message = str(len(request.filename))+" new speech files saved and sound played"
+            else:
+                response.success = True
+                response.message = str(len(request.filename))+" new speech files saved"
+
         return response
 
 

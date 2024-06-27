@@ -2,6 +2,9 @@
 
 string[] filename   # name of audio file
 string[] command    # speech command string 
+bool quick_voice    # if you do not want to use the pretty voice that takes more time to load, raising this flag uses the secondary quick voice
+bool play_command   # if you want to play the sound right after saving it 
+bool show_in_face   # whether or not it is intended for the speech command to be shown in the face
 ---
 bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages.
