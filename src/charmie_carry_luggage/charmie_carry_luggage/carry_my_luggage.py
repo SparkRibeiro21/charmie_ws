@@ -787,12 +787,12 @@ class CarryMyLuggageMain():
 
             contours, hierarchy = cv2.findContours(blank_image_bw, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-            print("areas")
+            # print("areas")
             for a in contours: # create list with area size 
-                print(cv2.contourArea(a))
+                # print(cv2.contourArea(a))
                 c_areas.append(cv2.contourArea(a))
-            if c_areas:
-                print(max(c_areas), " ...")
+            # if c_areas:
+            #     print(max(c_areas), " ...")
 
         cnt = contours[c_areas.index(max(c_areas))] # extracts the largest area 
         # print(c_areas.index(max(c_areas)))
@@ -804,7 +804,12 @@ class CarryMyLuggageMain():
         xi,yi,w,h = cv2.boundingRect(cnt)
 
         [vx,vy,x,y] = cv2.fitLine(cnt, cv2.DIST_L2,0,0.01,0.01)
-        theta = -math.atan2(vy,vx)
+        theta = math.degrees(math.atan2(vy,vx))
+
+        if theta < 0.0:
+            theta_gripper = theta+90.0
+        else:
+            theta_gripper = theta-90.0
 
         # bb_thresh = 40 
         # bb = BoundingBox() # centroide of bag bounding box 
@@ -836,7 +841,7 @@ class CarryMyLuggageMain():
         # y = move front and back robot, or left and right for camera
         # z = move right and left robot, or up and down for camera
         # print("xc = ", round(coords_centroide.center_coords.x,0), "yc = ", round(coords_centroide.center_coords.y,0), "zc = ", round(coords_centroide.center_coords.z,0))
-        print("xf = ", round(coords_full.center_coords.x,0), "yf = ", round(coords_full.center_coords.y,0), "zf = ", round(coords_full.center_coords.z,0))
+        # print("xf = ", round(coords_full.center_coords.x,0), "yf = ", round(coords_full.center_coords.y,0), "zf = ", round(coords_full.center_coords.z,0))
 
         ang_to_bag = -math.degrees(math.atan2(selected_coords.center_coords.z, selected_coords.center_coords.y))
         dist_to_bag = (math.sqrt(selected_coords.center_coords.y**2 + selected_coords.center_coords.z**2))/1000
@@ -846,9 +851,9 @@ class CarryMyLuggageMain():
         f_coords.append(selected_coords.center_coords.z/1000)
         f_coords.append(ang_to_bag)
         f_coords.append(dist_to_bag)
-        f_coords.append(theta)
+        f_coords.append(theta_gripper)
         
-        print(ang_to_bag, dist_to_bag)
+        # print(ang_to_bag, dist_to_bag)
         
         if DEBUG:
             mask_remaining = (current_frame_depth_head > self.floor_dist) # just for debug, floor level
@@ -872,7 +877,7 @@ class CarryMyLuggageMain():
             cv2.line(blank_image,(cols-1,righty),(0,lefty),(255, 0, 255),2)
             cv2.line(blank_image_bw2,(cols-1,righty),(0,lefty),(128),2)
 
-            print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
+            # print("bag theta =", round(math.degrees(theta), 2), round(theta,2))
             # print("bag centroide =", cx, cy)
 
             cv2.rectangle(blank_image, (bb.box_top_left_x, bb.box_top_left_y), (bb.box_top_left_x+bb.box_width, bb.box_top_left_y+bb.box_height), (255, 0, 255),2)
@@ -891,7 +896,7 @@ class CarryMyLuggageMain():
             if k == ord('a'):
                 self.top_bag_dist -= 10
 
-            print(self.floor_dist, self.top_bag_dist)
+            # print(self.floor_dist, self.top_bag_dist)
 
         return f_coords
     
@@ -1274,6 +1279,7 @@ class CarryMyLuggageMain():
             elif self.state == self.Camera_pick_bag:
 
                 bag_coords = self.get_bag_pick_cordinates()
+                print(bag_coords)
                 self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
  
             elif self.state == self.Final_State:
