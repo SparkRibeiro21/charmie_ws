@@ -1160,8 +1160,6 @@ class CarryMyLuggageMain():
                             break
                     
 
-
-
                 # close claw (how?)
                 # raise arm
 
@@ -1278,10 +1276,44 @@ class CarryMyLuggageMain():
 
             elif self.state == self.Camera_pick_bag:
 
-                bag_coords = self.get_bag_pick_cordinates()
-                print(bag_coords)
-                self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
- 
+
+                
+                s,m = self.set_arm(command="carry_my_luggage_pre_pick", wait_for_end_of=True)
+                print("carry_my_luggage_pre_pick", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+                # bag_coords = self.get_bag_pick_cordinates()
+                # print(bag_coords)
+                # self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
+
+                
+                s,m = self.set_arm(command="carry_my_luggage_pick_bag", wait_for_end_of=True)
+                print("carry_my_luggage_pick_bag", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+                s,m = self.set_arm(command="carry_my_luggage_post_pick", wait_for_end_of=True)
+                print("carry_my_luggage_post_pick", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+                s,m = self.set_arm(command="carry_my_luggage_give_bag", wait_for_end_of=True)
+                print("carry_my_luggage_give_bag", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+                s,m = self.set_arm(command="open_gripper", wait_for_end_of=True)
+                print("open_gripper", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+                s,m = self.set_arm(command="carry_my_luggage_post_give_bag", wait_for_end_of=True)
+                print("carry_my_luggage_post_give_bag", s,m)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(3)
+
+
             elif self.state == self.Final_State:
                 print("State:", self.state, "- Final_State")
                 # your code here ...
