@@ -900,7 +900,59 @@ class CarryMyLuggageMain():
             # print(self.floor_dist, self.top_bag_dist)
 
         return f_coords
-    
+
+    def check_bag_grabbed_camera(self):
+
+        DEBUG = False
+        MIN_PERCENTAGE_AREA_BAG  = 0.05
+        bag_grabbed_camera = False
+
+        # while True:
+        # print("IN")
+
+        self.node.first_depth_hand_image_received = False
+        while not self.node.first_depth_hand_image_received:
+            pass
+        
+        # if self.node.first_depth_hand_image_received:
+
+        current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
+        height, width = current_frame_depth_head.shape
+        tot_pixeis = height*width 
+        
+        mask_zero = (current_frame_depth_head == 0)
+        mask_near = (current_frame_depth_head != 0) & (current_frame_depth_head <= self.bag_in_gripper_dist)
+
+        blank_image_bw = np.zeros((height,width), np.uint8)
+        blank_image_bw[mask_near] = [255]
+
+        pixel_count_near = np.count_nonzero(mask_near)
+        full_image_near_err = pixel_count_near/tot_pixeis
+
+        if DEBUG:
+            mask_remaining = (current_frame_depth_head > self.bag_in_gripper_dist) # just for debug, floor level
+            blank_image = np.zeros((height,width,3), np.uint8)
+            
+            blank_image[mask_zero] = [255,255,255]
+            blank_image[mask_near] = [255,0,0]
+            blank_image[mask_remaining] = [0,0,255]
+
+            cv2.imshow("New Img Check Bag Grabbed", blank_image)
+            cv2.imshow("New Img Check Bag Grabbed BW", blank_image_bw)
+
+            k = cv2.waitKey(10)
+            if k == ord('x'):
+                self.bag_in_gripper_dist += 10
+            if k == ord('z'):
+                self.bag_in_gripper_dist -= 10
+
+            print(self.bag_in_gripper_dist, full_image_near_err)
+
+        if full_image_near_err > MIN_PERCENTAGE_AREA_BAG:
+            bag_grabbed_camera = True
+
+        return bag_grabbed_camera
+
     # main state-machine function
     def main(self):
         
@@ -915,6 +967,7 @@ class CarryMyLuggageMain():
         
         self.floor_dist=660
         self.top_bag_dist=440
+        self.bag_in_gripper_dist=200
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -1277,22 +1330,29 @@ class CarryMyLuggageMain():
 
             elif self.state == self.Camera_pick_bag:
 
-
+                # bag_grabbed_camera = self.check_bag_grabbed_camera()
                 
                 s,m = self.set_arm(command="carry_my_luggage_pre_pick", wait_for_end_of=True)
                 print("carry_my_luggage_pre_pick", s,m)
                 self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
-                time.sleep(3)
+                # time.sleep(3)
 
-                # bag_coords = self.get_bag_pick_cordinates()
-                # print(bag_coords)
-                # self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
-                
-                s,m = self.set_arm(command="carry_my_luggage_pick_bag", adjust_position=-60.0, wait_for_end_of=True)
-                print("carry_my_luggage_pick_bag", s,m)
-                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
-                time.sleep(3)
+                bag_grabbed = False
+                while not bag_grabbed:
 
+                    bag_coords = self.get_bag_pick_cordinates()
+                    print(bag_coords)
+                    self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
+                    time.sleep(2.0)
+                    
+                    bag_grabbed_gripper, m = self.set_arm(command="carry_my_luggage_pick_bag", adjust_position=bag_coords[5], wait_for_end_of=True)
+                    print("carry_my_luggage_pick_bag", bag_grabbed_gripper, m)
+                    self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                    bag_grabbed_camera = self.check_bag_grabbed_camera()
+                    bag_grabbed = bag_grabbed_gripper or bag_grabbed_camera
+                    print("BAG GRABBED:", bag_grabbed, "via camera:", bag_grabbed_camera, "via gripper:", bag_grabbed_gripper)
+                    time.sleep(1.0)
+                    
                 s,m = self.set_arm(command="carry_my_luggage_post_pick", wait_for_end_of=True)
                 print("carry_my_luggage_post_pick", s,m)
                 self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
