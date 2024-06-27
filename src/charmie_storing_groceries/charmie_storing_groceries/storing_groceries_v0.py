@@ -979,7 +979,7 @@ class StoringGroceriesMain():
 
             print("FILTERED:")
             for o in filtered_objects:
-                # self.node.detected_objects_publisher.publish(o)
+                self.node.detected_objects_publisher.publish(o)
                 # print('---',o)
                 print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
 
@@ -1023,9 +1023,9 @@ class StoringGroceriesMain():
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
         self.set_neck(position=(0,0), wait_for_end_of=False)
-        self.set_speech(filename="generic/found_following_items")
-        for obj in final_objects:
-            self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+        # self.set_speech(filename="generic/found_following_items")
+        # for obj in final_objects:
+            # self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
             
         return final_objects
 
@@ -1688,29 +1688,11 @@ class StoringGroceriesMain():
         # Real-world dimensions (in meters)
         min_width_meters = -3.0
         max_width_meters = 3.0
-        min_height_meters = -2.0
-        max_height_meters = 2.0
+        min_height_meters = -2.5
+        max_height_meters = 2.5
         min_height_meters_y = 5.0
         max_height_meters_y = 0.0
 
-        # Coordinates to plot (x, y, z)
-        """ coordinates = [
-            ("Banana", -0.24, 1.95, -0.96),
-            ("Cheezit", -0.81, 0.93, -0.66),
-            ("Sugar", 0.29, 1.88, -0.53),
-            ("Strawberry Jello", 0.14, 1.96, -0.52),
-            ("7Up", 0.39, 1.78, 0.35),
-            ("Orange", -0.26, 2.15, -1.0),
-            ("Tomato Soup", 0.39, 1.74, 0.38),
-            ("Pringles", -0.4, 1.92, -0.03),
-            ("Cornflakes", -0.23, 1.91, -0.07),
-            ("Mustard", 0.96, 1.69, -0.32),
-            ("Cheezit", 1.64, 1.84, -0.3),
-            ("Red Wine", 0.19, 1.81, 0.45),
-            ("Tropical Juice", 0.11, 2.02, 0.41),
-            ("Spam", -0.41, 1.94, -0.02)
-        ] """
-        
         coordinates = data
 
         # Function to convert real-world coordinates to image coordinates
@@ -1730,7 +1712,7 @@ class StoringGroceriesMain():
             
             img_x = center_x + (img_x - center_x)
             img_y = center_y - (img_y - center_y)
-            img_z = center_y - (img_z - center_y)
+            img_z = center_y + (img_z - center_y)
             cv2.circle(image, (img_x, img_z), 5, (255, 255, 255), -1)  # Draw white points
             cv2.putText(image, name, (img_x + 5, img_z - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
             y_coordinates_front_view.append(img_x)
@@ -1739,14 +1721,11 @@ class StoringGroceriesMain():
             cv2.putText(image2, name, (img_x + 5, img_y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
             y_coordinates_top_view.append(img_y)
 
-            
-
-
-        
-        
+ 
         # Plot histogram for front view (y-coordinates)
+        bins = 120
         plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_front_view, bins=40, range=(0, width), color='blue', alpha=0.7)
+        plt.hist(y_coordinates_front_view, bins=bins, range=(0, width), color='blue', alpha=0.7) #Com bin de 60 tenho largura do armário a ocupar 9 bins (90 cm / 10)
         plt.title("Histogram of Y-coordinates in Front View")
         plt.xlabel("Pixel Y-coordinate")
         plt.ylabel("Frequency")
@@ -1754,31 +1733,39 @@ class StoringGroceriesMain():
         plt.savefig('histogram_front_view.png')
         plt.close()
 
+        print('Distância entre bins em cm:', width/bins)
+
+        # Calculate the histogram
+        hist, bins = np.histogram(y_coordinates_front_view, bins=120, range=(0, width))
+
+        # Find the index of the bin with the highest frequency
+        max_index = np.argmax(hist)
+
+        # Determine the range of values for the highest peak
+        bin_start = bins[max_index]
+        bin_end = bins[max_index + 1]
+
+        print(f"Range with highest peak in front view histogram: {bin_start} to {bin_end}")
+
         # Plot histogram for top view (y-coordinates)
+        bins = 144
         plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_top_view, bins=20, range=(0, height), color='green', alpha=0.7)
+        plt.hist(y_coordinates_top_view, bins=bins, range=(0, height), color='green', alpha=0.7) # 144 bins dá 5cm de diferença entre objetos. Sabendo a profundidade do armário sei quais os objetos que tenho em princípio
         plt.title("Histogram of Y-coordinates in Top View")
         plt.xlabel("Pixel Y-coordinate")
         plt.ylabel("Frequency")
         plt.grid(True)
         plt.savefig('histogram_top_view.png')
         plt.close()
+
+        print('Distância entre bins em cm:', height/bins)
         
         time.sleep(1)
         # Load and display the saved histogram images using OpenCV
         hist_front_view = cv2.imread('histogram_front_view.png')
         hist_top_view = cv2.imread('histogram_top_view.png')
         
-        # Display the image
-        cv2.imshow("Front view of cabinet", image)
-        cv2.waitKey(100)
-        #cv2.destroyAllWindows()
         
-        
-        
-        cv2.imshow("Histogram of Y-coordinates in Front View", hist_front_view)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
 
         # Display the image
         cv2.imshow("Top view of cabinet", image2)
@@ -1786,6 +1773,15 @@ class StoringGroceriesMain():
         #cv2.destroyAllWindows()        
 
         cv2.imshow("Histogram of Y-coordinates in Top View", hist_top_view)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        # Display the image
+        cv2.imshow("Front view of cabinet", image)
+        cv2.waitKey(100)
+        #cv2.destroyAllWindows()
+        
+        cv2.imshow("Histogram of Y-coordinates in Front View", hist_front_view)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -1833,7 +1829,7 @@ class StoringGroceriesMain():
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[0, -45], [0, -30], [0, -15], [0, 0]]
                 objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
-                
+
                 for o in objects_found:
                     
                     print(o.index, o.object_name, "\t", 
@@ -1845,6 +1841,7 @@ class StoringGroceriesMain():
                     z = round(o.position_absolute.z, 2)
                     data.append((name, x, y, z))
                 
+                print('Nr de objetos: ', len(data))
                 # # print(self.node.filtered_objects_storing_groceries)
                 # print('waiting...')
                 # while self.node.flag_storing_groceries_received == False:
@@ -1864,7 +1861,7 @@ class StoringGroceriesMain():
 
                 # self.node.flag_storing_groceries_received = False
                 # self.node.filtered_objects_storing_groceries.clear()
-                print(data)
+                # print('---', data)
                 self.plot_histograms(data)       
                 while True:
                     pass
