@@ -1677,7 +1677,7 @@ class StoringGroceriesMain():
 
         # print(f"Saved image with rectangle for object {detected_object.object_name} as {image_name}")
         
-    def plot_histograms(self):
+    def plot_histograms(self, data):
         height, width = 780, 1280
         image = np.zeros((height, width), dtype=np.uint8)
         image2 = np.zeros((height, width), dtype=np.uint8)
@@ -1694,7 +1694,7 @@ class StoringGroceriesMain():
         max_height_meters_y = 0.0
 
         # Coordinates to plot (x, y, z)
-        coordinates = [
+        """ coordinates = [
             ("Banana", -0.24, 1.95, -0.96),
             ("Cheezit", -0.81, 0.93, -0.66),
             ("Sugar", 0.29, 1.88, -0.53),
@@ -1709,7 +1709,9 @@ class StoringGroceriesMain():
             ("Red Wine", 0.19, 1.81, 0.45),
             ("Tropical Juice", 0.11, 2.02, 0.41),
             ("Spam", -0.41, 1.94, -0.02)
-        ]
+        ] """
+        
+        coordinates = data
 
         # Function to convert real-world coordinates to image coordinates
         
@@ -1731,7 +1733,7 @@ class StoringGroceriesMain():
             img_z = center_y - (img_z - center_y)
             cv2.circle(image, (img_x, img_z), 5, (255, 255, 255), -1)  # Draw white points
             cv2.putText(image, name, (img_x + 5, img_z - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            y_coordinates_front_view.append(img_z)
+            y_coordinates_front_view.append(img_x)
             
             cv2.circle(image2, (img_x, img_y), 5, (255, 255, 255), -1)  # Draw white points
             cv2.putText(image2, name, (img_x + 5, img_y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
@@ -1740,19 +1742,11 @@ class StoringGroceriesMain():
             
 
 
-        # Display the image
-        cv2.imshow("Front view of cabinet", image)
-        cv2.waitKey(100)
-        #cv2.destroyAllWindows()
         
-        # Display the image
-        cv2.imshow("Top view of cabinet", image2)
-        cv2.waitKey(100)
-        #cv2.destroyAllWindows()
         
         # Plot histogram for front view (y-coordinates)
         plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_front_view, bins=20, range=(0, height), color='blue', alpha=0.7)
+        plt.hist(y_coordinates_front_view, bins=40, range=(0, width), color='blue', alpha=0.7)
         plt.title("Histogram of Y-coordinates in Front View")
         plt.xlabel("Pixel Y-coordinate")
         plt.ylabel("Frequency")
@@ -1775,9 +1769,21 @@ class StoringGroceriesMain():
         hist_front_view = cv2.imread('histogram_front_view.png')
         hist_top_view = cv2.imread('histogram_top_view.png')
         
+        # Display the image
+        cv2.imshow("Front view of cabinet", image)
+        cv2.waitKey(100)
+        #cv2.destroyAllWindows()
+        
+        
+        
         cv2.imshow("Histogram of Y-coordinates in Front View", hist_front_view)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+
+        # Display the image
+        cv2.imshow("Top view of cabinet", image2)
+        cv2.waitKey(100)
+        #cv2.destroyAllWindows()        
 
         cv2.imshow("Histogram of Y-coordinates in Top View", hist_top_view)
         cv2.waitKey(0)
@@ -1823,60 +1829,43 @@ class StoringGroceriesMain():
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-
+                data = []
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                # tetas = [[0, -45], [0, -30], [0, -15], [0, 0]]
-                # objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                tetas = [[0, -45], [0, -30], [0, -15], [0, 0]]
+                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
                 
-                # print(self.node.filtered_objects_storing_groceries)
-                self.plot_histograms()       
-                while True:
-                    pass
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                height, width = 720, 1280
-                black_image = np.zeros((height, width), dtype=np.uint8)
-
-                print('waiting...')
-                while self.node.flag_storing_groceries_received == False:
-                    pass
-                time.sleep(2)
-                for o in self.node.filtered_objects_storing_groceries:
+                for o in objects_found:
+                    
                     print(o.index, o.object_name, "\t", 
                         round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), 
                         round(o.position_absolute.z, 2)) # round(o.box_center_x), round(o.box_center_y)
-                    black_image[round(o.box_center_y), round(o.box_center_x)] = 255
-
-                self.node.flag_storing_groceries_received = False
-                self.node.filtered_objects_storing_groceries.clear()
+                    name = o.object_name
+                    x = round(o.position_absolute.x, 2)
+                    y = round(o.position_absolute.y, 2)
+                    z = round(o.position_absolute.z, 2)
+                    data.append((name, x, y, z))
                 
-                # Display the image
-                cv2.imshow("Black Image with White Points", black_image)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+                # # print(self.node.filtered_objects_storing_groceries)
+                # print('waiting...')
+                # while self.node.flag_storing_groceries_received == False:
+                #     pass
+                # time.sleep(2)
+                
+                # for o in self.node.filtered_objects_storing_groceries:
+                    
+                #     print(o.index, o.object_name, "\t", 
+                #         round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), 
+                #         round(o.position_absolute.z, 2)) # round(o.box_center_x), round(o.box_center_y)
+                #     name = o.object_name
+                #     x = round(o.position_absolute.x, 2)
+                #     y = round(o.position_absolute.y, 2)
+                #     z = round(o.position_absolute.z, 2)
+                #     data.append((name, x, y, z))
 
-                # Optionally, save the image
-                # cv2.imwrite("black_image_with_white_points.png", black_image)
+                # self.node.flag_storing_groceries_received = False
+                # self.node.filtered_objects_storing_groceries.clear()
+                print(data)
+                self.plot_histograms(data)       
                 while True:
                     pass
                 
