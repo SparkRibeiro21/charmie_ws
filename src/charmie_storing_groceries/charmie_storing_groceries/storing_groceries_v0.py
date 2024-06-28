@@ -1811,11 +1811,6 @@ class StoringGroceriesMain():
         for index, counts in neighbor_counts_front.items():
             print(f"Peak at bin {bins_front[index]}: {counts}")
 
-
-
-
-
-
         """ ####
         720 pixeis -> 500 centimetros
         500 / 50 = 5 cm
@@ -2056,6 +2051,32 @@ class StoringGroceriesMain():
 
                 print('Filtered objects:', filtered_objects)
                 print('nr de objetos filtrados: ', len(filtered_objects))
+
+                min_object = min(filtered_objects, key=lambda x: x[1])
+                max_object = max(filtered_objects, key=lambda x: x[1])
+
+                print('x_min:', min_object[1])
+                print('x_max:', max_object[1])
+                dif = abs(max_object[1] - min_object[1])
+                print('dif', dif)
+                print(round(dif/2))
+                half = min_object[1] + dif/2
+
+                print('half:', half)
+
+                objects_left_side = []
+                objects_right_side = []
+                for obj in filtered_objects:
+                    if obj[1] < half:
+                        objects_left_side.append(obj)
+                    else:
+                        objects_right_side.append(obj)
+
+                print("Object with the minimum value in the 2nd argument:", min_object)
+                print("Object with the maximum value in the 2nd argument:", max_object)
+
+                print('Objects on the right side of the shelf:', objects_right_side)
+                print('Objects on the left side of the shelf:', objects_left_side)
 
                 while True:
                     pass
