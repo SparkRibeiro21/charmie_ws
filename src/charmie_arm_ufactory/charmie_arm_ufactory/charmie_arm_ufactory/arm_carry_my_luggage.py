@@ -804,10 +804,10 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 
-			temp = self.pre_pick_bag_position_joints
-			temp[5] = self.adjust_position
+			temp_adjust_angle_bag = self.pre_pick_bag_position_joints.copy()
+			temp_adjust_angle_bag[5] = self.adjust_position
 
-			self.joint_values_req.angles = self.deg_to_rad(temp)
+			self.joint_values_req.angles = self.deg_to_rad(temp_adjust_angle_bag)
 			self.joint_values_req.speed = math.radians(25)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0

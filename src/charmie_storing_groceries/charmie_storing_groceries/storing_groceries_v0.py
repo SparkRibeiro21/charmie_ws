@@ -1722,68 +1722,229 @@ class StoringGroceriesMain():
             y_coordinates_top_view.append(img_y)
 
  
-        # Plot histogram for front view (y-coordinates)
-        bins = 120
+        # Plot histogram for front view (x-coordinates)
+        """ ####
+        1280 pixeis -> 600 centimetros
+        600 / 120 = 5 cm
+        5 cm -> 10,7 pixeis
+
+        logo uso 18 vizinhos para perceber se a deteção do armário está top (porque o armário mede 90cm)
+        #### """
+        bins_front = 120
         plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_front_view, bins=bins, range=(0, width), color='blue', alpha=0.7) #Com bin de 60 tenho largura do armário a ocupar 9 bins (90 cm / 10)
-        plt.title("Histogram of Y-coordinates in Front View")
-        plt.xlabel("Pixel Y-coordinate")
+        plt.hist(y_coordinates_front_view, bins=bins_front, range=(0, width), color='blue', alpha=0.7)
+        plt.title("Histogram of X-coordinates in Front View")
+        plt.xlabel("Pixel X-coordinate")
         plt.ylabel("Frequency")
         plt.grid(True)
         plt.savefig('histogram_front_view.png')
         plt.close()
 
-        print('Distância entre bins em cm:', width/bins)
-
         # Calculate the histogram
-        hist, bins = np.histogram(y_coordinates_front_view, bins=120, range=(0, width))
+        hist_front, bins_front = np.histogram(y_coordinates_front_view, bins=bins_front, range=(0, width))
+        # max_index_front = np.argmax(hist_front)
 
-        # Find the index of the bin with the highest frequency
-        max_index = np.argmax(hist)
+        threshold = np.max(hist_front) * 0.8
+        peak_indices_front = np.where(hist_front >= threshold)[0]
 
-        # Determine the range of values for the highest peak
-        bin_start = bins[max_index]
-        bin_end = bins[max_index + 1]
+        # Define the range of neighbors to consider
+        neighbor_ranges = [(2, 17), (17, 2), (9, 9)]
+        best_peak_index_front = None
+        highest_neighbor_count_front = 0
+        neighbor_counts_front = {}
+        
 
-        print(f"Range with highest peak in front view histogram: {bin_start} to {bin_end}")
+        for index in peak_indices_front:
+            best_range_front = None
+            highest_sum_front = 0
+            neighbor_counts = []
+            for left, right in neighbor_ranges:
+                start_index_front = max(0, index - left)
+                end_index_front = min(len(hist_front) - 1, index + right)
+                total_frequency = np.sum(hist_front[start_index_front:end_index_front + 1])
 
-        # Plot histogram for top view (y-coordinates)
-        bins = 144
+                # Calculate number of objects in this range
+                left_bound_front = bins_front[start_index_front]
+                right_bound_front = bins_front[end_index_front + 1]
+                objects_in_range_front = np.sum((y_coordinates_front_view >= left_bound_front) & (y_coordinates_front_view < right_bound_front))
+
+                neighbor_counts.append(objects_in_range_front)
+
+                if total_frequency > highest_sum_front:
+                    highest_sum_front = total_frequency
+                    best_range_front = (start_index_front, end_index_front)
+
+            # Calculate number of objects in the best range for this peak
+            left_bound_front = bins_front[best_range_front[0]]
+            right_bound_front = bins_front[best_range_front[1] + 1]
+            objects_in_range_front = np.sum((y_coordinates_front_view >= left_bound_front) & (y_coordinates_front_view < right_bound_front))
+            
+            # Store neighbor counts for this peak
+            neighbor_counts_front[index] = neighbor_counts
+
+            if objects_in_range_front > highest_neighbor_count_front:
+                highest_neighbor_count_front = objects_in_range_front
+                best_peak_index_front = index
+
+        # Print the best peak and its neighbor count
+        left_bound_front = bins_front[best_range_front[0]]
+        right_bound_front = bins_front[best_range_front[1] + 1]
+
+        print(f"Best peak in front view histogram: {bins_front[best_peak_index_front]}")
+        print(f"Objects in neighbors range: {highest_neighbor_count_front}")
+
+        print("Neighbor counts for front view peaks:")
+        for index, counts in neighbor_counts_front.items():
+            print(f"Peak at bin {bins_front[index]}: {counts}")
+
+
+        """ ####
+        720 pixeis -> 500 centimetros
+        500 / 50 = 5 cm
+        5 cm -> 7,2 pixeis
+
+        logo uso 6 vizinhos para perceber se a deteção do armário está top (porque o armário mede 30cm em profundidade)
+        #### """
+        
+        # Plot histogram for top view (z-coordinates)
+        bins_top = 144
         plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_top_view, bins=bins, range=(0, height), color='green', alpha=0.7) # 144 bins dá 5cm de diferença entre objetos. Sabendo a profundidade do armário sei quais os objetos que tenho em princípio
-        plt.title("Histogram of Y-coordinates in Top View")
-        plt.xlabel("Pixel Y-coordinate")
+        plt.hist(y_coordinates_top_view, bins=bins_top, range=(0, height), color='green', alpha=0.7)
+        plt.title("Histogram of Z-coordinates in Top View")
+        plt.xlabel("Pixel Z-coordinate")
         plt.ylabel("Frequency")
         plt.grid(True)
         plt.savefig('histogram_top_view.png')
         plt.close()
 
-        print('Distância entre bins em cm:', height/bins)
+
+
+        # Calculate the histogram
+        hist_top, bins_top = np.histogram(y_coordinates_top_view, bins=bins_top, range=(0, height))
+        # max_index_top = np.argmax(hist_top)
+
+        threshold = np.max(hist_top) * 0.8
+        peak_indices_top = np.where(hist_top >= threshold)[0]
+
+        # Define the range of neighbors to consider
+        neighbor_ranges = [(1, 6), (6, 1), (4, 4)]
+        best_peak_index_top = None
+        highest_neighbor_count_top = 0
+
+        # Store neighbor counts for top view peaks
+        neighbor_counts_top = {}
         
+        for index in peak_indices_top:
+            best_range_top = None
+            highest_sum_top = 0
+            neighbor_counts = []
+            for left, right in neighbor_ranges:
+                start_index_top = max(0, index - left)
+                end_index_top = min(len(hist_top) - 1, index + right)
+                total_frequency = np.sum(hist_top[start_index_top:end_index_top + 1])
+
+                # Calculate number of objects in this range
+                left_bound_top = bins_top[start_index_top]
+                right_bound_top = bins_top[end_index_top + 1]
+                objects_in_range_top = np.sum((y_coordinates_top_view >= left_bound_top) & (y_coordinates_top_view < right_bound_top))
+
+                neighbor_counts.append(objects_in_range_top)
+
+                if total_frequency > highest_sum_top:
+                    highest_sum_top = total_frequency
+                    best_range_top = (start_index_top, end_index_top)
+
+            # Calculate number of objects in the best range for this peak
+            left_bound_top = bins_top[best_range_top[0]]
+            right_bound_top = bins_top[best_range_top[1] + 1]
+            objects_in_range_top = np.sum((y_coordinates_top_view >= left_bound_top) & (y_coordinates_top_view < right_bound_top))
+
+            # Store neighbor counts for this peak
+            neighbor_counts_top[index] = neighbor_counts
+
+            if objects_in_range_top > highest_neighbor_count_top:
+                highest_neighbor_count_top = objects_in_range_top
+                best_peak_index_top = index
+
+        # Print the best peak and its neighbor count
+        left_bound_top = bins_top[best_range_top[0]]
+        right_bound_top = bins_top[best_range_top[1] + 1]
+
+        print(f"Best peak in top view histogram: {bins_top[best_peak_index_top]}")
+        print(f"Objects in neighbors range: {highest_neighbor_count_top}")
+
+        print("Neighbor counts for top view peaks:")
+        for index, counts in neighbor_counts_top.items():
+            print(f"Peak at bin {bins_top[index]}: {counts}")
+
+
+        # Filter coordinates to keep only those within the common range
+        filtered_coordinates = []
+        for name, x, y, z in coordinates:
+            img_x = int((x - min_width_meters) / (max_width_meters - min_width_meters) * width)
+            img_y = height - int((y - min_height_meters_y) / (max_height_meters_y - min_height_meters_y) * height)
+            img_z = height - int((z - min_height_meters) / (max_height_meters - min_height_meters) * height)
+
+            img_x = center_x + (img_x - center_x)
+            img_y = center_y - (img_y - center_y)
+            img_z = center_y + (img_z - center_y)
+            print('name:', name)
+            print('- :', img_x, img_y, img_z)
+            print('- :', left_bound_front, right_bound_front, left_bound_top, right_bound_top)
+
+            if left_bound_front <= img_x <= right_bound_front and left_bound_top <= img_y <= right_bound_top:
+                print('- :', name)
+                filtered_coordinates.append((name, x, y, z))
+
+        # Plotting the peak regions in histograms
+        plt.figure(figsize=(10, 6))
+        plt.hist(y_coordinates_front_view, bins=bins_front, range=(0, width), color='blue', alpha=0.7)
+        plt.axvline(left_bound_front, color='red', linestyle='--', linewidth=2, label='Left Bound')
+        plt.axvline(right_bound_front, color='green', linestyle='--', linewidth=2, label='Right Bound')
+        plt.title("Histogram of X-coordinates in Front View with Peak Region")
+        plt.xlabel("Pixel X-coordinate")
+        plt.ylabel("Frequency")
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('histogram_front_view_peak.png')
+        plt.close()
+
+        plt.figure(figsize=(10, 6))
+        plt.hist(y_coordinates_top_view, bins=bins_top, range=(0, height), color='green', alpha=0.7)
+        plt.axvline(left_bound_top, color='red', linestyle='--', linewidth=2, label='Left Bound')
+        plt.axvline(right_bound_top, color='green', linestyle='--', linewidth=2, label='Right Bound')
+        plt.title("Histogram of Z-coordinates in Top View with Peak Region")
+        plt.xlabel("Pixel Z-coordinate")
+        plt.ylabel("Frequency")
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('histogram_top_view_peak.png')
+        plt.close()
+
         time.sleep(1)
         # Load and display the saved histogram images using OpenCV
-        hist_front_view = cv2.imread('histogram_front_view.png')
-        hist_top_view = cv2.imread('histogram_top_view.png')
-        
-        
+        hist_front_view_peak = cv2.imread('histogram_front_view_peak.png')
+        hist_top_view_peak = cv2.imread('histogram_top_view_peak.png')
 
-        # Display the image
         cv2.imshow("Top view of cabinet", image2)
         cv2.waitKey(100)
-        #cv2.destroyAllWindows()        
 
-        cv2.imshow("Histogram of Y-coordinates in Top View", hist_top_view)
+        cv2.imshow("Histogram of Z-coordinates in Top View with Peak Region", hist_top_view_peak)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-        # Display the image
         cv2.imshow("Front view of cabinet", image)
         cv2.waitKey(100)
-        #cv2.destroyAllWindows()
-        
-        cv2.imshow("Histogram of Y-coordinates in Front View", hist_front_view)
+
+        cv2.imshow("Histogram of X-coordinates in Front View with Peak Region", hist_front_view_peak)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+
+        print(f"Front view: {left_bound_front} to {right_bound_front}")
+        print(f"Top view: {left_bound_top} to {right_bound_top}")
+
+        # Return the filtered coordinates
+        return filtered_coordinates
 
     def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
@@ -1827,28 +1988,10 @@ class StoringGroceriesMain():
 
                 data = []
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                tetas = [[0, -45], [0, -30], [0, -15], [0, 0]]
-                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                # tetas = [[0, -45], [0, -30], [0, -15], [0, 0]]
+                # objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
 
-                for o in objects_found:
-                    
-                    print(o.index, o.object_name, "\t", 
-                        round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), 
-                        round(o.position_absolute.z, 2)) # round(o.box_center_x), round(o.box_center_y)
-                    name = o.object_name
-                    x = round(o.position_absolute.x, 2)
-                    y = round(o.position_absolute.y, 2)
-                    z = round(o.position_absolute.z, 2)
-                    data.append((name, x, y, z))
-                
-                print('Nr de objetos: ', len(data))
-                # # print(self.node.filtered_objects_storing_groceries)
-                # print('waiting...')
-                # while self.node.flag_storing_groceries_received == False:
-                #     pass
-                # time.sleep(2)
-                
-                # for o in self.node.filtered_objects_storing_groceries:
+                # for o in objects_found:
                     
                 #     print(o.index, o.object_name, "\t", 
                 #         round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), 
@@ -1858,11 +2001,33 @@ class StoringGroceriesMain():
                 #     y = round(o.position_absolute.y, 2)
                 #     z = round(o.position_absolute.z, 2)
                 #     data.append((name, x, y, z))
+                
+                # print('Nr de objetos: ', len(data))
 
-                # self.node.flag_storing_groceries_received = False
-                # self.node.filtered_objects_storing_groceries.clear()
-                # print('---', data)
-                self.plot_histograms(data)       
+                # print(self.node.filtered_objects_storing_groceries)
+                print('waiting...')
+                while self.node.flag_storing_groceries_received == False:
+                    pass
+                time.sleep(2)
+                
+                for o in self.node.filtered_objects_storing_groceries:
+                    
+                    print(o.index, o.object_name, "\t", 
+                        round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), 
+                        round(o.position_absolute.z, 2)) # round(o.box_center_x), round(o.box_center_y)
+                    name = o.object_name
+                    x = round(o.position_absolute.x, 2)
+                    y = round(o.position_absolute.y, 2)
+                    z = round(o.position_absolute.z, 2)
+                    data.append((name, x, y, z))
+
+                self.node.flag_storing_groceries_received = False
+                self.node.filtered_objects_storing_groceries.clear()
+                print('---', data)
+                filtered_objects = self.plot_histograms(data)     
+
+                print('Filtered objects:', filtered_objects)
+
                 while True:
                     pass
                 
