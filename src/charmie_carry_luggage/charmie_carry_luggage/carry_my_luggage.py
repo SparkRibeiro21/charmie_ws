@@ -713,8 +713,7 @@ class CarryMyLuggageMain():
             self.navigation_message = "Arrived at selected location"
 
         return self.node.navigation_success, self.node.navigation_message   
-
-    
+ 
     def set_initial_position(self, initial_position):
 
         task_initialpose = PoseWithCovarianceStamped()
@@ -747,7 +746,6 @@ class CarryMyLuggageMain():
         task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         
         self.node.initialpose_publisher.publish(task_initialpose)
-
 
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
@@ -1260,7 +1258,6 @@ class CarryMyLuggageMain():
 
         return self.node.activate_obstacles_success, self.node.activate_obstacles_message
     
-
     def get_point_cloud(self, bb=BoundingBox(), wait_for_end_of=True):
 
         requested_objects = []
@@ -1285,7 +1282,6 @@ class CarryMyLuggageMain():
 
         return self.node.point_cloud_response.coords[0]
     
-
     def detect_bag(self, position_of_referee_x, received_bag):
         correct_bag  = False
         self.activate_yolo_objects(activate_objects=True)
@@ -1342,7 +1338,6 @@ class CarryMyLuggageMain():
         self.activate_yolo_pose(activate=False)
 
         return bag_side
-
 
     def get_bag_pick_cordinates(self):
 
@@ -1545,14 +1540,20 @@ class CarryMyLuggageMain():
         self.Waiting_for_task_to_start = 0
         self.Recognize_bag = 1
         self.Go_to_bag = 2
-        self.Pick_bag_left = 3
-        self.Pick_bag_right = 4
-        self.Camera_pick_bag = 10
+        # self.Pick_bag_left = 3
+        # self.Pick_bag_right = 4
+        self.Camera_pick_bag = 3
+        self.Go_back_to_initial_position = 4
         self.Final_State = 5
         
+        # CML Vars ...
         self.floor_dist=660
         self.top_bag_dist=440
         self.bag_in_gripper_dist=200
+        self.bag_side = "none"
+        self.task_room_location = "Office"
+        self.DETECT_BAG_FILTER = True # if i want to turn off the bag detection, if not reliable
+        self.move_bag_coords = Point()
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -1560,8 +1561,9 @@ class CarryMyLuggageMain():
 
         self.initial_position = [-4.5, 1.0, 0.0]
 
+
         self.IMU_ANGLE = 90.0
-        self.INITIAL_REACHED_RADIUS = 0.9
+        self.INITIAL_REACHED_RADIUS = 1.0
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Camera_pick_bag
@@ -1582,7 +1584,7 @@ class CarryMyLuggageMain():
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
                 # set rgb's to cyan
-                self.set_rgb(CYAN+SET_COLOUR)
+                self.set_rgb(CYAN+HALF_ROTATE)
 
                 self.set_speech(filename="carry_my_luggage/carry_luggage_ready_start", wait_for_end_of=True)
                 
@@ -1593,72 +1595,72 @@ class CarryMyLuggageMain():
 
                 self.set_rgb(BLUE+SET_COLOUR)
 
-                # set rgb's to static green
-                # self.set_rgb(GREEN+SET_COLOUR)
-
                 # next state
                 self.state = self.Recognize_bag
 
             elif self.state == self.Recognize_bag:
                 print("State:", self.state, "- Recognize_bag")
                 
-                # set rgb's to blue
-
-                # speech: "Please point to the bag you want me to take."
+                # Speech: "Please point to the bag you want me to carry."
                 self.set_speech(filename="carry_my_luggage/point_to_bag", wait_for_end_of=True)
-                # how to get pose and bag????
                 
-                # set rgb's to static green
-                # self.set_rgb(GREEN+SET_COLOUR)
+                time.sleep(2.0)
+                
+                # Detect person pointing to the bag
+                pointing_person_found = False
+                pointing_person = DetectedPerson()
+                while not pointing_person_found:
+                    tetas = [[0, -10]]
+                    people_found = self.search_for_person(tetas=tetas, delta_t=3.0)
+                    for p in people_found:
+                        if p.room_location == self.task_room_location and p.pointing_at != "None":
+                            pointing_person = p
+                            self.bag_side = p.pointing_at.lower()
+                            pointing_person_found = True
+                
+                self.set_rgb(GREEN+HALF_ROTATE)
 
-                # speech: "I have detected the bag"
-                # speck: dizer qual o saco: criar fase para esquerda e direita
+                # Speech: "You are pointing to the bag on your right"
+                self.set_speech(filename="carry_my_luggage/detected_bag_"+self.bag_side, wait_for_end_of=True)
                 
-                #### TIAGO METE O YOLO POSE AQUI
-                received_bag = self.detect_person_pointing()
-                
-                
-                # received_bag tem de ser dado pela função de deteção
-                self.set_speech(filename="carry_my_luggage/detected_bag_"+received_bag.lower(), wait_for_end_of=True)
-                
-                
-                ### Quero retirar coordenadas do saco detetado. Enquanto não tiver um saco detetado dolado correto que me foi  dado, mexo  pescoço
-                
-                
-                self.activate_yolo_objects(activate_objects=True)
+                bag_found = False
+                if self.DETECT_BAG_FILTER:
+                    # Check for bag object without moving neck
+                    correct_bag = DetectedObject()
+                    tetas = [[0, -10]]
+                    objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, detect_objects=True)
+                    for o in objects_found:
+                        if self.bag_side == "left":
+                            if o.room_location == self.task_room_location and o.position_absolute.x > pointing_person.position_absolute.x:
+                                correct_bag = o
+                                bag_found = True
+                        else: # == "right"
+                            if o.room_location == self.task_room_location and o.position_absolute.x < pointing_person.position_absolute.x:
+                                correct_bag = o
+                                bag_found = True
 
-                list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
-                position_index = 0
+                    if not bag_found:
+                        # Check for bag object using multiple neck positions (x3)
+                        tetas = [[-45, -10], [0, -10], [45, -10]]
+                        objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, detect_objects=True)
+                        for o in objects_found:
+                            if self.bag_side == "left":
+                                if o.room_location == self.task_room_location and o.position_absolute.x > pointing_person.position_absolute.x:
+                                    correct_bag = o
+                            else: # == "right"
+                                if o.room_location == self.task_room_location and o.position_absolute.x < pointing_person.position_absolute.x:
+                                    correct_bag = o
 
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                correct_bag_detected = False
-                
-                while not correct_bag_detected:
-                    pos_offset = list_of_neck_position_search[position_index]
-                    new_neck_pos = [self.look_navigation[0] + pos_offset[0], self.look_navigation[1] + pos_offset[1]]
-                    print('pescoço: ', new_neck_pos)
+                if bag_found:
+                    self.move_bag_coords = correct_bag
+                else:
+                    # if the robot does not find a bag, it calculates the coordinates according to the pointing person position
+                    self.move_bag_coords.y = pointing_person.position_absolute.y + 0.5
                     
-                    self.set_neck(position=new_neck_pos, wait_for_end_of=True)
-                    
-                    time.sleep(5)
-                
-                    # self.current_image = self.node.detected_objects.image_rgb
-                    # bridge = CvBridge()
-                    # Convert ROS Image to OpenCV image
-                    # cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-                    # self.image_most_obj_detected= cv_image
-                    
-                    
-                    ### VARIÁVEL REFEREE_X TEM DE ME SER DADA PELO POINT CLOUD DA PESSOA
-                    referee_x = 0.0
-                
-                    correct_bag_detected, relative_position_of_bag = self.detect_bag(position_of_referee_x= referee_x, received_bag= received_bag)
-                
-                    # Move to the next position
-                    position_index = (position_index + 1) % len(list_of_neck_position_search)
-                    print(position_index)
-                
-                self.activate_yolo_objects(activate_objects=False)
+                    if self.bag_side == "left":
+                        self.move_bag_coords.x = pointing_person.position_absolute.x - 1.0
+                    else: # == "right"
+                        self.move_bag_coords.x = pointing_person.position_absolute.x + 1.0
 
                 # next state
                 self.state = self.Go_to_bag 
@@ -1666,42 +1668,31 @@ class CarryMyLuggageMain():
             elif self.state == self.Go_to_bag:
                 print("State:", self.state, "- Go_to_bag")
 
-                # set rgb's to rotating green
-                self.set_rgb(GREEN+ROTATE)
+                self.set_rgb(MAGENTA+ROTATE)
 
-                # speech: "I'm going to go to the bag."
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+
+                # Speech: "I am moving towards the bag you pointed at."
                 self.set_speech(filename="carry_my_luggage/going_to_bag", wait_for_end_of=True)
 
-                print('Navigate to: ', relative_position_of_bag.x, relative_position_of_bag.y)
+                print('Navigate to: ', self.move_bag_coords.x, self.move_bag_coords.y)
 
-                
-
+                # Speech: "Just a warning. I might slightly push the bag. However this is intended since I have to position myself as close as possible to the bag."
                 self.set_speech(filename="carry_my_luggage/might_touch_bag", wait_for_end_of=False)
 
-                self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
-                print('received bag: ', received_bag)
-                if received_bag == 'left':
+                self.set_navigation(movement="move", target = [self.move_bag_coords.x, self.move_bag_coords.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
+                
+                print('received bag: ', self.bag_side)
+                if self.bag_side == "left":
                     self.IMU_ANGLE -=20.0
-                    print('left')
-                    state = self.Pick_bag_left
-                elif received_bag == 'right':
+                else: # == "right"
                     self.IMU_ANGLE += 20.0
-                    print('\n \n \n \n right \n \n \n')
-                    state = self.Pick_bag_right
-                else:
-                    self.IMU_ANGLE += 0.0
-                    state = self.Go_to_bag
 
                 self.set_navigation(movement="orientate", absolute_angle= self.IMU_ANGLE, flag_not_obs=True, wait_for_end_of=True)
 
-                # look at bag (set neck with the bag's coordinates)
-
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                # navigation (how?)
-
-                # next state
-                self.state = state
+                self.state = self.Camera_pick_bag
             
+                """
             elif self.state == self.Pick_bag_left:
                 print("State:", self.state, "- Pick_bag")
                 # your code here ...  
@@ -1912,8 +1903,12 @@ class CarryMyLuggageMain():
 
                 # next state
                 self.state = self.Final_State 
-
+                """
+            
             elif self.state == self.Camera_pick_bag:
+
+                #### FALTA BAIXAR O TRONCO 
+                #### FALTA VER SE BRAÇO CONSEGUE DESCER MAIS
 
                 # bag_grabbed_camera = self.check_bag_grabbed_camera()
                 
@@ -1957,7 +1952,6 @@ class CarryMyLuggageMain():
                 print("carry_my_luggage_post_give_bag", s,m)
                 self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
                 time.sleep(3)
-
 
             elif self.state == self.Final_State:
                 print("State:", self.state, "- Final_State")
