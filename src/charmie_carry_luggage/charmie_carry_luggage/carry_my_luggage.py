@@ -1656,12 +1656,15 @@ class CarryMyLuggageMain():
             
             elif self.state == self.Camera_pick_bag:
 
-                # Speech: "I am going to pick up the bag now."
-                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=False)
+                # Speech: "Please step away from the bag as I might need some space to pick up the bag."
+                self.set_speech(filename="carry_my_luggage/step_away_from_bag", wait_for_end_of=False)
                 
                 s,m = self.set_arm(command="carry_my_luggage_pre_pick", wait_for_end_of=True)
                 print("carry_my_luggage_pre_pick", s,m)
                 
+                # Speech: "I am going to pick up the bag now."
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=False)
+
                 bag_grabbed = False
                 while not bag_grabbed:
 
