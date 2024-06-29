@@ -155,6 +155,12 @@ def generate_launch_description():
                 emulate_tty=True
                 )
     
+    obstacles = Node(package='charmie_obstacles',
+                executable='obstacles_fusion',
+                name='obstacles_fusion',
+                emulate_tty=True
+                )
+    
     debug_visual = Node(package='charmie_debug',
                         executable='debug_visual',
                         name='debug_visual',
@@ -163,8 +169,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),
-        # charmie_multi_camera_launch_description,
-        face,
+        charmie_multi_camera_launch_description,
+        # face,
         speakers,
         neck,
         low_level,
@@ -175,6 +181,9 @@ def generate_launch_description():
         yolo_objects,
         debug_visual,
         yolo_pose,
-        # lidar,
+        lidar,
+        obstacles,
+        
+        
         # carry_my_luggage,
     ])

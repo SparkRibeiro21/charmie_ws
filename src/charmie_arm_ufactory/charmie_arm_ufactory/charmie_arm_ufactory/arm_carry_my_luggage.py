@@ -816,7 +816,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 2:
 			print("MOVED LINE DOWN")
-			self.move_line_tool_req.pose = [0.0, 0.0, 380.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.pose = [0.0, 0.0, 420.0, 0.0, 0.0, 0.0]
 			self.move_line_tool_req.speed = 40.0
 			self.move_line_tool_req.acc = 500.0
 			self.move_line_tool_req.wait = True
@@ -850,7 +850,7 @@ class ArmUfactory(Node):
 		elif self.estado_tr == 6:
 			print("CHECK GRIPPER POSITION:", self.gripper_tr)
 			print("MOVED LINE UP")
-			self.move_line_tool_req.pose = [0.0, 0.0, -380.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.pose = [0.0, 0.0, -420.0, 0.0, 0.0, 0.0]
 			self.move_line_tool_req.speed = 40.0
 			self.move_line_tool_req.acc = 500.0
 			self.move_line_tool_req.wait = True

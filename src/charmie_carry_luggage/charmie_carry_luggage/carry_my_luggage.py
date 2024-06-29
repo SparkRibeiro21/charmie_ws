@@ -89,38 +89,38 @@ class CarryMyLuggageNode(Node):
 
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
-        # Speakers
-        # while not self.speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Speech Command...")
         # Neck 
-        # while not self.set_neck_position_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        # while not self.get_neck_position_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-        # while not self.set_neck_coordinates_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        while not self.set_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+        while not self.get_neck_position_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
+        while not self.set_neck_coordinates_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         # while not self.neck_track_person_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         # while not self.neck_track_object_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
         # Yolos
-        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
-        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        while not self.activate_yolo_pose_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        while not self.activate_yolo_objects_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Arm (CHARMIE)
-        # while not self.arm_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
         # Face
         # while not self.face_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Face Command...")
         # Obstacles
-        # while not self.activate_obstacles_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
-        
+        while not self.activate_obstacles_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
         # Point Cloud
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
+        # Speakers
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
+        
 
 
         # Variables 
@@ -1550,6 +1550,7 @@ class CarryMyLuggageMain():
         self.floor_dist=660
         self.top_bag_dist=440
         self.bag_in_gripper_dist=200
+        self.INITIAL_REACHED_RADIUS = 1.0
         self.bag_side = "none"
         self.task_room_location = "Office"
         self.DETECT_BAG_FILTER = True # if i want to turn off the bag detection, if not reliable
@@ -1559,14 +1560,14 @@ class CarryMyLuggageMain():
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
 
-        self.initial_position = [-4.5, 1.0, 0.0]
+        self.initial_position = [-4.5, 4.0, 180.0]
 
 
         self.IMU_ANGLE = 90.0
-        self.INITIAL_REACHED_RADIUS = 1.0
+
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Camera_pick_bag
+        self.state = self.Waiting_for_task_to_start
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Carry My Luggage Main...")
@@ -1580,6 +1581,10 @@ class CarryMyLuggageMain():
                 print("SET INITIAL POSITION")
 
                 time.sleep(1)
+                
+                self.activate_yolo_objects(activate_objects=False, activate_doors=False, activate_shoes=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False)
+                self.activate_yolo_pose(activate=False)
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=False)
         
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
@@ -1909,6 +1914,7 @@ class CarryMyLuggageMain():
 
                 #### FALTA BAIXAR O TRONCO 
                 #### FALTA VER SE BRAÇO CONSEGUE DESCER MAIS
+                #### TIRAR FUNCOES ANTIGAS QUE JA NAO SAO USADAS
 
                 # bag_grabbed_camera = self.check_bag_grabbed_camera()
                 
