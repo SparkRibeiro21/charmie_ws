@@ -1,8 +1,7 @@
 {
-"first_example": "This is the apple example",
-"second_example": "This is the second example",
-"third_example": "This is the third example",
-"fourth_example": "This is the fourth example",
-"fifth_example": "This is the fifth example"
+"sucess_pick_bag": "I have successfully picked up the bag.",
+"move_initial_position": "Moving to the initial position.",
+"ready_to_follow": "I am ready to follow you. Let's go.",
+"step_away_from_bag": "Please step away from the bag as I might need some space to pick up the bag."
 }
 
