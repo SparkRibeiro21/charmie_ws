@@ -469,7 +469,7 @@ class PointCloudNode(Node):
                 width = self.hand_rgb_img.width
                 height = self.hand_rgb_img.height
 
-                depth_frame_res = cv2.resize(depth_frame, (width, height), interpolation = cv2.INTER_NEAREST)
+                depth_frame_res = cv2.resize(depth_frame, (1280, 720), interpolation = cv2.INTER_NEAREST)
 
                 depth_frame_res[depth_frame_res > self.pcloud_hand.MAX_DIST] = 0
                 depth_frame_res[depth_frame_res < self.pcloud_hand.MIN_DIST] = 0

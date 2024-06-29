@@ -120,8 +120,8 @@ def generate_launch_description():
                         )
     
     yolo_pose = Node(package='charmie_yolo_pose',
-                        executable='yolo_pose',
-                        name='yolo_pose',
+                        executable='yolo_pose_characteristics',
+                        name='yolo_pose_characteristics',
                         emulate_tty=True
                         )
     
@@ -170,6 +170,7 @@ def generate_launch_description():
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),
         charmie_multi_camera_launch_description,
+        yolo_pose,
         # face,
         speakers,
         neck,
@@ -180,10 +181,8 @@ def generate_launch_description():
         point_cloud,
         yolo_objects,
         debug_visual,
-        yolo_pose,
         lidar,
         obstacles,
-        
         
         # carry_my_luggage,
     ])

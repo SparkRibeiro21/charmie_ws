@@ -179,7 +179,8 @@ class CarryMyLuggageNode(Node):
     def get_aligned_depth_hand_image_callback(self, img: Image):
         self.depth_hand_img = img
         self.first_depth_hand_image_received = True
-        # print("Received Depth Image")
+        print(".", end='')
+        # print("Received HAND Depth Image")
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -909,7 +910,7 @@ class CarryMyLuggageMain():
 
         final_objects = []
         mandatory_object_detected_flags = [False for _ in list_of_objects]
-        print(mandatory_object_detected_flags)
+        # print(mandatory_object_detected_flags)
         DETECTED_ALL_LIST_OF_OBJECTS = False
         MIN_DIST_DIFFERENT_FRAMES = 0.3 # maximum distance for the robot to assume it is the same objects
         MIN_DIST_SAME_FRAME = 0.2
@@ -1079,7 +1080,7 @@ class CarryMyLuggageMain():
 
                         if is_in_mandatory_list:
                             mandatory_ctr += 1
-                        print(m_object, is_in_mandatory_list)
+                        # print(m_object, is_in_mandatory_list)
 
                     if mandatory_ctr == len(list_of_objects): # if all objects are already in the detected list 
                         break
@@ -1091,11 +1092,11 @@ class CarryMyLuggageMain():
             
 
             # DEBUG
-            print("TOTAL objects in this neck pos:")
-            for frame in total_objects_detected:
-                for object in frame:    
-                    print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
-                print("-")
+            # print("TOTAL objects in this neck pos:")
+            # for frame in total_objects_detected:
+            #     for object in frame:    
+            #         print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
+            #     print("-")
 
             ### DETECTS ALL THE OBJECTS SHOW IN EVERY FRAME ###
             
@@ -1107,11 +1108,11 @@ class CarryMyLuggageMain():
                 to_remove = []
 
                 if not len(filtered_objects):
-                    print("NO OBJECTS", frame)
+                    # print("NO OBJECTS", frame)
                     for object in range(len(total_objects_detected[frame])):
                         to_append.append(total_objects_detected[frame][object])
                 else:
-                    print("YES OBJECTS", frame)
+                    # print("YES OBJECTS", frame)
 
                     for object in range(len(total_objects_detected[frame])):
                         same_object_ctr = 0
@@ -1122,13 +1123,13 @@ class CarryMyLuggageMain():
 
                                 # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
                                 dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
-                                print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
+                                # print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
                                 
                                 if dist < MIN_DIST_DIFFERENT_FRAMES:
                                     same_object_ctr+=1
                                     same_object_old = filtered_objects[filtered]
                                     same_object_new = total_objects_detected[frame][object]
-                                    print("SAME OBJECT")                        
+                                    # print("SAME OBJECT")                        
                         
                         if same_object_ctr > 0:
 
@@ -1136,8 +1137,8 @@ class CarryMyLuggageMain():
                             same_object_old_distance_center = math.dist(image_center, (same_object_old.box_center_x, same_object_old.box_center_y))
                             same_object_new_distance_center = math.dist(image_center, (same_object_new.box_center_x, same_object_new.box_center_y))
                             
-                            print("OLD (pixel):", same_object_old.index, same_object_old.object_name, ", dist_2_center:", round(same_object_old_distance_center,2))
-                            print("NEW (pixel):", same_object_new.index, same_object_new.object_name, ", dist_2_center:", round(same_object_new_distance_center,2))
+                            # print("OLD (pixel):", same_object_old.index, same_object_old.object_name, ", dist_2_center:", round(same_object_old_distance_center,2))
+                            # print("NEW (pixel):", same_object_new.index, same_object_new.object_name, ", dist_2_center:", round(same_object_new_distance_center,2))
 
                             if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
                                 to_remove.append(same_object_old)
@@ -1150,14 +1151,15 @@ class CarryMyLuggageMain():
 
                 for o in to_remove:
                     if o in filtered_objects:
-                        print("REMOVED: ", o.index, o.object_name)
+                        # print("REMOVED: ", o.index, o.object_name)
                         filtered_objects.remove(o)
                     else:
-                        print("TRIED TO REMOVE TWICE THE SAME OBJECT")
+                        pass
+                        # print("TRIED TO REMOVE TWICE THE SAME OBJECT")
                 to_remove.clear()  
 
                 for o in to_append:
-                    print("ADDED: ", o.index, o.object_name)
+                    # print("ADDED: ", o.index, o.object_name)
                     filtered_objects.append(o)
                 to_append.clear()
 
@@ -1185,8 +1187,8 @@ class CarryMyLuggageMain():
                         # else:
                         #     pass
                 
-                print(list_of_objects)
-                print(mandatory_object_detected_flags)
+                # print(list_of_objects)
+                # print(mandatory_object_detected_flags)
                 
                 if not all(mandatory_object_detected_flags):
                     self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
@@ -1205,9 +1207,9 @@ class CarryMyLuggageMain():
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
         self.set_neck(position=(0,0), wait_for_end_of=False)
-        self.set_speech(filename="generic/found_following_items")
-        for obj in final_objects:
-            self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+        # self.set_speech(filename="generic/found_following_items")
+        # for obj in final_objects:
+        #     self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
             
         return final_objects    
 
@@ -1281,74 +1283,18 @@ class CarryMyLuggageMain():
                 pass
 
         return self.node.point_cloud_response.coords[0]
-    
-    def detect_bag(self, position_of_referee_x, received_bag):
-        correct_bag  = False
-        self.activate_yolo_objects(activate_objects=True)
-        objects_stored = self.node.detected_objects
-        obj = Point()
-                
-        for object in objects_stored.objects:
-            print('Objeto: ', object)
-            if object.object_name ==  'bag' or object.object_name ==  'Bag':
-                print('x do saco relativo ao robô: ', object.position_relative.x)
-                if object.position_relative.x <= position_of_referee_x and received_bag == 'right':
-                    correct_bag = True
-                    print('Coordenadas do saco (mundo): ', object.position_absolute)
-                    obj = object.position_absolute
-                    break
-                elif object.position_relative.x > position_of_referee_x and received_bag == 'left':
-                    correct_bag = True
-                    print('Coordenadas do saco (mundo): ', object.position_absolute)
-                    obj = object.position_absolute
-                    break
-                else: 
-                    correct_bag = False
-                    
-        return correct_bag, obj
-        
-    def detect_person_pointing(self):
-        detected_person_temp = Yolov8Pose()
-        self.activate_yolo_pose(activate=True)
-        
-        self.set_rgb(WHITE+HALF_ROTATE)
-
-        time.sleep(2.5)
-        detected_person_temp = self.node.detected_people  
-
-
-        bag_side = ""
-        self.set_rgb(BLUE+HALF_ROTATE)
-
-        person_detected = False
-        while not person_detected:
-            
-            detected_person_temp = self.node.detected_people  
-
-            for p in detected_person_temp.persons:
-                if p.room_location == "Office" and p.pointing_at != "None":
-                    person_detected = True
-                    bag_side = p.pointing_at.lower()
-                    self.set_rgb(GREEN+HALF_ROTATE)
-
-                print(p.room_location, p.pointing_at, person_detected)
-            
-            time.sleep(0.05)
-
-        self.activate_yolo_pose(activate=False)
-
-        return bag_side
-
+       
     def get_bag_pick_cordinates(self):
 
-        DEBUG = False
+        DEBUG = True
         MIN_BAG_PIXEL_AREA = 40000
         f_coords = []
 
         self.node.first_depth_hand_image_received = False
 
         while not self.node.first_depth_hand_image_received:
-            pass
+            print(".")
+            time.sleep(0.1)
 
         c_areas = []
         
@@ -1356,6 +1302,10 @@ class CarryMyLuggageMain():
             c_areas.clear()
             current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
             height, width = current_frame_depth_head.shape
+            print(height, width)
+            current_frame_depth_head = cv2.resize(current_frame_depth_head, (1280, 720), interpolation = cv2.INTER_NEAREST)
+            height, width = current_frame_depth_head.shape
+            print(height, width)
             
             # current_frame_depth_head[int(0.80*height):height,int(0.29*width):int(0.71*width)] = 0 # remove the robot from the image
 
@@ -1467,7 +1417,7 @@ class CarryMyLuggageMain():
             cv2.imshow("New Img Distance Inspection", blank_image)
             cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
 
-            k = cv2.waitKey(1)
+            k = cv2.waitKey(100)
             if k == ord('w'):
                 self.floor_dist += 10
             if k == ord('q'):
@@ -1492,7 +1442,8 @@ class CarryMyLuggageMain():
 
         self.node.first_depth_hand_image_received = False
         while not self.node.first_depth_hand_image_received:
-            pass
+            print(".")
+            time.sleep(0.1)
         
         # if self.node.first_depth_hand_image_received:
 
@@ -1547,24 +1498,22 @@ class CarryMyLuggageMain():
         self.Final_State = 5
         
         # CML Vars ...
-        self.floor_dist=660
+        self.floor_dist = 600 # 660
         self.top_bag_dist=440
         self.bag_in_gripper_dist=200
-        self.INITIAL_REACHED_RADIUS = 1.0
+        self.INITIAL_REACHED_RADIUS = 0.8
+        self.slight_angular_adjust_depending_on_side = 0.0
         self.bag_side = "none"
         self.task_room_location = "Office"
         self.DETECT_BAG_FILTER = True # if i want to turn off the bag detection, if not reliable
         self.move_bag_coords = Point()
+        self.pointing_person = DetectedPerson()
 
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
 
-        self.initial_position = [-4.5, 4.0, 180.0]
-
-
-        self.IMU_ANGLE = 90.0
-
+        self.initial_position = [-4.5, 1.0, 0.0]
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_to_start
@@ -1583,7 +1532,7 @@ class CarryMyLuggageMain():
                 time.sleep(1)
                 
                 self.activate_yolo_objects(activate_objects=False, activate_doors=False, activate_shoes=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False)
-                self.activate_yolo_pose(activate=False)
+                # self.activate_yolo_pose(activate=False)
                 self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=False)
         
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
@@ -1596,7 +1545,7 @@ class CarryMyLuggageMain():
                 self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=True)
 
                 # wait for start_button
-                self.wait_for_start_button()
+                # self.wait_for_start_button()
 
                 self.set_rgb(BLUE+SET_COLOUR)
 
@@ -1609,20 +1558,22 @@ class CarryMyLuggageMain():
                 # Speech: "Please point to the bag you want me to carry."
                 self.set_speech(filename="carry_my_luggage/point_to_bag", wait_for_end_of=True)
                 
-                time.sleep(2.0)
+                # time.sleep(2.0)
                 
                 # Detect person pointing to the bag
                 pointing_person_found = False
-                pointing_person = DetectedPerson()
                 while not pointing_person_found:
                     tetas = [[0, -10]]
-                    people_found = self.search_for_person(tetas=tetas, delta_t=3.0)
+                    people_found = self.search_for_person(tetas=tetas, delta_t=2.0)
+                    print("-")
                     for p in people_found:
+                        print(p.room_location, p.pointing_at)
                         if p.room_location == self.task_room_location and p.pointing_at != "None":
-                            pointing_person = p
+                            self.pointing_person = p
                             self.bag_side = p.pointing_at.lower()
                             pointing_person_found = True
                 
+                print(self.pointing_person.position_relative)
                 self.set_rgb(GREEN+HALF_ROTATE)
 
                 # Speech: "You are pointing to the bag on your right"
@@ -1632,318 +1583,152 @@ class CarryMyLuggageMain():
                 if self.DETECT_BAG_FILTER:
                     # Check for bag object without moving neck
                     correct_bag = DetectedObject()
-                    tetas = [[0, -10]]
-                    objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, detect_objects=True)
+                    tetas = [[0, -30]]
+                    objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, detect_objects=True)
                     for o in objects_found:
+                        print(o.position_relative)
                         if self.bag_side == "left":
-                            if o.room_location == self.task_room_location and o.position_absolute.x > pointing_person.position_absolute.x:
+                            if o.object_name == "Bag" and o.room_location == self.task_room_location and o.position_relative.x > self.pointing_person.position_relative.x:
                                 correct_bag = o
                                 bag_found = True
                         else: # == "right"
-                            if o.room_location == self.task_room_location and o.position_absolute.x < pointing_person.position_absolute.x:
+                            if o.object_name == "Bag" and o.room_location == self.task_room_location and o.position_relative.x < self.pointing_person.position_relative.x:
                                 correct_bag = o
                                 bag_found = True
 
                     if not bag_found:
                         # Check for bag object using multiple neck positions (x3)
-                        tetas = [[-45, -10], [0, -10], [45, -10]]
-                        objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, detect_objects=True)
+                        tetas = [[-45, -30], [0, -30], [45, -30]]
+                        objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, detect_objects=True)
                         for o in objects_found:
                             if self.bag_side == "left":
-                                if o.room_location == self.task_room_location and o.position_absolute.x > pointing_person.position_absolute.x:
+                                if o.object_name == "Bag" and o.room_location == self.task_room_location and o.position_relative.x > self.pointing_person.position_relative.x:
                                     correct_bag = o
                             else: # == "right"
-                                if o.room_location == self.task_room_location and o.position_absolute.x < pointing_person.position_absolute.x:
+                                if o.object_name == "Bag" and o.room_location == self.task_room_location and o.position_relative.x < self.pointing_person.position_relative.x:
                                     correct_bag = o
 
                 if bag_found:
-                    self.move_bag_coords = correct_bag
+                    self.move_bag_coords = correct_bag.position_absolute
+                    self.set_rgb(MAGENTA+ROTATE)
+                
                 else:
                     # if the robot does not find a bag, it calculates the coordinates according to the pointing person position
-                    self.move_bag_coords.y = pointing_person.position_absolute.y + 0.5
+                    self.move_bag_coords.y = self.pointing_person.position_absolute.y - 0.2
                     
                     if self.bag_side == "left":
-                        self.move_bag_coords.x = pointing_person.position_absolute.x - 1.0
+                        self.move_bag_coords.x = self.pointing_person.position_absolute.x + 0.6
                     else: # == "right"
-                        self.move_bag_coords.x = pointing_person.position_absolute.x + 1.0
-
+                        self.move_bag_coords.x = self.pointing_person.position_absolute.x - 0.6
+                        self.set_rgb(CYAN+ROTATE)
+                
                 # next state
                 self.state = self.Go_to_bag 
 
             elif self.state == self.Go_to_bag:
                 print("State:", self.state, "- Go_to_bag")
 
-                self.set_rgb(MAGENTA+ROTATE)
-
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
                 # Speech: "I am moving towards the bag you pointed at."
                 self.set_speech(filename="carry_my_luggage/going_to_bag", wait_for_end_of=True)
-
                 print('Navigate to: ', self.move_bag_coords.x, self.move_bag_coords.y)
 
                 # Speech: "Just a warning. I might slightly push the bag. However this is intended since I have to position myself as close as possible to the bag."
-                self.set_speech(filename="carry_my_luggage/might_touch_bag", wait_for_end_of=False)
+                # self.set_speech(filename="carry_my_luggage/might_touch_bag", wait_for_end_of=False)
 
+                self.set_navigation(movement="rotate", target = [self.move_bag_coords.x, self.move_bag_coords.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
+                
                 self.set_navigation(movement="move", target = [self.move_bag_coords.x, self.move_bag_coords.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
                 
                 print('received bag: ', self.bag_side)
                 if self.bag_side == "left":
-                    self.IMU_ANGLE -=20.0
+                    self.slight_angular_adjust_depending_on_side = -20.0
                 else: # == "right"
-                    self.IMU_ANGLE += 20.0
+                    self.slight_angular_adjust_depending_on_side = 20.0
 
-                self.set_navigation(movement="orientate", absolute_angle= self.IMU_ANGLE, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle = 90.0+self.slight_angular_adjust_depending_on_side, flag_not_obs=True, wait_for_end_of=True)
 
                 self.state = self.Camera_pick_bag
             
-                """
-            elif self.state == self.Pick_bag_left:
-                print("State:", self.state, "- Pick_bag")
-                # your code here ...  
-
-                # set rgb's to purple
-                self.set_rgb(MAGENTA+ROTATE)
-
-                # self.torso_pos.x = -1.0
-                # self.torso_test_publisher.publish(self.torso_pos)
-
-                # speech: "I'm picking up the bag now."
-                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
-
-                # self.torso_pos.x = 0.0
-                # self.torso_test_publisher.publish(self.torso_pos)
-
-                # move arm to bag's position (how?)
-                self.set_arm(command="carry_my_luggage_pre_check_bag", wait_for_end_of=True)
-
-                list_of_rotations = [0.0, -30.0, -60.0]
-                raio = [1.0, 0.7, 0.4, 0.0]
-                counter = 0
-
-                i = 0
-                first_time = True
-                object_in_gripper = False
-                while not object_in_gripper:
-                    while self.INITIAL_REACHED_RADIUS > 0.0:
-                        for pos in list_of_rotations:
-                            if pos == 0.0 and first_time == True:
-                                first_time = False
-                                i += 1
-                                if i == len(list_of_rotations):
-                                    print('já rodei 2 vezes pelo imu')
-                                    break
-                            else:
-                                print('ciclo de orientation imu')
-                                # self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-
-                                # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
-                                
-                                if not object_in_gripper:
-                                    self.set_rgb(command=RED+BLINK_LONG)
-                            
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=False)
-                                    
-                                    self.set_arm(command="carry_my_luggage_if_failed_pick", wait_for_end_of=True)
-                                    
-                                    print('before navigation orientate')
-
-                                    self.set_navigation(movement="orientate", absolute_angle= self.IMU_ANGLE + pos, flag_not_obs=True, wait_for_end_of=True)
-                                    print('Angle: ', self.IMU_ANGLE + pos )
-
-                                    i += 1
-
-                                    print('Antes de voltar a movimentar braço para saco')
-                                    self.set_arm(command="carry_my_luggage_pick_bag_after_failing", wait_for_end_of=True)
-
-                                    if i == len(list_of_rotations):
-                                        print('Iterations', i)
-                                        object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                                        if not object_in_gripper:
-                                            self.set_rgb(command=RED+BLINK_LONG)
-                                            self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=False)
-                                            self.set_arm(command="carry_my_luggage_if_failed_pick", wait_for_end_of=True)
-                                        else:
-                                            print('Funcionou!')
-                                            self.set_rgb(command=GREEN+BLINK_LONG)
-                                            self.set_arm(command="carry_my_luggage_bag_picked_correctly", wait_for_end_of=True)
-                                            object_in_gripper = True
-                                        break
-                                else:
-                                    print('Funcionou!')
-                                    self.set_rgb(command=GREEN+BLINK_LONG)
-                                    self.set_arm(command="carry_my_luggage_bag_picked_correctly", wait_for_end_of=True)
-                                    object_in_gripper = True
-                                    break
-                        if not object_in_gripper:
-                            counter += 1
-                            self.INITIAL_REACHED_RADIUS = raio[counter]
-                            print('Radius ',self.INITIAL_REACHED_RADIUS)
-                            i = 0
-                            print('vou rodar para saco e andar para ele')
-                            self.set_speech(filename="carry_my_luggage/might_touch_bag", wait_for_end_of=False)
-                            list_of_rotations[0] -= 5.0 
-                            list_of_rotations[1] -= 5.0 
-                            list_of_rotations[2] -= 5.0 
-                            self.set_navigation(movement="rotate", target= [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, wait_for_end_of=True)
-                            self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
-                            print('andei para a frente, estou pronto para testar de novo')
-                        else:
-                            print('funcionou')
-                            break
-                    
-
-                # close claw (how?)
-                # raise arm
-
-
-                # next state
-                self.state = self.Final_State 
-
-            elif self.state == self.Pick_bag_right:
-                print("State:", self.state, "- Pick_bag")
-                # your code here ...  
-
-                # set rgb's to purple
-                self.set_rgb(MAGENTA+ROTATE)
-
-                # self.torso_pos.x = -1.0
-                # self.torso_test_publisher.publish(self.torso_pos)
-
-                # speech: "I'm picking up the bag now."
-                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
-
-                # self.torso_pos.x = 0.0
-                # self.torso_test_publisher.publish(self.torso_pos)
-
-                # move arm to bag's position (how?)
-                self.set_arm(command="carry_my_luggage_pre_check_bag", wait_for_end_of=True)
-                
-                list_of_rotations = [0.0, 30.0, 60.0]
-
-                #raio = [0.9, 0.4, 0.2, 0.0]
-                raio = [1.0, 0.7, 0.4, 0.0]
-                counter = 0
-
-                i = 0
-                first_time = True
-                object_in_gripper = False
-                while not object_in_gripper:
-                    while self.INITIAL_REACHED_RADIUS > 0.0:
-                        for pos in list_of_rotations:
-                            if pos == 0.0 and first_time == True:
-                                first_time = False
-                                i += 1
-                                if i == len(list_of_rotations):
-                                    print('já rodei 2 vezes pelo imu')
-                                    break
-                            else:
-                                print('ciclo de orientation imu')
-                                # self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-
-                                # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
-                                
-                                if not object_in_gripper:
-                                    self.set_rgb(command=RED+BLINK_LONG)
-                            
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=False)
-                                    
-                                    self.set_arm(command="carry_my_luggage_if_failed_pick", wait_for_end_of=True)
-                                    
-                                    print('before navigation orientate')
-
-                                    self.set_navigation(movement="orientate", absolute_angle= self.IMU_ANGLE + pos, flag_not_obs=True, wait_for_end_of=True)
-
-                                    i += 1
-
-                                    print('Antes de voltar a movimentar braço para saco')
-                                    self.set_arm(command="carry_my_luggage_pick_bag_after_failing", wait_for_end_of=True)
-
-                                    if i == len(list_of_rotations):
-                                        print('Iterations', i)
-                                        object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                                        if not object_in_gripper:
-                                            self.set_rgb(command=RED+BLINK_LONG)
-                                            self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=False)
-                                            self.set_arm(command="carry_my_luggage_if_failed_pick", wait_for_end_of=True)
-                                        else:
-                                            print('Funcionou!')
-                                            self.set_rgb(command=GREEN+BLINK_LONG)
-                                            self.set_arm(command="carry_my_luggage_bag_picked_correctly", wait_for_end_of=True)
-                                            object_in_gripper = True
-                                        break
-                                else:
-                                    print('Funcionou!')
-                                    self.set_rgb(command=GREEN+BLINK_LONG)
-                                    self.set_arm(command="carry_my_luggage_bag_picked_correctly", wait_for_end_of=True)
-                                    object_in_gripper = True
-                                    break
-                        if not object_in_gripper:
-                            counter += 1
-                            self.INITIAL_REACHED_RADIUS = raio[counter]
-                            print('Radius ',self.INITIAL_REACHED_RADIUS)
-                            i = 0
-                            print('vou rodar para saco e andar para ele')
-                            self.set_speech(filename="carry_my_luggage/might_touch_bag", wait_for_end_of=False)
-                            list_of_rotations[0] += 5.0 
-                            list_of_rotations[1] += 5.0 
-                            list_of_rotations[2] += 5.0 
-                            self.set_navigation(movement="rotate", target= [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, wait_for_end_of=True)
-                            self.set_navigation(movement="move", target = [relative_position_of_bag.x, relative_position_of_bag.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
-                            print('andei para a frente, estou pronto para testar de novo')
-                        else:
-                            print('funcionou')
-                            break
-                    
-
-
-
-                # close claw (how?)
-                # raise arm
-
-
-                # next state
-                self.state = self.Final_State 
-                """
-            
             elif self.state == self.Camera_pick_bag:
-
-                #### FALTA BAIXAR O TRONCO 
-                #### FALTA VER SE BRAÇO CONSEGUE DESCER MAIS
-                #### TIRAR FUNCOES ANTIGAS QUE JA NAO SAO USADAS
 
                 # bag_grabbed_camera = self.check_bag_grabbed_camera()
                 
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=False)
+                
                 s,m = self.set_arm(command="carry_my_luggage_pre_pick", wait_for_end_of=True)
                 print("carry_my_luggage_pre_pick", s,m)
-                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
                 # time.sleep(3)
 
                 bag_grabbed = False
                 while not bag_grabbed:
 
+                    # from far away make a correctio
                     bag_coords = self.get_bag_pick_cordinates()
                     print(bag_coords)
                     self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
+                    # self.set_speech(filename="generic/introduction_hello", wait_for_end_of=True)
+                    
                     time.sleep(2.0)
+
+                    
+                    # from close distance make a better correction
+                    # bag_coords = self.get_bag_pick_cordinates()
+                    # print(bag_coords)
+                    # self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
+                    # time.sleep(2.0)
+
+                    # self.set_speech(filename="generic/introduction_hello", wait_for_end_of=True)
                     
                     bag_grabbed_gripper, m = self.set_arm(command="carry_my_luggage_pick_bag", adjust_position=bag_coords[5], wait_for_end_of=True)
                     print("carry_my_luggage_pick_bag", bag_grabbed_gripper, m)
-                    self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                    # self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
                     bag_grabbed_camera = self.check_bag_grabbed_camera()
                     bag_grabbed = bag_grabbed_gripper or bag_grabbed_camera
                     print("BAG GRABBED:", bag_grabbed, "via camera:", bag_grabbed_camera, "via gripper:", bag_grabbed_gripper)
-                    time.sleep(1.0)
+                    # time.sleep(1.0)
+
+                    if not bag_grabbed:
+
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=False)
+                                            
+                        if self.bag_side == "left":
+                            self.slight_angular_adjust_depending_on_side += 15.0
+                        else: # == "right"
+                            self.slight_angular_adjust_depending_on_side -= 15.0
+                        
+                        self.set_navigation(movement="orientate", absolute_angle = 90.0+self.slight_angular_adjust_depending_on_side, flag_not_obs=True, wait_for_end_of=True)
+                        # self.set_speech(filename="generic/introduction_hello", wait_for_end_of=True)
+                        time.sleep(1.0)
+
+                        
+
                     
                 s,m = self.set_arm(command="carry_my_luggage_post_pick", wait_for_end_of=True)
                 print("carry_my_luggage_post_pick", s,m)
-                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
-                time.sleep(3)
+                
+                self.state = self.Go_back_to_initial_position
 
+            elif self.state == self.Go_back_to_initial_position:
+                
+                # Speak: moving back to initial position
+
+                self.set_navigation(movement="rotate", target = [self.initial_position[0], self.initial_position[1]], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
+                
+                self.set_navigation(movement="move", target = [self.initial_position[0], self.initial_position[1]], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
+                
+                self.set_navigation(movement="rotate", target = [self.pointing_person.position_absolute.x, self.pointing_person.position_absolute.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
+                
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                
+                while True:
+                    pass
+                # self.state = self.Final_State
+
+
+            elif self.state == self.Final_State:
+                
                 s,m = self.set_arm(command="carry_my_luggage_give_bag", wait_for_end_of=True)
                 print("carry_my_luggage_give_bag", s,m)
                 self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
@@ -1959,7 +1744,7 @@ class CarryMyLuggageMain():
                 self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
                 time.sleep(3)
 
-            elif self.state == self.Final_State:
+
                 print("State:", self.state, "- Final_State")
                 # your code here ...
 
