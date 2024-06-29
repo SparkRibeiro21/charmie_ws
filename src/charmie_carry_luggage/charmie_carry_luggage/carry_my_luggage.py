@@ -1191,9 +1191,11 @@ class CarryMyLuggageMain():
                 # print(mandatory_object_detected_flags)
                 
                 if not all(mandatory_object_detected_flags):
+                    # Speech: "There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?"
                     self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
                     for obj in range(len(list_of_objects)):
                         if not mandatory_object_detected_flags[obj]:
+                            # Speech: (Name of object)
                             self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
                 else:
                     DETECTED_ALL_LIST_OF_OBJECTS = True
@@ -1491,11 +1493,12 @@ class CarryMyLuggageMain():
         self.Waiting_for_task_to_start = 0
         self.Recognize_bag = 1
         self.Go_to_bag = 2
-        # self.Pick_bag_left = 3
-        # self.Pick_bag_right = 4
         self.Camera_pick_bag = 3
         self.Go_back_to_initial_position = 4
-        self.Final_State = 5
+        self.Follow_to_the_car = 5
+        self.Deliver_the_bag = 6
+        self.Return_to_the_house = 7
+        self.Final_State = 8
         
         # CML Vars ...
         self.floor_dist = 600 # 660
@@ -1540,12 +1543,14 @@ class CarryMyLuggageMain():
                 # set rgb's to cyan
                 self.set_rgb(CYAN+HALF_ROTATE)
 
+                # Speech: "I am ready to start the carry my luggage task"                
                 self.set_speech(filename="carry_my_luggage/carry_luggage_ready_start", wait_for_end_of=True)
                 
+                # Speech: "Waiting for start button to be pressed."
                 self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=True)
 
                 # wait for start_button
-                # self.wait_for_start_button()
+                self.wait_for_start_button()
 
                 self.set_rgb(BLUE+SET_COLOUR)
 
@@ -1557,8 +1562,6 @@ class CarryMyLuggageMain():
                 
                 # Speech: "Please point to the bag you want me to carry."
                 self.set_speech(filename="carry_my_luggage/point_to_bag", wait_for_end_of=True)
-                
-                # time.sleep(2.0)
                 
                 # Detect person pointing to the bag
                 pointing_person_found = False
@@ -1653,44 +1656,30 @@ class CarryMyLuggageMain():
             
             elif self.state == self.Camera_pick_bag:
 
-                # bag_grabbed_camera = self.check_bag_grabbed_camera()
-                
+                # Speech: "I am going to pick up the bag now."
                 self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=False)
                 
                 s,m = self.set_arm(command="carry_my_luggage_pre_pick", wait_for_end_of=True)
                 print("carry_my_luggage_pre_pick", s,m)
-                # time.sleep(3)
-
+                
                 bag_grabbed = False
                 while not bag_grabbed:
 
-                    # from far away make a correctio
                     bag_coords = self.get_bag_pick_cordinates()
                     print(bag_coords)
                     self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
-                    # self.set_speech(filename="generic/introduction_hello", wait_for_end_of=True)
-                    
                     time.sleep(2.0)
 
-                    
-                    # from close distance make a better correction
-                    # bag_coords = self.get_bag_pick_cordinates()
-                    # print(bag_coords)
-                    # self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
-                    # time.sleep(2.0)
-
-                    # self.set_speech(filename="generic/introduction_hello", wait_for_end_of=True)
-                    
                     bag_grabbed_gripper, m = self.set_arm(command="carry_my_luggage_pick_bag", adjust_position=bag_coords[5], wait_for_end_of=True)
                     print("carry_my_luggage_pick_bag", bag_grabbed_gripper, m)
-                    # self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
                     bag_grabbed_camera = self.check_bag_grabbed_camera()
                     bag_grabbed = bag_grabbed_gripper or bag_grabbed_camera
                     print("BAG GRABBED:", bag_grabbed, "via camera:", bag_grabbed_camera, "via gripper:", bag_grabbed_gripper)
                     # time.sleep(1.0)
 
                     if not bag_grabbed:
-
+                        
+                        # Speech: "Oops. Lets try again."
                         self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=False)
                                             
                         if self.bag_side == "left":
@@ -1699,20 +1688,20 @@ class CarryMyLuggageMain():
                             self.slight_angular_adjust_depending_on_side -= 15.0
                         
                         self.set_navigation(movement="orientate", absolute_angle = 90.0+self.slight_angular_adjust_depending_on_side, flag_not_obs=True, wait_for_end_of=True)
-                        # self.set_speech(filename="generic/introduction_hello", wait_for_end_of=True)
-                        time.sleep(1.0)
-
-                        
-
-                    
+                        time.sleep(2.0)
+                
+                # Speech: "I have successfully picked up the bag."
+                self.set_speech(filename="carry_my_luggage/success_pick_bag", wait_for_end_of=False)
+                
                 s,m = self.set_arm(command="carry_my_luggage_post_pick", wait_for_end_of=True)
                 print("carry_my_luggage_post_pick", s,m)
                 
                 self.state = self.Go_back_to_initial_position
 
             elif self.state == self.Go_back_to_initial_position:
-                
-                # Speak: moving back to initial position
+               
+                # Speech: "Moving to the initial position."
+                self.set_speech(filename="carry_my_luggage/move_initial_position", wait_for_end_of=False)
 
                 self.set_navigation(movement="rotate", target = [self.initial_position[0], self.initial_position[1]], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
                 
@@ -1722,48 +1711,67 @@ class CarryMyLuggageMain():
                 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
                 
-                while True:
-                    pass
-                # self.state = self.Final_State
+                self.state = self.Follow_to_the_car
 
+            elif self.state == self.Follow_to_the_car:
 
-            elif self.state == self.Final_State:
+                # Speech: "I am ready to follow you. Let's go."
+                self.set_speech(filename="carry_my_luggage/ready_to_follow", wait_for_end_of=True)
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 
+                # FOLLOW PERSON CODE HERE ...
+                # Speech: "Unfortunately my team has not developed the follow me function yet, and so I cannot follow you. I am sorry."
+                self.set_speech(filename="carry_my_luggage/unfortunately_cannot_follow", wait_for_end_of=True)
+
+                self.state = self.Deliver_the_bag
+
+            elif self.state == self.Deliver_the_bag:
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                # Speech: "Here is your bag."
+                self.set_speech(filename="carry_my_luggage/here_is_your_bag", wait_for_end_of=True)
                 s,m = self.set_arm(command="carry_my_luggage_give_bag", wait_for_end_of=True)
                 print("carry_my_luggage_give_bag", s,m)
-                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
-                time.sleep(3)
-
+                
+                # Speech: "I will open my hand. In 3. 2. 1.
+                self.set_speech(filename="arm/arm_open_gripper", wait_for_end_of=True)
                 s,m = self.set_arm(command="open_gripper", wait_for_end_of=True)
                 print("open_gripper", s,m)
-                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+
+                # Speech: "Please take your bag from my hand."
+                self.set_speech(filename="carry_my_luggage/take_bag_from_hand", wait_for_end_of=True)
                 time.sleep(3)
 
                 s,m = self.set_arm(command="carry_my_luggage_post_give_bag", wait_for_end_of=True)
                 print("carry_my_luggage_post_give_bag", s,m)
-                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
-                time.sleep(3)
+                
+                self.state = self.Return_to_the_house
 
+            elif self.state == self.Return_to_the_house:
 
+                # Speech: "I will return to the house. See you soon."
+                self.set_speech(filename="carry_my_luggage/return_to_house", wait_for_end_of=True)
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                
+                # RETURN HOUSE CODE HERE ...
+                
+                self.state = self.Final_State
+
+                
+            elif self.state == self.Final_State:
+                
                 print("State:", self.state, "- Final_State")
-                # your code here ...
-
+                
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                # set rgb's to static cyan
-                self.set_rgb(CYAN+ROTATE)
-
-                # Speech: "I have picked up the bag, however I cannot follow you. I finished my task."
-                self.set_speech(filename="carry_my_luggage/end_of_carry_luggage", wait_for_end_of=True)
-
-                # wait for start_button
-                self.wait_for_start_button()
-
                 # set rgb's to static green
-                self.set_rgb(GREEN+SET_COLOUR)
+                self.set_rgb(GREEN+BREATH)
 
-                self.set_arm(command="carry_my_luggage_back_to_initial_position", wait_for_end_of=True)
-
+                # Speech: "I have finished my carry my luggage task."
+                self.set_speech(filename="carry_my_luggage/cml_finished", wait_for_end_of=True)
 
                 while True:
                     pass

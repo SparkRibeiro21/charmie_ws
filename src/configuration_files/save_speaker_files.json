@@ -1,7 +1,5 @@
 {
-"sucess_pick_bag": "I have successfully picked up the bag.",
-"move_initial_position": "Moving to the initial position.",
-"ready_to_follow": "I am ready to follow you. Let's go.",
-"step_away_from_bag": "Please step away from the bag as I might need some space to pick up the bag."
+"cml_finished": "I have finished my carry my luggage task.",
+"unfortunately_cannot_follow": "Unfortunately my team has not developed the follow me function yet, and so I cannot follow you. I am sorry."
 }
 
