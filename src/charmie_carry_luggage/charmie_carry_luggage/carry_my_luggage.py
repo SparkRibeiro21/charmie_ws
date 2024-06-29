@@ -1501,9 +1501,9 @@ class CarryMyLuggageMain():
         self.Final_State = 8
         
         # CML Vars ...
-        self.floor_dist = 600 # 660
-        self.top_bag_dist=440
-        self.bag_in_gripper_dist=200
+        self.floor_dist = 580 # 660
+        self.top_bag_dist = 440
+        self.bag_in_gripper_dist = 200
         self.INITIAL_REACHED_RADIUS = 0.8
         self.slight_angular_adjust_depending_on_side = 0.0
         self.bag_side = "none"
@@ -1663,7 +1663,8 @@ class CarryMyLuggageMain():
                 print("carry_my_luggage_pre_pick", s,m)
                 
                 # Speech: "I am going to pick up the bag now."
-                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=False)
+                self.set_speech(filename="carry_my_luggage/picking_up_bag", wait_for_end_of=True)
+                time.sleep(0.5)
 
                 bag_grabbed = False
                 while not bag_grabbed:
@@ -1691,7 +1692,7 @@ class CarryMyLuggageMain():
                             self.slight_angular_adjust_depending_on_side -= 15.0
                         
                         self.set_navigation(movement="orientate", absolute_angle = 90.0+self.slight_angular_adjust_depending_on_side, flag_not_obs=True, wait_for_end_of=True)
-                        time.sleep(2.0)
+                        time.sleep(2.5)
                 
                 # Speech: "I have successfully picked up the bag."
                 self.set_speech(filename="carry_my_luggage/success_pick_bag", wait_for_end_of=False)
@@ -1738,14 +1739,15 @@ class CarryMyLuggageMain():
                 s,m = self.set_arm(command="carry_my_luggage_give_bag", wait_for_end_of=True)
                 print("carry_my_luggage_give_bag", s,m)
                 
+                # Speech: "Please take your bag from my hand."
+                self.set_speech(filename="carry_my_luggage/take_bag_from_hand", wait_for_end_of=True)
+
                 # Speech: "I will open my hand. In 3. 2. 1.
                 self.set_speech(filename="arm/arm_open_gripper", wait_for_end_of=True)
                 s,m = self.set_arm(command="open_gripper", wait_for_end_of=True)
                 print("open_gripper", s,m)
 
-                # Speech: "Please take your bag from my hand."
-                self.set_speech(filename="carry_my_luggage/take_bag_from_hand", wait_for_end_of=True)
-                time.sleep(3)
+                time.sleep(5.0)
 
                 s,m = self.set_arm(command="carry_my_luggage_post_give_bag", wait_for_end_of=True)
                 print("carry_my_luggage_post_give_bag", s,m)
