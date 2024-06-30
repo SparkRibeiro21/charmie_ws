@@ -41,7 +41,7 @@ class NavigationSDNLClass:
         # self.nav_threshold_dist_follow_me = 1.2 # in meters
         self.nav_threshold_ang = 15 # degrees
         # self.nav_threshold_ang_follow_me = 20 # degrees
-        # self.max_lin_speed = 15.0 # speed # 30.0
+        self.max_lin_speed = 15.0 # speed # 30.0
         self.max_ang_speed = 10.0 # speed # 20.0
         self.tar_dist_decrease_lin_speed = 0.8 # meters
         self.obs_dist_decrease_lin_speed = 1.0 # meters
@@ -119,12 +119,11 @@ class NavigationSDNLClass:
         self.f_obstacle, self.yff, self.yfff = self.repulsor()
         
         if not self.nav_target.flag_not_obs:
-            self.max_lin_speed = 15.0
+            # self.max_lin_speed = 15.0
             self.f_final, self.y_final = self.combine_atrator_repulsor()
             # print("ATRATOR + REPULSORES")
         else:
             # in case it is intended to not consider obstacles
-            self.max_lin_speed = 20.0
             # self.max_lin_speed = 20.0
             self.f_final = self.f_target
             self.y_final = self.y_atrator
@@ -931,6 +930,7 @@ class NavSDNLNode(Node):
         self.nav.dist_to_target = self.nav.upload_move_dist_to_target()
         self.nav.ang_to_target = self.nav.upload_rot_ang_to_target()
         self.nav.nav_threshold_dist = nav.reached_radius # in meters
+        self.nav.max_lin_speed = nav.max_speed
         self.latest_localisation_x = self.nav.robot_x
         self.latest_localisation_y = self.nav.robot_y
         self.latest_localisation_t = self.nav.robot_t

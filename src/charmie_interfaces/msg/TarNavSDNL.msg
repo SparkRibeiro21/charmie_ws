@@ -7,3 +7,4 @@ bool avoid_people
 float32 adjust_distance
 float32 adjust_direction
 float32 adjust_min_dist
+float32 max_speed
