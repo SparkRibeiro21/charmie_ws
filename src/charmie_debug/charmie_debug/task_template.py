@@ -162,9 +162,10 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import PoseWithCovarianceStamped
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
+from sensor_msgs.msg import Image
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud
 
 import cv2 
 import threading
@@ -193,6 +194,9 @@ class ServeBreakfastNode(Node):
         self.complete_path_custom_face = home+'/'+midpath+'/'
 
         ### Topics (Publisher and Subscribers) ###   
+        # Intel Realsense Subscribers
+        # self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        # self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_head_image_callback, 10)
         # Low Level 
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
@@ -217,7 +221,11 @@ class ServeBreakfastNode(Node):
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
-
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
+        # Search for person and object 
+        self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
+        self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
+        
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -243,7 +251,9 @@ class ServeBreakfastNode(Node):
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
-
+        # Point Cloud
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
@@ -286,7 +296,9 @@ class ServeBreakfastNode(Node):
         # Obstacles
         # while not self.activate_obstacles_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
-       
+        # Point Cloud
+        # while not self.point_cloud_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Point Cloud...")
         
         # Variables 
         self.waited_for_end_of_audio = False
@@ -300,13 +312,24 @@ class ServeBreakfastNode(Node):
         self.waited_for_end_of_track_object = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
+        self.waiting_for_pcloud = False
 
         self.br = CvBridge()
+        self.depth_head_img = Image()
+        self.depth_hand_img = Image()
+        self.first_depth_head_image_received = False
+        self.first_depth_hand_image_received = False
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
         self.door_start_state = False
         self.flag_navigation_reached = False
+        self.point_cloud_response = GetPointCloud.Response()
+
+        # robot localization
+        self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_t = 0.0
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -366,6 +389,21 @@ class ServeBreakfastNode(Node):
     def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
         self.detected_shoes_hand = det_object
 
+    def get_aligned_depth_head_image_callback(self, img: Image):
+        self.depth_head_img = img
+        self.first_depth_head_image_received = True
+        # print("Received Depth Image")
+
+    def get_aligned_depth_hand_image_callback(self, img: Image):
+        self.depth_hand_img = img
+        self.first_depth_hand_image_received = True
+        # print("Received HAND Depth Image")
+
+    def robot_localisation_callback(self, pose: Pose2D):
+        self.robot_x = pose.x
+        self.robot_y = pose.y
+        self.robot_t = pose.theta
+
     def arm_finished_movement_callback(self, flag: Bool):
         # self.get_logger().info("Received response from arm finishing movement")
         # self.arm_ready = True
@@ -391,6 +429,28 @@ class ServeBreakfastNode(Node):
     ### NAVIGATION ###
     def flag_navigation_reached_callback(self, flag: Bool):
         self.flag_navigation_reached = flag
+
+    # request point cloud information from point cloud node
+    def call_point_cloud_server(self, req, camera):
+        request = GetPointCloud.Request()
+        request.data = req
+        request.retrieve_bbox = False
+        request.camera = camera
+    
+        future = self.point_cloud_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud)
+
+    def callback_call_point_cloud(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            self.point_cloud_response = future.result()
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
@@ -1209,10 +1269,16 @@ class ServeBreakfastMain():
                 # print("ADDED: ", p.index_person)
                 filtered_persons.append(p)
             to_append.clear()
+            
+        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        self.set_rgb(BLUE+HALF_ROTATE)
 
+        sfp_pub = ListOfDetectedPerson()
         # print("FILTERED:")
-        # for p in filtered_persons:
+        for p in filtered_persons:
+            sfp_pub.persons.append(p)
         #     print(p.index_person)
+        self.node.search_for_person_detections_publisher.publish(sfp_pub)
 
         return filtered_persons
 
@@ -1537,10 +1603,20 @@ class ServeBreakfastMain():
                 final_objects = filtered_objects
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
-        self.set_neck(position=(0,0), wait_for_end_of=False)
+        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        self.set_rgb(BLUE+HALF_ROTATE)
+
+        # Debug Speak
         # self.set_speech(filename="generic/found_following_items")
         # for obj in final_objects:
         #     self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+
+        sfo_pub = ListOfDetectedObject()
+        # print("FILTERED:")
+        for o in final_objects:
+            sfo_pub.objects.append(o)
+        #     print(o.object_name)
+        self.node.search_for_object_detections_publisher.publish(sfo_pub)
             
         return final_objects        
 
@@ -1581,6 +1657,30 @@ class ServeBreakfastMain():
             self.set_face(custom=face_path)
         
         return face_path
+
+    def get_point_cloud(self, bb=BoundingBox(), wait_for_end_of=True):
+
+        requested_objects = []
+            
+        # bb = BoundingBox()
+        # bb.box_top_left_x = 0
+        # bb.box_top_left_y = 0
+        # bb.box_width = 1280
+        # bb.box_height = 720
+
+        get_pc = BoundingBoxAndPoints()
+        get_pc.bbox = bb
+
+        requested_objects.append(get_pc)
+
+        self.node.waiting_for_pcloud = True
+        self.node.call_point_cloud_server(requested_objects, "hand")
+
+        if wait_for_end_of:
+            while self.node.waiting_for_pcloud:
+                pass
+
+        return self.node.point_cloud_response.coords[0]
 
     def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
         

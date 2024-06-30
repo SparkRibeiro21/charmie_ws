@@ -5,7 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
-from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL
+from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -81,7 +81,8 @@ class Robot():
 
         self.person_pose = Yolov8Pose()
         self.object_detected = Yolov8Objects()
-        self.search_for_person = ListOfPoints()
+        self.search_for_person = ListOfDetectedPerson()
+        self.search_for_object = ListOfDetectedObject()
 
         self.navigation = TarNavSDNL()
         self.is_navigating = False
@@ -291,22 +292,20 @@ class Robot():
 
 
             """
-            for person in self.search_for_person.coords:
+            for person in self.person_pose.persons:
                 # print(person.position_relative.x/1000, person.position_relative.y/1000)
 
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
                 #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
            
-
-                cv2.circle(self.test_image, (int(self.xc_adj + person.x*self.scale),
-                    int(self.yc_adj - person.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 0, 0), -1)
+                cv2.circle(self.test_image, (int(self.xc_adj + person.position_absolute.x*self.scale),
+                    int(self.yc_adj - person.position_absolute.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
                 
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
                 #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
-           
 
-            
-            for person in self.person_pose.persons:
+
+            for person in self.search_for_person.persons:
                 # print(person.position_relative.x/1000, person.position_relative.y/1000)
 
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
@@ -314,10 +313,11 @@ class Robot():
            
 
                 cv2.circle(self.test_image, (int(self.xc_adj + person.position_absolute.x*self.scale),
-                    int(self.yc_adj - person.position_absolute.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
+                    int(self.yc_adj - person.position_absolute.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 0, 0), -1)
                 
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
                 #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
+            
 
             for object in self.object_detected.objects:
                 # print(person.position_relative.x/1000, person.position_relative.y/1000)
@@ -330,6 +330,25 @@ class Robot():
                               (int(self.xc_adj + object.position_absolute.x*self.scale + self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale + self.lidar_radius*2*self.scale)),
                               (int(self.xc_adj + object.position_absolute.x*self.scale - self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale - self.lidar_radius*2*self.scale)),
                               (255, 255, 255), -1)
+                               
+                # cv2.circle(self.test_image, (int(self.xc_adj + object.position_relative.x*self.scale),
+                #     int(self.yc_adj - object.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 0, 0), -1)
+                
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
+                #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
+
+            
+            for object in self.search_for_object.objects:
+                # print(person.position_relative.x/1000, person.position_relative.y/1000)
+
+                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
+                #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
+           
+
+                cv2.rectangle(self.test_image, 
+                              (int(self.xc_adj + object.position_absolute.x*self.scale + self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale + self.lidar_radius*2*self.scale)),
+                              (int(self.xc_adj + object.position_absolute.x*self.scale - self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale - self.lidar_radius*2*self.scale)),
+                              (255, 0, 0), -1)
                                
                 # cv2.circle(self.test_image, (int(self.xc_adj + object.position_relative.x*self.scale),
                 #     int(self.yc_adj - object.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 0, 0), -1)
@@ -378,8 +397,9 @@ class DebugVisualNode(Node):
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
 
-        # search for person, person localisation 
-        self.search_for_person_subscriber = self.create_subscription(ListOfPoints, "search_for_person_points", self.search_for_person_callback, 10)
+        # search for person and object 
+        self.search_for_person_subscriber = self.create_subscription(ListOfDetectedPerson, "search_for_person_detections", self.search_for_person_detections_callback, 10)
+        self.search_for_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_object_detections", self.search_for_object_detections_callback, 10)
         
         # Intel Realsense Subscribers
         self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
@@ -500,8 +520,11 @@ class DebugVisualNode(Node):
         self.robot.robot_y = pose.y
         # self.robot.robot_t = pose.theta
         
-    def search_for_person_callback(self, points: ListOfPoints):
+    def search_for_person_detections_callback(self, points: ListOfDetectedPerson):
         self.robot.search_for_person = points
+        
+    def search_for_object_detections_callback(self, points: ListOfDetectedObject):
+        self.robot.search_for_object = points
 
     def get_color_image_callback(self, img: Image):
         # self.get_logger().info('Receiving color video frame')
