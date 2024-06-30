@@ -1395,6 +1395,7 @@ class StoringGroceriesMain():
         self.shelf_side_objects = defaultdict(list)
         self.shelf_side_class_counts = defaultdict(Counter)
         self.shelf_side_common_class = {}
+        attributed_classes = set()
 
         # Analyze and categorize objects
         for obj in filtered_objects:
@@ -1415,10 +1416,56 @@ class StoringGroceriesMain():
             self.shelf_side_class_counts[shelf_side_key][obj.object_class] += 1
 
         # Determine the most common class for each shelf and side
-        
+        self.shelf_side_common_class = {}
+        self.tied_shelves = defaultdict(list)
+
+        # Loop through each shelf-side combination
         for key, class_count in self.shelf_side_class_counts.items():
-            most_common_class, count = class_count.most_common(1)[0]
-            self.shelf_side_common_class[key] = most_common_class
+            # Find the most common class(es) and handle ties
+            most_common_classes = class_count.most_common()
+            highest_count = most_common_classes[0][1]
+
+            # Filter classes that have the highest count
+            tied_classes = [cls for cls, count in most_common_classes if count == highest_count]
+
+            if len(tied_classes) == 1:
+                # No tie, only one class has the highest count
+                most_common_class = tied_classes[0]
+                self.shelf_side_common_class[key] = most_common_class
+                attributed_classes.add(most_common_class)
+            else:
+                # Tie exists, mark as "tied" and store tied classes
+                # self.shelf_side_common_class[key] = "tied"
+                self.tied_shelves[key] = tied_classes
+
+
+        # Second Pass: Resolve ties
+        for key, tied_classes in self.tied_shelves.items():
+            unassigned_class = None
+            for cls in tied_classes:
+                if cls not in attributed_classes:
+                    unassigned_class = cls
+                    break
+
+            if unassigned_class:
+                # Assign the unassigned class
+                self.shelf_side_common_class[key] = unassigned_class
+                attributed_classes.add(unassigned_class)
+            else:
+                # Keep the tie if all classes are already attributed
+                self.shelf_side_common_class[key] = "tied"
+
+        # Print the results
+        print("Common classes per shelf-side combination:")
+        print(self.shelf_side_common_class)
+        print("\nTied classes per shelf-side combination:")
+        print(dict(self.tied_shelves))
+        print('\n')
+        # for key, class_count in self.shelf_side_class_counts.items():
+        #     most_common_class, count = class_count.most_common(1)[0]
+        #     self.shelf_side_common_class[key] = most_common_class
+
+
 
         # Output results
         for key, common_class in self.shelf_side_common_class.items():
@@ -2243,24 +2290,37 @@ class StoringGroceriesMain():
 
                 filtered_objects = self.plot_histograms(real_data)
 
+                coord_y = 0.0
+                coord_z = 0.0
+                for obj in filtered_objects:
+                    coord_y += obj.position_relative.y
+                    coord_z += obj.position_relative.z
+
+                print('average depth: ', coord_y/len(filtered_objects))
+                print('average height: ', coord_z/len(filtered_objects))
+
+                while True:
+                    pass
+
+
                 # for obj in filtered_objects:
                 #     print('Filtered objects:', obj.object_name)
                 print('nr de objetos filtrados: ', len(filtered_objects))
 
-                self.objects_left_side = []
-                self.objects_right_side = []
-                self.objects_first_shelf_rs = []
-                self.objects_first_shelf_ls = []
-                self.objects_second_shelf_rs = []
-                self.objects_second_shelf_ls = []
-                self.objects_third_shelf_rs = []
-                self.objects_third_shelf_ls = []
-                self.objects_fourth_shelf_rs = []
-                self.objects_fourth_shelf_ls = []
-                self.objects_fifth_shelf_rs = []
-                self.objects_fifth_shelf_ls = []
-                self.objects_sixth_shelf_rs = []
-                self.objects_sixth_shelf_ls = []
+                # self.objects_left_side = []
+                # self.objects_right_side = []
+                # self.objects_first_shelf_rs = []
+                # self.objects_first_shelf_ls = []
+                # self.objects_second_shelf_rs = []
+                # self.objects_second_shelf_ls = []
+                # self.objects_third_shelf_rs = []
+                # self.objects_third_shelf_ls = []
+                # self.objects_fourth_shelf_rs = []
+                # self.objects_fourth_shelf_ls = []
+                # self.objects_fifth_shelf_rs = []
+                # self.objects_fifth_shelf_ls = []
+                # self.objects_sixth_shelf_rs = []
+                # self.objects_sixth_shelf_ls = []
                 self.high_priority_class = []
                 self.medium_priority_class = []
 
@@ -2300,13 +2360,11 @@ class StoringGroceriesMain():
                     
                 """ 
                 ### TO DO:
-                - TRATAR DE CASOS EM QUE HÁ 2 OBJETOS COM CLASSES IGUAIS NA MESMA PRATELEIRA
-                - TRATAR DE CASOS EM QUE HÁ A MESMA CLASSE EM VÁRIAS PRATELEIRAS DIFERENTES (NÃO ACONTECE)
-                - TRATAR DE CASOS DE OBJETOS SEM PRIORIDADE QUE SÃO ESCOLHIDOS DA MESA
                 - COLOCAR SPEECH HELP PICK + HELP PLACE
                 - COLOCAR IMAGEM NA CARA
                 - TRATAR DE POUSAR OBJETOS EM PRATELEIRAS ESTRATÉGICAS
                 - TRATAR DE ABRIR A PORTA
+                - FAZER ADJUST EM X E Y COM ARMÁRIO
                 """
                 while True:
                     pass
