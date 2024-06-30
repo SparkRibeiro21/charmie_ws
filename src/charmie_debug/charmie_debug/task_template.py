@@ -204,6 +204,11 @@ class ServeBreakfastNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
+        self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
+        self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
+        self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'doors_detected_filtered_hand', self.doors_detected_filtered_hand_callback, 10)
+        self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
+        self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
@@ -231,12 +236,7 @@ class ServeBreakfastNode(Node):
         # Yolo Pose
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # Yolo Objects
-        self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-        self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
-        self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
-        self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'doors_detected_filtered_hand', self.doors_detected_filtered_hand_callback, 10)
-        self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
-        self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
+        self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
         # Navigation
@@ -256,6 +256,7 @@ class ServeBreakfastNode(Node):
         #     self.get_logger().warn("Waiting for Audio Server...")
         # while not self.calibrate_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        # Face
         # while not self.face_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Face Command...")
         """
@@ -419,7 +420,7 @@ class ServeBreakfastNode(Node):
 
         self.activate_yolo_objects_client.call_async(request)
 
-    ### ACTIVATE OBJECTS SERVER FUNCTIONS ###
+    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
     def call_activate_obstacles_server(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False):
         request = ActivateObstacles.Request()
         request.activate_lidar_up = obstacles_lidar_up
@@ -1238,7 +1239,7 @@ class ServeBreakfastMain():
 
         final_objects = []
         mandatory_object_detected_flags = [False for _ in list_of_objects]
-        print(mandatory_object_detected_flags)
+        # print(mandatory_object_detected_flags)
         DETECTED_ALL_LIST_OF_OBJECTS = False
         MIN_DIST_DIFFERENT_FRAMES = 0.3 # maximum distance for the robot to assume it is the same objects
         MIN_DIST_SAME_FRAME = 0.2
@@ -1408,7 +1409,7 @@ class ServeBreakfastMain():
 
                         if is_in_mandatory_list:
                             mandatory_ctr += 1
-                        print(m_object, is_in_mandatory_list)
+                        # print(m_object, is_in_mandatory_list)
 
                     if mandatory_ctr == len(list_of_objects): # if all objects are already in the detected list 
                         break
@@ -1420,11 +1421,11 @@ class ServeBreakfastMain():
             
 
             # DEBUG
-            print("TOTAL objects in this neck pos:")
-            for frame in total_objects_detected:
-                for object in frame:    
-                    print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
-                print("-")
+            # print("TOTAL objects in this neck pos:")
+            # for frame in total_objects_detected:
+            #     for object in frame:    
+            #         print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
+            #     print("-")
 
             ### DETECTS ALL THE OBJECTS SHOW IN EVERY FRAME ###
             
@@ -1436,11 +1437,11 @@ class ServeBreakfastMain():
                 to_remove = []
 
                 if not len(filtered_objects):
-                    print("NO OBJECTS", frame)
+                    # print("NO OBJECTS", frame)
                     for object in range(len(total_objects_detected[frame])):
                         to_append.append(total_objects_detected[frame][object])
                 else:
-                    print("YES OBJECTS", frame)
+                    # print("YES OBJECTS", frame)
 
                     for object in range(len(total_objects_detected[frame])):
                         same_object_ctr = 0
@@ -1451,13 +1452,13 @@ class ServeBreakfastMain():
 
                                 # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
                                 dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
-                                print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
+                                # print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
                                 
                                 if dist < MIN_DIST_DIFFERENT_FRAMES:
                                     same_object_ctr+=1
                                     same_object_old = filtered_objects[filtered]
                                     same_object_new = total_objects_detected[frame][object]
-                                    print("SAME OBJECT")                        
+                                    # print("SAME OBJECT")                        
                         
                         if same_object_ctr > 0:
 
@@ -1465,8 +1466,8 @@ class ServeBreakfastMain():
                             same_object_old_distance_center = math.dist(image_center, (same_object_old.box_center_x, same_object_old.box_center_y))
                             same_object_new_distance_center = math.dist(image_center, (same_object_new.box_center_x, same_object_new.box_center_y))
                             
-                            print("OLD (pixel):", same_object_old.index, same_object_old.object_name, ", dist_2_center:", round(same_object_old_distance_center,2))
-                            print("NEW (pixel):", same_object_new.index, same_object_new.object_name, ", dist_2_center:", round(same_object_new_distance_center,2))
+                            # print("OLD (pixel):", same_object_old.index, same_object_old.object_name, ", dist_2_center:", round(same_object_old_distance_center,2))
+                            # print("NEW (pixel):", same_object_new.index, same_object_new.object_name, ", dist_2_center:", round(same_object_new_distance_center,2))
 
                             if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
                                 to_remove.append(same_object_old)
@@ -1479,14 +1480,15 @@ class ServeBreakfastMain():
 
                 for o in to_remove:
                     if o in filtered_objects:
-                        print("REMOVED: ", o.index, o.object_name)
+                        # print("REMOVED: ", o.index, o.object_name)
                         filtered_objects.remove(o)
                     else:
-                        print("TRIED TO REMOVE TWICE THE SAME OBJECT")
+                        pass
+                        # print("TRIED TO REMOVE TWICE THE SAME OBJECT")
                 to_remove.clear()  
 
                 for o in to_append:
-                    print("ADDED: ", o.index, o.object_name)
+                    # print("ADDED: ", o.index, o.object_name)
                     filtered_objects.append(o)
                 to_append.clear()
 
@@ -1514,13 +1516,15 @@ class ServeBreakfastMain():
                         # else:
                         #     pass
                 
-                print(list_of_objects)
-                print(mandatory_object_detected_flags)
+                # print(list_of_objects)
+                # print(mandatory_object_detected_flags)
                 
                 if not all(mandatory_object_detected_flags):
+                    # Speech: "There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?"
                     self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
                     for obj in range(len(list_of_objects)):
                         if not mandatory_object_detected_flags[obj]:
+                            # Speech: (Name of object)
                             self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
                 else:
                     DETECTED_ALL_LIST_OF_OBJECTS = True
@@ -1534,11 +1538,11 @@ class ServeBreakfastMain():
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
         self.set_neck(position=(0,0), wait_for_end_of=False)
-        self.set_speech(filename="generic/found_following_items")
-        for obj in final_objects:
-            self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+        # self.set_speech(filename="generic/found_following_items")
+        # for obj in final_objects:
+        #     self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
             
-        return final_objects    
+        return final_objects        
 
     def detected_object_to_face_path(self, object, send_to_face, bb_color=(0,0,255)):
 

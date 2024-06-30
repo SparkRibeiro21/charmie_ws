@@ -534,6 +534,7 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	"""
 	def pick_bag_carry_my_luggage_pre_check_bag(self):
 		print(self.estado_tr)
 		if self.estado_tr == 0:
@@ -759,13 +760,14 @@ class ArmUfactory(Node):
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")
+	"""
 
 	def carry_my_luggage_pre_pick(self):
 		print(self.estado_tr)
 		
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = math.radians(25)
+			self.joint_values_req.speed = math.radians(30)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -773,7 +775,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_bag_position_joints)
-			self.joint_values_req.speed = math.radians(25)
+			self.joint_values_req.speed = math.radians(30)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -808,7 +810,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[5] = self.adjust_position
 
 			self.joint_values_req.angles = self.deg_to_rad(temp_adjust_angle_bag)
-			self.joint_values_req.speed = math.radians(25)
+			self.joint_values_req.speed = math.radians(100)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -816,8 +818,8 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 2:
 			print("MOVED LINE DOWN")
-			self.move_line_tool_req.pose = [0.0, 0.0, 380.0, 0.0, 0.0, 0.0]
-			self.move_line_tool_req.speed = 40.0
+			self.move_line_tool_req.pose = [0.0, 0.0, 420.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.speed = 60.0
 			self.move_line_tool_req.acc = 500.0
 			self.move_line_tool_req.wait = True
 			self.move_line_tool_req.timeout = 14.0
@@ -850,8 +852,8 @@ class ArmUfactory(Node):
 		elif self.estado_tr == 6:
 			print("CHECK GRIPPER POSITION:", self.gripper_tr)
 			print("MOVED LINE UP")
-			self.move_line_tool_req.pose = [0.0, 0.0, -380.0, 0.0, 0.0, 0.0]
-			self.move_line_tool_req.speed = 40.0
+			self.move_line_tool_req.pose = [0.0, 0.0, -420.0, 0.0, 0.0, 0.0]
+			self.move_line_tool_req.speed = 60.0
 			self.move_line_tool_req.acc = 500.0
 			self.move_line_tool_req.wait = True
 			self.move_line_tool_req.timeout = 14.0
@@ -871,7 +873,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 8:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_bag_position_joints)
-			self.joint_values_req.speed = math.radians(25)
+			self.joint_values_req.speed = math.radians(50)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -899,7 +901,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = math.radians(25)
+			self.joint_values_req.speed = math.radians(30)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -907,7 +909,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
-			self.joint_values_req.speed = math.radians(25)
+			self.joint_values_req.speed = math.radians(30)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -925,7 +927,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = math.radians(25)
+			self.joint_values_req.speed = math.radians(30)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -950,7 +952,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
-			self.joint_values_req.speed = math.radians(25)
+			self.joint_values_req.speed = math.radians(30)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -988,34 +990,6 @@ class ArmUfactory(Node):
 
 		return self.gripper_reached_target.data
 
-
-	def go_front(self):
-		if self.estado_tr == 0:
-			self.move_line_tool_req.pose = [0.0, 0.0, 370.0, 0.0, 0.0, 0.0]
-			self.move_line_tool_req.speed = 40.0
-			self.move_line_tool_req.acc = 500.0
-			self.move_line_tool_req.wait = True
-			self.move_line_tool_req.timeout = 4.0
-			self.future = self.move_tool_line.call_async(self.move_line_tool_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			print('.')
-			if self.returning != 0:
-				print('no')
-				self.estado_tr = 0
-				self.movement_selection()
-			else:
-				print('yes')
-				self.estado_tr = 2
-				self.movement_selection()
-
-		elif self.estado_tr == 2:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
 
 	def movement_selection(self):
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	

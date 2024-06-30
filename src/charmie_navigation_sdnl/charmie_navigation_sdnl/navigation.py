@@ -85,7 +85,7 @@ class NavigationSDNLClass:
 
 
         # visual debug
-        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
@@ -124,7 +124,7 @@ class NavigationSDNLClass:
             # print("ATRATOR + REPULSORES")
         else:
             # in case it is intended to not consider obstacles
-            self.max_lin_speed = 30.0
+            self.max_lin_speed = 20.0
             # self.max_lin_speed = 20.0
             self.f_final = self.f_target
             self.y_final = self.y_atrator

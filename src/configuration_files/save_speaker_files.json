@@ -1,8 +1,5 @@
 {
-"first_example": "This is the apple example",
-"second_example": "This is the second example",
-"third_example": "This is the third example",
-"fourth_example": "This is the fourth example",
-"fifth_example": "This is the fifth example"
+"cml_finished": "I have finished my carry my luggage task.",
+"unfortunately_cannot_follow": "Unfortunately my team has not developed the follow me function yet, and so I cannot follow you. I am sorry."
 }
 
