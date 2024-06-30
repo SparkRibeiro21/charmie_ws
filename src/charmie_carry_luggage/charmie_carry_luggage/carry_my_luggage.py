@@ -65,6 +65,7 @@ class CarryMyLuggageNode(Node):
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         
@@ -121,8 +122,6 @@ class CarryMyLuggageNode(Node):
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
         
-
-
         # Variables 
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_neck_pos = False
@@ -143,6 +142,11 @@ class CarryMyLuggageNode(Node):
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
         self.point_cloud_response = GetPointCloud.Response()
+
+        # robot localization
+        self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_t = 0.0
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -202,6 +206,11 @@ class CarryMyLuggageNode(Node):
 
     def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
         self.detected_shoes_hand = det_object
+    
+    def robot_localisation_callback(self, pose: Pose2D):
+        self.robot_x = pose.x
+        self.robot_y = pose.y
+        self.robot_t = pose.theta
 
     def arm_finished_movement_callback(self, flag: Bool):
         # self.get_logger().info("Received response from arm finishing movement")
@@ -1615,16 +1624,33 @@ class CarryMyLuggageMain():
                     self.move_bag_coords = correct_bag.position_absolute
                     self.set_rgb(MAGENTA+ROTATE)
                 
-                else:
-                    # if the robot does not find a bag, it calculates the coordinates according to the pointing person position
-                    self.move_bag_coords.y = self.pointing_person.position_absolute.y - 0.2
+                else: # if the robot does not find a bag, it calculates the coordinates according to the pointing person position
                     
+                    relative_not_detected_bag_position = Point()
+
+                    relative_not_detected_bag_position.y = self.pointing_person.position_relative.y - 0.2
                     if self.bag_side == "left":
-                        self.move_bag_coords.x = self.pointing_person.position_absolute.x + 0.6
+                        relative_not_detected_bag_position.x = self.pointing_person.position_relative.x + 0.6
                     else: # == "right"
-                        self.move_bag_coords.x = self.pointing_person.position_absolute.x - 0.6
+                        relative_not_detected_bag_position.x = self.pointing_person.position_relative.x - 0.6
                         self.set_rgb(CYAN+ROTATE)
                 
+                    # However the coordinates can not be relative to the robot, because if the robot is not facing forward, the axis don't make sense
+                    # So we need to convert realtive coordinates to absolute coordinates
+                    
+                    # calculate the absolute position according to the robot localisation
+                    angle_obj = math.atan2(relative_not_detected_bag_position.x, relative_not_detected_bag_position.y)
+                    dist_obj = math.sqrt(relative_not_detected_bag_position.x**2 + relative_not_detected_bag_position.y**2)
+
+                    theta_aux = math.pi/2 - (angle_obj - self.node.robot_t)
+
+                    target_x = dist_obj * math.cos(theta_aux) + self.node.robot_x
+                    target_y = dist_obj * math.sin(theta_aux) + self.node.robot_y
+
+                    self.move_bag_coords.x = target_x
+                    self.move_bag_coords.y = target_y
+                    self.set_rgb(CYAN+ROTATE)
+
                 # next state
                 self.state = self.Go_to_bag 
 
