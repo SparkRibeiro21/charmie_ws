@@ -1330,7 +1330,7 @@ class ServeBreakfastMain():
             self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_doors,
                                         activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
                                         minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
-            
+            self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             self.set_rgb(WHITE+ALTERNATE_QUARTERS)
             time.sleep(0.5)
 
