@@ -78,8 +78,8 @@ class TestNode(Node):
         # Yolos
         # while not self.activate_yolo_pose_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
-        while not self.activate_yolo_objects_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Face
         # while not self.face_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Face Command...")
@@ -586,7 +586,7 @@ class RestaurantMain():
 
                 ### SEARCH FOR PERSON EXAMPLE ###
                 
-                self.set_face(command="charmie_face")
+                # self.set_face(command="charmie_face")
                 self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
                 time.sleep(2.0)
@@ -597,9 +597,6 @@ class RestaurantMain():
                 print("FOUND:", len(people_found)) 
                 for p in people_found:
                     print("ID:", p.index_person)
-
-                self.set_rgb(BLUE+HALF_ROTATE)
-                self.set_neck(position=[0, 0], wait_for_end_of=True)
                 time.sleep(0.5)
 
                 for p in people_found:
@@ -634,9 +631,6 @@ class RestaurantMain():
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
                     print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
-
-                self.set_rgb(BLUE+HALF_ROTATE)
-                self.set_neck(position=[0, 0], wait_for_end_of=True)
                 time.sleep(0.5)
 
                 for o in objects_found:
@@ -962,7 +956,8 @@ class RestaurantMain():
                 final_objects = filtered_objects
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
-        self.set_neck(position=(0,0), wait_for_end_of=False)
+        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        self.set_rgb(BLUE+HALF_ROTATE)
 
         # Debug Speak
         # self.set_speech(filename="generic/found_following_items")
@@ -974,7 +969,7 @@ class RestaurantMain():
         for o in final_objects:
             sfo_pub.objects.append(o)
         #     print(o.object_name)
-        self.node.search_for_person_detections_publisher(sfo_pub)
+        self.node.search_for_object_detections_publisher.publish(sfo_pub)
             
         return final_objects        
 
@@ -1137,13 +1132,16 @@ class RestaurantMain():
                 # print("ADDED: ", p.index_person)
                 filtered_persons.append(p)
             to_append.clear()
+            
+        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        self.set_rgb(BLUE+HALF_ROTATE)
 
         sfp_pub = ListOfDetectedPerson()
         # print("FILTERED:")
         for p in filtered_persons:
             sfp_pub.persons.append(p)
         #     print(p.index_person)
-        self.node.search_for_person_detections_publisher(sfp_pub)
+        self.node.search_for_person_detections_publisher.publish(sfp_pub)
 
         return filtered_persons
 
