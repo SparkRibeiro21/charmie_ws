@@ -1526,6 +1526,7 @@ class CarryMyLuggageMain():
         self.look_navigation = [0, -30]
 
         self.initial_position = [-4.5, 1.0, 0.0]
+        self.initial_angle_temp = 0.0
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_to_start
@@ -1539,7 +1540,10 @@ class CarryMyLuggageMain():
                 print("State:", self.state, "- Waiting_for_task_to_start")
 
                 self.set_initial_position(self.initial_position)
-                print("SET INITIAL POSITION")
+                print("SET INITIAL POSITION")                
+                
+                # set rgb's to cyan
+                self.set_rgb(CYAN+HALF_ROTATE)
 
                 time.sleep(1)
                 
@@ -1548,9 +1552,10 @@ class CarryMyLuggageMain():
                 self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=False)
         
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                
-                # set rgb's to cyan
-                self.set_rgb(CYAN+HALF_ROTATE)
+
+                time.sleep(1)
+
+                self.set_navigation(movement="orientate", absolute_angle = float(self.initial_angle_temp), flag_not_obs=True, wait_for_end_of=True)
 
                 # Speech: "I am ready to start the carry my luggage task"                
                 self.set_speech(filename="carry_my_luggage/carry_luggage_ready_start", wait_for_end_of=True)
@@ -1610,7 +1615,7 @@ class CarryMyLuggageMain():
 
                     if not bag_found:
                         # Check for bag object using multiple neck positions (x3)
-                        tetas = [[-45, -30], [0, -30], [45, -30]]
+                        tetas = [[-30, -30], [0, -30], [30, -30]]
                         objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, detect_objects=True)
                         for o in objects_found:
                             if self.bag_side == "left":
@@ -1621,19 +1626,18 @@ class CarryMyLuggageMain():
                                     correct_bag = o
 
                 if bag_found:
+                    self.set_rgb(MAGENTA+HALF_ROTATE)
                     self.move_bag_coords = correct_bag.position_absolute
-                    self.set_rgb(MAGENTA+ROTATE)
-                
-                else: # if the robot does not find a bag, it calculates the coordinates according to the pointing person position
                     
+                else: # if the robot does not find a bag, it calculates the coordinates according to the pointing person position
+                    self.set_rgb(CYAN+HALF_ROTATE)
+                
                     relative_not_detected_bag_position = Point()
-
                     relative_not_detected_bag_position.y = self.pointing_person.position_relative.y - 0.2
                     if self.bag_side == "left":
                         relative_not_detected_bag_position.x = self.pointing_person.position_relative.x + 0.6
                     else: # == "right"
                         relative_not_detected_bag_position.x = self.pointing_person.position_relative.x - 0.6
-                        self.set_rgb(CYAN+ROTATE)
                 
                     # However the coordinates can not be relative to the robot, because if the robot is not facing forward, the axis don't make sense
                     # So we need to convert realtive coordinates to absolute coordinates
@@ -1649,8 +1653,7 @@ class CarryMyLuggageMain():
 
                     self.move_bag_coords.x = target_x
                     self.move_bag_coords.y = target_y
-                    self.set_rgb(CYAN+ROTATE)
-
+                    
                 # next state
                 self.state = self.Go_to_bag 
 
