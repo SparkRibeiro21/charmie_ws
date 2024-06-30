@@ -66,9 +66,7 @@ class CarryMyLuggageNode(Node):
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-        # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
-        
+
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -87,7 +85,9 @@ class CarryMyLuggageNode(Node):
         self.face_command_client = self.create_client(SetFace, "face_command")
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
-
+        # Point Cloud
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Neck 
