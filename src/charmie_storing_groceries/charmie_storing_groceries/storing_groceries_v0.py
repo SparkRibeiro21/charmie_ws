@@ -468,12 +468,12 @@ class StoringGroceriesMain():
         self.look_cabinet_center = [0, -30]
         self.look_cabinet_bottom = [-45, -45]
 
-        self.shelf_1_height = -1.10 # 0.15 # 0.14 # 0.15
-        self.shelf_2_height = -0.6 # 0.60 # 0.55 # 0.60 
-        self.shelf_3_height = -0.2  # 1.10 # 0.97 # 1.10 
-        self.shelf_4_height = 0.2  # 1.39
-        self.shelf_5_height = 0.8
-        self.shelf_6_height = 1.0
+        self.shelf_1_height = 0.1 # 0.15 # 0.14 # 0.15
+        self.shelf_2_height = 0.5  # 0.60 # 0.55 # 0.60 
+        self.shelf_3_height = 0.9  # 1.10 # 0.97 # 1.10 
+        self.shelf_4_height = 1.26  # 1.39
+        self.shelf_5_height = 1.8
+        self.shelf_6_height = 2.5
 
         self.shelf_length = 0.70
         self.left_limit_shelf = -0.7 # -0.38
@@ -2313,7 +2313,6 @@ class StoringGroceriesMain():
 
                 while True:
                     pass
-
 
                 # for obj in filtered_objects:
                 #     print('Filtered objects:', obj.object_name)
