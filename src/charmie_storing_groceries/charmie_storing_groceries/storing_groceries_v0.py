@@ -8,7 +8,7 @@ import threading
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, NavTrigger, SetFace
-from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL, ListOfDetectedObject
+from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL, ListOfDetectedObject, ArmController
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
@@ -89,7 +89,7 @@ class StoringGroceriesNode(Node):
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
 
         # Arm 
-        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
         
         #DEBUG
@@ -460,6 +460,7 @@ class StoringGroceriesMain():
 
         # Neck Positions
         self.look_forward = [0, 0]
+        self.look_back = [180,0]
         self.look_navigation = [0, -30]
         self.look_judge = [-45, 0]
         self.look_table_objects = [90, -40]
@@ -471,7 +472,7 @@ class StoringGroceriesMain():
         self.shelf_1_height = 0.1 # 0.15 # 0.14 # 0.15
         self.shelf_2_height = 0.5  # 0.60 # 0.55 # 0.60 
         self.shelf_3_height = 0.9  # 1.10 # 0.97 # 1.10 
-        self.shelf_4_height = 1.26  # 1.39
+        self.shelf_4_height = 1.33  # 1.39
         self.shelf_5_height = 1.8
         self.shelf_6_height = 2.5
 
@@ -618,20 +619,20 @@ class StoringGroceriesMain():
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
     
-    def set_arm(self, command="", wait_for_end_of=True):
+    def set_arm(self, command="", adjust_position=0.0, wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
         self.node.waited_for_end_of_arm = False
         
-        temp = String()
-        temp.data = command
+        temp = ArmController()
+        temp.command = command
+        temp.adjust_position = adjust_position
         self.node.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:
             while not self.node.waited_for_end_of_arm:
                 pass
             self.node.waited_for_end_of_arm = False
-            
         else:
             self.node.arm_success = True
             self.node.arm_message = "Wait for answer not needed"
@@ -2095,6 +2096,8 @@ class StoringGroceriesMain():
         neighbor_counts_top = {}
         left_bound_top = None
         right_bound_top = None
+        left_bound_final = 0
+        right_bound_final = 0
 
         # Loop through each peak index identified in the histogram
         for index in peak_indices_top:
@@ -2217,6 +2220,66 @@ class StoringGroceriesMain():
         # Return the filtered coordinates
         return filtered_coordinates
 
+    def choose_place_arm(self, shelf, side):
+        use_arm = False
+        
+        height_arm = 0.0
+        if side == 'left':
+            print('left side')
+            if shelf == 1:
+                print('first shelf')
+                use_arm = False
+            elif shelf == 2:
+                print('second shelf')
+                height_arm = self.shelf_2_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_second_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+            elif shelf == 3:
+                print('third shelf')
+                height_arm = self.shelf_3_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_third_shelf_left_side", adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+            elif shelf == 4:
+                print('fourth shelf')
+                height_arm = self.shelf_4_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_fourth_shelf_left_side", adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+
+        elif side == 'right':
+            print('right side')
+            if shelf == 1:
+                print('first shelf') 
+                use_arm = False
+            elif shelf == 2:
+                print('second shelf')
+                height_arm = self.shelf_2_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_second_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+            elif shelf == 3:
+                print('third shelf')
+                height_arm = self.shelf_3_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_third_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+            elif shelf == 4:
+                print('fourth shelf')
+                height_arm = self.shelf_4_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_fourth_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+
+        return use_arm
+
     def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
         self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
@@ -2225,6 +2288,88 @@ class StoringGroceriesMain():
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
+
+    def Rot(self, eixo, angulo):
+        ang_rad = angulo*math.pi/180.0
+        c = math.cos(ang_rad)
+        s = math.sin(ang_rad)
+        M = np.identity(4)
+        if (eixo == 'x' or eixo == 'X'):
+            M[1][1] = M[2][2] = c
+            M[1][2] = -s
+            M[2][1] = s
+        elif (eixo == 'y' or eixo == 'Y'):
+            M[0][0] = M[2][2] = c
+            M[0][2] = s
+            M[2][0] = -s
+        elif (eixo == 'z' or eixo == 'Z'):
+            M[0][0] = M[1][1] = c
+            M[0][1] = -s
+            M[1][0] = s
+        return M
+        
+    def Trans(self, tx, ty, tz):
+        M = np.identity(4)
+        M[0][3] = tx
+        M[1][3] = ty
+        M[2][3] = tz
+        return M
+
+    def transform(self, obj):
+        # C representa o ponto no espaço para onde eu quero transformar a base do braço do robô
+        # A matriz de transformação desde a  base do braço até ao centro do Robot pode ser representada por:
+        # T = Rot(z, 180) * Rot (x, -90) * Trans (3, -6, -110)
+        # a2 representa a translação desde a base do braço até ao centro do robô  (em cm)
+        # a1 representa a rotação sobre o eixo coordenadas x em -90º para alinhar os eixos coordenados
+        # a0 representa a rotação sobre o eixo coordenadas z em 180º para alinhar o eixo dos x 
+        # c representa o ponto (x,y,z) em relação ao centro do braço
+        
+        
+
+        ### nos numeros que chegam: x representa a frente do robô. y positivo vai para a esquerda do robô. z vai para cima no robô
+        ### nos numeros que saem: x vai para trás do robô. y vai para baixo no robô. z vai para a direita do robô
+        
+        
+        ### PARECE-ME QUE X E Z ESTÃO TROCADOS NO RESULTADO QUE TENHO EM RELAºÃO AO BRAÇO
+        print('\n\n')
+    
+        c = np.dot(np.identity(4), [0, 0, 0, 1])
+        # c = np.dot(np.identity(4), [90.0, -30.0, 105.0, 1])
+        ### ESTAS TRANSFORMAÇÕES SEGUINTES SÃO NECESSÁRIAS PORQUE O ROBOT TEM EIXO COORDENADAS COM Y PARA A FRENTE E X PARA A DIREITA E AS TRANSFORMAÇÕES DA CAMARA SÃO FEITAS COM X PARA A FRENTE Y PARA A ESQUERDA
+        new_x = 0.0
+        new_y = -0.0
+        new_z = obj * 1000
+        c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
+        print(f'Posição em relação ao solo:[{new_x:.2f}, {new_y:.2f}, {new_z:.2f}]')
+        a2 = self.Trans(30.0, -60.0, -1100.0)
+        a1 = self.Rot('x', -90.0)
+        a0 = self.Rot('z', 180.0)
+        T = np.dot(a0, a1)
+        T = np.dot(T, a2)
+        
+        #print('T', T)
+        
+        AA = np.dot(T, c)
+        
+        print('Ponto em relação ao braço:', AA)
+
+
+        # aux = AA[0]
+        # AA[0] = AA[2]
+        # AA[2] = aux
+
+        # AA[0] = AA[0] * 10
+        # AA[1] = AA[1] * 10
+        # AA[2] = AA[2] * 10
+        # my_formatted_list = [ '%.2f' % elem for elem in AA ]
+        ### VALOR DO Z ESTÀ INVERSO AO QUE EU DEVO PASSAR PARA O BRAÇO EM AA !!!
+        
+        # print('Ponto em relação ao braço:', AA)
+        # print('y = ', AA[1]*10)
+
+        print('\n\n')
+
+        return AA
 
     def main(self):
 
@@ -2256,6 +2401,8 @@ class StoringGroceriesMain():
                 time.sleep(1)
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
 
                 data = []
                 real_data = []
@@ -2311,9 +2458,8 @@ class StoringGroceriesMain():
 
                 print('average depth: ', coord_y/len(filtered_objects))
                 print('average height: ', coord_z/len(filtered_objects))
-
-                while True:
-                    pass
+                distance_y_to_navigate = coord_y/len(filtered_objects) - 0.9
+                print('I must navigate for: ', distance_y_to_navigate)                
 
                 # for obj in filtered_objects:
                 #     print('Filtered objects:', obj.object_name)
@@ -2341,7 +2487,11 @@ class StoringGroceriesMain():
 
                 self.choose_priority(filtered_objects)
 
-                tetas = [[90, -30], [90, -15]]
+                #self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_y_to_navigate, adjust_direction=0.0, wait_for_end_of=True)
+                #self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.15, adjust_direction=90.0, wait_for_end_of=True)
+
+
+                tetas = [[120, -30], [120, -15]]
                 objects_found_table = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
 
                 table_objects = self.analysis_table(objects_found_table)
@@ -2354,10 +2504,19 @@ class StoringGroceriesMain():
                 for obj in self.medium_priority_class:
                     print(obj)
 
+                self.set_neck(position=self.look_back, wait_for_end_of=False)
+
+                # self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
+                # time.sleep(10)
+                # self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                
+
+                # self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+
                 print('Choosed objects in table: ')
                 for obj in table_objects:
                     print(obj.object_name, obj.object_class)
-
 
                     # Output results
                     for key, common_class in self.shelf_side_common_class.items():
@@ -2365,16 +2524,39 @@ class StoringGroceriesMain():
                         # print(f"Shelf {shelf}, Side {side} - Most Common Class: {common_class}")
                         # print(f"Objects: {[obj.object_name for obj in self.shelf_side_objects[key]]}")
                         if obj.object_class == common_class:
+
                             print(f"{obj.object_name} goes to {shelf} shelf, {side} side")
+                            self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
+                            time.sleep(10)
+                            self.set_arm(command="close_gripper", wait_for_end_of=True)
+                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+                            self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
+                            self.set_rgb(command=GREEN+BLINK_LONG)
+                            use_arm = self.choose_place_arm(shelf, side)
+                            if use_arm == True:
+                                self.set_rgb(command=GREEN+BLINK_LONG)
+                                self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=0.0, wait_for_end_of=True)
+                                self.set_arm(command="open_gripper", wait_for_end_of=True)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=180.0, wait_for_end_of=True)
+                                self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
+                                self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+                                
+                                
+                            else:
+                                print(f'please place {obj.object_name} in the {shelf} shelf, {side} side')
+                                self.set_rgb(command=RED+BLINK_LONG)
+
                         # else:
                         #     print('resolver caso sem prioridade')
 
                     
                 """ 
                 ### TO DO:
+                - COLOCAR ORIENTATE A FUNCIONAR DIREITINHO PARA FICAR A 0.0 GRAUS
+                - VERIFICAR OBJETOS QUE DETETA DA MESA (QUERO DAR PRINT A QUAL A CLASSE EM CADA UMA DAS PRATELEIRAS E A QUAL PRATELEIRA ELE ATRIBUI OS OBJETOS DA MESA, AINDA N ESTOU CONVENCIDO)
                 - COLOCAR SPEECH HELP PICK + HELP PLACE
                 - COLOCAR IMAGEM NA CARA
-                - TRATAR DE POUSAR OBJETOS EM PRATELEIRAS ESTRATÉGICAS
                 - TRATAR DE ABRIR A PORTA
                 - FAZER ADJUST EM X E Y COM ARMÁRIO
                 """
