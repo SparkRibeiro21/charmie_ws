@@ -5,7 +5,7 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfDetectedObject, ListOfDetectedPerson
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, SetFace, SpeechCommand
 from sensor_msgs.msg import Image
 
@@ -46,8 +46,9 @@ class TestNode(Node):
         self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
         self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
         
-        # Search for Person debug publisher
-        self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
+        # search for person and object 
+        self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
+        self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
 
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
@@ -962,9 +963,18 @@ class RestaurantMain():
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
         self.set_neck(position=(0,0), wait_for_end_of=False)
+
+        # Debug Speak
         # self.set_speech(filename="generic/found_following_items")
         # for obj in final_objects:
         #     self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+
+        sfo_pub = ListOfDetectedObject()
+        # print("FILTERED:")
+        for o in final_objects:
+            sfo_pub.objects.append(o)
+        #     print(o.object_name)
+        self.node.search_for_person_detections_publisher(sfo_pub)
             
         return final_objects        
 
@@ -1128,9 +1138,12 @@ class RestaurantMain():
                 filtered_persons.append(p)
             to_append.clear()
 
+        sfp_pub = ListOfDetectedPerson()
         # print("FILTERED:")
-        # for p in filtered_persons:
+        for p in filtered_persons:
+            sfp_pub.persons.append(p)
         #     print(p.index_person)
+        self.node.search_for_person_detections_publisher(sfp_pub)
 
         return filtered_persons
 
