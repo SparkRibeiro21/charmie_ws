@@ -42,7 +42,7 @@ class Yolo_obj(Node):
 
          ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
-        self.declare_parameter("debug_draw", False) 
+        self.declare_parameter("debug_draw", True) 
         self.declare_parameter("activate_objects", True)
         self.declare_parameter("activate_shoes", False)
         self.declare_parameter("activate_doors", False)
@@ -702,6 +702,8 @@ class YoloObjectsMain():
                 total_obj = 0
                 total_filtered_obj = 0
                 current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+                # current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
+                _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
                     
                 if self.node.ACTIVATE_YOLO_OBJECTS:
@@ -728,8 +730,8 @@ class YoloObjectsMain():
                 self.prev_head_frame_time = self.new_head_frame_time
 
                 if self.node.DEBUG_DRAW:
-                    cv2.putText(current_frame_draw, 'fps:' + self.head_fps, (0, self.node.head_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, self.node.head_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'fps:' + self.head_fps, (0, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.imshow("Yolo Objects TR Detection HEAD", current_frame_draw)
                     cv2.waitKey(1)
 
@@ -740,6 +742,8 @@ class YoloObjectsMain():
                 total_obj = 0
                 total_filtered_obj = 0
                 current_frame = self.node.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
+                # current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
+                _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
 
                 if self.node.ACTIVATE_YOLO_OBJECTS_HAND:
@@ -766,8 +770,8 @@ class YoloObjectsMain():
                 self.prev_hand_frame_time = self.new_hand_frame_time
 
                 if self.node.DEBUG_DRAW:
-                    cv2.putText(current_frame_draw, 'fps:' + self.hand_fps, (0, self.node.hand_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, self.node.hand_rgb.height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'fps:' + self.hand_fps, (0, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
                     cv2.waitKey(1)
 

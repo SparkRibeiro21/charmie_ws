@@ -55,7 +55,7 @@ class YoloPoseNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("yolo_model", "s") 
-        self.declare_parameter("debug_draw", False) 
+        self.declare_parameter("debug_draw", True) 
         self.declare_parameter("activate", True)
 
         # info regarding the paths for the recorded files intended to be played

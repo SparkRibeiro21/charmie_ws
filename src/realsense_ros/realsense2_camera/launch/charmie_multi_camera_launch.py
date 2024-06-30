@@ -81,7 +81,7 @@ def launch_static_transform_publisher_node(context : LaunchContext):
 
 def generate_launch_description():
     params1 = duplicate_params(rs_launch.configurable_parameters, '1')
-    params2 = duplicate_params(rs_launch.configurable_parameters, '2')
+    params2 = duplicate_params(rs_launch.configurable_parameters_2, '2')
 
     return LaunchDescription(
         rs_launch.declare_configurable_parameters(local_parameters) +
