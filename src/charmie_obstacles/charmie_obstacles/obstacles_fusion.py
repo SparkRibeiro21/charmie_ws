@@ -50,6 +50,11 @@ class Robot():
         self.MAX_OBS_DISTANCE = 2.5
         self.OBSTACLE_RADIUS_THRESHOLD = 0.05
         self.D_TETA = 0.0
+
+        # shifts in displacement so camera poitns meet lidar points
+        self.X_SHIFT = -150
+        self.Y_SHIFT = 50
+        self.Z_SHIFT = 0
         
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -567,9 +572,9 @@ class DebugVisualNode(Node):
         for p in pc[0].bbox_point_coords:
 
             object_rel_pos = Point()
-            object_rel_pos.x =  -p.y/1000
-            object_rel_pos.y =  p.x/1000
-            object_rel_pos.z =  p.z/1000
+            object_rel_pos.x =  -(p.y+self.robot.Y_SHIFT)/1000
+            object_rel_pos.y =   (p.x+self.robot.X_SHIFT)/1000
+            object_rel_pos.z =   (p.z+self.robot.Z_SHIFT)/1000
 
             if object_rel_pos.z >= 0.3 and object_rel_pos.z <= 1.7: # filters the floor and the ceiling
                 
