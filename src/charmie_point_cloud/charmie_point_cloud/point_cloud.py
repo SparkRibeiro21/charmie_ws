@@ -65,11 +65,16 @@ class PointCloud():
             # shifts from the center of the bottom servo to the center of the robot platform
             # self.X_SHIFT = 50
             # self.Z_SHIFT = 1260
-
+            
             # post lidar obstacles_fusion calibration
-            self.X_SHIFT = -100
-            self.Y_SHIFT = 50
-            self.Z_SHIFT = 0
+            # self.X_SHIFT = -100
+            # self.Y_SHIFT = 50
+            # self.Z_SHIFT = 1260
+
+            # had to come back to originals
+            self.X_SHIFT = 50
+            self.Y_SHIFT = 0
+            self.Z_SHIFT = 1260
         
 
         else: #  self.camera == "hand":
