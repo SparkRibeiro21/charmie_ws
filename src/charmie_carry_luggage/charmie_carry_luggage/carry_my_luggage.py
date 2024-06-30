@@ -771,9 +771,10 @@ class CarryMyLuggageMain():
 
         return self.node.face_success, self.node.face_message
     
-    def search_for_person(self, tetas, delta_t=3.0):
+    def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False):
 
-        self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)                
+        self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible) 
+        self.set_speech(filename="generic/search_people", wait_for_end_of=False)
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
         time.sleep(0.5)
         
@@ -1600,7 +1601,7 @@ class CarryMyLuggageMain():
                 pointing_person_found = False
                 while not pointing_person_found:
                     tetas = [[0, -10]]
-                    people_found = self.search_for_person(tetas=tetas, delta_t=2.0)
+                    people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True)
                     print("-")
                     for p in people_found:
                         print(p.room_location, p.pointing_at)
