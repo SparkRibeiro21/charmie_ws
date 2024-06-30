@@ -5,7 +5,7 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point, Pose2D
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints, BoundingBox, TarNavSDNL
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints, BoundingBox, TarNavSDNL, ListOfDetectedPerson
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, GetPointCloud
 from xarm_msgs.srv import GetFloat32List, PlanPose, PlanExec, PlanJoint
 from sensor_msgs.msg import Image
@@ -79,6 +79,9 @@ class TestNode(Node):
         self.arm_pose_subscriber = self.create_subscription(ListOfFloats, 'arm_current_pose', self.get_arm_current_pose_callback, 10)
         self.arm_set_pose_publisher = self.create_publisher(ListOfFloats, 'arm_set_desired_pose', 10)
         self.arm_set_height_publisher = self.create_publisher(Float32, 'arm_set_desired_height', 10)
+
+        # Search for person and object 
+        self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
 
         # Point cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
@@ -5371,10 +5374,16 @@ class RestaurantMain():
                 # print("ADDED: ", p.index_person)
                 filtered_persons.append(p)
             to_append.clear()
+            
+        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        self.set_rgb(BLUE+HALF_ROTATE)
 
+        sfp_pub = ListOfDetectedPerson()
         # print("FILTERED:")
-        # for p in filtered_persons:
+        for p in filtered_persons:
+            sfp_pub.persons.append(p)
         #     print(p.index_person)
+        self.node.search_for_person_detections_publisher.publish(sfp_pub)
 
         return filtered_persons
 

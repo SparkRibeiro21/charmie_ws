@@ -8,7 +8,7 @@ import threading
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, NavTrigger, SetFace
-from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL, ListOfDetectedObject
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
@@ -101,6 +101,8 @@ class StoringGroceriesNode(Node):
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         
+        # Search for person and object 
+        self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
 
         ### Services (Clients) ###
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
@@ -1023,12 +1025,22 @@ class StoringGroceriesMain():
                 final_objects = filtered_objects
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
-        self.set_neck(position=(0,0), wait_for_end_of=False)
+        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        self.set_rgb(BLUE+HALF_ROTATE)
+
+        # Debug Speak
         # self.set_speech(filename="generic/found_following_items")
         # for obj in final_objects:
         #     self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+
+        sfo_pub = ListOfDetectedObject()
+        # print("FILTERED:")
+        for o in final_objects:
+            sfo_pub.objects.append(o)
+        #     print(o.object_name)
+        self.node.search_for_object_detections_publisher.publish(sfo_pub)
             
-        return final_objects    
+        return final_objects   
 
     def detected_object_to_face_path(self, object, send_to_face, bb_color=(0,0,255)):
 

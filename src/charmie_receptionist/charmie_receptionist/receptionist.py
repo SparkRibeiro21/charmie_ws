@@ -6,7 +6,7 @@ from rclpy.node import Node
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfDetectedPerson
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace
 
 import os
@@ -50,6 +50,8 @@ class ReceptionistNode(Node):
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+        # Search for person and object 
+        self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
 
         ### Services (Clients) ###
         # Speakers
@@ -1734,9 +1736,15 @@ class ReceptionistMain():
                 # print("ADDED: ", p.index_person)
                 filtered_persons.append(p)
             to_append.clear()
+            
+        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        self.set_rgb(BLUE+HALF_ROTATE)
 
+        sfp_pub = ListOfDetectedPerson()
         # print("FILTERED:")
-        # for p in filtered_persons:
+        for p in filtered_persons:
+            sfp_pub.persons.append(p)
         #     print(p.index_person)
+        self.node.search_for_person_detections_publisher.publish(sfp_pub)
 
         return filtered_persons

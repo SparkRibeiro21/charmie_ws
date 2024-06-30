@@ -164,7 +164,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud
 
 import cv2 
@@ -222,7 +222,10 @@ class ServeBreakfastNode(Node):
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-
+        # Search for person and object 
+        self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
+        self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
+        
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -1266,10 +1269,16 @@ class ServeBreakfastMain():
                 # print("ADDED: ", p.index_person)
                 filtered_persons.append(p)
             to_append.clear()
+            
+        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        self.set_rgb(BLUE+HALF_ROTATE)
 
+        sfp_pub = ListOfDetectedPerson()
         # print("FILTERED:")
-        # for p in filtered_persons:
+        for p in filtered_persons:
+            sfp_pub.persons.append(p)
         #     print(p.index_person)
+        self.node.search_for_person_detections_publisher.publish(sfp_pub)
 
         return filtered_persons
 
@@ -1594,10 +1603,20 @@ class ServeBreakfastMain():
                 final_objects = filtered_objects
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
-        self.set_neck(position=(0,0), wait_for_end_of=False)
+        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        self.set_rgb(BLUE+HALF_ROTATE)
+
+        # Debug Speak
         # self.set_speech(filename="generic/found_following_items")
         # for obj in final_objects:
         #     self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+
+        sfo_pub = ListOfDetectedObject()
+        # print("FILTERED:")
+        for o in final_objects:
+            sfo_pub.objects.append(o)
+        #     print(o.object_name)
+        self.node.search_for_object_detections_publisher.publish(sfo_pub)
             
         return final_objects        
 

@@ -5,7 +5,7 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfDetectedPerson
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, SetFace
 from sensor_msgs.msg import Image
 
@@ -49,6 +49,9 @@ class TestNode(Node):
 
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
+
+        # Search for person and object 
+        self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
 
         ### Services (Clients) ###
         
@@ -833,10 +836,16 @@ class RestaurantMain():
                 # print("ADDED: ", p.index_person)
                 filtered_persons.append(p)
             to_append.clear()
+            
+        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        self.set_rgb(BLUE+HALF_ROTATE)
 
+        sfp_pub = ListOfDetectedPerson()
         # print("FILTERED:")
-        # for p in filtered_persons:
+        for p in filtered_persons:
+            sfp_pub.persons.append(p)
         #     print(p.index_person)
+        self.node.search_for_person_detections_publisher.publish(sfp_pub)
 
         return filtered_persons
 
