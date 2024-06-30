@@ -2265,9 +2265,9 @@ class StoringGroceriesMain():
 
                 for o in objects_found:
                     
-                    # print(o.index, o.object_name, "\t", 
-                    #     round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), 
-                    #     round(o.position_absolute.z, 2)) # round(o.box_center_x), round(o.box_center_y)
+                    print(o.index, o.object_name, "\t", 
+                        round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), 
+                        round(o.position_absolute.z, 2)) # round(o.box_center_x), round(o.box_center_y)
                     name = o.object_name
                     x = round(o.position_absolute.x, 2)
                     y = round(o.position_absolute.y, 2)
@@ -2307,6 +2307,7 @@ class StoringGroceriesMain():
                 for obj in filtered_objects:
                     coord_y += obj.position_relative.y
                     coord_z += obj.position_relative.z
+                    print(obj.position_relative.y, obj.position_relative.z)
 
                 print('average depth: ', coord_y/len(filtered_objects))
                 print('average height: ', coord_z/len(filtered_objects))
