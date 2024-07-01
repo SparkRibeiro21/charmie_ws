@@ -164,7 +164,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud
 
 import cv2 
@@ -201,9 +201,6 @@ class ServeBreakfastNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
-        # Door Start
-        self.start_door_subscriber = self.create_subscription(Bool, 'get_door_start', self.get_door_start_callback, 10) 
-        self.flag_door_start_publisher = self.create_publisher(Bool, 'flag_door_start', 10) 
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -225,6 +222,8 @@ class ServeBreakfastNode(Node):
         # Search for person and object 
         self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
+        # Obstacles
+        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
         
         ### Services (Clients) ###
         # Speakers
@@ -322,9 +321,9 @@ class ServeBreakfastNode(Node):
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
-        self.door_start_state = False
         self.flag_navigation_reached = False
         self.point_cloud_response = GetPointCloud.Response()
+        self.obstacles = Obstacles()
 
         # robot localization
         self.robot_x = 0.0
@@ -399,6 +398,10 @@ class ServeBreakfastNode(Node):
         self.first_depth_hand_image_received = True
         # print("Received HAND Depth Image")
 
+    ### OBSTACLES
+    def obstacles_callback(self, obs: Obstacles):
+        self.obstacles = obs
+
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
         self.robot_y = pose.y
@@ -419,11 +422,6 @@ class ServeBreakfastNode(Node):
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
-        # print("Received Start Button:", state.data)
-
-    ### DOOR START ###
-    def get_door_start_callback(self, state: Bool):
-        self.door_start_state = state.data
         # print("Received Start Button:", state.data)
 
     ### NAVIGATION ###

@@ -147,12 +147,6 @@ def generate_launch_description():
                         emulate_tty=True
                         )
     
-    door_start = Node(package='charmie_door_start',
-                        executable='door_start',
-                        name='door_start',
-                        emulate_tty=True
-                        )
-    
     debug_visual = Node(package='charmie_debug',
                         executable='debug_visual',
                         name='debug_visual',
@@ -176,7 +170,6 @@ def generate_launch_description():
         charmie_both_cameras_launch_description,
         lidar,
         obstacles,
-        door_start,
         face,
         neck,
         point_cloud,

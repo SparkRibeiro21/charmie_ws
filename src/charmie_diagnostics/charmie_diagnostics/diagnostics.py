@@ -17,9 +17,6 @@ class BSNode(Node):
         """ # Navigation 
         self.navigation_diagnostic_subscriber = self.create_subscription(Bool, "navigation_diagnostic", self.navigation_diagnostic, 10)
 
-        # Door Start
-        self.door_start_diagnostic_subscriber = self.create_subscription(Bool, "door_start_diagnostic", self.door_start_diagnostic, 10)
-
         # Obstacle
         self.obstacles_diagnostic_subscriber = self.create_subscription(Bool, "obstacles_diagnostic", self.obstacles_diagnostic, 10)
 
@@ -106,7 +103,6 @@ class BSNode(Node):
             #'obstacles': False,
             #'odometry': False,
             #'navigation_sdnl': False,
-            #'door_start': False,
             #'yolo_pose': False,
             #'yolo_objects': False,
             #'localisation': False,
@@ -203,10 +199,6 @@ class BSNode(Node):
     """ def navigation_diagnostic(self, state: Bool):
         #self.get_logger().info("Initialised CHARMIE Navigation Node")
         self.nodes_launched['navigation_sdnl'] = state.data
-
-    def door_start_diagnostic(self, state: Bool):
-        #self.get_logger().info("Initialised CHARMIE Door Start Node")
-        self.nodes_launched['door_start'] = state.data
 
     def obstacles_diagnostic(self, state: Bool):
         #self.get_logger().info("Initialised CHARMIE Obstacles Node")

@@ -8,7 +8,7 @@ import threading
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, NavTrigger, SetFace
-from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL, Obstacles
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
@@ -76,10 +76,6 @@ class StoringGroceriesNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)
 
-        # Door Start
-        self.start_door_subscriber = self.create_subscription(Bool, 'get_door_start', self.get_door_start_callback, 10) 
-        self.flag_door_start_publisher = self.create_publisher(Bool, 'flag_door_start', 10) 
-
         # Neck
         # self.neck_position_publisher = self.create_publisher(NeckPosition, "neck_to_pos", 10)
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
@@ -93,6 +89,8 @@ class StoringGroceriesNode(Node):
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+        # Obstacles
+        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
         
 
         ### Services (Clients) ###
@@ -153,8 +151,7 @@ class StoringGroceriesNode(Node):
         self.waited_for_end_of_neck_coords = False
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_face = False
-        self.door_start_state = False
-
+        
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
         self.speech_message = ""
@@ -176,6 +173,7 @@ class StoringGroceriesNode(Node):
         
         self.objects_classNames_dict = {item["name"]: item["class"] for item in self.objects_file}
         self.detected_objects = Yolov8Objects()
+        self.obstacles = Obstacles()
         #print(self.objects_classNames_dict)
 
         
@@ -189,11 +187,10 @@ class StoringGroceriesNode(Node):
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
     
-    ### DOOR START ###
-    def get_door_start_callback(self, state: Bool):
-        self.door_start_state = state.data
-        # print("Received Start Button:", state.data)
-
+    ### OBSTACLES
+    def obstacles_callback(self, obs: Obstacles):
+        self.obstacles = obs
+        
     ### NAVIGATION ###
     def flag_navigation_reached_callback(self, flag: Bool):
         self.flag_navigation_reached = flag

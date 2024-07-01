@@ -213,9 +213,10 @@ class CarryMyLuggageNode(Node):
     def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
         self.detected_shoes_hand = det_object
 
+    ### OBSTACLES
     def obstacles_callback(self, obs: Obstacles):
         self.obstacles = obs
-    
+        
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
         self.robot_y = pose.y

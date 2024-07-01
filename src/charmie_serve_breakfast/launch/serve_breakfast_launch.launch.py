@@ -140,13 +140,6 @@ def generate_launch_description():
                         emulate_tty=True
                         )
     
-    door_start = Node(package='charmie_door_start',
-                        executable='door_start',
-                        name='door_start',
-                        emulate_tty=True
-                        )
-    
-
     odometry = Node(package='charmie_odometry',
                 executable='odometry',
                 name='odometry',
@@ -181,6 +174,5 @@ def generate_launch_description():
         # yolo_objects,
         lidar,
         obstacles,
-        door_start,
         # serve_breakfast,
     ])

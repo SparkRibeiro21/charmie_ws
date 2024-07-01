@@ -163,7 +163,7 @@ from rclpy.node import Node
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, Obstacles
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger
 
 import cv2 
@@ -190,9 +190,6 @@ class ServeBreakfastNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
-        # Door Start
-        self.start_door_subscriber = self.create_subscription(Bool, 'get_door_start', self.get_door_start_callback, 10) 
-        self.flag_door_start_publisher = self.create_publisher(Bool, 'flag_door_start', 10) 
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         self.custom_image_to_face_publisher = self.create_publisher(String, "display_custom_image_face", 10)
@@ -202,7 +199,6 @@ class ServeBreakfastNode(Node):
         # self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         # Objects detected
         self.objects_filtered_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered', self.get_objects_callback, 10)
-        
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
@@ -211,7 +207,9 @@ class ServeBreakfastNode(Node):
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
-
+        # Obstacles
+        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
+        
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -285,8 +283,8 @@ class ServeBreakfastNode(Node):
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
-        self.door_start_state = False
         self.flag_navigation_reached = False
+        self.obstacles = Obstacles()
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -424,11 +422,10 @@ class ServeBreakfastNode(Node):
         self.start_button_state = state.data
         # print("Received Start Button:", state.data)
 
-    ### DOOR START ###
-    def get_door_start_callback(self, state: Bool):
-        self.door_start_state = state.data
-        # print("Received Start Button:", state.data)
-
+    ### OBSTACLES
+    def obstacles_callback(self, obs: Obstacles):
+        self.obstacles = obs
+        
     ### NAVIGATION ###
     def flag_navigation_reached_callback(self, flag: Bool):
         self.flag_navigation_reached = flag
