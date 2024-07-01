@@ -195,6 +195,7 @@ class StoringGroceriesNode(Node):
         self.detected_objects = Yolov8Objects()
         self.filtered_objects_storing_groceries = []
         self.flag_storing_groceries_received = False
+        self.br = CvBridge()
         #print(self.objects_classNames_dict)
         
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
@@ -1484,7 +1485,7 @@ class StoringGroceriesMain():
         for key, common_class in self.shelf_side_common_class.items():
             shelf, side = key
             print(f"Shelf {shelf}, Side {side} - Most Common Class: {common_class}")
-            print(f"Objects: {[obj.object_name for obj in self.shelf_side_objects[key]]}")
+            print(f"Objects cabinet: {[obj.object_name for obj in self.shelf_side_objects[key]]}")
 
 
         # for obj in filtered_objects:
@@ -1633,8 +1634,8 @@ class StoringGroceriesMain():
     def analysis_table(self, table_objects):
         objects_choosed = []
         for obj in table_objects:
-            print('Object table high:', obj.object_name)
             if obj.object_class in self.high_priority_class:
+                print('Object table high priority:', obj.object_name)
                 objects_choosed.append(obj)
                 if len(objects_choosed) == 5:
                     break
@@ -1643,14 +1644,22 @@ class StoringGroceriesMain():
             
         if len(objects_choosed) < 5:
             for obj in table_objects:
-                print('Object table medium:', obj.object_name)
                 if obj.object_class in self.medium_priority_class:
+                    print('Object table medium priority:', obj.object_name)
                     objects_choosed.append(obj)
                     if len(objects_choosed) == 5:
                         break
                 if len(objects_choosed) == 5:
                     break
-
+        
+        if len(objects_choosed) < 5:
+            for obj in table_objects:
+                print('Object table low priority:', obj.object_name)
+                objects_choosed.append(obj)
+                if len(objects_choosed) == 5:
+                    break
+           
+        
         # if len(objects_choosed) < 5:
         #     for obj in table_objects:
         #         print('Object table:', obj.object_name)
@@ -2487,22 +2496,34 @@ class StoringGroceriesMain():
 
                 self.choose_priority(filtered_objects)
 
-                #self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_y_to_navigate, adjust_direction=0.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_y_to_navigate, adjust_direction=0.0, wait_for_end_of=True)
                 #self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.15, adjust_direction=90.0, wait_for_end_of=True)
-
 
                 tetas = [[120, -30], [120, -15]]
                 objects_found_table = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
 
-                table_objects = self.analysis_table(objects_found_table)
+                print('Objects found on table: ')
+                for obj in objects_found_table:
+                    print(obj.object_name)
 
-                print('High class:')
-                for obj in self.high_priority_class:
-                    print(obj)
+                print('---------')
+
+                table_objects = self.analysis_table(objects_found_table)
+                print('Objects filtered from table: ')
+                for obj in table_objects:
+                    print(obj.object_name)
+
+
+                # print('High class:')
+                # for obj in self.high_priority_class:
+                #     print(obj)
                 
-                print('Medium class:')
-                for obj in self.medium_priority_class:
-                    print(obj)
+                # print('Medium class:')
+                # for obj in self.medium_priority_class:
+                #     print(obj)
+
+
+                print('---', self.shelf_side_common_class.items())
 
                 self.set_neck(position=self.look_back, wait_for_end_of=False)
 
@@ -2521,10 +2542,19 @@ class StoringGroceriesMain():
                     # Output results
                     for key, common_class in self.shelf_side_common_class.items():
                         shelf, side = key
+                        print('Inside loop: ', shelf, side, common_class)
                         # print(f"Shelf {shelf}, Side {side} - Most Common Class: {common_class}")
                         # print(f"Objects: {[obj.object_name for obj in self.shelf_side_objects[key]]}")
                         if obj.object_class == common_class:
+                            path_to_image = self.detected_object_to_face_path(object=obj, send_to_face=False)
+                            print(path_to_image)
+                            cf = self.node.br.imgmsg_to_cv2(obj.image_rgb_frame, "bgr8")
 
+                            cv2.rectangle(cf, (obj.box_top_left_x, obj.box_top_left_y), (obj.box_top_left_x + obj.box_width, obj.box_top_left_y + obj.box_height), (255,0,0), 2)
+
+
+                            cv2.imshow('table object', cf)
+                            cv2.waitKey(0) 
                             print(f"{obj.object_name} goes to {shelf} shelf, {side} side")
                             self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
                             time.sleep(10)
@@ -2536,16 +2566,17 @@ class StoringGroceriesMain():
                             if use_arm == True:
                                 self.set_rgb(command=GREEN+BLINK_LONG)
                                 self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=0.0, wait_for_end_of=True)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.3, adjust_direction=0.0, wait_for_end_of=True)
                                 self.set_arm(command="open_gripper", wait_for_end_of=True)
-                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=180.0, wait_for_end_of=True)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.3, adjust_direction=180.0, wait_for_end_of=True)
                                 self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
                                 self.set_arm(command="arm_front_robot", wait_for_end_of=True)
                                 
                                 
                             else:
-                                print(f'please place {obj.object_name} in the {shelf} shelf, {side} side')
+                                print(f'{obj.object_name} goes to the {shelf} shelf, on the {side} side')
                                 self.set_rgb(command=RED+BLINK_LONG)
+                            
 
                         # else:
                         #     print('resolver caso sem prioridade')
@@ -2554,11 +2585,12 @@ class StoringGroceriesMain():
                 """ 
                 ### TO DO:
                 - COLOCAR ORIENTATE A FUNCIONAR DIREITINHO PARA FICAR A 0.0 GRAUS
-                - VERIFICAR OBJETOS QUE DETETA DA MESA (QUERO DAR PRINT A QUAL A CLASSE EM CADA UMA DAS PRATELEIRAS E A QUAL PRATELEIRA ELE ATRIBUI OS OBJETOS DA MESA, AINDA N ESTOU CONVENCIDO)
                 - COLOCAR SPEECH HELP PICK + HELP PLACE
                 - COLOCAR IMAGEM NA CARA
                 - TRATAR DE ABRIR A PORTA
                 - FAZER ADJUST EM X E Y COM ARMÁRIO
+                - RETIRAR POSIÇÃO INTERMÉDIA
+                - FAZER DICIONÁRIO DE ALTURAS PARA CADA OBJETO
                 """
                 while True:
                     pass
