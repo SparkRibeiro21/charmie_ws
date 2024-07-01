@@ -2585,12 +2585,13 @@ class StoringGroceriesMain():
                 """ 
                 ### TO DO:
                 - COLOCAR ORIENTATE A FUNCIONAR DIREITINHO PARA FICAR A 0.0 GRAUS
-                - COLOCAR SPEECH HELP PICK + HELP PLACE
+                - COLOCAR SPEECH PICK AND PLACE
                 - COLOCAR IMAGEM NA CARA
                 - TRATAR DE ABRIR A PORTA
                 - FAZER ADJUST EM X E Y COM ARMÁRIO
                 - RETIRAR POSIÇÃO INTERMÉDIA
                 - FAZER DICIONÁRIO DE ALTURAS PARA CADA OBJETO
+                - AO FECHAR MÃO, SE NÃO TIVER NADA AVANÇO PARA O SEGUINTE
                 """
                 while True:
                     pass
