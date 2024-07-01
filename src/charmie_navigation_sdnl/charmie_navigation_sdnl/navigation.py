@@ -741,7 +741,7 @@ class NavSDNLNode(Node):
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         # Create PUBs/SUBs
-        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar2", self.obs_lidar_callback, 10)
+        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
         
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
@@ -760,9 +760,6 @@ class NavSDNLNode(Node):
 
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
-        
-        # Obstacles 
-        # self.obstacles_subscriber = self.create_subscription(Obstacles, 'obs_lidar', self.obstacles_callback, 10)
 
         self.create_timer(0.1, self.timer_callback)
 

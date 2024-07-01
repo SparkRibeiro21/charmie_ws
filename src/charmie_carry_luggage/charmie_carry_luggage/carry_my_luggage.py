@@ -7,7 +7,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Point, PoseWithCovarianceStamped, Pose2D
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ArmController, ListOfDetectedPerson, ListOfDetectedObject
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ArmController, ListOfDetectedPerson, ListOfDetectedObject, Obstacles
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, GetPointCloud, SetFace, ActivateObstacles
 
 import cv2 
@@ -69,6 +69,8 @@ class CarryMyLuggageNode(Node):
         # Search for person and object 
         self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
+        # Obstacles
+        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
         
         ### Services (Clients) ###
         # Speakers
@@ -145,6 +147,7 @@ class CarryMyLuggageNode(Node):
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
         self.point_cloud_response = GetPointCloud.Response()
+        self.obstacles = Obstacles()
 
         # robot localization
         self.robot_x = 0.0
@@ -209,6 +212,9 @@ class CarryMyLuggageNode(Node):
 
     def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
         self.detected_shoes_hand = det_object
+
+    def obstacles_callback(self, obs: Obstacles):
+        self.obstacles = obs
     
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
@@ -561,7 +567,6 @@ class CarryMyLuggageMain():
  
     def wait_for_start_button(self):
 
-
         self.node.start_button_state = False
 
         t = Bool()
@@ -573,7 +578,33 @@ class CarryMyLuggageMain():
 
         t.data = False 
         self.node.flag_start_button_publisher.publish(t)
-   
+
+    def wait_for_door_start(self):
+        
+        # max angle considered to be a door (degrees)
+        MAX_DOOR_ANGLE = math.radians(18.0)
+        # max distance to be considered a door (meters)
+        MAX_DOOR_DISTANCE = 1.0 
+        
+        door_open = False
+
+        while not door_open:
+            ctr = 0
+            for obs in self.node.obstacles.obstacles:
+                # if the robot detects any obstacle inside the max_angle with a dist under max_dist it considers the door is closed
+                # the max distance was introduced since in some cases, there may be a sofa, 3 meters away in that direction...
+                if -MAX_DOOR_ANGLE < obs.alfa < MAX_DOOR_ANGLE and obs.dist < MAX_DOOR_DISTANCE:
+                    ctr += 1
+                    print(math.degrees(obs.alfa), obs.dist)
+            
+            if ctr == 0:
+                door_open = True
+                print("DOOR OPEN")
+            else:
+                door_open = False
+                print("DOOR CLOSED")
+            
+
     def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
         self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
@@ -1587,6 +1618,10 @@ class CarryMyLuggageMain():
 
                 # wait for start_button
                 self.wait_for_start_button()
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+
+                self.wait_for_door_start()
 
                 self.set_rgb(BLUE+SET_COLOUR)
 

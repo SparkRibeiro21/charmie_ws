@@ -24,7 +24,7 @@ class Robot():
     def __init__(self):
         print("New Robot Class Initialised")
 
-        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.DEBUG_DRAW_IMAGE_OVERALL = False
         self.DEBUG_DRAW_JUST_CALCULATION_POINTS = True
         self.xc = 400
@@ -376,13 +376,9 @@ class DebugVisualNode(Node):
         self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
        
         # Obstacles
-        self.obstacles_publisher = self.create_publisher(Obstacles, "obs_lidar2", 10)
+        self.obstacles_publisher = self.create_publisher(Obstacles, "obs_lidar", 10)
         self.camera_head_obstacles_publisher = self.create_publisher(ListOfPoints, "camera_head_obstacles", 10)
         self.final_obstacles_publisher = self.create_publisher(ListOfPoints, "final_obstacles", 10)
-
-        # Door Start
-        self.start_door_subscriber = self.create_subscription(Bool, 'flag_door_start', self.start_door_callback, 10) 
-        self.done_start_door_publisher = self.create_publisher(Bool, 'get_door_start', 10) 
 
         ### Services (Clients) ###
         # Point Cloud
@@ -401,8 +397,6 @@ class DebugVisualNode(Node):
         self.waiting_for_pcloud = False
         self.point_cloud_response = GetPointCloud.Response()
         self.first_depth_image_received = False
-
-        self.door_start_detection = False
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, req, camera):
@@ -526,17 +520,6 @@ class DebugVisualNode(Node):
         self.robot.robot_x = pose.x
         self.robot.robot_y = pose.y
         # self.robot.robot_t = pose.theta
-
-    def start_door_callback(self, state: Bool):
-        print("Received Door Start:", state.data)
-        self.door_start_detection = state.data
-
-    # def get_color_image_callback(self, img: Image):
-        # self.get_logger().info('Receiving color video frame')
-        # ROS2 Image Bridge for OpenCV
-        # br = CvBridge()
-        # self.robot.current_frame = br.imgmsg_to_cv2(img, "bgr8")
-
     
     def get_aligned_depth_image_head_callback(self, img: Image):
         # self.head_depth_img = img
@@ -566,31 +549,6 @@ class DebugVisualNode(Node):
         #     pass
 
         # return self.point_cloud_response.coords
-    
-    def publish_door_state(self, obstacles=Obstacles()):
-
-        # max angle considered to be a door (degrees)
-        MAX_DOOR_ANGLE = math.radians(18.0)
-        # max distance to be considered a door (meters)
-        MAX_DOOR_DISTANCE = 1.0 
-        
-        ctr = 0
-        for obs in obstacles.obstacles:
-            # if the robot detects any obstacle inside the max_angle with a dist under max_dist it considers the door is closed
-            # the max distance was introduced since in some cases, there may be a sofa, 3 meters away in that direction...
-            if -MAX_DOOR_ANGLE < obs.alfa < MAX_DOOR_ANGLE and obs.dist < MAX_DOOR_DISTANCE:
-                ctr += 1
-                print(math.degrees(obs.alfa), obs.dist)
-        
-        door_state = Bool()
-        if ctr == 0:
-            door_state.data = True
-            print("DOOR OPEN")
-        else:
-            door_state.data = False
-            print("DOOR CLOSED")
-        self.done_start_door_publisher.publish(door_state)
-
 
     def update_obstacle_points_from_head_camera(self, pc):
         init_time = time.time()
@@ -717,9 +675,6 @@ class DebugVisualNode(Node):
 
         self.obstacles_publisher.publish(tot_obs)
         self.final_obstacles_publisher.publish(temp_lp)
-
-        if self.door_start_detection:
-            self.publish_door_state(tot_obs)
 
         if self.robot.DEBUG_DRAW_IMAGE:
             self.robot.update_image_shown()
