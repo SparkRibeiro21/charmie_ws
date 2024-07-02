@@ -24,7 +24,7 @@ class Robot():
     def __init__(self):
         print("New Robot Class Initialised")
 
-        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.DEBUG_DRAW_IMAGE_OVERALL = False
         self.DEBUG_DRAW_JUST_CALCULATION_POINTS = True
         self.xc = 400
@@ -50,6 +50,11 @@ class Robot():
         self.MAX_OBS_DISTANCE = 2.5
         self.OBSTACLE_RADIUS_THRESHOLD = 0.05
         self.D_TETA = 0.0
+
+        # shifts in displacement so camera poitns meet lidar points
+        self.X_SHIFT = -150
+        self.Y_SHIFT = 50
+        self.Z_SHIFT = 0
         
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -371,7 +376,7 @@ class DebugVisualNode(Node):
         self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
        
         # Obstacles
-        self.obstacles_publisher = self.create_publisher(Obstacles, "obs_lidar2", 10)
+        self.obstacles_publisher = self.create_publisher(Obstacles, "obs_lidar", 10)
         self.camera_head_obstacles_publisher = self.create_publisher(ListOfPoints, "camera_head_obstacles", 10)
         self.final_obstacles_publisher = self.create_publisher(ListOfPoints, "final_obstacles", 10)
 
@@ -515,13 +520,6 @@ class DebugVisualNode(Node):
         self.robot.robot_x = pose.x
         self.robot.robot_y = pose.y
         # self.robot.robot_t = pose.theta
-
-    # def get_color_image_callback(self, img: Image):
-        # self.get_logger().info('Receiving color video frame')
-        # ROS2 Image Bridge for OpenCV
-        # br = CvBridge()
-        # self.robot.current_frame = br.imgmsg_to_cv2(img, "bgr8")
-
     
     def get_aligned_depth_image_head_callback(self, img: Image):
         # self.head_depth_img = img
@@ -551,7 +549,6 @@ class DebugVisualNode(Node):
         #     pass
 
         # return self.point_cloud_response.coords
-    
 
     def update_obstacle_points_from_head_camera(self, pc):
         init_time = time.time()
@@ -567,9 +564,9 @@ class DebugVisualNode(Node):
         for p in pc[0].bbox_point_coords:
 
             object_rel_pos = Point()
-            object_rel_pos.x =  -p.y/1000
-            object_rel_pos.y =  p.x/1000
-            object_rel_pos.z =  p.z/1000
+            object_rel_pos.x =  -(p.y+self.robot.Y_SHIFT)/1000
+            object_rel_pos.y =   (p.x+self.robot.X_SHIFT)/1000
+            object_rel_pos.z =   (p.z+self.robot.Z_SHIFT)/1000
 
             if object_rel_pos.z >= 0.3 and object_rel_pos.z <= 1.7: # filters the floor and the ceiling
                 

@@ -164,7 +164,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud
 
 import cv2 
@@ -201,9 +201,6 @@ class ServeBreakfastNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
-        # Door Start
-        self.start_door_subscriber = self.create_subscription(Bool, 'get_door_start', self.get_door_start_callback, 10) 
-        self.flag_door_start_publisher = self.create_publisher(Bool, 'flag_door_start', 10) 
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -225,6 +222,8 @@ class ServeBreakfastNode(Node):
         # Search for person and object 
         self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
+        # Obstacles
+        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
         
         ### Services (Clients) ###
         # Speakers
@@ -322,9 +321,9 @@ class ServeBreakfastNode(Node):
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
-        self.door_start_state = False
         self.flag_navigation_reached = False
         self.point_cloud_response = GetPointCloud.Response()
+        self.obstacles = Obstacles()
 
         # robot localization
         self.robot_x = 0.0
@@ -399,6 +398,10 @@ class ServeBreakfastNode(Node):
         self.first_depth_hand_image_received = True
         # print("Received HAND Depth Image")
 
+    ### OBSTACLES
+    def obstacles_callback(self, obs: Obstacles):
+        self.obstacles = obs
+
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
         self.robot_y = pose.y
@@ -419,11 +422,6 @@ class ServeBreakfastNode(Node):
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
-        # print("Received Start Button:", state.data)
-
-    ### DOOR START ###
-    def get_door_start_callback(self, state: Bool):
-        self.door_start_state = state.data
         # print("Received Start Button:", state.data)
 
     ### NAVIGATION ###
@@ -891,18 +889,33 @@ class ServeBreakfastMain():
         self.node.flag_start_button_publisher.publish(t)
         
     def wait_for_door_start(self):
+        
+        # max angle considered to be a door (degrees)
+        MAX_DOOR_ANGLE = math.radians(15.0)
+        # max distance to be considered a door (meters)
+        MAX_DOOR_DISTANCE = 1.0 
+        
+        door_open = False
 
-        self.node.door_start_state = False
+        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
 
-        t = Bool()
-        t.data = True
-        self.node.flag_door_start_publisher.publish(t)
-
-        while not self.node.door_start_state:
-            pass
-
-        t.data = False 
-        self.node.flag_door_start_publisher.publish(t)
+        while not door_open:
+            ctr = 0
+            for obs in self.node.obstacles.obstacles:
+                # if the robot detects any obstacle inside the max_angle with a dist under max_dist it considers the door is closed
+                # the max distance was introduced since in some cases, there may be a sofa, 3 meters away in that direction...
+                if -MAX_DOOR_ANGLE < obs.alfa < MAX_DOOR_ANGLE and obs.dist < MAX_DOOR_DISTANCE:
+                    ctr += 1
+                    # print(math.degrees(obs.alfa), obs.dist)
+            
+            if ctr == 0:
+                door_open = True
+                print("DOOR OPEN")
+            else:
+                door_open = False
+                print("DOOR CLOSED", ctr)
+        
+        self.set_rgb(GREEN+ALTERNATE_QUARTERS)
 
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", face_hearing="charmie_face_green", wait_for_end_of=True):
 
@@ -1065,9 +1078,9 @@ class ServeBreakfastMain():
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
     
-    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
+    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
 
-        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" :   
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
 
             self.navigation_success = False
@@ -1086,20 +1099,22 @@ class ServeBreakfastMain():
             # float32 adjust_distance
             # float32 adjust_direction
             # float32 adjust_min_dist
+            # float32 max_speed
 
             if adjust_direction < 0:
                 adjust_direction += 360
 
-            navigation.target_coordinates.x = target[0]
-            navigation.target_coordinates.y = target[1]
+            navigation.target_coordinates.x = float(target[0])
+            navigation.target_coordinates.y = float(target[1])
             navigation.move_or_rotate = movement
-            navigation.orientation_absolute = absolute_angle
+            navigation.orientation_absolute = float(absolute_angle)
             navigation.flag_not_obs = flag_not_obs
-            navigation.reached_radius = reached_radius
+            navigation.reached_radius = float(reached_radius)
             navigation.avoid_people = False
-            navigation.adjust_distance = adjust_distance
-            navigation.adjust_direction = adjust_direction
-            navigation.adjust_min_dist = adjust_min_dist
+            navigation.adjust_distance = float(adjust_distance)
+            navigation.adjust_direction = float(adjust_direction)
+            navigation.adjust_min_dist = float(adjust_min_dist)
+            navigation.max_speed = float(max_speed)
 
             self.node.flag_navigation_reached = False
             
@@ -1330,7 +1345,7 @@ class ServeBreakfastMain():
             self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_doors,
                                         activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
                                         minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
-            
+            self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             self.set_rgb(WHITE+ALTERNATE_QUARTERS)
             time.sleep(0.5)
 

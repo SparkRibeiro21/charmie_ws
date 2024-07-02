@@ -154,11 +154,6 @@ def generate_launch_description():
                       name='navigation',
                       )
                       
-    #create door_start node
-    door_start = Node(package='charmie_door_start',
-                      executable='door_start',
-                      name='door_start',
-                      )
     #create node YOLO_Pose
     yolopose = Node(package='yolopose',
                     executable='yolo_posev8',

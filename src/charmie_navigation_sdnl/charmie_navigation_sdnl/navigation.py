@@ -41,7 +41,7 @@ class NavigationSDNLClass:
         # self.nav_threshold_dist_follow_me = 1.2 # in meters
         self.nav_threshold_ang = 15 # degrees
         # self.nav_threshold_ang_follow_me = 20 # degrees
-        # self.max_lin_speed = 15.0 # speed # 30.0
+        self.max_lin_speed = 15.0 # speed # 30.0
         self.max_ang_speed = 10.0 # speed # 20.0
         self.tar_dist_decrease_lin_speed = 0.8 # meters
         self.obs_dist_decrease_lin_speed = 1.0 # meters
@@ -119,12 +119,11 @@ class NavigationSDNLClass:
         self.f_obstacle, self.yff, self.yfff = self.repulsor()
         
         if not self.nav_target.flag_not_obs:
-            self.max_lin_speed = 15.0
+            # self.max_lin_speed = 15.0
             self.f_final, self.y_final = self.combine_atrator_repulsor()
             # print("ATRATOR + REPULSORES")
         else:
             # in case it is intended to not consider obstacles
-            self.max_lin_speed = 20.0
             # self.max_lin_speed = 20.0
             self.f_final = self.f_target
             self.y_final = self.y_atrator
@@ -742,7 +741,7 @@ class NavSDNLNode(Node):
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         
         # Create PUBs/SUBs
-        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar2", self.obs_lidar_callback, 10)
+        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
         
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
@@ -761,9 +760,6 @@ class NavSDNLNode(Node):
 
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
-        
-        # Obstacles 
-        # self.obstacles_subscriber = self.create_subscription(Obstacles, 'obs_lidar', self.obstacles_callback, 10)
 
         self.create_timer(0.1, self.timer_callback)
 
@@ -931,6 +927,7 @@ class NavSDNLNode(Node):
         self.nav.dist_to_target = self.nav.upload_move_dist_to_target()
         self.nav.ang_to_target = self.nav.upload_rot_ang_to_target()
         self.nav.nav_threshold_dist = nav.reached_radius # in meters
+        self.nav.max_lin_speed = nav.max_speed
         self.latest_localisation_x = self.nav.robot_x
         self.latest_localisation_y = self.nav.robot_y
         self.latest_localisation_t = self.nav.robot_t
