@@ -458,18 +458,33 @@ class ServeBreakfastMain():
         self.node.flag_start_button_publisher.publish(t)
         
     def wait_for_door_start(self):
+        
+        # max angle considered to be a door (degrees)
+        MAX_DOOR_ANGLE = math.radians(15.0)
+        # max distance to be considered a door (meters)
+        MAX_DOOR_DISTANCE = 1.0 
+        
+        door_open = False
 
-        self.node.door_start_state = False
+        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
 
-        t = Bool()
-        t.data = True
-        self.node.flag_door_start_publisher.publish(t)
-
-        while not self.node.door_start_state:
-            pass
-
-        t.data = False 
-        self.node.flag_door_start_publisher.publish(t)
+        while not door_open:
+            ctr = 0
+            for obs in self.node.obstacles.obstacles:
+                # if the robot detects any obstacle inside the max_angle with a dist under max_dist it considers the door is closed
+                # the max distance was introduced since in some cases, there may be a sofa, 3 meters away in that direction...
+                if -MAX_DOOR_ANGLE < obs.alfa < MAX_DOOR_ANGLE and obs.dist < MAX_DOOR_DISTANCE:
+                    ctr += 1
+                    # print(math.degrees(obs.alfa), obs.dist)
+            
+            if ctr == 0:
+                door_open = True
+                print("DOOR OPEN")
+            else:
+                door_open = False
+                print("DOOR CLOSED", ctr)
+        
+        self.set_rgb(GREEN+ALTERNATE_QUARTERS)
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
         

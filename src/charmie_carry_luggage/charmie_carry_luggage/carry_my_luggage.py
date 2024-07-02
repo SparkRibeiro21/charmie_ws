@@ -583,11 +583,13 @@ class CarryMyLuggageMain():
     def wait_for_door_start(self):
         
         # max angle considered to be a door (degrees)
-        MAX_DOOR_ANGLE = math.radians(18.0)
+        MAX_DOOR_ANGLE = math.radians(15.0)
         # max distance to be considered a door (meters)
         MAX_DOOR_DISTANCE = 1.0 
         
         door_open = False
+
+        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
 
         while not door_open:
             ctr = 0
@@ -596,16 +598,17 @@ class CarryMyLuggageMain():
                 # the max distance was introduced since in some cases, there may be a sofa, 3 meters away in that direction...
                 if -MAX_DOOR_ANGLE < obs.alfa < MAX_DOOR_ANGLE and obs.dist < MAX_DOOR_DISTANCE:
                     ctr += 1
-                    print(math.degrees(obs.alfa), obs.dist)
+                    # print(math.degrees(obs.alfa), obs.dist)
             
             if ctr == 0:
                 door_open = True
                 print("DOOR OPEN")
             else:
                 door_open = False
-                print("DOOR CLOSED")
+                print("DOOR CLOSED", ctr)
+        
+        self.set_rgb(GREEN+ALTERNATE_QUARTERS)
             
-
     def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
         self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
