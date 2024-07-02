@@ -4,7 +4,7 @@ from rclpy.node import Node
 
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import NeckPosition, PointCloudCoordinates
-from charmie_interfaces.srv import GetPointCloud
+from charmie_interfaces.srv import GetPointCloud, ActivateObstacles
 from geometry_msgs.msg import Point
 from cv_bridge import CvBridge
 
@@ -243,6 +243,8 @@ class PointCloudNode(Node):
         # Neck Position
         self.neck_get_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
 
+        self.server_activate_obstacles = self.create_service(ActivateObstacles, "activate_obstacles_head_depth", self.callback_activate_head_depth_obstacles) 
+
         # SERVICES:
         # Main receive commads 
         self.server_point_cloud_head = self.create_service(GetPointCloud, "get_point_cloud", self.callback_point_cloud_head) 
@@ -262,6 +264,8 @@ class PointCloudNode(Node):
         self.tempo_calculo = 0
         self.tempo_frame = 0
 
+        self.ACTIVATE_HEAD_DEPTH_OBSTACLES = False
+
 
     def get_color_image_head_callback(self, img: Image):
         self.head_rgb_img = img
@@ -269,6 +273,8 @@ class PointCloudNode(Node):
 
     def get_aligned_depth_image_head_callback(self, img: Image):
         self.head_depth_img = img
+        if self.ACTIVATE_HEAD_DEPTH_OBSTACLES:
+            self.publish_head_depth_obstacles()
         # print("Received Head Depth Image")
 
 
@@ -286,6 +292,31 @@ class PointCloudNode(Node):
         self.pcloud_head.teta[0] = neck_pos.pan
         self.pcloud_head.teta[1] = -neck_pos.tilt
         # print("Received Neck Position: (", neck_pos.pan, ",", neck_pos.tilt, ") - (", self.pcloud_head.teta[0], ",", self.pcloud_head.teta[1], ")")
+
+    def callback_activate_head_depth_obstacles(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # bool activate_lidar_up     # activate lidar from robot body
+        # bool activate_lidar_bottom # activate lidar to see floor objects
+        # bool activate_camera_head  # activate head camera for 3D obstacles  
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+        self.get_logger().info("Received Activate Obstacles %s" %("("+str(request.activate_camera_head)+")"))
+
+        # self.robot.ACTIVATE_LIDAR_UP = request.activate_lidar_up
+        # self.robot.ACTIVATE_LIDAR_BOTTOM = request.activate_lidar_bottom
+        self.ACTIVATE_HEAD_DEPTH_OBSTACLES = request.activate_camera_head
+        
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Activated with selected parameters"
+        return response
+    
+    def publish_head_depth_obstacles(self):
+        print("INSIDE DEPTH HEAD OBSTACLES FUNCTION")
+        time.sleep(0.05)
 
     def callback_point_cloud_head(self, request, response):
 

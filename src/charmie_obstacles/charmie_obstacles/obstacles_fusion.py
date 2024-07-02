@@ -83,7 +83,7 @@ class Robot():
         
         self.ACTIVATE_LIDAR_UP = True
         self.ACTIVATE_LIDAR_BOTTOM = False
-        self.ACTIVATE_CAMERA_HEAD = False
+        self.ACTIVATE_CAMERA_HEAD = True
 
         self.scan = LaserScan()
         self.valores_dict = {}
@@ -382,11 +382,14 @@ class DebugVisualNode(Node):
 
         ### Services (Clients) ###
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
-
+        # self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        # Activates Obstacles
         self.server_activate_obstacles = self.create_service(ActivateObstacles, "activate_obstacles", self.callback_activate_obstacles) 
+        self.activate_obstacles_head_depth_client = self.create_client(ActivateObstacles, "activate_obstacles_head_depth")
 
-        while not self.point_cloud_client.wait_for_service(1.0):
+        # while not self.point_cloud_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Point Cloud...")
+        while not self.activate_obstacles_head_depth_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
 
         # Camera Obstacles
@@ -398,7 +401,11 @@ class DebugVisualNode(Node):
         self.point_cloud_response = GetPointCloud.Response()
         self.first_depth_image_received = False
 
+        self.call_activate_head_depth_obstacles_server(obstacles_camera_head=self.robot.ACTIVATE_CAMERA_HEAD)
+
+
     # request point cloud information from point cloud node
+    """
     def call_point_cloud_server(self, req, camera):
         request = GetPointCloud.Request()
         request.data = req
@@ -407,6 +414,7 @@ class DebugVisualNode(Node):
     
         future = self.point_cloud_client.call_async(request)
         future.add_done_callback(self.callback_call_point_cloud)
+    """
 
     def callback_call_point_cloud(self, future):
 
@@ -438,11 +446,20 @@ class DebugVisualNode(Node):
         self.robot.ACTIVATE_LIDAR_UP = request.activate_lidar_up
         self.robot.ACTIVATE_LIDAR_BOTTOM = request.activate_lidar_bottom
         self.robot.ACTIVATE_CAMERA_HEAD = request.activate_camera_head
+
+        self.call_activate_head_depth_obstacles_server(obstacles_camera_head=self.robot.ACTIVATE_CAMERA_HEAD)
         
         # returns whether the message was played and some informations regarding status
         response.success = True
         response.message = "Activated with selected parameters"
         return response
+    
+    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
+    def call_activate_head_depth_obstacles_server(self, obstacles_camera_head=False):
+        request = ActivateObstacles.Request()
+        request.activate_camera_head = obstacles_camera_head
+        self.activate_obstacles_head_depth_client.call_async(request)
+
 
     def get_orientation_callback(self, orientation: Float32):
         # self.robot.imu_orientation = orientation.data
@@ -508,8 +525,8 @@ class DebugVisualNode(Node):
                     self.robot.lidar_obstacle_points.append(target)
 
         # print(len(self.robot.lidar_obstacle_points_rel), len(self.robot.lidar_obstacle_points_rel_draw), len(self.robot.lidar_obstacle_points))
-        if self.first_depth_image_received == True:
-            self.get_point_cloud() 
+        # if self.first_depth_image_received == True:
+        #     self.get_point_cloud() 
 
         self.publish_obstacles()
 
@@ -529,6 +546,7 @@ class DebugVisualNode(Node):
         if self.first_depth_image_received == False:
             self.first_depth_image_received = True
     
+    """
     def get_point_cloud(self, wait_for_end_of=True):
 
         requested_objects = []
@@ -551,6 +569,7 @@ class DebugVisualNode(Node):
         #     pass
 
         # return self.point_cloud_response.coords
+    """
 
     def update_obstacle_points_from_head_camera(self, pc):
         init_time = time.time()

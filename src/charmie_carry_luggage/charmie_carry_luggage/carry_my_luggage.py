@@ -93,7 +93,7 @@ class CarryMyLuggageNode(Node):
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         
-
+        """
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
@@ -126,7 +126,8 @@ class CarryMyLuggageNode(Node):
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
-        
+        """
+
         # Variables 
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_neck_pos = False
@@ -1590,6 +1591,13 @@ class CarryMyLuggageMain():
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Carry My Luggage Main...")
+
+        while True:
+            time.sleep(2)
+            self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=False)
+            time.sleep(2)
+            self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
+
 
         while True:
 
