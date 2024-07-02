@@ -965,9 +965,9 @@ class SticklerForTheRulesMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
-    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
+    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
 
-        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" :   
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
 
             self.navigation_success = False
@@ -986,20 +986,22 @@ class SticklerForTheRulesMain():
             # float32 adjust_distance
             # float32 adjust_direction
             # float32 adjust_min_dist
+            # float32 max_speed
 
             if adjust_direction < 0:
                 adjust_direction += 360
 
-            navigation.target_coordinates.x = target[0]
-            navigation.target_coordinates.y = target[1]
+            navigation.target_coordinates.x = float(target[0])
+            navigation.target_coordinates.y = float(target[1])
             navigation.move_or_rotate = movement
-            navigation.orientation_absolute = absolute_angle
+            navigation.orientation_absolute = float(absolute_angle)
             navigation.flag_not_obs = flag_not_obs
-            navigation.reached_radius = reached_radius
+            navigation.reached_radius = float(reached_radius)
             navigation.avoid_people = False
-            navigation.adjust_distance = adjust_distance
-            navigation.adjust_direction = adjust_direction
-            navigation.adjust_min_dist = adjust_min_dist
+            navigation.adjust_distance = float(adjust_distance)
+            navigation.adjust_direction = float(adjust_direction)
+            navigation.adjust_min_dist = float(adjust_min_dist)
+            navigation.max_speed = float(max_speed)
 
             self.node.flag_navigation_reached = False
             
