@@ -511,6 +511,8 @@ class DebugVisualNode(Node):
         if self.first_depth_image_received == True:
             self.get_point_cloud() 
 
+        self.publish_obstacles()
+
     def get_neck_position_callback(self, pose: NeckPosition):
         # print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
         self.robot.neck_pan = -math.radians(- pose.pan)
@@ -650,7 +652,10 @@ class DebugVisualNode(Node):
         # print("cam")
         # print(len(self.robot.camera_obstacle_points_rel), len(self.robot.camera_obstacle_points_rel_draw), len(self.robot.camera_obstacle_points))
 
+        self.publish_obstacles()
         
+    def publish_obstacles(self):
+
         if self.robot.DEBUG_DRAW_IMAGE:
             self.robot.update_debug_drawings()
             self.robot.update_debug_drawings2()
@@ -667,7 +672,6 @@ class DebugVisualNode(Node):
             obs_info.length_angular = self.robot.D_TETA
             tot_obs.obstacles.append(obs_info)
 
-
             t = Point()
             t.x = p[0]
             t.y = p[1]
@@ -680,8 +684,7 @@ class DebugVisualNode(Node):
             self.robot.update_image_shown()
 
         # print("elapsed time =", time.time()-init_time)
-        print("elapsed time =", time.time()-post_pc_time)
-        
+        # print("elapsed time =", time.time()-post_pc_time)
 
 def main(args=None):
     rclpy.init(args=args)
