@@ -93,7 +93,6 @@ class CarryMyLuggageNode(Node):
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         
-        """
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
@@ -126,8 +125,7 @@ class CarryMyLuggageNode(Node):
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
-        """
-
+        
         # Variables 
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_neck_pos = False
@@ -190,7 +188,6 @@ class CarryMyLuggageNode(Node):
     def get_aligned_depth_hand_image_callback(self, img: Image):
         self.depth_hand_img = img
         self.first_depth_hand_image_received = True
-        print(".", end='')
         # print("Received HAND Depth Image")
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
@@ -1581,7 +1578,7 @@ class CarryMyLuggageMain():
 
         # Neck Positions
         self.look_forward = [0, 0]
-        self.look_navigation = [0, -30]
+        self.look_navigation = [0, -50]
 
         self.initial_position = [-4.5, 1.0, 0.0]
         self.initial_angle_temp = 0.0
@@ -1591,14 +1588,7 @@ class CarryMyLuggageMain():
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Carry My Luggage Main...")
-
-        while True:
-            time.sleep(2)
-            self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=False)
-            time.sleep(2)
-            self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
-
-
+                
         while True:
 
             if self.state == self.Waiting_for_task_to_start:
@@ -1631,9 +1621,9 @@ class CarryMyLuggageMain():
                 # wait for start_button
                 self.wait_for_start_button()
 
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
-                self.wait_for_door_start()
+                # self.wait_for_door_start()
 
                 self.set_rgb(BLUE+SET_COLOUR)
 
