@@ -689,7 +689,7 @@ class CarryMyLuggageMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
-    def set_arm(self, command="", adjust_position=0.0, wait_for_end_of=True):
+    def set_arm(self, command="", pose=[], adjust_position=0.0, wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
         self.node.waited_for_end_of_arm = False
@@ -697,6 +697,7 @@ class CarryMyLuggageMain():
         temp = ArmController()
         temp.command = command
         temp.adjust_position = adjust_position
+        temp.pose = pose
         self.node.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:

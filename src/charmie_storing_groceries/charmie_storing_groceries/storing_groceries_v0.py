@@ -8,7 +8,7 @@ import threading
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, NavTrigger, SetFace
-from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL, ListOfDetectedObject, Obstacles
+from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL, ListOfDetectedObject, Obstacles, ArmController
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
@@ -629,20 +629,21 @@ class StoringGroceriesMain():
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
     
-    def set_arm(self, command="", wait_for_end_of=True):
+    def set_arm(self, command="", pose=[], adjust_position=0.0, wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
         self.node.waited_for_end_of_arm = False
         
-        temp = String()
-        temp.data = command
+        temp = ArmController()
+        temp.command = command
+        temp.adjust_position = adjust_position
+        temp.pose = pose
         self.node.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:
             while not self.node.waited_for_end_of_arm:
                 pass
             self.node.waited_for_end_of_arm = False
-            
         else:
             self.node.arm_success = True
             self.node.arm_message = "Wait for answer not needed"
