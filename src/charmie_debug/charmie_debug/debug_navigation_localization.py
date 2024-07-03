@@ -48,11 +48,11 @@ class TestNode(Node):
         
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Navigation
-        # while not self.nav_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
         # Obstacles
-        while not self.activate_obstacles_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
+        # while not self.activate_obstacles_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
         # Speakers
         # while not self.speech_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Speech Command...")
@@ -385,22 +385,40 @@ class RestaurantMain():
 
                 # If initial position is inside while loop you are telling the robot the wrong localisation.
                 # This command must only be sent once, at the start of the task
-                self.set_initial_position(self.initial_position)
+                # self.set_initial_position(self.initial_position)
 
                 self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False)
 
                 # time.sleep(5)
-                self.set_neck(position=[0-0, -20.0], wait_for_end_of=True)
+                # self.set_neck(position=[0-0, -20.0], wait_for_end_of=True)
 
                 # next state
                 self.state = Searching_for_clients
 
             elif self.state == Searching_for_clients:
-                #print('State 1 = Hand Raising Detect')
+                print('State 1 = Hand Raising Detect')
 
-                time.sleep(2)
+                # time.sleep(5)
+                time.sleep(1)
                 
-                self.set_navigation(movement="move", target=[0.0, 3.0], reached_radius=0.5, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=[0.0, 1.0], max_speed=20, reached_radius=0.5, wait_for_end_of=True)
+
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=0.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=180.0, wait_for_end_of=True)
+                # time.sleep(1.0)
+                self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                # time.sleep(1.0)
+                
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=0.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=180.0, wait_for_end_of=True)
+                # time.sleep(1.0)
+                self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+
+
+
+
 
                 while True:
                     pass    
