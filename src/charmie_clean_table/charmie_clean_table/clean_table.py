@@ -6,7 +6,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, Obstacles
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, Obstacles, ArmController
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace
 
 # Constant Variables to ease RGB_MODE coding
@@ -559,20 +559,21 @@ class ServeBreakfastMain():
 
         return self.node.track_object_success, self.node.track_object_message   
 
-    def set_arm(self, command="", wait_for_end_of=True):
+    def set_arm(self, command="", pose=[], adjust_position=0.0, wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
         self.node.waited_for_end_of_arm = False
         
-        temp = String()
-        temp.data = command
+        temp = ArmController()
+        temp.command = command
+        temp.adjust_position = adjust_position
+        temp.pose = pose
         self.node.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:
             while not self.node.waited_for_end_of_arm:
                 pass
             self.node.waited_for_end_of_arm = False
-            
         else:
             self.node.arm_success = True
             self.node.arm_message = "Wait for answer not needed"

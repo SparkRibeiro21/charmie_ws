@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, Float32, Int16
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3, Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.msg import TarNavSDNL, Obstacles, Yolov8Pose, Obstacles
-from charmie_interfaces.srv import NavTrigger
+from charmie_interfaces.srv import NavTrigger, SetAcceleration
 from sensor_msgs.msg import Image
 
 import cv2
@@ -83,13 +83,17 @@ class NavigationSDNLClass:
         self.f_final = 0.0
         self.y_final = []
 
+        # PID variables:
+        self.integral = 0.0
+        self.prev_error = 0.0
+        self.correct_ctr = 0
 
         # visual debug
         self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
         self.xc = 400
         self.yc = 400
         self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
-        self.image_plt = np.zeros((self.xc * 2, self.yc * 2, 3), dtype=np.uint8)
+        self.image_plt = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
         self.plot1 = TRplotter(133, (0, 255, 0))
         self.plot2 = TRplotter(400, (0, 255, 255))
         self.plot3 = TRplotter(800 - 133, (255, 255, 0))
@@ -216,6 +220,64 @@ class NavigationSDNLClass:
 
         print(error, speed, target_reached)
 
+        return omni_move, target_reached
+
+    def rotate_adjust_orientation(self, orientation_target):
+        # print("INSIDE!!!!!!!!!!!!!!!!!!!!!!")
+        
+        # orientation_target
+        # print(local_target)
+
+
+        max_rot_speed = 5
+        acceptable_error = 3.0
+        d_t = 0.1
+        # kp = 0.14
+        kp = 0.08
+        ki = 0.02
+        kd = 0.04
+
+        error = self.imu_orientation_norm + orientation_target
+        
+        P = kp * error 
+        
+        if error * self.prev_error < 0: # different signs
+            self.integral = 0
+        self.integral += error * d_t 
+        I = ki * self.integral
+        
+        derivative = (error - self.prev_error) / d_t
+        D = kd * derivative
+        
+        speed = P + I + D
+        
+        if speed > max_rot_speed:
+            speed = max_rot_speed 
+        if speed < -max_rot_speed:
+            speed = -max_rot_speed 
+
+        target_reached = False
+        omni_move = Vector3()
+        omni_move.x = float(0.0)
+        omni_move.y = float(0.0)
+
+        if abs(error) >= acceptable_error:
+            omni_move.z = float(100.0 - speed)
+            target_reached = False
+            self.correct_ctr = 0
+        else:
+            omni_move.z = float(100.0)
+            self.correct_ctr += 1
+            
+        if self.correct_ctr > 3:
+            omni_move.z = float(100.0)
+            target_reached = True
+            self.correct_ctr = 0
+            self.integral = 0
+
+        self.prev_error = error
+
+        print(round(error,2), round(speed,2), target_reached, self.correct_ctr, round(P,2), round(I,2), round(D,2))
         return omni_move, target_reached
 
     def atrator(self, mov_or_rot):
@@ -761,6 +823,11 @@ class NavSDNLNode(Node):
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
 
+        self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+
+        while not self.set_acceleration_ramp_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Low Level...")
+
         self.create_timer(0.1, self.timer_callback)
 
         self.br = CvBridge()
@@ -845,6 +912,13 @@ class NavSDNLNode(Node):
         self.rgb_message = "Value Sucessfully Sent"
 
         return self.rgb_success, self.rgb_message
+
+
+    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
+    def call_set_acceleration_ramp_server(self, acceleration):
+        request = SetAcceleration.Request()
+        request.data = acceleration
+        self.set_acceleration_ramp_client.call_async(request)
 
 
     def navigation_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.nav_trigger_client.wait_for_service(1.0):"
@@ -932,6 +1006,12 @@ class NavSDNLNode(Node):
         self.latest_localisation_y = self.nav.robot_y
         self.latest_localisation_t = self.nav.robot_t
         self.navigation_state = 0
+
+        # if self.nav.nav_target.move_or_rotate.lower() == "adjust_angle":
+        #     self.call_set_acceleration_ramp_server(10)
+            # send speed ramp = min
+
+        # time.sleep(1.0)
 
 
     def check_person_depth_head(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=800):
@@ -1066,15 +1146,17 @@ class NavSDNLNode(Node):
 
                 elif self.nav.nav_target.move_or_rotate.lower() == "orientate":
 
-                    self.nav.max_ang_speed = 20.0 # speed # 20.0
-                    self.nav.lambda_target = 12 # 12
-
-
                     omni_move, target_reached = self.nav.rotate_orientation(self.nav.nav_target.orientation_absolute)
                     self.omni_move_publisher.publish(omni_move)
                     if target_reached:
                         self.navigation_state = 2
 
+                elif self.nav.nav_target.move_or_rotate.lower() == "adjust_angle":
+
+                    omni_move, target_reached = self.nav.rotate_adjust_orientation(self.nav.nav_target.orientation_absolute)
+                    self.omni_move_publisher.publish(omni_move)
+                    if target_reached:
+                        self.navigation_state = 2
 
                 elif self.nav.nav_target.move_or_rotate.lower() == "adjust":
 
@@ -1133,6 +1215,9 @@ class NavSDNLNode(Node):
                 omni_move.y = float(0.0)
                 omni_move.z = float(100.0)
                 self.omni_move_publisher.publish(omni_move)
+                # resets the acceleration value
+                if self.nav.nav_target.move_or_rotate.lower() == "adjust_angle":
+                    self.call_set_acceleration_ramp_server(1)
                 self.flag_pos_reached_publisher.publish(finish_flag) 
 
             

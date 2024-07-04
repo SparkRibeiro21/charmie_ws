@@ -631,8 +631,12 @@ class StoringGroceriesMain():
         self.node.waited_for_end_of_get_neck = False
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
+<<<<<<< HEAD
     
-    def set_arm(self, command="", adjust_position=0.0, wait_for_end_of=True):
+=======
+
+>>>>>>> 8c62f55b935b803822c851b424a545d9e5168ac6
+    def set_arm(self, command="", pose=[], adjust_position=0.0, wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
         self.node.waited_for_end_of_arm = False
@@ -640,6 +644,7 @@ class StoringGroceriesMain():
         temp = ArmController()
         temp.command = command
         temp.adjust_position = adjust_position
+        temp.pose = pose
         self.node.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:

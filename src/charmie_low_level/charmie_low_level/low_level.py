@@ -5,6 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, Float32
 from charmie_interfaces.msg import Encoders
+from charmie_interfaces.srv import SetAcceleration
 import serial
 import time
 import struct
@@ -277,7 +278,9 @@ class LowLevelNode(Node):
         self.torso_test_subscriber = self.create_subscription(Pose2D, "torso_test", self.torso_test_callback , 10)
 
 
-
+        ### Services (Clients) ###
+        # Set Acceleration
+        self.server_set_acceleration = self.create_service(SetAcceleration, "set_acceleration_ramp", self.callback_set_acceleration) 
 
         flag_diagn = Bool()
         flag_diagn.data = False
@@ -316,6 +319,28 @@ class LowLevelNode(Node):
         self.flag_get_torso_pos = False
         self.flag_get_encoders = False
         self.flag_get_orientation = False
+
+    
+    def callback_set_acceleration(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # bool activate_lidar_up     # activate lidar from robot body
+        # bool activate_lidar_bottom # activate lidar to see floor objects
+        # bool activate_camera_head  # activate head camera for 3D obstacles  
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+        self.get_logger().info("Received Set Acceleration Ramp %s" %("("+str(request.data)+")"))
+        
+        self.robot.set_omni_variables(self.robot.ACCELERATION, request.data)
+
+        print(self.robot.get_omni_variables(self.robot.ACCELERATION))
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Set Acceleration Ramp for Motors to " + str(request.data)
+        return response
 
     
     def torso_test_callback(self, data: Pose2D):
