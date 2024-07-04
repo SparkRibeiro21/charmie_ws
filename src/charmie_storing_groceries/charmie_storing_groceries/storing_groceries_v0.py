@@ -631,11 +631,6 @@ class StoringGroceriesMain():
         self.node.waited_for_end_of_get_neck = False
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> 8c62f55b935b803822c851b424a545d9e5168ac6
     def set_arm(self, command="", pose=[], adjust_position=0.0, wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
@@ -2403,6 +2398,31 @@ class StoringGroceriesMain():
 
         print("IN NEW MAIN")
         # time.sleep(1)
+        try:
+            with open(self.node.complete_path_configuration_files + 'objects_height.json', encoding='utf-8') as json_file:
+                self.node.objects_file = json.load(json_file)
+                # print(self.objects_file)
+        except:
+            self.get_logger().error("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
+
+
+        # Print the dictionary
+        print(self.node.objects_file)
+        
+        # Create a dictionary to store the heights with the object names as keys
+        self.heights_dict = {item['name']: item['height'] for item in self.node.objects_file}
+
+        # Print the heights dictionary
+        print(self.heights_dict)
+        """
+        # Access a specific height using the object's name
+        sponge_height = self.heights_dict.get('Sponge')
+        print(f"Height of Sponge: {sponge_height}")
+
+        # Example: Iterate and print all object names and their heights
+        for name, height in self.heights_dict.items():
+            print(f"Object: {name}, Height: {height}") """
+    
 
         # Navigation Coordinates
         """## LAR

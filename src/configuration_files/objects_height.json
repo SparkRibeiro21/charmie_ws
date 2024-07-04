@@ -1,0 +1,47 @@
+[
+{"name": "Sponge",   		"height": "0.02"},
+{"name": "Cleanser", 		"height": "0.0"},
+
+{"name": "Red Wine", 		"height": "0.1"},
+{"name": "Juice Pack", 		"height": "0.0"},
+{"name": "Cola", 		"height": "0.0"},
+{"name": "Tropical Juice", 	"height": "0.0"},
+{"name": "Milk",           	"height": "0.0"},
+{"name": "Iced Tea",       	"height": "0.09"},
+{"name": "Orange Juice",   	"height": "0.0"},
+
+{"name": "Tuna", 		"height": "0.0"},
+{"name": "Tomato Soup", 	"height": "0.035"},
+{"name": "Spam",		"height": "0.035"},
+{"name": "Mustard", 		"height": "0.0"},
+{"name": "Strawberry Jello",	"height": "0.02"},
+{"name": "Chocolate Jello", 	"height": "0.02"},
+{"name": "Coffee Grounds", 	"height": "0.0"},
+{"name": "Sugar", 		"height": "0.02"},
+
+{"name": "Pear", 		"height": "0.0"},
+{"name": "Plum", 		"height": "0.0"},
+{"name": "Peach", 		"height": "0.0"},
+{"name": "Lemon", 		"height": "0.0"},
+{"name": "Orange", 		"height": "0.0"},
+{"name": "Strawberry", 		"height": "0.0"},
+{"name": "Banana", 		"height": "0.0"},
+{"name": "Apple", 		"height": "0.0"},
+
+{"name": "Tennis Ball", 	"height": "0.0"},
+{"name": "Soccer Ball", 	"height": "0.0"},
+{"name": "Rubiks Cube", 	"height": "0.01"},
+{"name": "Dice", 		"height": "0.0"},
+{"name": "Baseball", 		"height": "0.0"},
+
+{"name": "Pringles", 		"height": "0.0"},
+{"name": "Cornflakes", 		"height": "0.02"},
+{"name": "Cheezit", 		"height": "0.0"},
+
+{"name": "Spoon", 		"height": "0.02"},
+{"name": "Plate", 		"height": "0.12"},
+{"name": "Cup", 		"height": "0.03"},
+{"name": "Fork", 		"height": "0.02"},
+{"name": "Bowl", 		"height": "0.11"},
+{"name": "Knife", 		"height": "0.02"}
+]
