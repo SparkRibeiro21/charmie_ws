@@ -385,12 +385,12 @@ class RestaurantMain():
 
                 # If initial position is inside while loop you are telling the robot the wrong localisation.
                 # This command must only be sent once, at the start of the task
-                # self.set_initial_position(self.initial_position)
+                self.set_initial_position(self.initial_position)
 
-                self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False)
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=True)
 
                 # time.sleep(5)
-                # self.set_neck(position=[0-0, -20.0], wait_for_end_of=True)
+                self.set_neck(position=[0-0, -50.0], wait_for_end_of=True)
 
                 # next state
                 self.state = Searching_for_clients
@@ -399,10 +399,13 @@ class RestaurantMain():
                 print('State 1 = Hand Raising Detect')
 
                 # time.sleep(5)
-                time.sleep(1)
+                time.sleep(3)
                 
-                # self.set_navigation(movement="move", target=[0.0, 1.0], max_speed=20, reached_radius=0.5, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=[-2.0, 2.1], max_speed=10, reached_radius=0.5, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=[-1.5, 5.1], wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[-1.5, 5.1], max_speed=15, reached_radius=0.5, flag_not_obs=False, wait_for_end_of=True)
 
+                """
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=0.0, wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=180.0, wait_for_end_of=True)
                 # time.sleep(1.0)
@@ -415,7 +418,7 @@ class RestaurantMain():
                 # time.sleep(1.0)
                 self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-
+                """
 
 
 

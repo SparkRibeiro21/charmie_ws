@@ -28,13 +28,15 @@ class NavigationSDNLClass:
         # configurable SDNL parameters
         # self.lambda_target_mov = 12
         # self.lambda_target_rot = 12
-        self.lambda_target = 5 # 12
-        self.beta1 = 140 # 9
-        self.beta2 = 0.15 # 7
+        
+        
+        # self.lambda_target = 5 # 12
+        # self.beta1 = 120  # 9
+        # self.beta2 = 0.15 # 7
 
         self.lambda_target = 5 # 12
-        self.beta1 = 120 # 9
-        self.beta2 = 0.15 # 7
+        self.beta1 = 80 # 9
+        self.beta2 = 0.35 # 0.04 # 7
 
         # configurable other parameters
         self.nav_threshold_dist = 0.6 # in meters
@@ -44,11 +46,11 @@ class NavigationSDNLClass:
         self.max_lin_speed = 15.0 # speed # 30.0
         self.max_ang_speed = 10.0 # speed # 20.0
         self.tar_dist_decrease_lin_speed = 0.8 # meters
-        self.obs_dist_decrease_lin_speed = 1.0 # meters
-        self.min_speed_obs = 6.0 # speed
+        self.obs_dist_decrease_lin_speed = 1.5 # meters
+        self.min_speed_obs = 3.0 # speed
         self.decay_rate_initial_speed_ramp = 2.0 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
-        self.MAX_DIST_FOR_OBS = 1.0
+        self.MAX_DIST_FOR_OBS = 2.0
 
         self.obstacles = Obstacles()
         self.aux_obstacles_l = Obstacles()
@@ -330,7 +332,7 @@ class NavigationSDNLClass:
         aux_obs = {}
         phi_ =  phi + math.pi/2
 
-        min_d = 1.5
+        min_d = self.MAX_DIST_FOR_OBS
         for obs in self.obstacles.obstacles:
             if obs.dist < self.MAX_DIST_FOR_OBS:
                 if obs.dist < min_d:
@@ -418,7 +420,7 @@ class NavigationSDNLClass:
             f_obstacle += f_obs
             # print(f_obs)
 
-            print(round(d_obs,2), round(delta_teta,2), round(lambda_obstacle_,2), round(sigma_,2), round(f_obs,2))
+            # print(round(d_obs,2), round(delta_teta,2), round(lambda_obstacle_,2), round(sigma_,2), round(f_obs,2))
 
             for half_degree in range(360*2):
 
@@ -876,7 +878,7 @@ class NavSDNLNode(Node):
     def get_aligned_depth_image_callback(self, img: Image):
         self.depth_img = img
         self.first_depth_image_received = True
-        print("Received Depth Image")
+        # print("Received Depth Image")
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -940,13 +942,13 @@ class NavSDNLNode(Node):
         # self.nav.update_debug_drawings()
         # print("here")
 
-        print("===")
-        for o in obs.obstacles:
-            print("alfa", o.alfa)
-            print("dist", o.dist)
-            print("l_ang", o.length_angular)
-            print("l_cm", o.length_cm)
-        print("---")
+        # print("===")
+        # for o in obs.obstacles:
+        #     print("alfa", o.alfa)
+        #     print("dist", o.dist)
+        #     print("l_ang", o.length_angular)
+        #     print("l_cm", o.length_cm)
+        # print("---")
 
         for obs in self.obstacles.obstacles:
             if obs.dist < self.MIN_DIST_OBS:
@@ -1011,6 +1013,9 @@ class NavSDNLNode(Node):
         #     self.call_set_acceleration_ramp_server(10)
             # send speed ramp = min
 
+        if self.nav.nav_target.move_or_rotate.lower() == "move":
+            self.call_set_acceleration_ramp_server(10)
+        
         # time.sleep(1.0)
 
 
@@ -1102,6 +1107,9 @@ class NavSDNLNode(Node):
         # print(self.nav.first_imu_orientation, round(self.nav.NORTE, 2), round(self.nav.imu_orientation, 2), round(self.nav.imu_orientation_norm, 2))
         
         if self.nav.first_nav_target:
+
+            
+            print("lambda_target:", self.nav.lambda_target, "beta1:", self.nav.beta1, "beta2:", self.nav.beta2)
 
             # print("estado:", self.navigation_state)
             
@@ -1216,8 +1224,8 @@ class NavSDNLNode(Node):
                 omni_move.z = float(100.0)
                 self.omni_move_publisher.publish(omni_move)
                 # resets the acceleration value
-                if self.nav.nav_target.move_or_rotate.lower() == "adjust_angle":
-                    self.call_set_acceleration_ramp_server(1)
+                # if self.nav.nav_target.move_or_rotate.lower() == "adjust_angle":
+                #     self.call_set_acceleration_ramp_server(1)
                 self.flag_pos_reached_publisher.publish(finish_flag) 
 
             

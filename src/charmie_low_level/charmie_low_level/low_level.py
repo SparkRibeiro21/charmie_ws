@@ -291,7 +291,7 @@ class LowLevelNode(Node):
         self.robot = RobotControl()
 
         self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
-        self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
+        self.robot.set_omni_variables(self.robot.ACCELERATION, 10)
         self.robot.set_omni_flags(self.robot.TIMEOUT, False)
         self.robot.set_omni_variables(self.robot.RGB, 100)
 
@@ -459,7 +459,7 @@ class LowLevelNode(Node):
             cmd.enc_m3 = (aux_e[8] << 24) + (aux_e[9] << 16) + (aux_e[10] << 8) + aux_e[11]
             cmd.enc_m4 = (aux_e[12] << 24) + (aux_e[13] << 16) + (aux_e[14] << 8) + aux_e[15]
 
-            print(aux_e[0], aux_e[1], aux_e[2], aux_e[3], "|", aux_e[4], aux_e[5], aux_e[6], aux_e[7], "|", aux_e[8], aux_e[9], aux_e[10], aux_e[11], "|", aux_e[12], aux_e[13], aux_e[14], aux_e[15])
+            # print(aux_e[0], aux_e[1], aux_e[2], aux_e[3], "|", aux_e[4], aux_e[5], aux_e[6], aux_e[7], "|", aux_e[8], aux_e[9], aux_e[10], aux_e[11], "|", aux_e[12], aux_e[13], aux_e[14], aux_e[15])
 
             # print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
             self.get_encoders_publisher.publish(cmd)
@@ -471,7 +471,7 @@ class LowLevelNode(Node):
             orientation = Float32()
             orientation.data = (aux_o[0]<<8|aux_o[1])/10
             
-            print("ORIENTATION:", orientation.data)
+            # print("ORIENTATION:", orientation.data)
 
             self.get_orientation_publisher.publish(orientation)
 
