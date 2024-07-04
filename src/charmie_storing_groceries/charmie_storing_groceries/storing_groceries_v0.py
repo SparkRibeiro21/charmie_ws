@@ -21,6 +21,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('agg')
+from collections import defaultdict, Counter
 
 import os
 
@@ -84,7 +85,7 @@ class StoringGroceriesNode(Node):
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
 
         # Arm 
-        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
         
         #DEBUG
@@ -192,6 +193,7 @@ class StoringGroceriesNode(Node):
         self.obstacles = Obstacles()
         self.filtered_objects_storing_groceries = []
         self.flag_storing_groceries_received = False
+        self.br = CvBridge()
         #print(self.objects_classNames_dict)
         
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
@@ -456,6 +458,7 @@ class StoringGroceriesMain():
 
         # Neck Positions
         self.look_forward = [0, 0]
+        self.look_back = [180,0]
         self.look_navigation = [0, -30]
         self.look_judge = [-45, 0]
         self.look_table_objects = [90, -40]
@@ -464,12 +467,12 @@ class StoringGroceriesMain():
         self.look_cabinet_center = [0, -30]
         self.look_cabinet_bottom = [-45, -45]
 
-        self.shelf_1_height = 0.0 # 0.15 # 0.14 # 0.15
-        self.shelf_2_height = 0.39 # 0.60 # 0.55 # 0.60 
-        self.shelf_3_height = 0.67  # 1.10 # 0.97 # 1.10 
-        self.shelf_4_height = 0.92  # 1.39
-        self.shelf_5_height = 1.28
-        self.shelf_6_height = 1.57
+        self.shelf_1_height = 0.1 # 0.15 # 0.14 # 0.15
+        self.shelf_2_height = 0.5  # 0.60 # 0.55 # 0.60 
+        self.shelf_3_height = 0.9  # 1.10 # 0.97 # 1.10 
+        self.shelf_4_height = 1.33  # 1.39
+        self.shelf_5_height = 1.8
+        self.shelf_6_height = 2.5
 
         self.shelf_length = 0.70
         self.left_limit_shelf = -0.7 # -0.38
@@ -628,7 +631,7 @@ class StoringGroceriesMain():
         self.node.waited_for_end_of_get_neck = False
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
-    
+
     def set_arm(self, command="", pose=[], adjust_position=0.0, wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
@@ -1094,308 +1097,481 @@ class StoringGroceriesMain():
             self.set_face(custom=face_path)
         
         return face_path
+    
+    # def analysis_cabinet(self):
+    #     nr_classes_detected = 0
+    #     i = 0
+    #     objects = []
+    #     self.object_position = {}
+    #     if hasattr(self.node, 'image') and self.node.image:
+    #         if hasattr(self.node, 'objects') and self.node.objects:
+    #             objects_stored = self.node.objects
+    #             self.nr_objects_detected = self.node.nr_objects
+
+
+    #             self.current_image = self.node.image
+    #             bridge = CvBridge()
+    #             # Convert ROS Image to OpenCV image
+    #             cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+    #             self.current_image_2= cv_image
+
+    #             for detected_objects in objects_stored:
+    #                 print(detected_objects.object_name, detected_objects.object_class)
+    #                 if detected_objects.object_name in objects:
+    #                     pass
+    #                 else:
+    #                     objects.append(detected_objects) 
+
+    #             print(objects)
+
+    #             print('Will iterate for: ', self.nr_objects_detected)
+    #             while i < self.nr_objects_detected:                    
+    #                 detected_object = objects_stored[i]
+    #                 object_name = detected_object.object_name
+    #                 object_class = detected_object.object_class
+    #                 object_height = detected_object.position_relative.z
+    #                 object_distance = detected_object.position_relative.y
+    #                 object_confidence = detected_object.confidence
+    #                 object_x_position = detected_object.position_relative.x
+    #                 box_top_left_x = detected_object.box_top_left_x
+    #                 box_top_left_y = detected_object.box_top_left_y
+    #                 box_width = detected_object.box_width
+    #                 box_height = detected_object.box_height
+    #                 position = ' '
+    #                 #print(f"Object: {object_name}, Height: {object_height}, Confidence: {object_confidence}")
+    #                 if object_name in self.object_details:
+    #                     pass
+    #                 else:
+    #                     if object_distance > 3.0:
+    #                         print(object_name, '- too far')
+    #                         print(object_height)
+                            
+    #                     elif self.shelf_1_height < object_height < self.shelf_2_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+    #                         position = 'First shelf '
+    #                         print(object_name, 'is in the first shelf ')
+    #                         # print(object_x_position)
+
+    #                     elif self.shelf_2_height < object_height < self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+    #                         position = 'Second shelf '
+    #                         print(object_name, 'is in the second shelf ')
+    #                         # print(object_x_position)
+
+    #                     elif self.shelf_4_height > object_height > self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+    #                         position = 'Third shelf '
+    #                         print(object_name, 'is in the third shelf ')
+    #                         # print(object_x_position)
+                        
+    #                     elif self.shelf_5_height > object_height > self.shelf_4_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+    #                         position = 'Fourth shelf '
+    #                         print(object_name, 'is in the fourth shelf ')
+    #                         # print(object_x_position)
+
+    #                     elif self.shelf_6_height > object_height > self.shelf_5_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+    #                         position = 'Fifth shelf '
+    #                         print(object_name, 'is in the fifth shelf ')
+    #                         # print(object_x_position)
+
+    #                     elif object_height > self.shelf_6_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+    #                         position = 'Sixth shelf '
+    #                         print(object_name, 'is in the sixth shelf ')
+    #                         # print(object_x_position)
+
+    #                     else:
+    #                         print(object_name, '- none of the shelfs')
+    #                         print(object_height)
+                            
+    #                     """ if  self.center_shelf <= object_x_position <= self.right_limit_shelf :
+    #                         position += 'Right side '
+                            
+    #                     elif self.left_limit_shelf <= object_x_position < self.center_shelf :
+    #                         position += 'Left side '
+                            
+    #                     else:
+    #                         position += 'Outside shelf ' """
+                            
+    #                     if detected_object.object_class in self.object_position:
+    #                         self.object_position[detected_object.object_class].append(position)
+    #                     else:
+    #                         self.object_position[detected_object.object_class] = [position]
+
+    #                     #self.object_position[object_class] = position
+
+
+    #                     print('object ', object_name, ' and confidence ', object_confidence)
+
+    #                 i += 1
+
+    #             # Código para dizer 'tal classe está em tal prateleira'
+
+    #             print('objects position:', self.object_position)
+    #             object_x_values = {}
+
+    #             # Dictionary to store filtered values
+    #             filtered_objects_position = {}
+
+    #             # Loop through the original dictionary
+    #             for key, values in self.object_position.items():
+    #                 # Use set to remove duplicates and then convert back to list
+    #                 unique_values = list(set(values))
+    #                 # If there's only one unique value, use that
+    #                 if len(unique_values) == 1:
+    #                     filtered_objects_position[key] = unique_values[0]
+
+    #             print("Filtered objects position:", filtered_objects_position)
+
+    #             # Iterate through the objects and store object_x values for each class
+    #             for obj in objects:
+    #                 obj_class = obj.object_class
+    #                 object_x = obj.position_relative.x
+    #                 if obj_class not in object_x_values:
+    #                     object_x_values[obj_class] = []
+    #                 object_x_values[obj_class].append(object_x)
+
+    #             # Print object_x values for each class
+    #             for obj_class, x_values in object_x_values.items():
+    #                 #print(f"{obj_class} object_x values:")
+    #                 i = 0
+    #                 average_x_values = 0
+    #                 for x in x_values:
+    #                     i +=1
+    #                     print(f"  - {x}")
+    #                     average_x_values += x
+    #                 average_x_values = average_x_values / i
+    #                 #print(f"average: {average_x_values}")
+                
+    #             # Organize objects by position
+    #             objects_by_position = {}
+    #             for obj_class, position in filtered_objects_position.items():
+    #                 if position not in objects_by_position:
+    #                     objects_by_position[position] = []
+    #                 objects_by_position[position].append(obj_class)
+                
+    #             for position, obj_classes in objects_by_position.items():
+    #                 print(f"\nObjects in {position}:")
+    #                 for obj_class in obj_classes:
+    #                     if obj_class in object_x_values:
+    #                         x_values = object_x_values[obj_class]
+    #                         print(f"{obj_class} object_x values:")
+    #                         i = 0
+    #                         average_x_values = 0
+    #                         for x in x_values:
+    #                             i +=1
+    #                             print(f"  - {x}")
+    #                             average_x_values += x
+    #                         average_x_values = average_x_values / i
+    #                         print(f"  Average: {average_x_values}")
+    #                     else:
+    #                         print(f"No object_x values found for class {obj_class}")
+                    
+
+    #             # Dictionary to store average x values for each class and shelf
+    #             average_values_by_shelf = {}
+
+    #             # Iterate through the objects and store object_x values for each class
+    #             for obj in objects:
+    #                 obj_class = obj.object_class
+    #                 object_x = obj.position_relative.x
+    #                 position = filtered_objects_position.get(obj_class)
+    #                 if position:
+    #                     if position not in average_values_by_shelf:
+    #                         average_values_by_shelf[position] = {}
+    #                     if obj_class not in average_values_by_shelf[position]:
+    #                         average_values_by_shelf[position][obj_class] = []
+    #                     average_values_by_shelf[position][obj_class].append(object_x)
+    #                     print('average values by shelf', average_values_by_shelf)
+
+    
+
+    #             # Initialize variables to store reference x values
+    #             left_reference_x = None
+    #             right_reference_x = None
+    #             left_reference_x = -0.5
+    #             right_reference_x = 0.05
+
+    #             # Initialize variable for single class average x
+    #             single_class_average_x = None
+
+    #             for shelf, class_values in average_values_by_shelf.items():
+    #                 average_values_by_shelf[shelf] = dict(sorted(class_values.items(), key=lambda item: len(item[1]), reverse=True))
+
+    #             # Sort the shelves based on the total number of classes they contain
+    #             sorted_shelves = dict(sorted(average_values_by_shelf.items(), key=lambda item: len(item[1]), reverse=True))
+
+    #             print('sorted shelves ', sorted_shelves)
+
+    #             average_values_by_shelf = sorted_shelves
+
+    #             positions_in_cabinet = {}
+
+    #             # Iterate through the average values for each shelf
+    #             for shelf, class_values in average_values_by_shelf.items():
+    #                 print(f"\nShelf: {shelf}")
+
+    #                 # Get class names and average x values
+    #                 class_names = list(class_values.keys())
+    #                 average_x_values = [sum(x_values) / len(x_values) for x_values in class_values.values()]
+
+    #                 left_reference_x = -0.5
+    #                 right_reference_x = 0.05
+
+    #                 if len(average_x_values) == 2:
+    #                     # If two classes and reference x values are not yet established, determine left or right side and store reference x values
+    #                     if left_reference_x is None and right_reference_x is None:
+    #                         if average_x_values[0] > average_x_values[1]:
+    #                             print(f'{class_names[1]} - left side')
+    #                             print(f'{class_names[0]} - right side')
+    #                             left_reference_x = average_x_values[1]
+    #                             right_reference_x = average_x_values[0]
+    #                             positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
+    #                             positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
+    #                         else:
+    #                             print(f'{class_names[1]} - right side')
+    #                             print(f'{class_names[0]} - left side')
+    #                             left_reference_x = average_x_values[0]
+    #                             right_reference_x = average_x_values[1]
+    #                             positions_in_cabinet[class_names[0]] = f"{shelf} Left side"
+    #                             positions_in_cabinet[class_names[1]] = f"{shelf} Right side"
+    #                     else:
+    #                         if average_x_values[0] > average_x_values[1]:
+    #                             print(f'{class_names[1]} - left side')
+    #                             print(f'{class_names[0]} - right side')
+    #                             positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
+    #                             positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
+    #                         else:
+    #                             print(f'{class_names[0]} - right side')
+    #                             print(f'{class_names[1]} - left side')
+    #                             positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
+    #                             positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
+    #                 elif len(average_x_values) == 1:
+    #                     # If only one class, compare with reference x values
+    #                     if left_reference_x is not None and right_reference_x is not None:
+    #                         single_class_average_x = average_x_values[0]
+    #                         if abs(single_class_average_x - left_reference_x ) < self.shelf_length / 3:
+    #                             print(f"{class_names[0]} - left side")
+    #                             positions_in_cabinet[class_names[0]] = f"{shelf} Left side"
+    #                         elif abs(single_class_average_x - right_reference_x ) < self.shelf_length / 3:
+    #                             print(f"{class_names[0]} - right side")
+    #                             positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
+    #                     else:
+    #                         print("Not enough data to determine position")
+    #                 else:
+    #                     # If three classes, print a message indicating the situation is strange
+    #                     print("Strange situation: Three classes present")
+                    
+
+    #             print(positions_in_cabinet)
+    #             self.object_position = positions_in_cabinet
+    
+    #             keywords = []
+
+    #             self.classes_detected_wardrobe.clear()
+
+    #             class_name_array = []
+    #             nr_classes_detected = 0
+
+    #             for position in positions_in_cabinet.values():
+    #                 keywords = position.split()  # Split each position string into words and extend the keywords list
+
+    #                 # Initialize filenames
+    #                 class_filename = None
+    #                 location_filename = None
+
+    #                 # Iterate over object_position_mapping
+    #                 for condition, object_location in object_position_mapping.items():
+    #                     # Check if all keywords in the condition are in the current position
+    #                     if all(keyword in keywords for keyword in condition):
+    #                         # Get the class name associated with the current position
+    #                         class_name = [class_name for class_name, pos in positions_in_cabinet.items() if pos == position][0]
+    #                         if class_name not in class_name_array:
+    #                             class_name_array.append(class_name)
+    #                         print('Class name:', class_name)
+    #                         print('All class names', class_name_array)
+    #                         self.classes_detected_wardrobe.append(class_name)
+    #                         print(self.classes_detected_wardrobe)
+    #                         nr_classes_detected = len(class_name_array)
+    #                         print('Nr classes detected: ', nr_classes_detected)
+    #                         location_filename = f"storing_groceries/{object_location}"
+    #                         class_filename = f"objects_classes/{class_name}"
+    #                         break
+
+    #     return nr_classes_detected
+
 
   
-    def analysis_cabinet(self):
-        nr_classes_detected = 0
-        i = 0
-        objects = []
-        self.object_position = {}
-        if hasattr(self.node, 'image') and self.node.image:
-            if hasattr(self.node, 'objects') and self.node.objects:
-                objects_stored = self.node.objects
-                self.nr_objects_detected = self.node.nr_objects
+    def analysis_cabinet(self, filtered_objects):
+
+        # min_object = min(filtered_objects, key=lambda x: x[1])
+        # max_object = max(filtered_objects, key=lambda x: x[1])
+        min_object = min(filtered_objects, key=lambda obj: obj.position_relative.x)
+        max_object = max(filtered_objects, key=lambda obj: obj.position_relative.x)
+
+        print('x_min:', min_object.position_relative.x)
+        print('x_max:', max_object.position_relative.x)
+        dif = abs(max_object.position_relative.x - min_object.position_relative.x)
+        print('dif', dif)
+        print(round(dif/2))
+        half = min_object.position_relative.x + dif/2
+
+        print('half:', half)
+
+        print("Object with the minimum value in the 2nd argument:", min_object.object_name, min_object.position_relative.x)
+        print("Object with the maximum value in the 2nd argument:", max_object.object_name, max_object.position_relative.x)
+
+        
 
 
-                self.current_image = self.node.image
-                bridge = CvBridge()
-                # Convert ROS Image to OpenCV image
-                cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-                self.current_image_2= cv_image
+        # Initialize dictionaries to store objects and class counts for each shelf and side
+        self.shelf_side_objects = defaultdict(list)
+        self.shelf_side_class_counts = defaultdict(Counter)
+        self.shelf_side_common_class = {}
+        attributed_classes = set()
 
-                for detected_objects in objects_stored:
-                    print(detected_objects.object_name, detected_objects.object_class)
-                    if detected_objects.object_name in objects:
-                        pass
-                    else:
-                        objects.append(detected_objects) 
+        # Analyze and categorize objects
+        for obj in filtered_objects:
+            side = 'left' if obj.position_relative.x < half else 'right'
+            if self.shelf_1_height < obj.position_relative.z < self.shelf_2_height:
+                shelf = 1
+            elif self.shelf_2_height < obj.position_relative.z < self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                shelf = 2
+            elif self.shelf_3_height < obj.position_relative.z < self.shelf_4_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                shelf = 3
+            elif self.shelf_4_height < obj.position_relative.z < self.shelf_5_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+                shelf = 4
+            else:
+                continue  # Only considering the first shelf for now, can be expanded as needed
+            
+            shelf_side_key = (shelf, side)
+            self.shelf_side_objects[shelf_side_key].append(obj)
+            self.shelf_side_class_counts[shelf_side_key][obj.object_class] += 1
 
-                print(objects)
+        # Determine the most common class for each shelf and side
+        self.shelf_side_common_class = {}
+        self.tied_shelves = defaultdict(list)
 
-                print('Will iterate for: ', self.nr_objects_detected)
-                while i < self.nr_objects_detected:                    
-                    detected_object = objects_stored[i]
-                    object_name = detected_object.object_name
-                    object_class = detected_object.object_class
-                    object_height = detected_object.position_relative.z
-                    object_distance = detected_object.position_relative.y
-                    object_confidence = detected_object.confidence
-                    object_x_position = detected_object.position_relative.x
-                    box_top_left_x = detected_object.box_top_left_x
-                    box_top_left_y = detected_object.box_top_left_y
-                    box_width = detected_object.box_width
-                    box_height = detected_object.box_height
-                    position = ' '
-                    #print(f"Object: {object_name}, Height: {object_height}, Confidence: {object_confidence}")
-                    if object_name in self.object_details:
-                        pass
-                    else:
-                        if object_distance > 3.0:
-                            print(object_name, '- too far')
-                            print(object_height)
-                            
-                        elif self.shelf_1_height < object_height < self.shelf_2_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                            position = 'First shelf '
-                            print(object_name, 'is in the first shelf ')
-                            # print(object_x_position)
+        # Loop through each shelf-side combination
+        for key, class_count in self.shelf_side_class_counts.items():
+            # Find the most common class(es) and handle ties
+            most_common_classes = class_count.most_common()
+            highest_count = most_common_classes[0][1]
 
-                        elif self.shelf_2_height < object_height < self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                            position = 'Second shelf '
-                            print(object_name, 'is in the second shelf ')
-                            # print(object_x_position)
+            # Filter classes that have the highest count
+            tied_classes = [cls for cls, count in most_common_classes if count == highest_count]
 
-                        elif self.shelf_4_height > object_height > self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                            position = 'Third shelf '
-                            print(object_name, 'is in the third shelf ')
-                            # print(object_x_position)
-                        
-                        elif self.shelf_5_height > object_height > self.shelf_4_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                            position = 'Fourth shelf '
-                            print(object_name, 'is in the fourth shelf ')
-                            # print(object_x_position)
-
-                        elif self.shelf_6_height > object_height > self.shelf_5_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                            position = 'Fifth shelf '
-                            print(object_name, 'is in the fifth shelf ')
-                            # print(object_x_position)
-
-                        elif object_height > self.shelf_6_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
-                            position = 'Sixth shelf '
-                            print(object_name, 'is in the sixth shelf ')
-                            # print(object_x_position)
-
-                        else:
-                            print(object_name, '- none of the shelfs')
-                            print(object_height)
-                            
-                        """ if  self.center_shelf <= object_x_position <= self.right_limit_shelf :
-                            position += 'Right side '
-                            
-                        elif self.left_limit_shelf <= object_x_position < self.center_shelf :
-                            position += 'Left side '
-                            
-                        else:
-                            position += 'Outside shelf ' """
-                            
-                        if detected_object.object_class in self.object_position:
-                            self.object_position[detected_object.object_class].append(position)
-                        else:
-                            self.object_position[detected_object.object_class] = [position]
-
-                        #self.object_position[object_class] = position
+            if len(tied_classes) == 1:
+                # No tie, only one class has the highest count
+                most_common_class = tied_classes[0]
+                self.shelf_side_common_class[key] = most_common_class
+                attributed_classes.add(most_common_class)
+            else:
+                # Tie exists, mark as "tied" and store tied classes
+                # self.shelf_side_common_class[key] = "tied"
+                self.tied_shelves[key] = tied_classes
 
 
-                        print('object ', object_name, ' and confidence ', object_confidence)
+        # Second Pass: Resolve ties
+        for key, tied_classes in self.tied_shelves.items():
+            unassigned_class = None
+            for cls in tied_classes:
+                if cls not in attributed_classes:
+                    unassigned_class = cls
+                    break
 
-                    i += 1
+            if unassigned_class:
+                # Assign the unassigned class
+                self.shelf_side_common_class[key] = unassigned_class
+                attributed_classes.add(unassigned_class)
+            else:
+                # Keep the tie if all classes are already attributed
+                self.shelf_side_common_class[key] = "tied"
 
-                # Código para dizer 'tal classe está em tal prateleira'
+        # Print the results
+        print("Common classes per shelf-side combination:")
+        print(self.shelf_side_common_class)
+        print("\nTied classes per shelf-side combination:")
+        print(dict(self.tied_shelves))
+        print('\n')
+        # for key, class_count in self.shelf_side_class_counts.items():
+        #     most_common_class, count = class_count.most_common(1)[0]
+        #     self.shelf_side_common_class[key] = most_common_class
 
-                print('objects position:', self.object_position)
-                object_x_values = {}
 
-                # Dictionary to store filtered values
-                filtered_objects_position = {}
 
-                # Loop through the original dictionary
-                for key, values in self.object_position.items():
-                    # Use set to remove duplicates and then convert back to list
-                    unique_values = list(set(values))
-                    # If there's only one unique value, use that
-                    if len(unique_values) == 1:
-                        filtered_objects_position[key] = unique_values[0]
+        # Output results
+        for key, common_class in self.shelf_side_common_class.items():
+            shelf, side = key
+            print(f"Shelf {shelf}, Side {side} - Most Common Class: {common_class}")
+            print(f"Objects cabinet: {[obj.object_name for obj in self.shelf_side_objects[key]]}")
 
-                print("Filtered objects position:", filtered_objects_position)
 
-                # Iterate through the objects and store object_x values for each class
-                for obj in objects:
-                    obj_class = obj.object_class
-                    object_x = obj.position_relative.x
-                    if obj_class not in object_x_values:
-                        object_x_values[obj_class] = []
-                    object_x_values[obj_class].append(object_x)
+        # for obj in filtered_objects:
+        #     if obj.position_relative.x < half:
+        #         self.objects_left_side.append(obj)
 
-                # Print object_x values for each class
-                for obj_class, x_values in object_x_values.items():
-                    #print(f"{obj_class} object_x values:")
-                    i = 0
-                    average_x_values = 0
-                    for x in x_values:
-                        i +=1
-                        print(f"  - {x}")
-                        average_x_values += x
-                    average_x_values = average_x_values / i
-                    #print(f"average: {average_x_values}")
+        #         if self.shelf_1_height < obj.position_relative.z < self.shelf_2_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_first_shelf_ls.append(obj)
+        #             print(obj.object_name, 'is in the first shelf in the left side')
+        #             # print(object_x_position)
+
+        #         elif self.shelf_2_height < obj.position_relative.z < self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_second_shelf_ls.append(obj)
+        #             print(obj.object_name, 'is in the second shelf in the left side')
+        #             # print(object_x_position)
+
+        #         elif self.shelf_4_height > obj.position_relative.z > self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_third_shelf_ls.append(obj)
+        #             print(obj.object_name, 'is in the third shelf in the left side')
+        #             # print(object_x_position)
                 
-                # Organize objects by position
-                objects_by_position = {}
-                for obj_class, position in filtered_objects_position.items():
-                    if position not in objects_by_position:
-                        objects_by_position[position] = []
-                    objects_by_position[position].append(obj_class)
+        #         elif self.shelf_5_height > obj.position_relative.z > self.shelf_4_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_fourth_shelf_ls.append(obj)
+        #             print(obj.object_name, 'is in the fourth shelf in the left side')
+        #             # print(object_x_position)
+
+        #         elif self.shelf_6_height > obj.position_relative.z > self.shelf_5_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_fifth_shelf_ls.append(obj)
+        #             print(obj.object_name, 'is in the fifth shelf in the left side')
+        #             # print(object_x_position)
+
+        #         elif obj.position_relative.z > self.shelf_6_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_sixth_shelf_ls.append(obj)
+        #             print(obj.object_name, 'is in the sixth shelf in the left side')
+        #             # print(object_x_position)
+
+        #     else:
+        #         self.objects_right_side.append(obj)
+        #         print(obj.object_name, 'is in the right side')
                 
-                for position, obj_classes in objects_by_position.items():
-                    print(f"\nObjects in {position}:")
-                    for obj_class in obj_classes:
-                        if obj_class in object_x_values:
-                            x_values = object_x_values[obj_class]
-                            print(f"{obj_class} object_x values:")
-                            i = 0
-                            average_x_values = 0
-                            for x in x_values:
-                                i +=1
-                                print(f"  - {x}")
-                                average_x_values += x
-                            average_x_values = average_x_values / i
-                            print(f"  Average: {average_x_values}")
-                        else:
-                            print(f"No object_x values found for class {obj_class}")
-                    
+        #         if self.shelf_1_height < obj.position_relative.z < self.shelf_2_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_first_shelf_rs.append(obj)
+        #             print(obj.object_name, 'is in the first shelf is in the right side')
+        #             # print(object_x_position)
 
-                # Dictionary to store average x values for each class and shelf
-                average_values_by_shelf = {}
+        #         elif self.shelf_2_height < obj.position_relative.z < self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_second_shelf_rs.append(obj)
+        #             print(obj.object_name, 'is in the second shelf is in the right side')
+        #             # print(object_x_position)
 
-                # Iterate through the objects and store object_x values for each class
-                for obj in objects:
-                    obj_class = obj.object_class
-                    object_x = obj.position_relative.x
-                    position = filtered_objects_position.get(obj_class)
-                    if position:
-                        if position not in average_values_by_shelf:
-                            average_values_by_shelf[position] = {}
-                        if obj_class not in average_values_by_shelf[position]:
-                            average_values_by_shelf[position][obj_class] = []
-                        average_values_by_shelf[position][obj_class].append(object_x)
-                        print('average values by shelf', average_values_by_shelf)
-
-    
-
-                # Initialize variables to store reference x values
-                left_reference_x = None
-                right_reference_x = None
-                left_reference_x = -0.5
-                right_reference_x = 0.05
-
-                # Initialize variable for single class average x
-                single_class_average_x = None
-
-                for shelf, class_values in average_values_by_shelf.items():
-                    average_values_by_shelf[shelf] = dict(sorted(class_values.items(), key=lambda item: len(item[1]), reverse=True))
-
-                # Sort the shelves based on the total number of classes they contain
-                sorted_shelves = dict(sorted(average_values_by_shelf.items(), key=lambda item: len(item[1]), reverse=True))
-
-                print('sorted shelves ', sorted_shelves)
-
-                average_values_by_shelf = sorted_shelves
-
-                positions_in_cabinet = {}
-
-                # Iterate through the average values for each shelf
-                for shelf, class_values in average_values_by_shelf.items():
-                    print(f"\nShelf: {shelf}")
-
-                    # Get class names and average x values
-                    class_names = list(class_values.keys())
-                    average_x_values = [sum(x_values) / len(x_values) for x_values in class_values.values()]
-
-                    left_reference_x = -0.5
-                    right_reference_x = 0.05
-
-                    if len(average_x_values) == 2:
-                        # If two classes and reference x values are not yet established, determine left or right side and store reference x values
-                        if left_reference_x is None and right_reference_x is None:
-                            if average_x_values[0] > average_x_values[1]:
-                                print(f'{class_names[1]} - left side')
-                                print(f'{class_names[0]} - right side')
-                                left_reference_x = average_x_values[1]
-                                right_reference_x = average_x_values[0]
-                                positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
-                                positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
-                            else:
-                                print(f'{class_names[1]} - right side')
-                                print(f'{class_names[0]} - left side')
-                                left_reference_x = average_x_values[0]
-                                right_reference_x = average_x_values[1]
-                                positions_in_cabinet[class_names[0]] = f"{shelf} Left side"
-                                positions_in_cabinet[class_names[1]] = f"{shelf} Right side"
-                        else:
-                            if average_x_values[0] > average_x_values[1]:
-                                print(f'{class_names[1]} - left side')
-                                print(f'{class_names[0]} - right side')
-                                positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
-                                positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
-                            else:
-                                print(f'{class_names[0]} - right side')
-                                print(f'{class_names[1]} - left side')
-                                positions_in_cabinet[class_names[1]] = f"{shelf} Left side"
-                                positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
-                    elif len(average_x_values) == 1:
-                        # If only one class, compare with reference x values
-                        if left_reference_x is not None and right_reference_x is not None:
-                            single_class_average_x = average_x_values[0]
-                            if abs(single_class_average_x - left_reference_x ) < self.shelf_length / 3:
-                                print(f"{class_names[0]} - left side")
-                                positions_in_cabinet[class_names[0]] = f"{shelf} Left side"
-                            elif abs(single_class_average_x - right_reference_x ) < self.shelf_length / 3:
-                                print(f"{class_names[0]} - right side")
-                                positions_in_cabinet[class_names[0]] = f"{shelf} Right side"
-                        else:
-                            print("Not enough data to determine position")
-                    else:
-                        # If three classes, print a message indicating the situation is strange
-                        print("Strange situation: Three classes present")
-                    
-
-                print(positions_in_cabinet)
-                self.object_position = positions_in_cabinet
-    
-                keywords = []
-
-                self.classes_detected_wardrobe.clear()
-
-                class_name_array = []
-                nr_classes_detected = 0
-
-                for position in positions_in_cabinet.values():
-                    keywords = position.split()  # Split each position string into words and extend the keywords list
-
-                    # Initialize filenames
-                    class_filename = None
-                    location_filename = None
-
-                    # Iterate over object_position_mapping
-                    for condition, object_location in object_position_mapping.items():
-                        # Check if all keywords in the condition are in the current position
-                        if all(keyword in keywords for keyword in condition):
-                            # Get the class name associated with the current position
-                            class_name = [class_name for class_name, pos in positions_in_cabinet.items() if pos == position][0]
-                            if class_name not in class_name_array:
-                                class_name_array.append(class_name)
-                            print('Class name:', class_name)
-                            print('All class names', class_name_array)
-                            self.classes_detected_wardrobe.append(class_name)
-                            print(self.classes_detected_wardrobe)
-                            nr_classes_detected = len(class_name_array)
-                            print('Nr classes detected: ', nr_classes_detected)
-                            location_filename = f"storing_groceries/{object_location}"
-                            class_filename = f"objects_classes/{class_name}"
-                            break
-
+        #         elif self.shelf_4_height > obj.position_relative.z > self.shelf_3_height: #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_third_shelf_rs.append(obj)
+        #             print(obj.object_name, 'is in the third shelf is in the right side')
+        #             # print(object_x_position)
                 
-                            
-                return nr_classes_detected
-    
+        #         elif self.shelf_5_height > obj.position_relative.z > self.shelf_4_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_fourth_shelf_rs.append(obj)
+        #             print(obj.object_name, 'is in the fourth shelf is in the right side')
+        #             # print(object_x_position)
+
+        #         elif self.shelf_6_height > obj.position_relative.z > self.shelf_5_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_fifth_shelf_rs.append(obj)
+        #             print(obj.object_name, 'is in the fifth shelf is in the right side')
+        #             # print(object_x_position)
+
+        #         elif obj.position_relative.z > self.shelf_6_height:  #and self.left_limit_shelf < object_x_position < self.right_limit_shelf :
+        #             self.objects_sixth_shelf_rs.append(obj)
+        #             print(obj.object_name, 'is in the sixth shelf is in the right side')
+        #             # print(object_x_position)      
+
+            
     def load_image_one_object(self, obj_name, obj):
         # Construct the filename for the image
         image_name = f"image_{obj_name}.jpg"
@@ -1470,77 +1646,118 @@ class StoringGroceriesMain():
     # else:
     #     print("Error: Image not found.")
 
-    def detect_table_objects(self):
-        i = 0
-        nr_objects_high_priority_detected = 0
-        self.detected_object = []
-
-        for name, class_name in self.node.objects_classNames_dict.items():
-            if class_name in self.classes_detected_wardrobe:
-                self.priority_dict[class_name] = 'High'
-                print(class_name + ' High')
-            else:
-                self.priority_dict[class_name] = 'Low'
-                print(class_name + ' Low')
-
-        # if hasattr(self.node, 'image') and self.node.image:
-        #     if hasattr(self.node, 'objects') and self.node.objects:
-
-        five_objects_detected = False
-        detect_object = []
-        
-        list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
-        while not five_objects_detected:
-            
-            self.activate_yolo_objects(activate_objects=True)
-            finished_detection = False
-
-            for pos in list_of_neck_position_search:
-
-                print(pos)
-                new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
-                #new_neck_pos = [ pos[0],  pos[1]]
-                print('Neck: ', new_neck_pos)
-                self.set_neck(position=new_neck_pos, wait_for_end_of=True)
-                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-                time.sleep(1)
-
-                # finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=False)    
-
-                self.objects_stored = self.node.objects
-                self.nr_objects_detected = self.node.nr_objects
-                self.current_image = self.node.image
-                bridge = CvBridge()
-                # Convert ROS Image to OpenCV image
-                cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-                self.image_objects_detected = cv_image
-                current_frame_draw = self.image_objects_detected
-                print('Will iterate for: ', self.nr_objects_detected)
-                nr_objects_high_priority_detected = 0
-                i = 0
-                for detected_objects in self.objects_stored:
-                    print(detected_objects.object_name, detected_objects.object_class)
-                    if detected_objects.object_name in detect_object:
-                        pass
-                    else:
-                        detect_object.append(self.objects_stored) 
-                        if self.priority_dict[detected_objects.object_class] == 'High':
-                            nr_objects_high_priority_detected += 1
-                            print('Nr objects high: ', nr_objects_high_priority_detected)
-
-                        print('Object ' + detected_objects.object_name + ' from class ' + detected_objects.object_class + ' has ' + self.priority_dict[detected_objects.object_class] + 'priority')
-
-                    i += 1
-
-                print(i)
-                if nr_objects_high_priority_detected >= 5:
-                    print(self.objects_stored)
-                    five_objects_detected = True
-                    self.set_rgb(command=GREEN+BLINK_LONG)
+    def analysis_table(self, table_objects):
+        objects_choosed = []
+        for obj in table_objects:
+            if obj.object_class in self.high_priority_class:
+                print('Object table high priority:', obj.object_name)
+                objects_choosed.append(obj)
+                if len(objects_choosed) == 5:
                     break
-                self.set_rgb(command=RED+BLINK_LONG)
+            if len(objects_choosed) == 5:
+                break
+            
+        if len(objects_choosed) < 5:
+            for obj in table_objects:
+                if obj.object_class in self.medium_priority_class:
+                    print('Object table medium priority:', obj.object_name)
+                    objects_choosed.append(obj)
+                    if len(objects_choosed) == 5:
+                        break
+                if len(objects_choosed) == 5:
+                    break
+        
+        if len(objects_choosed) < 5:
+            for obj in table_objects:
+                print('Object table low priority:', obj.object_name)
+                objects_choosed.append(obj)
+                if len(objects_choosed) == 5:
+                    break
+           
+        
+        # if len(objects_choosed) < 5:
+        #     for obj in table_objects:
+        #         print('Object table:', obj.object_name)
+        #         if obj.object_class not in self.medium_priority_class and obj.object_class not in self.high_priority_class:
+        #             objects_choosed.append(obj)
+        #             if len(objects_choosed) == 5:
+        #                 break
+        #         if len(objects_choosed) == 5:
+        #             break
+           
+        return objects_choosed
 
-        return nr_objects_high_priority_detected
+    # def detect_table_objects(self):
+    #     i = 0
+    #     nr_objects_high_priority_detected = 0
+    #     self.detected_object = []
+
+    #     for name, class_name in self.node.objects_classNames_dict.items():
+    #         if class_name in self.classes_detected_wardrobe:
+    #             self.priority_dict[class_name] = 'High'
+    #             print(class_name + ' High')
+    #         else:
+    #             self.priority_dict[class_name] = 'Low'
+    #             print(class_name + ' Low')
+
+    #     # if hasattr(self.node, 'image') and self.node.image:
+    #     #     if hasattr(self.node, 'objects') and self.node.objects:
+
+    #     five_objects_detected = False
+    #     detect_object = []
+        
+    #     list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
+    #     while not five_objects_detected:
+            
+    #         self.activate_yolo_objects(activate_objects=True)
+    #         finished_detection = False
+
+    #         for pos in list_of_neck_position_search:
+
+    #             print(pos)
+    #             new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
+    #             #new_neck_pos = [ pos[0],  pos[1]]
+    #             print('Neck: ', new_neck_pos)
+    #             self.set_neck(position=new_neck_pos, wait_for_end_of=True)
+    #             self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
+    #             time.sleep(1)
+
+    #             # finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=False)    
+
+    #             self.objects_stored = self.node.objects
+    #             self.nr_objects_detected = self.node.nr_objects
+    #             self.current_image = self.node.image
+    #             bridge = CvBridge()
+    #             # Convert ROS Image to OpenCV image
+    #             cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
+    #             self.image_objects_detected = cv_image
+    #             current_frame_draw = self.image_objects_detected
+    #             print('Will iterate for: ', self.nr_objects_detected)
+    #             nr_objects_high_priority_detected = 0
+    #             i = 0
+    #             for detected_objects in self.objects_stored:
+    #                 print(detected_objects.object_name, detected_objects.object_class)
+    #                 if detected_objects.object_name in detect_object:
+    #                     pass
+    #                 else:
+    #                     detect_object.append(self.objects_stored) 
+    #                     if self.priority_dict[detected_objects.object_class] == 'High':
+    #                         nr_objects_high_priority_detected += 1
+    #                         print('Nr objects high: ', nr_objects_high_priority_detected)
+
+    #                     print('Object ' + detected_objects.object_name + ' from class ' + detected_objects.object_class + ' has ' + self.priority_dict[detected_objects.object_class] + 'priority')
+
+    #                 i += 1
+
+    #             print(i)
+    #             if nr_objects_high_priority_detected >= 5:
+    #                 print(self.objects_stored)
+    #                 five_objects_detected = True
+    #                 self.set_rgb(command=GREEN+BLINK_LONG)
+    #                 break
+    #             self.set_rgb(command=RED+BLINK_LONG)
+
+    #     return nr_objects_high_priority_detected
 
     def choose_place_object_wardrobe(self, counter): 
         object_ = self.selected_objects[counter]
@@ -1579,9 +1796,33 @@ class StoringGroceriesMain():
             pass
         self.object_counter += 1
 
-    def choose_priority(self):
+    def choose_priority(self, objects):
         # Este nível fica para a versão 1. Para a versão 0 faço ver o que está na prateleira, guardar essas classes e ficam essas como high
         
+        # print(self.shelf_side_objects.values())
+        print(self.shelf_side_objects.keys())
+
+        print('\n')
+
+
+        # Check if object is in self.shelf_side_objects with keys having shelf 2 or 3
+        for obj in objects:
+            found = any(
+                obj in obj_list
+                for key, obj_list in self.shelf_side_objects.items()
+                if key[0] in (2, 3, 4)  # Only consider shelves 2, 3 and 4
+            )
+            if found:
+                print(f"{obj.object_name} is in self.shelf_side_objects for shelf 2, 3 or 4")
+                if obj.object_class not in self.high_priority_class:
+                    self.high_priority_class.append(obj.object_class)
+                    # print(obj.object_class + ' High')
+            else:
+                print(f"{obj.object_name} is NOT in self.shelf_side_objects for shelf 2, 3 or 4")
+                if obj.object_class not in self.medium_priority_class:
+                    self.medium_priority_class.append(obj.object_class)
+
+
         """ i = 0
         if hasattr(self.node, 'image') and self.node.image:
             if hasattr(self.node, 'objects') and self.node.objects:
@@ -1614,13 +1855,17 @@ class StoringGroceriesMain():
 
                     i += 1 """
         
-        for name, class_name in self.node.objects_classNames_dict.items():
-            if class_name in self.classes_detected_wardrobe:
-                self.priority_dict[class_name] = 'High'
-                print(class_name + ' High')
-            else:
-                self.priority_dict[class_name] = 'Low'
-                print(class_name + ' Low')
+        # for name, class_name in self.node.objects_classNames_dict.items():
+        #     if class_name in self.classes_detected_wardrobe:
+        #         self.priority_dict[class_name] = 'High'
+        #         print(class_name + ' High')
+        #     else:
+        #         self.priority_dict[class_name] = 'Low'
+        #         print(class_name + ' Low')
+
+
+
+        
       
     def select_voice_audio(self, object):
         print('dentro')
@@ -1705,7 +1950,7 @@ class StoringGroceriesMain():
 
         # print(f"Saved image with rectangle for object {detected_object.object_name} as {image_name}")
         
-    def plot_histograms(self):
+    def plot_histograms(self, data):
         height, width = 780, 1280
         image = np.zeros((height, width), dtype=np.uint8)
         image2 = np.zeros((height, width), dtype=np.uint8)
@@ -1716,28 +1961,12 @@ class StoringGroceriesMain():
         # Real-world dimensions (in meters)
         min_width_meters = -3.0
         max_width_meters = 3.0
-        min_height_meters = -2.0
-        max_height_meters = 2.0
+        min_height_meters = -2.5
+        max_height_meters = 2.5
         min_height_meters_y = 5.0
         max_height_meters_y = 0.0
 
-        # Coordinates to plot (x, y, z)
-        coordinates = [
-            ("Banana", -0.24, 1.95, -0.96),
-            ("Cheezit", -0.81, 0.93, -0.66),
-            ("Sugar", 0.29, 1.88, -0.53),
-            ("Strawberry Jello", 0.14, 1.96, -0.52),
-            ("7Up", 0.39, 1.78, 0.35),
-            ("Orange", -0.26, 2.15, -1.0),
-            ("Tomato Soup", 0.39, 1.74, 0.38),
-            ("Pringles", -0.4, 1.92, -0.03),
-            ("Cornflakes", -0.23, 1.91, -0.07),
-            ("Mustard", 0.96, 1.69, -0.32),
-            ("Cheezit", 1.64, 1.84, -0.3),
-            ("Red Wine", 0.19, 1.81, 0.45),
-            ("Tropical Juice", 0.11, 2.02, 0.41),
-            ("Spam", -0.41, 1.94, -0.02)
-        ]
+        coordinates = data
 
         # Function to convert real-world coordinates to image coordinates
         
@@ -1747,69 +1976,333 @@ class StoringGroceriesMain():
             
 
         # Plot points on the image
-        for name, x, y, z in coordinates:
-            img_x = int((x - min_width_meters) / (max_width_meters - min_width_meters) * width)
+        for obj in coordinates:
+            img_x = int((obj.position_relative.x - min_width_meters) / (max_width_meters - min_width_meters) * width)
             # Scale y from (-max_height, max_height) to (0, img_height)
-            img_y = height - int((y - min_height_meters_y) / (max_height_meters_y - min_height_meters_y) * height)
+            img_y = height - int((obj.position_relative.y - min_height_meters_y) / (max_height_meters_y - min_height_meters_y) * height)
     
-            img_z = height - int((z - min_height_meters) / (max_height_meters - min_height_meters) * height)
+            img_z = height - int((obj.position_relative.z - min_height_meters) / (max_height_meters - min_height_meters) * height)
             
             img_x = center_x + (img_x - center_x)
             img_y = center_y - (img_y - center_y)
-            img_z = center_y - (img_z - center_y)
+            img_z = center_y + (img_z - center_y)
             cv2.circle(image, (img_x, img_z), 5, (255, 255, 255), -1)  # Draw white points
-            cv2.putText(image, name, (img_x + 5, img_z - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            y_coordinates_front_view.append(img_z)
+            cv2.putText(image, obj.object_name, (img_x + 5, img_z - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            y_coordinates_front_view.append(img_x)
             
             cv2.circle(image2, (img_x, img_y), 5, (255, 255, 255), -1)  # Draw white points
-            cv2.putText(image2, name, (img_x + 5, img_y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            cv2.putText(image2, obj.object_name, (img_x + 5, img_y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
             y_coordinates_top_view.append(img_y)
 
-            
+ 
+        # Plot histogram for front view (x-coordinates)
+        """ ####
+        1280 pixeis -> 600 centimetros
+        600 / 120 = 5 cm
+        5 cm -> 10,7 pixeis
 
-
-        # Display the image
-        cv2.imshow("Front view of cabinet", image)
-        cv2.waitKey(100)
-        #cv2.destroyAllWindows()
-        
-        # Display the image
-        cv2.imshow("Top view of cabinet", image2)
-        cv2.waitKey(100)
-        #cv2.destroyAllWindows()
-        
-        # Plot histogram for front view (y-coordinates)
+        logo uso 18 vizinhos para perceber se a deteção do armário está top (porque o armário mede 90cm)
+        #### """
+        bins_front = 120
         plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_front_view, bins=20, range=(0, height), color='blue', alpha=0.7)
-        plt.title("Histogram of Y-coordinates in Front View")
-        plt.xlabel("Pixel Y-coordinate")
+        plt.hist(y_coordinates_front_view, bins=bins_front, range=(0, width), color='blue', alpha=0.7)
+        plt.title("Histogram of X-coordinates in Front View")
+        plt.xlabel("Pixel X-coordinate")
         plt.ylabel("Frequency")
         plt.grid(True)
         plt.savefig('histogram_front_view.png')
         plt.close()
 
-        # Plot histogram for top view (y-coordinates)
+        # Calculate the histogram and find peaks for front view
+        hist_front, bins_front = np.histogram(y_coordinates_front_view, bins=bins_front, range=(0, width))
+        threshold = np.max(hist_front) * 0.8
+        peak_indices_front = np.where(hist_front >= threshold)[0]
+
+        # Define the range of neighbors to consider
+        neighbor_ranges = [(2, 17), (17, 2), (9, 9)]
+
+        # Store neighbor counts for front view peaks
+        neighbor_counts_front = {}
+
+        # Initialize variables to track the best peak and its associated neighbor range
+        best_peak_index_front = None
+        highest_count_across_peaks_front = 0
+        best_neighbor_range_front = None
+        left_bound_front = None
+        right_bound_front = None
+        left_bound_final_front = None
+        right_bound_final_front = None
+
+        for index in peak_indices_front:
+            best_range_front = None
+            highest_sum_front = 0
+            neighbor_counts = []
+
+            for left, right in neighbor_ranges:
+                start_index_front = max(0, index - left)
+                end_index_front = min(len(hist_front) - 1, index + right)
+                total_frequency = np.sum(hist_front[start_index_front:end_index_front + 1])
+
+                # Calculate number of objects in this range
+                left_bound_front_current = bins_front[start_index_front]
+                right_bound_front_current = bins_front[end_index_front + 1]
+                objects_in_range_front = np.sum((y_coordinates_front_view >= left_bound_front_current) & (y_coordinates_front_view < right_bound_front_current))
+
+                neighbor_counts.append(objects_in_range_front)
+
+                if total_frequency > highest_sum_front:
+                    highest_sum_front = total_frequency
+                    best_range_front = (start_index_front, end_index_front)
+                    left_bound_front = left_bound_front_current
+                    right_bound_front = right_bound_front_current
+
+            # Store neighbor counts for this peak index
+            neighbor_counts_front[index] = neighbor_counts
+
+            # Find the highest count across all neighbor ranges for this peak index
+            max_count_for_peak_front = max(neighbor_counts)
+            
+            # Check if this peak index has a higher count than previously found peaks
+            if max_count_for_peak_front > highest_count_across_peaks_front:
+                highest_count_across_peaks_front = max_count_for_peak_front
+                best_peak_index_front = index
+                
+                # Determine which neighbor range had the highest count for this peak index
+                best_neighbor_range_index_front = np.argmax(neighbor_counts)
+                best_neighbor_range_front = neighbor_ranges[best_neighbor_range_index_front]
+                left_bound_final_front = left_bound_front
+                right_bound_final_front = right_bound_front
+
+        # Print the best peak and its highest count and selected neighbor range
+        print('--------------------')
+        print(f"Best peak in front view histogram: {bins_front[best_peak_index_front]}")
+        print(f"Highest count: {highest_count_across_peaks_front}")
+        print(f"Selected neighbor range: {best_neighbor_range_front}")
+        print(f"Left bound of selected range: {left_bound_final_front}")
+        print(f"Right bound of selected range: {right_bound_final_front}")
+        print("Neighbor counts for front view peaks:")
+        for index, counts in neighbor_counts_front.items():
+            print(f"Peak at bin {bins_front[index]}: {counts}")
+
+        """ ####
+        720 pixeis -> 500 centimetros
+        500 / 50 = 5 cm
+        5 cm -> 7,2 pixeis
+
+        logo uso 6 vizinhos para perceber se a deteção do armário está top (porque o armário mede 30cm em profundidade)
+        #### """
+        
+        # Plot histogram for top view (z-coordinates)
+        bins_top = 144
         plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_top_view, bins=20, range=(0, height), color='green', alpha=0.7)
-        plt.title("Histogram of Y-coordinates in Top View")
-        plt.xlabel("Pixel Y-coordinate")
+        plt.hist(y_coordinates_top_view, bins=bins_top, range=(0, height), color='green', alpha=0.7)
+        plt.title("Histogram of Z-coordinates in Top View")
+        plt.xlabel("Pixel Z-coordinate")
         plt.ylabel("Frequency")
         plt.grid(True)
         plt.savefig('histogram_top_view.png')
         plt.close()
-        
+
+        # Calculate the histogram
+        hist_top, bins_top = np.histogram(y_coordinates_top_view, bins=bins_top, range=(0, height))
+
+        # Determine the threshold for peak detection
+        threshold = np.max(hist_top) * 0.8
+        peak_indices_top = np.where(hist_top >= threshold)[0]
+
+        # Define the range of neighbors to consider
+        neighbor_ranges = [(2, 8), (8, 2), (5, 5)]
+
+        # Initialize variables to track best peak and its properties
+        best_peak_index_top = None
+        highest_neighbor_count_top = 0
+        selected_neighbor_range_top = None
+        neighbor_counts_top = {}
+        left_bound_top = None
+        right_bound_top = None
+        left_bound_final = 0
+        right_bound_final = 0
+
+        # Loop through each peak index identified in the histogram
+        for index in peak_indices_top:
+            best_range_top = None
+            highest_sum_top = 0
+            neighbor_counts = []
+
+            # Evaluate different neighbor ranges for this peak index
+            for left, right in neighbor_ranges:
+                start_index_top = max(0, index - left)
+                end_index_top = min(len(hist_top) - 1, index + right)
+                
+                # Calculate total frequency in the current range
+                total_frequency = np.sum(hist_top[start_index_top:end_index_top + 1])
+
+                # Calculate number of objects in this range
+                left_bound_top_current = bins_top[start_index_top]
+                right_bound_top_current = bins_top[end_index_top + 1]
+                objects_in_range_top = np.sum((y_coordinates_top_view >= left_bound_top_current) & (y_coordinates_top_view < right_bound_top_current))
+
+                neighbor_counts.append(objects_in_range_top)
+
+                # Track the highest total frequency and its associated range
+                if total_frequency > highest_sum_top:
+                    highest_sum_top = total_frequency
+                    best_range_top = (start_index_top, end_index_top)
+                    left_bound_top = left_bound_top_current  # Update left bound
+                    right_bound_top = right_bound_top_current  # Update right bound
+
+            # Store neighbor counts for this peak
+            neighbor_counts_top[index] = neighbor_counts
+
+            # Check for the highest count within neighbor counts
+            max_count = max(neighbor_counts)
+            if max_count > highest_neighbor_count_top:
+                highest_neighbor_count_top = max_count
+                best_peak_index_top = index
+                selected_neighbor_range_top = neighbor_ranges[np.argmax(neighbor_counts)]
+                left_bound_final = left_bound_top
+                right_bound_final = right_bound_top
+
+
+        # Print the results
+        print('--------------------')
+        print(f"Best peak in top view histogram: {bins_top[best_peak_index_top]}")
+        print(f"Highest count: {highest_neighbor_count_top}")
+        print(f"Selected neighbor range: {selected_neighbor_range_top}")
+        print(f"Left bound of selected range: {left_bound_final}")
+        print(f"Right bound of selected range: {right_bound_final}")
+        print("Neighbor counts for top view peaks:")
+        for index, counts in neighbor_counts_top.items():
+            print(f"Peak at bin {bins_top[index]}: {counts}")
+
+
+        # Filter coordinates to keep only those within the common range
+        filtered_coordinates = []
+        for obj in coordinates:
+            img_x = int((obj.position_relative.x - min_width_meters) / (max_width_meters - min_width_meters) * width)
+            img_y = height - int((obj.position_relative.y - min_height_meters_y) / (max_height_meters_y - min_height_meters_y) * height)
+            img_z = height - int((obj.position_relative.z - min_height_meters) / (max_height_meters - min_height_meters) * height)
+
+            img_x = center_x + (img_x - center_x)
+            img_y = center_y - (img_y - center_y)
+            img_z = center_y + (img_z - center_y)
+            # print('name:', obj.object_name)
+            # print('- :', img_x, img_y, img_z)
+            # print('- :', left_bound_front, right_bound_front, left_bound_top, right_bound_top)
+
+            if left_bound_final_front <= img_x <= right_bound_final_front and left_bound_final <= img_y <= right_bound_final:
+                # print('- :', obj.object_name)
+                filtered_coordinates.append(obj)
+
+        # Plotting the peak regions in histograms
+        plt.figure(figsize=(10, 6))
+        plt.hist(y_coordinates_front_view, bins=bins_front, range=(0, width), color='blue', alpha=0.7)
+        plt.axvline(left_bound_final_front, color='red', linestyle='--', linewidth=2, label='Left Bound')
+        plt.axvline(right_bound_final_front, color='green', linestyle='--', linewidth=2, label='Right Bound')
+        plt.title("Histogram of X-coordinates in Front View with Peak Region")
+        plt.xlabel("Pixel X-coordinate")
+        plt.ylabel("Frequency")
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('histogram_front_view_peak.png')
+        plt.close()
+
+        plt.figure(figsize=(10, 6))
+        plt.hist(y_coordinates_top_view, bins=bins_top, range=(0, height), color='green', alpha=0.7)
+        plt.axvline(left_bound_final , color='red', linestyle='--', linewidth=2, label='Left Bound')
+        plt.axvline(right_bound_final, color='green', linestyle='--', linewidth=2, label='Right Bound')
+        plt.title("Histogram of Z-coordinates in Top View with Peak Region")
+        plt.xlabel("Pixel Z-coordinate")
+        plt.ylabel("Frequency")
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('histogram_top_view_peak.png')
+        plt.close()
+
         time.sleep(1)
         # Load and display the saved histogram images using OpenCV
-        hist_front_view = cv2.imread('histogram_front_view.png')
-        hist_top_view = cv2.imread('histogram_top_view.png')
-        
-        cv2.imshow("Histogram of Y-coordinates in Front View", hist_front_view)
+        hist_front_view_peak = cv2.imread('histogram_front_view_peak.png')
+        hist_top_view_peak = cv2.imread('histogram_top_view_peak.png')
+
+        cv2.imshow("Top view of cabinet", image2)
+        cv2.waitKey(100)
+
+        cv2.imshow("Histogram of Z-coordinates in Top View with Peak Region", hist_top_view_peak)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-        cv2.imshow("Histogram of Y-coordinates in Top View", hist_top_view)
+        cv2.imshow("Front view of cabinet", image)
+        cv2.waitKey(100)
+
+        cv2.imshow("Histogram of X-coordinates in Front View with Peak Region", hist_front_view_peak)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+
+        print(f"Front view: {left_bound_front} to {right_bound_front}")
+        print(f"Top view: {left_bound_top} to {right_bound_top}")
+
+        # Return the filtered coordinates
+        return filtered_coordinates
+
+    def choose_place_arm(self, shelf, side):
+        use_arm = False
+        
+        height_arm = 0.0
+        if side == 'left':
+            print('left side')
+            if shelf == 1:
+                print('first shelf')
+                use_arm = False
+            elif shelf == 2:
+                print('second shelf')
+                height_arm = self.shelf_2_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_second_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+            elif shelf == 3:
+                print('third shelf')
+                height_arm = self.shelf_3_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_third_shelf_left_side", adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+            elif shelf == 4:
+                print('fourth shelf')
+                height_arm = self.shelf_4_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_fourth_shelf_left_side", adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+
+        elif side == 'right':
+            print('right side')
+            if shelf == 1:
+                print('first shelf') 
+                use_arm = False
+            elif shelf == 2:
+                print('second shelf')
+                height_arm = self.shelf_2_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_second_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+            elif shelf == 3:
+                print('third shelf')
+                height_arm = self.shelf_3_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_third_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+            elif shelf == 4:
+                print('fourth shelf')
+                height_arm = self.shelf_4_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_fourth_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
+                use_arm = True
+
+        return use_arm
 
     def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
@@ -1819,6 +2312,88 @@ class StoringGroceriesMain():
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
+
+    def Rot(self, eixo, angulo):
+        ang_rad = angulo*math.pi/180.0
+        c = math.cos(ang_rad)
+        s = math.sin(ang_rad)
+        M = np.identity(4)
+        if (eixo == 'x' or eixo == 'X'):
+            M[1][1] = M[2][2] = c
+            M[1][2] = -s
+            M[2][1] = s
+        elif (eixo == 'y' or eixo == 'Y'):
+            M[0][0] = M[2][2] = c
+            M[0][2] = s
+            M[2][0] = -s
+        elif (eixo == 'z' or eixo == 'Z'):
+            M[0][0] = M[1][1] = c
+            M[0][1] = -s
+            M[1][0] = s
+        return M
+        
+    def Trans(self, tx, ty, tz):
+        M = np.identity(4)
+        M[0][3] = tx
+        M[1][3] = ty
+        M[2][3] = tz
+        return M
+
+    def transform(self, obj):
+        # C representa o ponto no espaço para onde eu quero transformar a base do braço do robô
+        # A matriz de transformação desde a  base do braço até ao centro do Robot pode ser representada por:
+        # T = Rot(z, 180) * Rot (x, -90) * Trans (3, -6, -110)
+        # a2 representa a translação desde a base do braço até ao centro do robô  (em cm)
+        # a1 representa a rotação sobre o eixo coordenadas x em -90º para alinhar os eixos coordenados
+        # a0 representa a rotação sobre o eixo coordenadas z em 180º para alinhar o eixo dos x 
+        # c representa o ponto (x,y,z) em relação ao centro do braço
+        
+        
+
+        ### nos numeros que chegam: x representa a frente do robô. y positivo vai para a esquerda do robô. z vai para cima no robô
+        ### nos numeros que saem: x vai para trás do robô. y vai para baixo no robô. z vai para a direita do robô
+        
+        
+        ### PARECE-ME QUE X E Z ESTÃO TROCADOS NO RESULTADO QUE TENHO EM RELAºÃO AO BRAÇO
+        print('\n\n')
+    
+        c = np.dot(np.identity(4), [0, 0, 0, 1])
+        # c = np.dot(np.identity(4), [90.0, -30.0, 105.0, 1])
+        ### ESTAS TRANSFORMAÇÕES SEGUINTES SÃO NECESSÁRIAS PORQUE O ROBOT TEM EIXO COORDENADAS COM Y PARA A FRENTE E X PARA A DIREITA E AS TRANSFORMAÇÕES DA CAMARA SÃO FEITAS COM X PARA A FRENTE Y PARA A ESQUERDA
+        new_x = 0.0
+        new_y = -0.0
+        new_z = obj * 1000
+        c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
+        print(f'Posição em relação ao solo:[{new_x:.2f}, {new_y:.2f}, {new_z:.2f}]')
+        a2 = self.Trans(30.0, -60.0, -1100.0)
+        a1 = self.Rot('x', -90.0)
+        a0 = self.Rot('z', 180.0)
+        T = np.dot(a0, a1)
+        T = np.dot(T, a2)
+        
+        #print('T', T)
+        
+        AA = np.dot(T, c)
+        
+        print('Ponto em relação ao braço:', AA)
+
+
+        # aux = AA[0]
+        # AA[0] = AA[2]
+        # AA[2] = aux
+
+        # AA[0] = AA[0] * 10
+        # AA[1] = AA[1] * 10
+        # AA[2] = AA[2] * 10
+        # my_formatted_list = [ '%.2f' % elem for elem in AA ]
+        ### VALOR DO Z ESTÀ INVERSO AO QUE EU DEVO PASSAR PARA O BRAÇO EM AA !!!
+        
+        # print('Ponto em relação ao braço:', AA)
+        # print('y = ', AA[1]*10)
+
+        print('\n\n')
+
+        return AA
 
     def main(self):
 
@@ -1851,60 +2426,188 @@ class StoringGroceriesMain():
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
 
+                data = []
+                real_data = []
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                # tetas = [[0, -45], [0, -30], [0, -15], [0, 0]]
-                # objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
-                
-                # print(self.node.filtered_objects_storing_groceries)
-                self.plot_histograms()       
-                while True:
-                    pass
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                height, width = 720, 1280
-                black_image = np.zeros((height, width), dtype=np.uint8)
+                tetas = [[0, -45], [0, -30], [0, -15], [0, 0]]
+                objects_found = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
 
-                print('waiting...')
-                while self.node.flag_storing_groceries_received == False:
-                    pass
-                time.sleep(2)
-                for o in self.node.filtered_objects_storing_groceries:
+                for o in objects_found:
+                    
                     print(o.index, o.object_name, "\t", 
                         round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), 
                         round(o.position_absolute.z, 2)) # round(o.box_center_x), round(o.box_center_y)
-                    black_image[round(o.box_center_y), round(o.box_center_x)] = 255
-
-                self.node.flag_storing_groceries_received = False
-                self.node.filtered_objects_storing_groceries.clear()
+                    name = o.object_name
+                    x = round(o.position_absolute.x, 2)
+                    y = round(o.position_absolute.y, 2)
+                    z = round(o.position_absolute.z, 2)
+                    obj_class = o.object_class
+                    # print('-- \n ', o.position_relative.z, '\n')
+                    data.append((name, x, y, z, obj_class))
+                    real_data.append(o)
                 
-                # Display the image
-                cv2.imshow("Black Image with White Points", black_image)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+                print('Nr de objetos: ', len(data))
 
-                # Optionally, save the image
-                # cv2.imwrite("black_image_with_white_points.png", black_image)
+                # print(self.node.filtered_objects_storing_groceries)
+                # print('waiting...')
+                # while self.node.flag_storing_groceries_received == False:
+                #     pass
+                # time.sleep(2)
+                
+                # for o in self.node.filtered_objects_storing_groceries:
+                    
+                #     print(o.index, o.object_name, "\t", 
+                #         round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), 
+                #         round(o.position_absolute.z, 2)) # round(o.box_center_x), round(o.box_center_y)
+                #     name = o.object_name
+                #     x = round(o.position_absolute.x, 2)
+                #     y = round(o.position_absolute.y, 2)
+                #     z = round(o.position_absolute.z, 2)
+                #     data.append((name, x, y, z))
+
+                # self.node.flag_storing_groceries_received = False
+                # self.node.filtered_objects_storing_groceries.clear()
+                # print('---', data)
+
+                filtered_objects = self.plot_histograms(real_data)
+
+                coord_y = 0.0
+                coord_z = 0.0
+                for obj in filtered_objects:
+                    coord_y += obj.position_relative.y
+                    coord_z += obj.position_relative.z
+                    print(obj.position_relative.y, obj.position_relative.z)
+
+                print('average depth: ', coord_y/len(filtered_objects))
+                print('average height: ', coord_z/len(filtered_objects))
+                distance_y_to_navigate = coord_y/len(filtered_objects) - 0.9
+                print('I must navigate for: ', distance_y_to_navigate)                
+
+                # for obj in filtered_objects:
+                #     print('Filtered objects:', obj.object_name)
+                print('nr de objetos filtrados: ', len(filtered_objects))
+
+                # self.objects_left_side = []
+                # self.objects_right_side = []
+                # self.objects_first_shelf_rs = []
+                # self.objects_first_shelf_ls = []
+                # self.objects_second_shelf_rs = []
+                # self.objects_second_shelf_ls = []
+                # self.objects_third_shelf_rs = []
+                # self.objects_third_shelf_ls = []
+                # self.objects_fourth_shelf_rs = []
+                # self.objects_fourth_shelf_ls = []
+                # self.objects_fifth_shelf_rs = []
+                # self.objects_fifth_shelf_ls = []
+                # self.objects_sixth_shelf_rs = []
+                # self.objects_sixth_shelf_ls = []
+                self.high_priority_class = []
+                self.medium_priority_class = []
+
+
+                self.analysis_cabinet(filtered_objects)
+
+                self.choose_priority(filtered_objects)
+
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_y_to_navigate, adjust_direction=0.0, wait_for_end_of=True)
+                #self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.15, adjust_direction=90.0, wait_for_end_of=True)
+
+                tetas = [[120, -30], [120, -15]]
+                objects_found_table = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+
+                print('Objects found on table: ')
+                for obj in objects_found_table:
+                    print(obj.object_name)
+
+                print('---------')
+
+                table_objects = self.analysis_table(objects_found_table)
+                print('Objects filtered from table: ')
+                for obj in table_objects:
+                    print(obj.object_name)
+
+
+                # print('High class:')
+                # for obj in self.high_priority_class:
+                #     print(obj)
+                
+                # print('Medium class:')
+                # for obj in self.medium_priority_class:
+                #     print(obj)
+
+
+                print('---', self.shelf_side_common_class.items())
+
+                self.set_neck(position=self.look_back, wait_for_end_of=False)
+
+                # self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
+                # time.sleep(10)
+                # self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                
+
+                # self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+
+                print('Choosed objects in table: ')
+                for obj in table_objects:
+                    print(obj.object_name, obj.object_class)
+
+                    # Output results
+                    for key, common_class in self.shelf_side_common_class.items():
+                        shelf, side = key
+                        print('Inside loop: ', shelf, side, common_class)
+                        # print(f"Shelf {shelf}, Side {side} - Most Common Class: {common_class}")
+                        # print(f"Objects: {[obj.object_name for obj in self.shelf_side_objects[key]]}")
+                        if obj.object_class == common_class:
+                            path_to_image = self.detected_object_to_face_path(object=obj, send_to_face=False)
+                            print(path_to_image)
+                            cf = self.node.br.imgmsg_to_cv2(obj.image_rgb_frame, "bgr8")
+
+                            cv2.rectangle(cf, (obj.box_top_left_x, obj.box_top_left_y), (obj.box_top_left_x + obj.box_width, obj.box_top_left_y + obj.box_height), (255,0,0), 2)
+
+
+                            cv2.imshow('table object', cf)
+                            cv2.waitKey(0) 
+                            print(f"{obj.object_name} goes to {shelf} shelf, {side} side")
+                            self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
+                            time.sleep(10)
+                            self.set_arm(command="close_gripper", wait_for_end_of=True)
+                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+                            self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
+                            self.set_rgb(command=GREEN+BLINK_LONG)
+                            use_arm = self.choose_place_arm(shelf, side)
+                            if use_arm == True:
+                                self.set_rgb(command=GREEN+BLINK_LONG)
+                                self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.3, adjust_direction=0.0, wait_for_end_of=True)
+                                self.set_arm(command="open_gripper", wait_for_end_of=True)
+                                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.3, adjust_direction=180.0, wait_for_end_of=True)
+                                self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
+                                self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+                                
+                                
+                            else:
+                                print(f'{obj.object_name} goes to the {shelf} shelf, on the {side} side')
+                                self.set_rgb(command=RED+BLINK_LONG)
+                            
+
+                        # else:
+                        #     print('resolver caso sem prioridade')
+
+                    
+                """ 
+                ### TO DO:
+                - COLOCAR ORIENTATE A FUNCIONAR DIREITINHO PARA FICAR A 0.0 GRAUS
+                - COLOCAR SPEECH PICK AND PLACE
+                - COLOCAR IMAGEM NA CARA
+                - TRATAR DE ABRIR A PORTA
+                - FAZER ADJUST EM X E Y COM ARMÁRIO
+                - RETIRAR POSIÇÃO INTERMÉDIA
+                - FAZER DICIONÁRIO DE ALTURAS PARA CADA OBJETO
+                - AO FECHAR MÃO, SE NÃO TIVER NADA AVANÇO PARA O SEGUINTE
+                """
                 while True:
                     pass
                 
@@ -1943,14 +2646,14 @@ class StoringGroceriesMain():
 
                 ###### MOVEMENT TO THE CABINET
 
-                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=False, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle= 85.0, flag_not_obs = True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
+                # # self.set_navigation(movement="rotate", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=False, wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle= 85.0, flag_not_obs = True, wait_for_end_of=True)
 
                 
 
@@ -1967,6 +2670,16 @@ class StoringGroceriesMain():
 
                 while nr_classes_detected < 2:
                     
+                    
+
+
+
+
+
+
+
+
+
 
                     print('\n \n \n \n')
 

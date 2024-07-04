@@ -40,7 +40,7 @@ class TestNode(Node):
 
         # path to save detected people in search for person
         home = str(Path.home())
-        midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+        midpath = "charmie_ws/src"
         self.complete_path_custom_face = home+'/'+midpath+'/'
 
         # Intel Realsense Subscribers
@@ -2203,9 +2203,11 @@ class RestaurantMain():
                 std_dev_aux = 0.0
                 lines_detected = False
                 for avg_depth, roi, y_diff, y_01, y_02, roi_depth in avg_depths:
+                    cv2.imwrite(self.node.complete_path_custom_face + '1' + ".jpg", roi_depth) 
                     cv2.imshow(f"ROI with Average Depth {avg_depth}", roi_depth)
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
+                    cv2.imwrite(self.node.complete_path_custom_face + '2' + ".jpg", roi) 
                     cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
@@ -2222,6 +2224,7 @@ class RestaurantMain():
                                 aux_ = avg_depth, roi, y_diff, y_01, y_02, roi_depth
                                 # print('depth', avg_depth)
 
+                cv2.imwrite(self.node.complete_path_custom_face + '3' + ".jpg", colored_depth_image) 
                 cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
@@ -2230,6 +2233,7 @@ class RestaurantMain():
                 print(lines_detected)
 
                 if lines_detected == True:
+                    cv2.imwrite(self.node.complete_path_custom_face + '4' + ".jpg", aux_[1]) 
                     cv2.imshow('Furthest plane: ', aux_[1])
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
@@ -2248,7 +2252,7 @@ class RestaurantMain():
 
                     # Draw a circle at the center of the ROI
                     cv2.circle(aux_[1], (roi_center_x, roi_center_y), radius, (0, 255, 0), -1)
-
+                    cv2.imwrite(self.node.complete_path_custom_face + '5' + ".jpg", aux_[1]) 
                     cv2.imshow('Furthest plane: ', aux_[1])
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
@@ -2323,7 +2327,7 @@ class RestaurantMain():
                     cv2.rectangle(colored_depth_image_2, (bb_2.box_top_left_x, bb_2.box_top_left_y), (bb_2.box_top_left_x + bb_2.box_width, bb_2.box_top_left_y + bb_2.box_height), (255, 0, 0), 2)
                     cv2.rectangle(colored_depth_image_2, (bb_3.box_top_left_x, bb_3.box_top_left_y), (bb_3.box_top_left_x + bb_3.box_width, bb_3.box_top_left_y + bb_3.box_height), (255, 0, 0), 2)
 
-
+                    cv2.imwrite(self.node.complete_path_custom_face + '6' + ".jpg", colored_depth_image_2) 
                     cv2.imshow("Original Image with Circles", colored_depth_image_2)
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
