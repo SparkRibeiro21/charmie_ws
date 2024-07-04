@@ -39,6 +39,7 @@ setup(
             "debug_yolos = charmie_debug.debug_yolos:main",
 		    "node_template = charmie_debug.node_template:main",
             "rosbag_2_video_converter = charmie_debug.rosbag_2_video_converter:main",
+            "save_video_for_dataset = charmie_debug.save_video_for_dataset:main",
 		    "task_template = charmie_debug.task_template:main"
         ],
     },

@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 
-from charmie_interfaces.msg import PS4Controller, NeckPosition
+from charmie_interfaces.msg import PS4Controller, NeckPosition, ArmController
 from charmie_interfaces.srv import SpeechCommand, SetNeckPosition
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, String
@@ -503,13 +503,15 @@ class ControllerNode(Node):
         return self.speech_success, self.speech_message
 
     # function to be called in tasks to send commands to arm
-    def set_arm(self, command="", wait_for_end_of=True):
+    def set_arm(self, command="", pose=[], adjust_position=0.0, wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
         self.waited_for_end_of_arm = False
         
-        temp = String()
-        temp.data = command
+        temp = ArmController()
+        temp.command = command
+        temp.adjust_position = adjust_position
+        temp.pose = pose
         self.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:
@@ -520,8 +522,7 @@ class ControllerNode(Node):
             self.arm_success = True
             self.arm_message = "Wait for answer not needed"
 
-        self.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
-
+        # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.arm_success, self.arm_message
 
 
