@@ -602,7 +602,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 40.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -622,7 +622,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 40.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -642,7 +642,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 40.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -662,7 +662,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 40.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -683,7 +683,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 40.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -704,7 +704,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 40.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -725,7 +725,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 40.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0

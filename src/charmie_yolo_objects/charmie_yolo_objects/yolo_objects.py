@@ -21,7 +21,7 @@ objects_filename = "segmentation_M_size_model_600_epochs.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
 # objects_filename = "lar_dataset_post_fnr2024.pt"
 shoes_filename = "shoes_socks_v1.pt"
-doors_filename = "door_bruno.pt"
+doors_filename = "door_bruno_2.pt"
 
 MIN_OBJECT_CONF_VALUE = 0.5
 MIN_SHOES_CONF_VALUE = 0.5
@@ -166,7 +166,7 @@ class Yolo_obj(Node):
         
         self.shoes_class_names = ['Shoe', 'Sock']    
         
-        self.doors_class_names = ['Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
+        self.doors_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
 
         self.objects_class_names_dict = {}
         self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
