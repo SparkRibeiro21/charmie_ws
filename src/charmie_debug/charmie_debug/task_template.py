@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # initial instructions:
 # this is an example of the layout code for a task in our workspace
 # It is used a threading system so the ROS2 functionalities are not blocked when executing the state machine
@@ -156,6 +154,7 @@ NEXT I PROVIDE AN EXAMPLE ON HOW THE CODE OF A TASK SHOULD BE MADE:
 # 20) TEST ALL SET NAVIGATION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
 """
+#!/usr/bin/env python3
 
 import rclpy
 from rclpy.node import Node
@@ -409,7 +408,6 @@ class ServeBreakfastNode(Node):
 
     def arm_finished_movement_callback(self, flag: Bool):
         # self.get_logger().info("Received response from arm finishing movement")
-        # self.arm_ready = True
         self.waited_for_end_of_arm = True
         self.arm_success = flag.data
         if flag.data:
