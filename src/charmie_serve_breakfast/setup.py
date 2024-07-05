@@ -23,10 +23,10 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		"serve_breakfast_1000_fnr = charmie_serve_breakfast.serve_breakfast_1000_fnr:main",
-		"serve_breakfast = charmie_serve_breakfast.serve_breakfast:main",
-		"serve_breakfast_pre_fnr = charmie_serve_breakfast.serve_breakfast_pre_fnr:main",
-		"serve_breakfast_template = charmie_serve_breakfast.serve_breakfast_template:main"
-        ],
+		"serve_breakfast_1000_fnr2024 = charmie_serve_breakfast.serve_breakfast_1000_fnr2024:main",
+		"serve_breakfast_just_milk_fnr2024 = charmie_serve_breakfast.serve_breakfast_just_milk_fnr2024:main",
+		"serve_breakfast_pre_fnr2024 = charmie_serve_breakfast.serve_breakfast_pre_fnr2024:main",
+		"serve_breakfast = charmie_serve_breakfast.serve_breakfast:main"
+		],
     },
 )

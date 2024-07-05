@@ -111,9 +111,6 @@ class ServeBreakfastNode(Node):
         # Navigation
         while not self.nav_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
-        # Face
-        while not self.face_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Face Command...")
         """
 
 
@@ -124,6 +121,9 @@ class ServeBreakfastNode(Node):
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
+        # Face
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
 
         # Variables
         self.waited_for_end_of_speaking = False
@@ -630,7 +630,7 @@ class ServeBreakfastMain():
             self.navigation_success = True
             self.navigation_message = "Arrived at selected location"
 
-        return self.node.navigation_success, self.node.navigation_message   
+        return self.node.navigation_success, self.node.navigation_message    
 
 
     def set_initial_position(self, initial_position):
@@ -691,21 +691,16 @@ class ServeBreakfastMain():
         self.Detect_milk = 2
         self.Picking_up_milk = 3
 
-        self.Approach_cornflakes_location = 4
-        self.Detect_cornflakes = 5
-        self.Picking_up_cornflakes = 6
-        
-        self.Approach_dishes_location = 7
-        self.Detect_dishes = 8
-        self.Picking_up_dishes = 9
+        self.Approach_dishes_location = 4
+        self.Detect_dishes = 5
+        self.Picking_up_dishes = 6
 
-        self.Approach_kitchen_table = 10
-        self.Placing_bowl = 11
+        self.Approach_kitchen_table = 7
+        self.Placing_bowl = 8
         
-        self.Placing_milk = 12
-        self.Placing_cornflakes = 13
-        self.Placing_spoon = 14
-        self.Final_State = 15
+        self.Placing_milk = 9
+        self.Placing_spoon = 10
+        self.Final_State = 11
         
 
 
@@ -734,16 +729,6 @@ class ServeBreakfastMain():
         self.midway_kitchen_counter = [-0.6, 8.0]
         self.kitchen_counter = [-0.6, 9.5]
 
-
-        self.door_kitchen_bedroom_inside = [-0.8, 8.2]
-        self.door_kitchen_bedroom_outside = [-4.2, 8.2]
-
-        self.door_kitchen_bedroom_outside2 = [-4.0, 7.5]
-        self.door_kitchen_bedroom_inside2 = [-1.5, 7.3]
-
-        self.intermedio_dishes_pour = [-0.6, 9.2] 
-
-
         self.cofee_table = [0.8, 3.5]
 
 
@@ -753,19 +738,12 @@ class ServeBreakfastMain():
         self.flag_object_total = [False, False] 
 
         
-        # only for milk
+        
         self.detect_object_total_milk = DetectedObject()
         self.images_of_detected_object_total_milk = Image()
         self.flag_object_total_milk = False 
 
         
-        # only for cornflakes
-        self.detect_object_total_cornflakes = DetectedObject()
-        self.images_of_detected_object_total_cornflakes = Image()
-        self.flag_object_total_cornflakes = False 
-
-
-
         self.state = self.Waiting_for_task_start
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
@@ -810,7 +788,18 @@ class ServeBreakfastMain():
                 self.set_navigation(movement="move", target=self.cofee_table, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
                 
+                """
+                self.set_navigation(movement="move", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
 
+                self.set_navigation(movement="rotate", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
+                """
 
                 self.set_speech(filename="serve_breakfast/arrived_at_coffee_table", wait_for_end_of=True)
                 
@@ -899,145 +888,7 @@ class ServeBreakfastMain():
                 self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
 
-                self.state = self.Approach_cornflakes_location
-
-
-            elif self.state == self.Approach_cornflakes_location:
-
-
-
-                
-                self.set_navigation(movement="move", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
-
-                self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
-                
-                # temp só debug
-                # self.set_initial_position([self.inside_kitchen[0], self.inside_kitchen[1]-0.5, 0.0])
-                # print("SET INITIAL POSITION")
-
-                # time.sleep(3)
-
-                self.set_navigation(movement="rotate", target=self.door_kitchen_bedroom_inside, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.door_kitchen_bedroom_inside, flag_not_obs=True, wait_for_end_of=True)
-                
-                
-                self.set_navigation(movement="rotate", target=self.door_kitchen_bedroom_outside, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.door_kitchen_bedroom_outside, flag_not_obs=False, wait_for_end_of=True)
-
-                self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs = True, wait_for_end_of=True)
-                
-                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_direction=0.0, adjust_min_dist=0.50, wait_for_end_of=True)
-
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=8.0, adjust_direction=-90.0+360, wait_for_end_of=True)
-
-                self.set_navigation(movement="orientate", absolute_angle= 135.0, flag_not_obs = True, wait_for_end_of=True)
-
-
-
-                
-
-
-
-
-                """
-                self.set_navigation(movement="rotate", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                
-                self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
-                """
-
-
-
-
-
-                self.state = self.Detect_cornflakes
-
-            elif self.state == self.Detect_cornflakes:
-
-
-
-                self.search_for_cornflakes()
-
-                # This used to be here, but we lost a lot of time that the arm could be moving at the same time as we speak, so it has been changed to the 
-                # detection function, before speaking that the objects have been found
-                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
-
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                #self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-
-                self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=False)
-
-                # self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-                
-                # self.set_speech(filename="serve_breakfast/will_show_objects_one_by_one", wait_for_end_of=True)
-                
-                # already shows the detection for the next object while moving the arm from previous action, this way we save time
-                
-                self.set_face(custom=self.custom_face_filename + "cornflakes")
-
-                # self.set_speech(filename="serve_breakfast/found_the_spoon", wait_for_end_of=True)  
-                self.set_speech(filename="serve_breakfast/found_the_cornflakes", wait_for_end_of=True)  
-                
-                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
-
-                time.sleep(2.0)
-
-                
-
-                self.state = self.Picking_up_cornflakes
-                
-            elif self.state == self.Picking_up_cornflakes:
-
-
-                # post FNR2024: this is here to try to pick up the objects rather than using Deus Ex Machina 
-
-                self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
-
-                self.set_neck(position=self.look_judge, wait_for_end_of=True)    
-
-                self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                self.set_face("help_pick_cornflakes") 
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                time.sleep(self.wait_time_to_put_objects_in_hand) # waits for person to put object in hand
-                
-                
-                object_in_gripper = False
-                while not object_in_gripper:
-                
-                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object_cornflakes", wait_for_end_of=True)
-                    
-                    # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-                
-                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-                                        
-                
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True) # almost bumps into arm and is not necessary
-                
-                # self.set_face(custom=self.custom_face_filename + "cornflakes")
-
-                # self.set_speech(filename="serve_breakfast/found_the_cornflakes", wait_for_end_of=False)  
-                
-                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
-                
-                self.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
-                self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-
-
                 self.state = self.Approach_dishes_location
-
 
             elif self.state == self.Approach_dishes_location:
 
@@ -1047,23 +898,6 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=False)
 
-
-                self.set_navigation(movement="rotate", target=self.door_kitchen_bedroom_outside2, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.door_kitchen_bedroom_outside2, flag_not_obs=True, wait_for_end_of=True)
-
-                self.set_navigation(movement="rotate", target=self.door_kitchen_bedroom_inside2, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.door_kitchen_bedroom_inside2, flag_not_obs=False, wait_for_end_of=True)
-
-                self.set_navigation(movement="rotate", target=self.intermedio_dishes_pour, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.intermedio_dishes_pour, flag_not_obs=True, wait_for_end_of=True)
-
-                self.set_navigation(movement="orientate", absolute_angle= -90.0, flag_not_obs = True, wait_for_end_of=True)
-
-                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_distance=1.0, adjust_direction=0.0, adjust_min_dist=0.50, wait_for_end_of=True)
-
-                self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
-
-                """
                 self.set_navigation(movement="move", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
@@ -1073,7 +907,7 @@ class ServeBreakfastMain():
                 self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 
                 self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
-                """
+
 
                 self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=True)
                 
@@ -1178,10 +1012,6 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
-                self.set_navigation(movement="orientate", absolute_angle= -50.0, flag_not_obs = True, wait_for_end_of=True)
-
-
-                """
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=7.0, adjust_direction=135.0, wait_for_end_of=True)
 
                 self.set_navigation(movement="orientate", absolute_angle=-45.0, flag_not_obs=True, wait_for_end_of=True)
@@ -1189,7 +1019,7 @@ class ServeBreakfastMain():
                 self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_distance=1.0, adjust_direction=-45.0+360, adjust_min_dist=0.60, wait_for_end_of=True)
 
                 self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
-                """
+
 
                 # self.set_speech(filename="generic/place_object_table", wait_for_end_of=True)
 
@@ -1210,7 +1040,7 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
-                
+                """
                 self.state = self.Placing_cornflakes 
             
             elif self.state == self.Placing_cornflakes:
@@ -1233,7 +1063,7 @@ class ServeBreakfastMain():
                 ##### ARM PLACE OBJECT
                 self.set_arm(command="place_cereal_table", wait_for_end_of=True)
                 self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
-                
+                """
                 self.state = self.Placing_milk
            
             elif self.state == self.Placing_milk:
@@ -1363,7 +1193,7 @@ class ServeBreakfastMain():
                 break
 
             print("SEARCH TYPE 2")
-            """
+
             # SECOND TYPE OF SEARCH: ARM WITH SMALL ADJUSTEMENTS AND NECK WITH BIGGER ADJUSTEMENTS
             list_of_neck_position_search = [[0, 0], [15,10], [-15,10], [-15,-10], [15,-10]]
 
@@ -1409,138 +1239,12 @@ class ServeBreakfastMain():
             if all_objects_detected:
                 self.activate_yolo_objects(activate_objects=False)
                 break
-            """
+
             
             self.set_neck(position=self.look_judge, wait_for_end_of=False)
             # if i can not detect both times, i will ask the judge to move and rotate the objects I could not detect
             self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
             self.set_speech(filename="objects_names/milk", wait_for_end_of=False)  
-
-
-    def search_for_cornflakes(self):
-
-
-        # self.detect_object_total_cornflakes = DetectedObject()
-        # self.images_of_detected_object_total_cornflakes = Image()
-        # self.flag_object_total_cornflakes = False 
-
-
-        all_objects_detected = False
-
-        # TOTAL_OBJ = 4
-        # list_sb_objects=[
-        #     "spoon",
-        #     "milk",
-        #     "cornflakes",
-        #     "bowl"
-        # ]
-        self.look_table_special_cornflakes = [-45, -20]
-
-
-        while not all_objects_detected:
-
-            # FIRST TYPE OF SEARCH: JUST THE NECK WITH SMALL ADJUSTEMENTS
-            list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
-
-            self.activate_yolo_objects(activate_objects=True)
-            finished_detection = False
-            for pos in list_of_neck_position_search:
-
-                print(pos)
-                new_neck_pos = [self.look_table_special_cornflakes[0] + pos[0], self.look_table_special_cornflakes[1] + pos[1]]
-                self.set_neck(position=new_neck_pos, wait_for_end_of=True)
-                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-                # time.sleep(1)
-
-                finished_detection = self.detect_just_cornflakes(delta_t=2.0, with_hand=False)    
-                # finished_detection = self.detect_four_serve_breakfast_objects(delta_t=1.0, with_hand=False)    
-
-                if finished_detection:
-                    break
-
-                if self.flag_object_total_cornflakes:
-                    print("FINISHED!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    break
-
-            # if finished_detection:
-            #     self.set_neck(position=self.look_judge, wait_for_end_of=False)
-            #     # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-            #     self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-            #     self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
-            #     self.set_speech(filename="objects_names/spoon", wait_for_end_of=True)  
-            #     self.set_speech(filename="objects_names/milk", wait_for_end_of=True)  
-            #     self.set_speech(filename="objects_names/cornflakes", wait_for_end_of=True)  
-            #     self.set_speech(filename="objects_names/bowl", wait_for_end_of=True)  
-            #     all_objects_detected = True 
-
-            if self.flag_object_total_cornflakes:
-                self.create_image_just_cornflakes() 
-                # self.create_image_four_sb_objects_separately() 
-                # self.set_neck(position=self.look_judge, wait_for_end_of=False)
-                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-                # self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
-                # self.create_image_four_sb_objects_separately() 
-                all_objects_detected = True
-
-            if all_objects_detected:
-                self.activate_yolo_objects(activate_objects=False)
-                break
-
-            print("SEARCH TYPE 2")
-            """"
-            # SECOND TYPE OF SEARCH: ARM WITH SMALL ADJUSTEMENTS AND NECK WITH BIGGER ADJUSTEMENTS
-            list_of_neck_position_search = [[0, 0], [15,10], [-15,10], [-15,-10], [15,-10]]
-
-            self.activate_yolo_objects(activate_objects=True)
-            finished_detection = False
-            for pos in list_of_neck_position_search:
-                print(pos)
-                new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
-                self.set_neck(position=new_neck_pos, wait_for_end_of=True)
-                self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-                # time.sleep(1)
-
-                finished_detection = self.detect_just_cornflakes(delta_t=2.0, with_hand=False)    
-                # finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=True)    
-
-                if finished_detection:
-                    break
-
-                if self.flag_object_total_cornflakes:
-                    print("FINISHED!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    break
-
-            # if finished_detection:
-            #     self.set_neck(position=self.look_judge, wait_for_end_of=False)
-            #     self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-            #     self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-            #     self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
-            #     self.set_speech(filename="objects_names/spoon", wait_for_end_of=True)  
-            #     self.set_speech(filename="objects_names/milk", wait_for_end_of=True)  
-            #     self.set_speech(filename="objects_names/cornflakes", wait_for_end_of=True)  
-            #     self.set_speech(filename="objects_names/bowl", wait_for_end_of=True)  
-            #     all_objects_detected = True 
-
-            if self.flag_object_total_cornflakes:
-                self.create_image_just_cornflakes() 
-                # self.set_neck(position=self.look_judge, wait_for_end_of=False)
-                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-                # self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
-                # self.create_image_four_sb_objects_separately() 
-                all_objects_detected = True
-
-            if all_objects_detected:
-                self.activate_yolo_objects(activate_objects=False)
-                break
-
-            """
-            self.set_neck(position=self.look_judge, wait_for_end_of=False)
-            # if i can not detect both times, i will ask the judge to move and rotate the objects I could not detect
-            self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
-            self.set_speech(filename="objects_names/cornflakes", wait_for_end_of=False)  
-
 
     def search_for_serve_breakfast_objects(self):
 
@@ -1601,7 +1305,7 @@ class ServeBreakfastMain():
                 break
 
             print("SEARCH TYPE 2")
-            """
+
             # SECOND TYPE OF SEARCH: ARM WITH SMALL ADJUSTEMENTS AND NECK WITH BIGGER ADJUSTEMENTS
             list_of_neck_position_search = [[0, 0], [15,10], [-15,10], [-15,-10], [15,-10]]
 
@@ -1645,7 +1349,7 @@ class ServeBreakfastMain():
             if all_objects_detected:
                 self.activate_yolo_objects(activate_objects=False)
                 break
-            """
+
             self.set_neck(position=self.look_judge, wait_for_end_of=False)
             # if i can not detect both times, i will ask the judge to move and rotate the objects I could not detect
             self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
@@ -1808,85 +1512,6 @@ class ServeBreakfastMain():
             return False
         
 
-
-    def detect_just_cornflakes(self, delta_t, with_hand=False):
-
-        actual_object = "cornflakes"
-        actual_object_with_spaces = "CORNFLAKES "
-        # TOTAL_OBJ = 1
-
-        # self.detect_object_total_cornflakes = DetectedObject()
-        # self.images_of_detected_object_total_cornflakes = Image()
-        # self.flag_object_total_cornflakes = False 
-
-        detect_as = ["Cornflakes", "Strawberry_jello", "Chocolate_jello"] # detect as 'cornflakes'
-
-        detect_object = DetectedObject()
-        flag_object = False 
-
-        # print("WHAT?")
-        
-        start_time = time.time()
-        while (time.time() - start_time) < delta_t:        
-            local_detected_objects = self.node.detected_objects
-            for object in local_detected_objects.objects:
-                # for obj in range(TOTAL_OBJ):
-
-                print(object.object_name)
-
-                if object.object_name in detect_as:
-                    print("Decteting cornflakes")
-                    
-                    if self.MULTIPLE_IMAGES_FACE_SAME_TIME: # JOHANNES said that this is not the correct deus ex machina ask for help to help with handing over the objects
-                        if object.confidence > detect_object.confidence:
-                            # print(" - ", object.object_name, "-", object.confidence, "-", object.index)
-                            detect_object = object
-                            detect_object.object_name = actual_object
-                            flag_object = True
-                        
-                    if object.confidence > self.detect_object_total_cornflakes.confidence:
-                        print("INSIDEEEEEEEEE")
-                        self.detect_object_total_cornflakes = object
-                        self.detect_object_total_cornflakes.object_name = actual_object
-                        self.flag_object_total_cornflakes = True
-                        self.images_of_detected_object_total_cornflakes = local_detected_objects.image_rgb
-                        # flag_object_total_cornflakes
-            
-            local_detected_objects_hand = self.node.detected_objects_hand
-            for object in local_detected_objects_hand.objects:
-                # for obj in range(TOTAL_OBJ):
-                if object.object_name in detect_as:
-                    # print(object.object_name, "-", object.confidence, "-", object.index)
-
-                    # The hand objects can not be considered for the show the four objects in the same image case since the images are not the same
-                    # if object.confidence > detect_object[obj].confidence:
-                    #     # print(" - ", object.object_name, "-", object.confidence, "-", object.index)
-                    #     detect_object[obj] = object
-                    #     flag_object[obj] = True
-                    
-                    if object.confidence > self.detect_object_total_cornflakes.confidence:
-                        self.detect_object_total_cornflakes = object
-                        self.detect_object_total_cornflakes.object_name = actual_object
-                        self.flag_object_total_cornflakes = True
-                        self.images_of_detected_object_total_cornflakes = local_detected_objects_hand.image_rgb
-        
-        # for obj in range(TOTAL_OBJ):
-        #     print(actual_object_with_spaces[obj], "|", detect_object[obj].object_name, "-", detect_object[obj].confidence, "-", detect_object[obj].index, "-", flag_object[obj] )
-
-        # for obj in range(TOTAL_OBJ):
-        print(actual_object_with_spaces, "|", self.detect_object_total_cornflakes.object_name, "-", self.detect_object_total_cornflakes.confidence, "-", self.detect_object_total_cornflakes.index, "-", self.flag_object_total_cornflakes)
-
-        # print("FINAL:", all(flag_object))
-
-        if flag_object:
-            # self.create_image_four_sb_objects_same_time(local_detected_objects.image_rgb, detect_object) # sends the last image analysed 
-            # self.create_image_just_one_object(local_detected_objects.image_rgb, detect_object)
-            return True
-        else:
-            return False
-        
-
-
     def create_image_four_sb_objects_same_time(self, image, serve_breakfast_objects):
 
         current_frame = self.node.br.imgmsg_to_cv2(image, "bgr8")
@@ -2048,67 +1673,6 @@ class ServeBreakfastMain():
         cv2.putText(current_frame_draw, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
     
         cv2.imwrite(self.node.complete_path_custom_face + current_datetime + "milk" + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
-        
-        # time.sleep(0.5)
-        # self.set_face(custom=current_datetime)
-        # self.set_speech(filename="objects_names/"+list_sb_objects[i], wait_for_end_of=False)  
-        # time.sleep(3)
-    
-
-    def create_image_just_cornflakes(self):
-
-
-        # self.detect_object_total_cornflakes = DetectedObject()
-        # self.images_of_detected_object_total_cornflakes = Image()
-        # self.flag_object_total_cornflakes = False 
-        
-        # TOTAL_OBJ = 4
-        list_sb_objects = "cornflakes"
-
-        # same time for all obejcts
-        current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
-        self.custom_face_filename = current_datetime
-
-        # for i in range(TOTAL_OBJ):
-        current_frame = self.node.br.imgmsg_to_cv2(self.images_of_detected_object_total_cornflakes, "bgr8")
-        current_frame_draw = current_frame.copy()
-
-        thresh_h = 220
-        thresh_v = 220
-
-        x_min = 1280
-        x_max = 0
-        y_min = 720
-        y_max = 0
-
-        object = self.detect_object_total_cornflakes
-
-        if object.box_top_left_x < x_min:
-            x_min = object.box_top_left_x
-        if object.box_top_left_x+object.box_width > x_max:
-            x_max = object.box_top_left_x+object.box_width
-
-        if object.box_top_left_y < y_min:
-            y_min = object.box_top_left_y
-        if object.box_top_left_y+object.box_height > y_max:
-            y_max = object.box_top_left_y+object.box_height
-
-        start_point = (object.box_top_left_x, object.box_top_left_y)
-        end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
-        cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
-        # cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
-        
-        if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
-            start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
-        else:
-            start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
-            
-        text_size, _ = cv2.getTextSize(f"{object.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
-        text_w, text_h = text_size
-        cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
-        cv2.putText(current_frame_draw, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
-    
-        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + "cornflakes" + ".jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         
         # time.sleep(0.5)
         # self.set_face(custom=current_datetime)
