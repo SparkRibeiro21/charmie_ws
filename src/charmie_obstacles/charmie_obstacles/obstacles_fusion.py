@@ -20,7 +20,7 @@ class Robot():
     def __init__(self):
         print("New Robot Class Initialised")
 
-        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
         self.DEBUG_DRAW_IMAGE_OVERALL = False
         self.DEBUG_DRAW_JUST_CALCULATION_POINTS = True
         self.xc = 400

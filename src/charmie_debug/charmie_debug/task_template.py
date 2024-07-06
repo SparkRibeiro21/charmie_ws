@@ -1320,6 +1320,9 @@ class ServeBreakfastMain():
     def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
 
         final_objects = []
+        if not list_of_objects_detected_as:
+            list_of_objects_detected_as = [None] * len(list_of_objects)
+            
         mandatory_object_detected_flags = [False for _ in list_of_objects]
         # print(mandatory_object_detected_flags)
         DETECTED_ALL_LIST_OF_OBJECTS = False
@@ -1328,7 +1331,10 @@ class ServeBreakfastMain():
 
         merged_lists = []
         for obj, detected_as in zip(list_of_objects, list_of_objects_detected_as):
-            merged_lists.append([obj] + detected_as)
+            if detected_as != None:
+                merged_lists.append([obj] + detected_as)
+            else:
+                merged_lists.append([obj])
         merged_lists = [[item.replace(" ","_").lower() for item in sublist] for sublist in merged_lists]
         # print(merged_lists)
         # for merged_list in merged_lists:
