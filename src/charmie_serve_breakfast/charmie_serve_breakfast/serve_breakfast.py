@@ -100,6 +100,8 @@ class ServeBreakfastNode(Node):
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
+        # while not self.save_speech_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Save Speech Command...")
         # Audio
         # while not self.get_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Audio Server...")
@@ -792,6 +794,8 @@ class ServeBreakfastMain():
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
+        
+        wait_for_end_of=False
         
         self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
         
@@ -1547,23 +1551,20 @@ class ServeBreakfastMain():
         # Task Related Variables
 
         self.Waiting_for_task_start = 0
-
         self.Approach_milk_location = 1
         self.Detect_and_pick_milk = 2
-
         self.Approach_cornflakes_location = 3
         self.Detect_and_pick_cornflakes = 4
-        
         self.Approach_dishes_location = 5
         self.Detect_and_pick_dishes = 6
-
         self.Approach_kitchen_table = 7
-
         self.Placing_bowl = 8
         self.Placing_milk = 9
         self.Placing_cornflakes = 10
         self.Placing_spoon = 11
         self.Final_State = 12
+    
+        self.ATTEMPTS_AT_RECEIVING = 2
     
         # Neck Positions
         self.look_forward = [0, 0]
@@ -1577,7 +1578,7 @@ class ServeBreakfastMain():
         self.initial_position = [0.0, 0.1, 0.0]
 
         # Navigation Positions
-        self.front_of_door = [-0.5, 1.5] 
+        self.front_of_door = [-0.2, 1.5] 
         self.cofee_table = [-0.5, 2.5]
         self.side_table = [-0.5, 3.5]
         self.kitchen_counter = [-0.5, 4.5]
@@ -1599,7 +1600,7 @@ class ServeBreakfastMain():
 
         self.intermedio_dishes_pour = [-0.6, 9.2]
 
-        self.state = self.Waiting_for_task_start
+        self.state = self.Detect_and_pick_dishes
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
 
@@ -1675,7 +1676,7 @@ class ServeBreakfastMain():
 
                     object_in_gripper = False
                     gripper_ctr = 0
-                    while not object_in_gripper and gripper_ctr < 2:
+                    while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
                         
                         gripper_ctr += 1
                         
@@ -1688,7 +1689,13 @@ class ServeBreakfastMain():
                             self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                             
                             self.set_arm(command="open_gripper", wait_for_end_of=False)
-                                            
+
+                    if not object_in_gripper and gripper_ctr >= self.ATTEMPTS_AT_RECEIVING:
+
+                        self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                            
                 self.set_face("charmie_face")
 
                 self.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
@@ -1738,13 +1745,13 @@ class ServeBreakfastMain():
 
                     object_in_gripper = False
                     gripper_ctr = 0
-                    while not object_in_gripper and gripper_ctr < 2:
+                    while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
                         
                         gripper_ctr += 1
                         
                         self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                        object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                        object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object_cornflakes", wait_for_end_of=True)
                         
                         if not object_in_gripper:
                     
@@ -1752,6 +1759,12 @@ class ServeBreakfastMain():
                             
                             self.set_arm(command="open_gripper", wait_for_end_of=False)
 
+                    if not object_in_gripper and gripper_ctr >= self.ATTEMPTS_AT_RECEIVING:
+
+                        self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                            
                 self.set_face("charmie_face")
                     
                 self.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
@@ -1765,8 +1778,8 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=False)
 
-                self.set_navigation(movement="rotate", target=self.side_table, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.side_table, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=False, wait_for_end_of=True)
                 
                 self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
                 
@@ -1777,25 +1790,25 @@ class ServeBreakfastMain():
             elif self.state == self.Detect_and_pick_dishes:
 
                 object_in_gripper = False
-                
+                correct_object_bowl = DetectedObject()
+                correct_object_spoon = DetectedObject()
                 while not object_in_gripper:
 
-                    objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["fork", "knife"], ["Plate, Cup"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                    # objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, list_of_objects=["Spoon", "Bowl"], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                    objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["Fork", "Knife"],["Plate"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
                 
+                    for of in objects_found:
+                        if of.object_name.lower() == "bowl":
+                            correct_object_bowl = of
+                        elif of.object_name.lower() == "spoon":
+                            correct_object_spoon = of
 
-
-                    # fica a meio do sistema de receber os dois objetos - pedir para por no funilocopo
-
-
-
-
-
-
-                    self.detected_object_to_face_path(object=objects_found[0], send_to_face=True, bb_color=(0,0,255))
+                    # BOWL
+                    self.detected_object_to_face_path(object=correct_object_bowl, send_to_face=True, bb_color=(255,0,0))
 
                     self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                    self.set_speech(filename="serve_breakfast/found_the_cornflakes", wait_for_end_of=False)  
+                    self.set_speech(filename="serve_breakfast/found_the_bowl", wait_for_end_of=False)  
                     
                     self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
 
@@ -1803,13 +1816,13 @@ class ServeBreakfastMain():
 
                     self.set_arm(command="open_gripper", wait_for_end_of=False)
 
-                    self.set_face("help_pick_cornflakes") 
+                    self.set_face("help_pick_bowl") 
                     
                     self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                     object_in_gripper = False
                     gripper_ctr = 0
-                    while not object_in_gripper and gripper_ctr < 2:
+                    while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
                         
                         gripper_ctr += 1
                         
@@ -1823,128 +1836,55 @@ class ServeBreakfastMain():
                             
                             self.set_arm(command="open_gripper", wait_for_end_of=False)
 
-                self.set_face("charmie_face")
-                    
-                self.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
-                
-                self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    if not object_in_gripper and gripper_ctr >= self.ATTEMPTS_AT_RECEIVING:
 
-                self.state = self.Approach_dishes_location
+                        self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                            
+                self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                # self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=False)
-
-                # self.set_arm(command="search_for_objects", wait_for_end_of=True)
-
-                self.search_for_serve_breakfast_objects()
-
-                # This used to be here, but we lost a lot of time that the arm could be moving at the same time as we speak, so it has been changed to the 
-                # detection function, before speaking that the objects have been found
-                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
+                # BOWL
+                self.detected_object_to_face_path(object=correct_object_spoon, send_to_face=True, bb_color=(255,0,0))
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-
-                # self.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-                
-                # self.set_speech(filename="serve_breakfast/will_show_objects_one_by_one", wait_for_end_of=True)
-                
-                # already shows the detection for the next object while moving the arm from previous action, this way we save time
-                
-
-                self.state = self.Picking_up_dishes
-
-            elif self.state == self.Picking_up_dishes:
-
-                ### self.set_face(custom=self.custom_face_filename + "bowl")
-
-                self.set_speech(filename="serve_breakfast/found_the_bowl", wait_for_end_of=True)  
-                
-                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
-
-                self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
-
-                time.sleep(2.0)
-
-
-                # post FNR2024: this is here to try to pick up the objects rather than using Deus Ex Machina 
-
-                
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)    
-
-                self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                self.set_face("help_pick_bowl") 
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                time.sleep(self.wait_time_to_put_objects_in_hand) # waits for person to put object in hand
-                
-                object_in_gripper = False
-                while not object_in_gripper:
-                
-                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                    
-                    # object_in_gripper, m = self.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-                
-                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-                                        
-
-                ### self.set_face(custom=self.custom_face_filename + "spoon")
-                
                 self.set_speech(filename="serve_breakfast/found_the_spoon", wait_for_end_of=False)  
                 
-                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
-                
-                self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
 
                 time.sleep(5)
 
                 self.set_face(command="spoon_inside_traycup")
 
-
                 self.set_speech(filename="serve_breakfast/place_object_in_funilocopo", wait_for_end_of=True)
 
-            
-                time.sleep(3)
+                time.sleep(5)
 
-            
+                self.set_face("charmie_face")
 
                 self.state = self.Approach_kitchen_table
 
             elif self.state == self.Approach_kitchen_table:
 
-                self.set_face("charmie_face")
+                print("NAV PLACE")
+
+                while True:
+                    pass
+
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
+                self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=False, wait_for_end_of=True)
+                
+                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
+                
+                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=True)
+                
+                
+                
+                
                 self.set_navigation(movement="orientate", absolute_angle= -50.0, flag_not_obs = True, wait_for_end_of=True)
 
 
