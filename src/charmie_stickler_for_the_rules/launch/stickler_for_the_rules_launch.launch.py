@@ -97,8 +97,8 @@ def generate_launch_description():
                         )
     
     obstacles = Node(package='charmie_obstacles',
-                        executable='obstacles_lidar',
-                        name='obstacles_lidar',
+                        executable='obstacles_fusion',
+                        name='obstacles_fusion',
                         emulate_tty=True
                         )
     
