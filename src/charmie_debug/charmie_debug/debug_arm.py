@@ -35,7 +35,7 @@ class DebugArmNode(Node):
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
 
         # Arm CHARMIE
-        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
 
         ### Services (Clients) ###
