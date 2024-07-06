@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # initial instructions:
 # this is an example of the layout code for a task in our workspace
 # It is used a threading system so the ROS2 functionalities are not blocked when executing the state machine
@@ -156,6 +154,7 @@ NEXT I PROVIDE AN EXAMPLE ON HOW THE CODE OF A TASK SHOULD BE MADE:
 # 20) TEST ALL SET NAVIGATION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
 """
+#!/usr/bin/env python3
 
 import rclpy
 from rclpy.node import Node
@@ -211,7 +210,7 @@ class ServeBreakfastNode(Node):
         self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
         self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
         # Arm CHARMIE
-        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
         # Navigation
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
@@ -409,7 +408,6 @@ class ServeBreakfastNode(Node):
 
     def arm_finished_movement_callback(self, flag: Bool):
         # self.get_logger().info("Received response from arm finishing movement")
-        # self.arm_ready = True
         self.waited_for_end_of_arm = True
         self.arm_success = flag.data
         if flag.data:
@@ -1322,6 +1320,9 @@ class ServeBreakfastMain():
     def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
 
         final_objects = []
+        if not list_of_objects_detected_as:
+            list_of_objects_detected_as = [None] * len(list_of_objects)
+            
         mandatory_object_detected_flags = [False for _ in list_of_objects]
         # print(mandatory_object_detected_flags)
         DETECTED_ALL_LIST_OF_OBJECTS = False
@@ -1330,7 +1331,10 @@ class ServeBreakfastMain():
 
         merged_lists = []
         for obj, detected_as in zip(list_of_objects, list_of_objects_detected_as):
-            merged_lists.append([obj] + detected_as)
+            if detected_as != None:
+                merged_lists.append([obj] + detected_as)
+            else:
+                merged_lists.append([obj])
         merged_lists = [[item.replace(" ","_").lower() for item in sublist] for sublist in merged_lists]
         # print(merged_lists)
         # for merged_list in merged_lists:

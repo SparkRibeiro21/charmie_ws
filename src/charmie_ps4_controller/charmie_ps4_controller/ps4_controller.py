@@ -355,7 +355,7 @@ class ControllerNode(Node):
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         
         # Arm 
-        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
 
         ### Services (Clients) ###

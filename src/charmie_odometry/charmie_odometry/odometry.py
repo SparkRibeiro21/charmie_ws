@@ -6,6 +6,7 @@ from example_interfaces.msg import Bool
 from geometry_msgs.msg import Twist, TransformStamped, Pose2D, PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import Encoders
+from charmie_interfaces.srv import SetAcceleration
 import rclpy.time
 import tf2_geometry_msgs
 
@@ -314,6 +315,12 @@ class OdometryNode(Node):
 
         self.robot_localisation_publisher = self.create_publisher(Pose2D, "robot_localisation", 10)
         self.robot_localisation = Pose2D()
+
+        # for now this is here just to make sure the request for odometry is sent to a node that is already responding
+        # not being used for anythin else
+        self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+        while not self.set_acceleration_ramp_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Low Level...")
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
