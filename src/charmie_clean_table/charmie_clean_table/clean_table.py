@@ -95,11 +95,10 @@ class CleanTableNode(Node):
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         
-
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
-        # while not self.speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Speech Command...")
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
         # while not self.save_speech_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Save Speech Command...")
         # Audio
@@ -110,36 +109,24 @@ class CleanTableNode(Node):
         # Face
         # while not self.face_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Face Command...")
-        """
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        while not self.get_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-        while not self.set_neck_coordinates_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
-        while not self.neck_track_person_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
-        while not self.neck_track_object_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         # Yolos
-        while not self.activate_yolo_pose_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         while not self.activate_yolo_objects_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-        """
         # Arm (CHARMIE)
-        # while not self.arm_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
         # Navigation
-        # while not self.nav_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
         # Obstacles
-        # while not self.activate_obstacles_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
+        while not self.activate_obstacles_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
         # Point Cloud
-        # while not self.point_cloud_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Point Cloud...")
+        while not self.point_cloud_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud...")
         
         # Variables 
         self.waited_for_end_of_audio = False
@@ -806,6 +793,8 @@ class CleanTableMain():
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
+        
+        wait_for_end_of=False
         
         self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
         
@@ -1559,46 +1548,24 @@ class CleanTableMain():
     def main(self):
         
         # Task Related Variables
-        """
-        self.Waiting_for_task_start = 0
-        self.Approach_kitchen_counter = 1
-        self.Detect_all_objects = 2
-        self.Picking_up_spoon = 3
-        self.Picking_up_milk = 4
-        self.Picking_up_cornflakes = 5
-        self.Picking_up_bowl = 6
-        self.Approach_kitchen_table = 7
-        self.Placing_bowl = 8
-        self.Placing_cornflakes = 9
-        self.Placing_milk = 10
-        self.Placing_spoon = 11
-        self.Final_State = 12
-        """
 
         self.Waiting_for_task_start = 0
         self.Approach_kitchen_table = 1
-        self.Detect_all_objects = 2
-        self.Ask_to_place_all_objects_in_tray = 3
-        self.Approach_washing_machine = 4
-        
-        self.Open_rack = 5
+        self.Detect_and_pick_all_objects = 2
+        self.Approach_dishwasher = 3
+        self.Open_dishwasher_door = 4
+        self.Open_dishwasher_rack = 5
         self.Place_cup = 6
-        self.Close_rack = 7
-        
+        self.Place_bowl = 7
         self.Place_plate = 8
-        self.Place_bowl = 9
-
-        self.Place_cutlery = 10
-        self.Close_washing_machine = 11
-        self.Final_State = 12
-        
+        self.Place_cutlery1 = 9
+        self.Place_cutlery2 = 10
+        self.Close_dishwasher_rack = 11
+        self.Close_dishwasher_door = 12
+        self.Final_State = 13
 
         # Configurables
-        self.wait_time_to_put_objects_in_hand = 0
-        self.MULTIPLE_IMAGES_FACE_SAME_TIME = False
-
-        # Custom Faces:
-        self.custom_face_filename = "" 
+        self.ATTEMPTS_AT_RECEIVING = 2
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -1606,31 +1573,21 @@ class CleanTableMain():
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45] # temp while debugging! Correct value: [-45, -45], Debug Value [45, -45]
         self.look_tray = [0, -60]
+        self.search_tetas = [[-45, -45], [-45+10, -45+8], [-45-10, -45+8], [-45-10, -45-5], [-45+10, -45-5]]
 
         # Initial Position
         self.initial_position = [0.0, 0.1, 0.0]
 
         # Navigation Positions
-        self.front_of_door = [0.3, 2.5]
-        self.almost_kitchen = [1.5, 5.3]
-        self.inside_kitchen = [1.5, 6.8]
-        # self.cabinet = [-2.0, 7.5]
-        self.midway_kitchen_counter = [-0.2, 8.0]
-        self.kitchen_counter = [-0.2, 9.5]
+        self.front_of_door = [-0.2, 1.5] 
+        self.kitchen_table = [-0.5, 3.5]
+        self.dishwasher = [-1.0, 2.0]
 
 
-        # Detect Objects Variables
-        self.detect_object_total = [DetectedObject(), DetectedObject(), DetectedObject(), DetectedObject(), DetectedObject()]
-        self.images_of_detected_object_total = [Image(), Image(), Image(), Image(), Image()]
-        self.flag_object_total = [False, False, False, False, False] 
-
-        # to debug just a part of the task you can just change the initial state, example:
         self.state = self.Waiting_for_task_start
-        # self.state = self.Open_rack
 
-        ### DEBUG:
 
-        self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
+        self.node.get_logger().info("IN SERVE THE CLEAN THE TABLE MAIN")
 
         while True:
 
@@ -1643,6 +1600,8 @@ class CleanTableMain():
         
                 self.activate_yolo_objects(activate_objects=False)
 
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=False)
+
                 self.set_face("charmie_face")
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
@@ -1650,8 +1609,6 @@ class CleanTableMain():
                 self.set_speech(filename="clean_the_table/ready_start_ct", wait_for_end_of=True)
 
                 self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
-
-
 
                 self.wait_for_start_button()
                 
@@ -1663,52 +1620,30 @@ class CleanTableMain():
 
                 self.state = self.Approach_kitchen_table
 
+
             elif self.state == self.Approach_kitchen_table:
 
-                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=False)
+                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
-                
                 self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.midway_kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
+
+                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
                 
-                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True )
+                self.state = self.Detect_and_pick_all_objects
 
-                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_distance=1.0, adjust_direction=-45.0+360, adjust_min_dist=0.60, wait_for_end_of=True)
+            elif self.state == self.Detect_and_pick_all_objects:
 
-                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=True)
-                
-                self.state = self.Detect_all_objects
-
-            elif self.state == self.Detect_all_objects:
-
-                self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=False)
-
-                self.set_arm(command="search_for_objects", wait_for_end_of=True)
-
-                self.search_for_serve_breakfast_objects()
-
-                # This used to be here, but we lost a lot of time that the arm could be moving at the same time as we speak, so it has been changed to the 
-                # detection function, before speaking that the objects have been found
-                # self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=True)
-
-                self.state = self.Ask_to_place_all_objects_in_tray
-
-            elif self.state == self.Ask_to_place_all_objects_in_tray:
-
+                """
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                 self.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
 
                 # GET KNIFE
                 self.set_speech(filename="clean_the_table/found_the_knife", wait_for_end_of=True)  
-                self.set_face(custom=self.custom_face_filename + "knife")
+                ###self.set_face(custom=self.custom_face_filename + "knife")
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 time.sleep(3)
                 self.set_face(command="spoon_inside_traycup")
@@ -1717,7 +1652,7 @@ class CleanTableMain():
                 
                 # GET FORK
                 self.set_speech(filename="clean_the_table/found_the_fork", wait_for_end_of=True)  
-                self.set_face(custom=self.custom_face_filename + "fork")
+                ###self.set_face(custom=self.custom_face_filename + "fork")
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 time.sleep(3)
                 self.set_face(command="spoon_inside_traycup")
@@ -1726,7 +1661,7 @@ class CleanTableMain():
                 
                 # GET PLATE
                 self.set_speech(filename="clean_the_table/found_the_plate", wait_for_end_of=True)  
-                self.set_face(custom=self.custom_face_filename + "plate")
+                ###self.set_face(custom=self.custom_face_filename + "plate")
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 time.sleep(3)
                 self.set_speech(filename="clean_the_table/place_object_in_tray", wait_for_end_of=True)  
@@ -1734,7 +1669,7 @@ class CleanTableMain():
                 
                 # GET BOWL
                 self.set_speech(filename="clean_the_table/found_the_bowl", wait_for_end_of=True)  
-                self.set_face(custom=self.custom_face_filename + "bowl")
+                ###self.set_face(custom=self.custom_face_filename + "bowl")
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 time.sleep(3)
                 self.set_speech(filename="clean_the_table/place_object_in_tray", wait_for_end_of=True)  
@@ -1742,36 +1677,53 @@ class CleanTableMain():
                 
                 # GET CUP
                 self.set_speech(filename="clean_the_table/found_the_cup", wait_for_end_of=True)  
-                self.set_face(custom=self.custom_face_filename + "cup")
+                ###self.set_face(custom=self.custom_face_filename + "cup")
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 time.sleep(3)
                 self.set_speech(filename="clean_the_table/place_object_in_tray", wait_for_end_of=True)  
                 time.sleep(3)
 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=True)
+                """
 
-                self.state = self.Approach_washing_machine
+                self.Approach_dishwasher = 3
+                self.Open_dishwasher_door = 4
+                self.Open_dishwasher_rack = 5
+                self.Place_cup = 6
+                self.Place_bowl = 7
+                self.Place_plate = 8
+                self.Place_cutlery1 = 9
+                self.Place_cutlery2 = 10
+                self.Close_dishwasher_rack = 11
+                self.Close_dishwasher_door = 12
+                self.Final_State = 13
 
-            elif self.state == self.Approach_washing_machine:
+
+                self.state = self.Approach_dishwasher
+
+            elif self.state == self.Approach_dishwasher:
 
 
-                self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
-                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_distance=1.0, adjust_direction=0.0, adjust_min_dist=0.60, wait_for_end_of=True)
-
+                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.dishwasher, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.dishwasher, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
 
-                self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_distance=1.0, adjust_direction=45.0, adjust_min_dist=0.50, wait_for_end_of=True)
+                ### CENTER WITH DISHWASHER AND GET INTO POSITION
 
-                self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True )
+                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
 
+                self.state = self.Open_dishwasher_door
+
+
+            elif self.state == self.Open_dishwasher_door:
+
+                ### CODE HERE
 
                 self.state = self.Place_cup
 
-            elif self.state == self.Open_rack:
-
-
-                self.state = self.Place_cup
 
             elif self.state == self.Place_cup:
 
@@ -1780,47 +1732,55 @@ class CleanTableMain():
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                 self.set_arm(command="place_cup", wait_for_end_of=True)
-            
 
-
-
-
-
-
-
-
-                self.state = self.Final_State
-
-            elif self.state == self.Close_rack:
-            
-
-                self.state = self.Place_plate
-
-            elif self.state == self.Place_plate:
-            
+                ### CODE HERE
 
                 self.state = self.Place_bowl
 
+
             elif self.state == self.Place_bowl:
 
+                ### CODE HERE
 
-                self.state = self.Place_cutlery
-
-            elif self.state == self.Place_cutlery:
-
-
-                self.state = self.Close_washing_machine
-
-            elif self.state == self.Close_washing_machine:
+                self.state = self.Place_plate
 
 
+            elif self.state == self.Place_plate:
+
+                ### CODE HERE
+
+                self.state = self.Place_cutlery1
+
+
+            elif self.state == self.Place_cutlery1:
+
+                ### CODE HERE
+
+                self.state = self.Place_cutlery2
+
+
+            elif self.state == self.Place_cutlery2:
+
+                ### CODE HERE
+
+                self.state = self.Close_dishwasher_rack
+
+
+            elif self.state == self.Close_dishwasher_rack:
+
+                ### CODE HERE
+
+                self.state = self.Close_dishwasher_door
+
+
+            elif self.state == self.Close_dishwasher_door:
+
+                ### CODE HERE
 
                 self.state = self.Final_State 
-                
-            elif self.state == self.Final_State:
-                
 
-                # self.set_neck(position=self.look_judge) 
+
+            elif self.state == self.Final_State:
                 
                 self.set_speech(filename="clean_the_table/finished_ct", wait_for_end_of=False)
 

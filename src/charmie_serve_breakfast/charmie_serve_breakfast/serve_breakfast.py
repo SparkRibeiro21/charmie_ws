@@ -1549,7 +1549,6 @@ class ServeBreakfastMain():
     def main(self):
         
         # Task Related Variables
-
         self.Waiting_for_task_start = 0
         self.Approach_milk_location = 1
         self.Detect_and_pick_milk = 2
@@ -1564,6 +1563,7 @@ class ServeBreakfastMain():
         self.Placing_spoon = 11
         self.Final_State = 12
     
+        # Configurables
         self.ATTEMPTS_AT_RECEIVING = 2
         self.GET_MILK = False
         self.GET_CORNFLAKES = False
@@ -1573,7 +1573,7 @@ class ServeBreakfastMain():
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
-        self.look_table_objects = [-45, -45] # temp while debugging! Correct value: [-45, -45], Debug Value [45, -45]
+        self.look_table_objects = [-45, -45]
         self.look_tray = [0, -60]
         self.search_tetas = [[-45, -45], [-45+10, -45+8], [-45-10, -45+8], [-45-10, -45-5], [-45+10, -45-5]]
 
@@ -1587,7 +1587,9 @@ class ServeBreakfastMain():
         self.kitchen_counter = [-0.5, 4.5]
         self.kitchen_table = [-2.0, 5.5]
 
+
         self.state = self.Detect_and_pick_dishes
+
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
 
@@ -1878,7 +1880,7 @@ class ServeBreakfastMain():
 
                 self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.60, wait_for_end_of=True)
 
-                self.set_speech(filename="serve_breakfast/arrived_dishes_location", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
                 
                 self.set_neck(position=self.look_table_objects, wait_for_end_of=False)
                 
