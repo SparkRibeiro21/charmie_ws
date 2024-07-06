@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool, String
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
+from charmie_interfaces.msg import ArmController
 from charmie_interfaces.srv import ArmTrigger
 from functools import partial
 import math
@@ -14,7 +15,7 @@ class ArmUfactory(Node):
 		self.get_logger().info("Initialised my test Node")	
 
 		# ARM TOPICS
-		self.arm_command_subscriber = self.create_subscription(String, "arm_command", self.arm_command_callback, 10)
+		self.arm_command_subscriber = self.create_subscription(ArmController, "arm_command", self.arm_command_callback, 10)
 		self.flag_arm_finish_publisher = self.create_publisher(Bool, 'arm_finished_movement', 10)
 
 		# ARM SERVICES
@@ -88,6 +89,7 @@ class ArmUfactory(Node):
 
 		# initial debug movement 
 		self.next_arm_movement = "debug_initial"
+		self.adjust_position = 0.0
 
 		self.setup()
 		print('---------')
@@ -106,9 +108,11 @@ class ArmUfactory(Node):
 		return response
 
 
-	def arm_command_callback(self, move: String):
-		self.get_logger().info(f"Received movement selection: {move.data}")
-		self.next_arm_movement = move.data
+	def arm_command_callback(self, move: ArmController):
+		self.get_logger().info(f"Received movement selection: {move}")
+		self.next_arm_movement = move.command
+		self.adjust_position = move.adjust_position
+
 		self.movement_selection()
 		# this is used when a wrong command is received
 		if self.wrong_movement_received:

@@ -3,16 +3,12 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, Int16, String
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from geometry_msgs.msg import Pose, Point, Quaternion
-from charmie_interfaces.msg import RobotSpeech, ArmController
+from charmie_interfaces.msg import ArmController
 from charmie_interfaces.srv import ArmTrigger
-from std_srvs.srv import SetBool
 from functools import partial
-import numpy as np 
 import math
-
 import time
 
-import math
 
 class ArmUfactory(Node):
 	def __init__(self):
