@@ -75,7 +75,7 @@ class StoringGroceriesNode(Node):
         self.neck_to_coords_publisher = self.create_publisher(Pose2D, "neck_to_coords", 10)
 
         # Arm 
-        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
 
 

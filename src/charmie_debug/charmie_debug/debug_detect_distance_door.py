@@ -73,7 +73,7 @@ class TestNode(Node):
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)          
 
         # Arm 
-        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_value_publisher = self.create_publisher(Float32, 'arm_value', 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
         self.arm_pose_subscriber = self.create_subscription(ListOfFloats, 'arm_current_pose', self.get_arm_current_pose_callback, 10)

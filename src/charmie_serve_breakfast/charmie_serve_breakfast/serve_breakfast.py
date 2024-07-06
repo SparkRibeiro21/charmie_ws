@@ -96,13 +96,10 @@ class ServeBreakfastNode(Node):
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         
-
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
-        # while not self.speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Speech Command...")
-        # while not self.save_speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Save Speech Command...")
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
         # Audio
         # while not self.get_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Audio Server...")
@@ -111,36 +108,24 @@ class ServeBreakfastNode(Node):
         # Face
         # while not self.face_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Face Command...")
-        """
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        while not self.get_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-        while not self.set_neck_coordinates_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
-        while not self.neck_track_person_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
-        while not self.neck_track_object_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         # Yolos
-        while not self.activate_yolo_pose_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         while not self.activate_yolo_objects_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-        """
         # Arm (CHARMIE)
-        # while not self.arm_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        while not self.arm_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Arm Trigger Command...")
         # Navigation
-        # while not self.nav_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
         # Obstacles
-        # while not self.activate_obstacles_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
+        while not self.activate_obstacles_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
         # Point Cloud
-        # while not self.point_cloud_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Point Cloud...")
+        while not self.point_cloud_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud...")
         
         # Variables 
         self.waited_for_end_of_audio = False

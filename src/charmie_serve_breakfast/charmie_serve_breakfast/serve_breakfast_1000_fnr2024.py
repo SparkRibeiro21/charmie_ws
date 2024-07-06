@@ -45,7 +45,7 @@ class ServeBreakfastNode(Node):
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered_hand", self.object_detected_filtered_hand_callback, 10)
         # Arm 
-        self.arm_command_publisher = self.create_publisher(String, "arm_command", 10)
+        self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
         # Navigation
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
