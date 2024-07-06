@@ -148,12 +148,23 @@ class ArmUfactory(Node):
 		# INITIAL DEBUG MOVEMENT
 		self.secondary_initial_position_debug = [-214.8, 83.4, -65.0, -0.5, 74.9, 270.0] 
 
+		# self.inside_wardrobe_left_door = [-206.7, 55.7, -108.5, 36.7, 13.7, 298.2]
+		# self.inside_wardrobe_left_door_2 = [-209.4, 66.3, -124.0, -1.9, 35.1, 332.5]
+		# self.inside_wardrobe_left_door_3 = [-215.5, 48.3, -79.9, 10.8, 9.3, 314.0]
+
+		self.inside_wardrobe_left_door = [-211.1, 55.3, -115.5, 18.0, 36.0, 316.8]
+		self.inside_wardrobe_left_door_2 = [-210.7, 64.5, -136.5, 4.7, 57.1, 328.5]
+		
+
+		# self.wardrobe_left_door_outside = [-217.2, 88.2, -121.2, -1.0, 30.9, 317.8]
+		self.wardrobe_left_door_outside = [-213.5, 95.5, -147.2, -11.4, 60.9, 328.0]
+
 		# HELLO WAVING MOVEMENT
 		self.initial_position =       [-224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
 		self.first_waving_position =  [ -90.0,  -53.0,  -35.0,  154.0,  -20.9,  110.0] 
 		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0,  110.0] 
 		self.front_robot = 			  [ -191.7,   17.1,  -50.6,   164.9,   58.2,  97.0]
-		self.arm_check_right_door =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 131.8]
+		self.arm_check_right_door =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 221.8]
 		self.arm_check_left_door =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 106.3]
 
 
@@ -902,6 +913,68 @@ class ArmUfactory(Node):
 			print(arm_controller.pose)
 			self.arm_pose_publisher.publish(arm_controller)
 
+	def open_left_door_from_inside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_left_door)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_left_door_2)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def finish_open_left_door_from_inside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_left_door_outside)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def go_initial_position(self):
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.secondary_initial_position_debug)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			print('FEITO Abrir fechar garra')
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def movement_selection(self):
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
@@ -933,6 +1006,14 @@ class ArmUfactory(Node):
 			self.check_left_door()
 		elif self.next_arm_movement == "check_right_door":
 			self.check_right_door()
+		elif self.next_arm_movement == "finish_open_left_door_from_inside":
+			self.finish_open_left_door_from_inside()
+		elif self.next_arm_movement == "open_left_door_from_inside":
+			self.open_left_door_from_inside()
+		elif self.next_arm_movement == "go_initial_position":
+			self.go_initial_position()
+
+			
 
 		
 

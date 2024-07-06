@@ -2506,7 +2506,7 @@ class StoringGroceriesMain():
                 cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
                 cv2.rectangle(blank_image, (width//3, height//4), (width - width//3, height - height//4), (0, 255, 0), 3)
                 cv2.imshow("New Img Distance Inspection", blank_image)
-                cv2.waitKey(10)
+                cv2.waitKey(100)
 
             half_image_zero_or_near = False
             half_image_zero_or_near_err = 0.0
@@ -2650,54 +2650,88 @@ class StoringGroceriesMain():
                 left_door = False
                 print('Porta esquerda fechada creio eu')
 
-            
-            while True:
-                pass
-
-            
             # print(right_door, right_door_pose)
             arm_value = Float32()
 
+            tetas = [[0, 0]]
+            objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
+            for obj in objects_found:
+                if obj.object_name == 'Cabinet':
+                    cabinet_found = True
+                    cabinet_2 = obj
+                    print('Object found')
+
+            if cabinet_found:
+                cabinet_position_2 = cabinet_2.position_relative
+                distance_arm_to_cabinet = cabinet_position_2.x - 0.65
+                print('Cabinet detected')
+            else:
+                distance_arm_to_cabinet = cabinet_position.x - distance_y_to_center - 0.65
+                print('Cabinet not detected')
+
+            print('Arm distance to cabinet =', distance_arm_to_cabinet)
+
+            
+
             if right_door == True:
-                print('a')
-                print('desired height', new_height)
-                
-                self.node.arm_set_height_publisher.publish(new_height)
-                time.sleep(2)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                print('right door')
+                self.set_arm(command="check_right_door", wait_for_end_of=True)
 
-                # self.set_arm(command="change_height_front_robot_value", wait_for_end_of=True)
-                self.set_arm(command="change_height_front_robot_value", wait_for_end_of=True)
-                time.sleep(2)
+                distance_in_y_to_get_inside_cabinet = abs(distance_arm_to_cabinet) - 0.15
 
-                arm_value.data = 100.0
-                self.node.arm_value_publisher.publish(arm_value)
-                print(arm_value)
-                self.set_arm(command="go_front", wait_for_end_of=True)
-                time.sleep(2)
+                print('I will navigate in front for ', distance_in_y_to_get_inside_cabinet, 'meters')
 
-                self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                self.set_rgb(command=BLUE+BLINK_LONG)                
+
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_in_y_to_get_inside_cabinet, adjust_direction=0.0, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 time.sleep(1)
 
-                print('x do braço', self.node.arm_current_pose[0])
-                distance_to_close = object_x/1000 - self.node.arm_current_pose[0]/1000
-                distance_to_close = abs(distance_to_close) + 0.15
-                print('Distance I am from door', distance_to_close)
-                
-                
-                # print('move forward')
-                # arm_value.data = 100.0
-                # self.node.arm_value_publisher.publish(arm_value)
-                # print(arm_value)
-                # self.set_arm(command="go_front", wait_for_end_of=True)
+                self.set_arm(command="open_left_door_from_inside", wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                time.sleep(1)
 
+                self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
+                time.sleep(1)
+
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.35, adjust_direction=170.0, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                time.sleep(2)
+
+                self.set_arm(command="finish_open_left_door_from_inside", wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                time.sleep(1)
+
+                self.set_arm(command="go_initial_position", wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                time.sleep(1)
+                
+                # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.2, adjust_direction=180.0, wait_for_end_of=True)
+                # self.set_rgb(command=GREEN+BLINK_LONG)
+                # time.sleep(1)
+                
+
+                # self.set_arm(command="finish_open_left_door_from_inside", wait_for_end_of=True)
+                # time.sleep(1)
+
+                # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=180.0, wait_for_end_of=True)
+                # self.set_rgb(command=GREEN+BLINK_LONG)
+                # time.sleep(1)
+
+                # self.set_arm(command="go_initial_position", wait_for_end_of=True)
+                # time.sleep(1)
+
+               
+
+                while True:
+                    pass
 
                 ### Ver onde tenho braço em comparação ao ponto inicial detetado como sendo a porta. Quando o braço estiver para lá da porta,
                 ### inclino o braço com ângulo que a consiga pegar desde trás
                 
                 ### O VALOR DO TEMPO AQUI DEVERIA DEPENDER DA DISTÂNCIA A QUE ESTOU DO ARMÁRIO - OU SEJA EU SEI 
                 ### a DISTANCIA DO ARMÁRIO EM RELAÇÃO AO CENTRO DO ROBÔ, ENTÃO DEVERIA IR SEMPRE EM FRENTE TENDO ISSO EM CONTA
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_to_close, adjust_direction=0.0, wait_for_end_of=True)
-                time.sleep(2)
                 
                 self.set_arm(command="open_left_door_from_inside", wait_for_end_of=True)
                 time.sleep(1)
@@ -2742,6 +2776,12 @@ class StoringGroceriesMain():
                     pass
 
             elif left_door == True:
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                print('left door')
+                self.set_arm(command="check_left_door", wait_for_end_of=True)
+
+                while True:
+                    pass
 
                 print('a')
                 print('desired height', new_height)
@@ -3400,9 +3440,11 @@ class StoringGroceriesMain():
                 
                 """ 
                 ### TO DO:
+                Acrescentar posição intermédia após abrir porta antes de ir para initial position
+                ajustar posição de checkar se porta está aberta (mão está rodada e n devia)
+                Abrir porta lado drt
                 - COLOCAR SPEECH PICK AND PLACE ( adicionar fala de onde vou colocar o objeto )
-                - TRATAR DE ABRIR A PORTA
-                - FAZER ADJUST EM X E Y COM ARMÁRIO
+                - TRATAR DE ABRIR A PORTA (Tentar abrir a 45º + tratar de verificar distância à porta quando a tiro)
                 """
 
                 
