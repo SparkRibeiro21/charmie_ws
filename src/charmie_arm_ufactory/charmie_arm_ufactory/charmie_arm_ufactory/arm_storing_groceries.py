@@ -1,9 +1,9 @@
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool, Int16, String
-from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
+from example_interfaces.msg import Bool, Int16, String, Float32
+from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint, GetFloat32List
 from geometry_msgs.msg import Pose, Point, Quaternion
-from charmie_interfaces.msg import RobotSpeech, ArmController
+from charmie_interfaces.msg import RobotSpeech, ArmController, ListOfFloats
 from charmie_interfaces.srv import ArmTrigger
 from std_srvs.srv import SetBool
 from functools import partial
@@ -27,6 +27,7 @@ class ArmUfactory(Node):
 		self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
 		self.set_joint_client = self.create_client(MoveJoint, '/xarm/set_servo_angle')
 		self.motion_enable_client = self.create_client(SetInt16ById, '/xarm/motion_enable')
+		self.get_position_client = self.create_client(GetFloat32List, '/xarm/get_position')
 		self.set_mode_client = self.create_client(SetInt16, '/xarm/set_mode')
 		self.set_state_client = self.create_client(SetInt16, '/xarm/set_state')
 		self.set_gripper_enable = self.create_client(SetInt16, '/xarm/set_gripper_enable')
@@ -39,6 +40,8 @@ class ArmUfactory(Node):
 		#self.plan_pose_client = self.create_client(PlanPose, '/xarm_pose_plan')
 		#self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
 		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
+
+		self.arm_pose_publisher = self.create_publisher(ArmController, 'arm_current_pose', 10)
   		
 		while not self.move_tool_line.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server move_tool_line...")
@@ -46,6 +49,9 @@ class ArmUfactory(Node):
 	
 		while not self.set_position_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Position...")
+		
+		while not self.get_position_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Get Arm Position...")
 
 		while not self.set_joint_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Joint...")
@@ -81,6 +87,7 @@ class ArmUfactory(Node):
 
 		self.gripper_reached_target = Bool()
 		self.set_gripper_req = GripperMove.Request()
+		self.get_position_req = GetFloat32List.Request()
 		self.joint_values_req = MoveJoint.Request()
 		self.position_values_req = MoveCartesian.Request()
 		self.get_gripper_req = GetFloat32.Request()
@@ -145,6 +152,9 @@ class ArmUfactory(Node):
 		self.initial_position =       [-224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
 		self.first_waving_position =  [ -90.0,  -53.0,  -35.0,  154.0,  -20.9,  110.0] 
 		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0,  110.0] 
+		self.front_robot = 			  [ -191.7,   17.1,  -50.6,   164.9,   58.2,  97.0]
+		self.arm_check_right_door =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 131.8]
+		self.arm_check_left_door =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 106.3]
 
 
 		self.pre_place_bowl = [-649.9, 199.0, 786.7, 0.69, 0.007, -1.56]
@@ -302,7 +312,11 @@ class ArmUfactory(Node):
 
 	def callback_service_tr(self, future):
 		try:
-			print(future.result())			
+			print(future.result())
+			self.resultado = future.result()
+			print(self.resultado)
+			self.returning = future.result().ret
+			print(self.returning)
 			self.estado_tr += 1
 			print("ESTADO = ", self.estado_tr)
 			self.movement_selection()
@@ -772,6 +786,122 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def front_robot_oriented_front(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.front_robot)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	
+	def check_right_door(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	
+	def check_left_door(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_left_door)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def get_arm_position(self):
+		if self.estado_tr == 0: 
+			self.future = self.get_position_client.call_async(self.get_position_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('a')
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+			print('--')
+			arm_pose = self.resultado.datas
+			print('arm pose:', arm_pose)
+			print('--')
+			arm_controller = ArmController()
+			arm_pose_ = []
+			for a in arm_pose:
+				arm_pose_.append(a)
+				print(a)	
+
+			arm_controller.pose = arm_pose_
+			print(arm_controller.pose)
+			self.arm_pose_publisher.publish(arm_controller)
+
 	def movement_selection(self):
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
@@ -795,7 +925,15 @@ class ArmUfactory(Node):
 			self.place_cabinet_fourth_shelf_left_side()
 		elif self.next_arm_movement == "place_cabinet_fourth_shelf_right_side":
 			self.place_cabinet_fourth_shelf_right_side()
-		
+		elif self.next_arm_movement == "front_robot_oriented_front":
+			self.front_robot_oriented_front()
+		elif self.next_arm_movement == "get_arm_position":
+			self.get_arm_position()
+		elif self.next_arm_movement == "check_left_door":
+			self.check_left_door()
+		elif self.next_arm_movement == "check_right_door":
+			self.check_right_door()
+
 		
 
 

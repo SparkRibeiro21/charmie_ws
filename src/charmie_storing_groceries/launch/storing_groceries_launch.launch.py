@@ -164,7 +164,7 @@ def generate_launch_description():
     
 
     return LaunchDescription([
-        LaunchDescription(declared_arguments + [robot_driver_launch]),
+        # LaunchDescription(declared_arguments + [robot_driver_launch]),
         *delayed_actions,
         # debug_visual,
         charmie_both_cameras_launch_description,
@@ -174,6 +174,6 @@ def generate_launch_description():
         neck,
         point_cloud,
         yolo_objects,
-        arm,
+        # arm,
         # storing_groceries,
     ])

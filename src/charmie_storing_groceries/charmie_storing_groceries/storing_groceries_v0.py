@@ -5,7 +5,7 @@ from rclpy.node import Node
 
 import threading
 
-from example_interfaces.msg import Bool, String, Int16
+from example_interfaces.msg import Bool, String, Int16, Float32
 from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, NavTrigger, SetFace
 from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL, ListOfDetectedObject, Obstacles, ArmController
@@ -116,6 +116,11 @@ class StoringGroceriesNode(Node):
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
 
+        # Camera
+        self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
+        self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_hand_image_callback, 10)
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_callback, 10)
+        
         # Objects detected
         # self.objects_filtered_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered', self.get_objects_callback, 10)
         # Yolo Objects
@@ -128,6 +133,7 @@ class StoringGroceriesNode(Node):
         
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        self.arm_pose_subscriber = self.create_subscription(ArmController, 'arm_current_pose', self.get_arm_current_pose_callback, 10)
 
         # Navigation
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
@@ -148,8 +154,8 @@ class StoringGroceriesNode(Node):
         while not self.set_neck_coordinates_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         # Face
-        while not self.face_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Face Command...")
+        # while not self.face_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Face Command...")
         # Arm (CHARMIE)
         """ while not self.arm_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Arm Trigger Command...") """
@@ -181,6 +187,9 @@ class StoringGroceriesNode(Node):
         self.navigation_success = True
         self.navigation_message = ""
         self.flag_navigation_reached = False
+        self.first_depth_image_received = False
+        self.first_depth_image_hand_received = False
+        self.new_image_hand_flag = False
 
         self.get_neck_position = [1.0, 1.0]
         self.objects_classNames_dict = {}
@@ -190,6 +199,11 @@ class StoringGroceriesNode(Node):
         
         self.objects_classNames_dict = {item["name"]: item["class"] for item in self.objects_file}
         self.detected_objects = Yolov8Objects()
+        self.detected_doors = Yolov8Objects()
+        self.detected_shoes = Yolov8Objects()
+        self.detected_objects_hand = Yolov8Objects()
+        self.detected_doors_hand = Yolov8Objects()
+        self.detected_shoes_hand = Yolov8Objects()
         self.obstacles = Obstacles()
         self.filtered_objects_storing_groceries = []
         self.flag_storing_groceries_received = False
@@ -226,6 +240,21 @@ class StoringGroceriesNode(Node):
 
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
+
+    def get_aligned_depth_image_callback(self, img: Image):
+
+        self.depth_img = img
+        self.first_depth_image_received = True
+
+    def get_aligned_depth_hand_image_callback(self, img: Image):
+        self.depth_img_hand = img
+        self.first_depth_image_hand_received = True
+        self.new_image_hand_flag = True
+        # print("Received Depth Image")
+
+    def get_color_image_callback(self, img: Image):
+
+        self.rgb_img = img
     
     ### OBSTACLES
     def obstacles_callback(self, obs: Obstacles):
@@ -419,6 +448,8 @@ class StoringGroceriesNode(Node):
 
         self.get_logger().info("Received Arm Finished")
 
+    def get_arm_current_pose_callback(self, arm_pose: ArmController):
+        self.arm_current_pose = arm_pose.pose
 
 def main(args=None):
     rclpy.init(args=args)
@@ -480,6 +511,11 @@ class StoringGroceriesMain():
         self.shelf_4_height_to_place = 1.42
         self.shelf_5_height_to_place = 1.9
         self.shelf_6_height_to_place = 2.5
+
+        self.wardrobe_width = 0.9
+        self.door_width = 0.45
+        self.wardrobe_depth = 0.3
+        self.robot_radius = 0.28
 
         self.shelf_length = 0.70
         self.left_limit_shelf = -0.7 # -0.38
@@ -2196,6 +2232,8 @@ class StoringGroceriesMain():
     def choose_place_arm(self, shelf, side, obj):
         use_arm = False
         object_height = float(self.heights_dict.get(obj.object_name))
+        class_filename = f"objects_classes/_{obj.object_class}"
+        print(class_filename)
         print(object_height)
         height_arm = 0.0
         if side == 'left':
@@ -2205,6 +2243,9 @@ class StoringGroceriesMain():
                 use_arm = False
             elif shelf == 2:
                 print('second shelf')
+                self.set_speech(filename="storing_groceries/Place_second_shelf_ls", wait_for_end_of=True)
+                self.set_speech(filename='generic/Near', wait_for_end_of=True)
+                self.set_speech(filename=class_filename, wait_for_end_of=True)
                 height_arm = self.shelf_2_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
@@ -2216,6 +2257,9 @@ class StoringGroceriesMain():
                 use_arm = True
             elif shelf == 3:
                 print('third shelf')
+                self.set_speech(filename="storing_groceries/Place_third_shelf_ls", wait_for_end_of=True)
+                self.set_speech(filename='generic/Near', wait_for_end_of=True)
+                self.set_speech(filename=class_filename, wait_for_end_of=True)
                 height_arm = self.shelf_3_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
@@ -2227,6 +2271,9 @@ class StoringGroceriesMain():
                 use_arm = True
             elif shelf == 4:
                 print('fourth shelf')
+                self.set_speech(filename="storing_groceries/Place_fourth_shelf_ls", wait_for_end_of=True)
+                self.set_speech(filename='generic/Near', wait_for_end_of=True)
+                self.set_speech(filename=class_filename, wait_for_end_of=True)
                 height_arm = self.shelf_4_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
@@ -2241,9 +2288,13 @@ class StoringGroceriesMain():
             print('right side')
             if shelf == 1:
                 print('first shelf') 
+                self.set_speech(filename="storing_groceries/Place_third_shelf_rs", wait_for_end_of=True)
                 use_arm = False
             elif shelf == 2:
                 print('second shelf')
+                self.set_speech(filename="storing_groceries/Place_second_shelf_rs", wait_for_end_of=True)
+                self.set_speech(filename='generic/Near', wait_for_end_of=True)
+                self.set_speech(filename=class_filename, wait_for_end_of=True)
                 height_arm = self.shelf_2_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
@@ -2255,6 +2306,9 @@ class StoringGroceriesMain():
                 use_arm = True
             elif shelf == 3:
                 print('third shelf')
+                self.set_speech(filename="storing_groceries/Place_third_shelf_rs", wait_for_end_of=True)
+                self.set_speech(filename='generic/Near', wait_for_end_of=True)
+                self.set_speech(filename=class_filename, wait_for_end_of=True)
                 height_arm = self.shelf_3_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
@@ -2266,6 +2320,9 @@ class StoringGroceriesMain():
                 use_arm = True
             elif shelf == 4:
                 print('fourth shelf')
+                self.set_speech(filename="storing_groceries/Place_fourth_shelf_rs", wait_for_end_of=True)
+                self.set_speech(filename='generic/Near', wait_for_end_of=True)
+                self.set_speech(filename=class_filename, wait_for_end_of=True)
                 height_arm = self.shelf_4_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
@@ -2391,7 +2448,420 @@ class StoringGroceriesMain():
                         # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
                         self.set_arm(command="arm_front_robot", wait_for_end_of=True)
                         # CORRIGIR ESTA PARTE; TENHO DE DECIDIR ISTO ANTES DE PEDIR OBJETO NA MÂO
+
+    def check_door_depth_hand(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=600):
+
+        overall = False
+        DEBUG = True
+
+        if self.node.new_image_hand_flag:
+            current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img_hand, desired_encoding="passthrough")
+            height, width = current_frame_depth_hand.shape
+            current_frame_depth_hand_half = current_frame_depth_hand[height//2:height,:]
+            current_frame_depth_hand_center = current_frame_depth_hand[height//4:height-height//4, width//3:width-width//3]
+            # FOR THE FULL IMAGE
+
+            tot_pixeis = height*width 
+            tot_pixeis = (height-height//4 -height//4) * (width-width//3 - width//3)
+            mask_zero = (current_frame_depth_hand == 0)
+            mask_near = (current_frame_depth_hand > 0) & (current_frame_depth_hand <= near_max_dist)
+            mask_zero_center = (current_frame_depth_hand_center == 0)
+            mask_near_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center <= near_max_dist)
+            
+            if DEBUG:
+                mask_remaining = (current_frame_depth_hand > near_max_dist) # just for debug
+                blank_image = np.zeros((height,width,3), np.uint8)
+                blank_image[mask_zero] = [255,255,255]
+                blank_image[mask_near] = [255,0,0]
+                blank_image[mask_remaining] = [0,0,255]
+
+            pixel_count_zeros = np.count_nonzero(mask_zero)
+            pixel_count_near = np.count_nonzero(mask_near)
+            pixel_count_zeros_center = np.count_nonzero(mask_zero_center)
+
+            # FOR THE BOTTOM HALF OF THE IMAGE
+
+            mask_zero_half = (current_frame_depth_hand_half == 0)
+            mask_near_half = (current_frame_depth_hand_half > 0) & (current_frame_depth_hand_half <= near_max_dist)
+            mask_near_center = (current_frame_depth_hand_center > 0) & (current_frame_depth_hand_center <= near_max_dist)
+            
+            if DEBUG:
+                mask_remaining_half = (current_frame_depth_hand_half > near_max_dist) # just for debug
+                blank_image_half = np.zeros((height//2,width,3), np.uint8)
+                blank_image_half[mask_zero_half] = [255,255,255]
+                blank_image_half[mask_near_half] = [255,0,0]
+                blank_image_half[mask_remaining_half] = [0,0,255]
                     
+            pixel_count_zeros_half = np.count_nonzero(mask_zero_half)
+            pixel_count_near_half = np.count_nonzero(mask_near_half)
+            pixel_count_near_center = np.count_nonzero(mask_near_center)
+            
+            if DEBUG:
+                cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
+                cv2.rectangle(blank_image, (width//3, height//4), (width - width//3, height - height//4), (0, 255, 0), 3)
+                cv2.imshow("New Img Distance Inspection", blank_image)
+                cv2.waitKey(10)
+
+            half_image_zero_or_near = False
+            half_image_zero_or_near_err = 0.0
+            
+            full_image_near = False
+            full_image_near_err = 0.0
+
+
+            half_image_zero_or_near_err = (pixel_count_zeros_half+pixel_count_near_half)/(tot_pixeis//2)
+            if half_image_zero_or_near_err >= half_image_zero_or_near_percentage:
+                half_image_zero_or_near = True
+            
+            full_image_near_err = pixel_count_near/tot_pixeis
+            if full_image_near_err >= full_image_near_percentage:
+                full_image_near = True
+
+            center_image_near_err = pixel_count_near_center / tot_pixeis
+            print(center_image_near_err*100)
+            center_image_zeros = pixel_count_zeros_center/tot_pixeis
+            #print(center_image_zeros*100)
+            if full_image_near_err >= full_image_near_percentage:
+                center_image_near = True
+            
+            if half_image_zero_or_near or full_image_near:
+                overall = True
+
+            # just for debug
+            # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
+            # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
+        
+            return center_image_near_err
+        else:
+            return -1.0
+
+    def open_cabinet_door(self, objects_found, wanted_object):
+        # - Centrar com armário em x
+        # - Ir até certo ponto em Y (ver qual)
+        
+        if wanted_object != '':
+            # set_pose_arm = ListOfFloats()
+            cabinet_position = wanted_object.position_relative
+            object_location = self.transform_object(wanted_object)
+            #Value of height I want the arm to go to not touch in shelfs:
+            # desired_height = 1100.0 - (self.node.third_shelf_height - 0.2) * 1000
+            # new_height = Float32()
+            # new_height.data = desired_height
+            
+            object_x = object_location[0]
+            object_y = object_location[1]
+            object_y = object_location[1] + 100.0
+            object_y = 350.0
+            object_z = object_location[2]
+
+            print('x y e z do objeto em relação ao braço:',object_x, object_y, object_z)  
+
+            print('x y e z do objeto em relação ao robô:',cabinet_position)   
+
+            distance_to_close = abs(object_x)/1000 
+            print('Distance I am from door', distance_to_close)
+
+            distance_x_to_center = cabinet_position.x
+            distance_y_to_center = abs(cabinet_position.y) - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
+            ### ISTO CENTRA QD PORTA FECHADA É A ESQUERDA. -> door_position.x + self.node.wardrobe_width/4 
+            ###  SE PORTA FECHADA FOR A DIREITA, TENHO DE TROCAR SINAL PARA -> door_position.x - self.node.wardrobe_width/4 
+            if distance_x_to_center < 0.0:
+                move_side = 90.0
+            else:
+                move_side = -90.0 + 360.0
+
+            # distance_x_to_center = abs(abs(distance_x_to_center) - 0.1)
+            distance_x_to_center = abs(distance_x_to_center)
+            distance_y_to_center = abs(distance_y_to_center)
+
+            print('distancia lateral:', distance_x_to_center)
+            print('distancia frontal:', distance_y_to_center)
+
+            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_x_to_center, adjust_direction=move_side, wait_for_end_of=True)
+            self.set_rgb(command=GREEN+BLINK_LONG)
+            
+            # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+            # self.set_rgb(command=BLUE+BLINK_LONG)
+
+            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_y_to_center, adjust_direction=0.0, wait_for_end_of=True)
+            self.set_rgb(command=GREEN+BLINK_LONG)
+
+            time.sleep(2)
+
+            self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+            self.set_rgb(command=BLUE+BLINK_LONG)
+            
+            # print(self.node.arm_current_pose)
+
+            # self.set_arm(command="arm_side_of_washing_machine", wait_for_end_of=True)
+
+            self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
+            time.sleep(2)
+
+            
+
+
+            self.set_arm(command="check_right_door", wait_for_end_of=True)
+            time.sleep(1)
+            self.node.new_image_hand_flag = False
+            while self.node.new_image_hand_flag == False:
+                pass
+            near_percentage = -1.0
+            while near_percentage == -1.0:
+                near_percentage = self.check_door_depth_hand()
+
+            print(near_percentage * 100)
+
+            left_door = False
+            right_door = False
+
+            # Check if the door is near
+            if near_percentage < 0.5:
+                right_door = True
+                print('Porta direita aberta creio eu')
+
+            else:
+                right_door = False
+                print('Porta direita fechada creio eu')
+
+            
+            # self.set_arm(command="change_height_front_left_robot", wait_for_end_of=True)
+            self.set_arm(command="check_left_door", wait_for_end_of=True)
+            time.sleep(1)
+            self.node.new_image_hand_flag = False
+            while self.node.new_image_hand_flag == False:
+                pass
+
+            near_percentage = -1.0
+            while near_percentage == -1.0:
+                near_percentage = self.check_door_depth_hand()
+
+            print(near_percentage * 100)
+            if near_percentage < 0.5:
+                left_door = True
+                print('Porta esquerda aberta creio eu')
+            else:
+                left_door = False
+                print('Porta esquerda fechada creio eu')
+
+            
+            while True:
+                pass
+
+            
+            # print(right_door, right_door_pose)
+            arm_value = Float32()
+
+            if right_door == True:
+                print('a')
+                print('desired height', new_height)
+                
+                self.node.arm_set_height_publisher.publish(new_height)
+                time.sleep(2)
+
+                # self.set_arm(command="change_height_front_robot_value", wait_for_end_of=True)
+                self.set_arm(command="change_height_front_robot_value", wait_for_end_of=True)
+                time.sleep(2)
+
+                arm_value.data = 100.0
+                self.node.arm_value_publisher.publish(arm_value)
+                print(arm_value)
+                self.set_arm(command="go_front", wait_for_end_of=True)
+                time.sleep(2)
+
+                self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                time.sleep(1)
+
+                print('x do braço', self.node.arm_current_pose[0])
+                distance_to_close = object_x/1000 - self.node.arm_current_pose[0]/1000
+                distance_to_close = abs(distance_to_close) + 0.15
+                print('Distance I am from door', distance_to_close)
+                
+                
+                # print('move forward')
+                # arm_value.data = 100.0
+                # self.node.arm_value_publisher.publish(arm_value)
+                # print(arm_value)
+                # self.set_arm(command="go_front", wait_for_end_of=True)
+
+
+                ### Ver onde tenho braço em comparação ao ponto inicial detetado como sendo a porta. Quando o braço estiver para lá da porta,
+                ### inclino o braço com ângulo que a consiga pegar desde trás
+                
+                ### O VALOR DO TEMPO AQUI DEVERIA DEPENDER DA DISTÂNCIA A QUE ESTOU DO ARMÁRIO - OU SEJA EU SEI 
+                ### a DISTANCIA DO ARMÁRIO EM RELAÇÃO AO CENTRO DO ROBÔ, ENTÃO DEVERIA IR SEMPRE EM FRENTE TENDO ISSO EM CONTA
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_to_close, adjust_direction=0.0, wait_for_end_of=True)
+                time.sleep(2)
+                
+                self.set_arm(command="open_left_door_from_inside", wait_for_end_of=True)
+                time.sleep(1)
+                
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.2, adjust_direction=180.0, wait_for_end_of=True)
+                time.sleep(2)
+                
+
+                self.set_arm(command="finish_open_left_door_from_inside", wait_for_end_of=True)
+                time.sleep(1)
+
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=180.0, wait_for_end_of=True)
+                time.sleep(2)
+
+                self.set_arm(command="go_initial_position", wait_for_end_of=True)
+                time.sleep(1)
+                
+                
+                
+                while True:
+                    pass
+
+                near_percentage = -1.0
+                while near_percentage < 0.5:
+                    near_percentage = self.check_door_depth_hand(near_max_dist=350)
+
+                    print(near_percentage * 100)
+                    print('move forward')
+                    arm_value.data = 50.0
+                    self.node.arm_value_publisher.publish(arm_value)
+                    print(arm_value)
+                    self.set_arm(command="go_front", wait_for_end_of=True)
+
+                    time.sleep(2)
+
+                print('hey')
+
+                # self.set_arm(command="open_left_door", wait_for_end_of=True)
+                self.set_arm(command="open_left_door_from_front", wait_for_end_of=True)
+
+                while True:
+                    pass
+
+            elif left_door == True:
+
+                print('a')
+                print('desired height', new_height)
+                
+                self.node.arm_set_height_publisher.publish(new_height)
+                time.sleep(2)
+                # self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
+                self.set_arm(command="change_height_front_left_robot_value", wait_for_end_of=True)
+
+                
+
+                self.set_arm(command="get_arm_position", wait_for_end_of=True)
+                time.sleep(1)
+
+                print('x do braço', self.node.arm_current_pose[0])
+                print('object_x', object_x)
+                print('distance_y', distance_y)
+                distance_to_close = abs(object_x/1000) - abs(distance_y) - abs(self.node.arm_current_pose[0]/1000) + 0.15
+                distance_to_close = abs(distance_to_close)
+                print('Distance I am from door', distance_to_close)
+
+
+
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_to_close, adjust_direction=0.0, wait_for_end_of=True)
+                time.sleep(2)
+                
+                self.set_arm(command="open_right_door_from_inside", wait_for_end_of=True)
+                
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.2, adjust_direction=180.0, wait_for_end_of=True)
+                time.sleep(1)
+
+                self.set_arm(command="finish_open_right_door_from_inside", wait_for_end_of=True)
+
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=180.0, wait_for_end_of=True)
+
+                self.set_arm(command="go_initial_position", wait_for_end_of=True)
+                time.sleep(1)
+
+                while True:
+                    pass
+
+                near_percentage = -1.0
+                while near_percentage < 0.5:
+                    near_percentage = self.check_door_depth_hand(near_max_dist=450)
+
+                    print(near_percentage * 100)
+                    print('move forward')
+                    arm_value.data = 50.0
+                    self.node.arm_value_publisher.publish(arm_value)
+                    print(arm_value)
+                    self.set_arm(command="go_front", wait_for_end_of=True)
+
+                    time.sleep(2)
+
+                print('hey')
+                while True:
+                    pass
+                
+
+            """ time.sleep(2)
+            arm_value = Float32()
+            # print('move forward')
+            # arm_value.data = 100.0
+            # self.node.arm_value_publisher.publish(arm_value)
+            # print(arm_value)
+            # self.set_arm(command="go_front", wait_for_end_of=True)
+
+
+            ### Ver onde tenho braço em comparação ao ponto inicial detetado como sendo a porta. Quando o braço estiver para lá da porta,
+            ### inclino o braço com ângulo que a consiga pegar desde trás
+
+            near_percentage = -1.0
+            while near_percentage < 0.5:
+                near_percentage = self.check_door_depth_hand(near_max_dist=350)
+
+                print(near_percentage * 100)
+                print('move forward')
+                arm_value.data = 50.0
+                self.node.arm_value_publisher.publish(arm_value)
+                print(arm_value)
+                self.set_arm(command="go_front", wait_for_end_of=True)
+
+                time.sleep(2)
+
+            print('hey')
+
+            self.set_arm(command="open_left_door", wait_for_end_of=True) """
+
+
+            while True:
+                pass
+
+            time.sleep(3)
+
+
+            response = self.node.pose_planner([object_x, object_y, object_z, self.node.arm_current_pose[3], self.node.arm_current_pose[4], self.node.arm_current_pose[5]])
+        
+            if response == True:
+                print('YES')
+
+                set_pose_arm.pose[:] = array('f')
+
+                # set_pose_arm.pose.clear()
+
+                set_pose_arm.pose.append(object_x)
+                set_pose_arm.pose.append(object_y)
+                set_pose_arm.pose.append(object_z)
+                # set_pose_arm.pose.append(self.node.arm_current_pose[2])
+                set_pose_arm.pose.append(self.node.arm_current_pose[3])
+                set_pose_arm.pose.append(self.node.arm_current_pose[4])
+                set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                
+                self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                self.set_arm(command="move_linear", wait_for_end_of=True)
+
+                time.sleep(3)
+                self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+            else:
+                print('NO')
+                print(response)
+
+            while True:
+                pass
+
+
     def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
         self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
@@ -2426,6 +2896,63 @@ class StoringGroceriesMain():
         M[1][3] = ty
         M[2][3] = tz
         return M
+    
+    def transform_object(self, obj):
+        # C representa o ponto no espaço para onde eu quero transformar a base do braço do robô
+        # A matriz de transformação desde a  base do braço até ao centro do Robot pode ser representada por:
+        # T = Rot(z, 180) * Rot (x, -90) * Trans (3, -6, -110)
+        # a2 representa a translação desde a base do braço até ao centro do robô  (em cm)
+        # a1 representa a rotação sobre o eixo coordenadas x em -90º para alinhar os eixos coordenados
+        # a0 representa a rotação sobre o eixo coordenadas z em 180º para alinhar o eixo dos x 
+        # c representa o ponto (x,y,z) em relação ao centro do braço
+        
+        
+
+        ### nos numeros que chegam: x representa a frente do robô. y positivo vai para a esquerda do robô. z vai para cima no robô
+        ### nos numeros que saem: x vai para trás do robô. y vai para baixo no robô. z vai para a direita do robô
+        
+        
+        ### PARECE-ME QUE X E Z ESTÃO TROCADOS NO RESULTADO QUE TENHO EM RELAºÃO AO BRAÇO
+        print('\n\n')
+    
+        c = np.dot(np.identity(4), [0, 0, 0, 1])
+        # c = np.dot(np.identity(4), [90.0, -30.0, 105.0, 1])
+        ### ESTAS TRANSFORMAÇÕES SEGUINTES SÃO NECESSÁRIAS PORQUE O ROBOT TEM EIXO COORDENADAS COM Y PARA A FRENTE E X PARA A DIREITA E AS TRANSFORMAÇÕES DA CAMARA SÃO FEITAS COM X PARA A FRENTE Y PARA A ESQUERDA
+        new_x = obj.position_relative.y * 1000
+        new_y = -obj.position_relative.x * 1000
+        new_z = obj.position_relative.z * 1000
+        print(obj.object_name)
+        c = np.dot(np.identity(4), [new_x, new_y, new_z, 1])
+        print(f'Posição em relação ao solo:[{new_x:.2f}, {new_y:.2f}, {new_z:.2f}]')
+        a2 = self.Trans(30.0, -60.0, -1100.0)
+        a1 = self.Rot('x', -90.0)
+        a0 = self.Rot('z', 180.0)
+        T = np.dot(a0, a1)
+        T = np.dot(T, a2)
+        
+        #print('T', T)
+        
+        AA = np.dot(T, c)
+        
+        print('Ponto em relação ao braço:', AA)
+
+
+        # aux = AA[0]
+        # AA[0] = AA[2]
+        # AA[2] = aux
+
+        # AA[0] = AA[0] * 10
+        # AA[1] = AA[1] * 10
+        # AA[2] = AA[2] * 10
+        # my_formatted_list = [ '%.2f' % elem for elem in AA ]
+        ### VALOR DO Z ESTÀ INVERSO AO QUE EU DEVO PASSAR PARA O BRAÇO EM AA !!!
+        
+        # print('Ponto em relação ao braço:', AA)
+        # print('y = ', AA[1]*10)
+
+        print('\n\n')
+
+        return AA
 
     def transform(self, obj):
         # C representa o ponto no espaço para onde eu quero transformar a base do braço do robô
@@ -2496,13 +3023,13 @@ class StoringGroceriesMain():
 
 
         # Print the dictionary
-        print(self.node.objects_file)
+        # print(self.node.objects_file)
         
         # Create a dictionary to store the heights with the object names as keys
         self.heights_dict = {item['name']: item['height'] for item in self.node.objects_file}
 
         # Print the heights dictionary
-        print(self.heights_dict)
+        # print(self.heights_dict)
         """
         # Access a specific height using the object's name
         sponge_height = self.heights_dict.get('Sponge')
@@ -2538,6 +3065,33 @@ class StoringGroceriesMain():
                 time.sleep(1)
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                self.activate_yolo_objects(activate_doors=True, activate_doors_hand = True)
+
+                cabinet_found = False
+
+                print('pre')
+
+                while cabinet_found == False:
+                    print('inside')
+                    tetas = [[0, 0]]
+                    objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
+                    print('pos-search')
+                    for obj in objects_found:
+                        if obj.object_name == 'Cabinet':
+                            cabinet_found = True
+                            wanted_object = obj
+                            print('Object found')
+
+                self.open_cabinet_door(objects_found, wanted_object)
+
+
+
+
+
+
+                while True:
+                    pass
 
                 self.set_arm(command="open_gripper", wait_for_end_of=True)
 
