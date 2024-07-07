@@ -1649,13 +1649,13 @@ class ServeBreakfastMain():
 
             elif self.state == self.Detect_and_pick_all_objects:
 
-                four_objects_picked = False
+                all_objects_picked = False
                 object_in_gripper = False
                 correct_object = DetectedObject()
                 list_of_objects = ["milk", "cornflakes", "bowl", "spoon"]
                 list_of_objects_detected_as = [["cleanser"], ["strawberry_jello", "chocolate_jello"], [], ["knife", "fork"]]
 
-                while not four_objects_picked:
+                while not all_objects_picked:
 
                     print(list_of_objects)    
                     print(list_of_objects_detected_as)
@@ -1716,6 +1716,9 @@ class ServeBreakfastMain():
                                 index = list_of_objects.index(curr_obj)
                                 list_of_objects.remove(curr_obj)
                                 list_of_objects_detected_as.pop(index)
+                        
+                        else:
+                            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
 
                     
                     curr_obj = "Cornflakes"
@@ -1772,6 +1775,10 @@ class ServeBreakfastMain():
                                 index = list_of_objects.index(curr_obj)
                                 list_of_objects.remove(curr_obj)
                                 list_of_objects_detected_as.pop(index)
+                        
+                        else:
+                            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+
 
                     if "Milk" not in list_of_objects and "Cornflakes" not in list_of_objects:
                         
@@ -1829,6 +1836,10 @@ class ServeBreakfastMain():
                                     index = list_of_objects.index(curr_obj)
                                     list_of_objects.remove(curr_obj)
                                     list_of_objects_detected_as.pop(index)
+                        
+                        else:
+                            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+                            
                     
                         curr_obj = "Spoon"
                         
@@ -1856,7 +1867,7 @@ class ServeBreakfastMain():
                             time.sleep(2*self.SHOW_OBJECT_DETECTED_WAIT_TIME)
 
                     if not list_of_objects:
-                        four_objects_picked = True
+                        all_objects_picked = True
 
                 self.set_face("charmie_face")
 
