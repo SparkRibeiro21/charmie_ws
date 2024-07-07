@@ -1450,8 +1450,10 @@ class ServeBreakfastMain():
                     DETECTED_ALL_LIST_OF_OBJECTS = True
                     # forces the change of objects name for possible detected_as_object 
                     # (i.e. might detect cleanser as milk, but we need it as milk for the DEM show in face)
-                    for o in range(len(list_of_objects)): 
-                        final_objects[o].object_name = list_of_objects[o]
+                    for o in final_objects:
+                        for m in range(len(merged_lists)):
+                            if o.object_name.replace(" ","_").lower() in merged_lists[m]:
+                                o.object_name = list_of_objects[m]
 
             else:
                 final_objects = filtered_objects
