@@ -154,18 +154,27 @@ class ArmUfactory(Node):
 
 		self.inside_wardrobe_left_door = [-211.1, 55.3, -115.5, 18.0, 36.0, 316.8]
 		self.inside_wardrobe_left_door_2 = [-210.7, 64.5, -136.5, 4.7, 57.1, 328.5]
+
+		self.inside_wardrobe_right_door = [-221.7, 78.3, -102.5, 135.4, 73.8, 16.3]
+		self.inside_wardrobe_right_door_2 = [-216.0, 98.2, -137.8, 154.7, 104.1, 111.5]
 		
 
 		# self.wardrobe_left_door_outside = [-217.2, 88.2, -121.2, -1.0, 30.9, 317.8]
 		self.wardrobe_left_door_outside = [-213.5, 95.5, -147.2, -11.4, 60.9, 328.0]
+		self.wardrobe_left_door_outside_2 = [-219.5, 46.8, -87.5, -17.4, 52.2, 327.0]
+
+		self.wardrobe_right_door_outside = [-226.5, 49.5, -65.4, 141.6, 127.0, 105.8]
+		self.wardrobe_right_door_outside_2 = [-224.4, 33.2, -59.0, 146.3, 118.5, 110.6]
 
 		# HELLO WAVING MOVEMENT
 		self.initial_position =       [-224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
 		self.first_waving_position =  [ -90.0,  -53.0,  -35.0,  154.0,  -20.9,  110.0] 
 		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0,  110.0] 
 		self.front_robot = 			  [ -191.7,   17.1,  -50.6,   164.9,   58.2,  97.0]
-		self.arm_check_right_door =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 221.8]
+		self.arm_check_right_door =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 131.8]
 		self.arm_check_left_door =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 106.3]
+		self.arm_check_right_door_inside_cabinet =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 221.8]
+		self.arm_check_left_door_inside_cabinet =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 16.3]
 
 
 		self.pre_place_bowl = [-649.9, 199.0, 786.7, 0.69, 0.007, -1.56]
@@ -826,7 +835,36 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
-	
+	def check_right_door_inside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door_inside_cabinet)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
 	def check_right_door(self):
 		if self.estado_tr == 0:
 			print('a')
@@ -886,6 +924,35 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def check_left_door_inside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_left_door_inside_cabinet)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 
 	def get_arm_position(self):
 		if self.estado_tr == 0: 
@@ -912,6 +979,33 @@ class ArmUfactory(Node):
 			arm_controller.pose = arm_pose_
 			print(arm_controller.pose)
 			self.arm_pose_publisher.publish(arm_controller)
+	
+	def open_right_door_from_inside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_right_door)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_right_door_2)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
 
 	def open_left_door_from_inside(self):
 		if self.estado_tr == 0:
@@ -940,6 +1034,34 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def finish_open_right_door_from_inside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_right_door_outside)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_right_door_outside_2)
+			self.joint_values_req.speed = 0.2
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+	
 	def finish_open_left_door_from_inside(self):
 		if self.estado_tr == 0:
 			print('a')
@@ -952,6 +1074,16 @@ class ArmUfactory(Node):
 			print('b')
 
 		elif self.estado_tr == 1:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_left_door_outside_2)
+			self.joint_values_req.speed = 0.6
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -961,7 +1093,7 @@ class ArmUfactory(Node):
 	def go_initial_position(self):
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.secondary_initial_position_debug)
-			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.speed = 0.5
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1004,12 +1136,20 @@ class ArmUfactory(Node):
 			self.get_arm_position()
 		elif self.next_arm_movement == "check_left_door":
 			self.check_left_door()
+		elif self.next_arm_movement == "check_left_door_inside":
+			self.check_left_door_inside()
 		elif self.next_arm_movement == "check_right_door":
 			self.check_right_door()
+		elif self.next_arm_movement == "check_right_door_inside":
+			self.check_right_door_inside()
 		elif self.next_arm_movement == "finish_open_left_door_from_inside":
 			self.finish_open_left_door_from_inside()
 		elif self.next_arm_movement == "open_left_door_from_inside":
 			self.open_left_door_from_inside()
+		elif self.next_arm_movement == "finish_open_right_door_from_inside":
+			self.finish_open_right_door_from_inside()
+		elif self.next_arm_movement == "open_right_door_from_inside":
+			self.open_right_door_from_inside()
 		elif self.next_arm_movement == "go_initial_position":
 			self.go_initial_position()
 
