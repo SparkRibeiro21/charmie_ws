@@ -581,7 +581,7 @@ class CarryMyLuggageMain():
     def wait_for_door_start(self):
         
         # max angle considered to be a door (degrees)
-        MAX_DOOR_ANGLE = math.radians(15.0)
+        MAX_DOOR_ANGLE = math.radians(10.0)
         # max distance to be considered a door (meters)
         MAX_DOOR_DISTANCE = 1.0 
         

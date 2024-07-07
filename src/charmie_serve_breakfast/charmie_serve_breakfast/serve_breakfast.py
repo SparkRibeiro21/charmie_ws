@@ -719,7 +719,7 @@ class ServeBreakfastMain():
     def wait_for_door_start(self):
         
         # max angle considered to be a door (degrees)
-        MAX_DOOR_ANGLE = math.radians(15.0)
+        MAX_DOOR_ANGLE = math.radians(10.0)
         # max distance to be considered a door (meters)
         MAX_DOOR_DISTANCE = 1.0 
         
@@ -1665,9 +1665,9 @@ class ServeBreakfastMain():
 
                         self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-
                         time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
+
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
 
                         self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
@@ -1743,10 +1743,10 @@ class ServeBreakfastMain():
 
                         self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-
                         time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
                         
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+
                         self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
                         self.set_face("help_pick_cornflakes") 
@@ -1832,9 +1832,9 @@ class ServeBreakfastMain():
 
                         self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-
                         time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
+                        
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
 
                         self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
