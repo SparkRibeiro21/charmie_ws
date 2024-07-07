@@ -155,7 +155,7 @@ class ArmUfactory(Node):
 		self.inside_wardrobe_left_door = [-211.1, 55.3, -115.5, 18.0, 36.0, 316.8]
 		self.inside_wardrobe_left_door_2 = [-210.7, 64.5, -136.5, 4.7, 57.1, 328.5]
 
-		self.inside_wardrobe_right_door = [-221.7, 78.3, -102.5, 135.4, 73.8, 16.3]
+		self.inside_wardrobe_right_door = [-221.7, 78.3, -102.5, 135.4, 73.8, 106.3]
 		self.inside_wardrobe_right_door_2 = [-216.0, 98.2, -137.8, 154.7, 104.1, 111.5]
 		
 
@@ -636,7 +636,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -656,7 +656,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -676,7 +676,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -696,7 +696,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -717,7 +717,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -738,7 +738,7 @@ class ArmUfactory(Node):
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
-			self.position_values_req.speed = 80.0
+			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -777,7 +777,7 @@ class ArmUfactory(Node):
 	def ask_for_object_routine(self):
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.ask_for_object)
-			self.joint_values_req.speed = 0.4
+			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -793,7 +793,7 @@ class ArmUfactory(Node):
 	def arm_front_robot(self):
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.arm_front_robot_mid)
-			self.joint_values_req.speed = 0.4
+			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -839,7 +839,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door_inside_cabinet)
-			self.joint_values_req.speed = 0.4
+			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -869,7 +869,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door)
-			self.joint_values_req.speed = 0.4
+			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -899,7 +899,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_left_door)
-			self.joint_values_req.speed = 0.4
+			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -928,7 +928,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_left_door_inside_cabinet)
-			self.joint_values_req.speed = 0.4
+			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -984,7 +984,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_right_door)
-			self.joint_values_req.speed = 0.2
+			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -993,7 +993,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_right_door_2)
-			self.joint_values_req.speed = 0.2
+			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1011,7 +1011,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_left_door)
-			self.joint_values_req.speed = 0.4
+			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1020,7 +1020,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 1:
 			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_left_door_2)
-			self.joint_values_req.speed = 0.4
+			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1038,7 +1038,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_right_door_outside)
-			self.joint_values_req.speed = 0.2
+			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1048,7 +1048,7 @@ class ArmUfactory(Node):
 		elif self.estado_tr == 1:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_right_door_outside_2)
-			self.joint_values_req.speed = 0.2
+			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1066,7 +1066,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_left_door_outside)
-			self.joint_values_req.speed = 0.2
+			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1093,7 +1093,7 @@ class ArmUfactory(Node):
 	def go_initial_position(self):
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.secondary_initial_position_debug)
-			self.joint_values_req.speed = 0.5
+			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = False
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
