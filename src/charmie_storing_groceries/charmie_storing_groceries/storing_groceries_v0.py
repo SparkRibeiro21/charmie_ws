@@ -1956,12 +1956,12 @@ class StoringGroceriesMain():
             img_x = center_x + (img_x - center_x)
             img_y = center_y - (img_y - center_y)
             img_z = center_y + (img_z - center_y)
-            cv2.circle(image, (img_x, img_z), 5, (255, 255, 255), -1)  # Draw white points
-            cv2.putText(image, obj.object_name, (img_x + 5, img_z - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            # cv2.circle(image, (img_x, img_z), 5, (255, 255, 255), -1)  # Draw white points
+            # cv2.putText(image, obj.object_name, (img_x + 5, img_z - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
             y_coordinates_front_view.append(img_x)
             
-            cv2.circle(image2, (img_x, img_y), 5, (255, 255, 255), -1)  # Draw white points
-            cv2.putText(image2, obj.object_name, (img_x + 5, img_y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            # cv2.circle(image2, (img_x, img_y), 5, (255, 255, 255), -1)  # Draw white points
+            # cv2.putText(image2, obj.object_name, (img_x + 5, img_y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
             y_coordinates_top_view.append(img_y)
 
  
@@ -1974,14 +1974,14 @@ class StoringGroceriesMain():
         logo uso 18 vizinhos para perceber se a deteção do armário está top (porque o armário mede 90cm)
         #### """
         bins_front = 120
-        plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_front_view, bins=bins_front, range=(0, width), color='blue', alpha=0.7)
-        plt.title("Histogram of X-coordinates in Front View")
-        plt.xlabel("Pixel X-coordinate")
-        plt.ylabel("Frequency")
-        plt.grid(True)
-        plt.savefig('histogram_front_view.png')
-        plt.close()
+        # plt.figure(figsize=(10, 6))
+        # plt.hist(y_coordinates_front_view, bins=bins_front, range=(0, width), color='blue', alpha=0.7)
+        # plt.title("Histogram of X-coordinates in Front View")
+        # plt.xlabel("Pixel X-coordinate")
+        # plt.ylabel("Frequency")
+        # plt.grid(True)
+        # plt.savefig('histogram_front_view.png')
+        # plt.close()
 
         # Calculate the histogram and find peaks for front view
         hist_front, bins_front = np.histogram(y_coordinates_front_view, bins=bins_front, range=(0, width))
@@ -2043,16 +2043,16 @@ class StoringGroceriesMain():
                 left_bound_final_front = left_bound_front
                 right_bound_final_front = right_bound_front
 
-        # Print the best peak and its highest count and selected neighbor range
-        print('--------------------')
-        print(f"Best peak in front view histogram: {bins_front[best_peak_index_front]}")
-        print(f"Highest count: {highest_count_across_peaks_front}")
-        print(f"Selected neighbor range: {best_neighbor_range_front}")
-        print(f"Left bound of selected range: {left_bound_final_front}")
-        print(f"Right bound of selected range: {right_bound_final_front}")
-        print("Neighbor counts for front view peaks:")
-        for index, counts in neighbor_counts_front.items():
-            print(f"Peak at bin {bins_front[index]}: {counts}")
+        # # Print the best peak and its highest count and selected neighbor range
+        # print('--------------------')
+        # print(f"Best peak in front view histogram: {bins_front[best_peak_index_front]}")
+        # print(f"Highest count: {highest_count_across_peaks_front}")
+        # print(f"Selected neighbor range: {best_neighbor_range_front}")
+        # print(f"Left bound of selected range: {left_bound_final_front}")
+        # print(f"Right bound of selected range: {right_bound_final_front}")
+        # print("Neighbor counts for front view peaks:")
+        # for index, counts in neighbor_counts_front.items():
+        #     print(f"Peak at bin {bins_front[index]}: {counts}")
 
         """ ####
         720 pixeis -> 500 centimetros
@@ -2062,16 +2062,16 @@ class StoringGroceriesMain():
         logo uso 6 vizinhos para perceber se a deteção do armário está top (porque o armário mede 30cm em profundidade)
         #### """
         
-        # Plot histogram for top view (z-coordinates)
-        bins_top = 144
-        plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_top_view, bins=bins_top, range=(0, height), color='green', alpha=0.7)
-        plt.title("Histogram of Z-coordinates in Top View")
-        plt.xlabel("Pixel Z-coordinate")
-        plt.ylabel("Frequency")
-        plt.grid(True)
-        plt.savefig('histogram_top_view.png')
-        plt.close()
+        # # Plot histogram for top view (z-coordinates)
+        # bins_top = 144
+        # plt.figure(figsize=(10, 6))
+        # plt.hist(y_coordinates_top_view, bins=bins_top, range=(0, height), color='green', alpha=0.7)
+        # plt.title("Histogram of Z-coordinates in Top View")
+        # plt.xlabel("Pixel Z-coordinate")
+        # plt.ylabel("Frequency")
+        # plt.grid(True)
+        # plt.savefig('histogram_top_view.png')
+        # plt.close()
 
         # Calculate the histogram
         hist_top, bins_top = np.histogram(y_coordinates_top_view, bins=bins_top, range=(0, height))
@@ -2134,16 +2134,16 @@ class StoringGroceriesMain():
                 right_bound_final = right_bound_top
 
 
-        # Print the results
-        print('--------------------')
-        print(f"Best peak in top view histogram: {bins_top[best_peak_index_top]}")
-        print(f"Highest count: {highest_neighbor_count_top}")
-        print(f"Selected neighbor range: {selected_neighbor_range_top}")
-        print(f"Left bound of selected range: {left_bound_final}")
-        print(f"Right bound of selected range: {right_bound_final}")
-        print("Neighbor counts for top view peaks:")
-        for index, counts in neighbor_counts_top.items():
-            print(f"Peak at bin {bins_top[index]}: {counts}")
+        # # Print the results
+        # print('--------------------')
+        # print(f"Best peak in top view histogram: {bins_top[best_peak_index_top]}")
+        # print(f"Highest count: {highest_neighbor_count_top}")
+        # print(f"Selected neighbor range: {selected_neighbor_range_top}")
+        # print(f"Left bound of selected range: {left_bound_final}")
+        # print(f"Right bound of selected range: {right_bound_final}")
+        # print("Neighbor counts for top view peaks:")
+        # for index, counts in neighbor_counts_top.items():
+        #     print(f"Peak at bin {bins_top[index]}: {counts}")
 
 
         # Filter coordinates to keep only those within the common range
@@ -2164,52 +2164,58 @@ class StoringGroceriesMain():
                 # print('- :', obj.object_name)
                 filtered_coordinates.append(obj)
 
-        # Plotting the peak regions in histograms
-        plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_front_view, bins=bins_front, range=(0, width), color='blue', alpha=0.7)
-        plt.axvline(left_bound_final_front, color='red', linestyle='--', linewidth=2, label='Left Bound')
-        plt.axvline(right_bound_final_front, color='green', linestyle='--', linewidth=2, label='Right Bound')
-        plt.title("Histogram of X-coordinates in Front View with Peak Region")
-        plt.xlabel("Pixel X-coordinate")
-        plt.ylabel("Frequency")
-        plt.grid(True)
-        plt.legend()
-        plt.savefig('histogram_front_view_peak.png')
-        plt.close()
+        # # Plotting the peak regions in histograms
+        # plt.figure(figsize=(10, 6))
+        # plt.hist(y_coordinates_front_view, bins=bins_front, range=(0, width), color='blue', alpha=0.7)
+        # plt.axvline(left_bound_final_front, color='red', linestyle='--', linewidth=2, label='Left Bound')
+        # plt.axvline(right_bound_final_front, color='green', linestyle='--', linewidth=2, label='Right Bound')
+        # plt.title("Histogram of X-coordinates in Front View with Peak Region")
+        # plt.xlabel("Pixel X-coordinate")
+        # plt.ylabel("Frequency")
+        # plt.grid(True)
+        # plt.legend()
+        # plt.savefig('histogram_front_view_peak.png')
+        # plt.close()
 
-        plt.figure(figsize=(10, 6))
-        plt.hist(y_coordinates_top_view, bins=bins_top, range=(0, height), color='green', alpha=0.7)
-        plt.axvline(left_bound_final , color='red', linestyle='--', linewidth=2, label='Left Bound')
-        plt.axvline(right_bound_final, color='green', linestyle='--', linewidth=2, label='Right Bound')
-        plt.title("Histogram of Z-coordinates in Top View with Peak Region")
-        plt.xlabel("Pixel Z-coordinate")
-        plt.ylabel("Frequency")
-        plt.grid(True)
-        plt.legend()
-        plt.savefig('histogram_top_view_peak.png')
-        plt.close()
+        # plt.figure(figsize=(10, 6))
+        # plt.hist(y_coordinates_top_view, bins=bins_top, range=(0, height), color='green', alpha=0.7)
+        # plt.axvline(left_bound_final , color='red', linestyle='--', linewidth=2, label='Left Bound')
+        # plt.axvline(right_bound_final, color='green', linestyle='--', linewidth=2, label='Right Bound')
+        # plt.title("Histogram of Z-coordinates in Top View with Peak Region")
+        # plt.xlabel("Pixel Z-coordinate")
+        # plt.ylabel("Frequency")
+        # plt.grid(True)
+        # plt.legend()
+        # plt.savefig('histogram_top_view_peak.png')
+        # plt.close()
 
-        time.sleep(1)
-        # Load and display the saved histogram images using OpenCV
-        hist_front_view_peak = cv2.imread('histogram_front_view_peak.png')
-        hist_top_view_peak = cv2.imread('histogram_top_view_peak.png')
+        # time.sleep(1)
+        # # Load and display the saved histogram images using OpenCV
+        # hist_front_view_peak = cv2.imread('histogram_front_view_peak.png')
+        # hist_top_view_peak = cv2.imread('histogram_top_view_peak.png')
 
-        cv2.imshow("Top view of cabinet", image2)
-        cv2.waitKey(100)
+        # cv2.imshow("Top view of cabinet", image2)
+        # cv2.waitKey(0)
 
-        cv2.imshow("Histogram of Z-coordinates in Top View with Peak Region", hist_top_view_peak)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imwrite('top_view_cabinet' + ".jpg", image2) 
+        # time.sleep(0.5)
 
-        cv2.imshow("Front view of cabinet", image)
-        cv2.waitKey(100)
+        # cv2.imshow("Histogram of Z-coordinates in Top View with Peak Region", hist_top_view_peak)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
-        cv2.imshow("Histogram of X-coordinates in Front View with Peak Region", hist_front_view_peak)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imshow("Front view of cabinet", image)
+        # cv2.waitKey(0)
 
-        print(f"Front view: {left_bound_front} to {right_bound_front}")
-        print(f"Top view: {left_bound_top} to {right_bound_top}")
+        # cv2.imwrite('Front_view_of_cabinet' + ".jpg", image) 
+        # time.sleep(0.5)
+
+        # cv2.imshow("Histogram of X-coordinates in Front View with Peak Region", hist_front_view_peak)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
+        # print(f"Front view: {left_bound_front} to {right_bound_front}")
+        # print(f"Top view: {left_bound_top} to {right_bound_top}")
 
         # Return the filtered coordinates
         return filtered_coordinates
@@ -2775,7 +2781,13 @@ class StoringGroceriesMain():
                 cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
                 cv2.rectangle(blank_image, (width//3, height//4), (width - width//3, height - height//4), (0, 255, 0), 3)
                 cv2.imshow("New Img Distance Inspection", blank_image)
-                cv2.waitKey(100)
+                cv2.waitKey(10)
+
+                # cv2.imwrite('Distance_to_door' + ".jpg", blank_image) 
+                # time.sleep(0.5)
+
+
+                
 
             half_image_zero_or_near = False
             half_image_zero_or_near_err = 0.0
