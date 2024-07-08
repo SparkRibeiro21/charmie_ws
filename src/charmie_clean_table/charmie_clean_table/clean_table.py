@@ -149,6 +149,7 @@ class CleanTableNode(Node):
         self.first_depth_hand_image_received = False
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
+        self.detected_doors = Yolov8Objects()
         self.start_button_state = False
         self.flag_navigation_reached = False
         self.point_cloud_response = GetPointCloud.Response()
@@ -1587,7 +1588,7 @@ class CleanTableMain():
         self.dishwasher = [-1.0, 2.0]
 
 
-        self.state = self.Waiting_for_task_start
+        self.state = self.Approach_dishwasher
 
 
         self.node.get_logger().info("IN SERVE THE CLEAN THE TABLE MAIN")
@@ -2078,7 +2079,39 @@ class CleanTableMain():
 
             elif self.state == self.Approach_dishwasher:
 
-                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
+                # self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
+
+                tetas = [[-30, -30], [0, -30], [30, -30]]
+                objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
+                print('pos-search')
+                for obj in objects_found:
+                    if obj.object_name == 'Dishwasher':
+                        dishwasher_found = True
+                        dishwasher_position = obj.position_relative
+                        print('Object found')
+
+                        
+                print('rel_pos:', dishwasher_position.x, dishwasher_position.y, dishwasher_position.z)   
+
+                robot_radius = 0.28
+                distance_to_dishwasher = 1.10 # 1.10 makes me be at 1.0 from the front of the robot to the dishwasher 
+
+                distance_x_to_center = dishwasher_position.x
+                distance_y_to_center = dishwasher_position.y - robot_radius - distance_to_dishwasher
+                
+                print('d_lateral:', distance_x_to_center)
+                print('d_frontal:', distance_y_to_center)
+                
+                ang_to_bag = -math.degrees(math.atan2(distance_x_to_center, distance_y_to_center))
+                dist_to_bag = (math.sqrt(distance_x_to_center**2 + distance_y_to_center**2))
+                print(ang_to_bag, dist_to_bag)
+                self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
+                    
+
+                while True:
+                    pass
+
+
 
                 self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.dishwasher, flag_not_obs=True, wait_for_end_of=True)
