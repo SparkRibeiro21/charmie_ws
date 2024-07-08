@@ -176,7 +176,7 @@ class TestNode(Node):
         self.activate_yolo_pose_client.call_async(request)
 
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
+    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=True, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
         request = ActivateYoloObjects.Request()
         request.activate_objects = activate_objects
         request.activate_shoes = activate_shoes
