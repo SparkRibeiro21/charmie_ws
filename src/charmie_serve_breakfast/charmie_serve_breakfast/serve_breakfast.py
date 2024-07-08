@@ -1592,7 +1592,7 @@ class ServeBreakfastMain():
         self.kitchen_table = [-2.0, 6.8]
 
 
-        self.state = self.Placing_bowl
+        self.state = self.Waiting_for_task_start
 
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
