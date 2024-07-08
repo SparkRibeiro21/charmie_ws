@@ -34,10 +34,18 @@ class NavigationSDNLClass:
         # self.beta1 = 120  # 9
         # self.beta2 = 0.15 # 7
 
-        self.lambda_target = 5 # 12
-        self.beta1 = 80 # 9
-        self.beta2 = 0.35 # 0.04 # 7
-
+        # generic tasks
+        self.lambda_target = 4
+        self.beta1 = 40 
+        self.beta2 = 0.04
+        self.min_speed_obs = 6.0 # speed
+        
+        # restaurant
+        # self.lambda_target = 5
+        # self.beta1 = 80 
+        # self.beta2 = 0.35 
+        # self.min_speed_obs = 3.0 # speed
+        
         # configurable other parameters
         self.nav_threshold_dist = 0.6 # in meters
         # self.nav_threshold_dist_follow_me = 1.2 # in meters
@@ -47,7 +55,7 @@ class NavigationSDNLClass:
         self.max_ang_speed = 10.0 # speed # 20.0
         self.tar_dist_decrease_lin_speed = 0.8 # meters
         self.obs_dist_decrease_lin_speed = 1.5 # meters
-        self.min_speed_obs = 3.0 # speed
+        # self.min_speed_obs = 3.0 # speed
         self.decay_rate_initial_speed_ramp = 2.0 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
         self.MAX_DIST_FOR_OBS = 2.0
@@ -68,9 +76,8 @@ class NavigationSDNLClass:
         self.first_nav_target = False
         self.dist_to_target = 0.0
         self.ang_to_target = 0.0 
-        self.min_dist_obs = 0.0
+        self.min_dist_obs = self.MAX_DIST_FOR_OBS
         self.aux_initial_speed_ramp = 0.0
-
 
         self.f_target = 0.0
         self.y_atrator = []
@@ -838,7 +845,7 @@ class NavSDNLNode(Node):
 
         self.navigation_state = 0
         self.obstacles = Obstacles()
-        self.MIN_DIST_OBS = 0.0
+        # self.MIN_DIST_OBS = 10.0
         self.detected_people = Yolov8Pose()
         self.PERSON_IN_FRONT = False
         self.latest_localisation_x = 0.0
@@ -950,9 +957,10 @@ class NavSDNLNode(Node):
         #     print("l_cm", o.length_cm)
         # print("---")
 
-        for obs in self.obstacles.obstacles:
-            if obs.dist < self.MIN_DIST_OBS:
-                self.MIN_DIST_OBS = obs.dist
+        # self.MIN_DIST_OBS = 10.0
+        # for o in obs.obstacles:
+        #     if o.dist < self.MIN_DIST_OBS:
+        #         self.MIN_DIST_OBS = o.dist
 
     def robot_localisation_callback(self, pose: Pose2D):
         self.nav.robot_x = pose.x
@@ -1190,16 +1198,17 @@ class NavSDNLNode(Node):
                 elif self.nav.nav_target.move_or_rotate.lower() == "adjust_obstacle":
 
                     print("Entrei adjust OBSTACLE")
-                    print(self.nav.nav_target.adjust_distance, self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
+                    print(self.nav.nav_target.adjust_direction, self.nav.nav_target.adjust_min_dist)
+                    self.nav.calculate_obstacles_lidar()
 
                     omni_move = Vector3()
                     omni_move.x = float(self.nav.nav_target.adjust_direction)
                     omni_move.y = float(15.0)
                     omni_move.z = float(100.0) 
 
-                    print(self.MIN_DIST_OBS)
+                    print("min_obs:", self.nav.min_dist_obs, self.nav.nav_target.adjust_min_dist)
                     
-                    if self.MIN_DIST_OBS < self.nav.nav_target.adjust_min_dist:
+                    if self.nav.min_dist_obs < self.nav.nav_target.adjust_min_dist:
                         omni_move.x = float(0.0)
                         omni_move.y = float(0.0)
                         self.navigation_state = 2

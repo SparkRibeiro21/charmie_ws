@@ -24,11 +24,12 @@ RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
-class CleanTableNode(Node):
+
+class ServeBreakfastNode(Node):
 
     def __init__(self):
-        super().__init__("CleanTable")
-        self.get_logger().info("Initialised CHARMIE CleanTable Node")
+        super().__init__("ServeBreakfast")
+        self.get_logger().info("Initialised CHARMIE ServeBreakfast Node")
 
         # path to save detected people in search for person
         home = str(Path.home())
@@ -633,19 +634,19 @@ class CleanTableNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = CleanTableNode()
-    th_main = threading.Thread(target=ThreadMainCleanTable, args=(node,), daemon=True)
+    node = ServeBreakfastNode()
+    th_main = threading.Thread(target=ThreadMainServeBreakfast, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-def ThreadMainCleanTable(node: CleanTableNode):
-    main = CleanTableMain(node)
+def ThreadMainServeBreakfast(node: ServeBreakfastNode):
+    main = ServeBreakfastMain(node)
     main.main()
 
-class CleanTableMain():
+class ServeBreakfastMain():
 
-    def __init__(self, node: CleanTableNode):
+    def __init__(self, node: ServeBreakfastNode):
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
@@ -1153,7 +1154,7 @@ class CleanTableMain():
         final_objects = []
         if not list_of_objects_detected_as:
             list_of_objects_detected_as = [None] * len(list_of_objects)
-            
+
         mandatory_object_detected_flags = [False for _ in list_of_objects]
         # print(mandatory_object_detected_flags)
         DETECTED_ALL_LIST_OF_OBJECTS = False
@@ -1413,7 +1414,7 @@ class CleanTableMain():
 
             print("FILTERED:")
             for o in filtered_objects:
-                print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
+                print(o.index, o.object_name, o.index, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
 
 
             if list_of_objects: #only does this if there are items in the list of mandatory detection objects
@@ -1550,31 +1551,34 @@ class CleanTableMain():
     def main(self):
         
         # Task Related Variables
-
         self.Waiting_for_task_start = 0
-        self.Approach_kitchen_table = 1
+        # self.Approach_milk_location = 1
+        # self.Detect_and_pick_milk = 2
+        # self.Approach_cornflakes_location = 3
+        # self.Detect_and_pick_cornflakes = 4
+        # self.Approach_dishes_location = 5
+        # self.Detect_and_pick_dishes = 6
+        self.Approach_kitchen_counter = 1
         self.Detect_and_pick_all_objects = 2
-        self.Approach_dishwasher = 3
-        self.Open_dishwasher_door = 4
-        self.Open_dishwasher_rack = 5
-        self.Place_cup = 6
-        self.Place_bowl = 7
-        self.Place_plate = 8
-        self.Place_cutlery1 = 9
-        self.Place_cutlery2 = 10
-        self.Close_dishwasher_rack = 11
-        self.Close_dishwasher_door = 12
-        self.Final_State = 13
-
+        self.Approach_kitchen_table = 7
+        self.Placing_bowl = 8
+        self.Placing_milk = 9
+        self.Placing_cornflakes = 10
+        self.Placing_spoon = 11
+        self.Final_State = 12
+    
         # Configurables
         self.ATTEMPTS_AT_RECEIVING = 2
         self.SHOW_OBJECT_DETECTED_WAIT_TIME = 2.0
-
+        # self.GET_MILK = True
+        # self.GET_CORNFLAKES = True
+        # self.GET_DISHES = True
+        
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
-        self.look_table_objects = [-45, -45] # temp while debugging! Correct value: [-45, -45], Debug Value [45, -45]
+        self.look_table_objects = [-45, -45]
         self.look_tray = [0, -60]
         self.search_tetas = [[-45, -45], [-45+10, -45+8], [-45-10, -45+8], [-45-10, -45-5], [-45+10, -45-5]]
 
@@ -1583,14 +1587,16 @@ class CleanTableMain():
 
         # Navigation Positions
         self.front_of_door = [-0.2, 1.5] 
-        self.kitchen_table = [-0.5, 3.5]
-        self.dishwasher = [-1.0, 2.0]
+        self.cofee_table = [-0.2, 3.5]
+        self.side_table = [-0.2, 4.5]
+        self.kitchen_counter = [-0.2, 5.5]
+        self.kitchen_table = [-2.0, 6.5]
 
 
         self.state = self.Waiting_for_task_start
 
 
-        self.node.get_logger().info("IN SERVE THE CLEAN THE TABLE MAIN")
+        self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
 
         while True:
 
@@ -1609,7 +1615,7 @@ class CleanTableMain():
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.set_speech(filename="clean_the_table/ready_start_ct", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/sb_ready_start", wait_for_end_of=True)
 
                 self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
 
@@ -1621,50 +1627,114 @@ class CleanTableMain():
 
                 self.wait_for_door_start()
 
-                self.state = self.Approach_kitchen_table
+                self.state = self.Approach_kitchen_counter
 
 
-            elif self.state == self.Approach_kitchen_table:
-
-                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
-
-                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
-
-                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
+            elif self.state == self.Approach_kitchen_counter:
                 
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                    
+                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.set_speech(filename="generic/sb_moving_kitchen_counter", wait_for_end_of=False)
+
+                self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
+                
+                self.set_speech(filename="generic/sb_arrived_kitchen_counter", wait_for_end_of=True)
+            
                 self.state = self.Detect_and_pick_all_objects
+
 
             elif self.state == self.Detect_and_pick_all_objects:
 
                 all_objects_picked = False
                 object_in_gripper = False
                 correct_object = DetectedObject()
-                list_of_objects = ["Plate", "Bowl", "Cup", "Spoon", "Knife", "Fork"]
-                
+                list_of_objects = ["milk", "cornflakes", "bowl", "spoon"]
+                list_of_objects_detected_as = [["cleanser"], ["strawberry_jello", "chocolate_jello"], [], ["knife", "fork"]]
+
                 while not all_objects_picked:
 
                     print(list_of_objects)    
+                    print(list_of_objects_detected_as)
+
+                    objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, list_of_objects=list_of_objects, list_of_objects_detected_as=list_of_objects_detected_as, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
                     
-                    objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                    curr_obj = "Milk"
+
+                    if curr_obj in list_of_objects:
+
+                        # MILK
+                        for o in objects_found:
+                            if o == curr_obj:
+                                correct_object = o
+
+                        self.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
+
+                        self.set_neck(position=self.look_judge, wait_for_end_of=False)
+
+                        self.set_speech(filename="serve_breakfast/found_the_milk", wait_for_end_of=False)  
+                        
+                        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
+
+                        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+
+                        if not object_in_gripper:
+                            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
+
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+                        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                        self.set_face("help_pick_milk") 
+                        
+                        object_in_gripper = False
+                        gripper_ctr = 0
+                        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+                            
+                            gripper_ctr += 1
+                            
+                            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                            
+                            if not object_in_gripper:
+                        
+                                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+
+                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                                
+                                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+                        if object_in_gripper:
+
+                            self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
+
+                            if curr_obj in list_of_objects:
+                                index = list_of_objects.index(curr_obj)
+                                list_of_objects.remove(curr_obj)
+                                list_of_objects_detected_as.pop(index)
+                        
+                        else:
+                            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+
                     
-                    curr_obj = "Knife"
-                    curr_obj_flag = False
-                    for o in objects_found:
-                        if o == curr_obj:
-                            correct_object = o
-                            curr_obj_flag = True
+                    curr_obj = "Cornflakes"
+                    
+                    if curr_obj in list_of_objects:
 
-                    if curr_obj in list_of_objects and curr_obj_flag:
-                        curr_obj_flag = False
+                        # CORNFLAKES
+                        for o in objects_found:
+                            if o == curr_obj:
+                                correct_object = o
 
                         self.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
 
                         self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                        self.set_speech(filename="clean_the_table/found_the_"+curr_obj.lower(), wait_for_end_of=False)  
+                        self.set_speech(filename="serve_breakfast/found_the_cornflakes", wait_for_end_of=False)  
                         
                         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
 
@@ -1677,7 +1747,7 @@ class CleanTableMain():
 
                         self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                        self.set_face("help_pick_"+curr_obj.lower()) 
+                        self.set_face("help_pick_cornflakes") 
                         
                         object_in_gripper = False
                         gripper_ctr = 0
@@ -1687,7 +1757,7 @@ class CleanTableMain():
                             
                             self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object_cornflakes", wait_for_end_of=True)
                             
                             if not object_in_gripper:
                         
@@ -1699,474 +1769,186 @@ class CleanTableMain():
 
                         if object_in_gripper:
 
-                            ### ARM MOVEMENT WHEN SUCESSFULL RECEIVING OBJECT
-
-                            # self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
+                            self.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=False)
 
                             if curr_obj in list_of_objects:
+                                index = list_of_objects.index(curr_obj)
                                 list_of_objects.remove(curr_obj)
-                            
-                            # the robot must only move two pieces of cutlery
-                            if "Knife" not in list_of_objects and "Spoon" not in list_of_objects:
-                                list_of_objects.remove("Fork")
-                            if "Fork" not in list_of_objects and "Spoon" not in list_of_objects:
-                                list_of_objects.remove("Knife")
-                            if "Knife" not in list_of_objects and "Fork" not in list_of_objects:
-                                list_of_objects.remove("Spoon")
-
+                                list_of_objects_detected_as.pop(index)
+                        
                         else:
-
                             self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
 
 
-                    curr_obj = "Fork"
-                    curr_obj_flag = False
-                    for o in objects_found:
-                        if o == curr_obj:
-                            correct_object = o
-                            curr_obj_flag = True
-
-                    if curr_obj in list_of_objects and curr_obj_flag:
-                        curr_obj_flag = False
-
-                        self.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
-
-                        self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                        self.set_speech(filename="clean_the_table/found_the_"+curr_obj.lower(), wait_for_end_of=False)  
+                    if "Milk" not in list_of_objects and "Cornflakes" not in list_of_objects:
                         
-                        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
-
-                        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
-
-                        if not object_in_gripper:
-                            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
-
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                        self.set_face("help_pick_"+curr_obj.lower()) 
+                        curr_obj = "Bowl"
                         
-                        object_in_gripper = False
-                        gripper_ctr = 0
-                        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-                            
-                            gripper_ctr += 1
-                            
-                            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+                        if curr_obj in list_of_objects:
 
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                            # CORNFLAKES
+                            for o in objects_found:
+                                if o == curr_obj:
+                                    correct_object = o
+
+                            self.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
+
+                            self.set_neck(position=self.look_judge, wait_for_end_of=False)
+
+                            self.set_speech(filename="serve_breakfast/found_the_bowl", wait_for_end_of=False)  
                             
+                            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
+
+                            self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+
                             if not object_in_gripper:
-                        
-                                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+                                time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
 
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                            self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+                            self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                            self.set_face("help_pick_bowl") 
+                            
+                            object_in_gripper = False
+                            gripper_ctr = 0
+                            while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
                                 
-                                self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        if object_in_gripper:
-
-                            ### ARM MOVEMENT WHEN SUCESSFULL RECEIVING OBJECT
-
-                            # self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
-
-                            if curr_obj in list_of_objects:
-                                list_of_objects.remove(curr_obj)
-                            
-                            # the robot must only move two pieces of cutlery
-                            if "Knife" not in list_of_objects and "Spoon" not in list_of_objects:
-                                list_of_objects.remove("Fork")
-                            if "Fork" not in list_of_objects and "Spoon" not in list_of_objects:
-                                list_of_objects.remove("Knife")
-                            if "Knife" not in list_of_objects and "Fork" not in list_of_objects:
-                                list_of_objects.remove("Spoon")
-
-                        else:
-
-                            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
-
-
-                    curr_obj = "Spoon"
-                    curr_obj_flag = False
-                    for o in objects_found:
-                        if o == curr_obj:
-                            correct_object = o
-                            curr_obj_flag = True
-
-                    if curr_obj in list_of_objects and curr_obj_flag:
-                        curr_obj_flag = False
-
-                        self.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
-
-                        self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                        self.set_speech(filename="clean_the_table/found_the_"+curr_obj.lower(), wait_for_end_of=False)  
-                        
-                        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
-
-                        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
-
-                        if not object_in_gripper:
-                            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
-
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                        self.set_face("help_pick_"+curr_obj.lower()) 
-                        
-                        object_in_gripper = False
-                        gripper_ctr = 0
-                        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-                            
-                            gripper_ctr += 1
-                            
-                            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                            
-                            if not object_in_gripper:
-                        
-                                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                                gripper_ctr += 1
                                 
-                                self.set_arm(command="open_gripper", wait_for_end_of=False)
+                                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                        if object_in_gripper:
-
-                            ### ARM MOVEMENT WHEN SUCESSFULL RECEIVING OBJECT
-
-                            # self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
-
-                            if curr_obj in list_of_objects:
-                                list_of_objects.remove(curr_obj)
-                            
-                            # the robot must only move two pieces of cutlery
-                            if "Knife" not in list_of_objects and "Spoon" not in list_of_objects:
-                                list_of_objects.remove("Fork")
-                            if "Fork" not in list_of_objects and "Spoon" not in list_of_objects:
-                                list_of_objects.remove("Knife")
-                            if "Knife" not in list_of_objects and "Fork" not in list_of_objects:
-                                list_of_objects.remove("Spoon")
-
-                        else:
-
-                            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
-
-
-                    curr_obj = "Plate"
-                    curr_obj_flag = False
-                    for o in objects_found:
-                        if o == curr_obj:
-                            correct_object = o
-                            curr_obj_flag = True
-
-                    if curr_obj in list_of_objects and curr_obj_flag:
-                        curr_obj_flag = False
-
-                        self.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
-
-                        self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                        self.set_speech(filename="clean_the_table/found_the_"+curr_obj.lower(), wait_for_end_of=False)  
-                        
-                        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
-
-                        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
-
-                        if not object_in_gripper:
-                            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
-
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                        self.set_face("help_pick_"+curr_obj.lower()) 
-                        
-                        object_in_gripper = False
-                        gripper_ctr = 0
-                        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-                            
-                            gripper_ctr += 1
-                            
-                            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                            
-                            if not object_in_gripper:
-                        
-                                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
                                 
-                                self.set_arm(command="open_gripper", wait_for_end_of=False)
+                                if not object_in_gripper:
+                            
+                                    if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
 
-                        if object_in_gripper:
+                                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                                    
+                                    self.set_arm(command="open_gripper", wait_for_end_of=False)
 
-                            ### ARM MOVEMENT WHEN SUCESSFULL RECEIVING OBJECT
+                            if object_in_gripper:
 
-                            # self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
+                                self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
-                            if curr_obj in list_of_objects:
-                                list_of_objects.remove(curr_obj)
-
+                                if curr_obj in list_of_objects:
+                                    index = list_of_objects.index(curr_obj)
+                                    list_of_objects.remove(curr_obj)
+                                    list_of_objects_detected_as.pop(index)
+                        
                         else:
-
                             self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
-
-
-                    curr_obj = "Bowl"
-                    curr_obj_flag = False
-                    for o in objects_found:
-                        if o == curr_obj:
-                            correct_object = o
-                            curr_obj_flag = True
-
-                    if curr_obj in list_of_objects and curr_obj_flag:
-                        curr_obj_flag = False
-
-                        self.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
-
-                        self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                        self.set_speech(filename="clean_the_table/found_the_"+curr_obj.lower(), wait_for_end_of=False)  
+                            
+                    
+                        curr_obj = "Spoon"
                         
-                        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
+                        if curr_obj in list_of_objects:
 
-                        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+                            # CORNFLAKES
+                            for o in objects_found:
+                                if o == curr_obj:
+                                    correct_object = o
 
-                        if not object_in_gripper:
-                            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
+                            self.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
 
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+                            self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                        self.set_face("help_pick_"+curr_obj.lower()) 
-                        
-                        object_in_gripper = False
-                        gripper_ctr = 0
-                        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+                            self.set_speech(filename="serve_breakfast/found_the_spoon", wait_for_end_of=False)  
                             
-                            gripper_ctr += 1
-                            
-                            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+                            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
 
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                            
-                            if not object_in_gripper:
-                        
-                                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+                            time.sleep(2*self.SHOW_OBJECT_DETECTED_WAIT_TIME)
 
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                                
-                                self.set_arm(command="open_gripper", wait_for_end_of=False)
+                            self.set_face(command="spoon_inside_traycup")
 
-                        if object_in_gripper:
+                            self.set_speech(filename="serve_breakfast/place_object_in_funilocopo", wait_for_end_of=True)
 
-                            ### ARM MOVEMENT WHEN SUCESSFULL RECEIVING OBJECT
-
-                            # self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
-
-                            if curr_obj in list_of_objects:
-                                list_of_objects.remove(curr_obj)
-
-                        else:
-
-                            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
-
-
-                    curr_obj = "Cup"
-                    curr_obj_flag = False
-                    for o in objects_found:
-                        if o == curr_obj:
-                            correct_object = o
-                            curr_obj_flag = True
-
-                    if curr_obj in list_of_objects and curr_obj_flag:
-                        curr_obj_flag = False
-
-                        self.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
-
-                        self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                        self.set_speech(filename="clean_the_table/found_the_"+curr_obj.lower(), wait_for_end_of=False)  
-                        
-                        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
-
-                        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
-
-                        if not object_in_gripper:
-                            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
-
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                        self.set_face("help_pick_"+curr_obj.lower()) 
-                        
-                        object_in_gripper = False
-                        gripper_ctr = 0
-                        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-                            
-                            gripper_ctr += 1
-                            
-                            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                            
-                            if not object_in_gripper:
-                        
-                                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                                
-                                self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        if object_in_gripper:
-
-                            ### ARM MOVEMENT WHEN SUCESSFULL RECEIVING OBJECT
-                            # if cup is last to be received than i do not need to ask to place in tray and ask again to place in hand (change self.set_face("help_pick_ct"))
-                            # if len(list_of_objects) == 1:
-                            #     pass
-                            # else:
-                            
-                            # self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
-
-                            if curr_obj in list_of_objects:
-                                list_of_objects.remove(curr_obj)
-
-                        else:
-
-                            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+                            time.sleep(2*self.SHOW_OBJECT_DETECTED_WAIT_TIME)
 
                     if not list_of_objects:
                         all_objects_picked = True
 
-                ### PLEASE PLACE THE CUP ON MY HAND AS SHOWN ON MY FACE
-
-                self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
-
-                self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_face("help_pick_ct") 
-
-                object_in_gripper = False
-                while not object_in_gripper:
-                    
-                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-
-                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-                        
                 self.set_face("charmie_face")
-                    
-                self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
-                self.state = self.Approach_dishwasher
+                self.state = self.Approach_kitchen_table
 
 
-            elif self.state == self.Approach_dishwasher:
+            elif self.state == self.Approach_kitchen_table:
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
-                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.dishwasher, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.dishwasher, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
-
-                ### CENTER WITH DISHWASHER AND GET INTO POSITION
-
-                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
-
-                self.state = self.Open_dishwasher_door
-
-
-            elif self.state == self.Open_dishwasher_door:
-
-                ### CODE HERE (NOT IMPLEMENTED FOR NOW ...)
-
-                self.state = self.Open_dishwasher_rack
-
-
-            elif self.state == self.Open_dishwasher_rack:
-
-                ### CODE HERE (NOT IMPLEMENTED FOR NOW ...)
-
-                self.state = self.Place_cup
-
-
-            elif self.state == self.Place_cup:
-
-                self.set_face("help_pick_cup") 
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
                 
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.kitchen_table, max_speed=15.0, flag_not_obs=False, wait_for_end_of=True)
+                
+                self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
 
-                self.set_arm(command="place_cup", wait_for_end_of=True)
+                self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.5, wait_for_end_of=True)
 
-                ### CODE HERE
-
-                self.state = self.Place_bowl
-
-
-            elif self.state == self.Place_bowl:
-
-                ### CODE HERE
-
-                self.state = self.Place_plate
-
-
-            elif self.state == self.Place_plate:
-
-                ### CODE HERE
-
-                self.state = self.Place_cutlery1
+                self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
+                
+                self.set_neck(position=self.look_table_objects, wait_for_end_of=False)
+                
+                self.state = self.Placing_bowl
 
 
-            elif self.state == self.Place_cutlery1:
+            elif self.state == self.Placing_bowl:
 
-                ### CODE HERE
+                self.set_arm(command="place_bowl_table", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
-                self.state = self.Place_cutlery2
+                self.state = self.Placing_cornflakes 
+            
+
+            elif self.state == self.Placing_cornflakes:
+
+                ##### ARM POUR IN BOWL
+                self.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=False)
+                
+                ##### ARM PLACE OBJECT
+                self.set_arm(command="place_cereal_table", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+                
+                self.state = self.Placing_milk
+
+           
+            elif self.state == self.Placing_milk:
+
+                ##### ARM POUR IN BOWL
+                self.set_arm(command="pour_milk_bowl", wait_for_end_of=True)
+                self.set_speech(filename="serve_breakfast/milk_poured", wait_for_end_of=False)
+
+                ##### ARM PLACE OBJECT
+                self.set_arm(command="place_milk_table", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+
+                self.state = self.Placing_spoon
 
 
-            elif self.state == self.Place_cutlery2:
+            elif self.state == self.Placing_spoon:
 
-                ### CODE HERE
-
-                self.state = self.Close_dishwasher_rack
-
-
-            elif self.state == self.Close_dishwasher_rack:
-
-                ### CODE HERE
-
-                self.state = self.Close_dishwasher_door
-
-
-            elif self.state == self.Close_dishwasher_door:
-
-                ### CODE HERE
+                self.set_arm(command="place_spoon_table", wait_for_end_of=True)
+                self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
                 self.state = self.Final_State 
 
 
             elif self.state == self.Final_State:
                 
-                self.set_speech(filename="clean_the_table/finished_ct", wait_for_end_of=False)
+                self.set_arm(command="arm_go_rest", wait_for_end_of=False)
+
+                self.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=False)
 
                 while True:
                     pass
 
             else:
                 pass
+            
