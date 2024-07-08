@@ -5,7 +5,7 @@ from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point, Pose2D
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints, BoundingBox, TarNavSDNL, ListOfDetectedPerson, ArmController
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints, BoundingBox, TarNavSDNL, ArmController
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, GetPointCloud
 from xarm_msgs.srv import GetFloat32List, PlanPose, PlanExec, PlanJoint
 from sensor_msgs.msg import Image
@@ -40,7 +40,7 @@ class TestNode(Node):
 
         # path to save detected people in search for person
         home = str(Path.home())
-        midpath = "charmie_ws/src"
+        midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
         self.complete_path_custom_face = home+'/'+midpath+'/'
 
         # Intel Realsense Subscribers
@@ -79,9 +79,6 @@ class TestNode(Node):
         self.arm_pose_subscriber = self.create_subscription(ListOfFloats, 'arm_current_pose', self.get_arm_current_pose_callback, 10)
         self.arm_set_pose_publisher = self.create_publisher(ListOfFloats, 'arm_set_desired_pose', 10)
         self.arm_set_height_publisher = self.create_publisher(Float32, 'arm_set_desired_height', 10)
-
-        # Search for person and object 
-        self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
 
         # Point cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
@@ -1049,6 +1046,7 @@ class TestNode(Node):
         self.activate_yolo_objects_client.call_async(request)
 
     def pose_planner(self, obj):
+        #This routine was an introduction on how to use the planner of the arm to plan movements
         request = PlanPose.Request()
         response = PlanPose.Response()
         """ request.target.position.x = obj[0] * 0.001 #para ficar em mm
@@ -1161,9 +1159,9 @@ class RestaurantMain():
 
         return self.node.neck_success, self.node.neck_message
     
-    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
+    def set_navigation(self, movement="", target=[0.0, 0.0], absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
 
-        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
 
             self.navigation_success = False
@@ -1182,22 +1180,20 @@ class RestaurantMain():
             # float32 adjust_distance
             # float32 adjust_direction
             # float32 adjust_min_dist
-            # float32 max_speed
 
             if adjust_direction < 0:
                 adjust_direction += 360
 
-            navigation.target_coordinates.x = float(target[0])
-            navigation.target_coordinates.y = float(target[1])
+            navigation.target_coordinates.x = target[0]
+            navigation.target_coordinates.y = target[1]
             navigation.move_or_rotate = movement
-            navigation.orientation_absolute = float(absolute_angle)
+            navigation.orientation_absolute = absolute_angle
             navigation.flag_not_obs = flag_not_obs
-            navigation.reached_radius = float(reached_radius)
+            navigation.reached_radius = reached_radius
             navigation.avoid_people = False
-            navigation.adjust_distance = float(adjust_distance)
-            navigation.adjust_direction = float(adjust_direction)
-            navigation.adjust_min_dist = float(adjust_min_dist)
-            navigation.max_speed = float(max_speed)
+            navigation.adjust_distance = adjust_distance
+            navigation.adjust_direction = adjust_direction
+            navigation.adjust_min_dist = adjust_min_dist
 
             self.node.flag_navigation_reached = False
             
@@ -2203,11 +2199,9 @@ class RestaurantMain():
                 std_dev_aux = 0.0
                 lines_detected = False
                 for avg_depth, roi, y_diff, y_01, y_02, roi_depth in avg_depths:
-                    cv2.imwrite(self.node.complete_path_custom_face + '1' + ".jpg", roi_depth) 
                     cv2.imshow(f"ROI with Average Depth {avg_depth}", roi_depth)
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
-                    cv2.imwrite(self.node.complete_path_custom_face + '2' + ".jpg", roi) 
                     cv2.imshow(f"ROI with Average Depth {avg_depth}", roi)
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
@@ -2224,7 +2218,6 @@ class RestaurantMain():
                                 aux_ = avg_depth, roi, y_diff, y_01, y_02, roi_depth
                                 # print('depth', avg_depth)
 
-                cv2.imwrite(self.node.complete_path_custom_face + '3' + ".jpg", colored_depth_image) 
                 cv2.imshow("Aligned Depth Head with Lines", colored_depth_image)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
@@ -2233,7 +2226,6 @@ class RestaurantMain():
                 print(lines_detected)
 
                 if lines_detected == True:
-                    cv2.imwrite(self.node.complete_path_custom_face + '4' + ".jpg", aux_[1]) 
                     cv2.imshow('Furthest plane: ', aux_[1])
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
@@ -2252,7 +2244,7 @@ class RestaurantMain():
 
                     # Draw a circle at the center of the ROI
                     cv2.circle(aux_[1], (roi_center_x, roi_center_y), radius, (0, 255, 0), -1)
-                    cv2.imwrite(self.node.complete_path_custom_face + '5' + ".jpg", aux_[1]) 
+
                     cv2.imshow('Furthest plane: ', aux_[1])
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
@@ -2327,7 +2319,7 @@ class RestaurantMain():
                     cv2.rectangle(colored_depth_image_2, (bb_2.box_top_left_x, bb_2.box_top_left_y), (bb_2.box_top_left_x + bb_2.box_width, bb_2.box_top_left_y + bb_2.box_height), (255, 0, 0), 2)
                     cv2.rectangle(colored_depth_image_2, (bb_3.box_top_left_x, bb_3.box_top_left_y), (bb_3.box_top_left_x + bb_3.box_width, bb_3.box_top_left_y + bb_3.box_height), (255, 0, 0), 2)
 
-                    cv2.imwrite(self.node.complete_path_custom_face + '6' + ".jpg", colored_depth_image_2) 
+
                     cv2.imshow("Original Image with Circles", colored_depth_image_2)
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
@@ -5261,10 +5253,9 @@ class RestaurantMain():
                             pass
      
 
-    def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False):
+    def search_for_person(self, tetas, delta_t=3.0):
 
-        self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible) 
-        self.set_speech(filename="generic/search_people", wait_for_end_of=False)
+        self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)                
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
         time.sleep(0.5)
         
@@ -5383,16 +5374,10 @@ class RestaurantMain():
                 # print("ADDED: ", p.index_person)
                 filtered_persons.append(p)
             to_append.clear()
-            
-        self.set_neck(position=[0, 0], wait_for_end_of=False)
-        self.set_rgb(BLUE+HALF_ROTATE)
 
-        sfp_pub = ListOfDetectedPerson()
         # print("FILTERED:")
-        for p in filtered_persons:
-            sfp_pub.persons.append(p)
+        # for p in filtered_persons:
         #     print(p.index_person)
-        self.node.search_for_person_detections_publisher.publish(sfp_pub)
 
         return filtered_persons
 

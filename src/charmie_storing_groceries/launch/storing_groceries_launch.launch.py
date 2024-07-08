@@ -160,16 +160,16 @@ def generate_launch_description():
 
     for node in [speakers, low_level, odometry, navigation]: #---------> CHANGE ME
         delayed_actions.append(TimerAction(period=delay, actions=[node]))
-        delay += 0.5
+        delay += 1.0
     
 
     return LaunchDescription([
         # LaunchDescription(declared_arguments + [robot_driver_launch]),
         *delayed_actions,
-        debug_visual,
+        # debug_visual,
         charmie_both_cameras_launch_description,
-        lidar,
-        obstacles,
+        # lidar,
+        # obstacles,
         face,
         neck,
         point_cloud,
