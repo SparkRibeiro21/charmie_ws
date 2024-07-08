@@ -75,9 +75,9 @@ def generate_launch_description():
     charmie_multi_camera_launch_description = IncludeLaunchDescription(charmie_multi_camera_launch_file)
 
 
-    serve_breakfast = Node(package='charmie_serve_breakfast',
-                executable='serve_breakfast',
-                name='serve_breakfast',
+    clean_table = Node(package='charmie_clean_table',
+                executable='clean_table',
+                name='clean_table',
                 emulate_tty=True
                 )
     
@@ -111,8 +111,8 @@ def generate_launch_description():
                 )
 
     arm = Node(package='charmie_arm_ufactory',
-                        executable='arm_serve_breakfast',
-                        name='arm_serve_breakfast',
+                        executable='arm_clean_table',
+                        name='arm_clean_table',
                         emulate_tty=True
                         )
     
@@ -174,5 +174,5 @@ def generate_launch_description():
         yolo_objects,
         lidar,
         obstacles,
-        # serve_breakfast,
+        # clean_table,
     ])

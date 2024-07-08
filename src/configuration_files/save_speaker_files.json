@@ -1,5 +1,4 @@
 {
-"cml_finished": "I have finished my carry my luggage task.",
-"unfortunately_cannot_follow": "Unfortunately my team has not developed the follow me function yet, and so I cannot follow you. I am sorry."
+"misdetection_move_to_next": "Oops. I may have misdetected the object. Let's move on to the next object."
 }
 

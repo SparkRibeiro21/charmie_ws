@@ -581,7 +581,7 @@ class CarryMyLuggageMain():
     def wait_for_door_start(self):
         
         # max angle considered to be a door (degrees)
-        MAX_DOOR_ANGLE = math.radians(15.0)
+        MAX_DOOR_ANGLE = math.radians(10.0)
         # max distance to be considered a door (meters)
         MAX_DOOR_DISTANCE = 1.0 
         
@@ -1262,8 +1262,10 @@ class CarryMyLuggageMain():
                     DETECTED_ALL_LIST_OF_OBJECTS = True
                     # forces the change of objects name for possible detected_as_object 
                     # (i.e. might detect cleanser as milk, but we need it as milk for the DEM show in face)
-                    for o in range(len(list_of_objects)): 
-                        final_objects[o].object_name = list_of_objects[o]
+                    for o in final_objects:
+                        for m in range(len(merged_lists)):
+                            if o.object_name.replace(" ","_").lower() in merged_lists[m]:
+                                o.object_name = list_of_objects[m]
 
             else:
                 final_objects = filtered_objects
