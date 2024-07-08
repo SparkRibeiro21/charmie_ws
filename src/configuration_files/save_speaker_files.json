@@ -1,4 +1,16 @@
 {
-"misdetection_move_to_next": "Oops. I may have misdetected the object. Let's move on to the next object."
+"please_follow_my_commands": "Hey there guest. I will analyse if you are breaking any rule. Please follow my commands.",
+"stand_in_front_of_me": "Please stand in front of me.",
+"show_drink_and_shoes": "Please turn sideways and show me your drink and shoes, as shown in my face",
+"keep_enjoying_party": "Thank you. Keep enjoying your party!", 
+"looking_guest_drink_rule": "I am looking at the detected guest breaking the mandatory drink in hand at all times rule.",
+"looking_guest_shoes_rule": "I am looking at the detected guest breaking the mandatory shoes rule.",
+"looking_guest_garbage_rule": "I am looking at the detected guest breaking the no garbage on the floor rule.",
+"guest_breaking_drink_rule": "Hello there guest. You are breaking the mandatory drink in hand at all times rule.",
+"guest_breaking_shoes_rule": "Hello there guest. You are breaking the mandatory shoes rule.",
+"guest_breaking_garbage_rule": "Hello there guest. You are breaking the no garbage on the floor rule.",
+"action_drink_rule": "To stop breaking this rule, you must go to the bar and get a drink.",
+"action_shoes_rule": "To stop breaking this rule, you must go to the entrance and take off your shoes.",
+"action_garbage_rule": "To stop breaking this rule, you must pick up the garbage and throw it into the bin."
 }
 

@@ -1617,13 +1617,12 @@ class SticklerForTheRulesMain():
             # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=1.0, adjust_direction=0.0, wait_for_end_of=True)
             # self.set_navigation(movement="move", target=(persons[i].position_absolute.x, persons[i].position_absolute.y), flag_not_obs=True, wait_for_end_of=True)
             
-            # HEY THERE GUEST
-            # I WILL ANALYSE IF YOU ARE BREAKING ANY RULE. PLEASE FOLLOW MY COMMANDS
+            # HEY THERE GUEST. I WILL ANALYSE IF YOU ARE BREAKING ANY RULE. PLEASE FOLLOW MY COMMANDS
             # PLEASE STAND IN FRONT OF ME
             # PLEASE TURN SIDEWAYS AND SHOW ME YOUR DRINK, AS SEEN IN MY FACE
             # 
             # SEARCH FOR OBJECT (FUNÇÃO DE ANALISAR)
-                            
+            
             
             
             i += 1
