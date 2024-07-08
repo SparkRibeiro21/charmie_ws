@@ -38,12 +38,14 @@ class NavigationSDNLClass:
         self.lambda_target = 4
         self.beta1 = 40 
         self.beta2 = 0.04
-
+        self.min_speed_obs = 6.0 # speed
+        
         # restaurant
         # self.lambda_target = 5
         # self.beta1 = 80 
         # self.beta2 = 0.35 
-
+        # self.min_speed_obs = 3.0 # speed
+        
         # configurable other parameters
         self.nav_threshold_dist = 0.6 # in meters
         # self.nav_threshold_dist_follow_me = 1.2 # in meters
@@ -53,7 +55,7 @@ class NavigationSDNLClass:
         self.max_ang_speed = 10.0 # speed # 20.0
         self.tar_dist_decrease_lin_speed = 0.8 # meters
         self.obs_dist_decrease_lin_speed = 1.5 # meters
-        self.min_speed_obs = 3.0 # speed
+        # self.min_speed_obs = 3.0 # speed
         self.decay_rate_initial_speed_ramp = 2.0 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
         self.MAX_DIST_FOR_OBS = 2.0

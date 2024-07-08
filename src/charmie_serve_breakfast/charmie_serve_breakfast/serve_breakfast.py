@@ -1567,7 +1567,8 @@ class ServeBreakfastMain():
     
         # Configurables
         self.ATTEMPTS_AT_RECEIVING = 2
-        self.SHOW_OBJECT_DETECTED_WAIT_TIME = 2.0
+        self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
+        self.MAX_SPEED = 35
         self.GET_MILK = True
         self.GET_CORNFLAKES = True
         self.GET_DISHES = True
@@ -1578,20 +1579,20 @@ class ServeBreakfastMain():
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45]
         self.look_tray = [0, -60]
-        self.search_tetas = [[-45, -45], [-45+10, -45+8], [-45-10, -45+8], [-45-10, -45-5], [-45+10, -45-5]]
+        self.search_tetas = [[-45, -45], [-45+15, -45+10], [-45-15, -45+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
         # Initial Position
         self.initial_position = [0.0, 0.1, 0.0]
 
         # Navigation Positions
-        self.front_of_door = [-0.2, 1.5] 
-        self.cofee_table = [-0.2, 3.5]
-        self.side_table = [-0.2, 4.5]
-        self.kitchen_counter = [-0.2, 5.5]
-        self.kitchen_table = [-2.0, 6.5]
+        self.front_of_door = [0.0, 1.5] 
+        self.cofee_table = [-0.4, 3.5]
+        self.side_table = [-0.4, 4.5]
+        self.kitchen_counter = [-0.4, 5.5]
+        self.kitchen_table = [-2.0, 6.8]
 
 
-        self.state = self.Waiting_for_task_start
+        self.state = self.Placing_bowl
 
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
@@ -1602,6 +1603,7 @@ class ServeBreakfastMain():
 
                 self.set_initial_position(self.initial_position)
                 print("SET INITIAL POSITION")
+                print(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
 
                 time.sleep(1)
         
@@ -1632,13 +1634,13 @@ class ServeBreakfastMain():
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=False)
                     
-                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     
                 if self.GET_MILK:
                     self.set_speech(filename="generic/moving_drinks_location", wait_for_end_of=False)
 
                     self.set_navigation(movement="rotate", target=self.cofee_table, flag_not_obs=True, wait_for_end_of=True)
-                    self.set_navigation(movement="move", target=self.cofee_table, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.cofee_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
                     
                     self.set_speech(filename="generic/arrived_drinks_location", wait_for_end_of=True)
@@ -1653,7 +1655,7 @@ class ServeBreakfastMain():
                     
                     while not object_in_gripper:
 
-                        objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                        objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
                         
                         self.detected_object_to_face_path(object=objects_found[0], send_to_face=True, bb_color=(0,255,0))
 
@@ -1715,7 +1717,7 @@ class ServeBreakfastMain():
                     self.set_speech(filename="generic/moving_snacks_location", wait_for_end_of=False)
 
                     self.set_navigation(movement="rotate", target=self.side_table, flag_not_obs=True, wait_for_end_of=True)
-                    self.set_navigation(movement="move", target=self.side_table, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.side_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     
                     self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
                     
@@ -1731,7 +1733,7 @@ class ServeBreakfastMain():
                     
                     while not object_in_gripper:
 
-                        objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                        objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
                     
                         self.detected_object_to_face_path(object=objects_found[0], send_to_face=True, bb_color=(0,255,0))
 
@@ -1792,7 +1794,7 @@ class ServeBreakfastMain():
                     self.set_speech(filename="generic/moving_dishes_location", wait_for_end_of=False)
                     
                     self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                    self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.kitchen_counter, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     
                     self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
                     
@@ -1808,8 +1810,8 @@ class ServeBreakfastMain():
                     correct_object_spoon = DetectedObject()
                     while not object_in_gripper:
 
-                        # objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, list_of_objects=["Spoon", "Bowl"], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
-                        objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["Fork", "Knife"],["Plate"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                        objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                        # objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["Fork", "Knife"],["Plate"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
                     
                         for of in objects_found:
                             print(of.object_name.lower(), of.index)
@@ -1875,13 +1877,13 @@ class ServeBreakfastMain():
                     
                     self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
 
-                    time.sleep(2*self.SHOW_OBJECT_DETECTED_WAIT_TIME)
+                    time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
 
                     self.set_face(command="spoon_inside_traycup")
 
                     self.set_speech(filename="serve_breakfast/place_object_in_funilocopo", wait_for_end_of=True)
 
-                    time.sleep(2*self.SHOW_OBJECT_DETECTED_WAIT_TIME)
+                    time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
 
                     self.set_face("charmie_face")
 
@@ -1894,14 +1896,14 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
-                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
-                
                 self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.kitchen_table, max_speed=15.0, flag_not_obs=False, wait_for_end_of=True)
-                
+                self.set_navigation(movement="move", target=self.kitchen_table, max_speed=20.0, reached_radius=1.0, flag_not_obs=False, wait_for_end_of=True)
+
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
+                                
                 self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
 
-                self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.5, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.45, wait_for_end_of=True)
 
                 self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs=True, wait_for_end_of=True)
                 

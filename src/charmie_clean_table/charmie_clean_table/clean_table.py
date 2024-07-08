@@ -2029,7 +2029,11 @@ class CleanTableMain():
                         if object_in_gripper:
 
                             ### ARM MOVEMENT WHEN SUCESSFULL RECEIVING OBJECT
-
+                            # if cup is last to be received than i do not need to ask to place in tray and ask again to place in hand (change self.set_face("help_pick_ct"))
+                            # if len(list_of_objects) == 1:
+                            #     pass
+                            # else:
+                            
                             # self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
 
                             if curr_obj in list_of_objects:
