@@ -155,7 +155,7 @@ from rclpy.node import Node
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Point
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfPoints, Obstacles, ArmController, ListOfDetectedObject, ListOfDetectedPerson
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfPoints, Obstacles, ArmController
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace
 
 import cv2 
@@ -226,26 +226,11 @@ class SticklerForTheRulesNode(Node):
         # Yolos
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
-        
-        # Search for person and object 
-        self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
-        self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
-        
-        # Yolo Objects
-        self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-        self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
-        self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
-        self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'doors_detected_filtered_hand', self.doors_detected_filtered_hand_callback, 10)
-        self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
-        self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
-        
         # Arm (CHARMIE)
         # self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
         # Navigation
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
-        
-        ### Services (Clients) ###
-        self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
@@ -305,12 +290,6 @@ class SticklerForTheRulesNode(Node):
         self.waited_for_end_of_face = False
 
         self.br = CvBridge()
-        self.detected_objects = Yolov8Objects()
-        self.detected_doors = Yolov8Objects()
-        self.detected_shoes = Yolov8Objects()
-        self.detected_objects_hand = Yolov8Objects()
-        self.detected_doors_hand = Yolov8Objects()
-        self.detected_shoes_hand = Yolov8Objects()
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
@@ -345,24 +324,6 @@ class SticklerForTheRulesNode(Node):
 
         self.get_neck_position = [1.0, 1.0]
 
-    def object_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_objects = det_object
-
-    def object_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_objects_hand = det_object
-
-    def doors_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_doors = det_object
-
-    def doors_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_doors_hand = det_object
-
-    def shoes_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_shoes = det_object
-
-    def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_shoes_hand = det_object
-    
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -1089,567 +1050,234 @@ class SticklerForTheRulesMain():
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
-    def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False):
+    def search_for_person_2(self, tetas):
 
-        self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible) 
-        self.set_speech(filename="generic/search_people", wait_for_end_of=False)
+        self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=True)                
+
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-        time.sleep(0.5)
+
+        time.sleep(3.0)
         
+        imshow_detected_people = True
+
         total_person_detected = []
         person_detected = []
+        total_cropped_people = []
+        cropped_people = []
+        points = []
+        croppeds = []
+
         people_ctr = 0
+        delay_ctr = 0
 
-        ### MOVES NECK AND SAVES DETECTED PEOPLE ###
-        
+        print("Started")
         for t in tetas:
-            self.set_rgb(RED+SET_COLOUR)
-            self.set_neck(position=t, wait_for_end_of=True)
-            time.sleep(1.0) # 0.5
-            self.set_rgb(WHITE+SET_COLOUR)
+            self.set_neck(position=[t, -25])
+            time.sleep(2)
 
-            start_time = time.time()
-            while (time.time() - start_time) < delta_t:        
-                local_detected_people = self.node.detected_people
-                for temp_people in local_detected_people.persons:
+            for people in self.node.detected_people.persons:
+                people_ctr+=1
+                print(" - ", people.index_person, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
+                print(" - ", people.index_person, people.position_relative.x,people.position_relative.y, people.position_relative.z)
+                aux = (people.position_absolute.x, people.position_absolute.y) 
+                person_detected.append(aux)
+                points.append(aux)
+
+                if imshow_detected_people:
+
+                    y1 = people.box_top_left_y
+                    y2 = people.box_top_left_y + people.box_height
+
+                    x1 = people.box_top_left_x
+                    x2 = people.box_top_left_x + people.box_width
+
+                    print(y1, y1, x1,x2)
+                    br = CvBridge()
+                    current_frame = br.imgmsg_to_cv2(self.node.detected_people.image_rgb, "bgr8")
+                    cropped_image = current_frame[y1:y2, x1:x2]
+                    cropped_people.append(cropped_image)
                     
-                    is_already_in_list = False
-                    person_already_in_list = DetectedPerson()
-                    for people in person_detected:
+                    croppeds.append(cropped_image)
 
-                        if temp_people.index_person == people.index_person:
-                            is_already_in_list = True
-                            person_already_in_list = people
-
-                    if is_already_in_list:
-                        person_detected.remove(person_already_in_list)
-                    elif temp_people.index_person > 0: # debug
-                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
-                        self.set_rgb(GREEN+SET_COLOUR)
-                    
-                    if temp_people.index_person > 0:
-                        person_detected.append(temp_people)
-                        people_ctr+=1
-
-            # DEBUG
-            # print("people in this neck pos:")
-            # for people in person_detected:
-            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
-        
             total_person_detected.append(person_detected.copy())
-            # print("Total number of people detected:", len(person_detected), people_ctr)
+            total_cropped_people.append(cropped_people.copy())
+            print("Total number of people detected:", len(person_detected), people_ctr)
             person_detected.clear()          
+            cropped_people.clear()
 
-        self.activate_yolo_pose(activate=False)
-        # print(total_person_detected)
-
-        # DEBUG
-        # print("TOTAL people in this neck pos:")
-        # for frame in total_person_detected:
-        #     for people in frame:    
-        #         print(people.index_person, people.position_absolute.x, people.position_absolute.y)
-        #     print("-")
 
         ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
         
+        print(total_person_detected)
+        print(len(points))
+       
         filtered_persons = []
-
+        filtered_persons_cropped = []
+        new_filtered_persons_cropped = []
         for frame in range(len(total_person_detected)):
-
-            to_append = []
-            to_remove = []
+            print(filtered_persons)
+            # print(filtered_persons_cropped)
 
             if not len(filtered_persons):
-                # print("NO PEOPLE", frame)
                 for person in range(len(total_person_detected[frame])):
-                    to_append.append(total_person_detected[frame][person])
+                    filtered_persons.append(total_person_detected[frame][person])
+                    filtered_persons_cropped.append(total_cropped_people[frame][person])
+                    new_filtered_persons_cropped.append(total_cropped_people[frame][person])
             else:
-                # print("YES PEOPLE", frame)
-
-                MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same person
-
                 for person in range(len(total_person_detected[frame])):
                     same_person_ctr = 0
+                    same_person_coords = (0,0)
+                    for filtered in range(len(filtered_persons)): #_aux:
 
-                    for filtered in range(len(filtered_persons)):
-
-                        dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
-                        # print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
+                        # print("??? ", total_person_detected[frame][person], filtered_persons[filtered])
+                        dist = math.dist(total_person_detected[frame][person], filtered_persons[filtered])
+                        # print("person:", person, "filtered:", filtered, "dist:", dist)
                         
-                        if dist < MIN_DIST:
+                        if dist < 1.0:
                             same_person_ctr+=1
-                            same_person_old = filtered_persons[filtered]
-                            same_person_new = total_person_detected[frame][person]
-                            # print("SAME PERSON")                        
+                            same_person_coords = filtered_persons[filtered]
+                            same_person_cropped = filtered_persons_cropped[filtered] 
+
+                            # print(same_person_cropped.shape)
+                        
                     
                     if same_person_ctr > 0:
 
-                        same_person_old_distance_center = abs(1280/2 - same_person_old.body_center_x) 
-                        same_person_new_distance_center = abs(1280/2 - same_person_new.body_center_x) 
+                        # just debug
+                        for p in filtered_persons_cropped:
+                            print(p.shape)
 
-                        # print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
-                        # print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
-
-                        if same_person_new_distance_center < same_person_old_distance_center: # person from newer frame is more centered with camera center
-                            to_remove.append(same_person_old)
-                            to_append.append(same_person_new)
-                        else: # person from older frame is more centered with camera center
-                            pass # that person is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
-
-                    else:
-                        to_append.append(total_person_detected[frame][person])
-
-            for p in to_remove:
-                if p in filtered_persons:
-                    # print("REMOVED: ", p.index_person)
-                    filtered_persons.remove(p)
-                # else:
-                    # print("TRIED TO REMOVE TWICE THE SAME PERSON")
-            to_remove.clear()  
-
-            for p in to_append:
-                # print("ADDED: ", p.index_person)
-                filtered_persons.append(p)
-            to_append.clear()
-            
-        self.set_neck(position=[0, 0], wait_for_end_of=False)
-        self.set_rgb(BLUE+HALF_ROTATE)
-
-        sfp_pub = ListOfDetectedPerson()
-        # print("FILTERED:")
-        for p in filtered_persons:
-            sfp_pub.persons.append(p)
-        #     print(p.index_person)
-        self.node.search_for_person_detections_publisher.publish(sfp_pub)
-
-        return filtered_persons
-
-    def detected_person_to_face_path(self, person, send_to_face):
-
-        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
-        
-        cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
-        just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
-        # cv2.imshow("Search for Person", just_person_image)
-        # cv2.waitKey(100)
-        
-        face_path = current_datetime + str(person.index_person)
-        
-        cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
-        time.sleep(0.5)
-
-        if send_to_face:
-            self.set_face(custom=face_path)
-        
-        return face_path
-
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
-
-        final_objects = []
-        if not list_of_objects_detected_as:
-            list_of_objects_detected_as = [None] * len(list_of_objects)
-            
-        mandatory_object_detected_flags = [False for _ in list_of_objects]
-        # print(mandatory_object_detected_flags)
-        DETECTED_ALL_LIST_OF_OBJECTS = False
-        MIN_DIST_DIFFERENT_FRAMES = 0.3 # maximum distance for the robot to assume it is the same objects
-        MIN_DIST_SAME_FRAME = 0.2
-
-        merged_lists = []
-        for obj, detected_as in zip(list_of_objects, list_of_objects_detected_as):
-            if detected_as != None:
-                merged_lists.append([obj] + detected_as)
-            else:
-                merged_lists.append([obj])
-        merged_lists = [[item.replace(" ","_").lower() for item in sublist] for sublist in merged_lists]
-        # print(merged_lists)
-        # for merged_list in merged_lists:
-        #     print(merged_list)
-        
-        while not DETECTED_ALL_LIST_OF_OBJECTS:
-
-            total_objects_detected = []
-            objects_detected = []
-            shoes_detected = []
-            doors_detected = []
-            objects_ctr = 0
-
-            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_doors,
-                                        activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
-                                        minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
-            self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
-            self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-            time.sleep(0.5)
-
-            ### MOVES NECK AND SAVES DETECTED OBJECTS ###
-            for t in tetas:
-                self.set_rgb(RED+SET_COLOUR)
-                self.set_neck(position=t, wait_for_end_of=True)
-                time.sleep(1.0) # 0.5
-                self.set_rgb(WHITE+SET_COLOUR)
-
-                start_time = time.time()
-                while (time.time() - start_time) < delta_t:      
-
-                    if detect_objects: 
-                        local_detected_objects = self.node.detected_objects
-                        for temp_objects in local_detected_objects.objects:
-                            
-                            is_already_in_list = False
-                            object_already_in_list = DetectedObject()
-                            for object in objects_detected:
-
-                                # filters by same index
-                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
-                                    is_already_in_list = True
-                                    object_already_in_list = object
-
-                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                                if temp_objects.object_name == object.object_name: # and 
-                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                    if dist < MIN_DIST_SAME_FRAME:
-                                        is_already_in_list = True
-                                        object_already_in_list = object
-
-                            if is_already_in_list:
-                                objects_detected.remove(object_already_in_list)
-                            else:
-                            # elif temp_objects.index > 0: # debug
-                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                                self.set_rgb(GREEN+SET_COLOUR)
-                            
-                            # if temp_objects.index > 0:
-                            objects_detected.append(temp_objects)
-                            objects_ctr+=1
+                        print("---", same_person_cropped.shape)
 
                         
-                    if detect_shoes: 
-                        local_detected_objects = self.node.detected_shoes
-                        for temp_objects in local_detected_objects.objects:
-                            
-                            is_already_in_list = False
-                            object_already_in_list = DetectedObject()
-                            for object in shoes_detected:
-
-                                # filters by same index
-                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
-                                    is_already_in_list = True
-                                    object_already_in_list = object
-
-                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                                if temp_objects.object_name == object.object_name and temp_objects.index != object.index: 
-                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                    if dist < MIN_DIST_SAME_FRAME:
-                                        is_already_in_list = True
-                                        object_already_in_list = object
-
-                            if is_already_in_list:
-                                shoes_detected.remove(object_already_in_list)
-                            else:
-                            # elif temp_objects.index > 0: # debug
-                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                                self.set_rgb(GREEN+SET_COLOUR)
-                            
-                            # if temp_objects.index > 0:
-                            shoes_detected.append(temp_objects)
-                            objects_ctr+=1
-
+                        # print(same_person_cropped)
+                        # print(total_cropped_people[frame][person])
+                        # print(len(same_person_cropped), len(total_cropped_people[frame][person]))
+                        # print(same_person_cropped.shape[0], same_person_cropped.shape[1])
+                        # print(total_cropped_people[frame][person].shape[0], total_cropped_people[frame][person].shape[1])
                         
-                    if detect_doors: 
-                        local_detected_objects = self.node.detected_doors
-                        for temp_objects in local_detected_objects.objects:
-                            
-                            is_already_in_list = False
-                            object_already_in_list = DetectedObject()
-                            for object in doors_detected:
+                        # the same person is the person on the first frame, whereas total_cropped_people[frame][person] is the same person on the second frame
+                        # if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
+                            # filtered_persons_cropped.remove(same_person_cropped)
+                            # filtered_persons_cropped.append(total_cropped_people[frame][person])
+                            # total_cropped_people[frame][person] = 
+                            # pass
+                        # for p in filtered_persons_cropped:
+                        #     if p.shape == same_person_cropped.shape:
+                        #         filtered_persons_cropped.remove(p)
 
-                                # filters by same index
-                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
-                                    is_already_in_list = True
-                                    object_already_in_list = object
-
-                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                                if temp_objects.object_name == object.object_name and temp_objects.index != object.index: 
-                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                    if dist < MIN_DIST_SAME_FRAME:
-                                        is_already_in_list = True
-                                        object_already_in_list = object
-
-                            if is_already_in_list:
-                                doors_detected.remove(object_already_in_list)
-                            else:
-                            # elif temp_objects.index > 0: # debug
-                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                                self.set_rgb(GREEN+SET_COLOUR)
-                            
-                            # if temp_objects.index > 0:
-                            doors_detected.append(temp_objects)
-                            objects_ctr+=1
-
-
-                # DEBUG
-                # print("objects in this neck pos:")
-                # for object in objects_detected:
-                #     print(object.index, object.position_absolute.x, object.position_absolute.y)
-            
-                total_objects_detected.append(objects_detected.copy() + shoes_detected.copy() + doors_detected.copy())
-                # print("Total number of objects detected:", len(objects_detected), objects_ctr)
-                objects_detected.clear()   
-                shoes_detected.clear()
-                doors_detected.clear()
-
-                if list_of_objects: #only does this if there are items in the list of mandatory detection objects
-                    
-                    mandatory_ctr = 0
-                    # for m_object in list_of_objects:
-                    for m_object in merged_lists:
-                        is_in_mandatory_list = False
+                        #         del my_list[index_to_remove]  # Removes the value at index 2 (i.e., the third element)
                         
-                        for frame in range(len(total_objects_detected)):
-                            for object in range(len(total_objects_detected[frame])):
-                                
-                                # compares to local detected frame
-                                # if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
-                                if total_objects_detected[frame][object].object_name.replace(" ","_").lower() in m_object:
-                                    is_in_mandatory_list = True
-                                    # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
-                    
-                                # compares to overall final detected objects
-                                for final_obj in final_objects:
-                                    # if final_obj.object_name.lower() == m_object.lower():
-                                    if final_obj.object_name.replace(" ","_").lower() in m_object:
-                                        is_in_mandatory_list = True
-                                        # print(m_object, final_obj.object_name, final_obj.index, is_in_mandatory_list)
-
-                        if is_in_mandatory_list:
-                            mandatory_ctr += 1
-                        # print(m_object, is_in_mandatory_list)
-
-                    if mandatory_ctr == len(list_of_objects): # if all objects are already in the detected list 
-                        break
-
-
-            self.activate_yolo_objects(activate_objects=False, activate_shoes=False, activate_doors=False,
-                                        activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
-                                        minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
-            
-
-            # DEBUG
-            # print("TOTAL objects in this neck pos:")
-            # for frame in total_objects_detected:
-            #     for object in frame:    
-            #         print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
-            #     print("-")
-
-            ### DETECTS ALL THE OBJECTS SHOW IN EVERY FRAME ###
-            
-            filtered_objects = []
-
-            for frame in range(len(total_objects_detected)):
-
-                to_append = []
-                to_remove = []
-
-                if not len(filtered_objects):
-                    # print("NO OBJECTS", frame)
-                    for object in range(len(total_objects_detected[frame])):
-                        to_append.append(total_objects_detected[frame][object])
-                else:
-                    # print("YES OBJECTS", frame)
-
-                    for object in range(len(total_objects_detected[frame])):
-                        same_object_ctr = 0
-
-                        for filtered in range(len(filtered_objects)):
-
-                            if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name: 
-
-                                # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
-                                dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
-                                # print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
-                                
-                                if dist < MIN_DIST_DIFFERENT_FRAMES:
-                                    same_object_ctr+=1
-                                    same_object_old = filtered_objects[filtered]
-                                    same_object_new = total_objects_detected[frame][object]
-                                    # print("SAME OBJECT")                        
                         
-                        if same_object_ctr > 0:
-
-                            image_center = (1280/2, 720/2)
-                            same_object_old_distance_center = math.dist(image_center, (same_object_old.box_center_x, same_object_old.box_center_y))
-                            same_object_new_distance_center = math.dist(image_center, (same_object_new.box_center_x, same_object_new.box_center_y))
-                            
-                            # print("OLD (pixel):", same_object_old.index, same_object_old.object_name, ", dist_2_center:", round(same_object_old_distance_center,2))
-                            # print("NEW (pixel):", same_object_new.index, same_object_new.object_name, ", dist_2_center:", round(same_object_new_distance_center,2))
-
-                            if same_object_new_distance_center < same_object_old_distance_center: # object from newer frame is more centered with camera center
-                                to_remove.append(same_object_old)
-                                to_append.append(same_object_new)
-                            else: # object from older frame is more centered with camera center
-                                pass # that object is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
-
-                        else:
-                            to_append.append(total_objects_detected[frame][object])
-
-                for o in to_remove:
-                    if o in filtered_objects:
-                        # print("REMOVED: ", o.index, o.object_name)
-                        filtered_objects.remove(o)
-                    else:
-                        pass
-                        # print("TRIED TO REMOVE TWICE THE SAME OBJECT")
-                to_remove.clear()  
-
-                for o in to_append:
-                    # print("ADDED: ", o.index, o.object_name)
-                    filtered_objects.append(o)
-                to_append.clear()
-
-            print("FILTERED:")
-            for o in filtered_objects:
-                print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
-
-
-            if list_of_objects: #only does this if there are items in the list of mandatory detection objects
-                
-                for l_object in range(len(list_of_objects)):
-                    for object in filtered_objects:
-
-                        # if not final_objects: # if final_objects is empty
-
-                        # if object.object_name.lower() == list_of_objects[l_object].lower() and not mandatory_object_detected_flags[l_object]:
-                        if object.object_name.replace(" ","_").lower() in merged_lists[l_object] and not mandatory_object_detected_flags[l_object]:
-                            final_objects.append(object)
-                            # mandatory_object_detected_flags.append(True)
-                            mandatory_object_detected_flags[l_object] = True
-                            # break
-                            # else:
-                            #     mandatory_object_detected_flags.append(False)
-
+                        #         filtered_persons_cropped.remove(p)
+                        
+                        
+                        # filtered_persons_cropped.remove(same_person_cropped)
+                        # if total_cropped_people[frame][person].shape[1] > same_person_cropped.shape[1]:
+                        #     filtered_persons_cropped.append(total_cropped_people[frame][person])
+                        #     new_filtered_persons_cropped.append(total_cropped_people[frame][person])
                         # else:
-                        #     pass
-                
-                # print(list_of_objects)
-                # print(mandatory_object_detected_flags)
-                
-                if not all(mandatory_object_detected_flags):
-                    # Speech: "There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?"
-                    self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
-                    for obj in range(len(list_of_objects)):
-                        if not mandatory_object_detected_flags[obj]:
-                            # Speech: (Name of object)
-                            self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
-                else:
-                    DETECTED_ALL_LIST_OF_OBJECTS = True
-                    # forces the change of objects name for possible detected_as_object 
-                    # (i.e. might detect cleanser as milk, but we need it as milk for the DEM show in face)
-                    for o in range(len(list_of_objects)): 
-                        final_objects[o].object_name = list_of_objects[o]
-
-            else:
-                final_objects = filtered_objects
-                DETECTED_ALL_LIST_OF_OBJECTS = True
-
-        self.set_neck(position=[0, 0], wait_for_end_of=False)
-        self.set_rgb(BLUE+HALF_ROTATE)
-
-        # Debug Speak
-        # self.set_speech(filename="generic/found_following_items")
-        # for obj in final_objects:
-        #     self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
-
-        sfo_pub = ListOfDetectedObject()
-        # print("FILTERED:")
-        for o in final_objects:
-            sfo_pub.objects.append(o)
-        #     print(o.object_name)
-        self.node.search_for_object_detections_publisher.publish(sfo_pub)
-            
-        return final_objects   
-
-    def detected_object_to_face_path(self, object, send_to_face, bb_color=(0,0,255)):
-
-        thresh_h = 220
-        thresh_v = 220
-
-        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
-        cf = self.node.br.imgmsg_to_cv2(object.image_rgb_frame, "bgr8")
-        
-        # checks whether the text has to start inside the bounding box or can start outside (image boundaries)
-        start_point = (object.box_top_left_x, object.box_top_left_y)
-        end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
-        cv2.rectangle(cf, start_point, end_point, bb_color , 4) 
-        # cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
-        
-        if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
-            start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
-        else:
-            start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
-            
-        text_size, _ = cv2.getTextSize(f"{object.object_name}", cv2.FONT_HERSHEY_SIMPLEX, 0.9, 2)
-        text_w, text_h = text_size
-        cv2.rectangle(cf, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), bb_color, -1)
-        cv2.putText(cf, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
-    
-        object_image = cf[max(object.box_top_left_y-thresh_v,0):min(object.box_top_left_y+object.box_height+thresh_v,720), max(object.box_top_left_x-thresh_h,0):min(object.box_top_left_x+object.box_width+thresh_h,1280)]
-        # cv2.imshow("Search for Person", object_image)
-        # cv2.waitKey(100)
-        
-        face_path = current_datetime + str(object.index) + str(object.object_name)
-        
-        cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", object_image) 
-        time.sleep(0.5)
-        
-        if send_to_face:
-            self.set_face(custom=face_path)
-        
-        return face_path
-
-    def approach_people(self, persons):
-        nr_persons = len(persons)
-        i = 0
-        while i < nr_persons - 1:
-            self.set_neck_coords(position=[persons[i].position_absolute.x, persons[i].position_absolute.y], ang=-10, wait_for_end_of=True)
-            
-            # self.set_navigation(movement="rotate", target=(persons[i].position_absolute.x, persons[i].position_absolute.y), flag_not_obs=True, wait_for_end_of=True)
-            # DECIDIR SE DE SEGUIDA FAÇO MOVE OU ADJUST 
-            # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=1.0, adjust_direction=0.0, wait_for_end_of=True)
-            # self.set_navigation(movement="move", target=(persons[i].position_absolute.x, persons[i].position_absolute.y), flag_not_obs=True, wait_for_end_of=True)
-            
-            # HEY THERE GUEST
-            # I WILL ANALYSE IF YOU ARE BREAKING ANY RULE. PLEASE FOLLOW MY COMMANDS
-            # PLEASE STAND IN FRONT OF ME
-            # PLEASE TURN SIDEWAYS AND SHOW ME YOUR DRINK, AS SEEN IN MY FACE
-            # 
-            # SEARCH FOR OBJECT (FUNÇÃO DE ANALISAR)
+                        #     filtered_persons_cropped.append(same_person_cropped)
+                        #     new_filtered_persons_cropped.append(same_person_cropped)
                             
-            
-            
-            i += 1
+                        #print(same_person_ctr, same_person_coords, person)
+                        filtered_persons.remove(same_person_coords)
 
-    def check_if_charmie_is_being_followed(self, index):
-        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, only_detect_person_legs_visible= False)
+                        avg_person = ((total_person_detected[frame][person][0]+same_person_coords[0])/2, (total_person_detected[frame][person][1]+same_person_coords[1])/2)
+                        # print(avg_person)
+                        filtered_persons.append(avg_person)
+                        points.append(avg_person)
+
+                    else:
+                    
+                        filtered_persons.append(total_person_detected[frame][person])
+                        filtered_persons_cropped.append(total_cropped_people[frame][person])
+                        new_filtered_persons_cropped.append(total_cropped_people[frame][person])
         
+        # same time for all people
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))    
+        self.custom_face_filename = current_datetime
+        
+        # ctr = 0
+        # for c in croppeds:
+        #     ctr+=1
+        #     cv2.imwrite("Person Detected_"+str(ctr)+".jpg", c)
+        ctr = 0
+        filenames = []
+        for c in new_filtered_persons_cropped:
+            ctr+=1
+            path = current_datetime + "_person_" + str(ctr) 
+            filenames.append(path)
+            
+            # cv2.imwrite("Person Filtered_"+str(ctr)+".jpg", c)
+            cv2.imwrite(self.node.complete_path_custom_face + path + ".jpg", c) 
+        
+        print("Finished")
+
+
+        print("---", filtered_persons)
+        points_to_send = ListOfPoints()
+        # for debug, see all points and the average calculations
+        # for p in points:
+        for p in filtered_persons:
+            aux = Point()
+            aux.x = float(p[0])
+            aux.y = float(p[1])
+            aux.z = 0.0
+            points_to_send.coords.append(aux)
+
+        print(filtered_persons)
+
+        # print(points_to_send)
+        self.node.search_for_person_publisher.publish(points_to_send)
+        
+        self.activate_yolo_pose(activate=False)                
+
+        return filtered_persons, filenames
+    
+    def check_if_charmie_is_being_followed(self):
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
+        
+        detected_person_temp = Yolov8Pose()
+        self.set_rgb(WHITE+HALF_ROTATE)
+        time.sleep(2.5)
+        detected_person_temp = self.node.detected_people  
+        print(detected_person_temp.num_person)
+        # print(detected_person_temp.persons)
         not_following = True
-        tetas = [[-180, 0]]
-        while not_following == True:
-            person_found = self.search_for_person(tetas=tetas, delta_t=2, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)
-            if person_found == []:
-                not_following = True
+        while not_following:
+            detected_person_temp = self.node.detected_people 
+            if detected_person_temp.num_person == 0:  
                 self.set_rgb(YELLOW+HALF_ROTATE)
                 self.set_speech(filename="sftr/Come_behind_me", wait_for_end_of=True)
                 self.set_rgb(RED+BLINK_QUICK)
                 time.sleep(1)
             else:
-                if index == 1:
-                    self.set_rgb(GREEN+HALF_ROTATE)
-                    self.set_speech(filename="sftr/Thanks_for_following", wait_for_end_of=True)
-                    not_following = False
-                else:
-                    self.set_rgb(GREEN+HALF_ROTATE)
-                    self.set_speech(filename="sftr/Thanks_for_following_2", wait_for_end_of=True)
-                    not_following = False
+                self.set_rgb(GREEN+HALF_ROTATE)
+                self.set_speech(filename="sftr/Thanks_for_following", wait_for_end_of=True)
+                not_following = False
+          
+    def check_if_charmie_is_being_followed2(self):
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
+        
+        detected_person_temp = Yolov8Pose()
+        self.set_rgb(WHITE+HALF_ROTATE)
+        time.sleep(2.5)
+        detected_person_temp = self.node.detected_people  
+        print(detected_person_temp.num_person)
+        # print(detected_person_temp.persons)
+        not_following = True
+        while not_following:
+            detected_person_temp = self.node.detected_people 
+            if detected_person_temp.num_person == 0:  
+                self.set_rgb(YELLOW+HALF_ROTATE)
+                self.set_speech(filename="sftr/Come_behind_me", wait_for_end_of=True)
+                self.set_rgb(RED+BLINK_QUICK)
+                time.sleep(1)
+            else:
+                self.set_rgb(GREEN+HALF_ROTATE)
+                self.set_speech(filename="sftr/Thanks_for_following_2", wait_for_end_of=True)
+                not_following = False
 
     # main state-machine function
     def main(self):
@@ -1660,10 +1288,7 @@ class SticklerForTheRulesMain():
         self.Detect_people_forbidden_room = 2
         self.Speak_forbidden_room = 3
         self.Navigation_out_forbidden_room = 4
-        self.Search_person_second_room = 5
-        self.Search_person_third_room = 6
-        self.Search_person_fourth_room = 7
-        self.Final_State = 8
+        self.Final_State = 5
         
         # Neck Positions
         self.look_forward = [0, 0]
@@ -1720,21 +1345,19 @@ class SticklerForTheRulesMain():
 
             elif self.state == self.Navigation_forbidden_room:
                 print('State 1 = Navigation forbidden room')
-                
-                nr_persons_detected_bedroom = 0
 
                 self.set_speech(filename="sftr/go_forbidden_room", wait_for_end_of=False)
                 #MOVE TO THE ROOM DOOR
                 
-                # self.set_navigation(movement="rotate", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.inside_office, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.inside_office, flag_not_obs=False, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
-                # self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_office, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
 
                 # next state
                 self.state = self.Detect_people_forbidden_room
@@ -1746,134 +1369,102 @@ class SticklerForTheRulesMain():
                 
                 print('nr times tracking = ', self.nr_times_tracking_fb)
                 
+                self.set_speech(filename="sftr/start_searching", wait_for_end_of=False)
                 self.set_rgb(YELLOW+ROTATE)
-                
-                self.activate_yolo_pose(only_detect_person_legs_visible=True)
-
-                print('inside')
-                person_detected = []
-                nr_persons_fb_room = 0
-                person_forbidden_room = False
-                tetas = [[-60, -10], [0, -10], [60, -10]]
-                if self.nr_times_tracking_fb < 3:
-                    person_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True, only_detect_person_arm_raised=False, characteristics=False)
-                    for person in person_found:
-                        if person.room_location == 'Bedroom':
-                            person_forbidden_room = True
-                            person_detected.append(person)
-                            print('Person found')
+                #REPLACE: LOOK TO THE ROOM
                             
-                            # LOOK TO THE PERSON DETECTED
-                            self.set_neck_coords(position=[person.position_absolute.x, person.position_absolute.y], ang=-10, wait_for_end_of=True)
-                            time.sleep(1)
+                tetas = [-30, 0, 30]
+                coords_of_people, images_of_people = self.search_for_person_2(tetas)
+                print('Coordinates of people with legs detected: ', coords_of_people)
+                if coords_of_people == []:
+                    detected_person = False
+                else:
+                    print('\n\n Nr de pessoas detetadas: ', len(coords_of_people))
+                    nr_persons_detected_bedroom = len(coords_of_people)
+                    detected_person = True
+                    self.set_rgb(POLICE)
+                    """ for i in images_of_people:
+                        self.set_face(custom=i)
+                        time.sleep(3) """
+                
+                for c in coords_of_people:
+                    # self.set_neck_coords(position=c, wait_for_end_of=True)
+                    print('\n\n\n\ C:' , c)
+                    print('x: ', c[0])
+                    print('y: ', c[1])
                     
-                    self.activate_yolo_pose(activate=False)
-                    if person_forbidden_room == True:
-                        ### DEAL WITH PERSON
-                        print('Someone in forbidden room')
+                    if -6.5 < c[0] < -2.5 and 5.6 < c[1] < 11.0:
+                        coordinates_guest = c
+                        self.set_neck_coords(position=c, ang= -5.0, wait_for_end_of=True)
+                        
+                        time.sleep(2)
                         self.state = self.Speak_forbidden_room
-                        nr_persons_fb_room = len(person_detected)
-                        print('nr de pessoas forbidden room = ', nr_persons_fb_room)
+                        break
                     else:
-                        ### ADVANCE TO NEXT ONE
-                        print('No one detected. I will check again')
                         self.state = self.Detect_people_forbidden_room
-                else: 
-                    ### ADVANCE TO NEXT ONE
-                    print('There is no one breaking the forbidden room rule')
-                    self.activate_yolo_pose(activate=False)
-                    self.set_speech(filename="sftr/no_detection_forbidden_room", wait_for_end_of=False)
-                    self.state = self.Search_person_second_room
+                    #ONLY FOR DEBUG
+
+        
+                # self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                
+                   # self.state = self.Speak_forbidden_room
 
             elif self.state == self.Speak_forbidden_room:
                 print('State 3 = Speak forbidden room')
                 
-                self.set_neck_coords(position=[person_detected[nr_persons_detected_bedroom].position_absolute.x, person_detected[nr_persons_detected_bedroom].position_absolute.y], ang=-10, wait_for_end_of=True)  
-                self.set_speech(filename="sftr/detection_forbidden_room", wait_for_end_of=True)
-                path = self.detected_person_to_face_path(person=person_detected[nr_persons_detected_bedroom], send_to_face=True)
-                
-                #REPLACE: LOOK TO THE PERSON
-                print('Coordinates of the guest I am looking at: ', person_detected.position_absolute)
+                if detected_person ==True:
+                    self.set_speech(filename="sftr/detection_forbidden_room", wait_for_end_of=True)
+                    #REPLACE: LOOK TO THE PERSON
+                    
+                    # index = len(coords_of_people) - nr_persons_detected_bedroom
+                    # print('Index da pessoa que eu detetei e estou a olhar: ', index)
+                    
+                    print('Coordinates of the  guest I am looking at: ', coordinates_guest)
 
-                # self.set_neck(position=coords_of_people[0], wait_for_end_of=True)
-                self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=True)
-                self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=True)
-                self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=True)
-                self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=True)
-                self.state = self.Navigation_out_forbidden_room
-                       
+                    # self.set_neck(position=coords_of_people[0], wait_for_end_of=True)
+                    self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=True)
+                    self.state = self.Navigation_out_forbidden_room
+                    
+                else:
+                    if self.nr_times_tracking_fb == 3:
+                        self.state == self.Final_State
+                    else:
+                        self.state = self.Detect_people_forbidden_room
+                    
+                # next state
+           
             elif self.state == self.Navigation_out_forbidden_room:
                 print('State 4 = Navigation out forbidden room')
-                nr_persons_detected_bedroom += 1
+                nr_persons_detected_bedroom -= 1
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 #MOVE TO OUT OF THE BEDROOM
-                self.set_navigation(movement="rotate", target=self.after_leaving_bedroom, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.after_leaving_bedroom, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="orientate", absolute_angle = 180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_neck(position=self.look_back, wait_for_end_of=True)
                 self.set_speech(filename="sftr/follow_me", wait_for_end_of=True)
+                time.sleep(2)
                 self.set_navigation(movement="move", target=self.after_leaving_bedroom, flag_not_obs=False, wait_for_end_of=True)
-                times_checking_person = 1
-                self.check_if_charmie_is_being_followed(times_checking_person)
+                self.check_if_charmie_is_being_followed()
                 self.set_navigation(movement="move", target=self.center_office, flag_not_obs=True, wait_for_end_of=True)
-                times_checking_person = 2
-                self.check_if_charmie_is_being_followed(times_checking_person)
-                self.activate_yolo_pose(activate=False)
+                self.check_if_charmie_is_being_followed2()
                 self.set_speech(filename="sftr/no_longer_breaking_rule", wait_for_end_of=False)
                 self.set_rgb(GREEN+BLINK_LONG)
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
                         
-                if nr_persons_detected_bedroom == nr_persons_fb_room - 1:
+                if nr_persons_detected_bedroom == 0:
                     print('No more persons detected')
-                    self.state = self.Search_person_second_room 
+                    self.state = self.Final_State 
                 else: 
                     print('Still persons in the room')
-                    # self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                    # self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                    # self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                    # self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
-                    # self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
+                    self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
 
                     self.state = self.Detect_people_forbidden_room
-                    
-            elif self.state == self.Search_person_second_room:
-                
-                print("Navigate to the centre of the room!")
-                # self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                
-                self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, only_detect_person_right_in_front=False)
-                person_detected = []
-                tetas = [[-120, 0], [0, 0], [60, 0]]
-                person_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True, only_detect_person_arm_raised=False, characteristics=False)
-                for person in person_found:
-                    if person.room_location == 'Kitchen':
-                        person_forbidden_room = True
-                        person_detected.append(person)
-                        print('Person found')
-                        
-                        # LOOK TO THE PERSON DETECTED
-                        self.set_neck_coords(position=[person.position_absolute.x, person.position_absolute.y], ang=-10, wait_for_end_of=True)
-                        time.sleep(1)
-                        
-                self.approach_people(person_detected)
-                    
-                
-                
-                self.state = self.Search_person_third_room
-            
-            elif self.state == self.Search_person_third_room:
-                
-                print("Finished task!!!")
-                #NECK: LOOK IN FRONT
-                
-                self.state = self.Search_person_fourth_room
-            
-            elif self.state == self.Search_person_fourth_room:
-                
-                print("Finished task!!!")
-                #NECK: LOOK IN FRONT
-                
-                self.state = self.Final_State
                                 
             elif self.state == self.Final_State:
                 
