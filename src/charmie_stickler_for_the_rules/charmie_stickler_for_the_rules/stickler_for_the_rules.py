@@ -1606,6 +1606,71 @@ class SticklerForTheRulesMain():
         
         return face_path
 
+    def analyse_person(self):
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, only_detect_person_legs_visible= False)
+        
+        not_in_front = True
+        tetas = [[0, 0]]
+        while not_in_front == True:
+            person_found = self.search_for_person(tetas=tetas, delta_t=2, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)
+            if person_found == []:
+                not_in_front = True
+                self.set_rgb(YELLOW+HALF_ROTATE)
+                self.set_speech(filename="sftr/stand_in_front_of_me", wait_for_end_of=True)
+                self.set_rgb(RED+BLINK_QUICK)
+                time.sleep(1)
+            else:
+                person_detected = person_found[0]
+                self.set_rgb(GREEN+HALF_ROTATE)
+                self.set_speech(filename="sftr/Thanks_for_following", wait_for_end_of=True)
+                not_in_front = False
+        time.sleep(1)
+        
+        self.set_speech(filename="sftr/show_drink_and_shoes", wait_for_end_of=True)
+        shoes_rule_broken = False
+        drink_rule_broken = False
+        garbage_rule_broken = False
+        tetas = [[0, -50], [0, -25], [0, 0]]
+        objects_found = self.search_for_objects(tetas=tetas, delta_t=2, detect_objects=True, detect_shoes=True, detect_doors=False)
+        for obj in objects_found:
+            print(obj.object_name)
+            print(obj.position_relative)
+            print(obj.room_location)
+            
+        if shoes_rule_broken == True:
+            print('shoes rule broken')
+            self.set_neck_coords(position=[person_detected.position_absolute.x, person_detected.position_absolute.y], ang=-10, wait_for_end_of=True)  
+            self.set_speech(filename="sftr/detection_forbidden_shoes", wait_for_end_of=True)
+            path = self.detected_person_to_face_path(person=person_detected, send_to_face=True)
+            
+            self.set_speech(filename="sftr/looking_guest_forbidden_shoes", wait_for_end_of=True)
+            self.set_speech(filename="sftr/guest_breaking_rule_forbidden_shoes", wait_for_end_of=True)
+            self.set_speech(filename="sftr/action_forbidden_shoes", wait_for_end_of=True)
+            
+        if drink_rule_broken == True:
+            print('drink rule broken')
+            self.set_neck_coords(position=[person_detected.position_absolute.x, person_detected.position_absolute.y], ang=-10, wait_for_end_of=True)  
+            self.set_speech(filename="sftr/detection_forbidden_shoes", wait_for_end_of=True)
+            path = self.detected_person_to_face_path(person=person_detected, send_to_face=True)
+            
+            self.set_speech(filename="sftr/looking_guest_forbidden_shoes", wait_for_end_of=True)
+            self.set_speech(filename="sftr/guest_breaking_rule_forbidden_shoes", wait_for_end_of=True)
+            self.set_speech(filename="sftr/action_forbidden_shoes", wait_for_end_of=True)
+            
+        if garbage_rule_broken == True:
+            print('garbage rule broken')
+            self.set_neck_coords(position=[person_detected.position_absolute.x, person_detected.position_absolute.y], ang=-10, wait_for_end_of=True)  
+            self.set_speech(filename="sftr/detection_forbidden_shoes", wait_for_end_of=True)
+            path = self.detected_person_to_face_path(person=person_detected, send_to_face=True)
+            
+            self.set_speech(filename="sftr/looking_guest_forbidden_shoes", wait_for_end_of=True)
+            self.set_speech(filename="sftr/guest_breaking_rule_forbidden_shoes", wait_for_end_of=True)
+            self.set_speech(filename="sftr/action_forbidden_shoes", wait_for_end_of=True)
+            
+        if shoes_rule_broken == False and drink_rule_broken == False and garbage_rule_broken == False:
+            print('No rule broken')
+            self.set_speech(filename="sftr/keep_enjoying_party", wait_for_end_of=True)
+        
     def approach_people(self, persons):
         nr_persons = len(persons)
         i = 0
@@ -1617,14 +1682,10 @@ class SticklerForTheRulesMain():
             # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=1.0, adjust_direction=0.0, wait_for_end_of=True)
             # self.set_navigation(movement="move", target=(persons[i].position_absolute.x, persons[i].position_absolute.y), flag_not_obs=True, wait_for_end_of=True)
             
-            # HEY THERE GUEST. I WILL ANALYSE IF YOU ARE BREAKING ANY RULE. PLEASE FOLLOW MY COMMANDS
-            # PLEASE STAND IN FRONT OF ME
-            # PLEASE TURN SIDEWAYS AND SHOW ME YOUR DRINK, AS SEEN IN MY FACE
-            # 
-            # SEARCH FOR OBJECT (FUNÇÃO DE ANALISAR)
+            self.set_speech(filename="sftr/please_follow_my_commands", wait_for_end_of=True)
+            self.set_speech(filename="sftr/stand_in_front_of_me", wait_for_end_of=True)
             
-            
-            
+            self.analyse_person()            
             i += 1
 
     def check_if_charmie_is_being_followed(self, index):
@@ -1862,15 +1923,51 @@ class SticklerForTheRulesMain():
             
             elif self.state == self.Search_person_third_room:
                 
-                print("Finished task!!!")
-                #NECK: LOOK IN FRONT
+                print("Navigate to the centre of the room!")
+                # self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, only_detect_person_right_in_front=False)
+                person_detected = []
+                tetas = [[-120, 0], [0, 0], [60, 0]]
+                person_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True, only_detect_person_arm_raised=False, characteristics=False)
+                for person in person_found:
+                    if person.room_location == 'Kitchen':
+                        person_forbidden_room = True
+                        person_detected.append(person)
+                        print('Person found')
+                        
+                        # LOOK TO THE PERSON DETECTED
+                        self.set_neck_coords(position=[person.position_absolute.x, person.position_absolute.y], ang=-10, wait_for_end_of=True)
+                        time.sleep(1)
+                        
+                self.approach_people(person_detected)
+                    
                 
                 self.state = self.Search_person_fourth_room
             
             elif self.state == self.Search_person_fourth_room:
                 
-                print("Finished task!!!")
-                #NECK: LOOK IN FRONT
+                print("Navigate to the centre of the room!")
+                # self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, only_detect_person_right_in_front=False)
+                person_detected = []
+                tetas = [[-120, 0], [0, 0], [60, 0]]
+                person_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True, only_detect_person_arm_raised=False, characteristics=False)
+                for person in person_found:
+                    if person.room_location == 'Kitchen':
+                        person_forbidden_room = True
+                        person_detected.append(person)
+                        print('Person found')
+                        
+                        # LOOK TO THE PERSON DETECTED
+                        self.set_neck_coords(position=[person.position_absolute.x, person.position_absolute.y], ang=-10, wait_for_end_of=True)
+                        time.sleep(1)
+                        
+                self.approach_people(person_detected)
+                    
                 
                 self.state = self.Final_State
                                 
@@ -1886,6 +1983,12 @@ class SticklerForTheRulesMain():
                 # Lock after finishing task
                 while True:
                     pass
+                
+           
 
             else:
                 pass
+
+            """  
+            - AVANÇAR NO ARRAY SE PESSOA NÃO ESTIVER NA POSIÇÃO EM QUE ESTAVA INICIALMENTE
+            """
