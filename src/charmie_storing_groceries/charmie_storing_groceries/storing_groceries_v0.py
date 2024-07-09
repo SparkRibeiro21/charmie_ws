@@ -484,6 +484,8 @@ class StoringGroceriesMain():
         self.Placing_fourth_object = 11
         self.Placing_fifth_object = 12        
         self.Final_State = 13
+        
+        self.ATTEMPTS_AT_RECEIVING = 2
 
         self.object_counter = 0
 
@@ -524,6 +526,9 @@ class StoringGroceriesMain():
 
         # Initial Position
         self.initial_position = [0.0, 0.1, 0.0]
+        
+        self.kitchen_counter = [-0.2, 5.5]
+        self.kitchen_table = [-2.0, 6.5]
 
         # to debug just a part of the task you can just change the initial state, example:
         # self.state = self.Approach_kitchen_table
@@ -1966,7 +1971,7 @@ class StoringGroceriesMain():
 
         self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-        self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+        self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
 
         # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
 
@@ -1989,6 +1994,67 @@ class StoringGroceriesMain():
         time.sleep(1.5) # waits for person to put object in hand
     
         # self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        object_in_gripper = False
+        gripper_ctr = 0
+        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+            
+            gripper_ctr += 1
+            
+            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+            
+            if not object_in_gripper:
+                
+                self.set_rgb(command=RED+BLINK_LONG)
+        
+                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+
+                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+        if object_in_gripper:
+
+            self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
+
+            if curr_obj in list_of_objects:
+                index = list_of_objects.index(curr_obj)
+                list_of_objects.remove(curr_obj)
+                list_of_objects_detected_as.pop(index)
+        
+        else:
+            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     
         object_in_gripper = False
         while not object_in_gripper:
@@ -2018,6 +2084,8 @@ class StoringGroceriesMain():
                 next_obj = table_objects[i+1]
             else:
                 obj = table_objects[i]
+                next_obj = obj
+                
 
             # Output results
             for key, common_class in self.shelf_side_common_class.items():
@@ -2075,7 +2143,7 @@ class StoringGroceriesMain():
 
                             self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                            self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                            self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
 
                             # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
 
@@ -2099,12 +2167,10 @@ class StoringGroceriesMain():
                                 
                             self.set_rgb(command=GREEN+BLINK_LONG)
 
-                            print('front arm')
-
                             self.set_arm(command="arm_front_robot", wait_for_end_of=True)
                             # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
 
-                            print('frint arm')
+                            print('front arm')
                             
                             self.set_rgb(command=GREEN+BLINK_LONG)
         
@@ -2157,7 +2223,7 @@ class StoringGroceriesMain():
 
                             self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                            self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                            self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
 
                             # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
 
@@ -2238,7 +2304,7 @@ class StoringGroceriesMain():
 
                             self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                            self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                            self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
 
                             # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
 
@@ -2320,7 +2386,7 @@ class StoringGroceriesMain():
 
                             self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                            self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                            self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
 
                             # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
 
@@ -2492,6 +2558,7 @@ class StoringGroceriesMain():
             print('Distance I am from door', distance_to_close)
 
             distance_x_to_center = cabinet_position.x
+            distance_y_to_center_original = cabinet_position.y - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
             distance_y_to_center = abs(cabinet_position.y) - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
             ### ISTO CENTRA QD PORTA FECHADA É A ESQUERDA. -> door_position.x + self.node.wardrobe_width/4 
             ###  SE PORTA FECHADA FOR A DIREITA, TENHO DE TROCAR SINAL PARA -> door_position.x - self.node.wardrobe_width/4 
@@ -2501,24 +2568,39 @@ class StoringGroceriesMain():
                 move_side = -90.0 + 360.0
 
             # distance_x_to_center = abs(abs(distance_x_to_center) - 0.1)
-            distance_x_to_center = abs(distance_x_to_center)
-            distance_y_to_center = abs(distance_y_to_center)
+            distance_x_to_center_original = distance_x_to_center
+            distance_y_to_center_original = distance_y_to_center_original
+            
+            # distance_x_to_center = abs(distance_x_to_center)
+            # distance_y_to_center = abs(distance_y_to_center)
 
-            print('distancia lateral:', distance_x_to_center)
-            print('distancia frontal:', distance_y_to_center)
+            # print('distancia lateral:', distance_x_to_center)
+            # print('distancia frontal:', distance_y_to_center)
 
-            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_x_to_center, adjust_direction=move_side, wait_for_end_of=True)
+            # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_x_to_center, adjust_direction=move_side, wait_for_end_of=True)
+            # self.set_rgb(command=GREEN+BLINK_LONG)
+            
+            # # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+            # # self.set_rgb(command=BLUE+BLINK_LONG)
+
+            # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_y_to_center, adjust_direction=0.0, wait_for_end_of=True)
+            # self.set_rgb(command=GREEN+BLINK_LONG)
+            
+            print('d_lateral:', distance_x_to_center_original)
+            print('d_frontal:', distance_y_to_center_original)
+            
+            ang_to_bag = -math.degrees(math.atan2(distance_x_to_center, distance_y_to_center))
+            dist_to_bag = (math.sqrt(distance_x_to_center**2 + distance_y_to_center**2))
+            print(ang_to_bag, dist_to_bag)
+            self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
             
-            # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-            # self.set_rgb(command=BLUE+BLINK_LONG)
-
-            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_y_to_center, adjust_direction=0.0, wait_for_end_of=True)
-            self.set_rgb(command=GREEN+BLINK_LONG)
+            while True:
+                pass
 
             time.sleep(2)
 
-            self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+            self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
             self.set_rgb(command=BLUE+BLINK_LONG)
             
             # print(self.node.arm_current_pose)
@@ -2596,7 +2678,7 @@ class StoringGroceriesMain():
             
 
             if right_door == True:
-                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
                 print('right door')
                 self.set_arm(command="check_right_door_inside", wait_for_end_of=True)
 
@@ -2614,7 +2696,8 @@ class StoringGroceriesMain():
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 time.sleep(1)
 
-                self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=275.0, flag_not_obs=True, wait_for_end_of=True)
                 time.sleep(1)
 
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.35, adjust_direction=170.0, wait_for_end_of=True)
@@ -2638,7 +2721,7 @@ class StoringGroceriesMain():
                 
 
             elif left_door == True:
-                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
                 print('left door')
                 self.set_arm(command="check_left_door", wait_for_end_of=True)
 
@@ -2656,7 +2739,7 @@ class StoringGroceriesMain():
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 time.sleep(1)
 
-                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
                 time.sleep(1)
 
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.35, adjust_direction=200.0, wait_for_end_of=True)
@@ -2909,20 +2992,7 @@ class StoringGroceriesMain():
                 self.set_initial_position(self.initial_position)
                 print("SET INITIAL POSITION")
 
-                time.sleep(1)
-
-                """ 
-                ### TO DO:
-                Colocar if para último caso n crashar
-                senão receber objeto, passar para próximo
-                colocar  estrutura de navegação desde princípio
-                alterar navegação x+y 
-                Acrescentar mini movimento 5cm para direita após abrir porta
-                
-                Fazer testes com:
-                - só com 2 objetos e ver como se comporta
-                - com vários objetos mas só um de classe alta e 2 de classe média
-                """                
+                time.sleep(1)          
                 
                 self.set_speech(filename="storing_groceries/sg_ready_start", wait_for_end_of=True)
 
@@ -2959,6 +3029,19 @@ class StoringGroceriesMain():
                 self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=False)
 
                 ###### MOVEMENT TO THE CABINET
+                
+                # self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)                
+                # self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.kitchen_table, max_speed=15.0, flag_not_obs=False, wait_for_end_of=True)
+                
+                # self.set_navigation(movement="orientate", absolute_angle= -90.0 + 270.0, flag_not_obs=True, wait_for_end_of=True)
+
+
+
+
+
+
 
                 # self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
                 # # self.set_navigation(movement="rotate", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
@@ -2994,7 +3077,11 @@ class StoringGroceriesMain():
 
                 self.set_arm(command="open_gripper", wait_for_end_of=False)
 
-                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.05, adjust_direction=270.0, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
 
                 # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.1, adjust_direction=90.0, wait_for_end_of=True)
 
@@ -3090,5 +3177,18 @@ class StoringGroceriesMain():
 
                 self.pick_and_place_objects(table_objects)
 
-                while True:
-                    pass
+                
+                
+                
+                """ 
+                ### TO DO:
+                Colocar if para último caso n crashar
+                senão receber objeto, passar para próximo
+                colocar estrutura de navegação desde princípio
+                alterar navegação x+y 
+                Acrescentar mini movimento 5cm para direita após abrir porta
+                
+                Fazer testes com:
+                - só com 2 objetos e ver como se comporta
+                - com vários objetos mas só um de classe alta e 2 de classe média
+                """      
