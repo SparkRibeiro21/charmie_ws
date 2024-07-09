@@ -1571,7 +1571,7 @@ class ServeBreakfastMain():
         self.Placing_milk = 5
         self.Placing_cornflakes = 6
         self.Placing_spoon = 7
-        self.Final_State = 18
+        self.Final_State = 8
     
         # Configurables
         self.ATTEMPTS_AT_RECEIVING = 2

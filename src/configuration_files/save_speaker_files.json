@@ -1,5 +1,4 @@
 {
-"cannot_reach_shelf": "However, since I can not reach that shelf, I will just place somewhere on the cabinet.",
-"object_not_belong_cabinet": "This object does not belong to any of the detected classes, so I should place it in a free shelf."
+"search_again_misdetected_objects": "I will search again for the objects I have yet to successfully detect and have placed on my tray."
 }
 

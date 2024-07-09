@@ -438,7 +438,7 @@ class RestaurantMain():
                 time.sleep(5)
                 
             if self.state == Audio_egpsr:
-                print('State 3 = Audio Restaurant')
+                print('State 3 = Audio EGPSR')
 
                 ### EGPSR EXAMPLE
                 is_command_confirmed = False
