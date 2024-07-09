@@ -1855,11 +1855,11 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_3_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
-                self.set_arm(command="place_cabinet_third_shelf_left_side", adjust_position=a[1], wait_for_end_of=True)
+                self.set_arm(command="place_cabinet_third_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_3_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
-                self.set_arm(command="place_cabinet_third_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_arm(command="place_cabinet_third_shelf_centre",adjust_position=a[1], wait_for_end_of=True)
                 use_arm = False
             elif shelf == 2:
                 print('second shelf')
@@ -1914,11 +1914,11 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_3_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
-                self.set_arm(command="place_cabinet_third_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
+                self.set_arm(command="place_cabinet_fourth_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
-                height_arm = self.shelf_3_height_to_place + object_height + 0.05
+                height_arm = self.shelf_4_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
-                self.set_arm(command="place_cabinet_third_shelf_right_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_arm(command="place_cabinet_fourth_shelf_centre",adjust_position=a[1], wait_for_end_of=True)
                 use_arm = False
             elif shelf == 2:
                 print('second shelf')
@@ -1970,11 +1970,11 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_2_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
-                self.set_arm(command="place_cabinet_second_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
+                self.set_arm(command="place_cabinet_second_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_2_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
-                self.set_arm(command="place_cabinet_second_shelf_right_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_arm(command="place_cabinet_second_shelf_centre",adjust_position=a[1], wait_for_end_of=True)
                 use_arm = False
 
 
@@ -2500,7 +2500,7 @@ class StoringGroceriesMain():
 
             print('Arm distance to cabinet =', distance_arm_to_cabinet)
 
-            
+            self.set_speech(filename="storing_groceries/might_touch_cabinet", wait_for_end_of=False)            
 
             if right_door == True:
                 self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
@@ -3042,6 +3042,8 @@ class StoringGroceriesMain():
                     print(common_class)
                     print(key)
 
+                self.set_speech(filename="storing_groceries/might_touch_cabinet", wait_for_end_of=False)   
+
                 self.pick_and_place_objects(table_objects)
 
                 
@@ -3057,8 +3059,6 @@ class StoringGroceriesMain():
                 """ 
                 ### TO DO:
                 senão receber objeto, passar para próximo
-                acrescentar frase "might_touch_cabinet"
-                acrescentar posição central do braço
                 
                 Fazer testes com:
                 - só com 2 objetos e ver como se comporta

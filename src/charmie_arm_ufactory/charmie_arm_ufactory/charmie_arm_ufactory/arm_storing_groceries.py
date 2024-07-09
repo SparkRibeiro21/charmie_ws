@@ -246,10 +246,13 @@ class ArmUfactory(Node):
 
 		self.pre_place_cabinet_second_shelf_left_side = [-646.8, 452.7, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 		self.pre_place_cabinet_second_shelf_right_side = [-646.8, 452.7, 379.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_second_shelf_centre = [-646.8, 452.7, 160.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 		self.pre_place_cabinet_third_shelf_left_side = [-646.8, 62.3, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 		self.pre_place_cabinet_third_shelf_right_side = [-646.8, 62.3, 379.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_third_shelf_centre = [-646.8, 62.3, 160.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 		self.pre_place_cabinet_fourth_shelf_left_side = [-646.8, -400.0, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 		self.pre_place_cabinet_fourth_shelf_right_side = [-646.8, -400.0, 379.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_fourth_shelf_centre = [-646.8, -400.0, 160.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 
 		
 		print('Nada')
@@ -650,6 +653,26 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def place_cabinet_second_shelf_centre(self):
+		if self.estado_tr == 0:
+			temp_adjust_angle_bag = self.pre_place_cabinet_second_shelf_centre.copy()
+			temp_adjust_angle_bag[1] = self.adjust_position
+
+			self.position_values_req.pose = temp_adjust_angle_bag
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def place_cabinet_second_shelf_right_side(self):
 		if self.estado_tr == 0:
 			temp_adjust_angle_bag = self.pre_place_cabinet_second_shelf_right_side.copy()
@@ -689,6 +712,27 @@ class ArmUfactory(Node):
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def place_cabinet_third_shelf_centre(self):
+		if self.estado_tr == 0:
+			temp_adjust_angle_bag = self.pre_place_cabinet_third_shelf_centre.copy()
+			temp_adjust_angle_bag[1] = self.adjust_position
+
+			self.position_values_req.pose = temp_adjust_angle_bag
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+	
 
 	def place_cabinet_third_shelf_right_side(self):
 		if self.estado_tr == 0:
@@ -735,6 +779,26 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 
 			temp_adjust_angle_bag = self.pre_place_cabinet_fourth_shelf_right_side.copy()
+			temp_adjust_angle_bag[1] = self.adjust_position
+
+			self.position_values_req.pose = temp_adjust_angle_bag
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def place_cabinet_fourth_shelf_centre(self):
+		if self.estado_tr == 0:
+			temp_adjust_angle_bag = self.pre_place_cabinet_fourth_shelf_centre.copy()
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
@@ -1122,14 +1186,22 @@ class ArmUfactory(Node):
 			self.place_cabinet_second_shelf_left_side()
 		elif self.next_arm_movement == "place_cabinet_second_shelf_right_side":
 			self.place_cabinet_second_shelf_right_side()
+		elif self.next_arm_movement == "place_cabinet_second_shelf_centre":
+			self.place_cabinet_second_shelf_centre()
 		elif self.next_arm_movement == "place_cabinet_third_shelf_left_side":
 			self.place_cabinet_third_shelf_left_side()
 		elif self.next_arm_movement == "place_cabinet_third_shelf_right_side":
 			self.place_cabinet_third_shelf_right_side()
+		elif self.next_arm_movement == "place_cabinet_third_shelf_centre":
+			self.place_cabinet_third_shelf_centre()
 		elif self.next_arm_movement == "place_cabinet_fourth_shelf_left_side":
 			self.place_cabinet_fourth_shelf_left_side()
 		elif self.next_arm_movement == "place_cabinet_fourth_shelf_right_side":
 			self.place_cabinet_fourth_shelf_right_side()
+		elif self.next_arm_movement == "place_cabinet_fourth_shelf_centre":
+			self.place_cabinet_fourth_shelf_centre()
+
+		
 		elif self.next_arm_movement == "front_robot_oriented_front":
 			self.front_robot_oriented_front()
 		elif self.next_arm_movement == "get_arm_position":
