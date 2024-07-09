@@ -95,6 +95,7 @@ class CleanTableNode(Node):
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         
+        """
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
@@ -107,8 +108,8 @@ class CleanTableNode(Node):
         # while not self.calibrate_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # Face
-        # while not self.face_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Face Command...")
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
@@ -127,7 +128,8 @@ class CleanTableNode(Node):
         # Point Cloud
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
-        
+        """
+
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
@@ -1569,22 +1571,26 @@ class CleanTableMain():
 
         # Configurables
         self.ATTEMPTS_AT_RECEIVING = 2
-        self.SHOW_OBJECT_DETECTED_WAIT_TIME = 2.0
+        self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
+        self.MAX_SPEED = 30
+        self.CLOSE_RACK_WITH_PLATE = True
+        # self.TABLE_APPROACH_OBSTACLES = 0.45
 
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
-        self.look_table_objects = [-45, -45] # temp while debugging! Correct value: [-45, -45], Debug Value [45, -45]
+        self.look_table_objects = [-45, -45]
         self.look_tray = [0, -60]
-        self.search_tetas = [[-45, -45], [-45+10, -45+8], [-45-10, -45+8], [-45-10, -45-5], [-45+10, -45-5]]
+        self.look_dishwasher = [-90, -30]
+        self.search_tetas = [[-45, -45], [-45+15, -45+10], [-45-15, -45+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
         # Initial Position
         self.initial_position = [0.0, 0.1, 0.0]
 
         # Navigation Positions
-        self.front_of_door = [-0.2, 1.5] 
-        self.kitchen_table = [-0.5, 3.5]
+        self.front_of_door = [0.0, 1.5] 
+        self.kitchen_table = [-0.5, 4.5]
         self.dishwasher = [-1.0, 2.0]
 
 
@@ -1627,16 +1633,19 @@ class CleanTableMain():
 
             elif self.state == self.Approach_kitchen_table:
 
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                
+                self.set_navigation(movement="move", target=self.front_of_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
-                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.kitchen_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
 
                 self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
                 
-                self.state = self.Detect_and_pick_all_objects
+                self.state = self.Approach_dishwasher
 
             elif self.state == self.Detect_and_pick_all_objects:
 
@@ -2079,48 +2088,62 @@ class CleanTableMain():
 
             elif self.state == self.Approach_dishwasher:
 
-                # self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
+                time.sleep(5)
 
-                tetas = [[-30, -30], [0, -30], [30, -30]]
-                objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
-                print('pos-search')
-                for obj in objects_found:
-                    if obj.object_name == 'Dishwasher':
-                        dishwasher_found = True
-                        dishwasher_position = obj.position_relative
-                        print('Object found')
+                self.set_speech(filename="clean_the_table/moving_dishwasher", wait_for_end_of=False)
 
-                        
-                print('rel_pos:', dishwasher_position.x, dishwasher_position.y, dishwasher_position.z)   
-
-                robot_radius = 0.28
-                distance_to_dishwasher = 1.10 # 1.10 makes me be at 1.0 from the front of the robot to the dishwasher 
-
-                distance_x_to_center = dishwasher_position.x
-                distance_y_to_center = dishwasher_position.y - robot_radius - distance_to_dishwasher
-                
-                print('d_lateral:', distance_x_to_center)
-                print('d_frontal:', distance_y_to_center)
-                
-                ang_to_bag = -math.degrees(math.atan2(distance_x_to_center, distance_y_to_center))
-                dist_to_bag = (math.sqrt(distance_x_to_center**2 + distance_y_to_center**2))
-                print(ang_to_bag, dist_to_bag)
-                self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
-                    
-
-                while True:
-                    pass
-
-
-
-                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.dishwasher, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.dishwasher, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.dishwasher, max_speed=20.0, reached_radius=0.8, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle=180.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.set_speech(filename="clean_the_table/approaching_dishwasher", wait_for_end_of=False)
 
-                ### CENTER WITH DISHWASHER AND GET INTO POSITION
+                perfectly_centered = 3
+                perfectly_centered_ctr = 0
+                while perfectly_centered_ctr <= perfectly_centered:
+                    perfectly_centered_ctr += 1
 
-                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
+
+                    dishwasher_found = False
+                    while not dishwasher_found:
+                        # tetas = [[0, -30], [20, -30], [-20, -30]]
+                        tetas = [[0, -30], [20, -30], [-20, -30], [-40, -30], [40, -30]]
+                        objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
+                        print('pos-search')
+                        for obj in objects_found:
+                            if obj.object_name == 'Dishwasher':
+                                dishwasher_found = True
+                                dishwasher_position = obj.position_relative
+                                print('Object found')
+
+                        if not dishwasher_found:
+                            self.set_rgb(command=MAGENTA+HALF_ROTATE)
+                            self.set_navigation(movement="adjust", adjust_distance=0.1, adjust_direction=0.0, wait_for_end_of=True)
+                            self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+                        else:
+                            self.set_rgb(command=CYAN+HALF_ROTATE)
+                            
+                    print('rel_pos:', dishwasher_position.x, dishwasher_position.y, dishwasher_position.z)   
+
+                    robot_radius = 0.28
+                    distance_to_dishwasher = 1.10 # 1.10 makes me be at 1.0 from the front of the robot to the dishwasher 
+
+                    distance_x_to_center = dishwasher_position.x
+                    distance_y_to_center = dishwasher_position.y - robot_radius - distance_to_dishwasher
+                    
+                    print('d_lateral:', distance_x_to_center)
+                    print('d_frontal:', distance_y_to_center)
+                    
+                    ang_to_bag = -math.degrees(math.atan2(distance_x_to_center, distance_y_to_center))
+                    dist_to_bag = (math.sqrt(distance_x_to_center**2 + distance_y_to_center**2))
+                    print(ang_to_bag, dist_to_bag)
+                    self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
+
+                    # alternative solution to make sure i am at the right distance from the dishwasher
+                    # self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.5, wait_for_end_of=True)
+                    
+                self.set_speech(filename="clean_the_table/arrived_dishwasher", wait_for_end_of=False)
 
                 self.state = self.Open_dishwasher_door
 
@@ -2128,6 +2151,7 @@ class CleanTableMain():
             elif self.state == self.Open_dishwasher_door:
 
                 ### CODE HERE (NOT IMPLEMENTED FOR NOW ...)
+                self.set_speech(filename="clean_the_table/can_not_open_dishwasher_door", wait_for_end_of=False)
 
                 self.state = self.Open_dishwasher_rack
 
@@ -2135,61 +2159,221 @@ class CleanTableMain():
             elif self.state == self.Open_dishwasher_rack:
 
                 ### CODE HERE (NOT IMPLEMENTED FOR NOW ...)
+                self.set_speech(filename="clean_the_table/can_not_open_dishwasher_door", wait_for_end_of=False)
 
                 self.state = self.Place_cup
 
 
             elif self.state == self.Place_cup:
 
-                self.set_face("help_pick_cup") 
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
+
+                self.set_face("help_pick_ct")
                 
                 self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                self.set_arm(command="place_cup", wait_for_end_of=True)
+                self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
-                ### CODE HERE
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+                object_in_gripper = False
+                while not object_in_gripper:
+                                        
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                        
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+                
+                self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+
+                self.set_face("charmie_face")
+
+                # self.set_arm(command="place_cup", wait_for_end_of=True)
 
                 self.state = self.Place_bowl
 
 
             elif self.state == self.Place_bowl:
 
-                ### CODE HERE
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
+
+                self.set_face("help_pick_bowl")
+                
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                self.set_arm(command="top_ct_pose_to_ask_for_objects", wait_for_end_of=True)
+
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+                object_in_gripper = False
+                while not object_in_gripper:
+                                        
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                        
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+                
+                self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+
+                self.set_face("charmie_face")
+
+                # self.set_arm(command="place_bowl", wait_for_end_of=True)
 
                 self.state = self.Place_plate
 
 
             elif self.state == self.Place_plate:
 
-                ### CODE HERE
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
+
+                self.set_face("help_pick_plate")
+                
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                self.set_arm(command="top_ct_pose_to_ask_for_objects", wait_for_end_of=True)
+
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+                object_in_gripper = False
+                while not object_in_gripper:
+                                        
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                        
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+                
+                self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+
+                self.set_face("charmie_face")
+
+                # self.set_arm(command="place_plate", wait_for_end_of=True)
 
                 self.state = self.Place_cutlery1
 
 
             elif self.state == self.Place_cutlery1:
 
-                ### CODE HERE
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
+
+                # MISSING CHECK WHICH CUTLERY WAS RECEIVED
+                self.set_face("help_pick_knife")
+                
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                self.set_arm(command="top_ct_pose_to_ask_for_objects", wait_for_end_of=True)
+
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+                object_in_gripper = False
+                while not object_in_gripper:
+                                        
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                        
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+                
+                self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+
+                self.set_face("charmie_face")
+
+                # self.set_arm(command="place_cutlery", wait_for_end_of=True)
 
                 self.state = self.Place_cutlery2
 
 
             elif self.state == self.Place_cutlery2:
 
-                ### CODE HERE
+                self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                
+                # MISSING CHECK WHICH CUTLERY WAS RECEIVED
+                self.set_face("help_pick_fork")
+                
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                self.set_arm(command="top_ct_pose_to_ask_for_objects", wait_for_end_of=True)
+
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+                object_in_gripper = False
+                while not object_in_gripper:
+                                        
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                        
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+                
+                self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+
+                self.set_face("charmie_face")
+
+                # self.set_arm(command="place_cutlery", wait_for_end_of=True)
 
                 self.state = self.Close_dishwasher_rack
 
 
             elif self.state == self.Close_dishwasher_rack:
 
-                ### CODE HERE
+                self.set_speech(filename="clean_the_table/close_dishwasher_rack", wait_for_end_of=False)
+                
+                self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+                        
+                if self.CLOSE_RACK_WITH_PLATE:
+                    ### WITH PLATE
+                    self.set_speech(filename="clean_the_table/warning_close_dishwasher_rack_with_plate", wait_for_end_of=False)
+
+                    self.set_arm(command="close_rack_with_plate", wait_for_end_of=True)
+                else:
+                    ### WITHOUT PLATE
+                    self.set_arm(command="close_rack_without_plate", wait_for_end_of=True)
+
+
+
+
+                self.set_speech(filename="clean_the_table/closed_dishwasher_rack", wait_for_end_of=False)
 
                 self.state = self.Close_dishwasher_door
 
 
             elif self.state == self.Close_dishwasher_door:
 
-                ### CODE HERE
+                self.set_speech(filename="clean_the_table/close_dishwasher_door", wait_for_end_of=False)
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
+                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs = True, wait_for_end_of=True)
+                # self.set_navigation(movement="adjust", adjust_distance=0.1, adjust_direction=180.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+
+
+
+
+
+                self.set_speech(filename="clean_the_table/closed_dishwasher_door", wait_for_end_of=False)
 
                 self.state = self.Final_State 
 

@@ -1571,7 +1571,7 @@ class ServeBreakfastMain():
         self.MAX_SPEED = 30
         self.TABLE_APPROACH_OBSTACLES = 0.45
         self.GET_MILK = True
-        self.GET_CORNFLAKES = False
+        self.GET_CORNFLAKES = True
         self.GET_DISHES = True
         
         # Neck Positions
