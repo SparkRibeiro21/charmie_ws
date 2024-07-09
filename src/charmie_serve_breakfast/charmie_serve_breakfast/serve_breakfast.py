@@ -108,8 +108,8 @@ class ServeBreakfastNode(Node):
         # while not self.calibrate_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # Face
-        # while not self.face_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Face Command...")
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
@@ -1568,9 +1568,10 @@ class ServeBreakfastMain():
         # Configurables
         self.ATTEMPTS_AT_RECEIVING = 2
         self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
-        self.MAX_SPEED = 35
+        self.MAX_SPEED = 30
+        self.TABLE_APPROACH_OBSTACLES = 0.45
         self.GET_MILK = True
-        self.GET_CORNFLAKES = True
+        self.GET_CORNFLAKES = False
         self.GET_DISHES = True
         
         # Neck Positions
@@ -1603,7 +1604,7 @@ class ServeBreakfastMain():
 
                 self.set_initial_position(self.initial_position)
                 print("SET INITIAL POSITION")
-                print(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
+                print("GET_MILK:", self.GET_MILK, "GET_CORNFLAKES:", self.GET_CORNFLAKES, "GET_DISHES:", self.GET_DISHES)
 
                 time.sleep(1)
         
@@ -1903,8 +1904,10 @@ class ServeBreakfastMain():
                                 
                 self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
 
-                self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.45, wait_for_end_of=True)
+                # self.set_navigation(movement="adjust_angle", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
 
+                self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=self.TABLE_APPROACH_OBSTACLES, wait_for_end_of=True)
+                
                 self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs=True, wait_for_end_of=True)
                 
                 self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
@@ -1963,7 +1966,7 @@ class ServeBreakfastMain():
             elif self.state == self.Final_State:
                 
                 self.set_arm(command="arm_go_rest", wait_for_end_of=False)
-
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=False)
 
                 while True:
