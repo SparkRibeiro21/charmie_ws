@@ -675,6 +675,7 @@ class StoringGroceriesMain():
         self.node.waited_for_end_of_get_neck = False
 
         return self.node.get_neck_position[0], self.node.get_neck_position[1] 
+    
     def set_arm(self, command="", pose=[], adjust_position=0.0, wait_for_end_of=True):
         
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
@@ -697,7 +698,6 @@ class StoringGroceriesMain():
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
 
-    
     def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
 
         if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
@@ -750,7 +750,6 @@ class StoringGroceriesMain():
 
         return self.node.navigation_success, self.node.navigation_message    
 
-    
     def set_initial_position(self, initial_position):
 
         task_initialpose = PoseWithCovarianceStamped()
@@ -1337,78 +1336,6 @@ class StoringGroceriesMain():
            
         return objects_choosed
 
-    # def detect_table_objects(self):
-    #     i = 0
-    #     nr_objects_high_priority_detected = 0
-    #     self.detected_object = []
-
-    #     for name, class_name in self.node.objects_classNames_dict.items():
-    #         if class_name in self.classes_detected_wardrobe:
-    #             self.priority_dict[class_name] = 'High'
-    #             print(class_name + ' High')
-    #         else:
-    #             self.priority_dict[class_name] = 'Low'
-    #             print(class_name + ' Low')
-
-    #     # if hasattr(self.node, 'image') and self.node.image:
-    #     #     if hasattr(self.node, 'objects') and self.node.objects:
-
-    #     five_objects_detected = False
-    #     detect_object = []
-        
-    #     list_of_neck_position_search = [[0, 0], [10,8], [-10,8], [-10,-5], [10,-5]]
-    #     while not five_objects_detected:
-            
-    #         self.activate_yolo_objects(activate_objects=True)
-    #         finished_detection = False
-
-    #         for pos in list_of_neck_position_search:
-
-    #             print(pos)
-    #             new_neck_pos = [self.look_table_objects[0] + pos[0], self.look_table_objects[1] + pos[1]]
-    #             #new_neck_pos = [ pos[0],  pos[1]]
-    #             print('Neck: ', new_neck_pos)
-    #             self.set_neck(position=new_neck_pos, wait_for_end_of=True)
-    #             self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-    #             time.sleep(1)
-
-    #             # finished_detection = self.detect_four_serve_breakfast_objects(delta_t=5.0, with_hand=False)    
-
-    #             self.objects_stored = self.node.objects
-    #             self.nr_objects_detected = self.node.nr_objects
-    #             self.current_image = self.node.image
-    #             bridge = CvBridge()
-    #             # Convert ROS Image to OpenCV image
-    #             cv_image = bridge.imgmsg_to_cv2(self.current_image, desired_encoding="bgr8")
-    #             self.image_objects_detected = cv_image
-    #             current_frame_draw = self.image_objects_detected
-    #             print('Will iterate for: ', self.nr_objects_detected)
-    #             nr_objects_high_priority_detected = 0
-    #             i = 0
-    #             for detected_objects in self.objects_stored:
-    #                 print(detected_objects.object_name, detected_objects.object_class)
-    #                 if detected_objects.object_name in detect_object:
-    #                     pass
-    #                 else:
-    #                     detect_object.append(self.objects_stored) 
-    #                     if self.priority_dict[detected_objects.object_class] == 'High':
-    #                         nr_objects_high_priority_detected += 1
-    #                         print('Nr objects high: ', nr_objects_high_priority_detected)
-
-    #                     print('Object ' + detected_objects.object_name + ' from class ' + detected_objects.object_class + ' has ' + self.priority_dict[detected_objects.object_class] + 'priority')
-
-    #                 i += 1
-
-    #             print(i)
-    #             if nr_objects_high_priority_detected >= 5:
-    #                 print(self.objects_stored)
-    #                 five_objects_detected = True
-    #                 self.set_rgb(command=GREEN+BLINK_LONG)
-    #                 break
-    #             self.set_rgb(command=RED+BLINK_LONG)
-
-    #     return nr_objects_high_priority_detected
-
     def choose_place_object_wardrobe(self, counter): 
         object_ = self.selected_objects[counter]
         obj_class = object_.object_class
@@ -1534,11 +1461,7 @@ class StoringGroceriesMain():
         #     else:
         #         self.priority_dict[class_name] = 'Low'
         #         print(class_name + ' Low')
-
-
-
-        
-      
+   
     def select_voice_audio(self, object):
         print('dentro')
         
@@ -2430,8 +2353,6 @@ class StoringGroceriesMain():
                             
                             self.set_rgb(command=GREEN+BLINK_LONG)
 
-
-
     def check_door_depth_hand(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=600):
 
         overall = False
@@ -2992,11 +2913,15 @@ class StoringGroceriesMain():
 
                 """ 
                 ### TO DO:
-                - TRATAR DE ABRIR A PORTA (Tentar abrir a 45º + tratar de verificar distância à porta quando faço código do spark para saber porta aberta)
                 Colocar if para último caso n crashar
-                tirar histogramas do código (ANTES TIRAR PRINTS E FOTOS PARA POR NA TESE)
-                imolementae falha ao agarrar para continuar código
-                diminuir altura da bowl
+                senão receber objeto, passar para próximo
+                colocar  estrutura de navegação desde princípio
+                alterar navegação x+y 
+                Acrescentar mini movimento 5cm para direita após abrir porta
+                
+                Fazer testes com:
+                - só com 2 objetos e ver como se comporta
+                - com vários objetos mas só um de classe alta e 2 de classe média
                 """                
                 
                 self.set_speech(filename="storing_groceries/sg_ready_start", wait_for_end_of=True)
@@ -3043,9 +2968,6 @@ class StoringGroceriesMain():
                 # self.set_navigation(movement="rotate", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=False, wait_for_end_of=True)
                 # self.set_navigation(movement="orientate", absolute_angle= 85.0, flag_not_obs = True, wait_for_end_of=True)
-
-                
-
 
                 self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=False)
 
