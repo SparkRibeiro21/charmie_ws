@@ -1,10 +1,5 @@
 {
-
-"detection_forbidden_shoes": "I detected a guest breaking the forbidden shoes rule.",
-"detection_forbidden_garbage": "I detected a guest breaking the forbidden garbage on the floor rule.",
-"detection_mandatory_drink": "I detected a guest breaking the mandatory drink rule."
-
-
-
+"cannot_reach_shelf": "However, since I can not reach that shelf, I will just place somewhere on the cabinet.",
+"object_not_belong_cabinet": "This object does not belong to any of the detected classes, so I should place it in a free shelf."
 }
 

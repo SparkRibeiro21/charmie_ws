@@ -7,7 +7,7 @@ import threading
 
 from example_interfaces.msg import Bool, String, Int16, Float32
 from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
-from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, NavTrigger, SetFace
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, NavTrigger, SetFace, ActivateObstacles
 from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL, ListOfDetectedObject, Obstacles, ArmController
 from sensor_msgs.msg import Image
 import cv2
@@ -102,7 +102,7 @@ class StoringGroceriesNode(Node):
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
         # Obstacles
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
-        
+
         ### Services (Clients) ###
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Neck
@@ -138,6 +138,9 @@ class StoringGroceriesNode(Node):
         # Navigation
         self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
+        # Obstacles
+        self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
+
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Navigation
         while not self.nav_trigger_client.wait_for_service(1.0):
@@ -153,6 +156,9 @@ class StoringGroceriesNode(Node):
             self.get_logger().warn("Waiting for Server Get Neck Position Command...")
         while not self.set_neck_coordinates_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        # Obstacles
+        while not self.activate_obstacles_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
         # Face
         # while not self.face_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Face Command...")
@@ -208,6 +214,8 @@ class StoringGroceriesNode(Node):
         self.filtered_objects_storing_groceries = []
         self.flag_storing_groceries_received = False
         self.br = CvBridge()
+        self.activate_obstacles_success = True
+        self.activate_obstacles_message = ""
         #print(self.objects_classNames_dict)
         
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
@@ -278,6 +286,15 @@ class StoringGroceriesNode(Node):
         request.minimum_doors_confidence = minimum_doors_confidence
 
         self.activate_yolo_objects_client.call_async(request)
+
+    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
+    def call_activate_obstacles_server(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False):
+        request = ActivateObstacles.Request()
+        request.activate_lidar_up = obstacles_lidar_up
+        request.activate_lidar_bottom = obstacles_lidar_bottom
+        request.activate_camera_head = obstacles_camera_head
+
+        self.activate_obstacles_client.call_async(request)
 
     #### FACE SERVER FUNCTIONS #####
     def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
@@ -526,14 +543,11 @@ class StoringGroceriesMain():
 
         # Initial Position
         self.initial_position = [0.0, 0.1, 0.0]
-        
-        self.kitchen_counter = [-0.2, 5.5]
-        self.kitchen_table = [-2.0, 6.5]
+
+        self.kitchen_counter = [-0.4, 5.5]
+        self.kitchen_table = [-1.5, 6.8]
 
         # to debug just a part of the task you can just change the initial state, example:
-        # self.state = self.Approach_kitchen_table
-        self.state = self.Waiting_for_task_start
-        # self.state = self.Approach_cabinet_first_time
 
         self.nr_objects_detected_previous = 0
         self.nr_max_objects_detected = 0
@@ -1323,8 +1337,11 @@ class StoringGroceriesMain():
         
         if len(objects_choosed) < 5:
             for obj in table_objects:
-                print('Object table low priority:', obj.object_name)
-                objects_choosed.append(obj)
+                if obj.object_class in self.low_priority_class:
+                    print('Object table low priority:', obj.object_name)
+                    objects_choosed.append(obj)
+                    if len(objects_choosed) == 5:
+                        break
                 if len(objects_choosed) == 5:
                     break
            
@@ -1378,9 +1395,20 @@ class StoringGroceriesMain():
             pass
         self.object_counter += 1
 
-    def choose_priority(self, objects):
+    def choose_priority(self):
         # Este nível fica para a versão 1. Para a versão 0 faço ver o que está na prateleira, guardar essas classes e ficam essas como high
-        
+
+        try:
+            with open(self.node.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+                objects = json.load(json_file)
+                # print(self.objects_file)
+        except:
+            self.get_logger().error("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
+
+    
+        # Extract unique classes from the JSON data
+        total_classes = {obj['class'] for obj in objects}
+
         high_priority_class_set = set()
         medium_priority_class_set = set()
 
@@ -1404,68 +1432,27 @@ class StoringGroceriesMain():
         self.high_priority_class = list(high_priority_class_set)
         self.medium_priority_class = list(medium_priority_class_set)
 
+        # Determine low priority classes
+        low_priority_class_set = total_classes - high_priority_class_set - medium_priority_class_set
+
+        self.low_priority_class = list(low_priority_class_set)
+
+
+        for low_priority_class in self.low_priority_class:
+            # Use unique keys for low-priority classes to avoid overwriting
+            shelf_side_key = (0, f'none-{low_priority_class}')
+            self.shelf_side_common_class[shelf_side_key] = low_priority_class
+
         # Print the results for verification
         print("High priority classes:", self.high_priority_class)
         print("Medium priority classes:", self.medium_priority_class)
+        print("Low priority classes:", self.low_priority_class)
+        print("Updated shelf_side_common_class:", self.shelf_side_common_class)
+
+        for key, common_class in self.shelf_side_common_class.items():
+            shelf, side = key
+            print(key, common_class)
             
-            
-            # found = any(
-            #     obj in obj_list
-            #     for key, obj_list in self.shelf_side_objects.items()
-            #     if key[0] in (2, 3, 4)  # Only consider shelves 2, 3 and 4
-            # )
-            # if found:
-            #     print(f"{obj.object_name} is in self.shelf_side_objects for shelf 2, 3 or 4")
-            #     if obj.object_class not in self.high_priority_class:
-            #         self.high_priority_class.append(obj.object_class)
-            #         # print(obj.object_class + ' High')
-            # else:
-            #     print(f"{obj.object_name} is NOT in self.shelf_side_objects for shelf 2, 3 or 4")
-            #     if obj.object_class not in self.medium_priority_class:
-            #         self.medium_priority_class.append(obj.object_class)
-
- 
-
-
-        """ i = 0
-        if hasattr(self.node, 'image') and self.node.image:
-            if hasattr(self.node, 'objects') and self.node.objects:
-                objects_stored = self.node.objects
-                self.nr_objects_detected = self.node.nr_objects
-                while i < len(self.classes_detected_wardrobe) and i < self.nr_objects_detected:                   
-                    detected_object = objects_stored[i]
-                    object_name = detected_object.object_name
-                    object_class = detected_object.object_class
-                    object_height = detected_object.position_relative.z
-                    object_confidence = detected_object.confidence
-                    object_x_position = detected_object.position_relative.x
-                    box_top_left_x = detected_object.box_top_left_x
-                    box_top_left_y = detected_object.box_top_left_y
-                    box_width = detected_object.box_width
-                    box_height = detected_object.box_height
-                    #print(f"Object: {object_name}, Height: {object_height}, Confidence: {object_confidence}")
-
-                    if object_class in self.classes_detected_wardrobe:
-                        object_priority = 'High'
-                        
-                    else:
-                        object_priority = 'Low'
-
-                    print(object_class + ' ' + object_priority)
-
-                    self.object_details[object_name] = {'confidence': object_confidence, 'object_height': object_height,
-                                                        'object_class': object_class,'x_position': object_x_position, 'box_top_left_x': box_top_left_x,
-                                                        'box_top_left_y': box_top_left_y, 'box_width': box_width, 'box_height': box_height, 'priority': object_priority}
-
-                    i += 1 """
-        
-        # for name, class_name in self.node.objects_classNames_dict.items():
-        #     if class_name in self.classes_detected_wardrobe:
-        #         self.priority_dict[class_name] = 'High'
-        #         print(class_name + ' High')
-        #     else:
-        #         self.priority_dict[class_name] = 'Low'
-        #         print(class_name + ' Low')
    
     def select_voice_audio(self, object):
         print('dentro')
@@ -1693,7 +1680,7 @@ class StoringGroceriesMain():
         #### """
         
         # # Plot histogram for top view (z-coordinates)
-        # bins_top = 144
+        bins_top = 144
         # plt.figure(figsize=(10, 6))
         # plt.hist(y_coordinates_top_view, bins=bins_top, range=(0, height), color='green', alpha=0.7)
         # plt.title("Histogram of Z-coordinates in Top View")
@@ -1861,7 +1848,18 @@ class StoringGroceriesMain():
             print('left side')
             if shelf == 1:
                 print('first shelf')
-                self.set_speech(filename="storing_groceries/Place_third_shelf_rs", wait_for_end_of=False)
+                self.set_speech(filename="storing_groceries/Place_first_shelf_ls", wait_for_end_of=False)
+                self.set_speech(filename='generic/Near', wait_for_end_of=False)
+                self.set_speech(filename=class_filename, wait_for_end_of=False)
+                self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=False)
+                height_arm = self.shelf_3_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_third_shelf_left_side", adjust_position=a[1], wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
+                height_arm = self.shelf_3_height_to_place + object_height + 0.05
+                a = self.transform(height_arm)
+                self.set_arm(command="place_cabinet_third_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
                 use_arm = False
             elif shelf == 2:
                 print('second shelf')
@@ -1872,7 +1870,7 @@ class StoringGroceriesMain():
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
                 self.set_arm(command="place_cabinet_second_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.45, adjust_direction=0.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_2_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_second_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
@@ -1886,7 +1884,7 @@ class StoringGroceriesMain():
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
                 self.set_arm(command="place_cabinet_third_shelf_left_side", adjust_position=a[1], wait_for_end_of=True)
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.45, adjust_direction=0.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_3_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_third_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
@@ -1900,7 +1898,7 @@ class StoringGroceriesMain():
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
                 self.set_arm(command="place_cabinet_fourth_shelf_left_side", adjust_position=a[1], wait_for_end_of=True)
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=0.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_4_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_fourth_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
@@ -1909,8 +1907,18 @@ class StoringGroceriesMain():
         elif side == 'right':
             print('right side')
             if shelf == 1:
-                print('first shelf') 
-                self.set_speech(filename="storing_groceries/Place_third_shelf_rs", wait_for_end_of=False)
+                self.set_speech(filename="storing_groceries/Place_first_shelf_rs", wait_for_end_of=False)
+                self.set_speech(filename='generic/Near', wait_for_end_of=False)
+                self.set_speech(filename=class_filename, wait_for_end_of=False)
+                self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=False)
+                height_arm = self.shelf_3_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_third_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
+                height_arm = self.shelf_3_height_to_place + object_height + 0.05
+                a = self.transform(height_arm)
+                self.set_arm(command="place_cabinet_third_shelf_right_side",adjust_position=a[1], wait_for_end_of=True)
                 use_arm = False
             elif shelf == 2:
                 print('second shelf')
@@ -1921,7 +1929,7 @@ class StoringGroceriesMain():
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
                 self.set_arm(command="place_cabinet_second_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=0.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_2_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_second_shelf_right_side",adjust_position=a[1], wait_for_end_of=True)
@@ -1935,7 +1943,7 @@ class StoringGroceriesMain():
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
                 self.set_arm(command="place_cabinet_third_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=0.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_3_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_third_shelf_right_side",adjust_position=a[1], wait_for_end_of=True)
@@ -1949,11 +1957,28 @@ class StoringGroceriesMain():
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
                 self.set_arm(command="place_cabinet_fourth_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.4, adjust_direction=0.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_4_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_fourth_shelf_right_side",adjust_position=a[1], wait_for_end_of=True)
                 use_arm = True
+
+        else:
+            if shelf == 0:
+                print('No shelf')
+                self.set_speech(filename="storing_groceries/object_not_belong_cabinet", wait_for_end_of=False)
+                height_arm = self.shelf_2_height + 0.2
+                a = self.transform(height_arm)
+                print(a[0], a[1], a[2])
+                self.set_arm(command="place_cabinet_second_shelf_right_side", adjust_position=a[1], wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
+                height_arm = self.shelf_2_height_to_place + object_height + 0.05
+                a = self.transform(height_arm)
+                self.set_arm(command="place_cabinet_second_shelf_right_side",adjust_position=a[1], wait_for_end_of=True)
+                use_arm = False
+
+
+
         print('Altura final = ', height_arm)
         return use_arm
 
@@ -1971,7 +1996,7 @@ class StoringGroceriesMain():
 
         self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-        self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
+        self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
 
         # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
 
@@ -1981,13 +2006,13 @@ class StoringGroceriesMain():
 
         # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-        self.load_image_one_object(obj_0.object_name, obj_0)
+        # self.load_image_one_object(obj_0.object_name, obj_0)
 
         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
 
         time.sleep(5)
 
-        self.set_face(str(object_help_pick))
+        # self.set_face(str(object_help_pick))
 
         self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
         
@@ -2007,37 +2032,37 @@ class StoringGroceriesMain():
         
         
         
-        object_in_gripper = False
-        gripper_ctr = 0
-        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+        # object_in_gripper = False
+        # gripper_ctr = 0
+        # while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
             
-            gripper_ctr += 1
+        #     gripper_ctr += 1
             
-            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+        #     self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+        #     object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
             
-            if not object_in_gripper:
+        #     if not object_in_gripper:
                 
-                self.set_rgb(command=RED+BLINK_LONG)
+        #         self.set_rgb(command=RED+BLINK_LONG)
         
-                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+        #         if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
 
-                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+        #             self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                 
-                self.set_arm(command="open_gripper", wait_for_end_of=False)
+        #         self.set_arm(command="open_gripper", wait_for_end_of=False)
 
-        if object_in_gripper:
+        # if object_in_gripper:
 
-            self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
+        #     self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
 
-            if curr_obj in list_of_objects:
-                index = list_of_objects.index(curr_obj)
-                list_of_objects.remove(curr_obj)
-                list_of_objects_detected_as.pop(index)
+        #     if curr_obj in list_of_objects:
+        #         index = list_of_objects.index(curr_obj)
+        #         list_of_objects.remove(curr_obj)
+        #         list_of_objects_detected_as.pop(index)
         
-        else:
-            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+        # else:
+        #     self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
 
 
         
@@ -2085,340 +2110,126 @@ class StoringGroceriesMain():
             else:
                 obj = table_objects[i]
                 next_obj = obj
-                
+
+            print('---')
+            print(obj.object_name, next_obj.object_name)
+            print(i)
+            print(len(table_objects) - 1)
+            print('---')
 
             # Output results
             for key, common_class in self.shelf_side_common_class.items():
                 shelf, side = key
+                print(key, common_class)
                 # print('Inside loop: ', shelf, side, common_class)
                 # print(f"Shelf {shelf}, Side {side} - Most Common Class: {common_class}")
                 # print(f"Objects: {[obj.object_name for obj in self.shelf_side_objects[key]]}")
                 if obj.object_class == common_class:
                     if i < len(table_objects) - 1:
+                        print('i < len')
                         use_arm = self.choose_place_arm(shelf, side, obj)
                         print(use_arm)
-                        if use_arm == True:
-                            self.set_rgb(command=GREEN+BLINK_LONG)
-                            # self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
-                            # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                            time.sleep(2)
-                            self.set_arm(command="open_gripper", wait_for_end_of=True)
+                    
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+                        # self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+                        # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                        time.sleep(2)
+                        self.set_arm(command="open_gripper", wait_for_end_of=True)
 
-                            print('a')
-                            
-                            obj_name_lower = next_obj.object_name.lower().replace(" ", "_")
-                            print(obj_name_lower)
-
-                            object_help_pick = 'help_pick_' + obj_name_lower
-                            # self.set_face(str(object_help_pick))
-                            print(object_help_pick)
-
-                            self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
-
-                            self.select_voice_audio(next_obj)
-
-                            print('b')
-
-                            # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                            self.load_image_one_object(next_obj.object_name, next_obj)
-
-                            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
-    
-                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.47, adjust_direction=180.0, wait_for_end_of=True)
-                            print('c')
-                            time.sleep(1)
-
-                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
-
-                            self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
-
-                            self.set_face(str(object_help_pick))
-
-                            self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
-
-                            print('d')
-
-                            time.sleep(1.5) # waits for person to put object in hand
-
-                            self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                            self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
-
-                            # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
-
-                            print('3')
-
-                            object_in_gripper = False
-            
-                            while not object_in_gripper:
-                            
-                                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-
-                                if not object_in_gripper:
-
-                                    self.set_rgb(command=RED+BLINK_LONG)
+                        print('a')
                         
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                                
-                                    self.set_arm(command="open_gripper", wait_for_end_of=False)
-                                
-                            self.set_rgb(command=GREEN+BLINK_LONG)
+                        obj_name_lower = next_obj.object_name.lower().replace(" ", "_")
+                        print(obj_name_lower)
 
-                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
-                            # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
+                        object_help_pick = 'help_pick_' + obj_name_lower
+                        # self.set_face(str(object_help_pick))
+                        print(object_help_pick)
 
-                            print('front arm')
-                            
-                            self.set_rgb(command=GREEN+BLINK_LONG)
+                        self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
+
+                        self.select_voice_audio(next_obj)
+
+                        print('b')
+
+                        # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                        # self.load_image_one_object(next_obj.object_name, next_obj)
+
+                        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
+
+                        self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.50, adjust_direction=180.0, wait_for_end_of=True)
+                        print('c')
+                        time.sleep(1)
+
+                        self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+
+                        self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
+
+                        # self.set_face(str(object_help_pick))
+
+                        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
+
+                        print('d')
+
+                        time.sleep(1.5) # waits for person to put object in hand
+
+                        self.set_neck(position=self.look_judge, wait_for_end_of=False)
+
+                        self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+
+                        # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
+
+                        print('3')
+
+                        object_in_gripper = False
         
-                        else:
-                            print(f'{obj.object_name} goes to the {shelf} shelf, on the {side} side')
-
-
-                            self.set_rgb(command=GREEN+BLINK_LONG)
-                            # self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
-                            # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                            time.sleep(2)
-                            self.set_arm(command="open_gripper", wait_for_end_of=True)
-
-                            print('a')
-                            
-                            obj_name_lower = next_obj.object_name.lower().replace(" ", "_")
-                            print(obj_name_lower)
-
-                            object_help_pick = 'help_pick_' + obj_name_lower
-                            # self.set_face(str(object_help_pick))
-                            print(object_help_pick)
-
-                            self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
-
-                            self.select_voice_audio(next_obj)
-
-                            print('b')
-
-                            # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                            self.load_image_one_object(next_obj.object_name, next_obj)
-
-                            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
-    
-                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.47, adjust_direction=180.0, wait_for_end_of=True)
-                            print('c')
-                            time.sleep(1)
-
-                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
-
-                            self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
-
-                            self.set_face(str(object_help_pick))
-
-                            self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
-
-                            print('d')
-
-                            time.sleep(1.5) # waits for person to put object in hand
-
-                            self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                            self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
-
-                            # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
-
-                            print('3')
-
-                            object_in_gripper = False
-            
-                            while not object_in_gripper:
-                            
-                                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-
-                                if not object_in_gripper:
-
-                                    self.set_rgb(command=RED+BLINK_LONG)
+                        while not object_in_gripper:
                         
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                                
-                                    self.set_arm(command="open_gripper", wait_for_end_of=False)
-                                
-                            self.set_rgb(command=GREEN+BLINK_LONG)
+                            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                            print('front arm')
+                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
 
-                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
-                            # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
+                            if not object_in_gripper:
 
-                            print('frint arm')
+                                self.set_rgb(command=RED+BLINK_LONG)
+                    
+                                self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                             
-                            self.set_rgb(command=GREEN+BLINK_LONG)
+                                self.set_arm(command="open_gripper", wait_for_end_of=False)
+                            
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+
+                        self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+                        # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
+
+                        print('front arm')
+                        
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+        
                     else:
+                        print('i >= len')
                         use_arm = self.choose_place_arm(shelf, side, obj)
                         print(use_arm)
-                        if use_arm == True:
-                            self.set_rgb(command=GREEN+BLINK_LONG)
-                            # self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
-                            # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                            time.sleep(2)
-                            self.set_arm(command="open_gripper", wait_for_end_of=True)
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+                        # self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+                        # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                        time.sleep(2)
+                        self.set_arm(command="open_gripper", wait_for_end_of=True)
 
-                            print('a')
-                            
-                            obj_name_lower = next_obj.object_name.lower().replace(" ", "_")
-                            print(obj_name_lower)
-
-                            object_help_pick = 'help_pick_' + obj_name_lower
-                            # self.set_face(str(object_help_pick))
-                            print(object_help_pick)
-
-                            self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
-
-                            self.select_voice_audio(next_obj)
-
-                            print('b')
-
-                            # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                            self.load_image_one_object(next_obj.object_name, next_obj)
-
-                            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
-    
-                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.47, adjust_direction=180.0, wait_for_end_of=True)
-                            print('c')
-                            time.sleep(1)
-
-                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
-
-                            self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
-
-                            self.set_face(str(object_help_pick))
-
-                            self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
-
-                            print('d')
-
-                            time.sleep(1.5) # waits for person to put object in hand
-
-                            self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                            self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
-
-                            # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
-
-                            print('3')
-
-                            object_in_gripper = False
-            
-                            while not object_in_gripper:
-                            
-                                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-
-                                if not object_in_gripper:
-
-                                    self.set_rgb(command=RED+BLINK_LONG)
+                        print('a')
                         
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                                
-                                    self.set_arm(command="open_gripper", wait_for_end_of=False)
-                                
-                            self.set_rgb(command=GREEN+BLINK_LONG)
+                        self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.50, adjust_direction=180.0, wait_for_end_of=True)
+                        print('c')
+                        time.sleep(1)
 
-                            print('front arm')
+                        self.set_arm(command="arm_front_robot", wait_for_end_of=True)
 
-                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
-                            # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
+                        self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
 
-                            print('frint arm')
-                            
-                            self.set_rgb(command=GREEN+BLINK_LONG)
+                        self.set_arm(command="go_initial_position", wait_for_end_of=True)
+                        
+                        self.set_rgb(command=GREEN+BLINK_LONG)
         
-                        else:
-                            print(f'{obj.object_name} goes to the {shelf} shelf, on the {side} side')
-
-
-                            self.set_rgb(command=GREEN+BLINK_LONG)
-                            # self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
-                            # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                            time.sleep(2)
-                            self.set_arm(command="open_gripper", wait_for_end_of=True)
-
-                            print('a')
-                            
-                            obj_name_lower = obj.object_name.lower().replace(" ", "_")
-                            print(obj_name_lower)
-
-                            object_help_pick = 'help_pick_' + obj_name_lower
-                            # self.set_face(str(object_help_pick))
-                            print(object_help_pick)
-
-                            self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
-
-                            self.select_voice_audio(obj)
-
-                            print('b')
-
-                            # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                            self.load_image_one_object(obj.object_name, obj)
-
-                            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
-    
-                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.47, adjust_direction=180.0, wait_for_end_of=True)
-                            print('c')
-                            time.sleep(1)
-
-                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
-
-                            self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
-
-                            self.set_face(str(object_help_pick))
-
-                            self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
-
-                            print('d')
-
-                            time.sleep(1.5) # waits for person to put object in hand
-
-                            self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                            self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
-
-                            # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
-
-                            print('3')
-
-                            object_in_gripper = False
-            
-                            while not object_in_gripper:
-                            
-                                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-
-                                if not object_in_gripper:
-
-                                    self.set_rgb(command=RED+BLINK_LONG)
-                        
-                                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                                
-                                    self.set_arm(command="open_gripper", wait_for_end_of=False)
-                                
-                            self.set_rgb(command=GREEN+BLINK_LONG)
-
-                            print('front arm')
-
-                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
-                            # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
-
-                            print('frint arm')
-                            
-                            self.set_rgb(command=GREEN+BLINK_LONG)
-
     def check_door_depth_hand(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=600):
 
         overall = False
@@ -2557,7 +2368,7 @@ class StoringGroceriesMain():
             distance_to_close = abs(object_x)/1000 
             print('Distance I am from door', distance_to_close)
 
-            distance_x_to_center = cabinet_position.x
+            distance_x_to_center = cabinet_position.x - 0.05
             distance_y_to_center_original = cabinet_position.y - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
             distance_y_to_center = abs(cabinet_position.y) - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
             ### ISTO CENTRA QD PORTA FECHADA É A ESQUERDA. -> door_position.x + self.node.wardrobe_width/4 
@@ -2594,14 +2405,13 @@ class StoringGroceriesMain():
             print(ang_to_bag, dist_to_bag)
             self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
-            
-            while True:
-                pass
 
             time.sleep(2)
 
-            self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
-            self.set_rgb(command=BLUE+BLINK_LONG)
+            self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+            self.set_rgb(command=GREEN+BLINK_LONG)
+            self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+            self.set_rgb(command=GREEN+BLINK_LONG)
             
             # print(self.node.arm_current_pose)
 
@@ -2657,6 +2467,8 @@ class StoringGroceriesMain():
             # print(right_door, right_door_pose)
             arm_value = Float32()
 
+            cabinet_found = False
+
             tetas = [[0, 0]]
             objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
             for obj in objects_found:
@@ -2667,10 +2479,23 @@ class StoringGroceriesMain():
 
             if cabinet_found:
                 cabinet_position_2 = cabinet_2.position_relative
+                print(cabinet_position_2)
                 distance_arm_to_cabinet = cabinet_position_2.x - 0.65
                 print('Cabinet detected')
+
+                # distance_x_to_center = cabinet_position_2.x
+                # distance_y_to_center = cabinet_position_2.y - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
+
+                # print('d_lateral:', distance_x_to_center)
+                # print('d_frontal:', distance_y_to_center)
+                
+                # ang_to_bag = -math.degrees(math.atan2(distance_x_to_center, distance_y_to_center))
+                # dist_to_bag = (math.sqrt(distance_x_to_center**2 + distance_y_to_center**2))
+                # print(ang_to_bag, dist_to_bag)
+                # self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
+                # self.set_rgb(command=GREEN+BLINK_LONG)
             else:
-                distance_arm_to_cabinet = cabinet_position.x - distance_y_to_center - 0.65
+                distance_arm_to_cabinet = cabinet_position.x - abs(distance_y_to_center) - 0.65
                 print('Cabinet not detected')
 
             print('Arm distance to cabinet =', distance_arm_to_cabinet)
@@ -2678,7 +2503,7 @@ class StoringGroceriesMain():
             
 
             if right_door == True:
-                self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
                 print('right door')
                 self.set_arm(command="check_right_door_inside", wait_for_end_of=True)
 
@@ -2697,7 +2522,7 @@ class StoringGroceriesMain():
                 time.sleep(1)
 
                 # self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="adjust_angle", absolute_angle=275.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=-85.0, flag_not_obs=True, wait_for_end_of=True)
                 time.sleep(1)
 
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.35, adjust_direction=170.0, wait_for_end_of=True)
@@ -2714,14 +2539,16 @@ class StoringGroceriesMain():
 
                 navigate_backwards = distance_in_y_to_get_inside_cabinet - 0.35
                 if navigate_backwards > 0.0:
-                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.1, adjust_direction=180.0, wait_for_end_of=True)
+                    print(navigate_backwards)
+                    # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.1, adjust_direction=180.0, wait_for_end_of=True)
+                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=navigate_backwards, adjust_direction=180.0, wait_for_end_of=True)
                     self.set_rgb(command=GREEN+BLINK_LONG)
                     time.sleep(2)
 
                 
 
             elif left_door == True:
-                self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
                 print('left door')
                 self.set_arm(command="check_left_door", wait_for_end_of=True)
 
@@ -2739,7 +2566,7 @@ class StoringGroceriesMain():
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 time.sleep(1)
 
-                self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
                 time.sleep(1)
 
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.35, adjust_direction=200.0, wait_for_end_of=True)
@@ -2756,7 +2583,9 @@ class StoringGroceriesMain():
 
                 navigate_backwards = distance_in_y_to_get_inside_cabinet - 0.35
                 if navigate_backwards > 0.0:
-                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.1, adjust_direction=180.0, wait_for_end_of=True)
+                    print(navigate_backwards)
+                    # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.1, adjust_direction=180.0, wait_for_end_of=True)
+                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=navigate_backwards, adjust_direction=180.0, wait_for_end_of=True)
                     self.set_rgb(command=GREEN+BLINK_LONG)
                     time.sleep(2)
                 
@@ -2939,6 +2768,15 @@ class StoringGroceriesMain():
         print('\n\n')
 
         return AA
+    
+    def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
+        
+        self.node.call_activate_obstacles_server(obstacles_lidar_up=obstacles_lidar_up, obstacles_lidar_bottom=obstacles_lidar_bottom, obstacles_camera_head=obstacles_camera_head)
+
+        self.node.activate_obstacles_success = True
+        self.node.activate_obstacles_message = "Activated with selected parameters"
+
+        return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     def main(self):
 
@@ -2976,10 +2814,16 @@ class StoringGroceriesMain():
         self.outside_kitchen_door = [-0.7, 5.5]
         self.inside_kitchen_door = [-0.7, 7.5] """
 
-        self.front_of_door = [0.3, 2.5]
+
+        # self.state = self.Approach_kitchen_table
+        self.state = self.Waiting_for_task_start
+        # self.state = self.Approach_cabinet_first_time
+
+        self.front_of_door = [0.0, 1.5]
         self.almost_kitchen = [1.7, 5.3]
         self.inside_kitchen = [1.7, 7.0]
         self.cabinet = [-1.5, 7.5]
+        self.CABINET_ANGLE = -90.0
        
         while True:
 
@@ -2990,6 +2834,7 @@ class StoringGroceriesMain():
 
                 #self.set_face("charmie_face")
                 self.set_initial_position(self.initial_position)
+                
                 print("SET INITIAL POSITION")
 
                 time.sleep(1)          
@@ -3021,23 +2866,35 @@ class StoringGroceriesMain():
             elif self.state == self.Approach_cabinet_first_time:
                 
                 print('State 1 = Approaching cabinet for the first time')
-
-                # self.set_speech(filename="storing_groceries/sg_collected_objects_1st_round", wait_for_end_of=True)
-                
+                    
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                    
+                self.set_navigation(movement="move", target=self.front_of_door, max_speed=25.0, flag_not_obs=True, wait_for_end_of=True)
+
+                self.set_rgb(command=GREEN+BLINK_LONG)
+
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
 
                 self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=False)
 
                 ###### MOVEMENT TO THE CABINET
                 
-                # self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)                
-                # self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.kitchen_table, max_speed=15.0, flag_not_obs=False, wait_for_end_of=True)
-                
-                # self.set_navigation(movement="orientate", absolute_angle= -90.0 + 270.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                # self.set_navigation(movement="move", target=self.kitchen_counter, max_speed=15.0, flag_not_obs=False, wait_for_end_of=True)   
+                self.set_navigation(movement="move", target=self.kitchen_counter, max_speed=25.0, flag_not_obs=True, wait_for_end_of=True)   
+                self.set_rgb(command=GREEN+BLINK_LONG)             
+                self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                self.set_navigation(movement="move", target=self.kitchen_table, max_speed=15.0, flag_not_obs=False, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)                
+                self.set_navigation(movement="orientate", absolute_angle= -90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
 
+                time.sleep(1)
 
+                self.activate_obstacles(obstacles_lidar_up=False, obstacles_camera_head=False)
 
 
 
@@ -3056,7 +2913,7 @@ class StoringGroceriesMain():
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.activate_yolo_objects(activate_doors=True, activate_doors_hand = True)
+                self.activate_yolo_objects(activate_doors=True, activate_doors_hand = False)
 
                 cabinet_found = False
 
@@ -3064,7 +2921,7 @@ class StoringGroceriesMain():
 
                 while cabinet_found == False:
                     print('inside')
-                    tetas = [[0, 0]]
+                    tetas = [[0, 0], [-10, 0], [10, 0]]
                     objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
                     print('pos-search')
                     for obj in objects_found:
@@ -3077,11 +2934,15 @@ class StoringGroceriesMain():
 
                 self.set_arm(command="open_gripper", wait_for_end_of=False)
 
-                self.set_navigation(movement="adjust_angle", absolute_angle=270.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=self.CABINET_ANGLE, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
+
+                print('a')
                 
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.05, adjust_direction=270.0, wait_for_end_of=True)
-                self.set_rgb(command=GREEN+BLINK_LONG)
+                # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.05, adjust_direction=90.0, wait_for_end_of=True)
+                # self.set_rgb(command=GREEN+BLINK_LONG)
+
+                print('b')
 
                 # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.1, adjust_direction=90.0, wait_for_end_of=True)
 
@@ -3135,11 +2996,12 @@ class StoringGroceriesMain():
                 
                 self.high_priority_class = []
                 self.medium_priority_class = []
+                self.low_priority_class = []
 
 
                 self.analysis_cabinet(filtered_objects)
 
-                self.choose_priority(filtered_objects)
+                self.choose_priority()
 
                 # next state
                 self.state = self.Approach_tables_first_time
@@ -3158,7 +3020,9 @@ class StoringGroceriesMain():
                 self.set_neck(position=self.look_table_objects)
                 
                 tetas = [[120, -30], [120, -15]]
-                objects_found_table = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                objects_found_table = []
+                while objects_found_table == []:
+                    objects_found_table = self.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
 
                 print('Objects found on table: ')
                 for obj in objects_found_table:
@@ -3174,19 +3038,27 @@ class StoringGroceriesMain():
                 print('---', self.shelf_side_common_class.items())
 
                 # self.set_neck(position=self.look_back, wait_for_end_of=False)
+                for key, common_class in self.shelf_side_common_class.items():
+                    print(common_class)
+                    print(key)
 
                 self.pick_and_place_objects(table_objects)
 
                 
                 
-                
+                self.state = self.Final_State
+
+            elif self.state == self.Final_State:
+                print('Terminei')  
+                self.set_speech(filename="storing_groceries/sg_finished", wait_for_end_of=False)
+
+                while True:
+                    pass
                 """ 
                 ### TO DO:
-                Colocar if para último caso n crashar
                 senão receber objeto, passar para próximo
-                colocar estrutura de navegação desde princípio
-                alterar navegação x+y 
-                Acrescentar mini movimento 5cm para direita após abrir porta
+                acrescentar frase "might_touch_cabinet"
+                acrescentar posição central do braço
                 
                 Fazer testes com:
                 - só com 2 objetos e ver como se comporta
