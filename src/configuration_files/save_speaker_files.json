@@ -1,7 +1,4 @@
 {
-"warning_close_dishwasher_rack_with_plate": "Just a warning. I will use the plate to help closing the dishwasher rack. I will calmly push the rack with the plate.",
-"closed_dishwasher_rack": "Closed the dishwasher rack",
-"closed_dishwasher_door": "Closed the dishwasher door",
-"might_touch_cabinet": "Just a warning. I might slightly touch the cabinet. However this is intended since I have to position myself as close as possible to the cabinet."
+"search_again_misdetected_objects": "I will search again for the objects I have yet to successfully detect and have placed on my tray."
 }
 

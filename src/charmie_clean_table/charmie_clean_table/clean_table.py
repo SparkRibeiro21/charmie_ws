@@ -95,6 +95,17 @@ class CleanTableNode(Node):
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         
+        # Speakers
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
+        # while not self.save_speech_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Save Speech Command...")
+        # Audio
+        while not self.get_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Audio Server...")
+        while not self.calibrate_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        
         """
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
@@ -103,10 +114,10 @@ class CleanTableNode(Node):
         # while not self.save_speech_command_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Save Speech Command...")
         # Audio
-        # while not self.get_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Audio Server...")
-        # while not self.calibrate_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        while not self.get_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Audio Server...")
+        while not self.calibrate_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # Face
         while not self.face_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Face Command...")
@@ -1557,23 +1568,25 @@ class CleanTableMain():
         self.Waiting_for_task_start = 0
         self.Approach_kitchen_table = 1
         self.Detect_and_pick_all_objects = 2
-        self.Approach_dishwasher = 3
-        self.Open_dishwasher_door = 4
-        self.Open_dishwasher_rack = 5
-        self.Place_cup = 6
-        self.Place_bowl = 7
-        self.Place_plate = 8
-        self.Place_cutlery1 = 9
-        self.Place_cutlery2 = 10
-        self.Close_dishwasher_rack = 11
-        self.Close_dishwasher_door = 12
-        self.Final_State = 13
+        self.Detect_and_pick_all_objects_audio = 3
+        self.Approach_dishwasher = 4
+        self.Open_dishwasher_door = 5
+        self.Open_dishwasher_rack = 6
+        self.Place_cup = 7
+        self.Place_bowl = 8
+        self.Place_plate = 9
+        self.Place_cutlery1 = 10
+        self.Place_cutlery2 = 11
+        self.Close_dishwasher_rack = 12
+        self.Close_dishwasher_door = 13
+        self.Final_State = 14
 
         # Configurables
         self.ATTEMPTS_AT_RECEIVING = 2
         self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
         self.MAX_SPEED = 30
         self.CLOSE_RACK_WITH_PLATE = True
+        self.DEBUG_WITHOUT_AUDIO = False
         # self.TABLE_APPROACH_OBSTACLES = 0.45
 
         # Neck Positions
@@ -1594,7 +1607,7 @@ class CleanTableMain():
         self.dishwasher = [-1.0, 2.0]
 
 
-        self.state = self.Approach_dishwasher
+        self.state = self.Detect_and_pick_all_objects_audio
 
 
         self.node.get_logger().info("IN SERVE THE CLEAN THE TABLE MAIN")
@@ -1647,6 +1660,7 @@ class CleanTableMain():
                 
                 self.state = self.Approach_dishwasher
 
+                """
             elif self.state == self.Detect_and_pick_all_objects:
 
                 all_objects_picked = False
@@ -2085,6 +2099,37 @@ class CleanTableMain():
 
                 self.state = self.Approach_dishwasher
 
+                """
+
+            elif self.state == self.Detect_and_pick_all_objects_audio:
+                print ("GO audio")
+                
+                if not self.DEBUG_WITHOUT_AUDIO:
+                    
+                    self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
+                    self.set_speech(filename="generic/say_robot_yes_no", wait_for_end_of=True)
+                    ##### AUDIO: Listen "YES" OR "NO"
+                    ##### "Please say yes or no to confirm the order"
+                    confirmation = self.get_audio(yes_or_no=True, question="clean_the_table/question_detect_plate_place_tray", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+
+                    ##### Verifica a resposta recebida
+                    if confirmation.lower() == "yes":
+                        # self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+                        print("Received")
+                        self.set_speech(filename="generic/thank_you", wait_for_end_of=True)
+
+                    else:
+                        print("Not received")
+                        self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+                
+                        self.set_speech(filename="clean_the_table/search_again_misdetected_objects", wait_for_end_of=False)
+                    
+                
+                while True:
+                    pass
+                pass
 
             elif self.state == self.Approach_dishwasher:
 
@@ -2151,7 +2196,8 @@ class CleanTableMain():
             elif self.state == self.Open_dishwasher_door:
 
                 ### CODE HERE (NOT IMPLEMENTED FOR NOW ...)
-                self.set_speech(filename="clean_the_table/can_not_open_dishwasher_door", wait_for_end_of=False)
+                time.sleep(5)
+                self.set_speech(filename="clean_the_table/can_not_open_dishwasher_door", wait_for_end_of=True)
 
                 self.state = self.Open_dishwasher_rack
 
@@ -2159,7 +2205,8 @@ class CleanTableMain():
             elif self.state == self.Open_dishwasher_rack:
 
                 ### CODE HERE (NOT IMPLEMENTED FOR NOW ...)
-                self.set_speech(filename="clean_the_table/can_not_open_dishwasher_door", wait_for_end_of=False)
+                time.sleep(5)
+                self.set_speech(filename="clean_the_table/can_not_open_dishwasher_door", wait_for_end_of=True)
 
                 self.state = self.Place_cup
 
@@ -2192,6 +2239,8 @@ class CleanTableMain():
                 self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
 
                 self.set_face("charmie_face")
+                
+                self.set_speech(filename="clean_the_table/placing_cup", wait_for_end_of=False)
 
                 # self.set_arm(command="place_cup", wait_for_end_of=True)
 
@@ -2226,6 +2275,8 @@ class CleanTableMain():
                 self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
 
                 self.set_face("charmie_face")
+                
+                self.set_speech(filename="clean_the_table/placing_bowl", wait_for_end_of=False)
 
                 # self.set_arm(command="place_bowl", wait_for_end_of=True)
 
@@ -2258,6 +2309,8 @@ class CleanTableMain():
                         self.set_arm(command="open_gripper", wait_for_end_of=False)
                 
                 self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+                
+                self.set_speech(filename="clean_the_table/placing_plate", wait_for_end_of=False)
 
                 self.set_face("charmie_face")
 
@@ -2293,6 +2346,8 @@ class CleanTableMain():
                         self.set_arm(command="open_gripper", wait_for_end_of=False)
                 
                 self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+                
+                self.set_speech(filename="clean_the_table/placing_cutlery", wait_for_end_of=False)
 
                 self.set_face("charmie_face")
 
@@ -2328,6 +2383,8 @@ class CleanTableMain():
                         self.set_arm(command="open_gripper", wait_for_end_of=False)
                 
                 self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+                
+                self.set_speech(filename="clean_the_table/placing_cutlery", wait_for_end_of=False)
 
                 self.set_face("charmie_face")
 
