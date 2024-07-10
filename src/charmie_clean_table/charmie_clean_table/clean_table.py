@@ -1607,8 +1607,10 @@ class CleanTableMain():
         self.kitchen_table = [-0.5, 4.5]
         self.dishwasher = [-1.0, 2.0]
 
+        self.first_time_giving_audio_instructions = True
 
-        self.state = self.Detect_and_pick_all_objects_audio
+
+        self.state = self.Waiting_for_task_start
 
 
         self.node.get_logger().info("IN SERVE THE CLEAN THE TABLE MAIN")
@@ -1667,31 +1669,26 @@ class CleanTableMain():
                 
                 correct_object = DetectedObject()
                 list_of_objects = ["Knife", "Fork", "Spoon", "Plate", "Bowl", "Cup"]
+                list_of_objects_copy = []
                 
-                search_ctr = 0
                 while list_of_objects:
-                    search_ctr+=1
-
-                    print("while_start:", list_of_objects)    
+                
+                    list_of_objects_copy = list_of_objects.copy()   
                     
-                    if search_ctr < self.ATTEMPTS_AT_RECEIVING:
-                        objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
-                    else:
-                        objects_found = self.search_for_objects(tetas=self.search_tetas, list_of_objects=list_of_objects, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
-                        
-                    for pretended_obj in list_of_objects:
+                    objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                    
+                    print("while_start:", list_of_objects) 
+                    print("while_start_copy:", list_of_objects_copy)    
+
+                    for o in objects_found:
                         self.set_rgb(command=CYAN+HALF_ROTATE)
 
-                        print(pretended_obj, list_of_objects)    
-                                
-                        curr_obj_flag = False
-                        for o in objects_found:
-                            if o.object_name == pretended_obj:
-                                correct_object = o
-                                curr_obj_flag = True
-
-                        if curr_obj_flag:
-                            curr_obj_flag = False
+                        if o.object_name in list_of_objects_copy:
+                            correct_object = o
+                            pretended_obj = o.object_name
+                        
+                            print(pretended_obj, list_of_objects)    
+                            print(pretended_obj, list_of_objects_copy) 
 
                             confirmation = self.ask_judge_for_object(curr_obj=pretended_obj, correct_object=correct_object)
                             print("confirmation:", confirmation)
@@ -1700,49 +1697,56 @@ class CleanTableMain():
                                 self.set_rgb(command=GREEN+HALF_ROTATE)
                                 self.set_speech(filename="generic/thank_you", wait_for_end_of=True)
 
-                                list_of_objects.remove(pretended_obj)
+                                list_of_objects_copy.remove(pretended_obj)
                                 if pretended_obj == "Knife" or pretended_obj == "Spoon" or pretended_obj == "Fork":
                                     self.SELECTED_CUTLERY.append(pretended_obj)
+
+                                    # the robot must only move two pieces of cutlery
+                                    if "Knife" not in list_of_objects_copy and "Spoon" not in list_of_objects_copy:
+                                        list_of_objects_copy.remove("Fork")
+                                    elif "Fork" not in list_of_objects_copy and "Spoon" not in list_of_objects_copy:
+                                        list_of_objects_copy.remove("Knife")
+                                    elif "Knife" not in list_of_objects and "Fork" not in list_of_objects_copy:
+                                        list_of_objects_copy.remove("Spoon")
                                 
                             else:
                                 self.set_rgb(command=RED+HALF_ROTATE)
                                 self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
                         
-                        # the robot must only move two pieces of cutlery
-                        if "Knife" not in list_of_objects and "Spoon" not in list_of_objects:
-                            list_of_objects.remove("Fork")
-                        if "Fork" not in list_of_objects and "Spoon" not in list_of_objects:
-                            list_of_objects.remove("Knife")
-                        if "Knife" not in list_of_objects and "Fork" not in list_of_objects:
-                            list_of_objects.remove("Spoon")
-                        
+
+                    list_of_objects = list_of_objects_copy   
+
                     if list_of_objects:
-                        self.set_speech(filename="clean_the_table/search_again_misdetected_objects", wait_for_end_of=False)
-                            
+                        # self.set_speech(filename="clean_the_table/search_again_misdetected_objects", wait_for_end_of=True)
+                    
+                        # Speech: "There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?"
+                        self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
+                        for obj in list_of_objects:
+                            # Speech: (Name of object)
+                            self.set_speech(filename="objects_names/"+obj.replace(" ","_").lower(), wait_for_end_of=True)
                 
-                while True:
-                    pass
-                
+                print(self.SELECTED_CUTLERY)
+
                 self.state = self.Approach_dishwasher
+
 
             elif self.state == self.Approach_dishwasher:
 
-                time.sleep(5)
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                self.set_speech(filename="clean_the_table/moving_dishwasher", wait_for_end_of=False)
+                self.set_speech(filename="clean_the_table/moving_dishwasher", wait_for_end_of=True)
 
                 self.set_navigation(movement="rotate", target=self.dishwasher, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.dishwasher, max_speed=20.0, reached_radius=0.8, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle=180.0, flag_not_obs = True, wait_for_end_of=True)
-                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
                 
                 self.set_speech(filename="clean_the_table/approaching_dishwasher", wait_for_end_of=False)
 
-                perfectly_centered = 3
+                perfectly_centered = 2
                 perfectly_centered_ctr = 0
                 while perfectly_centered_ctr <= perfectly_centered:
                     perfectly_centered_ctr += 1
-
 
                     dishwasher_found = False
                     while not dishwasher_found:
@@ -1800,8 +1804,12 @@ class CleanTableMain():
 
                 ### CODE HERE (NOT IMPLEMENTED FOR NOW ...)
                 time.sleep(5)
-                self.set_speech(filename="clean_the_table/can_not_open_dishwasher_door", wait_for_end_of=True)
+                self.set_speech(filename="clean_the_table/can_not_open_dishwasher_rack", wait_for_end_of=True)
 
+                # The 175 rather than 180 is to force the adjustement
+                self.set_navigation(movement="orientate", absolute_angle=170.0, flag_not_obs = True, wait_for_end_of=True)    
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
+                        
                 self.state = self.Place_cup
 
 
@@ -2050,16 +2058,20 @@ class CleanTableMain():
 
         self.set_speech(filename="clean_the_table/place_"+curr_obj.lower()+"_in_tray", wait_for_end_of=True)  
         
-        ### FACE: TIRAR FOTOS
-        self.set_face("place_"+curr_obj.lower()+"_in_tray_ct")
+        self.set_face("place_"+curr_obj.lower()+"_in_tray_ct2")
+
+        time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)  
 
         self.set_face("charmie_face")
 
         confirmation = "yes"
         if not self.DEBUG_WITHOUT_AUDIO:
+
+            if self.first_time_giving_audio_instructions:
+                self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
+                self.set_speech(filename="generic/say_robot_yes_no", wait_for_end_of=True)
+                self.first_time_giving_audio_instructions = False
             
-            self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
-            self.set_speech(filename="generic/say_robot_yes_no", wait_for_end_of=True)
             ##### AUDIO: Listen "YES" OR "NO"
             ##### "Please say yes or no to confirm the order"
             confirmation = self.get_audio(yes_or_no=True, question="clean_the_table/question_detect_"+curr_obj.lower()+"_place_tray", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
