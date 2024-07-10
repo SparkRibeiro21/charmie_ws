@@ -1999,8 +1999,6 @@ class StoringGroceriesMain():
 
         self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
 
-        # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
-
         self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
 
         self.select_voice_audio(obj_0)
@@ -2127,7 +2125,7 @@ class StoringGroceriesMain():
                             self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                             self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
-
+                
                             # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
 
                             print('3')
@@ -2479,7 +2477,7 @@ class StoringGroceriesMain():
             self.set_rgb(command=GREEN+BLINK_LONG)
             self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
-            
+
             # print(self.node.arm_current_pose)
 
             # self.set_arm(command="arm_side_of_washing_machine", wait_for_end_of=True)
@@ -2541,47 +2539,19 @@ class StoringGroceriesMain():
 
             cabinet_found = False
 
-            # tetas = [[0, 0]]
-            # objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
-            # for obj in objects_found:
-            #     if obj.object_name == 'Cabinet':
-            #         cabinet_found = True
-            #         cabinet_2 = obj
-            #         print('Object found')
-
-            # if cabinet_found:
-            #     cabinet_position_2 = cabinet_2.position_relative
-            #     print(cabinet_position_2)
-            #     distance_arm_to_cabinet = cabinet_position_2.x - 0.65
-            #     print('Cabinet detected')
-
-            #     # distance_x_to_center = cabinet_position_2.x
-            #     # distance_y_to_center = cabinet_position_2.y - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
-
-            #     # print('d_lateral:', distance_x_to_center)
-            #     # print('d_frontal:', distance_y_to_center)
-                
-            #     # ang_to_bag = -math.degrees(math.atan2(distance_x_to_center, distance_y_to_center))
-            #     # dist_to_bag = (math.sqrt(distance_x_to_center**2 + distance_y_to_center**2))
-            #     # print(ang_to_bag, dist_to_bag)
-            #     # self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
-            #     # self.set_rgb(command=GREEN+BLINK_LONG)
-            # else:
-            #     distance_arm_to_cabinet = cabinet_position.x - abs(distance_y_to_center) - 0.65
-            #     print('Cabinet not detected')
-
-            average_depth_door = (average_depth_door / 1000) + 0.04
-            print('Arm distance to cabinet =', average_depth_door)
+            average_depth_door = (average_depth_door / 1000) - 0.13 + 0.2 #0.13 é a distância da câmera à garra e 0.2 é uma margem para entrar
+            print('Tip of arm distance to cabinet =', average_depth_door)
 
             self.set_speech(filename="storing_groceries/might_touch_cabinet", wait_for_end_of=False)            
 
             if right_door == True:
                 self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                
                 print('right door')
                 
                 self.set_arm(command="check_right_door_inside", wait_for_end_of=True)
 
-                distance_in_y_to_get_inside_cabinet = average_depth_door
+                distance_in_y_to_get_inside_cabinet = average_depth_door - 0.175 # nova posição do braço está 0.175 cm à frente da que viu o armário
 
                 print('I will navigate in front for ', distance_in_y_to_get_inside_cabinet, 'meters')
 
@@ -2599,7 +2569,7 @@ class StoringGroceriesMain():
                 self.set_navigation(movement="adjust_angle", absolute_angle=-82.0, flag_not_obs=True, wait_for_end_of=True)
                 time.sleep(1)
 
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.35, adjust_direction=170.0, wait_for_end_of=True)
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.3, adjust_direction=170.0, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 time.sleep(2)
 
@@ -2611,11 +2581,18 @@ class StoringGroceriesMain():
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 time.sleep(1)
 
-                navigate_backwards = distance_in_y_to_get_inside_cabinet - 0.35
+                navigate_backwards = distance_in_y_to_get_inside_cabinet - 0.5
+                
+                print('backwards', navigate_backwards)
                 if navigate_backwards > 0.0:
-                    print(navigate_backwards)
+                    print('backwards', navigate_backwards)
                     # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.1, adjust_direction=180.0, wait_for_end_of=True)
                     self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=navigate_backwards, adjust_direction=180.0, wait_for_end_of=True)
+                    self.set_rgb(command=GREEN+BLINK_LONG)
+                    time.sleep(2)
+                
+                else:
+                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=navigate_backwards, adjust_direction=0.0, wait_for_end_of=True)
                     self.set_rgb(command=GREEN+BLINK_LONG)
                     time.sleep(2)
 
@@ -2970,19 +2947,6 @@ class StoringGroceriesMain():
 
                 self.activate_obstacles(obstacles_lidar_up=False, obstacles_camera_head=False)
 
-
-
-
-
-                # self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True, wait_for_end_of=True)
-                # # self.set_navigation(movement="rotate", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.almost_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.inside_kitchen, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.inside_kitchen, flag_not_obs=False, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.cabinet, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.cabinet, flag_not_obs=False, wait_for_end_of=True)
-                # self.set_navigation(movement="orientate", absolute_angle= 85.0, flag_not_obs = True, wait_for_end_of=True)
-
                 self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=False)
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
@@ -3008,17 +2972,8 @@ class StoringGroceriesMain():
 
                 self.set_arm(command="open_gripper", wait_for_end_of=False)
 
-                self.set_navigation(movement="adjust_angle", absolute_angle=self.CABINET_ANGLE, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
-
-                print('a')
-                
-                # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.05, adjust_direction=90.0, wait_for_end_of=True)
-                # self.set_rgb(command=GREEN+BLINK_LONG)
-
-                print('b')
-
-                # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.1, adjust_direction=90.0, wait_for_end_of=True)
 
                 data = []
                 real_data = []

@@ -174,7 +174,7 @@ class ArmUfactory(Node):
 		self.arm_check_right_door =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 131.8]
 		self.arm_check_left_door =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 106.3]
 		self.arm_check_right_door_inside_cabinet =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 221.8]
-		self.arm_check_right_door_inside_cabinet_2 =   [ -219.8, 29.9, -77.7, 128.4, 56.2, 213.6]
+		self.arm_check_right_door_inside_cabinet_2 =   [ -207.6, 62.8, -140.4, 112.8, 30.4, 241.6]
 		self.arm_check_left_door_inside_cabinet =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 16.3]
 
 
