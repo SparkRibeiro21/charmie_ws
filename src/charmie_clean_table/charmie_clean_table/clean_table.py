@@ -2058,7 +2058,7 @@ class CleanTableMain():
 
         self.set_speech(filename="clean_the_table/place_"+curr_obj.lower()+"_in_tray", wait_for_end_of=True)  
         
-        self.set_face("place_"+curr_obj.lower()+"_in_tray_ct2")
+        self.set_face("place_"+curr_obj.lower()+"_in_tray_ct")
 
         time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)  
 
