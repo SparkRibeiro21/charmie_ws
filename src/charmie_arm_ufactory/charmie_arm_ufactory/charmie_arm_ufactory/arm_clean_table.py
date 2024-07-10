@@ -278,9 +278,14 @@ class ArmUfactory(Node):
   
 
 		### CLEAN THE TABLE VARIABLES!!! ###
+		height_top_rack    = float(-(self.HEIGHT_TOP_DISHWASHER_RACK-60.0)*10)
+		height_bottom_rack = float(-(self.HEIGHT_BOTTOM_DISHWASHER_RACK-25.0)*10)
+		print("height_adjust:", height_adjust)
 		self.pre_dishwasher =  			[ -273.9,  -94.8,  -20.4,    0.3,   22.1,  270.0]
 		
-
+		self.pre_place_cup =  			[ -298.4,  -44.1, -100.2,   30.0,   55.2,  254.5]
+		self.place_cup = 				[   25.5,  393.3+height_top_rack,  924.8, math.radians(  86.6), math.radians(  -0.7), math.radians( 177.7)]
+		
 
 
 
@@ -1463,6 +1468,176 @@ class ArmUfactory(Node):
 			self.get_logger().info("FINISHED MOVEMENT")	
 
 
+	def place_cup_in_dishwasher(self):
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_cup)
+			self.joint_values_req.speed = math.radians(40)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 1:
+			self.position_values_req.pose = self.place_cup
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 2:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 5000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 4:
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_cup)
+			self.joint_values_req.speed = math.radians(40)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 5:
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
+			self.joint_values_req.speed = math.radians(40)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def place_plate_in_dishwasher(self):
+
+		if self.estado_tr == 0:
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 1:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		if self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def place_bowl_in_dishwasher(self):
+
+		if self.estado_tr == 0:
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 1:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		if self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+		
+
+	def place_cutlery_in_dishwasher(self):
+
+		if self.estado_tr == 0:
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 1:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		if self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+		
+
+	def open_dishwasher_rack(self):
+
+		if self.estado_tr == 0:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def close_dishwasher_rack(self):
+
+		if self.estado_tr == 0:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+		
+
+	def open_dishwasher_door(self):
+
+		if self.estado_tr == 0:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def close_dishwasher_door(self):
+
+		if self.estado_tr == 0:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+
 	def movement_selection(self):
 		
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
@@ -1525,12 +1700,27 @@ class ArmUfactory(Node):
 			self.collect_bowl_to_initial_position()
 		
 
+		# CLEAN THE TABLE POSITIONS
 		elif self.next_arm_movement == "ask_for_objects_to_pre_dishwasher":
 			self.ask_for_objects_to_pre_dishwasher()
-		
 		elif self.next_arm_movement == "pre_dishwasher_to_ask_for_objects":
 			self.pre_dishwasher_to_ask_for_objects()
-		
+		elif self.next_arm_movement == "place_cup_in_dishwasher":
+			self.place_cup_in_dishwasher()
+		elif self.next_arm_movement == "place_plate_in_dishwasher":
+			self.place_plate_in_dishwasher()
+		elif self.next_arm_movement == "place_bowl_in_dishwasher":
+			self.place_bowl_in_dishwasher()
+		elif self.next_arm_movement == "place_cutlery_in_dishwasher":
+			self.place_cutlery_in_dishwasher()
+		elif self.next_arm_movement == "open_dishwasher_rack":
+			self.open_dishwasher_rack()
+		elif self.next_arm_movement == "close_dishwasher_rack":
+			self.close_dishwasher_rack()
+		elif self.next_arm_movement == "open_dishwasher_door":
+			self.open_dishwasher_door()
+		elif self.next_arm_movement == "close_dishwasher_door":
+			self.close_dishwasher_door()
 
 
 		else:

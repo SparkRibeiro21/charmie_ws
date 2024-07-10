@@ -1798,6 +1798,8 @@ class CleanTableMain():
                 ### CODE HERE (NOT IMPLEMENTED FOR NOW ...)
                 time.sleep(5)
                 self.set_speech(filename="clean_the_table/can_not_open_dishwasher_door", wait_for_end_of=True)
+                
+                # self.set_arm(command="open_dishwasher_door", wait_for_end_of=True)
 
                 self.state = self.Open_dishwasher_rack
 
@@ -1812,6 +1814,9 @@ class CleanTableMain():
                 # self.set_navigation(movement="orientate", absolute_angle=170.0, flag_not_obs = True, wait_for_end_of=True)    
                 # self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
 
+                # self.set_arm(command="open_dishwasher_rack", wait_for_end_of=True)
+                
+                # JUST FOR DEBUG
                 self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
                 self.SELECTED_CUTLERY = ["Fork", "Knife"]
 
@@ -1852,57 +1857,7 @@ class CleanTableMain():
 
                 self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
                 
-                # TEMP FOR DEBUG
-                time.sleep(2.0)
-                self.set_arm(command="open_gripper", wait_for_end_of=True)
-                time.sleep(1.0)
-                self.set_arm(command="close_gripper", wait_for_end_of=True)
-                
-                # self.set_arm(command="place_cup", wait_for_end_of=True)
-
-                self.state = self.Place_bowl
-
-
-            elif self.state == self.Place_bowl:
-
-                self.set_neck(position=self.look_forward, wait_for_end_of=False)
-
-                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
-
-                self.set_face("help_pick_bowl")
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                object_in_gripper = False
-                while not object_in_gripper:
-                                        
-                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-
-                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-                
-                self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
-
-                self.set_face("charmie_face")
-                
-                self.set_speech(filename="clean_the_table/placing_bowl", wait_for_end_of=False)
-
-                self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
-                
-                # TEMP FOR DEBUG
-                time.sleep(2.0)
-                self.set_arm(command="open_gripper", wait_for_end_of=True)
-                time.sleep(1.0)
-                self.set_arm(command="close_gripper", wait_for_end_of=True)
-
-                # self.set_arm(command="place_bowl", wait_for_end_of=True)
+                self.set_arm(command="place_cup_in_dishwasher", wait_for_end_of=True)
 
                 self.state = self.Place_plate
 
@@ -1940,14 +1895,12 @@ class CleanTableMain():
 
                 self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
                 
-                # TEMP FOR DEBUG
-                time.sleep(2.0)
-                self.set_arm(command="open_gripper", wait_for_end_of=True)
-                time.sleep(1.0)
-                self.set_arm(command="close_gripper", wait_for_end_of=True)
+                self.set_arm(command="close_dishwasher_rack", wait_for_end_of=True)
 
-                # self.set_arm(command="place_plate", wait_for_end_of=True)
+                self.set_arm(command="place_plate_in_dishwasher", wait_for_end_of=True)
 
+                # self.set_arm(command="open_dishwasher_rack", wait_for_end_of=True)
+                
                 self.state = self.Place_cutlery1
 
 
@@ -1984,13 +1937,7 @@ class CleanTableMain():
 
                 self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
                 
-                # TEMP FOR DEBUG
-                time.sleep(2.0)
-                self.set_arm(command="open_gripper", wait_for_end_of=True)
-                time.sleep(1.0)
-                self.set_arm(command="close_gripper", wait_for_end_of=True)
-
-                # self.set_arm(command="place_cutlery", wait_for_end_of=True)
+                self.set_arm(command="place_cutlery_in_dishwasher", wait_for_end_of=True)
 
                 self.state = self.Place_cutlery2
 
@@ -2028,17 +1975,51 @@ class CleanTableMain():
 
                 self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
                 
-                # TEMP FOR DEBUG
-                time.sleep(2.0)
-                self.set_arm(command="open_gripper", wait_for_end_of=True)
-                time.sleep(1.0)
-                self.set_arm(command="close_gripper", wait_for_end_of=True)
+                self.set_arm(command="place_cutlery_in_dishwasher", wait_for_end_of=True)
 
-                # self.set_arm(command="place_cutlery", wait_for_end_of=True)
-
-                self.state = self.Close_dishwasher_rack
+                self.state = self.Place_bowl
 
 
+            elif self.state == self.Place_bowl:
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
+
+                self.set_face("help_pick_bowl")
+                
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+                object_in_gripper = False
+                while not object_in_gripper:
+                                        
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                        
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+                
+                self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+
+                self.set_face("charmie_face")
+                
+                self.set_speech(filename="clean_the_table/placing_bowl", wait_for_end_of=False)
+
+                self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
+                
+                self.set_arm(command="place_bowl_in_dishwasher", wait_for_end_of=True)
+
+                self.state = self.Close_dishwasher_door
+
+
+            ### FOR NOW - THE CLOSE RACK MOVEMENT IS INCLUDED IN THE PLACE_PLATE
+                """
             elif self.state == self.Close_dishwasher_rack:
 
                 self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
@@ -2049,8 +2030,8 @@ class CleanTableMain():
                 
                 self.set_speech(filename="clean_the_table/close_dishwasher_rack", wait_for_end_of=False)
                 
-                while True:
-                    pass
+                # while True:
+                #     pass
                 
                 
                 self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
@@ -2067,7 +2048,7 @@ class CleanTableMain():
                 self.set_speech(filename="clean_the_table/closed_dishwasher_rack", wait_for_end_of=False)
 
                 self.state = self.Close_dishwasher_door
-
+                """
 
             elif self.state == self.Close_dishwasher_door:
 
@@ -2079,8 +2060,10 @@ class CleanTableMain():
                 # self.set_navigation(movement="adjust", adjust_distance=0.1, adjust_direction=180.0, wait_for_end_of=True)
                 self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
 
+                
+                
+                self.set_arm(command="close_dishwasher_door", wait_for_end_of=True)
 
-                ### CLOSE DISHWASHER CODE HERE
 
 
                 self.set_speech(filename="clean_the_table/closed_dishwasher_door", wait_for_end_of=False)
