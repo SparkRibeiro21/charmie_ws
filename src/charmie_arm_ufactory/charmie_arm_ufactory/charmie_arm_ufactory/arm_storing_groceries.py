@@ -174,6 +174,7 @@ class ArmUfactory(Node):
 		self.arm_check_right_door =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 131.8]
 		self.arm_check_left_door =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 106.3]
 		self.arm_check_right_door_inside_cabinet =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 221.8]
+		self.arm_check_right_door_inside_cabinet_2 =   [ -219.8, 29.9, -77.7, 128.4, 56.2, 213.6]
 		self.arm_check_left_door_inside_cabinet =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 16.3]
 
 
@@ -245,13 +246,13 @@ class ArmUfactory(Node):
 		self.arm_front_robot_mid_linear = [-646.8, 144.4, 107.5, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 
 		self.pre_place_cabinet_second_shelf_left_side = [-646.8, 452.7, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
-		self.pre_place_cabinet_second_shelf_right_side = [-646.8, 452.7, 379.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_second_shelf_right_side = [-646.8, 452.7, 309.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 		self.pre_place_cabinet_second_shelf_centre = [-646.8, 452.7, 160.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 		self.pre_place_cabinet_third_shelf_left_side = [-646.8, 62.3, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
-		self.pre_place_cabinet_third_shelf_right_side = [-646.8, 62.3, 379.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_third_shelf_right_side = [-646.8, 62.3, 309.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 		self.pre_place_cabinet_third_shelf_centre = [-646.8, 62.3, 160.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 		self.pre_place_cabinet_fourth_shelf_left_side = [-646.8, -400.0, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
-		self.pre_place_cabinet_fourth_shelf_right_side = [-646.8, -400.0, 379.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_fourth_shelf_right_side = [-646.8, -400.0, 309.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 		self.pre_place_cabinet_fourth_shelf_centre = [-646.8, -400.0, 160.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 
 		
@@ -902,7 +903,7 @@ class ArmUfactory(Node):
 	def check_right_door_inside(self):
 		if self.estado_tr == 0:
 			print('a')
-			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door_inside_cabinet)
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door_inside_cabinet_2)
 			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
