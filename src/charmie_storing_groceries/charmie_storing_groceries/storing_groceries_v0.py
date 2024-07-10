@@ -1983,6 +1983,7 @@ class StoringGroceriesMain():
         return use_arm
 
     def pick_and_place_objects(self, table_objects):
+        object_grabbed = False
         obj_0 = table_objects[0]
 
         obj_name_lower = obj_0.object_name.lower().replace(" ", "_")
@@ -2017,73 +2018,12 @@ class StoringGroceriesMain():
         self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
         
         time.sleep(1.5) # waits for person to put object in hand
-    
-        # self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        # object_in_gripper = False
-        # gripper_ctr = 0
-        # while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
             
-        #     gripper_ctr += 1
-            
-        #     self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-        #     object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-            
-        #     if not object_in_gripper:
-                
-        #         self.set_rgb(command=RED+BLINK_LONG)
-        
-        #         if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-
-        #             self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                
-        #         self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-        # if object_in_gripper:
-
-        #     self.set_arm(command="collect_milk_to_tray", wait_for_end_of=False)
-
-        #     if curr_obj in list_of_objects:
-        #         index = list_of_objects.index(curr_obj)
-        #         list_of_objects.remove(curr_obj)
-        #         list_of_objects_detected_as.pop(index)
-        
-        # else:
-        #     self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
-
-
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    
         object_in_gripper = False
-        while not object_in_gripper:
-        
+        gripper_ctr = 0
+        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+            
+            gripper_ctr += 1
             self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
             object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
@@ -2091,12 +2031,18 @@ class StoringGroceriesMain():
             if not object_in_gripper:
 
                 self.set_rgb(command=RED+BLINK_LONG)
-    
-                self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
             
                 self.set_arm(command="open_gripper", wait_for_end_of=False)
+           
+        if object_in_gripper:
+            object_grabbed = True
+            self.set_rgb(command=GREEN+BLINK_LONG)
             
-        self.set_rgb(command=GREEN+BLINK_LONG)
+        else:
+            self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+            self.set_rgb(command=RED+BLINK_LONG)
 
         self.set_arm(command="arm_front_robot", wait_for_end_of=True)
         # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
@@ -2104,131 +2050,208 @@ class StoringGroceriesMain():
         self.set_rgb(command=GREEN+BLINK_LONG)
 
         for i in range(len(table_objects)):
-            if i < len(table_objects) - 1:
-                obj = table_objects[i]
-                next_obj = table_objects[i+1]
-            else:
-                obj = table_objects[i]
-                next_obj = obj
+            if object_grabbed == True:
+                if i < len(table_objects) - 1:
+                    obj = table_objects[i]
+                    next_obj = table_objects[i+1]
+                else:
+                    obj = table_objects[i]
+                    next_obj = obj
 
-            print('---')
-            print(obj.object_name, next_obj.object_name)
-            print(i)
-            print(len(table_objects) - 1)
-            print('---')
+                print('---')
+                print(obj.object_name, next_obj.object_name)
+                print(i)
+                print(len(table_objects) - 1)
+                print('---')
 
-            # Output results
-            for key, common_class in self.shelf_side_common_class.items():
-                shelf, side = key
-                print(key, common_class)
-                # print('Inside loop: ', shelf, side, common_class)
-                # print(f"Shelf {shelf}, Side {side} - Most Common Class: {common_class}")
-                # print(f"Objects: {[obj.object_name for obj in self.shelf_side_objects[key]]}")
-                if obj.object_class == common_class:
-                    if i < len(table_objects) - 1:
-                        print('i < len')
-                        use_arm = self.choose_place_arm(shelf, side, obj)
-                        print(use_arm)
-                    
-                        self.set_rgb(command=GREEN+BLINK_LONG)
-                        # self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
-                        # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                        time.sleep(2)
-                        self.set_arm(command="open_gripper", wait_for_end_of=True)
-
-                        print('a')
+                # Output results
+                for key, common_class in self.shelf_side_common_class.items():
+                    shelf, side = key
+                    print(key, common_class)
+                    # print('Inside loop: ', shelf, side, common_class)
+                    # print(f"Shelf {shelf}, Side {side} - Most Common Class: {common_class}")
+                    # print(f"Objects: {[obj.object_name for obj in self.shelf_side_objects[key]]}")
+                    if obj.object_class == common_class:
+                        if i < len(table_objects) - 1:
+                            print('i < len')
+                            use_arm = self.choose_place_arm(shelf, side, obj)
+                            print(use_arm)
                         
-                        obj_name_lower = next_obj.object_name.lower().replace(" ", "_")
-                        print(obj_name_lower)
+                            self.set_rgb(command=GREEN+BLINK_LONG)
+                            # self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+                            # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                            time.sleep(2)
+                            self.set_arm(command="open_gripper", wait_for_end_of=True)
 
-                        object_help_pick = 'help_pick_' + obj_name_lower
-                        # self.set_face(str(object_help_pick))
-                        print(object_help_pick)
+                            print('a')
+                            
+                            obj_name_lower = next_obj.object_name.lower().replace(" ", "_")
+                            print(obj_name_lower)
 
-                        self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
+                            object_help_pick = 'help_pick_' + obj_name_lower
+                            # self.set_face(str(object_help_pick))
+                            print(object_help_pick)
 
-                        self.select_voice_audio(next_obj)
+                            self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
 
-                        print('b')
+                            self.select_voice_audio(next_obj)
 
-                        # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+                            print('b')
 
-                        # self.load_image_one_object(next_obj.object_name, next_obj)
+                            # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
+                            # self.load_image_one_object(next_obj.object_name, next_obj)
 
-                        self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.50, adjust_direction=180.0, wait_for_end_of=True)
-                        print('c')
-                        time.sleep(1)
+                            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
 
-                        self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.50, adjust_direction=180.0, wait_for_end_of=True)
+                            print('c')
+                            time.sleep(1)
 
-                        self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
+                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
 
-                        # self.set_face(str(object_help_pick))
+                            self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
 
-                        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
+                            # self.set_face(str(object_help_pick))
 
-                        print('d')
+                            self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
 
-                        time.sleep(1.5) # waits for person to put object in hand
+                            print('d')
 
-                        self.set_neck(position=self.look_judge, wait_for_end_of=False)
+                            time.sleep(1.5) # waits for person to put object in hand
 
-                        self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                            self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                        # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
+                            self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
 
-                        print('3')
+                            # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
 
-                        object_in_gripper = False
-        
-                        while not object_in_gripper:
-                        
-                            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+                            print('3')
 
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                            object_in_gripper = False
+                            gripper_ctr = 0
+                            while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+                                
+                                gripper_ctr += 1
+                                self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                            if not object_in_gripper:
+                                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
 
+                                if not object_in_gripper:
+
+                                    self.set_rgb(command=RED+BLINK_LONG)
+                                    if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+                                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                                
+                                    self.set_arm(command="open_gripper", wait_for_end_of=False)
+                            
+                            if object_in_gripper:
+                                object_grabbed = True
+                                self.set_rgb(command=GREEN+BLINK_LONG)
+                                
+                            else:
+                                self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
                                 self.set_rgb(command=RED+BLINK_LONG)
-                    
-                                self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                            
-                                self.set_arm(command="open_gripper", wait_for_end_of=False)
-                            
-                        self.set_rgb(command=GREEN+BLINK_LONG)
-
-                        self.set_arm(command="arm_front_robot", wait_for_end_of=True)
-                        # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
-
-                        print('front arm')
-                        
-                        self.set_rgb(command=GREEN+BLINK_LONG)
         
-                    else:
-                        print('i >= len')
-                        use_arm = self.choose_place_arm(shelf, side, obj)
-                        print(use_arm)
-                        self.set_rgb(command=GREEN+BLINK_LONG)
-                        # self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
-                        # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                        time.sleep(2)
-                        self.set_arm(command="open_gripper", wait_for_end_of=True)
+                            
 
-                        print('a')
-                        
-                        self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.50, adjust_direction=180.0, wait_for_end_of=True)
-                        print('c')
-                        time.sleep(1)
+                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+                            # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
 
-                        self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+                            print('front arm')
+                            
+                            self.set_rgb(command=GREEN+BLINK_LONG)
+            
+                        else:
+                            print('i >= len')
+                            use_arm = self.choose_place_arm(shelf, side, obj)
+                            print(use_arm)
+                            self.set_rgb(command=GREEN+BLINK_LONG)
+                            # self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+                            # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                            time.sleep(2)
+                            self.set_arm(command="open_gripper", wait_for_end_of=True)
 
-                        self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
+                            print('a')
+                            
+                            self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.50, adjust_direction=180.0, wait_for_end_of=True)
+                            print('c')
+                            time.sleep(1)
 
-                        self.set_arm(command="go_initial_position", wait_for_end_of=True)
-                        
-                        self.set_rgb(command=GREEN+BLINK_LONG)
+                            self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+
+                            self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
+
+                            self.set_arm(command="go_initial_position", wait_for_end_of=True)
+                            
+                            self.set_rgb(command=GREEN+BLINK_LONG)
+                            
+                            
+            else:
+                if i < len(table_objects) - 1:
+                    obj = table_objects[i]
+                    next_obj = table_objects[i+1]
+                else:
+                    obj = table_objects[i]
+                    next_obj = obj
+
+                print('---')
+                print(obj.object_name, next_obj.object_name)
+                print(i)
+                print(len(table_objects) - 1)
+                print('---')
+                
+                
+                print('not grabbed')
+                self.set_rgb(command=RED+BLINK_LONG)
+                self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
+                
+                self.set_arm(command="open_gripper", wait_for_end_of=True)                
+                obj_name_lower = next_obj.object_name.lower().replace(" ", "_")
+                print(obj_name_lower)
+
+                object_help_pick = 'help_pick_' + obj_name_lower
+                
+                self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
+
+                self.select_voice_audio(next_obj)
+                
+                self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
+                
+                object_in_gripper = False
+                gripper_ctr = 0
+                while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+                    
+                    gripper_ctr += 1
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+
+                    if not object_in_gripper:
+
+                        self.set_rgb(command=RED+BLINK_LONG)
+                        if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+                            self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                    
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+                
+                if object_in_gripper:
+                    object_grabbed = True
+                    self.set_rgb(command=GREEN+BLINK_LONG)
+                    
+                else:
+                    self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+                    self.set_rgb(command=RED+BLINK_LONG)
+
+                self.set_arm(command="arm_front_robot", wait_for_end_of=True)
+                # self.set_arm(command="arm_front_robot_linear", wait_for_end_of=True)
+
+                print('front arm')
+                
+                self.set_rgb(command=GREEN+BLINK_LONG)
+
+        
+        
         
     def check_door_depth_hand(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=600):
 
@@ -3059,8 +3082,4 @@ class StoringGroceriesMain():
                 """ 
                 ### TO DO:
                 senão receber objeto, passar para próximo
-                
-                Fazer testes com:
-                - só com 2 objetos e ver como se comporta
-                - com vários objetos mas só um de classe alta e 2 de classe média
                 """      
