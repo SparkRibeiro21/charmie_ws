@@ -317,6 +317,10 @@ class ArmUfactory(Node):
 		self.pre_place_cutlery_robocup24 =	 	[ -289.7,  -30.2,  -92.8,  110.0,   11.5,  260.2]
 		self.place_cutlery_robocup24 = 			[  154.2,  448.8+height_bottom_rack_torso_down,  818.4, math.radians(  -3.5), math.radians( -42.4), math.radians( -92.1)]
 
+		# CLOSE DISHWASHER
+		self.side_washing_machine = [-169.4, 31.6, -69.6, 274.9, 97.7, 55.8]
+		self.side_washing_machine_2 = [-145.9, 2.6, -60.6, 285.5, 119.1, 39.3]
+		self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 70.6]
 
   
 		print('Nada')
@@ -1963,6 +1967,26 @@ class ArmUfactory(Node):
 	def close_dishwasher_door(self):
 
 		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.side_washing_machine)
+			self.joint_values_req.speed = 0.5
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.close_dishwasher)
+			self.joint_values_req.speed = 0.4
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 2:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
