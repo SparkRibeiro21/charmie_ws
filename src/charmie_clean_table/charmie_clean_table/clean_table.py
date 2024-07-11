@@ -1610,7 +1610,7 @@ class CleanTableMain():
         self.first_time_giving_audio_instructions = True
 
 
-        self.state = self.Detect_and_pick_all_objects_audio
+        self.state = self.Open_dishwasher_rack
 
 
         self.node.get_logger().info("IN SERVE THE CLEAN THE TABLE MAIN")
@@ -1889,18 +1889,22 @@ class CleanTableMain():
                 
                 self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
                 
-                self.set_speech(filename="clean_the_table/placing_plate", wait_for_end_of=False)
-
                 self.set_face("charmie_face")
+
+                self.set_speech(filename="clean_the_table/close_dishwasher_rack", wait_for_end_of=False)
+
+                self.set_speech(filename="clean_the_table/warning_close_dishwasher_rack_with_plate", wait_for_end_of=False)
 
                 self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
                 
                 self.set_arm(command="close_dishwasher_rack", wait_for_end_of=True)
 
-                self.set_arm(command="place_plate_in_dishwasher", wait_for_end_of=True)
-
                 # self.set_arm(command="open_dishwasher_rack", wait_for_end_of=True)
                 
+                self.set_speech(filename="clean_the_table/placing_plate", wait_for_end_of=False)
+                
+                self.set_arm(command="place_plate_in_dishwasher", wait_for_end_of=True)
+
                 self.state = self.Place_cutlery1
 
 

@@ -279,13 +279,28 @@ class ArmUfactory(Node):
 
 		### CLEAN THE TABLE VARIABLES!!! ###
 		height_top_rack    = float(-(self.HEIGHT_TOP_DISHWASHER_RACK-60.0)*10)
-		height_bottom_rack = float(-(self.HEIGHT_BOTTOM_DISHWASHER_RACK-25.0)*10)
+		height_bottom_rack_torso_up = float(-(self.HEIGHT_BOTTOM_DISHWASHER_RACK+14.0-25.0)*10)
+		height_bottom_rack_torso_down = float(-(self.HEIGHT_BOTTOM_DISHWASHER_RACK-25.0)*10)
+		
+		
+		
 		print("height_adjust:", height_adjust)
 		self.pre_dishwasher =  			[ -273.9,  -94.8,  -20.4,    0.3,   22.1,  270.0]
 		
 		self.pre_place_cup =  			[ -298.4,  -44.1, -100.2,   30.0,   55.2,  254.5]
 		self.place_cup = 				[   25.5,  393.3+height_top_rack,  924.8, math.radians(  86.6), math.radians(  -0.7), math.radians( 177.7)]
+	
+
+		self.close_rack_place_plate_rack_height = 		[   21.0,  393.3+height_top_rack,  605.3, math.radians(  86.6), math.radians(  -0.7), math.radians( 177.7)]
+		self.close_rack_first_rack_push = 				[   24.0,  365.1+height_top_rack,  914.5, math.radians(  86.6), math.radians(  -0.7), math.radians( 177.7)]
+		self.pre_dishwasher_perpendicular =  			[ -273.9,  -94.8,  -20.4,  180.7,   64.5,  180.0]
+		self.close_rack_second_push_pre_adjust_height = [   47.7,  430.8+height_top_rack,  729.5, math.radians(  -2.6), math.radians(   0.4), math.radians( -94.4)]
+		self.close_rack_second_push = 					[   55.3,  392.0+height_top_rack,  966.5, math.radians(  -2.6), math.radians(   0.4), math.radians( -94.4)]
+		self.close_rack_second_push_back = 				[   52.4,  392.0+height_top_rack,  901.3, math.radians(  -2.6), math.radians(   0.4), math.radians( -94.4)]
 		
+
+
+
 
 
 
@@ -1472,7 +1487,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_cup)
-			self.joint_values_req.speed = math.radians(40)
+			self.joint_values_req.speed = math.radians(30)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1480,7 +1495,7 @@ class ArmUfactory(Node):
 		
 		elif self.estado_tr == 1:
 			self.position_values_req.pose = self.place_cup
-			self.position_values_req.speed = 120.0
+			self.position_values_req.speed = 100.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -1502,7 +1517,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 4:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_cup)
-			self.joint_values_req.speed = math.radians(40)
+			self.joint_values_req.speed = math.radians(30)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1510,7 +1525,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 5:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
-			self.joint_values_req.speed = math.radians(40)
+			self.joint_values_req.speed = math.radians(30)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1610,12 +1625,81 @@ class ArmUfactory(Node):
 	def close_dishwasher_rack(self):
 
 		if self.estado_tr == 0:
+			self.position_values_req.pose = self.close_rack_place_plate_rack_height
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		if self.estado_tr == 1:
+			self.position_values_req.pose = self.close_rack_first_rack_push
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
+			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher_perpendicular)
+			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		if self.estado_tr == 4:
+			self.position_values_req.pose = self.close_rack_second_push_pre_adjust_height
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		if self.estado_tr == 5:
+			self.position_values_req.pose = self.close_rack_second_push
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		if self.estado_tr == 6:
+			self.position_values_req.pose = self.close_rack_second_push_back
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 7:
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
+			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 8:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
-		
+
 
 	def open_dishwasher_door(self):
 
