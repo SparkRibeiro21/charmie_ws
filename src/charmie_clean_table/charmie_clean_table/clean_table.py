@@ -8,7 +8,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration
 
 import cv2 
 import threading
@@ -66,6 +66,8 @@ class CleanTableNode(Node):
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
         # Obstacles
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
+        # Torso Publisher
+        self.torso_pos_publisher = self.create_publisher(Pose2D, "torso_pos", 10)
         
         ### Services (Clients) ###
         # Speakers
@@ -141,6 +143,12 @@ class CleanTableNode(Node):
             self.get_logger().warn("Waiting for Server Point Cloud...")
         """
 
+        # for now this is here just to make sure the request for odometry is sent to a node that is already responding
+        # not being used for anythin else
+        self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+        while not self.set_acceleration_ramp_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Low Level...")
+
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
@@ -180,6 +188,8 @@ class CleanTableNode(Node):
         self.save_speech_message = ""
         self.rgb_success = True
         self.rgb_message = ""
+        self.torso_success = True
+        self.torso_message = ""
         self.calibrate_audio_success = True
         self.calibrate_audio_message = ""
         self.audio_command = ""
@@ -714,6 +724,18 @@ class CleanTableMain():
         self.node.rgb_message = "Value Sucessfully Sent"
 
         return self.node.rgb_success, self.node.rgb_message
+
+    def set_torso(self, legs=0.0, torso=0.0, wait_for_end_of=True):
+        
+        temp = Pose2D()
+        temp.x = float(legs)
+        temp.y = float(torso)
+        self.node.torso_pos_publisher.publish(temp)
+
+        self.node.torso_success = True
+        self.node.torso_message = "Value Sucessfully Sent"
+
+        return self.node.torso_success, self.node.torso_message
  
     def wait_for_start_button(self):
 
@@ -806,7 +828,7 @@ class CleanTableMain():
 
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
-    def set_face(self, command="", custom="", wait_for_end_of=True):
+    def set_face(self, command="", custom="", wait_for_end_of=False):
         
         wait_for_end_of=False
         
@@ -1815,6 +1837,13 @@ class CleanTableMain():
                 # self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
 
                 # self.set_arm(command="open_dishwasher_rack", wait_for_end_of=True)
+
+
+                self.set_torso(legs=0, torso=0) 
+                print("TORSO SENT")
+
+                time.sleep(25)
+
                 
                 # JUST FOR DEBUG
                 self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
@@ -1938,7 +1967,12 @@ class CleanTableMain():
                 self.set_arm(command="close_dishwasher_rack", wait_for_end_of=True)
 
                 # self.set_arm(command="open_dishwasher_rack", wait_for_end_of=True)
-                
+
+                self.set_torso(legs=0, torso=0) 
+                print("TORSO SENT")
+
+                time.sleep(25)
+
                 self.set_speech(filename="clean_the_table/placing_plate", wait_for_end_of=False)
                 
                 self.set_arm(command="place_plate_in_dishwasher", wait_for_end_of=True)
