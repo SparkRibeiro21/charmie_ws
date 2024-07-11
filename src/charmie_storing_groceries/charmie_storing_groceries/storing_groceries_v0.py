@@ -2881,9 +2881,9 @@ class StoringGroceriesMain():
             if self.state == self.Waiting_for_task_start:
 
                 time.sleep(1)
-                #print('State 0 = Initial')
+                print('State 0 = Initial')
 
-                #self.set_face("charmie_face")
+                # self.set_face("charmie_face")
                 self.set_initial_position(self.initial_position)
                 
                 print("SET INITIAL POSITION")
@@ -2907,11 +2907,6 @@ class StoringGroceriesMain():
                          
                 self.wait_for_door_start()
 
-                # time.sleep(3.5)
-                # next state
-                # self.state = self.Approach_tables_first_time
-
-                # self.state = 0 
                 self.state = self.Approach_cabinet_first_time
 
             elif self.state == self.Approach_cabinet_first_time:
@@ -2928,7 +2923,7 @@ class StoringGroceriesMain():
 
                 self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=False)
 
-                ###### MOVEMENT TO THE CABINET
+                ##### MOVEMENT TO THE CABINET
                 
                 self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)

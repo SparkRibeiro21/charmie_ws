@@ -7,7 +7,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from geometry_msgs.msg import Point
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfPoints, ListOfDetectedObject, ListOfDetectedPerson, Obstacles
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfPoints
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace
 
 import cv2 
@@ -74,28 +74,19 @@ class RestaurantNode(Node):
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
 
-        # Search for person and object 
-        self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
-        self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
-        # Obstacles
-        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
-        
-
-        
-
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
-        # while not self.speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Speech Command...")
-        # # Audio
-        # while not self.get_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Audio Server...")
-        # while not self.calibrate_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
-        # # Face
-        # while not self.face_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Face Command...")
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
+        # Audio
+        while not self.get_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Audio Server...")
+        while not self.calibrate_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Calibrate Audio Server...")
+        # Face
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
 
        
         """
@@ -131,13 +122,6 @@ class RestaurantNode(Node):
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
-        self.detected_objects = Yolov8Objects()
-        self.detected_doors = Yolov8Objects()
-        self.detected_shoes = Yolov8Objects()
-        self.detected_objects_hand = Yolov8Objects()
-        self.detected_doors_hand = Yolov8Objects()
-        self.detected_shoes_hand = Yolov8Objects()
-        self.obstacles = Obstacles()
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -161,14 +145,91 @@ class RestaurantNode(Node):
         self.activate_yolo_objects_message = ""
         self.navigation_success = True
         self.navigation_message = ""
-        self.activate_obstacles_success = True
-        self.activate_obstacles_message = ""
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
+        current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        current_frame_draw = current_frame.copy()
+        
+        cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
+        cv2.waitKey(10)
+
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
+
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
+
+
+        # img = [0:720, 0:1280]
+        # corr_image = False
+        # thresh_h = 50
+        # thresh_v = 200
+
+        """
+        if self.detected_objects.num_objects > 0:
+
+            x_min = 1280
+            x_max = 0
+            y_min = 720
+            y_max = 0
+
+            for object in self.detected_objects.objects:      
+            
+                if object.object_class == "Dishes":
+                    corr_image = True
+
+                    if object.box_top_left_x < x_min:
+                        x_min = object.box_top_left_x
+                    if object.box_top_left_x+object.box_width > x_max:
+                        x_max = object.box_top_left_x+object.box_width
+
+                    if object.box_top_left_y < y_min:
+                        y_min = object.box_top_left_y
+                    if object.box_top_left_y+object.box_height > y_max:
+                        y_max = object.box_top_left_y+object.box_height
+
+                    start_point = (object.box_top_left_x, object.box_top_left_y)
+                    end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
+                    cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
+
+                    cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
+                    
+            
+            for object in self.detected_objects.objects:      
+                
+                if object.object_class == "Dishes":
+                
+                    if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
+                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
+                    else:
+                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
+                        
+                    # just to test for the "serve the breakfast" task...
+                    aux_name = object.object_name
+                    if object.object_name == "Fork" or object.object_name == "Knife":
+                        aux_name = "Spoon"
+                    elif object.object_name == "Plate" or object.object_name == "Cup":
+                        aux_name = "Bowl"
+
+                    text_size, _ = cv2.getTextSize(f"{aux_name}", cv2.FONT_HERSHEY_DUPLEX, 1, 1)
+                    text_w, text_h = text_size
+                    cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
+                    cv2.putText(current_frame_draw, f"{aux_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1, cv2.LINE_AA)
+
+        if corr_image:
+            # current_frame_draw = current_frame_draw[x_min:y_min, x_max,y_max]
+            # img = current_frame_draw[y_min:y_max, x_min,x_max]
+            cv2.imshow("c", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)])
+            cv2.waitKey(10)
+            pass
+        """
+        # cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
+        # cv2.waitKey(10)
+
+        # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
+        # cv2.waitKey(10)
 
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
@@ -178,9 +239,6 @@ class RestaurantNode(Node):
     ### NAVIGATION ###
     def flag_navigation_reached_callback(self, flag: Bool):
         self.flag_navigation_reached = flag
-
-    def obstacles_callback(self, obs: Obstacles):
-        self.obstacles = obs
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
@@ -718,161 +776,6 @@ class RestaurantMain():
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
-    def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False):
-
-        self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible) 
-        self.set_speech(filename="generic/search_people", wait_for_end_of=False)
-        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-        time.sleep(0.5)
-        
-        total_person_detected = []
-        person_detected = []
-        people_ctr = 0
-
-        ### MOVES NECK AND SAVES DETECTED PEOPLE ###
-        
-        for t in tetas:
-            self.set_rgb(RED+SET_COLOUR)
-            self.set_neck(position=t, wait_for_end_of=True)
-            time.sleep(1.0) # 0.5
-            self.set_rgb(WHITE+SET_COLOUR)
-
-            start_time = time.time()
-            while (time.time() - start_time) < delta_t:        
-                local_detected_people = self.node.detected_people
-                for temp_people in local_detected_people.persons:
-                    
-                    is_already_in_list = False
-                    person_already_in_list = DetectedPerson()
-                    for people in person_detected:
-
-                        if temp_people.index_person == people.index_person:
-                            is_already_in_list = True
-                            person_already_in_list = people
-
-                    if is_already_in_list:
-                        person_detected.remove(person_already_in_list)
-                    elif temp_people.index_person > 0: # debug
-                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
-                        self.set_rgb(GREEN+SET_COLOUR)
-                    
-                    if temp_people.index_person > 0:
-                        person_detected.append(temp_people)
-                        people_ctr+=1
-
-            # DEBUG
-            # print("people in this neck pos:")
-            # for people in person_detected:
-            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
-        
-            total_person_detected.append(person_detected.copy())
-            # print("Total number of people detected:", len(person_detected), people_ctr)
-            person_detected.clear()          
-
-        self.activate_yolo_pose(activate=False)
-        # print(total_person_detected)
-
-        # DEBUG
-        # print("TOTAL people in this neck pos:")
-        # for frame in total_person_detected:
-        #     for people in frame:    
-        #         print(people.index_person, people.position_absolute.x, people.position_absolute.y)
-        #     print("-")
-
-        ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
-        
-        filtered_persons = []
-
-        for frame in range(len(total_person_detected)):
-
-            to_append = []
-            to_remove = []
-
-            if not len(filtered_persons):
-                # print("NO PEOPLE", frame)
-                for person in range(len(total_person_detected[frame])):
-                    to_append.append(total_person_detected[frame][person])
-            else:
-                # print("YES PEOPLE", frame)
-
-                MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same person
-
-                for person in range(len(total_person_detected[frame])):
-                    same_person_ctr = 0
-
-                    for filtered in range(len(filtered_persons)):
-
-                        dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
-                        # print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
-                        
-                        if dist < MIN_DIST:
-                            same_person_ctr+=1
-                            same_person_old = filtered_persons[filtered]
-                            same_person_new = total_person_detected[frame][person]
-                            # print("SAME PERSON")                        
-                    
-                    if same_person_ctr > 0:
-
-                        same_person_old_distance_center = abs(1280/2 - same_person_old.body_center_x) 
-                        same_person_new_distance_center = abs(1280/2 - same_person_new.body_center_x) 
-
-                        # print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
-                        # print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
-
-                        if same_person_new_distance_center < same_person_old_distance_center: # person from newer frame is more centered with camera center
-                            to_remove.append(same_person_old)
-                            to_append.append(same_person_new)
-                        else: # person from older frame is more centered with camera center
-                            pass # that person is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
-
-                    else:
-                        to_append.append(total_person_detected[frame][person])
-
-            for p in to_remove:
-                if p in filtered_persons:
-                    # print("REMOVED: ", p.index_person)
-                    filtered_persons.remove(p)
-                # else:
-                    # print("TRIED TO REMOVE TWICE THE SAME PERSON")
-            to_remove.clear()  
-
-            for p in to_append:
-                # print("ADDED: ", p.index_person)
-                filtered_persons.append(p)
-            to_append.clear()
-            
-        self.set_neck(position=[0, 0], wait_for_end_of=False)
-        self.set_rgb(BLUE+HALF_ROTATE)
-
-        sfp_pub = ListOfDetectedPerson()
-        # print("FILTERED:")
-        for p in filtered_persons:
-            sfp_pub.persons.append(p)
-        #     print(p.index_person)
-        self.node.search_for_person_detections_publisher.publish(sfp_pub)
-
-        return filtered_persons
-
-    def detected_person_to_face_path(self, person, send_to_face):
-
-        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
-        
-        cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
-        just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
-        # cv2.imshow("Search for Person", just_person_image)
-        # cv2.waitKey(100)
-        
-        face_path = current_datetime + str(person.index_person)
-        
-        cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
-        time.sleep(0.5)
-
-        if send_to_face:
-            self.set_face(custom=face_path)
-        
-        return face_path
-
-
     def search_for_person_2(self, tetas):
 
         self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=True)                
@@ -1110,8 +1013,6 @@ class RestaurantMain():
 
     # main state-machine function
     def main(self):
-
-        print('inside')
         
         # States in Restaurant Task
         self.Waiting_for_task_start = 0
@@ -1141,7 +1042,7 @@ class RestaurantMain():
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
         # self.state = self.Detecting_waving_customers
-        # self.set_face("charmie_face")
+        self.set_face("charmie_face")
 
 
         self.all_orders = []
@@ -1178,43 +1079,12 @@ class RestaurantMain():
                 self.set_rgb(command=CYAN+ALTERNATE_QUARTERS)
 
                 # change face, to standard face
-                # self.set_face("charmie_face")
-                
-                # FRASE "I WILL LOOK FOR THE BARMAN NOW. BARMAN, PLS RAISE YOUR HANDS"
+                self.set_face("charmie_face")
 
-                tetas = [[-90, 0], [90, 0]]
-                barman_not_found = True
+                ##### START TURN TO BARMAN TABLE!!!
 
-                while barman_not_found:
-                    people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
-
-                    print("FOUND:", len(people_found)) 
-                    for p in people_found:
-                        self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                        print("ID:", p.index_person)
-                        print('Barman position', p.position_relative)
-                        self.barman_position = p.position_relative
-                    time.sleep(0.5)
-
-                
-                    if self.barman_position.x < 0:
-                        print('barman on my left')
-                        # BARMAN, ARE YOU THE GUY ON MY FACE?
-                        # YES OR NO
-                        barman_not_found = False
-                    else:
-                        print('barman on my right')
-                        # BARMAN, ARE YOU THE GUY ON MY FACE?
-                        # YES OR NO
-                        barman_not_found = False
-
-                
-
-
-                for p in people_found:
-                    path = self.detected_person_to_face_path(person=p, send_to_face=True)
-                    time.sleep(4)
-
+                ##### NECK LOOKS AT Barman
+                self.set_neck(position=self.look_back, wait_for_end_of=True)
 
                 ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
                 self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
@@ -1227,7 +1097,7 @@ class RestaurantMain():
                 # self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
-               
+
                 # next state
                 self.state = self.Detecting_waving_customers
 
@@ -1240,33 +1110,21 @@ class RestaurantMain():
                 self.set_rgb(command=ORANGE+HALF_ROTATE)
 
                 ##### NECK: Rotate left and right for better view
-                # tetas = [-120, -60, 0, 60, 120]
+                tetas = [-120, -60, 0, 60, 120]
                 ##### YOLO POSE SEARCH FOR ONLY_DETECT_PERSON_ARM_RAISED
-                # coords_of_people, images_of_people = self.search_for_person_2(tetas)
+                coords_of_people, images_of_people = self.search_for_person_2(tetas)
 
-                tetas = [[-60, 0], [0, 0], [60, 0]]
-                customers_not_found = True
-                customers_list = []
+                print("RESPOSTA:", coords_of_people)
 
-            
-                people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
+                print('imagens:', images_of_people)
 
-                print("FOUND:", len(people_found)) 
-                for p in people_found:
-                    self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                    print("ID:", p.index_person)
-                    customers_list.append(p)
-                    
-                print('Nr of detected customers waving: ', len(customers_list))
-
-                for p in customers_list:
-                    print('Customer coordinates: ', p.position_relative)
+                print('Tamanho array', len(images_of_people))
 
 
                 self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
                 ##### IF AN ERROR IS DETECTED:
-                if len(customers_list) == 0:
+                if len(images_of_people) == 0:
 
                     self.set_rgb(command=RED+BLINK_QUICK)
 
@@ -1276,11 +1134,7 @@ class RestaurantMain():
                     ##### BACK TO initial searching
                     self.state = self.Detecting_waving_customers
 
-                elif len(customers_list) == 1:
-
-                    # AQUI!
-                    # ADICIONAR CLIENTES AO ARRAY E ORDENAR POR DISTÂNICAS
-
+                elif len(images_of_people) == 1:
                     self.set_rgb(command=YELLOW+BLINK_QUICK)
 
                     ##### SPEAK: Found waving customers
@@ -1289,13 +1143,13 @@ class RestaurantMain():
                     self.y = []
                     dist_array = []
 
-                    for p in customers_list:
-                        self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
-                        self.x.append(p.position_relative.x)
-                        self.y.append(p.position_relative.y)
-                        dist = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
+                    for c in coords_of_people:
+                        self.set_neck_coords(position=c, wait_for_end_of=True)
+                        self.x.append(c[0])
+                        self.y.append(c[1])
+                        dist = math.sqrt(c[0]**2 +c[1]**2)
                         dist_array.append(dist)
-                        print('\n \n coordenadas cliente :', self.x[0], self.y[0])
+                        print('\n \n coordenadas cliente :', c[0], c[1])
                         print('distance to client: ', dist)
                         
                         time.sleep(2)
@@ -1305,11 +1159,11 @@ class RestaurantMain():
 
                     print('\n\n dist all clients: ', dist_array)
 
-                    self.set_neck_coords(position=[self.barman_position.x, self.barman_position.y], wait_for_end_of=True)
+                    self.set_neck(position=self.look_back, wait_for_end_of=True)
                     ##### SPEAK: Check face to see customers detected
                     self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
 
-                    path = self.detected_person_to_face_path(person=customers_list[0], send_to_face=True)
+                    self.set_face(custom=images_of_people[0])
                     time.sleep(3)
 
                     self.state = self.Detecting_waving_customers
@@ -1399,29 +1253,6 @@ class RestaurantMain():
                     self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)             
                     # next state
                     self.state = self.Approach_customer1_table
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 
             elif self.state == self.Approach_customer1_table:
                 print("State:", self.state, "- Approach_customer1_table")
