@@ -154,6 +154,7 @@ class ArmUfactory(Node):
 
 		self.inside_wardrobe_left_door = [-211.1, 55.3, -115.5, 18.0, 36.0, 316.8]
 		self.inside_wardrobe_left_door_2 = [-210.7, 64.5, -136.5, 4.7, 57.1, 328.5]
+		self.inside_wardrobe_left_door_2_new = [-210.5, 73.5, -154.6, 0.2, 72.7, 331.4]
 
 		self.inside_wardrobe_right_door = [-221.7, 78.3, -102.5, 135.4, 73.8, 106.3]
 		self.inside_wardrobe_right_door_2 = [-216.0, 98.2, -137.8, 154.7, 104.1, 111.5]
@@ -1084,7 +1085,7 @@ class ArmUfactory(Node):
 			print('b')
 
 		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_left_door_2)
+			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_left_door_2_new)
 			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0

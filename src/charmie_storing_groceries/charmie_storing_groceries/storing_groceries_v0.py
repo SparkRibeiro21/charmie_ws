@@ -1855,11 +1855,13 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_3_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
+                self.set_rgb(command=WHITE+ROTATE)
                 self.set_arm(command="place_cabinet_third_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_3_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_third_shelf_centre",adjust_position=a[1], wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 use_arm = False
             elif shelf == 2:
                 print('second shelf')
@@ -1869,11 +1871,13 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_2_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
+                self.set_rgb(command=WHITE+ROTATE)
                 self.set_arm(command="place_cabinet_second_shelf_centre",adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_2_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_second_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 use_arm = True
             elif shelf == 3:
                 print('third shelf')
@@ -1883,11 +1887,13 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_3_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
+                self.set_rgb(command=WHITE+ROTATE)
                 self.set_arm(command="place_cabinet_third_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_3_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_third_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 use_arm = True
             elif shelf == 4:
                 print('fourth shelf')
@@ -1897,11 +1903,13 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_4_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
+                self.set_rgb(command=WHITE+ROTATE)
                 self.set_arm(command="place_cabinet_fourth_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_4_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_fourth_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 use_arm = True
 
         elif side == 'right':
@@ -1914,11 +1922,13 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_3_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
+                self.set_rgb(command=WHITE+ROTATE)
                 self.set_arm(command="place_cabinet_fourth_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_4_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_fourth_shelf_centre",adjust_position=a[1], wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 use_arm = False
             elif shelf == 2:
                 print('second shelf')
@@ -1928,11 +1938,13 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_2_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
+                self.set_rgb(command=WHITE+ROTATE)
                 self.set_arm(command="place_cabinet_second_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_2_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_second_shelf_right_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 use_arm = True
             elif shelf == 3:
                 print('third shelf')
@@ -1942,11 +1954,13 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_3_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
+                self.set_rgb(command=WHITE+ROTATE)
                 self.set_arm(command="place_cabinet_third_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_3_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_third_shelf_right_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 use_arm = True
             elif shelf == 4:
                 print('fourth shelf')
@@ -1956,11 +1970,13 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_4_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
+                self.set_rgb(command=WHITE+ROTATE)
                 self.set_arm(command="place_cabinet_fourth_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_4_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_fourth_shelf_right_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 use_arm = True
 
         else:
@@ -1970,11 +1986,13 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_2_height + 0.2
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
+                self.set_rgb(command=WHITE+ROTATE)
                 self.set_arm(command="place_cabinet_second_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.48, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_2_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
                 self.set_arm(command="place_cabinet_second_shelf_centre",adjust_position=a[1], wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 use_arm = False
 
 
@@ -1990,14 +2008,16 @@ class StoringGroceriesMain():
         print(obj_name_lower)
 
         object_help_pick = 'help_pick_' + obj_name_lower
-        self.set_face(str(object_help_pick))
+        # self.set_face(str(object_help_pick))
         print(object_help_pick)
 
         self.set_arm(command="ask_for_object_routine", wait_for_end_of=False)
 
         self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
+        self.set_rgb(command=BLUE+ROTATE)
         self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+        self.set_rgb(command=GREEN+BLINK_LONG)
 
         self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
 
@@ -2005,13 +2025,13 @@ class StoringGroceriesMain():
 
         # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-        self.load_image_one_object(obj_0.object_name, obj_0)
+        # self.load_image_one_object(obj_0.object_name, obj_0)
 
         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
 
         time.sleep(5)
 
-        self.set_face(str(object_help_pick))
+        # self.set_face(str(object_help_pick))
 
         self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
         
@@ -2084,6 +2104,8 @@ class StoringGroceriesMain():
                             # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
                             time.sleep(2)
                             self.set_arm(command="open_gripper", wait_for_end_of=True)
+                            self.set_rgb(command=RED+BLINK_LONG)
+
 
                             print('a')
                             
@@ -2091,7 +2113,7 @@ class StoringGroceriesMain():
                             print(obj_name_lower)
 
                             object_help_pick = 'help_pick_' + obj_name_lower
-                            self.set_face(str(object_help_pick))
+                            # self.set_face(str(object_help_pick))
                             print(object_help_pick)
 
                             self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
@@ -2102,19 +2124,20 @@ class StoringGroceriesMain():
 
                             # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                            self.load_image_one_object(next_obj.object_name, next_obj)
+                            # self.load_image_one_object(next_obj.object_name, next_obj)
 
                             self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
 
                             self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.50, adjust_direction=180.0, wait_for_end_of=True)
                             print('c')
+                    
                             time.sleep(1)
 
                             self.set_arm(command="arm_front_robot", wait_for_end_of=True)
 
                             self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
 
-                            self.set_face(str(object_help_pick))
+                            # self.set_face(str(object_help_pick))
 
                             self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
 
@@ -2124,7 +2147,14 @@ class StoringGroceriesMain():
 
                             self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
+                            self.set_rgb(command=BLUE+ROTATE)
                             self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                            self.set_rgb(command=GREEN+BLINK_LONG)
+
+                            if i == 2:
+                                self.set_rgb(command=BLUE+ROTATE)
+                                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                                self.set_rgb(command=GREEN+BLINK_LONG)
                 
                             # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
 
@@ -2154,7 +2184,7 @@ class StoringGroceriesMain():
                                 object_grabbed = True
                                 
                             else:
-                                self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+                                self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=False)
                                 self.set_rgb(command=RED+BLINK_LONG)
                                 object_grabbed = False
 
@@ -2174,6 +2204,7 @@ class StoringGroceriesMain():
                             # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
                             time.sleep(2)
                             self.set_arm(command="open_gripper", wait_for_end_of=True)
+                            self.set_rgb(command=RED+BLINK_LONG)
 
                             print('a')
                             
@@ -2225,13 +2256,13 @@ class StoringGroceriesMain():
 
                     # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                    self.load_image_one_object(next_obj.object_name, next_obj)
+                    # self.load_image_one_object(next_obj.object_name, next_obj)
 
                     self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
                     
                     time.sleep(3)
 
-                    self.set_face(str(object_help_pick))
+                    # self.set_face(str(object_help_pick))
 
                     self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
                     
@@ -2257,7 +2288,7 @@ class StoringGroceriesMain():
                         self.set_rgb(command=GREEN+BLINK_LONG)
                         
                     else:
-                        self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
+                        self.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=False)
                         self.set_rgb(command=RED+BLINK_LONG)
 
                     self.set_arm(command="arm_front_robot", wait_for_end_of=True)
@@ -2290,11 +2321,7 @@ class StoringGroceriesMain():
                     self.set_arm(command="go_initial_position", wait_for_end_of=True)
                     
                     self.set_rgb(command=GREEN+BLINK_LONG)
-
-
-        
-        
-        
+   
     def check_door_depth_hand(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=600):
 
         overall = False
@@ -2413,6 +2440,7 @@ class StoringGroceriesMain():
         
         if wanted_object != '':
             # set_pose_arm = ListOfFloats()
+            self.set_rgb(command=WHITE+HALF_ROTATE)
             cabinet_position = wanted_object.position_relative
             object_location = self.transform_object(wanted_object)
             #Value of height I want the arm to go to not touch in shelfs:
@@ -2468,13 +2496,15 @@ class StoringGroceriesMain():
             ang_to_bag = -math.degrees(math.atan2(distance_x_to_center, distance_y_to_center))
             dist_to_bag = (math.sqrt(distance_x_to_center**2 + distance_y_to_center**2))
             print(ang_to_bag, dist_to_bag)
+            self.set_rgb(command=WHITE+ROTATE)
             self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
 
             time.sleep(2)
 
-            self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
-            self.set_rgb(command=GREEN+BLINK_LONG)
+            # self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+            # self.set_rgb(command=GREEN+BLINK_LONG)
+            self.set_rgb(command=BLUE+ROTATE)
             self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
 
@@ -2542,11 +2572,14 @@ class StoringGroceriesMain():
             average_depth_door = (average_depth_door / 1000) - 0.13 + 0.2 #0.13 é a distância da câmera à garra e 0.2 é uma margem para entrar
             print('Tip of arm distance to cabinet =', average_depth_door)
 
-            self.set_speech(filename="storing_groceries/might_touch_cabinet", wait_for_end_of=False)            
+            self.set_speech(filename="storing_groceries/might_touch_cabinet", wait_for_end_of=False)  
+            self.set_rgb(command=WHITE+HALF_ROTATE)          
 
             if right_door == True:
+                self.set_rgb(command=BLUE+ROTATE)
                 self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
-                
+                self.set_rgb(command=GREEN+BLINK_LONG)
+
                 print('right door')
                 
                 self.set_arm(command="check_right_door_inside", wait_for_end_of=True)
@@ -2599,7 +2632,9 @@ class StoringGroceriesMain():
                 
 
             elif left_door == True:
+                self.set_rgb(command=BLUE+ROTATE)
                 self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 print('left door')
                 self.set_arm(command="check_left_door", wait_for_end_of=True)
 
@@ -2616,8 +2651,12 @@ class StoringGroceriesMain():
                 self.set_arm(command="open_right_door_from_inside", wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 time.sleep(1)
-
+                
+                self.set_rgb(command=BLUE+ROTATE)
                 self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                
+                # self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
                 time.sleep(1)
 
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.35, adjust_direction=200.0, wait_for_end_of=True)
@@ -2914,6 +2953,8 @@ class StoringGroceriesMain():
                 print('State 1 = Approaching cabinet for the first time')
                     
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+
+                self.set_rgb(command=WHITE+ROTATE)
                     
                 self.set_navigation(movement="move", target=self.front_of_door, max_speed=25.0, flag_not_obs=True, wait_for_end_of=True)
 
@@ -2924,6 +2965,7 @@ class StoringGroceriesMain():
                 self.set_speech(filename="generic/moving_cabinet", wait_for_end_of=False)
 
                 ##### MOVEMENT TO THE CABINET
+                self.set_rgb(command=WHITE+ROTATE)
                 
                 self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
@@ -2934,9 +2976,10 @@ class StoringGroceriesMain():
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 self.set_navigation(movement="move", target=self.kitchen_table, max_speed=15.0, flag_not_obs=False, wait_for_end_of=True)
                 # self.set_navigation(movement="move", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(command=GREEN+BLINK_LONG)                
+                self.set_rgb(command=BLUE+ROTATE)                
                 self.set_navigation(movement="orientate", absolute_angle= -90.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
+                
 
                 time.sleep(1)
 
@@ -2963,10 +3006,15 @@ class StoringGroceriesMain():
                             wanted_object = obj
                             print('Object found')
 
+                self.set_rgb(command=BLUE+ROTATE)
+                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+
                 self.open_cabinet_door(objects_found, wanted_object)
 
                 self.set_arm(command="open_gripper", wait_for_end_of=False)
 
+                self.set_rgb(command=BLUE+ROTATE)
                 self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
 
@@ -3066,7 +3114,10 @@ class StoringGroceriesMain():
                     print(common_class)
                     print(key)
 
-                self.set_speech(filename="storing_groceries/might_touch_cabinet", wait_for_end_of=False)   
+                # self.set_speech(filename="storing_groceries/might_touch_cabinet", wait_for_end_of=False)   
+                self.set_rgb(command=BLUE+ROTATE)
+                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
 
                 self.pick_and_place_objects(table_objects)
 

@@ -152,18 +152,18 @@ class Yolo_obj(Node):
         flag_diagn.data = True
         self.yolo_object_diagnostic_publisher.publish(flag_diagn)
 
-        # self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
-        #                            'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
-        #                            'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
-        #                            'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
-        #                            'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
+                                   'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
+                                   'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
+                                   'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
+                                   'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
         
         # Secondary declaration used for debug
-        self.objects_class_names = ['Apple', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser', 'Coffee_grounds', 'Cola',
-                                     'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_tea', 'Juice_pack', 'Knife', 'Lemon', 'Milk',
-                                       'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear', 'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube',
-                                         'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup',
-                                           'Tropical_juice', 'Tuna']
+        # self.objects_class_names = ['Apple', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser', 'Coffee_grounds', 'Cola',
+        #                              'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_tea', 'Juice_pack', 'Knife', 'Lemon', 'Milk',
+        #                                'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear', 'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube',
+        #                                  'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup',
+        #                                    'Tropical_juice', 'Tuna']
         
         self.shoes_class_names = ['Shoe', 'Sock']    
         
