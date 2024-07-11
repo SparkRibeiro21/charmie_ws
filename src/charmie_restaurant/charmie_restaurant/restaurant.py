@@ -89,8 +89,8 @@ class RestaurantNode(Node):
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
         # # Audio
-        # while not self.get_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Audio Server...")
+        while not self.get_audio_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Audio Server...")
         # while not self.calibrate_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # # Face
@@ -592,7 +592,7 @@ class RestaurantMain():
 
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
-    def set_face(self, command="", custom="", wait_for_end_of=True):
+    def set_face(self, command="", custom="", wait_for_end_of=False):
         
         self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
         
@@ -1115,6 +1115,7 @@ class RestaurantMain():
         
         # States in Restaurant Task
         self.Waiting_for_task_start = 0
+        self.Looking_for_barman = 1
         self.Detecting_waving_customers = 1
         self.Approach_customer1_table = 2
         self.Receiving_order1_listen_and_confirm = 3
@@ -1141,7 +1142,7 @@ class RestaurantMain():
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
         # self.state = self.Detecting_waving_customers
-        # self.set_face("charmie_face")
+        self.set_face("charmie_face")
 
 
         self.all_orders = []
@@ -1180,9 +1181,14 @@ class RestaurantMain():
                 self.set_rgb(command=CYAN+ALTERNATE_QUARTERS)
 
                 # change face, to standard face
-                # self.set_face("charmie_face")
+                self.set_face("charmie_face")
+
+                self.state = self.Looking_for_barman
+
+            elif self.state == self.Looking_for_barman:
                 
                 # FRASE "I WILL LOOK FOR THE BARMAN NOW. BARMAN, PLS RAISE YOUR HANDS"
+                self.set_speech(filename="restaurant/search_barman", wait_for_end_of=True)
 
                 tetas = [[-90, 0], [90, 0]]
                 barman_not_found = True
@@ -1207,89 +1213,60 @@ class RestaurantMain():
                             barman_final_position = dist
                             self.barman_position = barman
                             print(barman.position_relative)
-                
+
 
                 if self.barman_position.position_relative.x < 0:
                     print('barman on my left')
-                    #ESTE NECK ACHO QUE NÃO FAZ SENTIDO... VAIS OLHAR PARA O BARMAN E PERGUNTAR SE É ELE Xd?
-                    self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)
-                    # BARMAN, ARE YOU THE GUY ON MY FACE?
-                    self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
-                    # path = self.detected_person_to_face_path(person=barman, send_to_face=True)
-                    # YES OR NO
-                    ##### AUDIO: Listen "YES" OR "NO"
-                    ##### "Please say yes or no to confirm the order"
-                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-                    print("Finished:", confirmation)
-
-                    ##### Verifica a resposta recebida
-                    if confirmation.lower() == "yes":
-                        self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
-                        self.set_rgb(command=GREEN+BLINK_LONG)
-
-                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
-                        for kw in keyword_list:
-                            print(kw)
-                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
-                        ##### SPEAK: Thank you
-                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
-                        break  # Sai do loop se a confirmação for "yes"
-                    elif confirmation.lower() == "no":
-                        self.set_rgb(command=RED+BLINK_LONG)
-                        ##### SPEAK: Sorry, TRY AGAIN
-                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
-                    else:
-                        self.set_rgb(command=YELLOW+BLINK_LONG)
-                        ##### ERROR
-                        print("ERROR")
+                    
                 else:
                     print('barman on my right')
-                    self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)
-                    # BARMAN, ARE YOU THE GUY ON MY FACE?
+
+
+                self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)     
+                # BARMAN, ARE YOU THE GUY ON MY FACE?
+                # self.set_speech(filename="restaurant/confirm_barman", wait_for_end_of=False)
+                path = self.detected_person_to_face_path(person=barman, send_to_face=True)
+
+                # YES OR NO
+                ##### AUDIO: Listen "YES" OR "NO"
+                ##### "Please say yes or no to confirm the order"
+                confirmation = self.get_audio(yes_or_no=True, question="restaurant/confirm_barman", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                print("Finished:", confirmation)
+
+
+
+
+                ##### Verifica a resposta recebida
+                if confirmation.lower() == "yes":
+                    self.set_rgb(command=GREEN+BLINK_LONG)
+                    ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
                     self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
-                    # path = self.detected_person_to_face_path(person=barman, send_to_face=True)
-                    # YES OR NO
-                    ##### AUDIO: Listen "YES" OR "NO"
-                    ##### "Please say yes or no to confirm the order"
-                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-                    print("Finished:", confirmation)
 
-                    ##### Verifica a resposta recebida
-                    if confirmation.lower() == "yes":
-                        self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
-                        self.set_rgb(command=GREEN+BLINK_LONG)
+                    ##### SPEAK : I am going to turn around and search for possible customers. See you soon
+                    self.set_speech(filename="restaurant/go_search", wait_for_end_of=True)
 
-                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
-                        for kw in keyword_list:
-                            print(kw)
-                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
-                        ##### SPEAK: Thank you
-                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
-                        break  # Sai do loop se a confirmação for "yes"
-                    elif confirmation.lower() == "no":
-                        self.set_rgb(command=RED+BLINK_LONG)
-                        ##### SPEAK: Sorry, TRY AGAIN
-                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
-                    else:
-                        self.set_rgb(command=YELLOW+BLINK_LONG)
-                        ##### ERROR
-                        print("ERROR")
+                    #### NAVIGATION
+                    # self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
+
+                    self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                
+                    # next state
+                    self.state = self.Detecting_waving_customers
+                    # Nice meeting you
+
+                elif confirmation.lower() == "no":
+                    self.set_rgb(command=RED+BLINK_LONG)
+                    ##### SPEAK: Sorry, TRY AGAIN
+                    self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+                    self.state = self.Looking_for_barman
+                else:
+                    self.set_rgb(command=YELLOW+BLINK_LONG)
+                    ##### ERROR
+                    print("ERROR")
+                    self.state = self.Looking_for_barman
 
 
-                ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
-                self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
-
-                ##### SPEAK : I am going to turn around and search for possible customers. See you soon
-                self.set_speech(filename="restaurant/turn_search", wait_for_end_of=True)
-
-                ##### TURN AROUND to the customer zone
-                #### NAVIGATION
-                # self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
-
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
-               
-                # next state
-                self.state = self.Detecting_waving_customers
+                
 
             elif self.state == self.Detecting_waving_customers:
                 print("State:", self.state, "- Detecting_waving_customers")
@@ -1360,8 +1337,8 @@ class RestaurantMain():
                     ##### SPEAK: Check face to see customers detected
                     self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
 
-                    # path = self.detected_person_to_face_path(person=customers_list[0], send_to_face=True)
-                    # time.sleep(3)
+                    path = self.detected_person_to_face_path(person=customers_list[0], send_to_face=True)
+                    time.sleep(3)
 
                     self.state = self.Detecting_waving_customers
 
@@ -1411,7 +1388,8 @@ class RestaurantMain():
                             time.sleep(3)
                             i += 1
                             
-                        
+                    
+                    print('aqui')
 
 
 
@@ -1447,13 +1425,13 @@ class RestaurantMain():
                     """
 
                 
-                    self.set_neck(position=[self.barman_position.x, self.barman_position.y], wait_for_end_of=True)
+                    self.set_neck_coords(position=[self.barman_position.x, self.barman_position.y], wait_for_end_of=True)
                     ##### SPEAK: Check face to see customers detected
                     self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
                     
                     ##### SHOW FACE DETECTED CUSTOMER 
-                    # path_customer_0 = self.detected_person_to_face_path(person=sorted_persons[0], send_to_face=True)
-                    # path_customer_1 = self.detected_person_to_face_path(person=sorted_persons[1], send_to_face=True)
+                    path_customer_0 = self.detected_person_to_face_path(person=sorted_persons[0], send_to_face=True)
+                    path_customer_1 = self.detected_person_to_face_path(person=sorted_persons[1], send_to_face=True)
                     
 
                     
