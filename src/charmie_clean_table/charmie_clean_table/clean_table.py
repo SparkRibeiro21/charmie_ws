@@ -1859,6 +1859,44 @@ class CleanTableMain():
                 
                 self.set_arm(command="place_cup_in_dishwasher", wait_for_end_of=True)
 
+                self.state = self.Place_bowl
+
+
+            elif self.state == self.Place_bowl:
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
+
+                self.set_face("help_pick_bowl")
+                
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+                object_in_gripper = False
+                while not object_in_gripper:
+                                        
+                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    
+                    if not object_in_gripper:
+
+                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                        
+                        self.set_arm(command="open_gripper", wait_for_end_of=False)
+                
+                self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
+
+                self.set_face("charmie_face")
+                
+                self.set_speech(filename="clean_the_table/placing_bowl", wait_for_end_of=False)
+
+                self.set_arm(command="ask_for_objects_to_pre_dishwasher_special_bowl", wait_for_end_of=True)
+                
+                self.set_arm(command="place_bowl_in_dishwasher", wait_for_end_of=True)
+
                 self.state = self.Place_plate
 
 
@@ -1980,44 +2018,6 @@ class CleanTableMain():
                 self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
                 
                 self.set_arm(command="place_cutlery_in_dishwasher", wait_for_end_of=True)
-
-                self.state = self.Place_bowl
-
-
-            elif self.state == self.Place_bowl:
-
-                self.set_neck(position=self.look_forward, wait_for_end_of=False)
-
-                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
-
-                self.set_face("help_pick_bowl")
-                
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                object_in_gripper = False
-                while not object_in_gripper:
-                                        
-                    self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-
-                        self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.set_arm(command="open_gripper", wait_for_end_of=False)
-                
-                self.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
-
-                self.set_face("charmie_face")
-                
-                self.set_speech(filename="clean_the_table/placing_bowl", wait_for_end_of=False)
-
-                self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
-                
-                self.set_arm(command="place_bowl_in_dishwasher", wait_for_end_of=True)
 
                 self.state = self.Close_dishwasher_door
 
