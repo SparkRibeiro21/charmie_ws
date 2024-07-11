@@ -1,0 +1,1 @@
+This object does not belong to any of the detected classes, so I should place it in a free shelf.

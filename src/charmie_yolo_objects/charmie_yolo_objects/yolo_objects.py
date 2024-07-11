@@ -18,6 +18,7 @@ import math
 import time
 
 objects_filename = "segmentation_M_size_model_600_epochs.pt"
+# objects_filename = "epoch50.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
 # objects_filename = "lar_dataset_post_fnr2024.pt"
 shoes_filename = "shoes_socks_v1.pt"
@@ -158,11 +159,11 @@ class Yolo_obj(Node):
                                    'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
         
         # Secondary declaration used for debug
-        # self.objects_class_names = ['7up', 'Strawberry_jello', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
-        #                             'Coffe_grounds', 'Cola', 'Cheezit', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
-        #                             'Juice_pack', 'Knife', 'Lemon', 'Milk', '7up', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
-        #                             'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
-        #                             'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        # self.objects_class_names = ['Apple', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser', 'Coffee_grounds', 'Cola',
+        #                              'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_tea', 'Juice_pack', 'Knife', 'Lemon', 'Milk',
+        #                                'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear', 'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube',
+        #                                  'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup',
+        #                                    'Tropical_juice', 'Tuna']
         
         self.shoes_class_names = ['Shoe', 'Sock']    
         

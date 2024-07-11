@@ -1,13 +1,161 @@
 #!/usr/bin/env python3
 
+# initial instructions:
+# this is an example of the layout code for a task in our workspace
+# It is used a threading system so the ROS2 functionalities are not blocked when executing the state machine
+# So we create a thread for the main state machine of the task and another for the ROS2 funcitonalities
+# It is being used Serve the Breakfast as an example, so when changing the code for a specific task:
+# Ctrl+F "ServeBreakfast" and replace everything for the name of your task 
+
+# THE MAIN GOAL IS FOR YOU TO ONLY CHANGE BELOW THE LINE THAT STATES: "def main(self):"
+
+# The following code already has implemnted with examples the following modes:
+# Speakers
+# RGB
+# Start Button
+# Audio
+# Face
+# Neck
+# Yolos
+# Arm
+# Door Start
+
+# The following modules are still missing:
+# Nav - TBD
+
+
+"""
+NEXT I PROVIDE AN EXAMPLE ON HOW THE CODE OF A TASK SHOULD BE MADE:
+
+->  ->  ->  ->  ->  HOW TO CREATE A TASK?
+
+1) IMPORT ALL ROS2 TOPICS/SERVICES NECESSARY AND WAIT_FOR_SERVICE (THIS IS TIAGO JOB, ASK HIM TO HELP OR EXPLAIN)
+2) PLAN THE STATES AND SET THE STATES FOR YOUR TASK:
+
+        self.Waiting_for_task_start = 0
+        self.Approach_kitchen_counter = 1
+        self.Picking_up_spoon = 2
+        self.Picking_up_milk = 3
+        self.Picking_up_cereal = 4
+        self.Picking_up_bowl = 5
+        self.Approach_kitchen_table = 6
+        self.Placing_bowl = 7
+        self.Placing_cereal = 8
+        self.Placing_milk = 9
+        self.Placing_spoon = 10
+        self.Final_State = 11
+
+# 3) CREATE THE STATE STRUCTURE:
+        
+        if self.state == self.Waiting_for_task_start:
+                # your code here ...
+                                
+                # next state
+                self.state = self.Approach_kitchen_counter
+
+            elif self.state == self.Approach_kitchen_counter:
+                # your code here ...
+                                
+                # next state
+                self.state = self.Picking_up_spoon
+
+            elif self.state == self.Picking_up_spoon:
+                # your code here ...
+                                
+                # next state
+                self.state = self.Picking_up_milk
+
+            (...)
+
+# 4) CREATE THE PSEUDOCODE OF EACH STATE:
+            
+            elif self.state == self.Picking_up_spoon:
+                
+                ##### NECK LOOKS AT TABLE
+
+                ##### MOVES ARM TO TOP OF TABLE POSITION
+
+                ##### SPEAK: Searching for objects
+
+                ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
+                
+                ##### SPEAK: Found spoon
+                
+                ##### SPEAK: Check face to see object detected
+
+                ##### SHOW FACE DETECTED OBJECT
+
+                ##### MOVE ARM TO PICK UP OBJECT 
+
+                ##### IF AN ERROR IS DETECTED:
+
+                    ##### SPEAK: There is a problem picking up the object
+
+                    ##### MOVE ARM TO ERROR POSITION 
+                
+                    ##### NECK LOOK JUDGE
+
+                    ##### SPEAK: Need help, put object on my hand as it is on my face
+
+                    ##### SHOW FACE GRIPPER SPOON 
+
+                    ##### WHILE OBJECT IS NOT IN GRIPPER:
+
+                        ##### SPEAK: Close gripper in 3 2 1 
+
+                        ##### ARM: CLOSE GRIPPER
+
+                        ##### IF OBJECT NOT GRABBED: 
+
+                            ##### SPEAK: There seems to be a problem, please retry.
+
+                            ##### ARM OPEN GRIPPER
+                        
+                ##### NECK LOOK TRAY
+                        
+                ##### ARM PLACE OBJECT IN TRAY
+
+                self.state = self.Picking_up_milk
+
+# 5) REPLACE ALL THE SPEAKS IN PSEUDOCODE WITH self.set_speech(...), CREATE FILES IN ros2 run charmie_speakers save_audio
+
+# 6) TEST ALL SENTENCES ALONE TO SEE IF EVERYTHING IS OK
+
+# 5) REPLACE ALL THE FACE IN PSEUDOCODE WITH self.set_face(...)
+
+# 6) TEST ALL FACES WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# 7) REPLACE ALL THE START_BUTTON AND RGB IN PSEUDOCODE WITH self.set_rgb(...) and self.wait_for_start_button()
+
+# 8) TEST ALL START_BUTTON AND RGB WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# 9) REPLACE ALL THE AUDIO IN PSEUDOCODE WITH self.get_audio(...)
+
+# 10) TEST ALL AUDIO WITH THE PREVIOUS GETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# 11) REPLACE ALL THE NECK IN PSEUDOCODE WITH self.set_neck(...) OR ANY OF ALL THE OTHER FORMS TO SET THE NECK
+
+# 12) TEST ALL NECK WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# 13) REPLACE ALL THE YOLO DETECTIONS IN PSEUDOCODE WITH self.activate_yolo_pose(...) and self.activate_yolo_objects
+
+# 14) TEST ALL YOLOS WITH THE PREVIOUS ACTIVATES ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# 15) REPLACE ALL THE ARM MOVE WITH self.set_arm(...)
+
+# 16) TEST ALL ARM MOVE WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+
+# MISSING NAVIGATION ... (TIAGO)
+
+"""
+
 import rclpy
 from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import PoseWithCovarianceStamped
-from geometry_msgs.msg import Point
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfPoints, ListOfDetectedObject, ListOfDetectedPerson, Obstacles
+from geometry_msgs.msg import PoseWithCovarianceStamped, Point
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfPoints, Obstacles, ArmController
 from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace
 
 import cv2 
@@ -15,9 +163,11 @@ import threading
 import time
 from cv_bridge import CvBridge
 import math
+from datetime import datetime
 import numpy as np
 from pathlib import Path
-from datetime import datetime
+
+
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -25,15 +175,12 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 
-class RestaurantNode(Node):
+class SticklerForTheRulesNode(Node):
 
     def __init__(self):
-        super().__init__("Restaurant")
-        self.get_logger().info("Initialised CHARMIE Restaurant Node")
+        super().__init__("SticklerForTheRules")
+        self.get_logger().info("Initialised CHARMIE SticklerForTheRules Node")
 
-        self.DIST_CLIENT = 6.0
-
-        # path to save detected people in search for person
         home = str(Path.home())
         midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
         self.complete_path_custom_face = home+'/'+midpath+'/'
@@ -47,15 +194,21 @@ class RestaurantNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-        # Localisation
-        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
-        # Navigation
-        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
-        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
-         # Search for Person debug publisher
+        # Arm CHARMIE
+        self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
+        # self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
+
+        # Search for Person debug publisher
         self.search_for_person_publisher = self.create_publisher(ListOfPoints, "search_for_person_points", 10)
 
-
+         # Navigation
+        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
+        # Localisation
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+        # Obstacles
+        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
+        
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -73,49 +226,57 @@ class RestaurantNode(Node):
         # Yolos
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
-
-        # Search for person and object 
-        self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
-        self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
-        # Obstacles
-        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
-        
-
-        
+        # Arm (CHARMIE)
+        # self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        # Navigation
+        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
 
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
-        # # Audio
+        # Audio
         # while not self.get_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Audio Server...")
         # while not self.calibrate_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
-        # # Face
-        # while not self.face_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Face Command...")
-
-       
         
+        # Audio
+        # while not self.get_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Audio Server...")
+        # while not self.calibrate_audio_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        while not self.get_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
+        # while not self.get_neck_position_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Get Neck Position Command...")
         while not self.set_neck_coordinates_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         while not self.neck_track_person_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
-        while not self.neck_track_object_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
+        # Face
+        while not self.face_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Face Command...")
+        # while not self.neck_track_object_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         # Yolos
-        while not self.activate_yolo_pose_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         # while not self.activate_yolo_objects_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-       
+        # Arm (CHARMIE)
+        # while not self.arm_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        # Navigation
+        while not self.nav_trigger_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+        
+        # Arm (CHARMIE)
+        # while not self.arm_trigger_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+        
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
@@ -125,20 +286,15 @@ class RestaurantNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
 
         self.br = CvBridge()
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
-        self.detected_objects = Yolov8Objects()
-        self.detected_doors = Yolov8Objects()
-        self.detected_shoes = Yolov8Objects()
-        self.detected_objects_hand = Yolov8Objects()
-        self.detected_doors_hand = Yolov8Objects()
-        self.detected_shoes_hand = Yolov8Objects()
         self.obstacles = Obstacles()
-
+        
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
         self.speech_message = ""
@@ -154,34 +310,129 @@ class RestaurantNode(Node):
         self.track_person_success = True
         self.track_person_message = ""
         self.track_object_success = True
-        self.track_person_message = ""
+        self.track_object_message = ""
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.arm_success = True
+        self.arm_message = ""
         self.navigation_success = True
         self.navigation_message = ""
-        self.activate_obstacles_success = True
-        self.activate_obstacles_message = ""
+        self.flag_navigation_reached = False
+
+
+        self.get_neck_position = [1.0, 1.0]
+
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
+        current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        current_frame_draw = current_frame.copy()
+        
+        cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
+        cv2.waitKey(10)
+
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
+
+        current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
+        current_frame_draw = current_frame.copy()
+
+
+        # img = [0:720, 0:1280]
+        corr_image = False
+        thresh_h = 50
+        thresh_v = 200
+
+        if self.detected_objects.num_objects > 0:
+
+            x_min = 1280
+            x_max = 0
+            y_min = 720
+            y_max = 0
+
+            for object in self.detected_objects.objects:      
+            
+                if object.object_class == "Dishes":
+                    corr_image = True
+
+                    if object.box_top_left_x < x_min:
+                        x_min = object.box_top_left_x
+                    if object.box_top_left_x+object.box_width > x_max:
+                        x_max = object.box_top_left_x+object.box_width
+
+                    if object.box_top_left_y < y_min:
+                        y_min = object.box_top_left_y
+                    if object.box_top_left_y+object.box_height > y_max:
+                        y_max = object.box_top_left_y+object.box_height
+
+                    start_point = (object.box_top_left_x, object.box_top_left_y)
+                    end_point = (object.box_top_left_x+object.box_width, object.box_top_left_y+object.box_height)
+                    cv2.rectangle(current_frame_draw, start_point, end_point, (255,255,255) , 4) 
+
+                    cv2.circle(current_frame_draw, (object.box_center_x, object.box_center_y), 5, (255, 255, 255), -1)
+                    
+            
+            for object in self.detected_objects.objects:      
+                
+                if object.object_class == "Dishes":
+                
+                    if object.box_top_left_y < 30: # depending on the height of the box, so it is either inside or outside
+                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y+25)
+                    else:
+                        start_point_text = (object.box_top_left_x-2, object.box_top_left_y-22)
+                        
+                    # just to test for the "serve the breakfast" task...
+                    aux_name = object.object_name
+                    if object.object_name == "Fork" or object.object_name == "Knife":
+                        aux_name = "Spoon"
+                    elif object.object_name == "Plate" or object.object_name == "Cup":
+                        aux_name = "Bowl"
+
+                    text_size, _ = cv2.getTextSize(f"{aux_name}", cv2.FONT_HERSHEY_DUPLEX, 1, 1)
+                    text_w, text_h = text_size
+                    cv2.rectangle(current_frame_draw, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), (255,255,255), -1)
+                    cv2.putText(current_frame_draw, f"{aux_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1, cv2.LINE_AA)
+
+        if corr_image:
+            # current_frame_draw = current_frame_draw[x_min:y_min, x_max,y_max]
+            # img = current_frame_draw[y_min:y_max, x_min,x_max]
+            cv2.imshow("c", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)])
+            cv2.waitKey(10)
+            pass
+        # cv2.imshow("Yolo Objects TR Detection", current_frame_draw)
+        # cv2.waitKey(10)
+
+        # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
+        # cv2.waitKey(10)
+
+    def arm_finished_movement_callback(self, flag: Bool):
+        # self.get_logger().info("Received response from arm finishing movement")
+        # self.arm_ready = True
+        self.waited_for_end_of_arm = True
+        self.arm_success = flag.data
+        if flag.data:
+            self.arm_message = "Arm successfully moved"
+        else:
+            self.arm_message = "Wrong Movement Received"
+
+        self.get_logger().info("Received Arm Finished")
 
     ### LOW LEVEL START BUTTON ###
     def get_start_button_callback(self, state: Bool):
         self.start_button_state = state.data
         # print("Received Start Button:", state.data)
 
-    ### NAVIGATION ###
-    def flag_navigation_reached_callback(self, flag: Bool):
-        self.flag_navigation_reached = flag
-
+    ### OBSTACLES
     def obstacles_callback(self, obs: Obstacles):
         self.obstacles = obs
 
+    ### NAVIGATION ###
+    def flag_navigation_reached_callback(self, flag: Bool):
+        self.flag_navigation_reached = flag
+    
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
         request = ActivateYoloPose.Request()
@@ -209,7 +460,7 @@ class RestaurantNode(Node):
         request.minimum_doors_confidence = minimum_doors_confidence
 
         self.activate_yolo_objects_client.call_async(request)
-
+    
     #### FACE SERVER FUNCTIONS #####
     def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
         request = SetFace.Request()
@@ -492,19 +743,19 @@ class RestaurantNode(Node):
 # main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
-    node = RestaurantNode()
-    th_main = threading.Thread(target=ThreadMainRestaurant, args=(node,), daemon=True)
+    node = SticklerForTheRulesNode()
+    th_main = threading.Thread(target=ThreadMainSticklerForTheRules, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-def ThreadMainRestaurant(node: RestaurantNode):
-    main = RestaurantMain(node)
+def ThreadMainSticklerForTheRules(node: SticklerForTheRulesNode):
+    main = SticklerForTheRulesMain(node)
     main.main()
 
-class RestaurantMain():
+class SticklerForTheRulesMain():
 
-    def __init__(self, node: RestaurantNode):
+    def __init__(self, node: SticklerForTheRulesNode):
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
@@ -543,6 +794,35 @@ class RestaurantMain():
 
         t.data = False 
         self.node.flag_start_button_publisher.publish(t)
+        
+    def wait_for_door_start(self):
+        
+        # max angle considered to be a door (degrees)
+        MAX_DOOR_ANGLE = math.radians(15.0)
+        # max distance to be considered a door (meters)
+        MAX_DOOR_DISTANCE = 1.0 
+        
+        door_open = False
+
+        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+
+        while not door_open:
+            ctr = 0
+            for obs in self.node.obstacles.obstacles:
+                # if the robot detects any obstacle inside the max_angle with a dist under max_dist it considers the door is closed
+                # the max distance was introduced since in some cases, there may be a sofa, 3 meters away in that direction...
+                if -MAX_DOOR_ANGLE < obs.alfa < MAX_DOOR_ANGLE and obs.dist < MAX_DOOR_DISTANCE:
+                    ctr += 1
+                    # print(math.degrees(obs.alfa), obs.dist)
+            
+            if ctr == 0:
+                door_open = True
+                print("DOOR OPEN")
+            else:
+                door_open = False
+                print("DOOR CLOSED", ctr)
+        
+        self.set_rgb(GREEN+ALTERNATE_QUARTERS)
 
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", face_hearing="charmie_face_green", wait_for_end_of=True):
 
@@ -684,6 +964,58 @@ class RestaurantMain():
         self.node.waited_for_end_of_track_object = False
 
         return self.node.track_object_success, self.node.track_object_message   
+
+    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
+
+        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
+            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
+
+            self.navigation_success = False
+            self.navigation_message = "Wrong Movement Name"
+
+        else:
+            
+            navigation = TarNavSDNL()
+
+            # Pose2D target_coordinates
+            # string move_or_rotate
+            # float32 orientation_absolute
+            # bool flag_not_obs
+            # float32 reached_radius
+            # bool avoid_people
+            # float32 adjust_distance
+            # float32 adjust_direction
+            # float32 adjust_min_dist
+            # float32 max_speed
+
+            if adjust_direction < 0:
+                adjust_direction += 360
+
+            navigation.target_coordinates.x = float(target[0])
+            navigation.target_coordinates.y = float(target[1])
+            navigation.move_or_rotate = movement
+            navigation.orientation_absolute = float(absolute_angle)
+            navigation.flag_not_obs = flag_not_obs
+            navigation.reached_radius = float(reached_radius)
+            navigation.avoid_people = False
+            navigation.adjust_distance = float(adjust_distance)
+            navigation.adjust_direction = float(adjust_direction)
+            navigation.adjust_min_dist = float(adjust_min_dist)
+            navigation.max_speed = float(max_speed)
+
+            self.node.flag_navigation_reached = False
+            
+            self.node.target_pos_publisher.publish(navigation)
+
+            if wait_for_end_of:
+                while not self.node.flag_navigation_reached:
+                    pass
+                self.node.flag_navigation_reached = False
+
+            self.navigation_success = True
+            self.navigation_message = "Arrived at selected location"
+
+        return self.node.navigation_success, self.node.navigation_message   
     
     def set_initial_position(self, initial_position):
 
@@ -718,164 +1050,9 @@ class RestaurantMain():
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
-    def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False):
-
-        self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible) 
-        self.set_speech(filename="generic/search_people", wait_for_end_of=False)
-        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-        time.sleep(0.5)
-        
-        total_person_detected = []
-        person_detected = []
-        people_ctr = 0
-
-        ### MOVES NECK AND SAVES DETECTED PEOPLE ###
-        
-        for t in tetas:
-            self.set_rgb(RED+SET_COLOUR)
-            self.set_neck(position=t, wait_for_end_of=True)
-            time.sleep(1.0) # 0.5
-            self.set_rgb(WHITE+SET_COLOUR)
-
-            start_time = time.time()
-            while (time.time() - start_time) < delta_t:        
-                local_detected_people = self.node.detected_people
-                for temp_people in local_detected_people.persons:
-                    
-                    is_already_in_list = False
-                    person_already_in_list = DetectedPerson()
-                    for people in person_detected:
-
-                        if temp_people.index_person == people.index_person:
-                            is_already_in_list = True
-                            person_already_in_list = people
-
-                    if is_already_in_list:
-                        person_detected.remove(person_already_in_list)
-                    elif temp_people.index_person > 0: # debug
-                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
-                        self.set_rgb(GREEN+SET_COLOUR)
-                    
-                    if temp_people.index_person > 0:
-                        person_detected.append(temp_people)
-                        people_ctr+=1
-
-            # DEBUG
-            # print("people in this neck pos:")
-            # for people in person_detected:
-            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
-        
-            total_person_detected.append(person_detected.copy())
-            # print("Total number of people detected:", len(person_detected), people_ctr)
-            person_detected.clear()          
-
-        self.activate_yolo_pose(activate=False)
-        # print(total_person_detected)
-
-        # DEBUG
-        # print("TOTAL people in this neck pos:")
-        # for frame in total_person_detected:
-        #     for people in frame:    
-        #         print(people.index_person, people.position_absolute.x, people.position_absolute.y)
-        #     print("-")
-
-        ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
-        
-        filtered_persons = []
-
-        for frame in range(len(total_person_detected)):
-
-            to_append = []
-            to_remove = []
-
-            if not len(filtered_persons):
-                # print("NO PEOPLE", frame)
-                for person in range(len(total_person_detected[frame])):
-                    to_append.append(total_person_detected[frame][person])
-            else:
-                # print("YES PEOPLE", frame)
-
-                MIN_DIST = 1.0 # maximum distance for the robot to assume it is the same person
-
-                for person in range(len(total_person_detected[frame])):
-                    same_person_ctr = 0
-
-                    for filtered in range(len(filtered_persons)):
-
-                        dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
-                        # print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
-                        
-                        if dist < MIN_DIST:
-                            same_person_ctr+=1
-                            same_person_old = filtered_persons[filtered]
-                            same_person_new = total_person_detected[frame][person]
-                            # print("SAME PERSON")                        
-                    
-                    if same_person_ctr > 0:
-
-                        same_person_old_distance_center = abs(1280/2 - same_person_old.body_center_x) 
-                        same_person_new_distance_center = abs(1280/2 - same_person_new.body_center_x) 
-
-                        # print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
-                        # print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
-
-                        if same_person_new_distance_center < same_person_old_distance_center: # person from newer frame is more centered with camera center
-                            to_remove.append(same_person_old)
-                            to_append.append(same_person_new)
-                        else: # person from older frame is more centered with camera center
-                            pass # that person is already in the filtered list so we do not have to do anything, this is here just for explanation purposes 
-
-                    else:
-                        to_append.append(total_person_detected[frame][person])
-
-            for p in to_remove:
-                if p in filtered_persons:
-                    # print("REMOVED: ", p.index_person)
-                    filtered_persons.remove(p)
-                # else:
-                    # print("TRIED TO REMOVE TWICE THE SAME PERSON")
-            to_remove.clear()  
-
-            for p in to_append:
-                # print("ADDED: ", p.index_person)
-                filtered_persons.append(p)
-            to_append.clear()
-            
-        self.set_neck(position=[0, 0], wait_for_end_of=False)
-        self.set_rgb(BLUE+HALF_ROTATE)
-
-        sfp_pub = ListOfDetectedPerson()
-        # print("FILTERED:")
-        for p in filtered_persons:
-            sfp_pub.persons.append(p)
-        #     print(p.index_person)
-        self.node.search_for_person_detections_publisher.publish(sfp_pub)
-
-        return filtered_persons
-
-    def detected_person_to_face_path(self, person, send_to_face):
-
-        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
-        
-        cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
-        just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
-        # cv2.imshow("Search for Person", just_person_image)
-        # cv2.waitKey(100)
-        
-        face_path = current_datetime + str(person.index_person)
-        
-        cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
-        time.sleep(0.5)
-
-        if send_to_face:
-            self.set_face(custom=face_path)
-        
-        return face_path
-
-
     def search_for_person_2(self, tetas):
 
-        self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=True)                
+        self.activate_yolo_pose(activate=True, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=True)                
 
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
 
@@ -895,7 +1072,7 @@ class RestaurantMain():
 
         print("Started")
         for t in tetas:
-            self.set_neck(position=[t, -10])
+            self.set_neck(position=[t, -25])
             time.sleep(2)
 
             for people in self.node.detected_people.persons:
@@ -1053,660 +1230,251 @@ class RestaurantMain():
 
         # print(points_to_send)
         self.node.search_for_person_publisher.publish(points_to_send)
+        
+        self.activate_yolo_pose(activate=False)                
 
         return filtered_persons, filenames
     
-    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
-
-        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
-            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
-
-            self.navigation_success = False
-            self.navigation_message = "Wrong Movement Name"
-
-        else:
-            
-            navigation = TarNavSDNL()
-
-            # Pose2D target_coordinates
-            # string move_or_rotate
-            # float32 orientation_absolute
-            # bool flag_not_obs
-            # float32 reached_radius
-            # bool avoid_people
-            # float32 adjust_distance
-            # float32 adjust_direction
-            # float32 adjust_min_dist
-            # float32 max_speed
-
-            if adjust_direction < 0:
-                adjust_direction += 360
-
-            navigation.target_coordinates.x = float(target[0])
-            navigation.target_coordinates.y = float(target[1])
-            navigation.move_or_rotate = movement
-            navigation.orientation_absolute = float(absolute_angle)
-            navigation.flag_not_obs = flag_not_obs
-            navigation.reached_radius = float(reached_radius)
-            navigation.avoid_people = False
-            navigation.adjust_distance = float(adjust_distance)
-            navigation.adjust_direction = float(adjust_direction)
-            navigation.adjust_min_dist = float(adjust_min_dist)
-            navigation.max_speed = float(max_speed)
-
-            self.node.flag_navigation_reached = False
-            
-            self.node.target_pos_publisher.publish(navigation)
-
-            if wait_for_end_of:
-                while not self.node.flag_navigation_reached:
-                    pass
-                self.node.flag_navigation_reached = False
-
-            self.navigation_success = True
-            self.navigation_message = "Arrived at selected location"
-
-        return self.node.navigation_success, self.node.navigation_message   
+    def check_if_charmie_is_being_followed(self):
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
+        
+        detected_person_temp = Yolov8Pose()
+        self.set_rgb(WHITE+HALF_ROTATE)
+        time.sleep(2.5)
+        detected_person_temp = self.node.detected_people  
+        print(detected_person_temp.num_person)
+        # print(detected_person_temp.persons)
+        not_following = True
+        while not_following:
+            detected_person_temp = self.node.detected_people 
+            if detected_person_temp.num_person == 0:  
+                self.set_rgb(YELLOW+HALF_ROTATE)
+                self.set_speech(filename="sftr/Come_behind_me", wait_for_end_of=True)
+                self.set_rgb(RED+BLINK_QUICK)
+                time.sleep(1)
+            else:
+                self.set_rgb(GREEN+HALF_ROTATE)
+                self.set_speech(filename="sftr/Thanks_for_following", wait_for_end_of=True)
+                not_following = False
+          
+    def check_if_charmie_is_being_followed2(self):
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
+        
+        detected_person_temp = Yolov8Pose()
+        self.set_rgb(WHITE+HALF_ROTATE)
+        time.sleep(2.5)
+        detected_person_temp = self.node.detected_people  
+        print(detected_person_temp.num_person)
+        # print(detected_person_temp.persons)
+        not_following = True
+        while not_following:
+            detected_person_temp = self.node.detected_people 
+            if detected_person_temp.num_person == 0:  
+                self.set_rgb(YELLOW+HALF_ROTATE)
+                self.set_speech(filename="sftr/Come_behind_me", wait_for_end_of=True)
+                self.set_rgb(RED+BLINK_QUICK)
+                time.sleep(1)
+            else:
+                self.set_rgb(GREEN+HALF_ROTATE)
+                self.set_speech(filename="sftr/Thanks_for_following_2", wait_for_end_of=True)
+                not_following = False
 
     # main state-machine function
     def main(self):
-
-        print('inside')
         
-        # States in Restaurant Task
-        self.Waiting_for_task_start = 0
-        self.Detecting_waving_customers = 1
-        self.Approach_customer1_table = 2
-        self.Receiving_order1_listen_and_confirm = 3
-        self.Detecting_customer2_again = 4
-        self.Approach_customer2_table = 5
-        self.Receiving_order2_listen_and_confirm = 6
-        self.Collect_orders_from_barman = 7
-        self.Delivering_customer_order1 = 8
-        self.Delivering_customer_order2 = 9
-        self.Final_State = 10
+        # States in SticklerForTheRules Task
+        self.Waiting_for_start_button = 0
+        self.Navigation_forbidden_room = 1
+        self.Detect_people_forbidden_room = 2
+        self.Speak_forbidden_room = 3
+        self.Navigation_out_forbidden_room = 4
+        self.Final_State = 5
         
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_back = [-180, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
-        self.look_table_objects = [-45, -45]
-        self.look_tray = [0, -60]
-        self.look_customers = [0, 0]
-
-        # Start Localisation Position
-        self.initial_position = [0.0, 0.1, 0.0]
+        
+        self.initial_position = [-1.0, 3.0, 180.0]
+        self.pre_door_to_office = [-2.0, 3.0, 90.0]
+        self.inside_office = [-4.0, 3.0, 90.0]
+        self.center_office = [-5.0, 3.5, 180.0]
+        self.after_leaving_bedroom = [-5.3, 5.0, 180.0]
+        self.pre_door_to_bedroom = [-5.5, 5.0, 0.0]
+        self.inside_bedroom = [-5.5, 6.2, 0.0]
+        self.nr_times_tracking_fb = 0
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Waiting_for_task_start
-        # self.state = self.Detecting_waving_customers
-        # self.set_face("charmie_face")
+        self.state = self.Waiting_for_start_button 
 
-
-        self.all_orders = []
-        self.x1 = 0
-        self.y1 = 0
-        self.x2 = 0
-        self.y2 = 0
-
+        # DEBUG:
+        # self.state = self.Detect_people_forbidden_room 
+        #self.initial_position = [-4.5, 5.0, 0.0]
+        #self.set_initial_position(self.initial_position)
         # debug print to know we are on the main start of the task
-        self.node.get_logger().info("In Restaurant Main...")
+        self.node.get_logger().info("In SticklerForTheRules Main...")
 
         while True:
 
-            if self.state == self.Waiting_for_task_start:
-                print("State:", self.state, "- Waiting_for_task_start")
+            if self.state == self.Waiting_for_start_button:
+                print('State 0 = Waiting_for_start_button')
 
+                self.set_face("charmie_face")
+                self.activate_yolo_pose(activate=False)
+
+                #NECK: LOOKS IN FRONT
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
-
+                self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
+                
+                # SET START POSITION
                 self.set_initial_position(self.initial_position)
-                print("SET INITIAL POSITION")
-
-                # send speech command to speakers voice, intrucing the robot 
-                self.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                 
-                # sends RGB value for debug
-                self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
-                
-                ##### SPEAK : I am ready to start the restaurant task. Waiting for start button to be pressed!
-                self.set_speech(filename="restaurant/start_restaurant_task", wait_for_end_of=True)
-
-                # waiting for start button
+                #START TASK
+                self.set_speech(filename="sftr/start_sftr", wait_for_end_of=True)
+                #WAITING START BUTTON
+                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
                 self.wait_for_start_button()
-
-                print('start button')
-
-                self.set_rgb(command=CYAN+ALTERNATE_QUARTERS)
-
-                # change face, to standard face
-                # self.set_face("charmie_face")
                 
-                # FRASE "I WILL LOOK FOR THE BARMAN NOW. BARMAN, PLS RAISE YOUR HANDS"
+                # NAVIGATION POSE
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
-                tetas = [[-90, 0], [90, 0]]
-                barman_not_found = True
-                self.barman_position = []
+                # MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
+                self.state = self.Navigation_forbidden_room
 
-                while barman_not_found:
-                    people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
 
-                    print("FOUND:", len(people_found)) 
-                    for p in people_found:
-                        # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                        print("ID:", p.index_person)
-                        print('Barman position', p.position_relative)
-                        self.barman_position.append(p)
-                        barman_not_found = False
+            elif self.state == self.Navigation_forbidden_room:
+                print('State 1 = Navigation forbidden room')
 
-                barman_final_position = 100000.0
-                if len(self.barman_position) > 0:
-                    for barman in self.barman_position:
-                        dist = math.sqrt(barman.position_relative.x**2 + barman.position_relative.y**2)
-                        if dist < barman_final_position:
-                            barman_final_position = dist
-                            self.barman_position = barman
-                            print(barman.position_relative)
+                self.set_speech(filename="sftr/go_forbidden_room", wait_for_end_of=False)
+                #MOVE TO THE ROOM DOOR
                 
+                self.set_navigation(movement="rotate", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_office, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
 
-                if self.barman_position.position_relative.x < 0:
-                    print('barman on my left')
-                    self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)
-                    # BARMAN, ARE YOU THE GUY ON MY FACE?
-                    # path = self.detected_person_to_face_path(person=barman, send_to_face=True)
-                    # YES OR NO
-                else:
-                    print('barman on my right')
-                    self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)
-                    # BARMAN, ARE YOU THE GUY ON MY FACE?
-                    # path = self.detected_person_to_face_path(person=barman, send_to_face=True)
-                    # YES OR NO
-
-
-                ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
-                self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
-
-                ##### SPEAK : I am going to turn around and search for possible customers. See you soon
-                self.set_speech(filename="restaurant/turn_search", wait_for_end_of=True)
-
-                ##### TURN AROUND to the customer zone
-                #### NAVIGATION
-                # self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
-
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
-               
                 # next state
-                self.state = self.Detecting_waving_customers
+                self.state = self.Detect_people_forbidden_room
 
-            elif self.state == self.Detecting_waving_customers:
-                print("State:", self.state, "- Detecting_waving_customers")
-
-                ##### SPEAK: Searching for waving customers
-                self.set_speech(filename="restaurant/search_customers", wait_for_end_of=True)
-
-                self.set_rgb(command=ORANGE+HALF_ROTATE)
-
-                ##### NECK: Rotate left and right for better view
-                # tetas = [-120, -60, 0, 60, 120]
-                ##### YOLO POSE SEARCH FOR ONLY_DETECT_PERSON_ARM_RAISED
-                # coords_of_people, images_of_people = self.search_for_person_2(tetas)
-
-
-                tetas = [[-45, 0], [0, 0], [45, 0]]
-                customers_not_found = True
-                customers_list = []
-
-            
-                customers_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
-
-                print("FOUND:", len(people_found)) 
-                for p in customers_found:
-                    self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                    print("ID:", p.index_person)
-                    print('Customer position', p.position_relative)
-                    customers_list.append(p)
-                    
-                print('Nr of detected customers waving: ', len(customers_list))
-
-                self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
-
-                ##### IF AN ERROR IS DETECTED:
-                if len(customers_list) == 0:
-
-                    self.set_rgb(command=RED+BLINK_QUICK)
-
-                    ##### SPEAK: No costumers detected
-                    self.set_speech(filename="restaurant/no_customers", wait_for_end_of=True)
-
-                    ##### BACK TO initial searching
-                    self.state = self.Detecting_waving_customers
-
-                elif len(customers_list) == 1:
-
-                    # AQUI!
-                    # ADICIONAR CLIENTES AO ARRAY E ORDENAR POR DISTÂNICAS
-
-                    self.set_rgb(command=YELLOW+BLINK_QUICK)
-
-                    ##### SPEAK: Found waving customers
-                    self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
-                    dist_array = []
-
-                    for p in customers_list:
-                        self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
-                        dist = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
-                        dist_array.append(dist)
-                        print('\n \n coordenadas cliente :', p.position_relative.x, p.position_relative.y)
-                        print('distance to client: ', dist)
-                        
-                        time.sleep(2)
-
-                    print('\n\n dist all clients: ', dist_array)
-
-                    self.set_neck_coords(position=[self.barman_position.x, self.barman_position.y], wait_for_end_of=True)
-                    ##### SPEAK: Check face to see customers detected
-                    self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
-
-                    # path = self.detected_person_to_face_path(person=customers_list[0], send_to_face=True)
-                    # time.sleep(3)
-
-                    self.state = self.Detecting_waving_customers
-
-                else:
-
-                    self.set_rgb(command=GREEN+BLINK_QUICK)
-
-                    ##### SPEAK: Found waving customers
-                    self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
-                    dist_array = []
-                    ##### NECK: look waving customers
-
-                    for p in customers_list:
-                        self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
-                        dist = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
-                        dist_array.append(dist)
-                        print('\n \n coordenadas cliente :', p.position_relative.x, p.position_relative.y)
-                        print('distance to client: ', dist)
-                        
-                        time.sleep(2)
-
-
-                    # Step 1: Create a list of tuples (distance, index)
-                    distance_with_indices = [(distance, index) for index, distance in enumerate(dist_array)]
-
-                    # Step 2: Sort the list of tuples by distance
-                    sorted_distances = sorted(distance_with_indices)
-
-                    # Step 3: Use the sorted indices to reorder the persons list
-                    sorted_persons = [customers_list[index] for _, index in sorted_distances]
-
-                    # Print the results
-                    print("Sorted Distances with Indices:", sorted_distances)
-                    
-                    for p in sorted_persons:
-                        print("Positions:", p.position_relative, ' + ',p.index_person)
-
-
-                    # REPETITIVO MAS APENAS PARA DEBUG:
-                    i = 0
-                    person_count = 2
-                    while i < person_count:
-                        for p in sorted_persons :
-                            if i == person_count:
-                                break
-                            self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
-                            time.sleep(3)
-                            i += 1
+            elif self.state == self.Detect_people_forbidden_room:
+                print('State 2 = Detect people forbidden room')
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.nr_times_tracking_fb += 1
+                
+                print('nr times tracking = ', self.nr_times_tracking_fb)
+                
+                self.set_speech(filename="sftr/start_searching", wait_for_end_of=False)
+                self.set_rgb(YELLOW+ROTATE)
+                #REPLACE: LOOK TO THE ROOM
                             
-                        
-
-
-
-
-                    """ # Combine the x, y, and distance values into tuples
-                    combined_values = list(zip(self.x, self.y, dist_array, images_of_people))
-
-                    # Sort the tuples based on the distance values
-                    sorted_combined_values = sorted(combined_values, key=lambda tup: tup[2])
-
-                    # Split the sorted tuples back into separate arrays
-                    sorted_x_values, sorted_y_values, sorted_distances, sorted_images = map(list, zip(*sorted_combined_values))
-
-                    print("Sorted x values:", sorted_x_values)
-                    print("Sorted y values:", sorted_y_values)
-                    print("Sorted distances:", sorted_distances)
-                    print('Sorted images', sorted_images)
-
-                    time.sleep(3)
-
-
-                    result = [(sorted_x_values[i], sorted_y_values[i]) for i in range(len(sorted_distances))]
-
-                    print('\n \n coords of people received: ', coords_of_people)
-
-                    print("Result:", result)
- 
-                    self.set_neck_coords(position=[int(sorted_x_values[0]), int(sorted_y_values[0])], wait_for_end_of=True)
-                    time.sleep(3)
-                    self.set_neck_coords(position=[int(sorted_x_values[1]), int(sorted_y_values[1])], wait_for_end_of=True)
-                    time.sleep(3)
-
-                    """
-
-                
-                    self.set_neck(position=[self.barman_position.x, self.barman_position.y], wait_for_end_of=True)
-                    ##### SPEAK: Check face to see customers detected
-                    self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
-                    
-                    ##### SHOW FACE DETECTED CUSTOMER 
-                    # path_customer_0 = self.detected_person_to_face_path(person=sorted_persons[0], send_to_face=True)
-                    # path_customer_1 = self.detected_person_to_face_path(person=sorted_persons[1], send_to_face=True)
-                    
-
-                    
-                    # counter = 0 
-                    # for i in sorted_persons:
-                    #     counter += 1
-                    #     self.set_face(custom=i)
-                    #     time.sleep(2)
-                    #     if counter == 2:
-                    #         break
-
-                    
-
-                    ##### NECK: Reset the neck for standart position
-                    self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)             
-                    # next state
-                    self.state = self.Approach_customer1_table
-
-
-                    while True:
-                        pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                
-            elif self.state == self.Approach_customer1_table:
-                print("State:", self.state, "- Approach_customer1_table")
-
-                ##### NECK MOVEMENT FORWARD POSITION
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                
-                ##### BACK TO STANDART FACE
-                self.set_face("charmie_face")
-                
-                ##### SPEAK: Start Movement Alert
-                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
-
-                self.set_rgb(command=BLUE+ROTATE)
-
-                ##### MOVE TO CUSTOMER 1
-                self.set_navigation(movement="rotate", target=[sorted_x_values[0], sorted_y_values[0]], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_x_values[0], sorted_y_values[0]], reached_radius=2.2, flag_not_obs=False, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=[sorted_x_values[0], sorted_y_values[0]], flag_not_obs=True, wait_for_end_of=True)
-
-                ##### NECK: Look to customer 1
-                self.set_neck_coords(position=[sorted_x_values[0], sorted_y_values[0]], wait_for_end_of=True)
-
-                ##### SPEAK: Hello
-                self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
-                
-
-                self.state = self.Receiving_order1_listen_and_confirm
-
-            elif self.state == self.Receiving_order1_listen_and_confirm:
-                print("State:", self.state, "- Receiving_order1_listen_and_confirm")
-
-                while True:
-
-                    self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
-
-                    # old: self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
-                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-                    ##### AUDIO: Listen the order and repeat for confirmation
-                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
-                    print("Finished:", command)
-                    keyword_list = command.split(" ")
-                    self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
-                    for kw in keyword_list:
-                        print(kw)
-                        self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
-
-                    ##### AUDIO: Listen "YES" OR "NO"
-                    ##### "Please say yes or no to confirm the order"
-                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-                    print("Finished:", confirmation)
-
-                    ##### Verifica a resposta recebida
-                    if confirmation.lower() == "yes":
-                        self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
-                        self.set_rgb(command=GREEN+BLINK_LONG)
-
-                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
-                        for kw in keyword_list:
-                            print(kw)
-                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
-                        ##### SPEAK: Thank you
-                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
-                        break  # Sai do loop se a confirmação for "yes"
-                    elif confirmation.lower() == "no":
-                        self.set_rgb(command=RED+BLINK_LONG)
-                        ##### SPEAK: Sorry, TRY AGAIN
-                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
-                    else:
-                        self.set_rgb(command=YELLOW+BLINK_LONG)
-                        ##### ERROR
-                        print("ERROR")
-
-                # next state
-                """ self.state = self.Detecting_customer2_again
-
-            elif self.state == self.Detecting_customer2_again:
-                print("State:", self.state, "- Detecting_customer2_again")
-
-
-                ##### SPEAK: Could the second customer please raise their hand again?
-                self.set_speech(filename="restaurant/raise_hand_again", wait_for_end_of=True)
-
-                ##### SEARCH FOR PERSON AGAIN!!!!
-                tetas = [-120, -60, 0, 60, 120]
-                ##### YOLO POSE SEARCH FOR ONLY_DETECT_PERSON_ARM_RAISED
+                tetas = [-30, 0, 30]
                 coords_of_people, images_of_people = self.search_for_person_2(tetas)
-
-                if len(coords_of_people) >= 1:
-                    self.x2, self.y2 = coords_of_people[0]
-
-                ##### NECK: Look to customer 2
-                self.set_neck(position=[self.x2, self.y2], wait_for_end_of=True) """
-
-                # next state
+                print('Coordinates of people with legs detected: ', coords_of_people)
+                if coords_of_people == []:
+                    detected_person = False
+                else:
+                    print('\n\n Nr de pessoas detetadas: ', len(coords_of_people))
+                    nr_persons_detected_bedroom = len(coords_of_people)
+                    detected_person = True
+                    self.set_rgb(POLICE)
+                    """ for i in images_of_people:
+                        self.set_face(custom=i)
+                        time.sleep(3) """
                 
-                self.state = self.Approach_customer2_table
-
-            elif self.state == self.Approach_customer2_table:
-                print("State:", self.state, "- Approach_customer2_table")
-
-                ##### NECK MOVEMENT FORWARD POSITION
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
-                
-                ##### BACK TO STANDART FACE
-                self.set_face("charmie_face")
-                
-                ##### SPEAK: Start Movement Alert
-                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
-
-                self.set_rgb(command=BLUE+ROTATE)
-
-                ##### MOVE TO CUSTOMER 2
-                self.set_navigation(movement="rotate", target=[sorted_x_values[1], sorted_y_values[1]], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_x_values[1], sorted_y_values[1]], reached_radius=2.4, flag_not_obs=False, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=[sorted_x_values[1], sorted_y_values[1]], flag_not_obs=True, wait_for_end_of=True)
-
-                ##### NECK: Look to customer 2
-                self.set_neck_coords(position=[sorted_x_values[1], sorted_y_values[1]], wait_for_end_of=True)
-
-                ##### SPEAK: Hello
-                self.set_speech(filename="restaurant/hello_customer", wait_for_end_of=True)
-                self.state = self.Receiving_order2_listen_and_confirm
-
-            elif self.state == self.Receiving_order2_listen_and_confirm:
-                print("State:", self.state, "- Receiving_order2_listen_and_confirm")
-
-                while True:
-
-                    self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
-
-                    # old: self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
-                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-                    ##### AUDIO: Listen the order and repeat for confirmation
-                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
-                    print("Finished:", command)
-                    keyword_list = command.split(" ")
-                    self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
-                    for kw in keyword_list:
-                        print(kw)
-                        self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
-
-                    ##### AUDIO: Listen "YES" OR "NO"
-                    ##### "Please say yes or no to confirm the order"
-                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-                    print("Finished:", confirmation)
-
-                    ##### Verifica a resposta recebida
-                    if confirmation.lower() == "yes":
-                        self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
-                        self.set_rgb(command=GREEN+BLINK_LONG)
-
-                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
-                        for kw in keyword_list:
-                            print(kw)
-                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
-                        ##### SPEAK: Thank you
-                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
-                        break  # Sai do loop se a confirmação for "yes"
-                    elif confirmation.lower() == "no":
-                        self.set_rgb(command=RED+BLINK_LONG)
-                        ##### SPEAK: Sorry, TRY AGAIN
-                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
-                    else:
-                        self.set_rgb(command=YELLOW+BLINK_LONG)
-                        ##### ERROR
-                        print("ERROR")
-
-                # next state
-                self.state = self.Collect_orders_from_barman
-
-            elif self.state == self.Collect_orders_from_barman:
-                print("State:", self.state, "- Collect_orders_from_barman")
-                
-                ##### SPEAK: Start moving
-                self.set_speech(filename="restaurant/move_barman", wait_for_end_of=True)
-
-                self.set_rgb(command=BLUE+ROTATE)
-
-                ##### MOVE TO THE BARMAN TABLE
-                self.set_navigation(movement="rotate", target=[0.0, 0.0], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[0.0, 0.0], flag_not_obs=False, wait_for_end_of=True, reached_radius=2.0)
-                self.set_navigation(movement="rotate", target=[0.0, 0.0], flag_not_obs=True, wait_for_end_of=True)
-
-
-                self.set_neck_coords(position=[0.0, 0.0], wait_for_end_of=True)
-
-                ##### SPEAK: Say the order to barman
-                self.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
-
-                ##### SPEAK: Say order elements
-                ##### Itera sobre cada elemento do pedido
-                for pedido in self.all_orders:
-                    for elemento in pedido:
-                        # Define o nome do arquivo correspondente ao elemento
-                        filename = "objects_names/" + elemento.lower().replace(" ", "_")  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
+                for c in coords_of_people:
+                    # self.set_neck_coords(position=c, wait_for_end_of=True)
+                    print('\n\n\n\ C:' , c)
+                    print('x: ', c[0])
+                    print('y: ', c[1])
+                    
+                    if -6.5 < c[0] < -2.5 and 5.6 < c[1] < 11.0:
+                        coordinates_guest = c
+                        self.set_neck_coords(position=c, ang= -5.0, wait_for_end_of=True)
                         
-                        # SPEAK: Diz o elemento do pedido
-                        self.set_speech(filename=filename, wait_for_end_of=True)
+                        time.sleep(2)
+                        self.state = self.Speak_forbidden_room
+                        break
+                    else:
+                        self.state = self.Detect_people_forbidden_room
+                    #ONLY FOR DEBUG
 
-                ##### SPEAK: Say to the barman put the order in the tray
-                self.set_speech(filename="restaurant/tray_order", wait_for_end_of=True)
-
-                time.sleep(20)
-
-                # next state
-                self.state = self.Delivering_customer_order1
-
-            elif self.state == self.Delivering_customer_order1:
-                print("State:", self.state, "- Delivering_customer_order1")
-
-                ##### SPEAK: Start Movement Alert
-                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
-
-                self.set_rgb(command=BLUE+ROTATE)
-
-                ##### NAVIGATION TO FIRST CUSTOMER
-                ##### MOVE TO CUSTOMER 1
-                self.set_navigation(movement="rotate", target=[sorted_x_values[0], sorted_y_values[0]], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_x_values[0], sorted_y_values[0]], reached_radius=2.7, flag_not_obs=False, wait_for_end_of=True)
-
-                ##### SPEAK: Here are the items, CAN YOU PICK FROM MY TRAY?
-                self.set_speech(filename="restaurant/pick_tray", wait_for_end_of=True)
-
-                time.sleep(10)
-
-                ##### SPEAK: Hope you enjoy!
-                self.set_speech(filename="restaurant/enjoy_order", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Delivering_customer_order2
-
-            elif self.state == self.Delivering_customer_order2:
-                print("State:", self.state, "- Delivering_customer_order2")
-
-                ##### SPEAK: Start Movement Alert
-                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
-
-                self.set_rgb(command=BLUE+ROTATE)
-
-                ##### NAVIGATION TO SECOND CUSTOMER
-                ##### MOVE TO CUSTOMER 2
-                self.set_navigation(movement="rotate", target=[sorted_x_values[1], sorted_y_values[1]], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_x_values[1], sorted_y_values[1]], reached_radius=2.7, flag_not_obs=False, wait_for_end_of=True)
-
+        
+                # self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
-                ##### SPEAK: Here are the items, CAN YOU PICK FROM MY TRAY?
-                self.set_speech(filename="restaurant/pick_tray", wait_for_end_of=True)
-                
-                time.sleep(10)
-                ##### SPEAK: Hope you enjoy!
-                self.set_speech(filename="restaurant/enjoy_order", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Final_State
+                   # self.state = self.Speak_forbidden_room
 
+            elif self.state == self.Speak_forbidden_room:
+                print('State 3 = Speak forbidden room')
+                
+                if detected_person ==True:
+                    self.set_speech(filename="sftr/detection_forbidden_room", wait_for_end_of=True)
+                    #REPLACE: LOOK TO THE PERSON
+                    
+                    # index = len(coords_of_people) - nr_persons_detected_bedroom
+                    # print('Index da pessoa que eu detetei e estou a olhar: ', index)
+                    
+                    print('Coordinates of the  guest I am looking at: ', coordinates_guest)
+
+                    # self.set_neck(position=coords_of_people[0], wait_for_end_of=True)
+                    self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=True)
+                    self.state = self.Navigation_out_forbidden_room
+                    
+                else:
+                    if self.nr_times_tracking_fb == 3:
+                        self.state == self.Final_State
+                    else:
+                        self.state = self.Detect_people_forbidden_room
+                    
+                # next state
+           
+            elif self.state == self.Navigation_out_forbidden_room:
+                print('State 4 = Navigation out forbidden room')
+                nr_persons_detected_bedroom -= 1
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                #MOVE TO OUT OF THE BEDROOM
+                self.set_navigation(movement="rotate", target=self.after_leaving_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle = 180.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_neck(position=self.look_back, wait_for_end_of=True)
+                self.set_speech(filename="sftr/follow_me", wait_for_end_of=True)
+                time.sleep(2)
+                self.set_navigation(movement="move", target=self.after_leaving_bedroom, flag_not_obs=False, wait_for_end_of=True)
+                self.check_if_charmie_is_being_followed()
+                self.set_navigation(movement="move", target=self.center_office, flag_not_obs=True, wait_for_end_of=True)
+                self.check_if_charmie_is_being_followed2()
+                self.set_speech(filename="sftr/no_longer_breaking_rule", wait_for_end_of=False)
+                self.set_rgb(GREEN+BLINK_LONG)
+                        
+                if nr_persons_detected_bedroom == 0:
+                    print('No more persons detected')
+                    self.state = self.Final_State 
+                else: 
+                    print('Still persons in the room')
+                    self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
+                    self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
+
+                    self.state = self.Detect_people_forbidden_room
+                                
             elif self.state == self.Final_State:
-                print("State:", self.state, "- Final_State")
-
-                ##### SPEAK: FINISHING RESTAURANT TASK
                 
-                self.set_speech(filename="restaurant/finish_restaurant", wait_for_end_of=True)
-
-                self.set_rgb(command=RAINBOW_ROT)
-
+                print("Finished task!!!")
+                #NECK: LOOK IN FRONT
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_speech(filename="sftr/finish_sftr", wait_for_end_of=True)
+                #NECK: LOOK TO THE FLOOR
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
                 # Lock after finishing task
                 while True:
                     pass
