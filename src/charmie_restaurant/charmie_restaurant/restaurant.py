@@ -1285,23 +1285,16 @@ class RestaurantMain():
 
                     ##### SPEAK: Found waving customers
                     self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
-                    self.x = []
-                    self.y = []
                     dist_array = []
 
                     for p in customers_list:
                         self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
-                        self.x.append(p.position_relative.x)
-                        self.y.append(p.position_relative.y)
                         dist = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
                         dist_array.append(dist)
-                        print('\n \n coordenadas cliente :', self.x[0], self.y[0])
+                        print('\n \n coordenadas cliente :', p.position_relative.x, p.position_relative.y)
                         print('distance to client: ', dist)
                         
                         time.sleep(2)
-                    print('x de todos os clientes: ', self.x)
-
-                    print('y de todos os clientes: ', self.y)
 
                     print('\n\n dist all clients: ', dist_array)
 
@@ -1320,36 +1313,48 @@ class RestaurantMain():
 
                     ##### SPEAK: Found waving customers
                     self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
-                    self.x = []
-                    self.y = []
-                    self.x_final_array = []
-                    self.y_final_array = []
                     dist_array = []
-                    final_images = []
                     ##### NECK: look waving customers
-                    for c in coords_of_people:
-                        # self.set_neck_coords(position=c, wait_for_end_of=True)
-                        self.x.append(c[0])
-                        self.y.append(c[1])
-                        dist = math.sqrt(c[0]**2 +c[1]**2)
+
+                    for p in customers_list:
+                        self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
+                        dist = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
                         dist_array.append(dist)
-                        print('\n \n coordenadas cliente :', c[0], c[1])
+                        print('\n \n coordenadas cliente :', p.position_relative.x, p.position_relative.y)
                         print('distance to client: ', dist)
                         
-                    print('x de todos os clientes: ', self.x)
-
-                    print('y de todos os clientes: ', self.y)
-
-                    print('\n\n dist all clients: ', dist_array)
-                    # i = 0
-                    # j = 0
-                    # dist_array = sorted(dist_array)
-                    # print('sorted array: ', dist_array)
-                    # counter = 0
+                        time.sleep(2)
 
 
+                    # Step 1: Create a list of tuples (distance, index)
+                    distance_with_indices = [(distance, index) for index, distance in enumerate(dist_array)]
 
-                    # Combine the x, y, and distance values into tuples
+                    # Step 2: Sort the list of tuples by distance
+                    sorted_distances = sorted(distance_with_indices)
+
+                    # Step 3: Use the sorted indices to reorder the persons list
+                    sorted_persons = [customers_list[index] for _, index in sorted_distances]
+
+                    # Print the results
+                    print("Sorted Distances with Indices:", sorted_distances)
+                    for p in sorted_persons:
+
+                        print("Sorted Persons:", sorted_persons.position_relative, ' + ',sorted_persons.index_person )
+
+
+                    # REPETITIVO MAS APENAS PARA DEBUG:
+                    i = 0
+                    person_count = 2
+                    for p in sorted_persons and i < person_count:
+                        self.set_neck_coords(position=[int(p.position_relative.x), int(p.position_relative.y)], wait_for_end_of=True)
+                        time.sleep(3)
+                        i += 1
+                        
+
+
+
+
+                    """ # Combine the x, y, and distance values into tuples
                     combined_values = list(zip(self.x, self.y, dist_array, images_of_people))
 
                     # Sort the tuples based on the distance values
@@ -1371,27 +1376,32 @@ class RestaurantMain():
                     print('\n \n coords of people received: ', coords_of_people)
 
                     print("Result:", result)
-
+ 
                     self.set_neck_coords(position=[int(sorted_x_values[0]), int(sorted_y_values[0])], wait_for_end_of=True)
                     time.sleep(3)
                     self.set_neck_coords(position=[int(sorted_x_values[1]), int(sorted_y_values[1])], wait_for_end_of=True)
                     time.sleep(3)
 
+                    """
+
                 
-                    self.set_neck(position=self.look_back, wait_for_end_of=True)
+                    self.set_neck(position=[self.barman_position.x, self.barman_position.y], wait_for_end_of=True)
                     ##### SPEAK: Check face to see customers detected
                     self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
                     
+                    ##### SHOW FACE DETECTED CUSTOMER 
+                    path_customer_0 = self.detected_person_to_face_path(person=sorted_persons[0], send_to_face=True)
+                    path_customer_1 = self.detected_person_to_face_path(person=sorted_persons[1], send_to_face=True)
                     
 
-                    ##### SHOW FACE DETECTED CUSTOMER 
-                    counter = 0 
-                    for i in sorted_images:
-                        counter += 1
-                        self.set_face(custom=i)
-                        time.sleep(2)
-                        if counter == 2:
-                            break
+                    
+                    # counter = 0 
+                    # for i in sorted_persons:
+                    #     counter += 1
+                    #     self.set_face(custom=i)
+                    #     time.sleep(2)
+                    #     if counter == 2:
+                    #         break
 
                     
 
