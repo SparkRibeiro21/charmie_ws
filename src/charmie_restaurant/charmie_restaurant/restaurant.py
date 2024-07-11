@@ -86,8 +86,8 @@ class RestaurantNode(Node):
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Speakers
-        # while not self.speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Speech Command...")
+        while not self.speech_command_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Speech Command...")
         # # Audio
         # while not self.get_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Audio Server...")
@@ -98,7 +98,7 @@ class RestaurantNode(Node):
         #     self.get_logger().warn("Waiting for Server Face Command...")
 
        
-        """
+        
         # Neck 
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
@@ -113,9 +113,9 @@ class RestaurantNode(Node):
         # Yolos
         while not self.activate_yolo_pose_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
-        while not self.activate_yolo_objects_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-        """
+        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+       
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
@@ -1158,6 +1158,8 @@ class RestaurantMain():
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
 
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+
                 self.set_initial_position(self.initial_position)
                 print("SET INITIAL POSITION")
 
@@ -1184,36 +1186,41 @@ class RestaurantMain():
 
                 tetas = [[-90, 0], [90, 0]]
                 barman_not_found = True
+                self.barman_position = []
 
                 while barman_not_found:
                     people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
 
                     print("FOUND:", len(people_found)) 
                     for p in people_found:
-                        self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
+                        # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
                         print("ID:", p.index_person)
                         print('Barman position', p.position_relative)
-                        self.barman_position = p.position_relative
-                    time.sleep(0.5)
-
-                
-                    if self.barman_position.x < 0:
-                        print('barman on my left')
-                        # BARMAN, ARE YOU THE GUY ON MY FACE?
-                        # YES OR NO
-                        barman_not_found = False
-                    else:
-                        print('barman on my right')
-                        # BARMAN, ARE YOU THE GUY ON MY FACE?
-                        # YES OR NO
+                        self.barman_position.append(p)
                         barman_not_found = False
 
+                barman_final_position = 100000.0
+                if len(self.barman_position) > 0:
+                    for barman in self.barman_position:
+                        dist = math.sqrt(barman.position_relative.x**2 + barman.position_relative.y**2)
+                        if dist < barman_final_position:
+                            barman_final_position = dist
+                            self.barman_position = barman
+                            print(barman.position_relative)
                 
 
-
-                for p in people_found:
-                    path = self.detected_person_to_face_path(person=p, send_to_face=True)
-                    time.sleep(4)
+                if self.barman_position.position_relative.x < 0:
+                    print('barman on my left')
+                    self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)
+                    # BARMAN, ARE YOU THE GUY ON MY FACE?
+                    # path = self.detected_person_to_face_path(person=barman, send_to_face=True)
+                    # YES OR NO
+                else:
+                    print('barman on my right')
+                    self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)
+                    # BARMAN, ARE YOU THE GUY ON MY FACE?
+                    # path = self.detected_person_to_face_path(person=barman, send_to_face=True)
+                    # YES OR NO
 
 
                 ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
@@ -1244,24 +1251,22 @@ class RestaurantMain():
                 ##### YOLO POSE SEARCH FOR ONLY_DETECT_PERSON_ARM_RAISED
                 # coords_of_people, images_of_people = self.search_for_person_2(tetas)
 
-                tetas = [[-60, 0], [0, 0], [60, 0]]
+
+                tetas = [[-45, 0], [0, 0], [45, 0]]
                 customers_not_found = True
                 customers_list = []
 
             
-                people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
+                customers_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
 
                 print("FOUND:", len(people_found)) 
-                for p in people_found:
+                for p in customers_found:
                     self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
                     print("ID:", p.index_person)
+                    print('Customer position', p.position_relative)
                     customers_list.append(p)
                     
                 print('Nr of detected customers waving: ', len(customers_list))
-
-                for p in customers_list:
-                    print('Customer coordinates: ', p.position_relative)
-
 
                 self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
@@ -1302,8 +1307,8 @@ class RestaurantMain():
                     ##### SPEAK: Check face to see customers detected
                     self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
 
-                    path = self.detected_person_to_face_path(person=customers_list[0], send_to_face=True)
-                    time.sleep(3)
+                    # path = self.detected_person_to_face_path(person=customers_list[0], send_to_face=True)
+                    # time.sleep(3)
 
                     self.state = self.Detecting_waving_customers
 
@@ -1337,18 +1342,22 @@ class RestaurantMain():
 
                     # Print the results
                     print("Sorted Distances with Indices:", sorted_distances)
+                    
                     for p in sorted_persons:
-
-                        print("Sorted Persons:", sorted_persons.position_relative, ' + ',sorted_persons.index_person )
+                        print("Positions:", p.position_relative, ' + ',p.index_person)
 
 
                     # REPETITIVO MAS APENAS PARA DEBUG:
                     i = 0
                     person_count = 2
-                    for p in sorted_persons and i < person_count:
-                        self.set_neck_coords(position=[int(p.position_relative.x), int(p.position_relative.y)], wait_for_end_of=True)
-                        time.sleep(3)
-                        i += 1
+                    while i < person_count:
+                        for p in sorted_persons :
+                            if i == person_count:
+                                break
+                            self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
+                            time.sleep(3)
+                            i += 1
+                            
                         
 
 
@@ -1390,8 +1399,8 @@ class RestaurantMain():
                     self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
                     
                     ##### SHOW FACE DETECTED CUSTOMER 
-                    path_customer_0 = self.detected_person_to_face_path(person=sorted_persons[0], send_to_face=True)
-                    path_customer_1 = self.detected_person_to_face_path(person=sorted_persons[1], send_to_face=True)
+                    # path_customer_0 = self.detected_person_to_face_path(person=sorted_persons[0], send_to_face=True)
+                    # path_customer_1 = self.detected_person_to_face_path(person=sorted_persons[1], send_to_face=True)
                     
 
                     
@@ -1411,7 +1420,8 @@ class RestaurantMain():
                     self.state = self.Approach_customer1_table
 
 
-
+                    while True:
+                        pass
 
 
 

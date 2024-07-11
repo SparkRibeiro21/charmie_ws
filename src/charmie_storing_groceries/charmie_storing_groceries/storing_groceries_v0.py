@@ -2008,7 +2008,7 @@ class StoringGroceriesMain():
         print(obj_name_lower)
 
         object_help_pick = 'help_pick_' + obj_name_lower
-        # self.set_face(str(object_help_pick))
+        self.set_face(str(object_help_pick))
         print(object_help_pick)
 
         self.set_arm(command="ask_for_object_routine", wait_for_end_of=False)
@@ -2025,13 +2025,13 @@ class StoringGroceriesMain():
 
         # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-        # self.load_image_one_object(obj_0.object_name, obj_0)
+        self.load_image_one_object(obj_0.object_name, obj_0)
 
         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
 
         time.sleep(5)
 
-        # self.set_face(str(object_help_pick))
+        self.set_face(str(object_help_pick))
 
         self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
         
@@ -2113,7 +2113,7 @@ class StoringGroceriesMain():
                             print(obj_name_lower)
 
                             object_help_pick = 'help_pick_' + obj_name_lower
-                            # self.set_face(str(object_help_pick))
+                            self.set_face(str(object_help_pick))
                             print(object_help_pick)
 
                             self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
@@ -2124,7 +2124,7 @@ class StoringGroceriesMain():
 
                             # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                            # self.load_image_one_object(next_obj.object_name, next_obj)
+                            self.load_image_one_object(next_obj.object_name, next_obj)
 
                             self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
 
@@ -2137,7 +2137,7 @@ class StoringGroceriesMain():
 
                             self.set_arm(command="ask_for_object_routine", wait_for_end_of=True)
 
-                            # self.set_face(str(object_help_pick))
+                            self.set_face(str(object_help_pick))
 
                             self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
 
@@ -2256,13 +2256,13 @@ class StoringGroceriesMain():
 
                     # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                    # self.load_image_one_object(next_obj.object_name, next_obj)
+                    self.load_image_one_object(next_obj.object_name, next_obj)
 
                     self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
                     
                     time.sleep(3)
 
-                    # self.set_face(str(object_help_pick))
+                    self.set_face(str(object_help_pick))
 
                     self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
                     
@@ -2502,8 +2502,10 @@ class StoringGroceriesMain():
 
             time.sleep(2)
 
-            # self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
-            # self.set_rgb(command=GREEN+BLINK_LONG)
+            self.set_rgb(command=BLUE+ROTATE)
+            self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+            self.set_rgb(command=GREEN+BLINK_LONG)
+            
             self.set_rgb(command=BLUE+ROTATE)
             self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
@@ -2599,7 +2601,7 @@ class StoringGroceriesMain():
                 time.sleep(1)
 
                 # self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="adjust_angle", absolute_angle=-82.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=-75.0, flag_not_obs=True, wait_for_end_of=True)
                 time.sleep(1)
 
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.3, adjust_direction=170.0, wait_for_end_of=True)
@@ -2922,7 +2924,7 @@ class StoringGroceriesMain():
                 time.sleep(1)
                 print('State 0 = Initial')
 
-                # self.set_face("charmie_face")
+                self.set_face("charmie_face")
                 self.set_initial_position(self.initial_position)
                 
                 print("SET INITIAL POSITION")
