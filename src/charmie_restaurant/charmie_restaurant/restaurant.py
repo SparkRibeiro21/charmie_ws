@@ -1211,16 +1211,69 @@ class RestaurantMain():
 
                 if self.barman_position.position_relative.x < 0:
                     print('barman on my left')
+                    #ESTE NECK ACHO QUE NÃO FAZ SENTIDO... VAIS OLHAR PARA O BARMAN E PERGUNTAR SE É ELE Xd?
                     self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)
                     # BARMAN, ARE YOU THE GUY ON MY FACE?
+                    self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
                     # path = self.detected_person_to_face_path(person=barman, send_to_face=True)
                     # YES OR NO
+                    ##### AUDIO: Listen "YES" OR "NO"
+                    ##### "Please say yes or no to confirm the order"
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+
+                    ##### Verifica a resposta recebida
+                    if confirmation.lower() == "yes":
+                        self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+
+                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                        for kw in keyword_list:
+                            print(kw)
+                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+                        ##### SPEAK: Thank you
+                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                        break  # Sai do loop se a confirmação for "yes"
+                    elif confirmation.lower() == "no":
+                        self.set_rgb(command=RED+BLINK_LONG)
+                        ##### SPEAK: Sorry, TRY AGAIN
+                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+                    else:
+                        self.set_rgb(command=YELLOW+BLINK_LONG)
+                        ##### ERROR
+                        print("ERROR")
                 else:
                     print('barman on my right')
                     self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)
                     # BARMAN, ARE YOU THE GUY ON MY FACE?
+                    self.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
                     # path = self.detected_person_to_face_path(person=barman, send_to_face=True)
                     # YES OR NO
+                    ##### AUDIO: Listen "YES" OR "NO"
+                    ##### "Please say yes or no to confirm the order"
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+
+                    ##### Verifica a resposta recebida
+                    if confirmation.lower() == "yes":
+                        self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+
+                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                        for kw in keyword_list:
+                            print(kw)
+                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+                        ##### SPEAK: Thank you
+                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                        break  # Sai do loop se a confirmação for "yes"
+                    elif confirmation.lower() == "no":
+                        self.set_rgb(command=RED+BLINK_LONG)
+                        ##### SPEAK: Sorry, TRY AGAIN
+                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+                    else:
+                        self.set_rgb(command=YELLOW+BLINK_LONG)
+                        ##### ERROR
+                        print("ERROR")
 
 
                 ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.

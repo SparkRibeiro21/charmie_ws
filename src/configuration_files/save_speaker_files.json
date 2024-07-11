@@ -1,9 +1,6 @@
 {
-"place_knife_in_tray": "Please place the knife in my tray cup as shown on my face.",
-"place_spoon_in_tray": "Please place the spoon in my tray cup as shown on my face.",
-"place_fork_in_tray": "Please place the fork in my tray cup as shown on my face.",
-"place_cup_in_tray": "Please place the cup in my tray as shown on my face.",
-"place_bowl_in_tray": "Please place the bowl in my tray as shown on my face.",
-"place_plate_in_tray": "Please place the plate in my tray as shown on my face."
+"go_search": "I will look for customers. See you soon.",
+"search_barman": "I will look for the barman! Please raise your hand!",
+"confirm_barman": "I am displaying a person on my screen! Is this the barman?"
 }
 
