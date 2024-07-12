@@ -93,6 +93,12 @@ def generate_launch_description():
                 emulate_tty=True
                 )
     
+    audio = Node(package='charmie_audio',
+                        executable='audio',
+                        name='audio',
+                        emulate_tty=True
+                        )
+    
     low_level = Node(package='charmie_low_level',
                 executable='low_level',
                 name='low_level',
@@ -161,6 +167,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),
+        audio,
         low_level,
         charmie_multi_camera_launch_description,
         debug_visual,
