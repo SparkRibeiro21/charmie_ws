@@ -36,12 +36,16 @@ class NavigationSDNLClass:
 
         # generic tasks
         self.lambda_target = 4
+        self.lambda_target_not_obs = 10
+        self.lambda_target_with_obs = 4
         self.beta1 = 40 
         self.beta2 = 0.04
         self.min_speed_obs = 6.0 # speed
         
         # restaurant
         # self.lambda_target = 5
+        # self.lambda_target_not_obs = 8
+        # self.lambda_target_with_obs = 4
         # self.beta1 = 80 
         # self.beta2 = 0.35 
         # self.min_speed_obs = 3.0 # speed
@@ -53,10 +57,10 @@ class NavigationSDNLClass:
         # self.nav_threshold_ang_follow_me = 20 # degrees
         self.max_lin_speed = 15.0 # speed # 30.0
         self.max_ang_speed = 10.0 # speed # 20.0
-        self.tar_dist_decrease_lin_speed = 0.8 # meters
+        self.tar_dist_decrease_lin_speed = 1.2 # meters
         self.obs_dist_decrease_lin_speed = 1.5 # meters
         # self.min_speed_obs = 3.0 # speed
-        self.decay_rate_initial_speed_ramp = 2.0 # seconds # time took by the initial ramp  
+        self.decay_rate_initial_speed_ramp = 1.5 # seconds # time took by the initial ramp  
         self.decay_rate_initial_speed_ramp /= 0.1 # d_tao qual é feita a navigation
         self.MAX_DIST_FOR_OBS = 2.0
 
@@ -118,6 +122,17 @@ class NavigationSDNLClass:
     def sdnl_main(self, mov_or_rot):
 
         if mov_or_rot == "rot":
+            self.nav_target.flag_not_obs = True
+            self.lambda_target = self.lambda_target_not_obs 
+
+        if mov_or_rot == "mov":
+            
+            if self.nav_target.flag_not_obs:
+                self.lambda_target = self.lambda_target_not_obs
+
+            else:
+                self.lambda_target = self.lambda_target_with_obs
+            
             self.nav_target.flag_not_obs = True
 
         print(self.max_ang_speed, self.lambda_target)
@@ -197,17 +212,18 @@ class NavigationSDNLClass:
         return omni_move
 
     def rotate_orientation(self, orientation_target):
-        # print("INSIDE!!!!!!!!!!!!!!!!!!!!!!")
         
-        # orientation_target
-        # print(local_target)
-
-
         max_rot_speed = 10
         acceptable_error = 10
         kp = 0.14
-
+        
         error = self.imu_orientation_norm + orientation_target
+
+        if error > 180.0:
+            error -= 360.0 
+        elif error < -180:
+            error += 360.0 
+        
         speed = error * kp
         if speed > max_rot_speed:
             speed = max_rot_speed 
@@ -232,11 +248,6 @@ class NavigationSDNLClass:
         return omni_move, target_reached
 
     def rotate_adjust_orientation(self, orientation_target):
-        # print("INSIDE!!!!!!!!!!!!!!!!!!!!!!")
-        
-        # orientation_target
-        # print(local_target)
-
 
         max_rot_speed = 5
         acceptable_error = 3.0
@@ -247,6 +258,11 @@ class NavigationSDNLClass:
         kd = 0.04
 
         error = self.imu_orientation_norm + orientation_target
+        
+        if error > 180.0:
+            error -= 360.0 
+        elif error < -180:
+            error += 360.0 
         
         P = kp * error 
         
@@ -303,6 +319,8 @@ class NavigationSDNLClass:
         lambda_target = self.lambda_target
         current_pos = (self.robot_x, self.robot_y)
         phi = self.robot_t
+
+        print("lambda_target:", lambda_target)
 
 
         phi_ = phi + math.pi/2
@@ -990,6 +1008,8 @@ class NavSDNLNode(Node):
         qy = pose.pose.pose.orientation.y
         qz = pose.pose.pose.orientation.z
         qw = pose.pose.pose.orientation.w
+
+        self.get_logger().info("RECEIVED INITIALPOSE")
 
         # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
         # pitch = math.asin(-2.0*(qx*qz - qw*qy))
