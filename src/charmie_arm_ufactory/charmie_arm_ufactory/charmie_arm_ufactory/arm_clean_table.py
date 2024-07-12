@@ -20,7 +20,7 @@ class ArmUfactory(Node):
 		self.HEIGHT_TABLE_PLACE_OBJECTS = 76.0
 
 
-		self.HEIGHT_TOP_DISHWASHER_RACK = 65.0
+		self.HEIGHT_TOP_DISHWASHER_RACK = 60.0
 		self.HEIGHT_BOTTOM_DISHWASHER_RACK = 25.0
 
 
@@ -290,7 +290,7 @@ class ArmUfactory(Node):
 		
 		# PLACE CUP POSITION
 		self.pre_place_cup =  			[ -298.4,  -44.1, -100.2,   30.0,   55.2,  254.5]
-		self.place_cup = 				[   25.5,  393.3+height_top_rack,  924.8, math.radians(  86.6), math.radians(  -0.7), math.radians( 177.7)]
+		self.place_cup = 				[   75.5,  393.3+height_top_rack,  924.8, math.radians(  86.6), math.radians(  -0.7), math.radians( 177.7)]
 	
 		# PLACE BOWL POSITION
 		self.pre_place_bowl =  	[ -219.8,  -68.1, -42.4,  174.9,   72.6,  218.2]
@@ -306,9 +306,9 @@ class ArmUfactory(Node):
 		
 		# PLACE PLATE POSITION
 		self.pre_place_plate_lar = 			[ -246.1,  -48.5,  -84.8,  -10.3,   40.4,  186.9]
-		self.place_plate_lar = 				[  -89.8,  457.7+height_bottom_rack_torso_down,  872.9, math.radians(  -8.4), math.radians(  86.6), math.radians( 100.3)]
+		self.place_plate_lar = 				[  -89.8,  557.7+height_bottom_rack_torso_down,  872.9, math.radians(  -8.4), math.radians(  86.6), math.radians( 100.3)]
 		self.pre_place_plate_robocup24 = 	[ -269.2,  -47.1,  -89.6,  -11.0,   18.0,  279.6]
-		self.place_plate_robocup24 = 		[    6.6,  436.1+height_bottom_rack_torso_down,  993.0, math.radians(  61.0), math.radians(  -1.3), math.radians( 178.3)]
+		self.place_plate_robocup24 = 		[    6.6,  536.1+height_bottom_rack_torso_down,  993.0, math.radians(  61.0), math.radians(  -1.3), math.radians( 178.3)]
 
 		# PLACE CUTLERY POSITION
 		self.pre_place_cutlery_lar = 			[ -281.8,    1.9,  -64.9,  190.1,  143.4,  197.0]
@@ -320,7 +320,8 @@ class ArmUfactory(Node):
 		# CLOSE DISHWASHER
 		self.side_washing_machine = [-169.4, 31.6, -69.6, 274.9, 97.7, 55.8]
 		self.side_washing_machine_2 = [-145.9, 2.6, -60.6, 285.5, 119.1, 39.3]
-		self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 70.6]
+		# self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 70.6]	
+		self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 160.6]
 
   
 		print('Nada')
@@ -1465,6 +1466,39 @@ class ArmUfactory(Node):
 			self.get_logger().info("FINISHED MOVEMENT")	
 
 
+	def pre_dishwasher_to_initial_position(self):
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
+			self.joint_values_req.speed = math.radians(40)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		if self.estado_tr == 1:
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.speed = math.radians(40)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
 	def pre_dishwasher_to_ask_for_objects(self):
 
 		if self.estado_tr == 0:
@@ -2063,6 +2097,8 @@ class ArmUfactory(Node):
 			self.ask_for_objects_to_pre_dishwasher_special_bowl()
 		elif self.next_arm_movement == "pre_dishwasher_to_ask_for_objects":
 			self.pre_dishwasher_to_ask_for_objects()
+		elif self.next_arm_movement == "pre_dishwasher_to_initial_position":
+			self.pre_dishwasher_to_initial_position()
 		elif self.next_arm_movement == "place_cup_in_dishwasher":
 			self.place_cup_in_dishwasher()
 		elif self.next_arm_movement == "place_plate_in_dishwasher":
