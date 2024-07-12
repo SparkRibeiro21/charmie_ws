@@ -1,6 +1,4 @@
 {
-"go_search": "I will look for customers. See you soon.",
-"search_barman": "I will look for the barman! Please raise your hand!",
-"confirm_barman": "I am displaying a person on my screen! Is this the barman?"
+"confirm_barman": "Are you the barman? To confirm the order please respond with robot yes or robot no."
 }
 
