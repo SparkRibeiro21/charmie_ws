@@ -175,10 +175,10 @@ class NavigationSDNLClass:
 
             # decrescimo de velocidade rampa de aceleração inicial 
             if self.aux_initial_speed_ramp <= self.max_lin_speed:
-                if self.min_dist_obs < self.obs_dist_decrease_lin_speed:
-                    lin_speed_variation = self.max_lin_speed / (self.decay_rate_initial_speed_ramp)
-                    self.aux_initial_speed_ramp += lin_speed_variation
-                    speed_i = self.aux_initial_speed_ramp                    
+                # if self.min_dist_obs < self.obs_dist_decrease_lin_speed: # do not understand this ...
+                lin_speed_variation = self.max_lin_speed / (self.decay_rate_initial_speed_ramp)
+                self.aux_initial_speed_ramp += lin_speed_variation
+                speed_i = self.aux_initial_speed_ramp                    
 
             
             if not self.nav_target.flag_not_obs:
@@ -1012,6 +1012,7 @@ class NavSDNLNode(Node):
         self.nav.ang_to_target = self.nav.upload_rot_ang_to_target()
         self.nav.nav_threshold_dist = nav.reached_radius # in meters
         self.nav.max_lin_speed = nav.max_speed
+        self.nav.aux_initial_speed_ramp = 0.0
         self.latest_localisation_x = self.nav.robot_x
         self.latest_localisation_y = self.nav.robot_y
         self.latest_localisation_t = self.nav.robot_t
