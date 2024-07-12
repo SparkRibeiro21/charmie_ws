@@ -1606,8 +1606,8 @@ class CleanTableMain():
 
         # Configurables
         self.ATTEMPTS_AT_RECEIVING = 3
-        self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
-        self.MAX_SPEED = 20
+        self.SHOW_OBJECT_DETECTED_WAIT_TIME = 4.0
+        self.MAX_SPEED = 50
         self.CLOSE_RACK_WITH_PLATE = True
         self.DEBUG_WITHOUT_AUDIO = False
         self.SELECTED_CUTLERY = []
@@ -1633,7 +1633,7 @@ class CleanTableMain():
         self.first_time_giving_audio_instructions = True
 
 
-        self.state = self.Close_dishwasher_door
+        self.state = self.Waiting_for_task_start
 
 
         self.node.get_logger().info("IN SERVE THE CLEAN THE TABLE MAIN")
@@ -1733,7 +1733,7 @@ class CleanTableMain():
                                         list_of_objects_copy.remove("Fork")
                                     elif "Fork" not in list_of_objects_copy and "Spoon" not in list_of_objects_copy:
                                         list_of_objects_copy.remove("Knife")
-                                    elif "Knife" not in list_of_objects and "Fork" not in list_of_objects_copy:
+                                    elif "Knife" not in list_of_objects_copy and "Fork" not in list_of_objects_copy:
                                         list_of_objects_copy.remove("Spoon")
                                 
                             else:
@@ -2211,12 +2211,14 @@ class CleanTableMain():
         else:
             time.sleep(0.5)     
 
-        self.set_speech(filename="clean_the_table/place_"+curr_obj.lower()+"_in_tray", wait_for_end_of=True)  
-        
         self.set_face("place_"+curr_obj.lower()+"_in_tray_ct")
 
+        self.set_speech(filename="clean_the_table/place_"+curr_obj.lower()+"_in_tray", wait_for_end_of=True)  
+
         if self.first_time_giving_audio_instructions:
-            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)  
+            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)   
+        else:
+            time.sleep(0.5)    
 
         self.set_face("charmie_face")
 
