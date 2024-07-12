@@ -1599,7 +1599,7 @@ class CleanTableMain():
         self.Place_plate = 9
         self.Place_cutlery1 = 10
         self.Place_cutlery2 = 11
-        self.Place_cutlery_funilocopo = 10
+        self.Place_cutlery_funilocopo = 15
         self.Close_dishwasher_rack = 12
         self.Close_dishwasher_door = 13
         self.Final_State = 14
@@ -1863,7 +1863,7 @@ class CleanTableMain():
                 # self.set_arm(command="open_dishwasher_rack", wait_for_end_of=True)
 
                 # JUST FOR DEBUG
-                self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=False)
+                # self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=False)
                 # self.SELECTED_CUTLERY = ["Fork", "Knife"]
 
 
@@ -1873,12 +1873,12 @@ class CleanTableMain():
             elif self.state == self.Place_cup:
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                # self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
                 
                 self.set_face("help_pick_cup_ct")
                 
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
+
+                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
 
                 self.set_arm(command="open_gripper", wait_for_end_of=False)
 
@@ -1912,11 +1912,11 @@ class CleanTableMain():
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
-
                 self.set_face("help_pick_bowl")
                 
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
+
+                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
 
                 self.set_arm(command="open_gripper", wait_for_end_of=False)
 
@@ -1950,11 +1950,11 @@ class CleanTableMain():
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
-
                 self.set_face("help_pick_plate")
                 
-                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+                self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
+
+                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
 
                 self.set_arm(command="open_gripper", wait_for_end_of=False)
 

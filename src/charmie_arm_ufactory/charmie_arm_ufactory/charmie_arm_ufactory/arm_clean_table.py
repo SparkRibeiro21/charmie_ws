@@ -1523,7 +1523,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_cup)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1553,7 +1553,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 4:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_cup)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1561,7 +1561,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 5:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1579,7 +1579,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_bowl)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1618,7 +1618,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 5:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1637,7 +1637,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_plate_lar)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1667,7 +1667,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 4:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_plate_lar)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1675,7 +1675,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 5:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1693,7 +1693,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_plate_robocup24)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1723,7 +1723,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 4:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_plate_robocup24)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1731,7 +1731,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 5:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1749,7 +1749,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_cutlery_lar_midpoint)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1787,7 +1787,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 5:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_cutlery_lar)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1795,7 +1795,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 6:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1813,7 +1813,7 @@ class ArmUfactory(Node):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_cutlery_robocup24)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1843,7 +1843,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 4:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_cutlery_robocup24)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1851,7 +1851,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 5:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1897,7 +1897,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 2:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1905,7 +1905,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 3:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher_perpendicular)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1940,7 +1940,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 7:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_dishwasher)
-			self.joint_values_req.speed = math.radians(30)
+			self.joint_values_req.speed = math.radians(40)
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
