@@ -1140,6 +1140,15 @@ class ArmUfactory(Node):
 			print('b')
 
 		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def finish_open_left_door_from_inside_2(self):
+		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_left_door_outside_2)
 			self.joint_values_req.speed = 0.4
@@ -1149,7 +1158,7 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 			print('b')
 
-		elif self.estado_tr == 2:
+		elif self.estado_tr == 1:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -1218,6 +1227,8 @@ class ArmUfactory(Node):
 			self.check_right_door_inside()
 		elif self.next_arm_movement == "finish_open_left_door_from_inside":
 			self.finish_open_left_door_from_inside()
+		elif self.next_arm_movement == "finish_open_left_door_from_inside_2":
+			self.finish_open_left_door_from_inside_2()
 		elif self.next_arm_movement == "open_left_door_from_inside":
 			self.open_left_door_from_inside()
 		elif self.next_arm_movement == "finish_open_right_door_from_inside":

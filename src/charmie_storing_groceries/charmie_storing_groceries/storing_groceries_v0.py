@@ -672,7 +672,7 @@ class StoringGroceriesMain():
         t.data = False 
         self.node.flag_start_button_publisher.publish(t)
     
-    def set_face(self, command="", custom="", wait_for_end_of=True):
+    def set_face(self, command="", custom="", wait_for_end_of=False):
         
         self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
         
@@ -2025,9 +2025,9 @@ class StoringGroceriesMain():
 
         # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-        self.load_image_one_object(obj_0.object_name, obj_0)
-
         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
+
+        self.load_image_one_object(obj_0.object_name, obj_0)
 
         time.sleep(5)
 
@@ -2461,8 +2461,8 @@ class StoringGroceriesMain():
             distance_to_close = abs(object_x)/1000 
             print('Distance I am from door', distance_to_close)
 
-            distance_x_to_center = cabinet_position.x - 0.05
-            distance_y_to_center_original = cabinet_position.y - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
+            distance_x_to_center = cabinet_position.x
+            distance_y_to_center_original = cabinet_position.y - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius - self.robot_radius
             distance_y_to_center = abs(cabinet_position.y) - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
             ### ISTO CENTRA QD PORTA FECHADA É A ESQUERDA. -> door_position.x + self.node.wardrobe_width/4 
             ###  SE PORTA FECHADA FOR A DIREITA, TENHO DE TROCAR SINAL PARA -> door_position.x - self.node.wardrobe_width/4 
@@ -2509,6 +2509,40 @@ class StoringGroceriesMain():
             self.set_rgb(command=BLUE+ROTATE)
             self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
+
+            print('inside')
+            tetas = [[0, 0]]
+            objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
+            print('pos-search')
+            for obj in objects_found:
+                if obj.object_name == 'Cabinet':
+                    cabinet_found = True
+                    wanted_object = obj
+                    cabinet_position = wanted_object.position_relative
+                    print('Object found')
+
+            # REAJUSTAR COM CABINET
+            print('Reajustar cabinet!!!')
+            # object_location = self.transform_object(wanted_object)
+            print('Object found')
+            distance_x_to_center = cabinet_position.x
+            distance_y_to_center_original = cabinet_position.y - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
+            print('d_lateral:', distance_x_to_center)
+            print('d_frontal:', distance_y_to_center_original)
+            
+            ang_to_bag = -math.degrees(math.atan2(distance_x_to_center, distance_y_to_center_original))
+            dist_to_bag = (math.sqrt(distance_x_to_center**2 + distance_y_to_center_original**2))
+            print(ang_to_bag, dist_to_bag)
+            self.set_rgb(command=WHITE+ROTATE)
+            self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
+            self.set_rgb(command=GREEN+BLINK_LONG)
+
+            time.sleep(2)
+
+            self.set_rgb(command=BLUE+ROTATE)
+            self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+            self.set_rgb(command=GREEN+BLINK_LONG)
+
 
             # print(self.node.arm_current_pose)
 
@@ -2602,6 +2636,10 @@ class StoringGroceriesMain():
 
                 # self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="adjust_angle", absolute_angle=-75.0, flag_not_obs=True, wait_for_end_of=True)
+                time.sleep(1)
+
+                self.set_arm(command="open_left_door_from_inside_2", wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 time.sleep(1)
 
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.3, adjust_direction=170.0, wait_for_end_of=True)
@@ -2958,7 +2996,7 @@ class StoringGroceriesMain():
 
                 self.set_rgb(command=WHITE+ROTATE)
                     
-                self.set_navigation(movement="move", target=self.front_of_door, max_speed=25.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_door, max_speed=40.0, flag_not_obs=True, wait_for_end_of=True)
 
                 self.set_rgb(command=GREEN+BLINK_LONG)
 
@@ -2972,11 +3010,11 @@ class StoringGroceriesMain():
                 self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 # self.set_navigation(movement="move", target=self.kitchen_counter, max_speed=15.0, flag_not_obs=False, wait_for_end_of=True)   
-                self.set_navigation(movement="move", target=self.kitchen_counter, max_speed=25.0, flag_not_obs=True, wait_for_end_of=True)   
+                self.set_navigation(movement="move", target=self.kitchen_counter, max_speed=40.0, flag_not_obs=True, wait_for_end_of=True)   
                 self.set_rgb(command=GREEN+BLINK_LONG)             
                 self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
-                self.set_navigation(movement="move", target=self.kitchen_table, max_speed=15.0, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.kitchen_table, max_speed=40.0, flag_not_obs=False, wait_for_end_of=True)
                 # self.set_navigation(movement="move", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=BLUE+ROTATE)                
                 self.set_navigation(movement="orientate", absolute_angle= -90.0, flag_not_obs=True, wait_for_end_of=True)
@@ -2999,7 +3037,7 @@ class StoringGroceriesMain():
 
                 while cabinet_found == False:
                     print('inside')
-                    tetas = [[0, 0], [-10, 0], [10, 0]]
+                    tetas = [[-10, 0], [0, 0], [10, 0]]
                     objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
                     print('pos-search')
                     for obj in objects_found:
