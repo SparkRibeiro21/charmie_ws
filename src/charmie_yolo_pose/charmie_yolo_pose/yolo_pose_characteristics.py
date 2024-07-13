@@ -620,7 +620,7 @@ class YoloPoseNode(Node):
                         new_person.ethnicity, new_person.ethnicity_probability = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
                         new_person.age_estimate, new_person.age_estimate_probability = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
                         new_person.gender, new_person.gender_probability = self.get_gender_prediction(cropped_face) # says whether the person is male or female
-
+                        print(new_person.ethnicity, new_person.age_estimate, new_person.gender)        
                 # adds people to "person_pose_filtered" with selected filters
                 yolov8_pose_filtered.persons.append(new_person)
 

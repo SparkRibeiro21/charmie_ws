@@ -172,10 +172,9 @@ from openai import OpenAI
 #from gtts import gTTS
 import os
 #import playsound
-import fitz  # PyMuPDF
+#import PyMuPDF
 
-api_key = "OUR-KEY"
-
+api_key = "your-key"
 # Define the instructions text
 instructions_text = """
 You are a Home Assistant, your name is Charmie, and your task is to talk with people. Your body was made by the Laboratory of Automation and Robotics (LAR), which is a laboratory of the University of Minho. Your principal developer is Tiago Ribeiro. Your main tasks are: Following people, you can help them carry things since you have a manipulable arm. You can serve at tables, making your applicability vast. Or just talking. 
@@ -659,13 +658,13 @@ class LLMMain():
         # Ready the files for upload to OpenAI
         folder_path="./src/charmie_llm/charmie_llm/Files/"
         file_paths = ["tdp2023.pdf", "tdp2024.pdf","Actual Config.txt","Actual Team Members.txt", "Assistant Tasks.txt","Hardware Overview.txt"]  # List of your PDF files
-        file_streams = [open(folder_path+path, "rb") for path in file_paths]
+        #file_streams = [open(folder_path+path, "rb") for path in file_paths]
 
         # Use the upload and poll SDK helper to upload the files, add them to the vector store,
         # and poll the status of the file batch for completion.
-        file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
-        vector_store_id=vector_store.id, files=file_streams
-        )
+        #file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+        #vector_store_id=vector_store.id, files=file_streams
+        #)
 
 
         thread_id= "thread_M5Ot2oA7DdtK2moSe3cglsLz"
