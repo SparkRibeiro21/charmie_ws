@@ -1,7 +1,8 @@
 [
-{"name": "Entrance_Door",        	"top_left_coords": [-0.5, 0.6], "bot_right_coords": [0.4, 0.6]},
-{"name": "Living_Room_Kitchen_Door",    "top_left_coords": [1.0, 5.65], "bot_right_coords": [2.15, 5.65]}, 
-{"name": "Bedroom_Office_Door",         "top_left_coords": [-5.55, 5.65], "bot_right_coords": [-4.35, 5.65]},
-{"name": "Bedroom_Kitchen_Door", 	"top_left_coords": [-2.5, 8.05], "bot_right_coords": [-2.5, 7.15]},
-{"name": "Exit_Door",          		"top_left_coords": [-4.75, 0.6], "bot_right_coords": [-3.9, 0.6]}             
+{"name": "Entrance_Door",        	"top_left_coords": [-0.38, 0.57], "bot_right_coords": [0.4, 0.57]},
+{"name": "Living_Room_Kitchen_Door",    "top_left_coords": [-1.06, 9.45], "bot_right_coords": [-1.06, 6.45]}, 
+{"name": "Hallway_Office_Door",         "top_left_coords": [-1.06, 3.90], "bot_right_coords": [-1.06, 2.97]},
+{"name": "Hallway_Living_Room_Door", 	"top_left_coords": [0.015, 3.90], "bot_right_coords": [0.915, 3.90]},
+{"name": "Office_Kitchen_Door", 	"top_left_coords": [-3.455, 3.90], "bot_right_coords": [-2.525, 3.90]},
+{"name": "Exit_Door",          		"top_left_coords": [-6.01, 3.835], "bot_right_coords":[-6.01,3.135]}             
 ]

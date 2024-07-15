@@ -1,28 +1,19 @@
 [
-{"name": "Sofa",                     "top_left_coords": [2.6, 4.3], "bot_right_coords": [3.65, 2.4]},
-{"name": "Chair 1", 		     "top_left_coords": [2.6, 1.9], "bot_right_coords": [3.5, 1.0]},
-{"name": "Chair 2", 		     "top_left_coords": [1.4, 1.8], "bot_right_coords": [2.3, 0.9]},
-{"name": "Table Living Room", 	     "top_left_coords": [1.4, 3.8], "bot_right_coords": [1.9, 2.9]},
-{"name": "Table TV Living Room",     "top_left_coords": [-0.8, 5.65], "bot_right_coords": [0.55, 5.3]},
-{"name": "Lamp Living Room", 	     "top_left_coords": [-2.5, 5.65], "bot_right_coords": [-1.7, 5.15]},
+{"name": "Couch",                    "top_left_coords": [-0.08, 9.45], "bot_right_coords": [1.90, 8.2]},
+{"name": "Lounge Chair", 	     "top_left_coords": [1.92, 7.65], "bot_right_coords": [2.97, 6.75]},
+{"name": "Coffee Table ", 	     "top_left_coords": [-0.03, 8.0], "bot_right_coords": [1.17, 6.8]},
+{"name": "TV Table",     	     "top_left_coords": [0.915, 4.41], "bot_right_coords": [2.2, 3.95]},
+{"name": "Lamp", 	  	     "top_left_coords": [2.43, 9.32], "bot_right_coords": [2.74, 8.93]},
 
-{"name": "Shelf 1", 		     "top_left_coords": [-2.9, 4.6], "bot_right_coords": [-2.5, 3.75]},
-{"name": "Shelf 2", 		     "top_left_coords": [-6.55, 5.05], "bot_right_coords": [-6.15, 4.2]}, 
-{"name": "Garbige Office", 	     "top_left_coords": [-2.95, 5.65], "bot_right_coords": [-2.5, 5.2]},
-{"name": "Office Desk", 	     "top_left_coords": [-6.55, 3.3], "bot_right_coords": [-5.55, 1.7]},
-{"name": "Extra Office",	     "top_left_coords": [-3.0, 1.1], "bot_right_coords": [-2.5, 0.6]},
+{"name": "Shelf", 		     "top_left_coords": [-4.06, 0.97], "bot_right_coords": [-3.34, 0.57]},
+{"name": "Desk", 	             "top_left_coords": [-1.945, 2.37], "bot_right_coords": [-1.06, 0.87]},
 
-{"name": "Bed", 		     "top_left_coords": [-6.55, 9.25], "bot_right_coords": [-4.45, 7.35]},
-{"name": "Bed Side Table 1",	     "top_left_coords": [-6.55, 7.25], "bot_right_coords": [-6.1, 6.75]},
-{"name": "Bed Side Table 2",	     "top_left_coords": [-6.55, 9.85], "bot_right_coords": [-6.1, 9.35]},
-{"name": "Bed Chair",	    	     "top_left_coords": [-6.55, 11.05], "bot_right_coords": [-5.55, 10.25]},
-{"name": "Cabinet Bedroom",	     "top_left_coords": [-4.2, 11.05], "bot_right_coords": [-2.75, 10.35]},
+{"name": "Hallway Cabinet", 	     "top_left_coords": [1.12, 0.97], "bot_right_coords": [2.02, 0.57]},
+{"name": "Coathanger",	             "top_left_coords": [-1.0, 2.87], "bot_right_coords": [-0.58, 2.37]},
 
-{"name": "Washing Machine", 	     "top_left_coords": [-2.5, 9.45], "bot_right_coords": [-1.8, 8.75]},
-{"name": "Fridge", 		     "top_left_coords": [-0.6, 11.05], "bot_right_coords": [0.05, 10.3]}, 
-{"name": "Table Kitchen", 	     "top_left_coords": [1.35, 9.25], "bot_right_coords": [2.65, 7.25]},
-{"name": "Kitchen Counter",          "top_left_coords": [0.1, 11.05], "bot_right_coords": [1.15, 10.2]},
-{"name": "Garbige Kitchen", 	     "top_left_coords": [3.25, 6.05], "bot_right_coords": [3.65, 5.65]},
-{"name": "Cabinet", 		     "top_left_coords": [-2.5, 7.15], "bot_right_coords": [-2.1, 6.4]},
-{"name": "Side Table Kitchen", 	     "top_left_coords": [-1.65, 6.25], "bot_right_coords": [-0.5, 5.65]}
-]
+{"name": "Dishwasher", 	             "top_left_coords": [-4.19, 9.45], "bot_right_coords": [-3.56, 8.77]},
+{"name": "Table", 	             "top_left_coords": [-5.01, 7.01], "bot_right_coords": [-2.81, 5.8]},
+{"name": "Kitchen Counter",          "top_left_coords": [-6.01, 9.45], "bot_right_coords": [-4.19, 8.77]},
+{"name": "Trashcan", 	             "top_left_coords": [-1.71, 4.45], "bot_right_coords": [-1.10, 3.95]},
+{"name": "Cabinet", 		     "top_left_coords": [-5.49, 4.25], "bot_right_coords": [-4.59, 3.95]}]
+

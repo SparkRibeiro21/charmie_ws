@@ -38,8 +38,8 @@ class NavigationSDNLClass:
         self.lambda_target = 4
         self.lambda_target_not_obs = 10
         self.lambda_target_with_obs = 4
-        self.beta1 = 40 
-        self.beta2 = 0.04
+        self.beta1 = 40 # 40
+        self.beta2 = 0.06 # 0.04
         self.min_speed_obs = 6.0 # speed
         
         # restaurant
@@ -133,8 +133,6 @@ class NavigationSDNLClass:
             else:
                 self.lambda_target = self.lambda_target_with_obs
             
-            self.nav_target.flag_not_obs = True
-
         print(self.max_ang_speed, self.lambda_target)
 
         self.f_target, self.y_atrator = self.atrator(mov_or_rot)
