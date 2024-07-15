@@ -1,6 +1,6 @@
 [
-{"name": "Couch",                    "top_left_coords": [-0.08, 9.55], "bot_right_coords": [1.90, 8.3]},
-{"name": "Lounge Chair", 	     "top_left_coords": [1.92, 7.75], "bot_right_coords": [2.97, 6.75]},
+{"name": "Sofa",                    "top_left_coords": [-0.08, 9.55], "bot_right_coords": [1.90, 8.3]},
+{"name": "Chair", 	     "top_left_coords": [1.92, 7.75], "bot_right_coords": [2.97, 6.75]},
 {"name": "Coffee Table ", 	     "top_left_coords": [-0.03, 8.1], "bot_right_coords": [1.17, 6.9]},
 {"name": "TV Table",     	     "top_left_coords": [0.915, 4.46], "bot_right_coords": [2.2, 4.00]},
 {"name": "Lamp", 	  	     "top_left_coords": [2.43, 9.42], "bot_right_coords": [2.74, 9.03]},
