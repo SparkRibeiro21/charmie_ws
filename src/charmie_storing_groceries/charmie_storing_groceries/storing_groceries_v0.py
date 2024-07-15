@@ -512,6 +512,7 @@ class StoringGroceriesMain():
         self.look_navigation = [0, -30]
         self.look_judge = [90, 0]
         self.look_table_objects = [160, -20]
+        self.look_table_objects_front = [0, -40]
         self.look_tray = [0, -60]
         self.look_cabinet_top = [-45, 45]
         self.look_cabinet_center = [0, -30]
@@ -2085,7 +2086,7 @@ class StoringGroceriesMain():
         self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
         self.set_rgb(command=BLUE+ROTATE)
-        self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+        self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
         self.set_rgb(command=GREEN+BLINK_LONG)
 
         self.set_speech(filename="storing_groceries/sg_detected_single_object", wait_for_end_of=False) 
@@ -2217,12 +2218,12 @@ class StoringGroceriesMain():
                             self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                             self.set_rgb(command=BLUE+ROTATE)
-                            self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                            self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
                             self.set_rgb(command=GREEN+BLINK_LONG)
 
                             if i == 2:
                                 self.set_rgb(command=BLUE+ROTATE)
-                                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
                                 self.set_rgb(command=GREEN+BLINK_LONG)
                 
                             # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.11, adjust_direction=-90.0 + 360.0, wait_for_end_of=False)
@@ -2572,11 +2573,11 @@ class StoringGroceriesMain():
             time.sleep(2)
 
             self.set_rgb(command=BLUE+ROTATE)
-            self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+            self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
             
             self.set_rgb(command=BLUE+ROTATE)
-            self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+            self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
 
             print('inside')
@@ -2609,7 +2610,7 @@ class StoringGroceriesMain():
             time.sleep(2)
 
             self.set_rgb(command=BLUE+ROTATE)
-            self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+            self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
 
 
@@ -2682,7 +2683,7 @@ class StoringGroceriesMain():
 
             if right_door == True:
                 self.set_rgb(command=BLUE+ROTATE)
-                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
 
                 print('right door')
@@ -2705,7 +2706,7 @@ class StoringGroceriesMain():
                 time.sleep(1)
 
                 # self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="adjust_angle", absolute_angle=-75.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=-165.0, flag_not_obs=True, wait_for_end_of=True)
                 time.sleep(1)
 
                 self.set_arm(command="open_left_door_from_inside_2", wait_for_end_of=True)
@@ -2743,7 +2744,7 @@ class StoringGroceriesMain():
 
             elif left_door == True:
                 self.set_rgb(command=BLUE+ROTATE)
-                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 print('left door')
                 self.set_arm(command="check_left_door", wait_for_end_of=True)
@@ -2763,7 +2764,7 @@ class StoringGroceriesMain():
                 time.sleep(1)
                 
                 self.set_rgb(command=BLUE+ROTATE)
-                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 
                 # self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
@@ -3097,12 +3098,34 @@ class StoringGroceriesMain():
 
                 # self.activate_obstacles(obstacles_lidar_up=False, obstacles_camera_head=False)
 
-                # self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=False)
-            
+                self.set_rgb(command=BLUE+ROTATE)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                
+                self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
+                
+                self.activate_yolo_objects(activate_objects=True)
+                
+                self.set_neck(position=self.look_table_objects_front)
+                
+                tetas = [[-20, -40], [0, -40], [20, -40]]
+                objects_found_table = []
+                while objects_found_table == []:
+                    objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+
+                print('Objects found on table: ')
+                for obj in objects_found_table:
+                    print(obj.object_name)
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
-
-                self.activate_yolo_objects(activate_doors=True, activate_doors_hand = False, minimum_doors_confidence=0.2)
+                
+                self.set_rgb(command=BLUE+ROTATE)
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                
+                self.activate_yolo_objects(activate_doors=True, activate_doors_hand = False)
+                
+                # self.set_speech(filename="generic/arrived_cabinet", wait_for_end_of=False)
 
                 cabinet_found = False
 
@@ -3120,7 +3143,7 @@ class StoringGroceriesMain():
                             print('Object found')
 
                 self.set_rgb(command=BLUE+ROTATE)
-                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
 
                 self.open_cabinet_door(objects_found, wanted_object)
@@ -3128,12 +3151,12 @@ class StoringGroceriesMain():
                 self.set_arm(command="open_gripper", wait_for_end_of=False)
 
                 self.set_rgb(command=BLUE+ROTATE)
-                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
 
                 data = []
                 real_data = []
-                tetas = [[0, -30], [0, 0]]
+                tetas = [[0, -40], [0, -20], [0, 0]]
                 objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
                 
                 self.set_rgb(command=GREEN+BLINK_LONG)
@@ -3198,20 +3221,18 @@ class StoringGroceriesMain():
 
                 # self.set_speech(filename="generic/moving_table", wait_for_end_of=True)
 
-                ###### MOVEMENT TO THE KITCHEN COUNTER
-
                 # self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
 
-                self.set_neck(position=self.look_table_objects)
+                # self.set_neck(position=self.look_table_objects)
                 
-                tetas = [[160, -20], [140, -20], [120, -20]]
-                objects_found_table = []
-                while objects_found_table == []:
-                    objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                # tetas = [[160, -20], [140, -20], [120, -20]]
+                # objects_found_table = []
+                # while objects_found_table == []:
+                #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
 
-                print('Objects found on table: ')
-                for obj in objects_found_table:
-                    print(obj.object_name)
+                # print('Objects found on table: ')
+                # for obj in objects_found_table:
+                #     print(obj.object_name)
 
                 print('---------')
 
@@ -3232,7 +3253,7 @@ class StoringGroceriesMain():
 
                 # self.set_speech(filename="storing_groceries/might_touch_cabinet", wait_for_end_of=False)   
                 self.set_rgb(command=BLUE+ROTATE)
-                self.set_navigation(movement="adjust_angle", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 
 
