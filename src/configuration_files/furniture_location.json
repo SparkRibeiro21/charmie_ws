@@ -1,9 +1,9 @@
 [
-{"name": "Couch",                    "top_left_coords": [-0.08, 9.45], "bot_right_coords": [1.90, 8.2]},
-{"name": "Lounge Chair", 	     "top_left_coords": [1.92, 7.65], "bot_right_coords": [2.97, 6.75]},
-{"name": "Coffee Table ", 	     "top_left_coords": [-0.03, 8.0], "bot_right_coords": [1.17, 6.8]},
-{"name": "TV Table",     	     "top_left_coords": [0.915, 4.41], "bot_right_coords": [2.2, 3.95]},
-{"name": "Lamp", 	  	     "top_left_coords": [2.43, 9.32], "bot_right_coords": [2.74, 8.93]},
+{"name": "Couch",                    "top_left_coords": [-0.08, 9.55], "bot_right_coords": [1.90, 8.3]},
+{"name": "Lounge Chair", 	     "top_left_coords": [1.92, 7.75], "bot_right_coords": [2.97, 6.75]},
+{"name": "Coffee Table ", 	     "top_left_coords": [-0.03, 8.1], "bot_right_coords": [1.17, 6.9]},
+{"name": "TV Table",     	     "top_left_coords": [0.915, 4.46], "bot_right_coords": [2.2, 4.00]},
+{"name": "Lamp", 	  	     "top_left_coords": [2.43, 9.42], "bot_right_coords": [2.74, 9.03]},
 
 {"name": "Shelf", 		     "top_left_coords": [-4.06, 0.97], "bot_right_coords": [-3.34, 0.57]},
 {"name": "Desk", 	             "top_left_coords": [-1.945, 2.37], "bot_right_coords": [-1.06, 0.87]},
@@ -11,9 +11,11 @@
 {"name": "Hallway Cabinet", 	     "top_left_coords": [1.12, 0.97], "bot_right_coords": [2.02, 0.57]},
 {"name": "Coathanger",	             "top_left_coords": [-1.0, 2.87], "bot_right_coords": [-0.58, 2.37]},
 
-{"name": "Dishwasher", 	             "top_left_coords": [-4.19, 9.45], "bot_right_coords": [-3.56, 8.77]},
-{"name": "Table", 	             "top_left_coords": [-5.01, 7.01], "bot_right_coords": [-2.81, 5.8]},
-{"name": "Kitchen Counter",          "top_left_coords": [-6.01, 9.45], "bot_right_coords": [-4.19, 8.77]},
-{"name": "Trashcan", 	             "top_left_coords": [-1.71, 4.45], "bot_right_coords": [-1.10, 3.95]},
-{"name": "Cabinet", 		     "top_left_coords": [-5.49, 4.25], "bot_right_coords": [-4.59, 3.95]}]
+{"name": "Dishwasher", 	             "top_left_coords": [-4.19, 9.55], "bot_right_coords": [-3.56, 8.87]},
+{"name": "Table", 	             "top_left_coords": [-5.01, 7.11], "bot_right_coords": [-2.81, 5.8]},
+{"name": "Kitchen Counter",          "top_left_coords": [-6.01, 9.55], "bot_right_coords": [-4.19, 8.87]},
+{"name": "Trashcan", 	             "top_left_coords": [-1.71, 4.50], "bot_right_coords": [-1.10, 4.00]},
+{"name": "Cabinet", 		     "top_left_coords": [-5.49, 4.30], "bot_right_coords": [-4.59, 4.00]}]
+
+
 

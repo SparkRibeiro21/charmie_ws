@@ -1,6 +1,65 @@
 # this variable is just to help to better visualise for debug purposes
 max_number_of_chars_of_keys = 16
 
+names_dict = {
+    "Sophie":    ["sophie", "sufi", " sofi ", "zofi ", "zafi "],
+    "Julia":     ["julia", "zulia", "zolia", "jolia", "hula "],
+    "Emma":      ["emma", "ema", "yama", "amen", " yeah man ", "kema "],
+    "Sarah":     ["sarah", "sara ", "hada", "hera "],
+    "Laura":     ["laura", "lara "],
+    "Hayley":    ["hayley", "hailey", "ailey", "haley", " eli", "ale", "ahayley", "haley", "alien"],
+    "Susan":     ["susan", "susa", "suza", "fuza"],
+    "Fleur":     ["fleur", "fluid", "flour",  "slower", "stuart", "fluhr", "flair ", "fleewer", "fleeward", "flue", "fluhard", "flereur", "flare", "flo "],
+    "Gabrielle": ["gabrielle", "yobriel", "gangreal", "gabriel", "bigreal", "gatereal", "javier", "Cabrielle"],
+    "Robin":     ["robin", "harbin", "robyn", "hobby", "hobean", "hohvin", "robon", "corbin", "haubin", "horven", "covid", "colvin", "forbin"],
+    "John":      ["john", "jhong", "joe", "jopne", "joan", "chiang", "han", "chuan", "juan", "jean"],
+    "Liam":      ["liam", "lian", " leon ", " lee "],
+    "William":   ["william", "willian", "rheelium"],
+    "Kevin":     ["kevin", "cavin", "kavian"],
+    "Jesse":     ["jess", "chis", "jase", "jasey", "jazzy", "jassy"],
+    "Noah":      ["noah", "no one", "noha"],
+    "Harrie":    ["harrie", "harry", "arie ", "eri ", "ari ", "aali"],
+    "Peter":     ["peter", "better"],
+}
+
+drinks_dict = {
+    "Big_Coke":     ["big", "coke", "cok", "cook", "cog", "vehicle", "kolk"],
+    "Cola":         [" cola", "coca", "kola", "coconut", "color", "call", "gog", "koch", "kullum", "goog", "cold",\
+                        "kohler", "kala", "gola", "kohla", "cool", "kolkka"],
+    "Dubblefris":   ["double", "dubblefris", "crease", "free", "ease", "freeze", "fish", "lubelofish", "lublle", "fish"],
+    "Milk":         ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton", "miyuki"],
+	"Iced_Tea":     [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
+                       "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
+                       "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", " icy ", "nice t", "oysti", " aste "],
+    "Fanta":        ["fanta", "santa", "anta", "phanta", "fender", "fanda"],
+    "Water":        ["water", "laude"]
+}
+
+foods_dict = {
+    "Candy":            ["candy", "candi", "kai chi"],
+    "Crisps":           ["crisps", "crispy", "chris", "crispies", "grapes", "species", "creepy", "creeps", "greece"],
+    "Liquorice":        ["liquorice", "liqueur", "rice", "rise", "lekou"],
+    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "gringles"],
+    "Stroopwafel":      ["stroopwafle", "stroke", "waffle", "stop", "drop", "struck", "strip"],
+    "Tictac":           ["tictac", "tak ", "tuke", "tiktok", "tik", "tek", "cheek", "chalk", "eak", "diktak"],
+
+    "Pear":             ["pear", "pair", "pier", "beer", "bare"],
+    "Plum":             ["plum", "clump", "blam", "blum", "plumb"],
+    "Peach":            ["peach"],
+    "Lemon":            ["lemon", "lammon"],
+    "Orange":           ["orange", "orton"],
+    "Strawberry":       ["strawberry"],
+    "Banana":           ["banana"],
+    "Apple":            ["apple"],
+
+    "Cornflakes":       ["cornflakes", "corn flakes", "conflicts", "gonna flex"],
+    "Curry":            ["curry", "kurji", "huhi", "hurry"],
+    "Hagelslag":        ["hagelslag", "eagle", "sleigh", "slag", "hoggles", "huggles"],
+    "Mayonaise":        ["mayonaise", "own knees", "my hones","mayo", "nes ", "mayonw", "maio", "myonase"],
+    "Pancake_Mix":      ["pancake", "mix", "spankake", "kake", "pancakes"],
+    "Pea_Soup":         ["soup"],
+    "Sausages":         ["sausage", "sausageies", "sausages"]
+}
 """
 names_dict = {
     "Adel":     ["adel", "adele", "adam", "avel"],
@@ -16,7 +75,7 @@ names_dict = {
     "Simone":   ["simone", "simon", "simo", "siman"]
 }
 """
-
+"""
 names_dict = {
     "Kai":      ["kai", "kite", "guy", " kei ", " kay ", "kate", " k "],
     "Noah":     ["noah", "no one", "noha"],
@@ -32,9 +91,8 @@ names_dict = {
     "Remi":     ["remi", "renee", " rani ", " rami ", "remy", "ray me", "rene", "hemi", " vami ", "raimi"],
     "River":    ["river", "rever", "reaver", "rida", "rivel", "peever", " recer "], # david?
     "Atlas":    ["atlas", "atlash", "atles", "art loz", "akhlish", "ad-lose", "after", " atash ", "akish", "arthlash", "akash", "akulosh", "akulish", "ateles", " asla ", "aatish", " athos "]
-}
-
-
+}"""
+"""
 drinks_dict = {
     "Red_Wine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
     "Juice_Pack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
@@ -52,8 +110,8 @@ drinks_dict = {
                        "orang joyce", "orang juiis", "orange joyce", "arun jus", "jordan jus", "oronschuss"], # removed 'order' and all "just orange" so there is no conflict with orange 
     "7up":            ["seven", "up", "7", "nope", "devanab", "savannah", "sabona", "sabanab"], # removed o "simon" cause it conflicts with th name Simon
     "Water":          ["water", "laude"]
-}
-
+}"""
+"""
 foods_dict = {
     "Tuna":             ["tuna"],
     "Tomato_Soup":      ["tomato"],
@@ -77,7 +135,7 @@ foods_dict = {
     "Cornflakes":       ["cornflakes", "corn flakes", "conflicts", "gonna flex"],
     "Cheezit":          ["cheese", "cheezit", "she's it", "shisit"]
 }
-
+"""
 numbers_dict = {
     "Zero":  ["0", "zero"],
     "One":   ["1", "one"],
