@@ -44,7 +44,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 # this variable when True is used to enter a calibration mode for the dict words, without being necessary
 # to run any other node. It is used (mainly in competition) when new words are added to what the robot must be 
 # able to recognise. Check 'words_dict' to see the words the robot must recognise on each category.
-DICT_CALIBRATION = True
+DICT_CALIBRATION = False
 CALIBRATION_PRINTS = True
 FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in-depth audio keywords detected
 

@@ -152,15 +152,22 @@ class ArmUfactory(Node):
 		# self.inside_wardrobe_left_door_2 = [-209.4, 66.3, -124.0, -1.9, 35.1, 332.5]
 		# self.inside_wardrobe_left_door_3 = [-215.5, 48.3, -79.9, 10.8, 9.3, 314.0]
 
-		self.inside_wardrobe_left_door = [-211.1, 55.3, -115.5, 18.0, 36.0, 316.8]
-		self.inside_wardrobe_left_door_2 = [-210.7, 64.5, -136.5, 4.7, 57.1, 328.5]
+		# self.inside_wardrobe_left_door = [-211.1, 55.3, -115.5, 18.0, 36.0, 316.8]
+		# self.inside_wardrobe_left_door_2 = [-210.7, 64.5, -136.5, 4.7, 57.1, 328.5]
+		# self.inside_wardrobe_left_door_2_new = [-210.5, 73.5, -154.6, 0.2, 72.7, 331.4]
+		self.inside_wardrobe_left_door = [-197.4, 41.1, -88.0, 13.1, 19.9, 331.0]
+		self.inside_wardrobe_left_door_2_new = [-195.7, 69.9, -150.7, -2.2, 72.3, 346.7]
 
-		self.inside_wardrobe_right_door = [-221.7, 78.3, -102.5, 135.4, 73.8, 106.3]
-		self.inside_wardrobe_right_door_2 = [-216.0, 98.2, -137.8, 154.7, 104.1, 111.5]
+		# self.inside_wardrobe_right_door = [-221.7, 78.3, -102.5, 135.4, 73.8, 106.3]
+		# self.inside_wardrobe_right_door_2 = [-216.0, 98.2, -137.8, 154.7, 104.1, 111.5]
+		self.inside_wardrobe_right_door = [-215.4, 73.7, -89.9, 143.0, 78.3, 99.3]
+		self.inside_wardrobe_right_door_2 = [-206.8, 86.4, -111.4, 159.0, 115.6, 100.5]
 		
 
 		# self.wardrobe_left_door_outside = [-217.2, 88.2, -121.2, -1.0, 30.9, 317.8]
-		self.wardrobe_left_door_outside = [-213.5, 95.5, -147.2, -11.4, 60.9, 328.0]
+		# self.wardrobe_left_door_outside = [-213.5, 95.5, -147.2, -11.4, 60.9, 328.0]
+		# self.wardrobe_left_door_outside_2 = [-219.5, 46.8, -87.5, -17.4, 52.2, 327.0]
+		self.wardrobe_left_door_outside = [-199.9, 70.9, -95.8, -12.7, 36.3, 345.3]
 		self.wardrobe_left_door_outside_2 = [-219.5, 46.8, -87.5, -17.4, 52.2, 327.0]
 
 		self.wardrobe_right_door_outside = [-226.5, 49.5, -65.4, 141.6, 127.0, 105.8]
@@ -171,10 +178,14 @@ class ArmUfactory(Node):
 		self.first_waving_position =  [ -90.0,  -53.0,  -35.0,  154.0,  -20.9,  110.0] 
 		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0,  110.0] 
 		self.front_robot = 			  [ -191.7,   17.1,  -50.6,   164.9,   58.2,  97.0]
-		self.arm_check_right_door =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 131.8]
-		self.arm_check_left_door =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 106.3]
-		self.arm_check_right_door_inside_cabinet =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 221.8]
-		self.arm_check_left_door_inside_cabinet =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 16.3]
+		# self.arm_check_right_door =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 131.8]
+		self.arm_check_right_door =   [ -210.7, 14.9, -67.5, 135.3, 47.6, 121.8]
+		# self.arm_check_left_door =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 106.3]
+		self.arm_check_left_door =    [ -215.4, 73.7, -89.8, 143.0, 78.3, 99.3]
+		self.arm_check_right_door_inside_cabinet =   [ -194.8, 65.6, -146.5, 120.6, 17.6, 235.2]
+		# self.arm_check_right_door_inside_cabinet_2 =   [ -207.6, 62.8, -140.4, 112.8, 30.4, 241.6]
+		# self.arm_check_left_door_inside_cabinet =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 16.3]
+		self.arm_check_left_door_inside_cabinet = [ -215.4, 73.7, -89.8, 143.0, 78.3, 99.3]
 
 
 		self.pre_place_bowl = [-649.9, 199.0, 786.7, 0.69, 0.007, -1.56]
@@ -244,12 +255,26 @@ class ArmUfactory(Node):
 
 		self.arm_front_robot_mid_linear = [-646.8, 144.4, 107.5, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
 
-		self.pre_place_cabinet_second_shelf_left_side = [-646.8, 452.7, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
-		self.pre_place_cabinet_second_shelf_right_side = [-646.8, 452.7, 379.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
-		self.pre_place_cabinet_third_shelf_left_side = [-646.8, 62.3, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
-		self.pre_place_cabinet_third_shelf_right_side = [-646.8, 62.3, 379.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
-		self.pre_place_cabinet_fourth_shelf_left_side = [-646.8, -400.0, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
-		self.pre_place_cabinet_fourth_shelf_right_side = [-646.8, -400.0, 379.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		# self.pre_place_cabinet_second_shelf_left_side = [-800.8, 452.7, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		# self.pre_place_cabinet_second_shelf_right_side = [-800.8, 452.7, 309.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		# self.pre_place_cabinet_second_shelf_centre = [-800.8, 452.7, 160.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		# self.pre_place_cabinet_third_shelf_left_side = [-800.8, 62.3, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		# self.pre_place_cabinet_third_shelf_right_side = [-800.8, 62.3, 309.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		# self.pre_place_cabinet_third_shelf_centre = [-800.8, 62.3, 160.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		# self.pre_place_cabinet_fourth_shelf_left_side = [-800.8, -400.0, -58.2, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		# self.pre_place_cabinet_fourth_shelf_right_side = [-800.8, -400.0, 309.9, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		# self.pre_place_cabinet_fourth_shelf_centre = [-800.8, -400.0, 160.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+
+		
+		
+		self.pre_place_cabinet_fourth_shelf_left_side = [-800.5, -39.1, -40.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_fourth_shelf_right_side = [-800.5, -39.1, 290.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_fourth_shelf_centre = [-800.5, -39.1, 100.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_fifth_shelf_left_side = [-646.8, -360.0, -40.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_fifth_shelf_right_side = [-646.8, -360.0, 290.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+		self.pre_place_cabinet_fifth_shelf_centre = [-646.8, -360.0, 100.0, math.radians(87.5), math.radians(2.0), math.radians(-92.4)]
+
+		# 646.8
 
 		
 		print('Nada')
@@ -650,6 +675,26 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def place_cabinet_second_shelf_centre(self):
+		if self.estado_tr == 0:
+			temp_adjust_angle_bag = self.pre_place_cabinet_second_shelf_centre.copy()
+			temp_adjust_angle_bag[1] = self.adjust_position
+
+			self.position_values_req.pose = temp_adjust_angle_bag
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 	def place_cabinet_second_shelf_right_side(self):
 		if self.estado_tr == 0:
 			temp_adjust_angle_bag = self.pre_place_cabinet_second_shelf_right_side.copy()
@@ -689,6 +734,27 @@ class ArmUfactory(Node):
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def place_cabinet_third_shelf_centre(self):
+		if self.estado_tr == 0:
+			temp_adjust_angle_bag = self.pre_place_cabinet_third_shelf_centre.copy()
+			temp_adjust_angle_bag[1] = self.adjust_position
+
+			self.position_values_req.pose = temp_adjust_angle_bag
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+	
 
 	def place_cabinet_third_shelf_right_side(self):
 		if self.estado_tr == 0:
@@ -735,6 +801,86 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 
 			temp_adjust_angle_bag = self.pre_place_cabinet_fourth_shelf_right_side.copy()
+			temp_adjust_angle_bag[1] = self.adjust_position
+
+			self.position_values_req.pose = temp_adjust_angle_bag
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def place_cabinet_fourth_shelf_centre(self):
+		if self.estado_tr == 0:
+			temp_adjust_angle_bag = self.pre_place_cabinet_fourth_shelf_centre.copy()
+			temp_adjust_angle_bag[1] = self.adjust_position
+
+			self.position_values_req.pose = temp_adjust_angle_bag
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def place_cabinet_fifth_shelf_left_side(self):
+		if self.estado_tr == 0:
+			temp_adjust_angle_bag = self.pre_place_cabinet_fifth_shelf_left_side.copy()
+			temp_adjust_angle_bag[1] = self.adjust_position
+
+			self.position_values_req.pose = temp_adjust_angle_bag
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def place_cabinet_fifth_shelf_right_side(self):
+		if self.estado_tr == 0:
+			temp_adjust_angle_bag = self.pre_place_cabinet_fifth_shelf_right_side.copy()
+			temp_adjust_angle_bag[1] = self.adjust_position
+
+			self.position_values_req.pose = temp_adjust_angle_bag
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def place_cabinet_fifth_shelf_centre(self):
+		if self.estado_tr == 0:
+			temp_adjust_angle_bag = self.pre_place_cabinet_fifth_shelf_centre.copy()
 			temp_adjust_angle_bag[1] = self.adjust_position
 
 			self.position_values_req.pose = temp_adjust_angle_bag
@@ -810,7 +956,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.front_robot)
-			self.joint_values_req.speed = 0.4
+			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -869,7 +1015,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door)
-			self.joint_values_req.speed = 0.8
+			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -899,7 +1045,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_left_door)
-			self.joint_values_req.speed = 0.8
+			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1019,7 +1165,7 @@ class ArmUfactory(Node):
 			print('b')
 
 		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_left_door_2)
+			self.joint_values_req.angles = self.deg_to_rad(self.inside_wardrobe_left_door_2_new)
 			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
@@ -1038,7 +1184,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_right_door_outside)
-			self.joint_values_req.speed = 0.6
+			self.joint_values_req.speed = 0.4
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1046,16 +1192,16 @@ class ArmUfactory(Node):
 			print('b')
 
 		elif self.estado_tr == 1:
-			print('a')
-			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_right_door_outside_2)
-			self.joint_values_req.speed = 0.8
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('b')
+		# 	print('a')
+		# 	self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_right_door_outside_2)
+		# 	self.joint_values_req.speed = 0.5
+		# 	self.joint_values_req.wait = True
+		# 	self.joint_values_req.radius = 0.0
+		# 	self.future = self.set_joint_client.call_async(self.joint_values_req)
+		# 	self.future.add_done_callback(partial(self.callback_service_tr))
+		# 	print('b')
 
-		elif self.estado_tr == 2:
+		# elif self.estado_tr == 2:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -1066,7 +1212,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_left_door_outside)
-			self.joint_values_req.speed = 0.6
+			self.joint_values_req.speed = 0.4
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1074,16 +1220,25 @@ class ArmUfactory(Node):
 			print('b')
 
 		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def finish_open_left_door_from_inside_2(self):
+		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_left_door_outside_2)
-			self.joint_values_req.speed = 0.6
+			self.joint_values_req.speed = 0.4
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 			print('b')
 
-		elif self.estado_tr == 2:
+		elif self.estado_tr == 1:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
@@ -1122,14 +1277,31 @@ class ArmUfactory(Node):
 			self.place_cabinet_second_shelf_left_side()
 		elif self.next_arm_movement == "place_cabinet_second_shelf_right_side":
 			self.place_cabinet_second_shelf_right_side()
+		elif self.next_arm_movement == "place_cabinet_second_shelf_centre":
+			self.place_cabinet_second_shelf_centre()
 		elif self.next_arm_movement == "place_cabinet_third_shelf_left_side":
 			self.place_cabinet_third_shelf_left_side()
 		elif self.next_arm_movement == "place_cabinet_third_shelf_right_side":
 			self.place_cabinet_third_shelf_right_side()
+		elif self.next_arm_movement == "place_cabinet_third_shelf_centre":
+			self.place_cabinet_third_shelf_centre()
 		elif self.next_arm_movement == "place_cabinet_fourth_shelf_left_side":
 			self.place_cabinet_fourth_shelf_left_side()
 		elif self.next_arm_movement == "place_cabinet_fourth_shelf_right_side":
 			self.place_cabinet_fourth_shelf_right_side()
+		elif self.next_arm_movement == "place_cabinet_fourth_shelf_centre":
+			self.place_cabinet_fourth_shelf_centre()
+		elif self.next_arm_movement == "place_cabinet_fifth_shelf_left_side":
+			self.place_cabinet_fifth_shelf_left_side()
+		elif self.next_arm_movement == "place_cabinet_fifth_shelf_right_side":
+			self.place_cabinet_fifth_shelf_right_side()
+		elif self.next_arm_movement == "place_cabinet_fifth_shelf_centre":
+			self.place_cabinet_fifth_shelf_centre()
+
+			
+
+
+		
 		elif self.next_arm_movement == "front_robot_oriented_front":
 			self.front_robot_oriented_front()
 		elif self.next_arm_movement == "get_arm_position":
@@ -1144,6 +1316,8 @@ class ArmUfactory(Node):
 			self.check_right_door_inside()
 		elif self.next_arm_movement == "finish_open_left_door_from_inside":
 			self.finish_open_left_door_from_inside()
+		elif self.next_arm_movement == "finish_open_left_door_from_inside_2":
+			self.finish_open_left_door_from_inside_2()
 		elif self.next_arm_movement == "open_left_door_from_inside":
 			self.open_left_door_from_inside()
 		elif self.next_arm_movement == "finish_open_right_door_from_inside":
