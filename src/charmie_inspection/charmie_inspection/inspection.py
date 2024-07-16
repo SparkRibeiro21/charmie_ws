@@ -418,7 +418,7 @@ class InspectionMain():
 
         self.pre_room_door = [0.45, 3.65]
         self.post_room_door = [0.45, 4.70]
-        self.front_of_start_door = [0.0, 1.0]
+        self.front_of_start_door = [0.0, 1.2]
         self.front_sofa = [0.45, 5.8]
         self.inspection_door_point = [0.45, 5.2]
         self.inspection_final_point = [-0.45, 5.8]
@@ -450,6 +450,8 @@ class InspectionMain():
                 time.sleep(1)
 
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
+
+                self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
                 
                 # set rgb's to cyan
                 self.set_rgb(CYAN+SET_COLOUR)
@@ -475,7 +477,7 @@ class InspectionMain():
 
                 self.wait_for_door_start()
 
-                time.sleep(3.5)
+                # time.sleep(3.5)
 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
