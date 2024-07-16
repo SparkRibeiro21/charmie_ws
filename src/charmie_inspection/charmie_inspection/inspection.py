@@ -406,13 +406,29 @@ class InspectionMain():
         self.outside_bedroom_door = [-0.7, 4.7]
         self.inside_bedroom_door = [-2.8, 4.5]
         self.inside_bedroom_top_door = [-3.5, 5.0] """
-
+        """
         self.front_of_door = [0.3, 2.5]
         self.door_office = [-2.2, 3.0]
         self.inside_office = [-3.7, 3.0]
         self.final_point = [-4.7, 3.0]
         self.almost_outside_door = [-4.5, 1.5]
-        self.outside_house = [-4.5, -1.5]
+        self.outside_house = [-4.5, -1.5]"""
+
+        self.MAX_SPEED = 15
+
+        self.pre_room_door = [0.45, 3.65]
+        self.post_room_door = [0.45, 4.70]
+        self.front_of_start_door = [0.0, 1.0]
+        self.front_sofa = [0.45, 5.8]
+        self.inspection_door_point = [0.45, 5.2]
+        self.inspection_final_point = [-0.45, 5.8]
+
+        self.midway_living_room = [-0.9, 8.5]
+        self.close_to_garbage_bin = [-2.76, 5.9]
+        self.close_to_dishwasher = [-2.26, 8.0]
+        self.close_to_table_sb = [-4.26, 8.5]
+        self.pre_table = [-4.76, 6.0]
+
         
         # Initial Position
         self.initial_position = [0.0, 0.1, 0.0]
@@ -483,13 +499,31 @@ class InspectionMain():
                 self.set_navigation(movement="rotate", target=self.inside_bedroom_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.inside_bedroom_door, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True) """
 
-                self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True,  avoid_people=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.door_office, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.door_office, flag_not_obs=True, avoid_people=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.inside_office, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.inside_office, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.final_point, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.final_point, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.front_of_door, flag_not_obs=True,  avoid_people=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.door_office, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.door_office, flag_not_obs=True, avoid_people=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.inside_office, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.inside_office, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.final_point, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.final_point, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
+
+
+                self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, avoid_people=True, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, avoid_people=True, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, avoid_people=True, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.inspection_door_point, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inspection_door_point, max_speed=self.MAX_SPEED, avoid_people=True, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.inspection_final_point, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inspection_final_point, max_speed=self.MAX_SPEED, avoid_people=True, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+
 
                 # set rgb's to static green
                 self.set_rgb(GREEN+SET_COLOUR)
@@ -509,10 +543,10 @@ class InspectionMain():
                 # set rgb's to rotating rainbow  
                 self.set_rgb(RAINBOW_ROT)
 
-                self.set_speech(filename="inspection/inspection_introduction", wait_for_end_of=True)
+                # self.set_speech(filename="inspection/inspection_introduction", wait_for_end_of=True)
 
                 # set rgb's to red
-                self.set_rgb(CYAN+SET_COLOUR)
+                # 5self.set_rgb(CYAN+SET_COLOUR)
 
                 # wait for start button
                 self.wait_for_start_button()
@@ -530,10 +564,12 @@ class InspectionMain():
                                 
                 self.set_speech(filename="inspection/moving_exit_door", wait_for_end_of=True)
                 
-                self.set_navigation(movement="rotate", target=self.almost_outside_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.almost_outside_door, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.outside_house, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.outside_house, flag_not_obs=False, avoid_people=True, wait_for_end_of=True)
+                #  self.set_navigation(movement="rotate", target=self.almost_outside_door, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.almost_outside_door, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.outside_house, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.outside_house, flag_not_obs=False, avoid_people=True, wait_for_end_of=True)
+
+                ### POST NAVIGATION HERE ###
 
                 # next state
                 self.state = self.Final_State 
