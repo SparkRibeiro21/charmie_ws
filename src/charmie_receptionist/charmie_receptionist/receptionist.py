@@ -771,7 +771,7 @@ class ReceptionistMain():
         # LAR: self.look_sofa = [-2.5, 3.0]
         self.look_sofa = [0.91, 8.92] 
 
-        self.MAX_SPEED = 40
+        self.MAX_SPEED = 30
 
         self.host_name = "John"
         self.host_drink = "Milk"
@@ -849,7 +849,7 @@ class ReceptionistMain():
 
                     self.set_arm(command="open_door_LAR", wait_for_end_of= True)
 
-                    self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                    self.set_neck(position=self.look_forward, wait_for_end_of=False)
                 
                 self.state = Receive_first_guest
 
@@ -897,7 +897,7 @@ class ReceptionistMain():
 
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
                 
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
 
                 self.set_rgb(BLUE+ROTATE)
                 self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
@@ -990,7 +990,7 @@ class ReceptionistMain():
             elif self.state == Navigate_to_starting_point:
                 print('State 1 = Navigate_to_starting_point')
 
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
 
 
                 self.set_rgb(BLUE+ROTATE)
@@ -1051,7 +1051,7 @@ class ReceptionistMain():
 
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
                 
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
     
                 self.set_rgb(BLUE+ROTATE)
                 self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
@@ -1064,7 +1064,7 @@ class ReceptionistMain():
                 self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=-10.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(MAGENTA+ROTATE)
 
 
@@ -1192,7 +1192,7 @@ class ReceptionistMain():
                 #SPEAK: Thank you. I finished my receptionist task
                 self.set_speech(filename="receptionist/finish_receptionist", wait_for_end_of=True)
                 #NECK: LOOK TO THE FLOOR
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
                 self.set_rgb(RAINBOW_ROT)
                 
@@ -1477,7 +1477,7 @@ class ReceptionistMain():
 
     def search_for_guest_and_get_info(self):
 
-        self.search_for_guest()
+        self.search_for_guest_characteristics()
 
         self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=True)
 
@@ -1503,6 +1503,30 @@ class ReceptionistMain():
 
         # filename is the full path of this guest image
         return filename, guest.ethnicity, guest.age_estimate, guest.gender, guest.height, guest.shirt_color, guest.pants_color
+
+    def search_for_guest_characteristics(self):
+
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=True)
+    
+        self.set_rgb(MAGENTA+HALF_ROTATE)
+        time.sleep(0.5)
+
+        detected_person_temp = Yolov8Pose()
+        start_time = time.time()
+        while time.time() - start_time < 3.0:
+            detected_person_temp = self.node.detected_people  
+            if detected_person_temp.num_person == 0:  
+                start_time = time.time()
+                self.set_rgb(RED+HALF_ROTATE)
+            else:
+                self.set_rgb(YELLOW+HALF_ROTATE)
+            time.sleep(0.2)
+
+        self.set_rgb(WHITE+HALF_ROTATE)
+
+        self.track_person(person=detected_person_temp.persons[0], wait_for_end_of=True)
+
+
 
     def search_for_guest(self):
 
@@ -1639,7 +1663,7 @@ class ReceptionistMain():
                 age = "Between 18 and 32"
             age = age.replace(' ', '_')
         else: # If the robot can not compute, it guesses the following
-            age = 'Between18_32'
+            age = "Between 18 and 32"
         
         if gender != "None": # Minor corrections to value received
             pass

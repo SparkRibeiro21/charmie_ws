@@ -2,7 +2,7 @@
 max_number_of_chars_of_keys = 16
 
 names_dict = {
-    "Sophie":    ["sophie", "sufi", " sofi ", "zofi ", "zafi ", ""],
+    "Sophie":    ["sophie", "sufi", " sofi ", "zofi ", "zafi "],
     "Julia":     ["julia", "zulia", "zolia", "jolia", "hula "],
     "Emma":      ["emma", "ema", "yama", "amen", " yeah man ", "kema "],
     "Sarah":     ["sarah", "sara ", "hada", "hera "],
@@ -15,7 +15,7 @@ names_dict = {
     "John":      ["john", "jhong", "joe", "jopne", "joan", "chiang", "han", "chuan", "juan", "jean"],
     "Liam":      [" liam", " lian", " leon ", " lee "],
     "William":   ["william", "willian", "rheelium", "we like him"],
-    "Kevin":     ["kevin", "cavin", "kavian"],
+    "Kevin":     ["kevin", "cavin", "kavian", " gavin", "gaveen", "gabon", "kaveen"],
     "Jesse":     ["jess", "chis", "jase", "jasey", "jazzy", "jassy"],
     "Noah":      ["noah", "no one", "noha"],
     "Harrie":    ["harrie", "harry", "arie ", " eri ", " ari  ", "aali"],
@@ -31,8 +31,8 @@ drinks_dict = {
 	"Iced_Tea":     [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
                        "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", " icy ", "nice t", "oysti", " aste "],
-    "Fanta":        ["fanta", "santa", "anta", "phanta", "fender", "fanda"],
-    "Water":        ["water", "laude"]
+    "Fanta":        ["fanta", "santa", "anta", "phanta", "fender", "fanda", "ponder"],
+    "Water":        ["water", "laude", "walter"]
 }
 
 foods_dict = {

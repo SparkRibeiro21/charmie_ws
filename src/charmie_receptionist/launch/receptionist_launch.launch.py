@@ -170,7 +170,7 @@ def generate_launch_description():
         # LaunchDescription(declared_arguments + [robot_driver_launch]),
         charmie_multi_camera_launch_description,
         debug_visual,
-        audio,
+        # audio,
         face,
         speakers,
         neck,
