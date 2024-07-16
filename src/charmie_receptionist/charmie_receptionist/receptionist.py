@@ -714,15 +714,26 @@ class ReceptionistMain():
         self.OPEN_DOOR = False
 
         # Start localisation position: ### LAR ###
-        self.initial_position = [-1.7, 3.5, 180.0]
-        self.initial_position_with_door = [-0.33, 1.4, -135.0]
+        # self.initial_position = [-1.7, 3.5, 180.0]
+        # self.initial_position_with_door = [-0.33, 1.4, -135.0]
 
         # Navigation Positions: ### LAR ###
-        self.front_of_sofa = [-2.5, 1.5]
-        self.sofa = [0.91, 8.925]
-        self.receive_guests = [-1.0, 2.5]
-        self.where_guest_is_received = [0.0, 1.5]
-        self.map_initial_position = [0.25, 0.0]
+        # self.front_of_sofa = [-2.5, 1.5]
+        # self.sofa = [0.91, 8.925]
+        # self.receive_guests = [-1.0, 2.5]
+        # self.where_guest_is_received = [0.0, 1.5]
+        # self.map_initial_position = [0.25, 0.0]
+
+        # Start Localisation: ### RoboCup24 ###
+        self.initial_position = [-0.13, 2.10, 180.0]
+
+        self.receive_guests = [-0.13, 1.30]
+        self.pre_room_door = [0.45, 3.15]
+        self.post_room_door = [0.45, 4.70]
+        self.front_of_sofa = [0.45, 5.35]
+
+        self.map_initial_position = [0.0, 0.0]
+
 
         # Start Localisation Position: ### FNR24 ###
         # self.initial_position = [-1.0, 3.0, -90.0]
@@ -747,7 +758,7 @@ class ReceptionistMain():
 
         self.look_empty_place = [1.0, 2.0]
         # LAR: self.look_sofa = [-2.5, 3.0]
-        self.look_sofa = [0.91, 8.925] 
+        self.look_sofa = [0.91, 8.92] 
 
         self.MAX_SPEED = 30
 
@@ -788,10 +799,10 @@ class ReceptionistMain():
                 print('State 0 = Initial')
                 
                 if self.OPEN_DOOR == True:
-                    self.set_initial_position(self.initial_position_with_door)
+                    self.set_initial_position(self.initial_position)
                 else:
                     # self.set_initial_position(self.initial_position)
-                    self.set_initial_position([1.0, 6.0, 0.0])
+                    self.set_initial_position(self.initial_position)
 
                 print("SET INITIAL POSITION")
 
@@ -829,18 +840,43 @@ class ReceptionistMain():
 
                     self.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 
-                    self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
-                
-                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.receive_guests, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.receive_guests, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
 
-                ### NAVIGATION MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
-
-                # self.set_navigation(movement="move", target=self.receive_guests, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
+                time.sleep(5)
                 
+                self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                
+                time.sleep(5)
+
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.set_navigation(movement="move", target=self.receive_guests, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
+                
+                time.sleep(5)
+                
+                self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+
+                while True:
+                    pass
+
                 self.state = Receive_first_guest
+
 
             elif self.state == Receive_first_guest:
                 print('State 1 = Receive first guest')
@@ -1051,7 +1087,8 @@ class ReceptionistMain():
                 self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, characteristics=False)
 
                 ### SEARCH FOR ALL DETECTED PEOPLE AND RECEIVE THEIR LOCATION
-                total_photos, total_coords = self.search_for_host_and_guest1()
+                # total_photos, total_coords = self.search_for_host_and_guest1()
+                total_photos, total_coords = self.search_for_host_and_guest1_v2()
                                 
                 self.activate_yolo_pose(activate=False)
 
@@ -1059,9 +1096,15 @@ class ReceptionistMain():
                 print("tot_coords:", total_coords)
 
                 # could only detect one person
-                if len(total_photos) == 1:
+                if len(total_photos) == 0:
+                    print("NO PERSON DETECTED")
+                    self.set_neck_coords(position=self.look_sofa, ang=-10)
+                    time.sleep(0.5)
+
+                # could only detect one person
+                elif len(total_photos) == 1:
                     print("JUST ONE DETECTED PERSON ON THE SOFA")
-                    self.set_neck_coords(position=total_coords[0], ang=-20)
+                    self.set_neck_coords(position=total_coords[0], ang=-10)
                     time.sleep(0.5)
 
                 else: # if detects two or more people
@@ -1107,7 +1150,7 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/names/recep_host_name", wait_for_end_of=True)
                 self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
                 
-                self.set_neck_coords(position=self.look_sofa, ang=-20, wait_for_end_of=True)
+                self.set_neck_coords(position=self.look_sofa, ang=-10, wait_for_end_of=True)
 
                 ### SEARCH FOR AN EMPTY SEAT: ONLY FOR ROBOCUP                
                 
@@ -1155,7 +1198,7 @@ class ReceptionistMain():
 
             self.set_rgb(BLUE+HALF_ROTATE)
             self.set_neck(position=[0, 0], wait_for_end_of=True)
-            time.sleep(0.5)
+            # time.sleep(0.5)
 
             host_detected_person_chair = DetectedPerson()
             host_detected_person_living_room = DetectedPerson()
@@ -1172,12 +1215,14 @@ class ReceptionistMain():
                     chairs_ctr += 1
                     host_detected_person_chair = p
                     print("in sofa")
+                    # TIAGO : # usar distancia da pesso, e ver quem é a pessoa mais proxima!!!
                     
             for p in people_found:
                 if p.room_location == "Living Room":
                     living_room_ctr += 1
                     host_detected_person_living_room = p
                     print("in living room")
+                    # TIAGO : # usar distancia da pesso, e ver quem é a pessoa mais proxima!!!
             
             # if living_room_ctr == 0:
             #     for p in people_found:
@@ -1211,8 +1256,8 @@ class ReceptionistMain():
         #   in the living room 
         # if not assumes the closest person 
         # saves and returns that info
-        
-
+    
+    """
     def search_for_host(self):
     
         self.set_rgb(MAGENTA+HALF_ROTATE)
@@ -1269,7 +1314,8 @@ class ReceptionistMain():
         self.set_neck_coords(position=[host.position_absolute.x, host.position_absolute.y], ang=-10, wait_for_end_of=True)
 
         return filename, [host.position_absolute.x, host.position_absolute.y]
-
+        """
+    """
     def search_for_host_and_guest1(self):
         total_photos = []
         total_coords = []
@@ -1336,6 +1382,84 @@ class ReceptionistMain():
             self.set_rgb(WHITE+HALF_ROTATE)
 
         return total_photos, total_coords
+        """
+
+    def search_for_host_and_guest1_v2(self):
+
+        both_people_found = False
+        tetas = [[-30, -10], [0, -10], [30, -10]]
+        is_cropped = False
+        sfp_ctr = 0
+        total_photos = []
+        total_coords = []
+
+
+        while not both_people_found and sfp_ctr < 2:
+
+            total_photos.clear()
+            total_coords.clear()
+
+            sfp_ctr += 1
+            people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True)
+
+            print("FOUND:", len(people_found)) 
+            # for p in people_found:
+            #     print("ID:", p.index_person)
+
+            self.set_rgb(BLUE+HALF_ROTATE)
+            self.set_neck(position=[0, 0], wait_for_end_of=True)
+            time.sleep(0.5)
+
+            host_detected_person_chair = DetectedPerson()
+            host_detected_person_living_room = DetectedPerson()
+            chairs_ctr = 0
+            living_room_ctr = 0
+            
+            for p in people_found:
+                print("ID:", p.index_person, p.furniture_location, p.room_location)
+                # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
+                # time.sleep(3)
+
+            # for p in people_found:
+            #     if p.furniture_location == "Sofa" or p.furniture_location == "Chair":
+            #         chairs_ctr += 1
+            #         host_detected_person_chair = p
+            #         print("in sofa")
+                    
+            for p in people_found:
+
+                if p.room_location == "Living Room":
+                    living_room_ctr += 1
+                    host_detected_person_living_room = p
+                    
+                    is_cropped, filename = self.crop_face(p, p.image_rgb_frame, filename_with_index=True)
+                    # filename += "_"+str(p.index_person)
+                    if is_cropped:
+                        host = p
+                        host_found = True
+                        print("SOFA NO")
+                        
+                    print("in living room")
+            
+                if is_cropped:
+                    total_photos.append(filename)
+                    total_coords.append([host.position_absolute.x, host.position_absolute.y])
+
+            # if living_room_ctr == 0:
+            #     for p in people_found:
+            #         living_room_ctr += 1
+            #         host_detected_person_living_room = p
+            #         print("dont know where")
+
+        if len(total_photos) == 1:
+            self.set_rgb(BLUE+HALF_ROTATE)
+        elif len(total_photos) == 2:
+            self.set_rgb(GREEN+HALF_ROTATE)
+        elif len(total_photos) > 2:
+            self.set_rgb(WHITE+HALF_ROTATE)
+
+        return total_photos, total_coords
+    
 
     def search_for_guest_and_get_info(self):
 
@@ -1411,7 +1535,7 @@ class ReceptionistMain():
         for index, value in enumerate(total_host_errors):
             if value == max_host:
                 max_host_index = index
-                break # no need to keep going on, laready have the value
+                break # no need to keep going on, already have the value
         print(max_host_index)
         host_coords = total_coords[max_host_index]
 
@@ -1430,7 +1554,7 @@ class ReceptionistMain():
         for index, value in enumerate(total_guest_errors):
             if value == max_guest:
                 max_guest_index = index
-                break # no need to keep going on, laready have the value
+                break # no need to keep going on, already have the value
         print(max_guest_index)
         guest1_coords = total_coords[max_guest_index]
 
