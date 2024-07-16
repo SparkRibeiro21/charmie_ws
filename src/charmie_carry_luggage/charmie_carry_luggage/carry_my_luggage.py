@@ -810,7 +810,7 @@ class CarryMyLuggageMain():
     def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False):
 
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible) 
-        self.set_speech(filename="generic/search_people", wait_for_end_of=False)
+        # self.set_speech(filename="generic/search_people", wait_for_end_of=False)
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
         time.sleep(0.5)
         
@@ -1362,7 +1362,7 @@ class CarryMyLuggageMain():
     def get_bag_pick_cordinates(self):
 
         DEBUG = True
-        MIN_BAG_PIXEL_AREA = 40000
+        MIN_BAG_PIXEL_AREA = 20000 # 40000
         f_coords = []
 
         self.node.first_depth_hand_image_received = False
@@ -1372,6 +1372,8 @@ class CarryMyLuggageMain():
             time.sleep(0.1)
 
         c_areas = []
+
+        print("max_area:", max(c_areas))
         
         while not c_areas or max(c_areas) < MIN_BAG_PIXEL_AREA:
             c_areas.clear()
@@ -1492,7 +1494,7 @@ class CarryMyLuggageMain():
             cv2.imshow("New Img Distance Inspection", blank_image)
             cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
 
-            k = cv2.waitKey(100)
+            k = cv2.waitKey(10)
             if k == ord('w'):
                 self.floor_dist += 10
             if k == ord('q'):
@@ -1580,7 +1582,7 @@ class CarryMyLuggageMain():
         self.INITIAL_REACHED_RADIUS = 0.8
         self.slight_angular_adjust_depending_on_side = 0.0
         self.bag_side = "none"
-        self.task_room_location = "Office"
+        self.task_room_location = "Hallway"
         self.DETECT_BAG_FILTER = True # if i want to turn off the bag detection, if not reliable
         self.move_bag_coords = Point()
         self.pointing_person = DetectedPerson()
@@ -1589,11 +1591,11 @@ class CarryMyLuggageMain():
         self.look_forward = [0, 0]
         self.look_navigation = [0, -50]
 
-        self.initial_position = [-4.5, 1.0, 0.0]
+        self.initial_position = [1.0, 0.0, 0.0]
         self.initial_angle_temp = 0.0
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Waiting_for_task_to_start
+        self.state = self.Camera_pick_bag
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Carry My Luggage Main...")
@@ -1668,7 +1670,7 @@ class CarryMyLuggageMain():
                 if self.DETECT_BAG_FILTER:
                     # Check for bag object without moving neck
                     correct_bag = DetectedObject()
-                    tetas = [[0, -30]]
+                    tetas = [[0, -10]]
                     objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, detect_objects=True)
                     for o in objects_found:
                         print(o.position_relative)
@@ -1765,9 +1767,11 @@ class CarryMyLuggageMain():
 
                 bag_grabbed = False
                 while not bag_grabbed:
-
-                    bag_coords = self.get_bag_pick_cordinates()
-                    print(bag_coords)
+                    
+                    while True:
+                        bag_coords = self.get_bag_pick_cordinates()
+                        print(bag_coords)
+                    
                     self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
                     time.sleep(2.0)
 

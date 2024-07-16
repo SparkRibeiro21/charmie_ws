@@ -17,11 +17,13 @@ from pathlib import Path
 import math
 import time
 
-objects_filename = "segmentation_M_size_model_600_epochs.pt"
+# objects_filename = "segmentation_M_size_model_600_epochs.pt"
+objects_filename = "epoch20.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
 # objects_filename = "lar_dataset_post_fnr2024.pt"
 shoes_filename = "shoes_socks_v1.pt"
-doors_filename = "door_bruno_2.pt"
+# doors_filename = "door_bruno_2.pt"
+doors_filename = "furniture_robocup.pt"
 
 MIN_OBJECT_CONF_VALUE = 0.5
 MIN_SHOES_CONF_VALUE = 0.5
@@ -62,7 +64,10 @@ class Yolo_obj(Node):
 
         # Opens files with objects names and categories
         try:
-            with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            """ with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+                self.objects_file = json.load(json_file)
+            # print(self.objects_file) """
+            with open(self.complete_path_configuration_files + 'objects_robocup.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
             # print(self.objects_file)
             with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
@@ -151,22 +156,29 @@ class Yolo_obj(Node):
         flag_diagn.data = True
         self.yolo_object_diagnostic_publisher.publish(flag_diagn)
 
-        self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
-                                   'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
-                                   'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
-                                   'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
-                                   'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        # self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
+        #                            'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
+        #                            'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
+        #                            'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
+        #                            'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        
+        # Objects robocup 24
+        self.objects_class_names = ['Apple', 'Bag', 'Banana', 'Big_coke', 'Bowl', 'Candle', 'Candy', 'Cola', 'Cornflakes', 'Crisps', 'Cup', 
+                                    'Curry', 'Dishwasher_tab', 'Dubbelfris', 'Fanta', 'Fork', 'Hagelslag', 'Ice_tea', 'Knife', 'Lemon', 'Liquorice', 
+                                    'Mayonaise', 'Milk', 'Orange', 'Pancake_mix', 'Pea_soup', 'Peach', 'Pear', 'Plate', 'Plum', 'Pringles', 'Soap', 
+                                    'Sponge', 'Spoon', 'Strawberry', 'Stroopwafel', 'Suasages', 'Tictac', 'Washcloth', 'Water']
         
         # Secondary declaration used for debug
-        # self.objects_class_names = ['7up', 'Strawberry_jello', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
-        #                             'Coffe_grounds', 'Cola', 'Cheezit', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
-        #                             'Juice_pack', 'Knife', 'Lemon', 'Milk', '7up', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
-        #                             'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
-        #                             'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        # self.objects_class_names = ['Apple', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser', 'Coffee_grounds', 'Cola',
+        #                              'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_tea', 'Juice_pack', 'Knife', 'Lemon', 'Milk',
+        #                                'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear', 'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube',
+        #                                  'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup',
+        #                                    'Tropical_juice', 'Tuna']
         
-        self.shoes_class_names = ['Shoe', 'Sock']    
+        self.shoes_class_names = ['Shoe', 'Sock']
         
-        self.doors_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
+        # self.doors_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
+        self.doors_class_names = ['Cabinet', 'Dishwasher']
 
         self.objects_class_names_dict = {}
         self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
