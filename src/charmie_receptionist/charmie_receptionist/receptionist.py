@@ -728,8 +728,6 @@ class ReceptionistMain():
         self.initial_position_debug = [0.45, 5.35, 0.0]
         self.initial_position = [0.0, 2.10, 180.0]
 
-        self.initial_position = [0.0, 0.1, 0.0]
-
         self.receive_guests = [0.0, 1.45]
         self.pre_room_door = [0.85, 3.15]
         self.post_room_door = [0.85, 4.70]
@@ -853,84 +851,6 @@ class ReceptionistMain():
 
                     self.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 
-                
-                # self.set_navigation(movement="move", target=self.receive_guests, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
-
-                # time.sleep(5)
-                # self.set_navigation(movement="orientate", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
-                
-                # RECEP NAV
-                """
-                self.set_rgb(BLUE+ROTATE)
-                self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(MAGENTA+ROTATE)
-                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
-                self.set_rgb(BLUE+ROTATE)
-                self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(MAGENTA+ROTATE)
-                
-                time.sleep(5)
-
-                self.set_rgb(BLUE+ROTATE)
-                self.set_navigation(movement="rotate", target=self.post_room_door2, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.post_room_door2, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(MAGENTA+ROTATE)
-                self.set_navigation(movement="rotate", target=self.pre_room_door2, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.pre_room_door2, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
-                self.set_rgb(BLUE+ROTATE)
-                self.set_navigation(movement="rotate", target=self.receive_guests2, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.receive_guests2, max_speed=self.MAX_SPEED, reached_radius=1.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.map_initial_position2, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(MAGENTA+ROTATE)
-                
-                time.sleep(5)
-                
-                self.set_rgb(BLUE+ROTATE)
-                self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(MAGENTA+ROTATE)
-                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
-                self.set_rgb(BLUE+ROTATE)
-                self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(MAGENTA+ROTATE)
-                """
-
-                
-                
-                self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(BLUE+ROTATE)
-                # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(MAGENTA+ROTATE)
-                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
-                self.set_rgb(BLUE+ROTATE)
-                self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(MAGENTA+ROTATE)
-                self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                
-                time.sleep(5)
-
-
-                while True:
-                    pass
-
                 self.state = Receive_first_guest
 
 
@@ -978,6 +898,19 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
                 
                 # self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
@@ -1058,13 +991,27 @@ class ReceptionistMain():
                 print('State 1 = Navigate_to_starting_point')
 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+
+
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door2, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door2, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.pre_room_door2, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door2, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.receive_guests2, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.receive_guests2, max_speed=self.MAX_SPEED, reached_radius=1.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.map_initial_position2, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
                 
                 # self.set_navigation(movement="rotate", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="move", target=self.receive_guests, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
                 
-                
                 self.state = Receive_second_guest
+
 
             elif self.state == Receive_second_guest:
                 print('State 1 = Receive second guest')
@@ -1106,6 +1053,25 @@ class ReceptionistMain():
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
     
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+
+
+                self.set_rgb(WHITE+BACK_AND_FORTH_8)
+                self.set_initial_position([self.front_of_sofa[0], self.front_of_sofa[1], 0.0])
+                self.set_rgb(CYAN+BACK_AND_FORTH_8)
+                
                 # self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 
