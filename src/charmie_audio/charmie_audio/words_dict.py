@@ -2,14 +2,14 @@
 max_number_of_chars_of_keys = 16
 
 names_dict = {
-    "Sophie":    ["sophie", "sufi", " sofi ", "zofi ", "zafi "],
+    "Sophie":    ["sophie", "sufi", " sofi ", "zofi ", "zafi ", ""],
     "Julia":     ["julia", "zulia", "zolia", "jolia", "hula "],
     "Emma":      ["emma", "ema", "yama", "amen", " yeah man ", "kema "],
     "Sarah":     ["sarah", "sara ", "hada", "hera "],
     "Laura":     ["laura", "lara "],
-    "Hayley":    ["hayley", "hailey", "ailey", "haley", " eli", "ale", "ahayley", "haley", "alien"],
+    "Hayley":    ["hayley", "hailey", "ailey", "haley", " eli ", " ale ", "ahayley", "haley", "alien"],
     "Susan":     ["susan", "susa", "suza", "fuza"],
-    "Fleur":     ["fleur", "fluid", "flour",  "slower", "stuart", "fluhr", "flair ", "fleewer", "fleeward", "flue", "fluhard", "flereur", "flare", "flo "],
+    "Fleur":     ["fleur", "fluid", "flour",  "slower", "stuart", "fluhr", "flair ", "fleewer", "fleeward", "flue", "fluhard", "flereur", "flare", " flo "],
     "Gabrielle": ["gabrielle", "yobriel", "gangreal", "gabriel", "bigreal", "gatereal", "javier", "Cabrielle"],
     "Robin":     ["robin", "harbin", "robyn", "hobby", "hobean", "hohvin", "robon", "corbin", "haubin", "horven", "covid", "colvin", "forbin"],
     "John":      ["john", "jhong", "joe", "jopne", "joan", "chiang", "han", "chuan", "juan", "jean"],
@@ -18,15 +18,15 @@ names_dict = {
     "Kevin":     ["kevin", "cavin", "kavian"],
     "Jesse":     ["jess", "chis", "jase", "jasey", "jazzy", "jassy"],
     "Noah":      ["noah", "no one", "noha"],
-    "Harrie":    ["harrie", "harry", "arie ", "eri ", "ari ", "aali"],
+    "Harrie":    ["harrie", "harry", "arie ", " eri ", " ari  ", "aali"],
     "Peter":     ["peter", "better"],
 }
 
 drinks_dict = {
-    "Big_Coke":     ["big", "coke", "cok", "cook", "cog", "vehicle", "kolk"],
+    "Big_Coke":     ["big", "coke", " cok ", "cook", " cog ", "vehicle", "kolk", "cock", " vico", "cocke", "nikko", "V-cock"],
     "Cola":         [" cola", "coca", "kola", "coconut", "color", "call", "gog", "koch", "kullum", "goog", "cold",\
                         "kohler", "kala", "gola", "kohla", "cool", "kolkka"],
-    "Dubblefris":   ["double", "dubblefris", "crease", "free", "ease", "freeze", "fish", "lubelofish", "lublle", "fish"],
+    "Dubblefris":   ["double", "dubblefris", "crease", "free", "freeze", "fish", "lubelofish", "lublle", "fish"],
     "Milk":         ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton", "miyuki"],
 	"Iced_Tea":     [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\

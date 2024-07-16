@@ -725,12 +725,13 @@ class ReceptionistMain():
         # self.map_initial_position = [0.25, 0.0]
 
         # Start Localisation: ### RoboCup24 ###
-        self.initial_position = [-0.13, 2.10, 180.0]
+        self.initial_position_debug = [0.45, 5.35, 0.0]
+        self.initial_position = [0.0, 2.10, 180.0]
 
-        self.receive_guests = [-0.13, 1.30]
-        self.pre_room_door = [0.45, 3.15]
-        self.post_room_door = [0.45, 4.70]
-        self.front_of_sofa = [0.45, 5.35]
+        self.receive_guests = [0.0, 1.45]
+        self.pre_room_door = [0.85, 3.15]
+        self.post_room_door = [0.85, 4.70]
+        self.front_of_sofa = [0.85, 5.35]
 
         self.map_initial_position = [0.0, 0.0]
 
@@ -840,6 +841,7 @@ class ReceptionistMain():
 
                     self.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 
+                
                 self.set_navigation(movement="move", target=self.receive_guests, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
 
@@ -859,8 +861,7 @@ class ReceptionistMain():
                 self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.pre_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
-                
-                self.set_navigation(movement="move", target=self.receive_guests, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.receive_guests, max_speed=self.MAX_SPEED, reached_radius=1.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
                 
                 time.sleep(5)
@@ -1184,7 +1185,7 @@ class ReceptionistMain():
     def search_for_host2(self):
 
         host_found = False
-        tetas = [[-30, -10], [0, -10], [30, -10]]
+        tetas = [[-20, -10], [20, -10]]
         is_cropped = False
         sfp_ctr = 0
 
@@ -1234,10 +1235,12 @@ class ReceptionistMain():
             if chairs_ctr > 0:
                 selected_host = host_detected_person_chair
                 is_cropped, filename = self.crop_face(new_person=selected_host, current_frame_image_msg=selected_host.image_rgb_frame)
+                print("is_cropped:", is_cropped)
             elif living_room_ctr > 0:
                 selected_host = host_detected_person_living_room
                 is_cropped, filename = self.crop_face(new_person=selected_host, current_frame_image_msg=selected_host.image_rgb_frame)
-
+                print("is_cropped:", is_cropped)
+            
 
             if is_cropped:
                 host_found = True
@@ -1387,7 +1390,7 @@ class ReceptionistMain():
     def search_for_host_and_guest1_v2(self):
 
         both_people_found = False
-        tetas = [[-30, -10], [0, -10], [30, -10]]
+        tetas = [[-20, -10], [20, -10]]
         is_cropped = False
         sfp_ctr = 0
         total_photos = []
@@ -1408,11 +1411,7 @@ class ReceptionistMain():
 
             self.set_rgb(BLUE+HALF_ROTATE)
             self.set_neck(position=[0, 0], wait_for_end_of=True)
-            time.sleep(0.5)
-
-            host_detected_person_chair = DetectedPerson()
-            host_detected_person_living_room = DetectedPerson()
-            chairs_ctr = 0
+            
             living_room_ctr = 0
             
             for p in people_found:
@@ -1420,24 +1419,15 @@ class ReceptionistMain():
                 # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
                 # time.sleep(3)
 
-            # for p in people_found:
-            #     if p.furniture_location == "Sofa" or p.furniture_location == "Chair":
-            #         chairs_ctr += 1
-            #         host_detected_person_chair = p
-            #         print("in sofa")
-                    
             for p in people_found:
 
                 if p.room_location == "Living Room":
                     living_room_ctr += 1
-                    host_detected_person_living_room = p
                     
                     is_cropped, filename = self.crop_face(p, p.image_rgb_frame, filename_with_index=True)
-                    # filename += "_"+str(p.index_person)
                     if is_cropped:
                         host = p
-                        host_found = True
-                        print("SOFA NO")
+                        print("is_cropped:", is_cropped)
                         
                     print("in living room")
             
@@ -1445,6 +1435,9 @@ class ReceptionistMain():
                     total_photos.append(filename)
                     total_coords.append([host.position_absolute.x, host.position_absolute.y])
 
+            if len(total_photos) >= 2:
+                both_people_found = True
+                
             # if living_room_ctr == 0:
             #     for p in people_found:
             #         living_room_ctr += 1
