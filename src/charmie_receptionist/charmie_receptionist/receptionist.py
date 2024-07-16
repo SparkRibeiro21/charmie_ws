@@ -773,8 +773,8 @@ class ReceptionistMain():
 
         self.MAX_SPEED = 40
 
-        self.host_name = "Noah"
-        self.host_drink = "Iced Tea"
+        self.host_name = "John"
+        self.host_drink = "Milk"
         self.host_drink = self.host_drink.replace(' ', '_') # if someone forgets to write correctly
         self.host_filename = ""
         self.host_position = ""
