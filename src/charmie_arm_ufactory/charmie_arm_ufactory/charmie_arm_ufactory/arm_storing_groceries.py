@@ -956,7 +956,7 @@ class ArmUfactory(Node):
 		if self.estado_tr == 0:
 			print('a')
 			self.joint_values_req.angles = self.deg_to_rad(self.front_robot)
-			self.joint_values_req.speed = 0.4
+			self.joint_values_req.speed = 0.6
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
@@ -1192,16 +1192,16 @@ class ArmUfactory(Node):
 			print('b')
 
 		elif self.estado_tr == 1:
-			print('a')
-			self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_right_door_outside_2)
-			self.joint_values_req.speed = 0.5
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('b')
+		# 	print('a')
+		# 	self.joint_values_req.angles = self.deg_to_rad(self.wardrobe_right_door_outside_2)
+		# 	self.joint_values_req.speed = 0.5
+		# 	self.joint_values_req.wait = True
+		# 	self.joint_values_req.radius = 0.0
+		# 	self.future = self.set_joint_client.call_async(self.joint_values_req)
+		# 	self.future.add_done_callback(partial(self.callback_service_tr))
+		# 	print('b')
 
-		elif self.estado_tr == 2:
+		# elif self.estado_tr == 2:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)

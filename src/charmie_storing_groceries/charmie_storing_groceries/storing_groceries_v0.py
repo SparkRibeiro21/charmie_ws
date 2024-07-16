@@ -2621,6 +2621,10 @@ class StoringGroceriesMain():
             self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
             time.sleep(2)
 
+            left_door = False
+            right_door = False
+
+
             
             self.set_arm(command="check_right_door", wait_for_end_of=True)
             time.sleep(1)
@@ -2629,26 +2633,10 @@ class StoringGroceriesMain():
                 pass
             near_percentage = -1.0
             while near_percentage == -1.0:
-                near_percentage, avg_door = self.check_door_depth_hand()
-
-            print(near_percentage * 100)
-
-            left_door = False
-            right_door = False
-
-            # Check if the door is near
-            if near_percentage < 0.5:
-                right_door = True
-                print('Porta direita aberta creio eu')
+                near_percentage, avg_door_right = self.check_door_depth_hand()
                 
 
-            else:
-                right_door = False
-                print('Porta direita fechada creio eu')
-                average_depth_door = avg_door
-
             
-            # self.set_arm(command="change_height_front_left_robot", wait_for_end_of=True)
             self.set_arm(command="check_left_door", wait_for_end_of=True)
             time.sleep(1)
             self.node.new_image_hand_flag = False
@@ -2657,21 +2645,51 @@ class StoringGroceriesMain():
 
             near_percentage = -1.0
             while near_percentage == -1.0:
-                near_percentage, avg_door = self.check_door_depth_hand()
+                near_percentage, avg_door_left = self.check_door_depth_hand()
 
-            print(near_percentage * 100)
-            if near_percentage < 0.5:
-                left_door = True
-                print('Porta esquerda aberta creio eu')
-                
+            if avg_door_left < avg_door_right:
+                right_door = True
+                print('Porta direita aberta creio eu')
+                average_depth_door = avg_door_left
 
             else:
-                left_door = False
-                print('Porta esquerda fechada creio eu')
-                average_depth_door = avg_door
+                left_door = True
+                print('Porta esquerda aberta creio eu')
+                average_depth_door = avg_door_right
 
-            # print(right_door, right_door_pose)
-            arm_value = Float32()
+            
+
+            # # Check if the door is near
+            # if near_percentage < 0.5:
+            #     right_door = True
+            #     print('Porta direita aberta creio eu')
+
+            # else:
+            #     right_door = False
+            #     print('Porta direita fechada creio eu')
+            #     average_depth_door = avg_door
+
+            
+            # # self.set_arm(command="change_height_front_left_robot", wait_for_end_of=True)
+            # self.set_arm(command="check_left_door", wait_for_end_of=True)
+            # time.sleep(1)
+            # self.node.new_image_hand_flag = False
+            # while self.node.new_image_hand_flag == False:
+            #     pass
+
+            # near_percentage = -1.0
+            # while near_percentage == -1.0:
+            #     near_percentage, avg_door_left = self.check_door_depth_hand()
+
+            # if near_percentage < 0.5:
+            #     left_door = True
+            #     print('Porta esquerda aberta creio eu')
+                
+
+            # else:
+            #     left_door = False
+            #     print('Porta esquerda fechada creio eu')
+            #     average_depth_door = avg_door
 
             cabinet_found = False
 
@@ -3018,8 +3036,8 @@ class StoringGroceriesMain():
 
         # self.state = self.Approach_kitchen_table
         # self.state = self.Waiting_for_task_start
-        # self.state = self.Approach_cabinet_first_time
-        self.state = self.Approach_tables_first_time
+        self.state = self.Approach_cabinet_first_time
+        # self.state = self.Approach_tables_first_time
 
 
         self.front_of_door = [0.0, 1.5]
@@ -3083,24 +3101,30 @@ class StoringGroceriesMain():
                 # self.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_rgb(command=GREEN+BLINK_LONG)
                 # # self.set_navigation(movement="move", target=self.kitchen_counter, max_speed=15.0, flag_not_obs=False, wait_for_end_of=True)   
-                # self.set_navigation(movement="move", target=self.kitchen_counter, max_speed=40.0, flag_not_obs=True, wait_for_end_of=True)   
-                # self.set_rgb(command=GREEN+BLINK_LONG)             
-                # self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(command=GREEN+BLINK_LONG)
-                # self.set_navigation(movement="move", target=self.kitchen_table, max_speed=40.0, flag_not_obs=False, wait_for_end_of=True)
-                # # self.set_navigation(movement="move", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(command=BLUE+ROTATE)                
-                # self.set_navigation(movement="orientate", absolute_angle= -90.0, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(command=GREEN+BLINK_LONG)
+
+                self.set_face("charmie_face")
+                self.set_initial_position(self.initial_position)
+
+                # começo na porta, vou para frente armário, olho mesa e rodo armário
+
+                self.set_navigation(movement="rotate", target=[-1.5, 1.0], flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                self.set_navigation(movement="move", target=[-1.5, 1.0], max_speed=40.0, flag_not_obs=True, wait_for_end_of=True)   
+                self.set_rgb(command=GREEN+BLINK_LONG)             
+                
+                # self.set_navigation(movement="move", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=BLUE+ROTATE)                
+                self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
                 
 
-                # time.sleep(1)
+                time.sleep(1)
 
-                # self.activate_obstacles(obstacles_lidar_up=False, obstacles_camera_head=False)
+                self.activate_obstacles(obstacles_lidar_up=False, obstacles_camera_head=False)
 
-                self.set_rgb(command=BLUE+ROTATE)
-                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(command=GREEN+BLINK_LONG)
+                """ self.set_rgb(command=BLUE+ROTATE)
+                self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG) """
                 
                 self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
                 
@@ -3108,7 +3132,7 @@ class StoringGroceriesMain():
                 
                 self.set_neck(position=self.look_table_objects_front)
                 
-                tetas = [[-20, -40], [0, -40], [20, -40]]
+                tetas = [[-90, -30], [-60, -30], [-30, -30]]
                 objects_found_table = []
                 while objects_found_table == []:
                     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
@@ -3117,11 +3141,18 @@ class StoringGroceriesMain():
                 for obj in objects_found_table:
                     print(obj.object_name)
 
+                
+
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
                 
+                self.set_rgb(command=BLUE+ROTATE)                
+                self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                time.sleep(0.5)
                 self.set_rgb(command=BLUE+ROTATE)
                 self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
+                time.sleep(0.5)
                 
                 self.activate_yolo_objects(activate_doors=True, activate_doors_hand = False)
                 
