@@ -8,8 +8,10 @@ import pygame
 from pathlib import Path
 
 # names_list = ["Adel", "Angel", "Axel", "Charlie", "Jane", "John", "Jules", "Morgan", "Paris", "Robin", "Simone"]
-names_list = ["Kai", "Noah", "Unique", "Luca", "Evelyn", "Jayden", "James", "Riley", "Harper", "Quinn", "Avery", "Remi", "River", "Atlas"]
-drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
+#names_list = ["Kai", "Noah", "Unique", "Luca", "Evelyn", "Jayden", "James", "Riley", "Gabrielle", "Robin", "Avery", "Remi", "River", "Atlas"]
+names_list = ["Sophie", "Julia", "Emma", "Sara", "Laura", "Hayley", "Susan", "Fleur", "Gabrielle", "Robin", "John", "Liam", "William", "Kevin", "Jesse", "Noah", "Harrie", "Peter"]
+#drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
+drinks_list = ["Big Coke", "Cola", "Dubblefris", "Milk", "Iced Tea", "Fanta", "Water"] # the 7up is weird, must be redone manually
 host_name = "Noah"
 
 # MODE can be the following commands:

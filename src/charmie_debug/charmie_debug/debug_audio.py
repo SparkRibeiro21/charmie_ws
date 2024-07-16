@@ -41,8 +41,8 @@ class TestNode(Node):
             self.get_logger().warn("Waiting for Server Speech Command...")
         while not self.save_speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Save Speech Command...")
-        while not self.face_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Face Command...")
+        # while not self.face_command_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Face Command...")
 
         # Variables
         self.waited_for_end_of_audio = False
@@ -346,7 +346,7 @@ class RestaurantMain():
             self.node.get_logger().error("Could not generate save speech as as filename and command types are incompatible.")
             return False, "Could not generate save speech as as filename and command types are incompatible."
 
-    def set_face(self, command="", custom="", wait_for_end_of=True):
+    def set_face(self, command="", custom="", wait_for_end_of=False):
         
         self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
         
