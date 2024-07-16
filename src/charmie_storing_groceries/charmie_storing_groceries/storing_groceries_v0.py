@@ -148,14 +148,14 @@ class StoringGroceriesNode(Node):
         # # Speakers
         while not self.speech_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Speech Command...")
-        while not self.activate_yolo_objects_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
-        while not self.set_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        while not self.get_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-        while not self.set_neck_coordinates_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        # while not self.set_neck_position_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+        # while not self.get_neck_position_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Get Neck Position Command...")
+        # while not self.set_neck_coordinates_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
         # Obstacles
         while not self.activate_obstacles_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
@@ -3035,8 +3035,8 @@ class StoringGroceriesMain():
 
 
         # self.state = self.Approach_kitchen_table
-        # self.state = self.Waiting_for_task_start
-        self.state = self.Approach_cabinet_first_time
+        self.state = self.Waiting_for_task_start
+        # self.state = self.Approach_cabinet_first_time
         # self.state = self.Approach_tables_first_time
 
 
@@ -3045,6 +3045,17 @@ class StoringGroceriesMain():
         self.inside_kitchen = [1.7, 7.0]
         self.cabinet = [-1.5, 7.5]
         self.CABINET_ANGLE = -90.0
+        
+        self.MAX_SPEED = 40
+
+        self.pre_room_door = [0.45, 3.65]
+        self.post_room_door = [0.45, 4.70]
+        self.front_of_start_door = [0.0, 1.0]
+        self.front_sofa = [0.45, 5.8]
+        self.midway_living_room = [-0.9, 8.5]
+        self.close_to_garbage_bin = [-2.76, 5.9]
+        self.close_to_dishwasher = [-2.26, 8.0]
+        self.pre_table = [-4.76, 6.0]
        
         while True:
 
@@ -3059,6 +3070,8 @@ class StoringGroceriesMain():
                 print("SET INITIAL POSITION")
 
                 time.sleep(1)          
+
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=False)
                 
                 self.set_speech(filename="storing_groceries/sg_ready_start", wait_for_end_of=True)
 
@@ -3076,6 +3089,39 @@ class StoringGroceriesMain():
                 self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
                          
                 self.wait_for_door_start()
+
+                self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.front_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.close_to_dishwasher, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.close_to_dishwasher, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+
+                self.set_navigation(movement="rotate", target=self.close_to_garbage_bin, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.close_to_garbage_bin, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+
+                
+
+                self.set_navigation(movement="rotate", target=self.pre_table, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_table, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+
+                
+                while True:
+                    pass
 
                 self.state = self.Approach_cabinet_first_time
 
