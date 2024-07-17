@@ -1570,7 +1570,7 @@ class ServeBreakfastMain():
         self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
         self.MAX_SPEED = 30
         self.TABLE_APPROACH_OBSTACLES = 0.45
-        self.GET_MILK = True
+        self.GET_MILK = False
         self.GET_CORNFLAKES = True
         self.GET_DISHES = True
         
@@ -1593,7 +1593,7 @@ class ServeBreakfastMain():
         self.kitchen_table = [-2.0, 6.8]
 
 
-        self.state = self.Waiting_for_task_start
+        self.state = self.Detect_and_pick_cornflakes
 
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
@@ -1780,9 +1780,9 @@ class ServeBreakfastMain():
                                 
                     self.set_face("charmie_face")
                         
-                    self.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
+                    self.set_arm(command="collect_cornflakes_to_tray_alternative_robocup_cornflakes", wait_for_end_of=True)
                     
-                    self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    self.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=True)
 
                 self.state = self.Approach_dishes_location
 
