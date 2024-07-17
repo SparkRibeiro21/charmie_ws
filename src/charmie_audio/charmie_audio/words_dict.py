@@ -3,7 +3,7 @@ max_number_of_chars_of_keys = 16
 
 names_dict = {
     "Sophie":    ["sophie", "sufi", " sofi ", "zofi ", "zafi "],
-    "Julia":     ["julia", "zulia", "zolia", "jolia", "hula "],
+    "Julia":     ["julia", "zulia", "zolia", "jolia", "hula ", "jula", "jour"],
     "Emma":      ["emma", "ema", "yama", "amen", " yeah man ", "kema "],
     "Sarah":     ["sarah", "sara ", "hada", "hera ", "sada"],
     "Laura":     ["laura", "lara ", "longer"],
