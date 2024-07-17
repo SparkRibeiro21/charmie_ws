@@ -1049,7 +1049,7 @@ class NavSDNLNode(Node):
     def check_person_depth_head(self, half_image_zero_or_near_percentage=0.6, full_image_near_percentage=0.3, near_max_dist=800):
 
         overall = False
-        DEBUG = True
+        DEBUG = False
 
         print(self.first_depth_image_received)
 

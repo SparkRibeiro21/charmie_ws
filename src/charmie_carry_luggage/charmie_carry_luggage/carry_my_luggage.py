@@ -1373,7 +1373,6 @@ class CarryMyLuggageMain():
 
         c_areas = []
 
-        print("max_area:", max(c_areas))
         
         while not c_areas or max(c_areas) < MIN_BAG_PIXEL_AREA:
             c_areas.clear()
@@ -1494,7 +1493,7 @@ class CarryMyLuggageMain():
             cv2.imshow("New Img Distance Inspection", blank_image)
             cv2.imshow("New Img Distance Inspection BW", blank_image_bw2)
 
-            k = cv2.waitKey(10)
+            k = cv2.waitKey(100)
             if k == ord('w'):
                 self.floor_dist += 10
             if k == ord('q'):
@@ -1504,7 +1503,7 @@ class CarryMyLuggageMain():
             if k == ord('a'):
                 self.top_bag_dist -= 10
 
-            # print(self.floor_dist, self.top_bag_dist)
+            print(self.floor_dist, self.top_bag_dist)
 
         return f_coords
 
@@ -1577,9 +1576,9 @@ class CarryMyLuggageMain():
         
         # CML Vars ...
         self.floor_dist = 580 # 660
-        self.top_bag_dist = 440
+        self.top_bag_dist = 340
         self.bag_in_gripper_dist = 200
-        self.INITIAL_REACHED_RADIUS = 0.8
+        self.INITIAL_REACHED_RADIUS = 1.1
         self.slight_angular_adjust_depending_on_side = 0.0
         self.bag_side = "none"
         self.task_room_location = "Hallway"
@@ -1595,7 +1594,7 @@ class CarryMyLuggageMain():
         self.initial_angle_temp = 0.0
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Camera_pick_bag
+        self.state = self.Waiting_for_task_to_start
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Carry My Luggage Main...")
@@ -1730,7 +1729,7 @@ class CarryMyLuggageMain():
             elif self.state == self.Go_to_bag:
                 print("State:", self.state, "- Go_to_bag")
 
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
 
                 # Speech: "I am moving towards the bag you pointed at."
                 self.set_speech(filename="carry_my_luggage/going_to_bag", wait_for_end_of=True)
@@ -1768,10 +1767,9 @@ class CarryMyLuggageMain():
                 bag_grabbed = False
                 while not bag_grabbed:
                     
-                    while True:
-                        bag_coords = self.get_bag_pick_cordinates()
-                        print(bag_coords)
-                    
+                    bag_coords = self.get_bag_pick_cordinates()
+                    print(bag_coords)
+                
                     self.set_navigation(movement="adjust", adjust_distance=bag_coords[4], adjust_direction=bag_coords[3], wait_for_end_of=True)
                     time.sleep(2.0)
 
@@ -1808,11 +1806,11 @@ class CarryMyLuggageMain():
                 # Speech: "Moving to the initial position."
                 self.set_speech(filename="carry_my_luggage/move_initial_position", wait_for_end_of=False)
 
-                self.set_navigation(movement="rotate", target = [self.initial_position[0], self.initial_position[1]], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target = [self.initial_position[0], self.initial_position[1]], flag_not_obs=True, wait_for_end_of=True)
                 
-                self.set_navigation(movement="move", target = [self.initial_position[0], self.initial_position[1]], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
+                self.set_navigation(movement="move", target = [self.initial_position[0], self.initial_position[1]], flag_not_obs=True, wait_for_end_of=True)
                 
-                self.set_navigation(movement="rotate", target = [self.pointing_person.position_absolute.x, self.pointing_person.position_absolute.y], flag_not_obs=True, reached_radius=self.INITIAL_REACHED_RADIUS, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target = [self.pointing_person.position_absolute.x, self.pointing_person.position_absolute.y], flag_not_obs=True, wait_for_end_of=True)
                 
                 self.set_neck(position=self.look_forward, wait_for_end_of=False)
                 

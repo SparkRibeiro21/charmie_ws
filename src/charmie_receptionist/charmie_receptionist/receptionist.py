@@ -1665,6 +1665,7 @@ class ReceptionistMain():
             age = age.replace(' ', '_')
         else: # If the robot can not compute, it guesses the following
             age = "Between 18 and 32"
+            age = age.replace(' ', '_')
         
         if gender != "None": # Minor corrections to value received
             pass
