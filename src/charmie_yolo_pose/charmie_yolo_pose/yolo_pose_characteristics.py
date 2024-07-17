@@ -288,6 +288,7 @@ class YoloPoseNode(Node):
     """
 
     def get_color_image_head_callback(self, img: Image):
+        print("Received rgb cam")
 
         # only when activated via service, the model computes the person detection
         if self.ACTIVATE_YOLO_POSE:

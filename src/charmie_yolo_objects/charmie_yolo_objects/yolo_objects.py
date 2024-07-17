@@ -18,7 +18,8 @@ import math
 import time
 
 # objects_filename = "segmentation_M_size_model_600_epochs.pt"
-objects_filename = "epoch20.pt"
+# objects_filename = "epoch20.pt"
+objects_filename = "new_best.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
 # objects_filename = "lar_dataset_post_fnr2024.pt"
 shoes_filename = "shoes_socks_v1.pt"

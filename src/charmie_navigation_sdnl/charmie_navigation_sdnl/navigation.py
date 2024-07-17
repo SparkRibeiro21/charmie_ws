@@ -901,7 +901,7 @@ class NavSDNLNode(Node):
     def get_aligned_depth_image_callback(self, img: Image):
         self.depth_img = img
         self.first_depth_image_received = True
-        # print("Received Depth Image")
+        print("Received Depth Image")
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
@@ -1046,10 +1046,10 @@ class NavSDNLNode(Node):
         # time.sleep(1.0)
 
 
-    def check_person_depth_head(self, half_image_zero_or_near_percentage=0.3, full_image_near_percentage=0.1, near_max_dist=800):
+    def check_person_depth_head(self, half_image_zero_or_near_percentage=0.6, full_image_near_percentage=0.3, near_max_dist=800):
 
         overall = False
-        DEBUG = False
+        DEBUG = True
 
         print(self.first_depth_image_received)
 

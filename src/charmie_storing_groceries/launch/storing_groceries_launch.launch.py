@@ -166,7 +166,7 @@ def generate_launch_description():
     return LaunchDescription([
         LaunchDescription(declared_arguments + [robot_driver_launch]),
         *delayed_actions,
-        # debug_visual,
+        debug_visual,
         charmie_both_cameras_launch_description,
         # lidar,
         # obstacles,

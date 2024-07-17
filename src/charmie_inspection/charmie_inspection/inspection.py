@@ -62,8 +62,8 @@ class InspectionNode(Node):
         while not self.set_neck_position_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Set Neck Position Command...")
         # Yolos
-        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")        
+        while not self.activate_yolo_pose_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")        
         # Navigation
         while not self.nav_trigger_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
@@ -416,7 +416,7 @@ class InspectionMain():
 
         self.MAX_SPEED = 15
 
-        self.pre_room_door = [0.45, 3.65]
+        self.pre_room_door = [0.45, 3.85]
         self.post_room_door = [0.45, 4.70]
         self.front_of_start_door = [0.0, 1.2]
         self.front_sofa = [0.45, 5.8]
