@@ -1,6 +1,6 @@
 [
-{"name": "Living Room", "top_left_coords": [-1.06, 9.55], "bot_right_coords": [2.97, 3.95]},
-{"name": "Hallway",     "top_left_coords": [-1.06, 3.95], "bot_right_coords": [2.97, 0.55]},
-{"name": "Kitchen",     "top_left_coords": [-6.01, 9.55], "bot_right_coords": [-1.06, 3.95]},
+{"name": "Living Room", "top_left_coords": [-1.06, 9.85], "bot_right_coords": [3.25, 3.95]},
+{"name": "Hallway",     "top_left_coords": [-1.06, 3.95], "bot_right_coords": [3.25, 0.55]},
+{"name": "Kitchen",     "top_left_coords": [-6.01, 9.85], "bot_right_coords": [-1.06, 3.95]},
 {"name": "Office",      "top_left_coords": [-6.01, 3.95], "bot_right_coords": [-1.06, 0.55]}
 ]

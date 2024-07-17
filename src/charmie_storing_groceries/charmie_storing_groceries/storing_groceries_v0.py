@@ -3064,10 +3064,10 @@ class StoringGroceriesMain():
 
 
         # self.state = self.Approach_kitchen_table
-        # self.state = self.Waiting_for_task_start
+        self.state = self.Waiting_for_task_start
         # self.state = self.Approach_cabinet_first_time
         # self.state = self.Approach_tables_first_time
-        self.state = self.Final_State
+        # self.state = self.Final_State
 
 
         self.front_of_door = [0.0, 1.5]
@@ -3086,7 +3086,7 @@ class StoringGroceriesMain():
         self.close_to_garbage_bin = [-2.76, 5.9]
         self.close_to_dishwasher = [-2.26, 8.0]
         self.close_to_table_sb = [-4.26, 8.5]
-        self.pre_table = [-5.16, 6.0]
+        self.pre_table = [-5.16, 5.5]
        
         while True:
 
@@ -3129,45 +3129,45 @@ class StoringGroceriesMain():
 
                 ##### MOVEMENT TO THE CABINET
 
-                # self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(BLUE+ROTATE)
-                # # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.pre_room_door, max_speed=30.0, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(MAGENTA+ROTATE)
-                # self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
-                # self.set_rgb(BLUE+ROTATE)
-                # self.set_navigation(movement="rotate", target=self.front_sofa, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.front_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(MAGENTA+ROTATE)
-                # self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=30.0, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.front_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
 
-                # self.set_navigation(movement="rotate", target=self.close_to_dishwasher, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.close_to_dishwasher, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.close_to_dishwasher, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.close_to_dishwasher, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
 
-                # self.set_navigation(movement="rotate", target=self.close_to_garbage_bin, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.close_to_garbage_bin, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.close_to_garbage_bin, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.close_to_garbage_bin, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
 
-                # self.set_navigation(movement="rotate", target=self.pre_table, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.pre_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.pre_table, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
 
-                self.set_face("charmie_face")
-                self.set_initial_position(self.initial_position)
+                # self.set_face("charmie_face")
+                # self.set_initial_position(self.initial_position)
                     
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
-                self.set_rgb(command=WHITE+ROTATE)
+                # self.set_rgb(command=WHITE+ROTATE)
                 
                 
-                self.set_rgb(command=BLUE+ROTATE)                
-                self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(command=GREEN+BLINK_LONG)
+                # self.set_rgb(command=BLUE+ROTATE)                
+                # self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_rgb(command=GREEN+BLINK_LONG)
                 
 
                 time.sleep(1)
@@ -3351,29 +3351,29 @@ class StoringGroceriesMain():
 
                 
                 while True:
-
-                    tetas = [[0, -30]]
+                    pass
+                    # tetas = [[0, -30]]
                 
-                    objects_found_table = []
-                    while objects_found_table == []:
-                        objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                    # objects_found_table = []
+                    # while objects_found_table == []:
+                    #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
 
-                    for obj in objects_found_table:
-                        obj_name_lower = obj.object_name.lower().replace(" ", "_")
-                        print(obj_name_lower)
+                    # for obj in objects_found_table:
+                    #     obj_name_lower = obj.object_name.lower().replace(" ", "_")
+                    #     print(obj_name_lower)
 
-                        object_help_pick = 'help_pick_' + obj_name_lower
+                    #     object_help_pick = 'help_pick_' + obj_name_lower
                         
 
-                        self.load_image_one_object(obj.object_name, obj)
+                    #     self.load_image_one_object(obj.object_name, obj)
 
-                        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
+                    #     self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
 
-                        time.sleep(5)
+                    #     time.sleep(5)
 
-                        self.set_face(str(object_help_pick))
+                    #     self.set_face(str(object_help_pick))
 
-                        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
+                    #     self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
 
                 while True:
                     pass

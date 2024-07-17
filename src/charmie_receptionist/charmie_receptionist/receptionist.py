@@ -729,8 +729,9 @@ class ReceptionistMain():
         self.initial_position = [0.0, 2.10, 180.0]
 
         self.receive_guests = [0.0, 1.45]
-        self.pre_room_door = [0.75, 3.15]
-        self.post_room_door = [0.75, 4.70]
+        self.pre_room_door = [0.85, 3.6]
+        self.pre_room_door_3 = [0.75, 3.6]
+        self.post_room_door = [0.85, 4.75]
         self.front_of_sofa = [1.25, 5.85]
         self.sofa = [0.91, 8.925]
 
@@ -901,7 +902,7 @@ class ReceptionistMain():
 
                 self.set_rgb(BLUE+ROTATE)
                 self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=15, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(MAGENTA+ROTATE)
                 self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
@@ -1054,8 +1055,9 @@ class ReceptionistMain():
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
     
                 self.set_rgb(BLUE+ROTATE)
-                self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=[4.0, 4.0], flag_not_obs=True, wait_for_end_of=True) # To not get stuck in rotation
+                self.set_navigation(movement="rotate", target=self.pre_room_door_3, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door_3, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(MAGENTA+ROTATE)
                 self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
@@ -1481,7 +1483,6 @@ class ReceptionistMain():
 
         self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=True)
 
-        time.sleep(2.0)
         time.sleep(0.5)
 
         detected_person_temp = Yolov8Pose()
@@ -1489,7 +1490,7 @@ class ReceptionistMain():
         guest = DetectedPerson()
         is_cropped = False
         while not is_cropped:
-            while time.time() - start_time < 3.0:
+            while time.time() - start_time < 1.0:
                 detected_person_temp = self.node.detected_people  
                 if detected_person_temp.num_person == 0:  
                     start_time = time.time()
