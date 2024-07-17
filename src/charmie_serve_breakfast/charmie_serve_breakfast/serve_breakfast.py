@@ -1867,7 +1867,7 @@ class ServeBreakfastMain():
 
                             self.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
                                 
-                    self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+                    self.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=False)
 
                     # SPOON
                     self.detected_object_to_face_path(object=correct_object_spoon, send_to_face=True, bb_color=(0,255,0))
@@ -1930,11 +1930,11 @@ class ServeBreakfastMain():
 
                 if self.GET_CORNFLAKES:
                     ##### ARM POUR IN BOWL
-                    self.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
+                    self.set_arm(command="pour_cereals_bowl_alternative_robocup_cornflakes", wait_for_end_of=True)
                     self.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=False)
                     
                     ##### ARM PLACE OBJECT
-                    self.set_arm(command="place_cereal_table", wait_for_end_of=True)
+                    self.set_arm(command="place_cereal_table_alternative_robocup_cornflakes", wait_for_end_of=True)
                     self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
                 
                 self.state = self.Placing_milk
