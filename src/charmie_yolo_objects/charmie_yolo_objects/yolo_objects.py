@@ -100,14 +100,18 @@ class Yolo_obj(Node):
         # whether the activate doors flag starts as ON or OFF 
         self.ACTIVATE_YOLO_DOORS_HAND = self.get_parameter("activate_doors_hand").value
 
+        print(self.home+'/'+objects_filename)
+
         # Import the models, one for each category
-        self.object_model = YOLO(self.complete_path + objects_filename)
+        self.object_model = YOLO(self.home+'/'+objects_filename)
         self.shoes_model = YOLO(self.complete_path + shoes_filename)
         self.doors_model = YOLO(self.complete_path + doors_filename)
         # it needs to have a different model for head and hand image because of the track parameter, otherwise it is always creating new track ids
-        self.object_model_hand = YOLO(self.complete_path + objects_filename)
+        self.object_model_hand = YOLO(self.home+'/'+objects_filename)
         self.shoes_model_hand = YOLO(self.complete_path + shoes_filename)
         self.doors_model_hand = YOLO(self.complete_path + doors_filename)
+
+        print("Sucessfully imported YOLO models")
 
         ### Topics ###
         # Intel Realsense
