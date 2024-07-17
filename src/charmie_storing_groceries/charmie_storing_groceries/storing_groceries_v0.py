@@ -3065,8 +3065,9 @@ class StoringGroceriesMain():
 
         # self.state = self.Approach_kitchen_table
         # self.state = self.Waiting_for_task_start
-        self.state = self.Approach_cabinet_first_time
+        # self.state = self.Approach_cabinet_first_time
         # self.state = self.Approach_tables_first_time
+        self.state = self.Final_State
 
 
         self.front_of_door = [0.0, 1.5]
@@ -3346,10 +3347,37 @@ class StoringGroceriesMain():
 
             elif self.state == self.Final_State:
                 print('Terminei')  
-                self.set_speech(filename="storing_groceries/sg_finished", wait_for_end_of=False)
+                # self.set_speech(filename="storing_groceries/sg_finished", wait_for_end_of=False)
+
+                
+                while True:
+
+                    tetas = [[0, -30]]
+                
+                    objects_found_table = []
+                    while objects_found_table == []:
+                        objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+
+                    for obj in objects_found_table:
+                        obj_name_lower = obj.object_name.lower().replace(" ", "_")
+                        print(obj_name_lower)
+
+                        object_help_pick = 'help_pick_' + obj_name_lower
+                        
+
+                        self.load_image_one_object(obj.object_name, obj)
+
+                        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False) 
+
+                        time.sleep(5)
+
+                        self.set_face(str(object_help_pick))
+
+                        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
 
                 while True:
                     pass
+
                 """ 
                 ### TO DO:
 
