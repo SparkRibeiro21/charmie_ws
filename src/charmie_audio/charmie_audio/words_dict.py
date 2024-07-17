@@ -5,34 +5,34 @@ names_dict = {
     "Sophie":    ["sophie", "sufi", " sofi ", "zofi ", "zafi "],
     "Julia":     ["julia", "zulia", "zolia", "jolia", "hula "],
     "Emma":      ["emma", "ema", "yama", "amen", " yeah man ", "kema "],
-    "Sarah":     ["sarah", "sara ", "hada", "hera "],
-    "Laura":     ["laura", "lara "],
+    "Sarah":     ["sarah", "sara ", "hada", "hera ", "sada"],
+    "Laura":     ["laura", "lara ", "longer"],
     "Hayley":    ["hayley", "hailey", "ailey", "haley", " eli ", " ale ", "ahayley", "haley", "alien"],
-    "Susan":     ["susan", "susa", "suza", "fuza"],
-    "Fleur":     ["fleur", "fluid", "flour",  "slower", "stuart", "fluhr", "flair ", "fleewer", "fleeward", "flue", "fluhard", "flereur", "flare", " flo "],
-    "Gabrielle": ["gabrielle", "yobriel", "gangreal", "gabriel", "bigreal", "gatereal", "javier", "Cabrielle"],
+    "Susan":     ["susan", "susa", "suza", "fuza", "zuzan"],
+    "Fleur":     ["fleur", "fluid", "flour",  "slower", "stuart", "fluhr", "flair ", "fleewer", "fleeward", "flue", "fluhard", "flereur", "flare", " flo ", "flor", "floury", "flirt", "fuller", "phor"],
+    "Gabrielle": ["gabrielle", "yobriel", "gangreal", "gabriel", "bigreal", "gatereal", "javier", "cabrielle", "gabbyl", "gabby"],
     "Robin":     ["robin", "harbin", "robyn", "hobby", "hobean", "hohvin", "robon", "corbin", "haubin", "horven", "covid", "colvin", "forbin"],
     "John":      ["john", "jhong", "joe", "jopne", "joan", "chiang", "han", "chuan", "juan", "jean"],
     "Liam":      [" liam", " lian", " leon ", " lee "],
     "William":   ["william", "willian", "rheelium", "we like him"],
-    "Kevin":     ["kevin", "cavin", "kavian", " gavin", "gaveen", "gabon", "kaveen"],
-    "Jesse":     ["jess", "chis", "jase", "jasey", "jazzy", "jassy"],
+    "Kevin":     ["kevin", "cavin", "kavian", " gavin", "gaveen", "gabon", "kaveen", "kavin"],
+    "Jesse":     ["jess", "chis", "jase", "jasey", "jazzy", "jassy", "Jessie"],
     "Noah":      ["noah", "no one", "noha"],
-    "Harrie":    ["harrie", "harry", "arie ", " eri ", " ari  ", "aali"],
-    "Peter":     ["peter", "better"],
+    "Harrie":    ["harrie", "harry", "arie ", " eri ", " ari  ", "aali", "arty", "aaron", "aries"],
+    "Peter":     ["peter", "better", "pinker", "repeat"],
 }
 
 drinks_dict = {
-    "Big_Coke":     ["big", "coke", " cok ", "cook", " cog ", "vehicle", "kolk", "cock", " vico", "cocke", "nikko", "V-cock"],
+    "Big_Coke":     ["big", "coke", " cok ", "cook", " cog ", "vehicle", "kolk", "cock", " vico", "cocke", "nikko", "V-cock", "beak-oak", "vicoke", "biko", "alabicok"],
     "Cola":         [" cola", "coca", "kola", "coconut", "color", "call", "gog", "koch", "kullum", "goog", "cold",\
                         "kohler", "kala", "gola", "kohla", "cool", "kolkka"],
-    "Dubblefris":   ["double", "dubblefris", "crease", "free", "freeze", "fish", "lubelofish", "lublle", "fish"],
+    "Dubblefris":   ["double", "dubblefris", "crease", "free", "freeze", "fish", "lubelofish", "lublle", "fish", "frish", "frieche", "threes", "freech", "wolfish", "dubla", "fris", "doubul", "priest"],
     "Milk":         ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton", "miyuki"],
 	"Iced_Tea":     [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
                        "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", " icy ", "nice t", "oysti", " aste "],
-    "Fanta":        ["fanta", "santa", "anta", "phanta", "fender", "fanda", "ponder"],
-    "Water":        ["water", "laude", "walter"]
+    "Fanta":        ["fanta", "santa", "anta", "phanta", "fender", "fanda", "ponder", "fans ", "panta", "friend", "femtas",  "founder"],
+    "Water":        ["water", "laude", "walter", "wata", "wotoh", "wattered", "utter"]
 }
 
 foods_dict = {
@@ -40,7 +40,7 @@ foods_dict = {
     "Crisps":           ["crisps", "crispy", "chris", "crispies", "grapes", "species", "creepy", "creeps", "greece"],
     "Liquorice":        ["liquorice", "liqueur", "rice", "rise", "lekou"],
     "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "gringles"],
-    "Stroopwafel":      ["stroopwafle", "stroke", "waffle", "stop", "drop", "struck", "strip"],
+    "Stroopwafel":      ["stroopwafle", "stroke", "waffle", "stop", "drop", "struck", "strip", "powerful"],
     "Tictac":           ["tictac", "tak ", "tuke", "tiktok", "tik", "tek", "cheek", "chalk", "eak", "diktak"],
 
     "Pear":             ["pear", "pair", "pier", "beer", "bare"],

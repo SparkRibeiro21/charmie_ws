@@ -295,7 +295,7 @@ class InspectionMain():
 
         return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
+    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True, avoid_people=False):
 
         if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
@@ -327,7 +327,7 @@ class InspectionMain():
             navigation.orientation_absolute = float(absolute_angle)
             navigation.flag_not_obs = flag_not_obs
             navigation.reached_radius = float(reached_radius)
-            navigation.avoid_people = False
+            navigation.avoid_people = avoid_people
             navigation.adjust_distance = float(adjust_distance)
             navigation.adjust_direction = float(adjust_direction)
             navigation.adjust_min_dist = float(adjust_min_dist)
@@ -510,7 +510,7 @@ class InspectionMain():
                 # self.set_navigation(movement="move", target=self.final_point, flag_not_obs=False,  avoid_people=True, wait_for_end_of=True)
 
 
-                self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, avoid_people=True, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(BLUE+ROTATE)
                 # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, avoid_people=True, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
@@ -572,6 +572,18 @@ class InspectionMain():
                 # self.set_navigation(movement="move", target=self.outside_house, flag_not_obs=False, avoid_people=True, wait_for_end_of=True)
 
                 ### POST NAVIGATION HERE ###
+                self.set_navigation(movement="rotate", target=self.front_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_sofa, max_speed=self.MAX_SPEED, avoid_people=True, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, avoid_people=True, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.close_to_dishwasher, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.close_to_dishwasher, max_speed=self.MAX_SPEED, avoid_people=True, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.close_to_garbage_bin, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.close_to_garbage_bin, max_speed=self.MAX_SPEED, avoid_people=True, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
 
                 # next state
                 self.state = self.Final_State 
