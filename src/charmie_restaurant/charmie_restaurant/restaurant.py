@@ -1173,6 +1173,7 @@ class RestaurantMain():
         self.y1 = 0
         self.x2 = 0
         self.y2 = 0
+        self.just_one_waving = False
 
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In Restaurant Main...")
@@ -1587,7 +1588,9 @@ class RestaurantMain():
 
                 print(len(sorted_persons))
                 if len(sorted_persons) == 1:
+                    self.just_one_waving = True
                     self.state = self.Collect_orders_from_barman
+                    
                 
                 else:
                     self.state = self.Approach_customer2_table
@@ -1742,9 +1745,98 @@ class RestaurantMain():
 
                 ##### SPEAK: Hope you enjoy!
                 self.set_speech(filename="restaurant/enjoy_order", wait_for_end_of=True)
-                                
-                # next state
-                self.state = self.Delivering_customer_order2
+
+                if self.just_one_waving == True:
+                    # JUST ONE CLIENT WAVING
+
+                    ##### MOVE TO THE BARMAN TABLE
+                    self.set_navigation(movement="rotate", target=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], flag_not_obs=False, wait_for_end_of=True, reached_radius=2.0)
+                    self.set_rgb(command=GREEN+BLINK_QUICK)
+                    self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True) # Virar de frente para pessoas de novo
+                    self.set_rgb(command=GREEN+BLINK_LONG)
+
+                    tetas = [[-45, 0], [0, 0], [45, 0]]
+                    customers_not_found = True
+                    customers_list = []
+
+                
+                    customers_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
+
+                    print("FOUND:", len(customers_found)) 
+                    for p in customers_found:
+                        self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
+                        print("ID:", p.index_person)
+                        print('Customer position', p.position_relative)
+                        customers_list.append(p)
+                        
+                    print('Nr of detected customers waving: ', len(customers_list))
+
+                    self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
+
+
+
+
+
+
+
+
+                    ##### SPEAK: Found waving customers
+                    self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
+                    dist_array = []
+                    ##### NECK: look waving customers
+
+                    for p in customers_list:
+                        self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
+                        dist = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
+                        dist_array.append(dist)
+                        print('\n \n coordenadas cliente :', p.position_relative.x, p.position_relative.y)
+                        print('distance to client: ', dist)
+                        
+                        time.sleep(2)
+
+
+                    # Step 1: Create a list of tuples (distance, index)
+                    distance_with_indices = [(distance, index) for index, distance in enumerate(dist_array)]
+
+                    # Step 2: Sort the list of tuples by distance
+                    sorted_distances = sorted(distance_with_indices)
+
+                    # Step 3: Use the sorted indices to reorder the persons list
+                    sorted_persons = [customers_list[index] for _, index in sorted_distances]
+
+                    # Print the results
+                    print("Sorted Distances with Indices:", sorted_distances)
+                    
+                    for p in sorted_persons:
+                        print("Positions:", p.position_relative, ' + ',p.index_person)
+
+
+                    self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], wait_for_end_of=True)
+                    ##### SPEAK: Check face to see customers detected
+                    self.set_speech(filename="restaurant/face_customer", wait_for_end_of=True)
+
+                    i = 0
+                    person_count = 2
+                    for p in sorted_persons :
+                        if i == person_count:
+                            break
+                        path_customer = self.detected_person_to_face_path(person=sorted_persons[i], send_to_face=True)
+                        print(f'sorted person {i} position {sorted_persons[i].position_relative.x}, {sorted_persons[i].position_relative.y}')
+                
+                
+                        time.sleep(3)
+                        i += 1
+
+
+
+                    # ACABAR LÓGICA AQUI. TENHO DE GARANTIR QUE VOU PARA O SEGUNDO CLIENTE E CRIAR ESSE ESTADO E DEPOIS ESTADO FINAL
+
+                    
+                    self.state = self.Delivering_customer_order2
+                else:               
+                    # next state
+                    self.state = self.Delivering_customer_order2
 
             elif self.state == self.Delivering_customer_order2:
                 print("State:", self.state, "- Delivering_customer_order2")

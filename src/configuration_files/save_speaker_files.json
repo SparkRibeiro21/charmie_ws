@@ -1,4 +1,8 @@
 {
-"yes_no_question": "To confirm the order please respond with robot yes or robot no."
+"free_sit_chair_left": "There is a free sit in the chair on my left. Please take a sit there.",
+"free_sit_chair_right": "There is a free sit in the chair on my right. Please take a sit there.",
+"free_sit_sofa_center": "There is a free sit in the center of the sofa. Please take a sit there.",
+"free_sit_sofa_right": "There is a free sit in the right side of the sofa. Please take a sit there.",
+"free_sit_sofa_left": "There is a free sit in the left side of the sofa. Please take a sit there."
 }
 
