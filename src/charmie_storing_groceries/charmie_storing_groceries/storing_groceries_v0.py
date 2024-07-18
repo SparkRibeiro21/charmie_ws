@@ -3086,7 +3086,7 @@ class StoringGroceriesMain():
         self.close_to_garbage_bin = [-2.76, 5.9]
         self.close_to_dishwasher = [-2.26, 8.0]
         self.close_to_table_sb = [-4.26, 8.5]
-        self.pre_table = [-5.16, 6.0]
+        self.pre_table = [-5.0, 5.75]
        
         while True:
 

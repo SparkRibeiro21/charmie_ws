@@ -1530,7 +1530,7 @@ class ReceptionistMain():
 
         self.set_rgb(WHITE+HALF_ROTATE)
 
-        self.track_person(person=detected_person_temp.persons[0], wait_for_end_of=True)
+        # self.track_person(person=detected_person_temp.persons[0], wait_for_end_of=True)
 
 
 
@@ -1554,7 +1554,7 @@ class ReceptionistMain():
 
         self.set_rgb(WHITE+HALF_ROTATE)
 
-        self.track_person(person=detected_person_temp.persons[0], wait_for_end_of=True)
+        # self.track_person(person=detected_person_temp.persons[0], wait_for_end_of=True)
 
     def get_host_and_guest1_coordinates(self, total_photos, total_coords):
             
@@ -1705,7 +1705,7 @@ class ReceptionistMain():
         self.set_speech(filename="receptionist/the_shirt_color_is", wait_for_end_of=True)
         self.set_speech(filename="receptionist/characteristics/color_"+shirt_color.lower(), wait_for_end_of=True)
         self.set_speech(filename="receptionist/characteristics/gender_"+gender.lower(), wait_for_end_of=True)
-        self.set_speech(filename="receptionist/characteristics/race_"+race.lower(), wait_for_end_of=True)
+        # self.set_speech(filename="receptionist/characteristics/race_"+race.lower(), wait_for_end_of=True)
         
         # Not using the pants color at the moment, since the robot had to look down and 
         # we lose time that we do not actually since the other 5 characteristics are one more than enough 
