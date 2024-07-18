@@ -910,7 +910,7 @@ class ReceptionistMain():
                 self.set_rgb(BLUE+ROTATE)
                 self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=False)
                 self.set_rgb(MAGENTA+ROTATE)
                 
                 # self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
@@ -980,9 +980,11 @@ class ReceptionistMain():
 
                 ### SEARCH FOR AN EMPTY SEAT: ONLY FOR ROBOCUP
 
-                self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True)
 
-                self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
+
+                self.set_speech(filename="receptionist/free_sit_sofa_center", wait_for_end_of=True)
                 
                 self.set_rgb(GREEN+BLINK_LONG)
 
@@ -1065,8 +1067,8 @@ class ReceptionistMain():
                 self.set_rgb(BLUE+ROTATE)
                 self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="adjust_angle", absolute_angle=-10.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=False)
+                # self.set_navigation(movement="adjust_angle", absolute_angle=-10.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(MAGENTA+ROTATE)
 
 
@@ -1178,9 +1180,11 @@ class ReceptionistMain():
 
                 ### SEARCH FOR AN EMPTY SEAT: ONLY FOR ROBOCUP                
                 
-                self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True)
 
-                self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
+
+                self.set_speech(filename="receptionist/free_sit_sofa_right", wait_for_end_of=True)
 
                 self.set_rgb(GREEN+BLINK_LONG)
                 
@@ -1208,11 +1212,11 @@ class ReceptionistMain():
     def search_for_host2(self):
 
         host_found = False
-        tetas = [[-20, -10], [20, -10]]
+        tetas = [[-30, -10], [30, -10]]
         is_cropped = False
         sfp_ctr = 0
 
-        while not host_found and sfp_ctr < 2:
+        while not host_found and sfp_ctr < 1:
             sfp_ctr += 1
             people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True)
 
@@ -1696,13 +1700,13 @@ class ReceptionistMain():
             pants_color = "Blue"
         
         self.set_speech(filename="receptionist/the_first_guest_is", wait_for_end_of=True)
-        self.set_speech(filename="receptionist/characteristics/race_"+race.lower(), wait_for_end_of=True)
-        self.set_speech(filename="receptionist/characteristics/gender_"+gender.lower(), wait_for_end_of=True)
-        self.set_speech(filename="receptionist/characteristics/age_"+age.lower(), wait_for_end_of=True)
         self.set_speech(filename="receptionist/characteristics/height_"+temp_height_string.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/characteristics/age_"+age.lower(), wait_for_end_of=True)
         self.set_speech(filename="receptionist/the_shirt_color_is", wait_for_end_of=True)
         self.set_speech(filename="receptionist/characteristics/color_"+shirt_color.lower(), wait_for_end_of=True)
-
+        self.set_speech(filename="receptionist/characteristics/gender_"+gender.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/characteristics/race_"+race.lower(), wait_for_end_of=True)
+        
         # Not using the pants color at the moment, since the robot had to look down and 
         # we lose time that we do not actually since the other 5 characteristics are one more than enough 
         # self.set_speech(filename="receptionist/the_pants_color_is", wait_for_end_of=True)

@@ -26,7 +26,7 @@ drinks_dict = {
     "Big_Coke":     ["big", "coke", " cok ", "cook", " cog ", "vehicle", "kolk", "cock", " vico", "cocke", "nikko", "V-cock", "beak-oak", "vicoke", "biko", "alabicok"],
     "Cola":         [" cola", "coca", "kola", "coconut", "color", "call", "gog", "koch", "kullum", "goog", "cold",\
                         "kohler", "kala", "gola", "kohla", "cool", "kolkka"],
-    "Dubblefris":   ["double", "dubblefris", "crease", "free", "freeze", "fish", "lubelofish", "lublle", "fish", "frish", "frieche", "threes", "freech", "wolfish", "dubla", "fris", "doubul", "priest"],
+    "Dubblefris":   ["double", "dubblefris", "crease", "free", "freeze", "fish", "lubelofish", "lublle", "fish", "frish", "frieche", "threes", "freech", "wolfish", "dubla", "fris", "doubul", "priest", "du bo fries"],
     "Milk":         ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton", "miyuki"],
 	"Iced_Tea":     [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\

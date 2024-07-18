@@ -1704,9 +1704,9 @@ class CarryMyLuggageMain():
                     relative_not_detected_bag_position = Point()
                     relative_not_detected_bag_position.y = self.pointing_person.position_relative.y - 0.2
                     if self.bag_side == "left":
-                        relative_not_detected_bag_position.x = self.pointing_person.position_relative.x + 0.6
+                        relative_not_detected_bag_position.x = self.pointing_person.position_relative.x + 0.7
                     else: # == "right"
-                        relative_not_detected_bag_position.x = self.pointing_person.position_relative.x - 0.6
+                        relative_not_detected_bag_position.x = self.pointing_person.position_relative.x - 0.7
                 
                     # However the coordinates can not be relative to the robot, because if the robot is not facing forward, the axis don't make sense
                     # So we need to convert realtive coordinates to absolute coordinates

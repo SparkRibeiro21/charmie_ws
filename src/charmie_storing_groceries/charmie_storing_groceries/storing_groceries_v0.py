@@ -1899,12 +1899,12 @@ class StoringGroceriesMain():
                 a = self.transform(height_arm)
                 print(a[0], a[1], a[2])
                 self.set_rgb(command=WHITE+ROTATE)
-                self.set_arm(command="place_cabinet_third_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
+                self.set_arm(command="place_cabinet_fourth_shelf_centre", adjust_position=a[1], wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=adjust_dist, adjust_direction=0.0, wait_for_end_of=True)
                 height_arm = self.shelf_4_height + 0.1 + object_height
                 # height_arm = self.shelf_4_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
-                self.set_arm(command="place_cabinet_third_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_arm(command="place_cabinet_fourth_shelf_centre",adjust_position=a[1], wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
             elif shelf == 4:
                 print('fourth shelf')
@@ -1921,7 +1921,7 @@ class StoringGroceriesMain():
                 height_arm = self.shelf_4_height + 0.1 + object_height
                 # height_arm = self.shelf_4_height_to_place + object_height + 0.05
                 a = self.transform(height_arm)
-                self.set_arm(command="place_cabinet_fourth_shelf_left_side",adjust_position=a[1], wait_for_end_of=True)
+                self.set_arm(command="place_cabinet_fourth_shelf_centre",adjust_position=a[1], wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
 
             elif shelf == 5:
@@ -3086,7 +3086,7 @@ class StoringGroceriesMain():
         self.close_to_garbage_bin = [-2.76, 5.9]
         self.close_to_dishwasher = [-2.26, 8.0]
         self.close_to_table_sb = [-4.26, 8.5]
-        self.pre_table = [-5.16, 5.5]
+        self.pre_table = [-5.16, 6.0]
        
         while True:
 
