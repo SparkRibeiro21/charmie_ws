@@ -111,7 +111,7 @@ def generate_launch_description():
         speakers,
         neck,
         odometry,
-        # navigation,
+        navigation,
         point_cloud,
         yolo_pose,
         lidar,

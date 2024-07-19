@@ -120,8 +120,8 @@ def generate_launch_description():
         navigation,
         odometry,
         point_cloud,
-        # yolo_pose,
-        # yolo_objects,
+        yolo_pose,
+        yolo_objects,
         lidar,
         obstacles,
         # stickler

@@ -17,12 +17,16 @@ from pathlib import Path
 import math
 import time
 
-objects_filename = "segmentation_M_size_model_600_epochs.pt"
-# objects_filename = "epoch50.pt"
+# objects_filename = "segmentation_M_size_model_600_epochs.pt"
+# objects_filename = "epoch20.pt"
+# objects_filename = "new_best.pt"
+objects_filename = "new_best_2.pt"
+# objects_filename = "50_epochs.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
 # objects_filename = "lar_dataset_post_fnr2024.pt"
 shoes_filename = "shoes_socks_v1.pt"
-doors_filename = "door_bruno_2.pt"
+# doors_filename = "door_bruno_2.pt"
+doors_filename = "furniture_robocup.pt"
 
 MIN_OBJECT_CONF_VALUE = 0.5
 MIN_SHOES_CONF_VALUE = 0.5
@@ -63,7 +67,10 @@ class Yolo_obj(Node):
 
         # Opens files with objects names and categories
         try:
-            with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            """ with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+                self.objects_file = json.load(json_file)
+            # print(self.objects_file) """
+            with open(self.complete_path_configuration_files + 'objects_robocup.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
             # print(self.objects_file)
             with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
@@ -95,14 +102,18 @@ class Yolo_obj(Node):
         # whether the activate doors flag starts as ON or OFF 
         self.ACTIVATE_YOLO_DOORS_HAND = self.get_parameter("activate_doors_hand").value
 
+        print(self.home+'/'+objects_filename)
+
         # Import the models, one for each category
-        self.object_model = YOLO(self.complete_path + objects_filename)
+        self.object_model = YOLO(self.home+'/'+objects_filename)
         self.shoes_model = YOLO(self.complete_path + shoes_filename)
         self.doors_model = YOLO(self.complete_path + doors_filename)
         # it needs to have a different model for head and hand image because of the track parameter, otherwise it is always creating new track ids
-        self.object_model_hand = YOLO(self.complete_path + objects_filename)
+        self.object_model_hand = YOLO(self.home+'/'+objects_filename)
         self.shoes_model_hand = YOLO(self.complete_path + shoes_filename)
         self.doors_model_hand = YOLO(self.complete_path + doors_filename)
+
+        print("Sucessfully imported YOLO models")
 
         ### Topics ###
         # Intel Realsense
@@ -152,11 +163,17 @@ class Yolo_obj(Node):
         flag_diagn.data = True
         self.yolo_object_diagnostic_publisher.publish(flag_diagn)
 
-        self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
-                                   'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
-                                   'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
-                                   'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
-                                   'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        # self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
+        #                            'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
+        #                            'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
+        #                            'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
+        #                            'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
+        
+        # Objects robocup 24
+        self.objects_class_names = ['Apple', 'Bag', 'Banana', 'Big_coke', 'Bowl', 'Candle', 'Candy', 'Cola', 'Cornflakes', 'Crisps', 'Cup', 
+                                    'Curry', 'Dishwasher_tab', 'Dubbelfris', 'Fanta', 'Fork', 'Hagelslag', 'Ice_tea', 'Knife', 'Lemon', 'Liquorice', 
+                                    'Mayonaise', 'Milk', 'Orange', 'Pancake_mix', 'Pea_soup', 'Peach', 'Pear', 'Plate', 'Plum', 'Pringles', 'Soap', 
+                                    'Sponge', 'Spoon', 'Strawberry', 'Stroopwafel', 'Suasages', 'Tictac', 'Washcloth', 'Water']
         
         # Secondary declaration used for debug
         # self.objects_class_names = ['Apple', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser', 'Coffee_grounds', 'Cola',
@@ -165,9 +182,10 @@ class Yolo_obj(Node):
         #                                  'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup',
         #                                    'Tropical_juice', 'Tuna']
         
-        self.shoes_class_names = ['Shoe', 'Sock']    
+        self.shoes_class_names = ['Shoe', 'Sock']
         
-        self.doors_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
+        # self.doors_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
+        self.doors_class_names = ['Cabinet', 'Dishwasher']
 
         self.objects_class_names_dict = {}
         self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}

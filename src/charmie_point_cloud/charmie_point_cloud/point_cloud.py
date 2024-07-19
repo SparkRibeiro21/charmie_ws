@@ -277,7 +277,7 @@ class PointCloudNode(Node):
         self.head_depth_img = img
         if self.ACTIVATE_HEAD_DEPTH_OBSTACLES:
             self.publish_head_depth_obstacles()
-        # print("Received Head Depth Image")
+        print("Received Head Depth Image")
 
 
     def get_color_image_hand_callback(self, img: Image):
@@ -526,6 +526,7 @@ class PointCloudNode(Node):
         
         if request.camera == "head":
 
+            print("A")
             if self.head_depth_img.height > 0 and self.head_rgb_img.height > 0: # prevents doing this code before receiving images
 
                 # rgb_frame = self.br.imgmsg_to_cv2(self.head_rgb_img, "bgr8")
@@ -541,7 +542,7 @@ class PointCloudNode(Node):
 
                 # self.pcloud_head.rgb_img_pc = rgb_frame
                 self.pcloud_head.depth_img_pc = depth_frame_res
-            
+                print("B")
                 self.pcloud_head.RECEBO = []
                 for i in range(len(request.data)):
                     aux = []
@@ -559,6 +560,7 @@ class PointCloudNode(Node):
 
                 # calculo dos vários Bounding Boxes
                 self.pcloud_head.robo_head() 
+                print("C")
                 for bbox in self.pcloud_head.RECEBO:
 
                     # le os dados da BouundingBox
@@ -634,7 +636,7 @@ class PointCloudNode(Node):
                     temp.append(resp_outros)
                     temp.append(uteis)
                     self.pcloud_head.ENVIO.append(temp)
-
+                print("D")
                 # convert ENVIO into RetrievePointCloud ROS Variable
                 ret = []
                 if len(self.pcloud_head.ENVIO) > 0:
@@ -676,7 +678,7 @@ class PointCloudNode(Node):
                         ret.append(pcc)
 
                 response.coords = ret
-                
+                print("E")
                 # imprime os tempos de processamento e da frame
                 self.get_logger().info(f"Point Cloud Time: {time.perf_counter() - self.tempo_calculo}")
                 # print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos

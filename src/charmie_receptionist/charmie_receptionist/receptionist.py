@@ -33,6 +33,11 @@ class ReceptionistNode(Node):
         super().__init__("Receptionist")
         self.get_logger().info("Initialised CHARMIE Receptionist Node")
 
+        # path to save detected people in search for person
+        home = str(Path.home())
+        midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+        self.complete_path_custom_face = home+'/'+midpath+'/'
+
         ### Topics (Publisher and Subscribers) ###   
         # Low Level 
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
@@ -523,7 +528,7 @@ class ReceptionistMain():
 
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
-    def set_face(self, command="", custom="", wait_for_end_of=True):
+    def set_face(self, command="", custom="", wait_for_end_of=False):
         
         self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
         
@@ -705,38 +710,54 @@ class ReceptionistMain():
         Presentation_host_first_second_guest = 7
         Final_State = 8
 
-        self.state = Presentation_host_first_guest
-
-        self.SIDE_TO_LOOK = "right"
+        self.SIDE_TO_LOOK = "left"
         self.OPEN_DOOR = False
 
-        # Start localisation position
-        # LAR: self.initial_position = [-1.0, 1.5, -90.0]
-        # LAR: self.initial_position_with_door = [-0.33, 1.4, -135.0]
+        # Start localisation position: ### LAR ###
+        # self.initial_position = [-1.7, 3.5, 180.0]
+        # self.initial_position_with_door = [-0.33, 1.4, -135.0]
 
-        # Navigation Positions
-        # LAR: self.front_of_sofa = [-2.5, 1.5]
-        # LAR: self.sofa = [-2.5, 3.0]
-        # LAR: self.receive_guests = [-1.0, 1.5]
-        # LAR: self.where_guest_is_received = [0.0, 1.5]
-        # LAR: self.map_initial_position = [0.25, 0.0]
+        # Navigation Positions: ### LAR ###
+        # self.front_of_sofa = [-2.5, 1.5]
+        # self.sofa = [0.91, 8.925]
+        # self.receive_guests = [-1.0, 2.5]
+        # self.where_guest_is_received = [0.0, 1.5]
+        # self.map_initial_position = [0.25, 0.0]
 
-        # Start Localisation Position
-        self.initial_position = [-1.0, 3.0, -90.0]
-        self.initial_position_with_door = [-1.3, 1.7, -135.0]
+        # Start Localisation: ### RoboCup24 ###
+        self.initial_position_debug = [0.45, 5.35, 0.0]
+        self.initial_position = [0.0, 2.10, 180.0]
 
-        # Navigation Positions
-        # self.new_strating_position = []
- 
- 
- 
-        self.front_of_sofa = [-0.3, 3.7]
-        self.sofa = [3.0, 3.2]
-        self.centro_cadeiras = [3.0, 3.0]
+        self.receive_guests = [0.0, 1.45]
+        self.pre_room_door = [0.85, 3.6]
+        self.pre_room_door_3 = [0.75, 3.6]
+        self.post_room_door = [0.85, 4.75]
+        self.front_of_sofa = [1.25, 5.85]
+        self.sofa = [0.91, 8.925]
+
+        self.front_of_start_door = [0.0, 1.5]
+        self.midway_living_room = [-1.6, 7.45]
         
-        self.receive_guests = [1.0, 1.8]
-        self.where_guest_is_received = [-2.8, 1.5]
+        self.pre_room_door2 = [0.45, 3.15]
+        self.post_room_door2 = [0.45, 4.70]
+        self.receive_guests2 = [0.45, 2.05]
+        
+        
         self.map_initial_position = [0.0, 0.0]
+        self.map_initial_position2 = [-0.5, 0.0]
+
+
+        # Start Localisation Position: ### FNR24 ###
+        # self.initial_position = [-1.0, 3.0, -90.0]
+        # self.initial_position_with_door = [-1.3, 1.7, -135.0]
+
+        # Navigation Positions: ### FNR24 ###
+        # self.front_of_sofa = [-0.3, 3.7]
+        # self.sofa = [3.0, 3.2]
+        # self.centro_cadeiras = [3.0, 3.0]
+        # self.receive_guests = [1.0, 1.8]
+        # self.where_guest_is_received = [-2.8, 1.5]
+        # self.map_initial_position = [0.0, 0.0]
  
 
         self.look_forward = [0, 0]
@@ -749,10 +770,12 @@ class ReceptionistMain():
 
         self.look_empty_place = [1.0, 2.0]
         # LAR: self.look_sofa = [-2.5, 3.0]
-        self.look_sofa = [3.0, 4.0]
+        self.look_sofa = [0.91, 8.92] 
 
-        self.host_name = "Noah"
-        self.host_drink = "Iced Tea"
+        self.MAX_SPEED = 25
+
+        self.host_name = "John"
+        self.host_drink = "Milk"
         self.host_drink = self.host_drink.replace(' ', '_') # if someone forgets to write correctly
         self.host_filename = ""
         self.host_position = ""
@@ -774,8 +797,10 @@ class ReceptionistMain():
         midpath = "charmie_ws/src/charmie_receptionist/charmie_receptionist/images"
         self.complete_path_save_images = home+'/'+midpath+'/'
 
-        self.set_initial_position(self.initial_position)
+        # self.set_initial_position(self.initial_position)
+        self.state = Waiting_for_start_button
 
+        
         
         # debug print
         print("IN NEW MAIN")
@@ -786,9 +811,11 @@ class ReceptionistMain():
                 print('State 0 = Initial')
                 
                 if self.OPEN_DOOR == True:
-                    self.set_initial_position(self.initial_position_with_door)
-                else:
                     self.set_initial_position(self.initial_position)
+                else:
+                    # self.set_initial_position(self.initial_position)
+                    self.set_initial_position(self.initial_position)
+
                 print("SET INITIAL POSITION")
 
                 time.sleep(1)
@@ -801,15 +828,14 @@ class ReceptionistMain():
                 
                 self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
                 
+                # self.set_navigation(movement="rotate", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
+                
                 self.set_speech(filename="receptionist/start_receptionist", wait_for_end_of=True)
                 
-                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+                self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=True)
                 
-                self.set_navigation(movement="rotate", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
-
                 self.wait_for_start_button()
 
-                
                 self.set_rgb(CYAN+ALTERNATE_QUARTERS)
                 
                 if self.OPEN_DOOR == True:
@@ -824,21 +850,10 @@ class ReceptionistMain():
 
                     self.set_arm(command="open_door_LAR", wait_for_end_of= True)
 
-                    self.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                
-                    self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
-                
-                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
-
-                ### NAVIGATION MOVE TO DOOR LOCALISATION (PLACE TO RECEIVE THE GUEST)
-
-                self.set_navigation(movement="move", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
-
-                self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_neck(position=self.look_forward, wait_for_end_of=False)
                 
                 self.state = Receive_first_guest
+
 
             elif self.state == Receive_first_guest:
                 print('State 1 = Receive first guest')
@@ -856,10 +871,10 @@ class ReceptionistMain():
                 self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color = self.search_for_guest_and_get_info() # search for guest 1 and returns all info regarding guest 1
                 print(self.guest1_filename, self.guest1_ethnicity, self.guest1_age, self.guest1_gender, self.guest1_height, self.guest1_shirt_color, self.guest1_pants_color)
                 
-                self.activate_yolo_pose(activate=False)
+                # self.activate_yolo_pose(activate=False)
 
                 
-                self.get_characteristics(race=self.guest1_ethnicity, age=self.guest1_age, gender=self.guest1_gender, height=self.guest1_height, shirt_color=self.guest1_shirt_color, pants_color=self.guest1_pants_color)
+                # self.get_characteristics(race=self.guest1_ethnicity, age=self.guest1_age, gender=self.guest1_gender, height=self.guest1_height, shirt_color=self.guest1_shirt_color, pants_color=self.guest1_pants_color)
                 
                 # old: self.set_speech(filename="receptionist/presentation_answer_after_green_face", wait_for_end_of=True)
                 self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
@@ -883,15 +898,24 @@ class ReceptionistMain():
 
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
                 
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                
-                # self.set_navigation(movement="rotate", target=self.map_initial_position, flag_not_obs=True, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=15, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
                 self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.centro_cadeiras, flag_not_obs=True, wait_for_end_of=True)
-                # time.sleep(2)
-                # self.set_speech(filename="generic/Near", wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle=-100.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=False)
+                self.set_rgb(MAGENTA+ROTATE)
+                
+                # self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
 
                 if self.SIDE_TO_LOOK.lower() == "right":
 
@@ -913,6 +937,8 @@ class ReceptionistMain():
                 # temp:
                 # self.guest1_name = "Evelyn"
                 # self.guest1_drink = "Cola"
+                # self.set_initial_position([1.0, 6.0, 0.0])
+
 
                 self.set_neck(position=self.look_down_sofa, wait_for_end_of=True)
 
@@ -950,34 +976,45 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
 
                 ### NECK LOOK AT SOFA
-                self.set_neck_coords(position=self.look_sofa, ang=-20, wait_for_end_of=True)
+                self.set_neck_coords(position=self.look_sofa, ang=-10, wait_for_end_of=True)
 
                 ### SEARCH FOR AN EMPTY SEAT: ONLY FOR ROBOCUP
 
-                self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True)
 
-                self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
+
+                self.set_speech(filename="receptionist/free_sit_sofa_center", wait_for_end_of=True)
                 
                 self.set_rgb(GREEN+BLINK_LONG)
-                
+
                 self.state = Navigate_to_starting_point
 
             elif self.state == Navigate_to_starting_point:
                 print('State 1 = Navigate_to_starting_point')
 
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-                
-                # self.set_navigation(movement="orientate", absolute_angle=-90.0, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
-                # time.sleep(2)
-                # self.set_speech(filename="generic/Near", wait_for_end_of=True)
-                # self.set_navigation(movement="orientate", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
 
+
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door2, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door2, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.pre_room_door2, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door2, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.receive_guests2, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.receive_guests2, max_speed=self.MAX_SPEED, reached_radius=1.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.map_initial_position2, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                
+                # self.set_navigation(movement="rotate", target=self.receive_guests, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.receive_guests, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.where_guest_is_received, flag_not_obs=True, wait_for_end_of=True)
                 
                 self.state = Receive_second_guest
+
 
             elif self.state == Receive_second_guest:
                 print('State 1 = Receive second guest')
@@ -1017,18 +1054,32 @@ class ReceptionistMain():
 
                 self.set_speech(filename="receptionist/please_follow_me", wait_for_end_of=True)
                 
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
     
-                # self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
-
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=[4.0, 4.0], flag_not_obs=True, wait_for_end_of=True) # To not get stuck in rotation
+                self.set_navigation(movement="rotate", target=self.pre_room_door_3, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door_3, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
                 self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-                #self.set_navigation(movement="rotate", target=self.centro_cadeiras, flag_not_obs=True, wait_for_end_of=True)
-                # time.sleep(2)
-                # self.set_speech(filename="generic/Near", wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle=-95.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=False)
+                # self.set_navigation(movement="adjust_angle", absolute_angle=-10.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+
+
+                self.set_rgb(WHITE+BACK_AND_FORTH_8)
+                self.set_initial_position([self.front_of_sofa[0], self.front_of_sofa[1], 0.0])
+                self.set_rgb(CYAN+BACK_AND_FORTH_8)
+                
+                # self.set_navigation(movement="rotate", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.front_of_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                
+                # self.set_navigation(movement="orientate", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
 
                 if self.SIDE_TO_LOOK.lower() == "right":
 
@@ -1048,10 +1099,10 @@ class ReceptionistMain():
                 print('State 4 = Presentation host, first and second guest')
 
                 # temp:
-                self.guest1_name = "Evelyn"
-                self.guest1_drink = "Cola"
-                self.guest2_name = "Kai"
-                self.guest2_drink = "Red_Wine"
+                # self.guest1_name = "Evelyn"
+                # self.guest1_drink = "Cola"
+                # self.guest2_name = "Kai"
+                # self.guest2_drink = "Red_Wine"
                 
                 self.set_neck(position=self.look_down_sofa, wait_for_end_of=True)
 
@@ -1062,7 +1113,8 @@ class ReceptionistMain():
                 self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, characteristics=False)
 
                 ### SEARCH FOR ALL DETECTED PEOPLE AND RECEIVE THEIR LOCATION
-                total_photos, total_coords = self.search_for_host_and_guest1()
+                # total_photos, total_coords = self.search_for_host_and_guest1()
+                total_photos, total_coords = self.search_for_host_and_guest1_v2()
                                 
                 self.activate_yolo_pose(activate=False)
 
@@ -1070,13 +1122,19 @@ class ReceptionistMain():
                 print("tot_coords:", total_coords)
 
                 # could only detect one person
-                if len(total_photos) == 1:
+                if len(total_photos) == 0:
+                    print("NO PERSON DETECTED")
+                    self.set_neck_coords(position=self.look_sofa, ang=-10)
+                    time.sleep(0.5)
+
+                # could only detect one person
+                elif len(total_photos) == 1:
                     print("JUST ONE DETECTED PERSON ON THE SOFA")
-                    self.set_neck_coords(position=total_coords[0], ang=-20)
+                    self.set_neck_coords(position=total_coords[0], ang=-10)
                     time.sleep(0.5)
 
                 else: # if detects two or more people
-                    print("TWO ORE MORE PEOPLE DETECTED ON THE SOFA")
+                    print("TWO ORE MORE PEOPLE DETECTED ON THE SOFA OR CHAIRS")
                 
                     # temp: debug
                     # self.host_filename = "/home/charmie/charmie_ws/src/charmie_receptionist/charmie_receptionist/images/2024-04-28_15-49-22_.jpg"
@@ -1118,13 +1176,15 @@ class ReceptionistMain():
                 self.set_speech(filename="receptionist/names/recep_host_name", wait_for_end_of=True)
                 self.set_speech(filename="receptionist/favourite_drink/recep_drink_"+self.host_drink.lower(), wait_for_end_of=True)
                 
-                self.set_neck_coords(position=self.look_sofa, ang=-20, wait_for_end_of=True)
+                self.set_neck_coords(position=self.look_sofa, ang=-10, wait_for_end_of=True)
 
                 ### SEARCH FOR AN EMPTY SEAT: ONLY FOR ROBOCUP                
                 
-                self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/found_empty_seat", wait_for_end_of=True)
 
-                self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
+                # self.set_speech(filename="receptionist/please_sit_sofa", wait_for_end_of=True)
+
+                self.set_speech(filename="receptionist/free_sit_sofa_right", wait_for_end_of=True)
 
                 self.set_rgb(GREEN+BLINK_LONG)
                 
@@ -1138,7 +1198,7 @@ class ReceptionistMain():
                 #SPEAK: Thank you. I finished my receptionist task
                 self.set_speech(filename="receptionist/finish_receptionist", wait_for_end_of=True)
                 #NECK: LOOK TO THE FLOOR
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
                 
                 self.set_rgb(RAINBOW_ROT)
                 
@@ -1153,48 +1213,71 @@ class ReceptionistMain():
 
         host_found = False
         tetas = [[-30, -10], [30, -10]]
+        is_cropped = False
+        sfp_ctr = 0
 
-        while not host_found:
-            people_found = self.search_for_person(tetas=tetas, delta_t=5.0, only_detect_person_legs_visible=True)
+        while not host_found and sfp_ctr < 1:
+            sfp_ctr += 1
+            people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True)
 
             print("FOUND:", len(people_found)) 
-            for p in people_found:
-                print("ID:", p.index_person)
+            # for p in people_found:
+            #     print("ID:", p.index_person)
 
             self.set_rgb(BLUE+HALF_ROTATE)
             self.set_neck(position=[0, 0], wait_for_end_of=True)
-            time.sleep(0.5)
+            # time.sleep(0.5)
 
             host_detected_person_chair = DetectedPerson()
             host_detected_person_living_room = DetectedPerson()
             chairs_ctr = 0
             living_room_ctr = 0
+            
             for p in people_found:
-                self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                time.sleep(4)
+                print("ID:", p.index_person, p.furniture_location, p.room_location)
+                # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
+                # time.sleep(3)
 
-                if p.furniture_location == "Sofa" or p.furniture_location == "Chair 1" or p.furniture_location == "Chair 2":
+            for p in people_found:
+                if p.furniture_location == "Sofa" or p.furniture_location == "Chair":
                     chairs_ctr += 1
                     host_detected_person_chair = p
+                    print("in sofa")
+                    # TIAGO : # usar distancia da pesso, e ver quem é a pessoa mais proxima!!!
                     
+            for p in people_found:
                 if p.room_location == "Living Room":
                     living_room_ctr += 1
                     host_detected_person_living_room = p
+                    print("in living room")
+                    # TIAGO : # usar distancia da pesso, e ver quem é a pessoa mais proxima!!!
+            
+            # if living_room_ctr == 0:
+            #     for p in people_found:
+            #         living_room_ctr += 1
+            #         host_detected_person_living_room = p
+            #         print("dont know where")
 
             selected_host = DetectedPerson
             if chairs_ctr > 0:
                 selected_host = host_detected_person_chair
-                # host_found = True
+                is_cropped, filename = self.crop_face(new_person=selected_host, current_frame_image_msg=selected_host.image_rgb_frame)
+                print("is_cropped:", is_cropped)
             elif living_room_ctr > 0:
                 selected_host = host_detected_person_living_room
-                # host_found = True
+                is_cropped, filename = self.crop_face(new_person=selected_host, current_frame_image_msg=selected_host.image_rgb_frame)
+                print("is_cropped:", is_cropped)
+            
 
-
-            # is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb)
-        
+            if is_cropped:
+                host_found = True
 
             # o is_cropped tem que estar dentro destes ifs para só sair do while quanto tiver um cropped face correcto 
 
+        if sfp_ctr >= 2:
+            return "/home/charmie/charmie_ws/src/charmie_receptionist/charmie_receptionist/images/2024-05-01_21-05-27_8i_.jpg", [self.look_sofa[0], self.look_sofa[1]]
+        else:  
+            return filename, [selected_host.position_absolute.x, selected_host.position_absolute.y]
 
 
         print("loc counters:", chairs_ctr, living_room_ctr)
@@ -1203,8 +1286,8 @@ class ReceptionistMain():
         #   in the living room 
         # if not assumes the closest person 
         # saves and returns that info
-        
-
+    
+    """
     def search_for_host(self):
     
         self.set_rgb(MAGENTA+HALF_ROTATE)
@@ -1261,7 +1344,8 @@ class ReceptionistMain():
         self.set_neck_coords(position=[host.position_absolute.x, host.position_absolute.y], ang=-10, wait_for_end_of=True)
 
         return filename, [host.position_absolute.x, host.position_absolute.y]
-
+        """
+    """
     def search_for_host_and_guest1(self):
         total_photos = []
         total_coords = []
@@ -1328,10 +1412,78 @@ class ReceptionistMain():
             self.set_rgb(WHITE+HALF_ROTATE)
 
         return total_photos, total_coords
+        """
+
+    def search_for_host_and_guest1_v2(self):
+
+        both_people_found = False
+        tetas = [[-20, -10], [20, -10]]
+        is_cropped = False
+        sfp_ctr = 0
+        total_photos = []
+        total_coords = []
+
+
+        while not both_people_found and sfp_ctr < 2:
+
+            total_photos.clear()
+            total_coords.clear()
+
+            sfp_ctr += 1
+            people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True)
+
+            print("FOUND:", len(people_found)) 
+            # for p in people_found:
+            #     print("ID:", p.index_person)
+
+            self.set_rgb(BLUE+HALF_ROTATE)
+            self.set_neck(position=[0, 0], wait_for_end_of=True)
+            
+            living_room_ctr = 0
+            
+            for p in people_found:
+                print("ID:", p.index_person, p.furniture_location, p.room_location)
+                # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
+                # time.sleep(3)
+
+            for p in people_found:
+
+                if p.room_location == "Living Room":
+                    living_room_ctr += 1
+                    
+                    is_cropped, filename = self.crop_face(p, p.image_rgb_frame, filename_with_index=True)
+                    if is_cropped:
+                        host = p
+                        print("is_cropped:", is_cropped)
+                        
+                    print("in living room")
+            
+                if is_cropped:
+                    total_photos.append(filename)
+                    total_coords.append([host.position_absolute.x, host.position_absolute.y])
+
+            if len(total_photos) >= 2:
+                both_people_found = True
+                
+            # if living_room_ctr == 0:
+            #     for p in people_found:
+            #         living_room_ctr += 1
+            #         host_detected_person_living_room = p
+            #         print("dont know where")
+
+        if len(total_photos) == 1:
+            self.set_rgb(BLUE+HALF_ROTATE)
+        elif len(total_photos) == 2:
+            self.set_rgb(GREEN+HALF_ROTATE)
+        elif len(total_photos) > 2:
+            self.set_rgb(WHITE+HALF_ROTATE)
+
+        return total_photos, total_coords
+    
 
     def search_for_guest_and_get_info(self):
 
-        self.search_for_guest()
+        self.search_for_guest_characteristics()
 
         self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=True)
 
@@ -1358,6 +1510,30 @@ class ReceptionistMain():
         # filename is the full path of this guest image
         return filename, guest.ethnicity, guest.age_estimate, guest.gender, guest.height, guest.shirt_color, guest.pants_color
 
+    def search_for_guest_characteristics(self):
+
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=False)
+    
+        self.set_rgb(MAGENTA+HALF_ROTATE)
+        time.sleep(0.5)
+
+        detected_person_temp = Yolov8Pose()
+        start_time = time.time()
+        while time.time() - start_time < 3.0:
+            detected_person_temp = self.node.detected_people  
+            if detected_person_temp.num_person == 0:  
+                start_time = time.time()
+                self.set_rgb(RED+HALF_ROTATE)
+            else:
+                self.set_rgb(YELLOW+HALF_ROTATE)
+            time.sleep(0.2)
+
+        self.set_rgb(WHITE+HALF_ROTATE)
+
+        # self.track_person(person=detected_person_temp.persons[0], wait_for_end_of=True)
+
+
+
     def search_for_guest(self):
 
         self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, characteristics=False)
@@ -1378,7 +1554,7 @@ class ReceptionistMain():
 
         self.set_rgb(WHITE+HALF_ROTATE)
 
-        self.track_person(person=detected_person_temp.persons[0], wait_for_end_of=True)
+        # self.track_person(person=detected_person_temp.persons[0], wait_for_end_of=True)
 
     def get_host_and_guest1_coordinates(self, total_photos, total_coords):
             
@@ -1403,7 +1579,7 @@ class ReceptionistMain():
         for index, value in enumerate(total_host_errors):
             if value == max_host:
                 max_host_index = index
-                break # no need to keep going on, laready have the value
+                break # no need to keep going on, already have the value
         print(max_host_index)
         host_coords = total_coords[max_host_index]
 
@@ -1422,7 +1598,7 @@ class ReceptionistMain():
         for index, value in enumerate(total_guest_errors):
             if value == max_guest:
                 max_guest_index = index
-                break # no need to keep going on, laready have the value
+                break # no need to keep going on, already have the value
         print(max_guest_index)
         guest1_coords = total_coords[max_guest_index]
 
@@ -1493,7 +1669,8 @@ class ReceptionistMain():
                 age = "Between 18 and 32"
             age = age.replace(' ', '_')
         else: # If the robot can not compute, it guesses the following
-            age = 'Between18_32'
+            age = "Between 18 and 32"
+            age = age.replace(' ', '_')
         
         if gender != "None": # Minor corrections to value received
             pass
@@ -1523,13 +1700,13 @@ class ReceptionistMain():
             pants_color = "Blue"
         
         self.set_speech(filename="receptionist/the_first_guest_is", wait_for_end_of=True)
-        self.set_speech(filename="receptionist/characteristics/race_"+race.lower(), wait_for_end_of=True)
-        self.set_speech(filename="receptionist/characteristics/gender_"+gender.lower(), wait_for_end_of=True)
-        self.set_speech(filename="receptionist/characteristics/age_"+age.lower(), wait_for_end_of=True)
         self.set_speech(filename="receptionist/characteristics/height_"+temp_height_string.lower(), wait_for_end_of=True)
+        self.set_speech(filename="receptionist/characteristics/age_"+age.lower(), wait_for_end_of=True)
         self.set_speech(filename="receptionist/the_shirt_color_is", wait_for_end_of=True)
         self.set_speech(filename="receptionist/characteristics/color_"+shirt_color.lower(), wait_for_end_of=True)
-
+        self.set_speech(filename="receptionist/characteristics/gender_"+gender.lower(), wait_for_end_of=True)
+        # self.set_speech(filename="receptionist/characteristics/race_"+race.lower(), wait_for_end_of=True)
+        
         # Not using the pants color at the moment, since the robot had to look down and 
         # we lose time that we do not actually since the other 5 characteristics are one more than enough 
         # self.set_speech(filename="receptionist/the_pants_color_is", wait_for_end_of=True)
@@ -1541,7 +1718,8 @@ class ReceptionistMain():
         encoding_entry = face_recognition.face_encodings(image)
 
         if len(encoding_entry) == 0:
-            return [("Unknown", 0)], None, 0  
+            # return [("Unknown", 0)], None, 0  
+            return "Unknown", 0.0, 0.0  
 
         encoding_entry = encoding_entry[0]  
 
@@ -1565,7 +1743,8 @@ class ReceptionistMain():
             names.append(host_guest_names[i])
         
         if not encoding_knowns:  
-            return [("Unknown", 0)], None, 0
+            # return [("Unknown", 0)], None, 0  
+            return "Unknown", 0.0, 0.0
         
         all_percentages = []
         for encoding_knowns in encoding_knowns:
@@ -1752,3 +1931,22 @@ class ReceptionistMain():
         self.node.search_for_person_detections_publisher.publish(sfp_pub)
 
         return filtered_persons
+
+    def detected_person_to_face_path(self, person, send_to_face):
+
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
+        
+        cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
+        just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
+        # cv2.imshow("Search for Person", just_person_image)
+        # cv2.waitKey(100)
+        
+        face_path = current_datetime + str(person.index_person)
+        
+        cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
+        time.sleep(0.5)
+
+        if send_to_face:
+            self.set_face(custom=face_path)
+        
+        return face_path

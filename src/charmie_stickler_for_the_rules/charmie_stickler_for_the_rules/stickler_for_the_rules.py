@@ -274,13 +274,13 @@ class SticklerForTheRulesNode(Node):
         # Face
         while not self.face_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Face Command...")
-        # while not self.neck_track_object_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
+        while not self.neck_track_object_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         # Yolos
-        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
-        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        while not self.activate_yolo_pose_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        while not self.activate_yolo_objects_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Arm (CHARMIE)
         # while not self.arm_trigger_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
@@ -367,15 +367,16 @@ class SticklerForTheRulesNode(Node):
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
-        current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-        current_frame_draw = current_frame.copy()
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
         
-        cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
-        cv2.waitKey(10)
+        # cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
+        # cv2.waitKey(10)
 
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
 
+        """
         current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
         current_frame_draw = current_frame.copy()
 
@@ -446,6 +447,7 @@ class SticklerForTheRulesNode(Node):
 
         # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         # cv2.waitKey(10)
+        """
 
     def arm_finished_movement_callback(self, flag: Bool):
         # self.get_logger().info("Received response from arm finishing movement")
@@ -911,7 +913,7 @@ class SticklerForTheRulesMain():
 
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
-    def set_face(self, command="", custom="", wait_for_end_of=True):
+    def set_face(self, command="", custom="", wait_for_end_of=False):
         
         self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
         
@@ -1731,7 +1733,11 @@ class SticklerForTheRulesMain():
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
         
-        self.initial_position = [-1.0, 3.0, 180.0]
+        # self.initial_position = [-1.0, 3.0, 180.0]
+        self.initial_position = [0.0, 2.10, 0.0]
+        self.front_initial_position = [0.0, 3.50]
+        self.forbidden_room_entrance = [-1.56, 3.7]
+        self.center_hallway = [2.0, 2.0]
         self.pre_door_to_office = [-2.0, 3.0, 90.0]
         self.inside_office = [-4.0, 3.0, 90.0]
         self.center_office = [-5.0, 3.5, 180.0]
@@ -1785,17 +1791,46 @@ class SticklerForTheRulesMain():
 
                 self.set_speech(filename="sftr/go_forbidden_room", wait_for_end_of=False)
                 #MOVE TO THE ROOM DOOR
+                self.set_rgb(WHITE+ROTATE)
                 
-                # self.set_navigation(movement="rotate", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.inside_office, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.inside_office, flag_not_obs=False, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
-                # self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.25, wait_for_end_of=True)
+                
+                # # self.set_navigation(movement="rotate", target=self.forbidden_room_pre_entrance,  flag_not_obs=True, wait_for_end_of=True)
+                # # self.set_navigation(movement="move", target=self.forbidden_room_pre_entrance,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
+                
+                # self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
 
+                # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance= 1.36, adjust_direction=0.0, wait_for_end_of=True)
+
+                
+                self.set_navigation(movement="move", target=self.front_initial_position,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
+          
+                # self.set_navigation(movement="rotate", target=self.forbidden_room_entrance,  flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.forbidden_room_entrance,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(GREEN+BLINK_QUICK)
+                # TALVEZ FAZER UM ADJUST AQUI PARA FICAR LIGEIRAMENTE DENTRO DA SALA?
+                self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
+
+                # self.set_navigation(movement="rotate", target=self.forbidden_room_pre_entrance,  flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.forbidden_room_pre_entrance,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
+                
+
+
+
+                """ ANTIGAS COORDENADAS
+                
+                self.set_navigation(movement="rotate", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_door_to_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_office, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_door_to_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.inside_bedroom, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True) """
+                self.nr_times_tracking_fb = 0
                 # next state
                 self.state = self.Detect_people_forbidden_room
 
@@ -1814,14 +1849,17 @@ class SticklerForTheRulesMain():
                 person_detected = []
                 nr_persons_fb_room = 0
                 person_forbidden_room = False
-                tetas = [[-60, -10], [0, -10], [60, -10]]
+                tetas = [[60, -20], [30, -20]]
                 if self.nr_times_tracking_fb < 3:
                     person_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True, only_detect_person_arm_raised=False, characteristics=False)
                     for person in person_found:
-                        if person.room_location == 'Bedroom':
+                        print(person.room_location)
+                        if person.room_location == 'Office':
                             person_forbidden_room = True
                             person_detected.append(person)
                             print('Person found')
+                            print('Person position', person.position_relative)
+                            print('Person position', person.position_absolute)
                             
                             # LOOK TO THE PERSON DETECTED
                             self.set_neck_coords(position=[person.position_absolute.x, person.position_absolute.y], ang=-10, wait_for_end_of=True)
@@ -1848,18 +1886,19 @@ class SticklerForTheRulesMain():
             elif self.state == self.Speak_forbidden_room:
                 print('State 3 = Speak forbidden room')
                 
-                self.set_neck_coords(position=[person_detected[nr_persons_detected_bedroom].position_absolute.x, person_detected[nr_persons_detected_bedroom].position_absolute.y], ang=-10, wait_for_end_of=True)  
+                self.set_neck_coords(position=[person_detected[0].position_absolute.x, person_detected[0].position_absolute.y], ang=-10, wait_for_end_of=True)  
                 self.set_speech(filename="sftr/detection_forbidden_room", wait_for_end_of=True)
-                path = self.detected_person_to_face_path(person=person_detected[nr_persons_detected_bedroom], send_to_face=True)
+                path = self.detected_person_to_face_path(person=person_detected[0], send_to_face=True)
                 
                 #REPLACE: LOOK TO THE PERSON
-                print('Coordinates of the guest I am looking at: ', person_detected.position_absolute)
+                print('Coordinates of the guest I am looking at: ', person_detected[0].position_absolute)
 
                 # self.set_neck(position=coords_of_people[0], wait_for_end_of=True)
                 self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=True)
                 self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=True)
                 self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=True)
                 self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=True)
+
                 self.state = self.Navigation_out_forbidden_room
                        
             elif self.state == self.Navigation_out_forbidden_room:
@@ -1867,14 +1906,17 @@ class SticklerForTheRulesMain():
                 nr_persons_detected_bedroom += 1
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 #MOVE TO OUT OF THE BEDROOM
-                self.set_navigation(movement="rotate", target=self.after_leaving_bedroom, flag_not_obs=False, wait_for_end_of=True)
-                # self.set_navigation(movement="orientate", absolute_angle = 180.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle = -90.0, flag_not_obs=True, wait_for_end_of=True)
+
+                 # self.set_navigation(movement="orientate", absolute_angle = 180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_neck(position=self.look_back, wait_for_end_of=True)
                 self.set_speech(filename="sftr/follow_me", wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.after_leaving_bedroom, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.initial_position, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.initial_position, max_speed=15, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
                 times_checking_person = 1
                 self.check_if_charmie_is_being_followed(times_checking_person)
-                self.set_navigation(movement="move", target=self.center_office, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.center_hallway, max_speed=15, reached_radius=0.4, flag_not_obs=True, wait_for_end_of=True)
                 times_checking_person = 2
                 self.check_if_charmie_is_being_followed(times_checking_person)
                 self.activate_yolo_pose(activate=False)
@@ -1893,7 +1935,7 @@ class SticklerForTheRulesMain():
                     # self.set_navigation(movement="move", target=self.inside_bedroom, flag_not_obs=False, wait_for_end_of=True)
                     # self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
 
-                    self.state = self.Detect_people_forbidden_room
+                    self.state = self.Navigation_forbidden_room
                     
             elif self.state == self.Search_person_second_room:
                 
@@ -1903,11 +1945,10 @@ class SticklerForTheRulesMain():
                 
                 self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, only_detect_person_right_in_front=False)
                 person_detected = []
-                tetas = [[-120, 0], [0, 0], [60, 0]]
+                tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 person_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True, only_detect_person_arm_raised=False, characteristics=False)
                 for person in person_found:
-                    if person.room_location == 'Kitchen':
-                        person_forbidden_room = True
+                    if person.room_location == 'Hallway':
                         person_detected.append(person)
                         print('Person found')
                         
@@ -1929,11 +1970,10 @@ class SticklerForTheRulesMain():
                 
                 self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, only_detect_person_right_in_front=False)
                 person_detected = []
-                tetas = [[-120, 0], [0, 0], [60, 0]]
+                tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 person_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True, only_detect_person_arm_raised=False, characteristics=False)
                 for person in person_found:
-                    if person.room_location == 'Kitchen':
-                        person_forbidden_room = True
+                    if person.room_location == 'Living Room':
                         person_detected.append(person)
                         print('Person found')
                         
@@ -1954,11 +1994,10 @@ class SticklerForTheRulesMain():
                 
                 self.activate_yolo_pose(activate=True, only_detect_person_legs_visible=True, only_detect_person_right_in_front=False)
                 person_detected = []
-                tetas = [[-120, 0], [0, 0], [60, 0]]
+                tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 person_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True, only_detect_person_arm_raised=False, characteristics=False)
                 for person in person_found:
                     if person.room_location == 'Kitchen':
-                        person_forbidden_room = True
                         person_detected.append(person)
                         print('Person found')
                         

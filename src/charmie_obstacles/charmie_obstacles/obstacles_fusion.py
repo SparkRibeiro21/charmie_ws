@@ -87,7 +87,7 @@ class Robot():
         
         self.ACTIVATE_LIDAR_UP = True
         self.ACTIVATE_LIDAR_BOTTOM = False
-        self.ACTIVATE_CAMERA_HEAD = True
+        self.ACTIVATE_CAMERA_HEAD = False
 
         self.scan = LaserScan()
         self.valores_dict = {}

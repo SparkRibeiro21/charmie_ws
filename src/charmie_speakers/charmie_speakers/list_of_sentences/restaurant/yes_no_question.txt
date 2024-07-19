@@ -1,1 +1,1 @@
-To confirm the order please respond with yes robot or no robot.
+To confirm the order please respond with robot yes or robot no.
