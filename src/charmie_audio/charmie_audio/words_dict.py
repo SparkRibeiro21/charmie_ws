@@ -26,7 +26,7 @@ drinks_dict = {
     "Big_Coke":     ["big", "coke", " cok ", "cook", " cog ", "vehicle", "kolk", "cock", " vico", "cocke", "nikko", "V-cock", "beak-oak", "vicoke", "biko", "alabicok"],
     "Cola":         [" cola", "coca", "kola", "coconut", "color", "call", "gog", "koch", "kullum", "goog", "cold",\
                         "kohler", "kala", "gola", "kohla", "cool", "kolkka"],
-    "Dubblefris":   ["double", "dubblefris", "crease", "free", "freeze", "fish", "lubelofish", "lublle", "fish", "frish", "frieche", "threes", "freech", "wolfish", "dubla", "fris", "doubul", "priest", "du bo fries"],
+    "Dubblefris":   ["double", "dubblefris", "crease", "free", "freeze", "fish", "lubelofish", "lublle", "fish", "frish", "frieche", "threes", "freech", "wolfish", "dubla", "fris", "doubul", "priest"],
     "Milk":         ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton", "miyuki"],
 	"Iced_Tea":     [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
@@ -36,29 +36,29 @@ drinks_dict = {
 }
 
 foods_dict = {
-    "Candy":            ["candy", "candi", "kai chi"],
-    "Crisps":           ["crisps", "crispy", "chris", "crispies", "grapes", "species", "creepy", "creeps", "greece"],
-    "Liquorice":        ["liquorice", "liqueur", "rice", "rise", "lekou"],
-    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "gringles", "ringles"],
-    "Stroopwafel":      ["stroopwafle", "stroke", "waffle", "stop", "drop", "struck", "strip", "powerful"],
+    "Candy":            ["candy", "candi", "kai chi", "kandish","scary"],
+    "Crisps":           ["crisps", "crispy", "chris", "crispies", "grapes", "species", "creepy", "creeps", "greece", "crepes", "creas"],
+    "Liquorice":        ["liquorice", "liqueur", "rice", "rise", "lekou", "corrise", "legal highs"],
+    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "gringles", "ringles", "ingles"],
+    "Stroopwafel":      ["stroopwafle", "stroke", "waffle", "stop", "drop", "struck", "strip", "powerful", "proper", "straw"],
     "Tictac":           ["tictac", "tak ", "tuke", "tiktok", "tik", "tek", "cheek", "chalk", "eak", "diktak"],
 
     "Pear":             ["pear", "pair", "pier", "beer", "bare"],
     "Plum":             ["plum", "clump", "blam", "blum", "plumb"],
-    "Peach":            ["peach"],
-    "Lemon":            ["lemon", "lammon"],
+    "Peach":            ["peach", "beach", "bitch"],
+    "Lemon":            ["lemon", "lammon", "landmen", "land"],
     "Orange":           ["orange", "orton"],
     "Strawberry":       ["strawberry"],
-    "Banana":           ["banana"],
-    "Apple":            ["apple"],
+    "Banana":           ["banana", "benign", "banane", "banan"],
+    "Apple":            ["apple", "opera", "haypole", "april"],
 
-    "Cornflakes":       ["cornflakes", "corn flakes", "conflicts", "gonna flex"],
-    "Curry":            ["curry", "kurji", "huhi", "hurry"],
-    "Hagelslag":        ["hagelslag", "eagle", "sleigh", "slag", "hoggles", "huggles"],
-    "Mayonaise":        ["mayonaise", "own knees", "my hones","mayo", "nes ", "mayonw", "maio", "myonase"],
-    "Pancake_Mix":      ["pancake", "mix", "spankake", "kake", "pancakes"],
-    "Pea_Soup":         ["soup"],
-    "Sausages":         ["sausage", "sausageies", "sausages"]
+    "Cornflakes":       ["cornflakes", "corn flakes", "conflicts", "gonna flex", "flakes", "corn", "carbon", "car deflates"],
+    "Curry":            ["curry", "kurji", "huhi", "hurry", "call him", "call you"],
+    "Hagelslag":        ["hagelslag", "eagle", "sleigh", "slag", "hoggles", "huggles", "agel", "slack", "achol", "ugle", "sleigh", "slot" , "ghost"],
+    "Mayonaise":        ["mayonaise", "own knees", "my hones","mayo", "nes ", "mayonw", "maio", "myonase", "my own age", "my own eyes", "my own name", "enemies"],
+    "Pancake_Mix":      ["pancake", "mix", "spankake", "kake", "pancakes", "pankake"],
+    "Pea_Soup":         ["soup", "pea", "pee", "b as fuck", "b's fuck", "b too", "super", "peace", "soap"],
+    "Sausages":         ["sausage", "sausageies", "sausages", "swatches"]
 }
 """
 names_dict = {

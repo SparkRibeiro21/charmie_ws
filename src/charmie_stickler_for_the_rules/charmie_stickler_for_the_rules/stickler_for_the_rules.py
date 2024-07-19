@@ -1735,8 +1735,8 @@ class SticklerForTheRulesMain():
         
         # self.initial_position = [-1.0, 3.0, 180.0]
         self.initial_position = [0.0, 2.10, 0.0]
-        self.forbidden_room_entrance = [-1.56, 3.5]
-        self.forbidden_room_pre_entrance = [0.0, 3.5]
+        self.front_initial_position = [0.0, 3.50]
+        self.forbidden_room_entrance = [-1.56, 3.7]
         self.center_hallway = [2.0, 2.0]
         self.pre_door_to_office = [-2.0, 3.0, 90.0]
         self.inside_office = [-4.0, 3.0, 90.0]
@@ -1793,20 +1793,29 @@ class SticklerForTheRulesMain():
                 #MOVE TO THE ROOM DOOR
                 self.set_rgb(WHITE+ROTATE)
                 
-                self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.25, wait_for_end_of=True)
+                # self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.25, wait_for_end_of=True)
                 
+                # # self.set_navigation(movement="rotate", target=self.forbidden_room_pre_entrance,  flag_not_obs=True, wait_for_end_of=True)
+                # # self.set_navigation(movement="move", target=self.forbidden_room_pre_entrance,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
+                
+                # self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
+
+                # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance= 1.36, adjust_direction=0.0, wait_for_end_of=True)
+
+                
+                self.set_navigation(movement="move", target=self.front_initial_position,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
+          
+                # self.set_navigation(movement="rotate", target=self.forbidden_room_entrance,  flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.forbidden_room_entrance,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(GREEN+BLINK_QUICK)
+                # TALVEZ FAZER UM ADJUST AQUI PARA FICAR LIGEIRAMENTE DENTRO DA SALA?
+                self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
+
                 # self.set_navigation(movement="rotate", target=self.forbidden_room_pre_entrance,  flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="move", target=self.forbidden_room_pre_entrance,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
                 
-                self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
-
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance= 1.36, adjust_direction=0.0, wait_for_end_of=True)
-                            
-                # self.set_navigation(movement="rotate", target=self.forbidden_room_entrance,  flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.forbidden_room_entrance,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
-                self.set_rgb(GREEN+BLINK_QUICK)
-                # TALVEZ FAZER UM ADJUST AQUI PARA FICAR LIGEIRAMENTE DENTRO DA SALA?
-                # self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
 
 
 
@@ -1840,14 +1849,17 @@ class SticklerForTheRulesMain():
                 person_detected = []
                 nr_persons_fb_room = 0
                 person_forbidden_room = False
-                tetas = [[60, -10], [30, -10]]
+                tetas = [[60, -20], [30, -20]]
                 if self.nr_times_tracking_fb < 3:
                     person_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True, only_detect_person_arm_raised=False, characteristics=False)
                     for person in person_found:
+                        print(person.room_location)
                         if person.room_location == 'Office':
                             person_forbidden_room = True
                             person_detected.append(person)
                             print('Person found')
+                            print('Person position', person.position_relative)
+                            print('Person position', person.position_absolute)
                             
                             # LOOK TO THE PERSON DETECTED
                             self.set_neck_coords(position=[person.position_absolute.x, person.position_absolute.y], ang=-10, wait_for_end_of=True)
@@ -1874,12 +1886,12 @@ class SticklerForTheRulesMain():
             elif self.state == self.Speak_forbidden_room:
                 print('State 3 = Speak forbidden room')
                 
-                self.set_neck_coords(position=[person_detected[0].position_absolute.x, person_detected[nr_persons_detected_bedroom].position_absolute.y], ang=-10, wait_for_end_of=True)  
+                self.set_neck_coords(position=[person_detected[0].position_absolute.x, person_detected[0].position_absolute.y], ang=-10, wait_for_end_of=True)  
                 self.set_speech(filename="sftr/detection_forbidden_room", wait_for_end_of=True)
                 path = self.detected_person_to_face_path(person=person_detected[0], send_to_face=True)
                 
                 #REPLACE: LOOK TO THE PERSON
-                print('Coordinates of the guest I am looking at: ', person_detected.position_absolute)
+                print('Coordinates of the guest I am looking at: ', person_detected[0].position_absolute)
 
                 # self.set_neck(position=coords_of_people[0], wait_for_end_of=True)
                 self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=True)
@@ -1887,8 +1899,6 @@ class SticklerForTheRulesMain():
                 self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=True)
                 self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=True)
 
-                while True:
-                    pass
                 self.state = self.Navigation_out_forbidden_room
                        
             elif self.state == self.Navigation_out_forbidden_room:

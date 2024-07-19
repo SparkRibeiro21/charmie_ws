@@ -35,20 +35,20 @@ class NavigationSDNLClass:
         # self.beta2 = 0.15 # 7
 
         # generic tasks
-        # self.lambda_target = 4
-        # self.lambda_target_not_obs = 10
-        # self.lambda_target_with_obs = 4
-        # self.beta1 = 40 # 40
-        # self.beta2 = 0.06 # 0.04
-        # self.min_speed_obs = 6.0 # speed
+        self.lambda_target = 4
+        self.lambda_target_not_obs = 10
+        self.lambda_target_with_obs = 4
+        self.beta1 = 40 # 40
+        self.beta2 = 0.06 # 0.04
+        self.min_speed_obs = 6.0 # speed
         
         # restaurant
-        self.lambda_target = 5
-        self.lambda_target_not_obs = 8
-        self.lambda_target_with_obs = 4
-        self.beta1 = 80 
-        self.beta2 = 0.35 
-        self.min_speed_obs = 3.0 # speed
+        # self.lambda_target = 5
+        # self.lambda_target_not_obs = 8
+        # self.lambda_target_with_obs = 4
+        # self.beta1 = 80 
+        # self.beta2 = 0.35 
+        # self.min_speed_obs = 3.0 # speed
         
         # configurable other parameters
         self.nav_threshold_dist = 0.6 # in meters
