@@ -799,6 +799,21 @@ class ServeBreakfastMain():
         
         self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
         
+        if command != "" and command != "charmie_face" and command != "charmie_face_green_yes_no":
+            home = str(Path.home())
+            midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_media_faces"
+            complete_path = home+'/'+midpath+'/'
+            image = cv2.imread(complete_path + command + ".jpg")
+            cv2.imshow(command, image) 
+            cv2.waitKey(200)
+        elif custom != "":
+            home = str(Path.home())
+            midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+            complete_path = home+'/'+midpath+'/'
+            image = cv2.imread(complete_path + custom + ".jpg")
+            cv2.imshow(custom, image) 
+            cv2.waitKey(200)
+        
         if wait_for_end_of:
             while not self.node.waited_for_end_of_face:
                 pass
@@ -1569,8 +1584,8 @@ class ServeBreakfastMain():
         self.ATTEMPTS_AT_RECEIVING = 2
         self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
         self.MAX_SPEED = 30
-        self.TABLE_APPROACH_OBSTACLES = 0.45
-        self.COUNTER_APPROACH_OBSTACLES = 0.20
+        self.TABLE_APPROACH_OBSTACLES = 0.25
+        self.COUNTER_APPROACH_OBSTACLES = 0.25
         self.GET_MILK = False
         self.GET_CORNFLAKES = True
         self.GET_DISHES = True
@@ -1606,7 +1621,7 @@ class ServeBreakfastMain():
         self.close_to_table_sb = [-4.26, 8.8]
         self.pre_table = [-4.76, 6.0]
 
-        self.state = self.Detect_and_pick_cornflakes
+        self.state = self.Waiting_for_task_start
 
 
         self.node.get_logger().info("IN SERVE THE BREAKFAST MAIN")
@@ -1729,7 +1744,7 @@ class ServeBreakfastMain():
                     self.set_neck(position=self.look_navigation, wait_for_end_of=False)
                     self.set_speech(filename="generic/sb_moving_kitchen_counter", wait_for_end_of=False)
 
-                    """
+                    
                     self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     self.set_rgb(BLUE+ROTATE)
                     # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
@@ -1749,13 +1764,10 @@ class ServeBreakfastMain():
                     self.set_navigation(movement="rotate", target=self.close_to_table_sb, flag_not_obs=True, wait_for_end_of=True)
                     self.set_navigation(movement="move", target=self.close_to_table_sb, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     self.set_rgb(BLUE+ROTATE)
-                    """
-
-                    self.set_initial_position([0.0, 0.0, 90.0])
-
-                    self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
                     
-                
+                    # debug
+                    # self.set_initial_position([0.0, 0.0, 90.0])
+
                     self.set_speech(filename="generic/sb_arrived_kitchen_counter", wait_for_end_of=False)
                     self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
                     
@@ -1925,8 +1937,10 @@ class ServeBreakfastMain():
 
                     self.set_face("charmie_face")
 
-                # self.state = self.Approach_kitchen_table
-                self.state = self.Placing_bowl
+                self.state = self.Approach_kitchen_table
+                
+                # debug
+                # self.state = self.Placing_bowl
 
 
             elif self.state == self.Approach_kitchen_table:

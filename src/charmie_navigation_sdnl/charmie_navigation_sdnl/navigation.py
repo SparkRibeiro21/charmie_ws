@@ -1222,7 +1222,7 @@ class NavSDNLNode(Node):
 
                     omni_move = Vector3()
                     omni_move.x = float(self.nav.nav_target.adjust_direction)
-                    omni_move.y = float(15.0)
+                    omni_move.y = float(5.0)
                     omni_move.z = float(100.0) 
 
                     print("min_obs:", self.nav.min_dist_obs, self.nav.nav_target.adjust_min_dist)
