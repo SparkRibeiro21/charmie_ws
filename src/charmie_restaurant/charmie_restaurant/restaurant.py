@@ -1394,12 +1394,12 @@ class RestaurantMain():
                     self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
                     dist_array = []
                     ##### NECK: look waving customers
-                    # self.set_speech(filename="restaurant/look_detected_waving_customers", wait_for_end_of=False)
+                    self.set_speech(filename="restaurant/look_detected_waving_customers", wait_for_end_of=False)
 
                     time.sleep(1)
                         
                     for p in customers_list:
-                        # self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
+                        self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
                         dist = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
                         dist_array.append(dist)
                         print('\n \n coordenadas cliente :', p.position_relative.x, p.position_relative.y)
@@ -1962,6 +1962,8 @@ class RestaurantMain():
                     ##### "Please say yes or no to confirm the order"
                     confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                     print("Finished:", confirmation)
+
+                    self.all_orders = []
 
                     ##### Verifica a resposta recebida
                     if confirmation.lower() == "yes":

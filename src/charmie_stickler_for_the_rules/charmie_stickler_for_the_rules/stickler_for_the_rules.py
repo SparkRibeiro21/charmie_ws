@@ -1091,9 +1091,9 @@ class SticklerForTheRulesMain():
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
-    def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False):
+    def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
-        self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible) 
+        self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
         self.set_speech(filename="generic/search_people", wait_for_end_of=False)
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
         time.sleep(0.5)
@@ -1214,7 +1214,7 @@ class SticklerForTheRulesMain():
                 filtered_persons.append(p)
             to_append.clear()
             
-        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        # self.set_neck(position=[0, 0], wait_for_end_of=False)
         self.set_rgb(BLUE+HALF_ROTATE)
 
         sfp_pub = ListOfDetectedPerson()
@@ -1696,21 +1696,21 @@ class SticklerForTheRulesMain():
         not_following = True
         tetas = [[-180, 0]]
         while not_following == True:
-            person_found = self.search_for_person(tetas=tetas, delta_t=2, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False)
+            person_found = self.search_for_person(tetas=tetas, delta_t=2, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=True)
             if person_found == []:
                 not_following = True
                 self.set_rgb(YELLOW+HALF_ROTATE)
-                self.set_speech(filename="sftr/Come_behind_me", wait_for_end_of=True)
+                self.set_speech(filename="sftr/stand_behind_me", wait_for_end_of=True)
                 self.set_rgb(RED+BLINK_QUICK)
                 time.sleep(1)
             else:
-                if index == 1:
+                if index == 1 or index == 2:
                     self.set_rgb(GREEN+HALF_ROTATE)
-                    self.set_speech(filename="sftr/Thanks_for_following", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/Thanks_for_standind_behind_me_1", wait_for_end_of=True)
                     not_following = False
                 else:
                     self.set_rgb(GREEN+HALF_ROTATE)
-                    self.set_speech(filename="sftr/Thanks_for_following_2", wait_for_end_of=True)
+                    self.set_speech(filename="sftr/Thanks_for_standind_behind_me_2", wait_for_end_of=True)
                     not_following = False
 
     # main state-machine function
@@ -1847,6 +1847,7 @@ class SticklerForTheRulesMain():
 
                 print('inside')
                 person_detected = []
+                dist_array = []
                 nr_persons_fb_room = 0
                 person_forbidden_room = False
                 tetas = [[60, -20], [30, -20]]
@@ -1864,6 +1865,28 @@ class SticklerForTheRulesMain():
                             # LOOK TO THE PERSON DETECTED
                             self.set_neck_coords(position=[person.position_absolute.x, person.position_absolute.y], ang=-10, wait_for_end_of=True)
                             time.sleep(1)
+
+                            dist = math.sqrt(person.position_relative.x**2 + person.position_relative.y**2)
+                            dist_array.append(dist)
+
+                            print('\n \n coordenadas cliente :', person.position_relative.x, person.position_relative.y)
+                            print('distance to client: ', dist)
+                    
+                    # Step 1: Create a list of tuples (distance, index)
+                    distance_with_indices = [(distance, index) for index, distance in enumerate(dist_array)]
+
+                    # Step 2: Sort the list of tuples by distance
+                    sorted_distances = sorted(distance_with_indices)
+
+                    # Step 3: Use the sorted indices to reorder the persons list
+                    sorted_persons = [person_detected[index] for _, index in sorted_distances]
+
+                    # Print the results
+                    print("Sorted Distances with Indices:", sorted_distances)
+                    
+                    for p in sorted_persons:
+                        print("Positions:", p.position_relative, ' + ',p.index_person)
+
                     
                     self.activate_yolo_pose(activate=False)
                     if person_forbidden_room == True:
@@ -1886,13 +1909,14 @@ class SticklerForTheRulesMain():
             elif self.state == self.Speak_forbidden_room:
                 print('State 3 = Speak forbidden room')
                 
-                self.set_neck_coords(position=[person_detected[0].position_absolute.x, person_detected[0].position_absolute.y], ang=-10, wait_for_end_of=True)  
+                self.set_neck_coords(position=[sorted_persons[0].position_absolute.x, sorted_persons[0].position_absolute.y], ang=-10, wait_for_end_of=True)  
                 self.set_speech(filename="sftr/detection_forbidden_room", wait_for_end_of=True)
-                path = self.detected_person_to_face_path(person=person_detected[0], send_to_face=True)
+                # path = self.detected_person_to_face_path(person=person_detected[0], send_to_face=True)
                 
                 #REPLACE: LOOK TO THE PERSON
-                print('Coordinates of the guest I am looking at: ', person_detected[0].position_absolute)
-
+                # print('Coordinates of the guest I am looking at: ', person_detected[0].position_absolute)
+                print('Coordinates of the guest I am looking at: ', sorted_persons[0].position_absolute)
+                
                 # self.set_neck(position=coords_of_people[0], wait_for_end_of=True)
                 self.set_speech(filename="sftr/looking_guest_forbidden_room", wait_for_end_of=True)
                 self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=True)
@@ -1906,24 +1930,42 @@ class SticklerForTheRulesMain():
                 nr_persons_detected_bedroom += 1
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 #MOVE TO OUT OF THE BEDROOM
-                self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle = 0.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="orientate", absolute_angle = -90.0, flag_not_obs=True, wait_for_end_of=True)
 
                  # self.set_navigation(movement="orientate", absolute_angle = 180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_neck(position=self.look_back, wait_for_end_of=True)
                 self.set_speech(filename="sftr/follow_me", wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.initial_position, flag_not_obs=False, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.initial_position, max_speed=15, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+
                 times_checking_person = 1
                 self.check_if_charmie_is_being_followed(times_checking_person)
-                self.set_navigation(movement="move", target=self.center_hallway, max_speed=15, reached_radius=0.4, flag_not_obs=True, wait_for_end_of=True)
+                
+                
+                self.set_navigation(movement="rotate", target=self.front_initial_position, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_initial_position, max_speed=15, reached_radius=0.5, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle = -90.0, flag_not_obs=True, wait_for_end_of=True)
+
                 times_checking_person = 2
                 self.check_if_charmie_is_being_followed(times_checking_person)
+                
+
+                self.set_navigation(movement="rotate", target=self.initial_position, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.initial_position, max_speed=15, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle = 180.0, flag_not_obs=True, wait_for_end_of=True)
+
+                times_checking_person = 3
+                self.check_if_charmie_is_being_followed(times_checking_person)
+
                 self.activate_yolo_pose(activate=False)
                 self.set_speech(filename="sftr/no_longer_breaking_rule", wait_for_end_of=False)
                 self.set_rgb(GREEN+BLINK_LONG)
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.center_hallway, max_speed=15, reached_radius=0.4, flag_not_obs=True, wait_for_end_of=True)
                         
+                while True:
+                    pass
+
+
                 if nr_persons_detected_bedroom == nr_persons_fb_room - 1:
                     print('No more persons detected')
                     self.state = self.Search_person_second_room 
