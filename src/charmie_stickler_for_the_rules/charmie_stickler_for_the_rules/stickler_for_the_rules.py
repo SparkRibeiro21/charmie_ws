@@ -274,13 +274,13 @@ class SticklerForTheRulesNode(Node):
         # Face
         while not self.face_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Face Command...")
-        # while not self.neck_track_object_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
+        while not self.neck_track_object_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         # Yolos
-        # while not self.activate_yolo_pose_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
-        # while not self.activate_yolo_objects_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+        while not self.activate_yolo_pose_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        while not self.activate_yolo_objects_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
         # Arm (CHARMIE)
         # while not self.arm_trigger_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
@@ -367,15 +367,16 @@ class SticklerForTheRulesNode(Node):
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
 
-        current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-        current_frame_draw = current_frame.copy()
+        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
+        # current_frame_draw = current_frame.copy()
         
-        cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
-        cv2.waitKey(10)
+        # cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
+        # cv2.waitKey(10)
 
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
 
+        """
         current_frame = self.br.imgmsg_to_cv2(self.detected_objects.image_rgb, "bgr8")
         current_frame_draw = current_frame.copy()
 
@@ -446,6 +447,7 @@ class SticklerForTheRulesNode(Node):
 
         # cv2.imwrite("object_detected_test4.jpg", current_frame_draw[max(y_min-thresh_v,0):min(y_max+thresh_v,720), max(x_min-thresh_h,0):min(x_max+thresh_h,1280)]) 
         # cv2.waitKey(10)
+        """
 
     def arm_finished_movement_callback(self, flag: Bool):
         # self.get_logger().info("Received response from arm finishing movement")
@@ -911,7 +913,7 @@ class SticklerForTheRulesMain():
 
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
-    def set_face(self, command="", custom="", wait_for_end_of=True):
+    def set_face(self, command="", custom="", wait_for_end_of=False):
         
         self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
         
@@ -1733,7 +1735,8 @@ class SticklerForTheRulesMain():
         
         # self.initial_position = [-1.0, 3.0, 180.0]
         self.initial_position = [0.0, 2.10, 0.0]
-        self.forbidden_room_entrance = [-1.06, 3.5]
+        self.forbidden_room_entrance = [-1.56, 3.5]
+        self.forbidden_room_pre_entrance = [0.0, 3.5]
         self.center_hallway = [2.0, 2.0]
         self.pre_door_to_office = [-2.0, 3.0, 90.0]
         self.inside_office = [-4.0, 3.0, 90.0]
@@ -1789,11 +1792,23 @@ class SticklerForTheRulesMain():
                 self.set_speech(filename="sftr/go_forbidden_room", wait_for_end_of=False)
                 #MOVE TO THE ROOM DOOR
                 self.set_rgb(WHITE+ROTATE)
-                self.set_navigation(movement="rotate", target=self.forbidden_room_entrance,  flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.forbidden_room_entrance,reached_radius=0.5, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.25, wait_for_end_of=True)
+                
+                # self.set_navigation(movement="rotate", target=self.forbidden_room_pre_entrance,  flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.forbidden_room_pre_entrance,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
+                
+                self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
+
+                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance= 1.36, adjust_direction=0.0, wait_for_end_of=True)
+                            
+                # self.set_navigation(movement="rotate", target=self.forbidden_room_entrance,  flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.forbidden_room_entrance,reached_radius=0.3, max_speed=15, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(GREEN+BLINK_QUICK)
                 # TALVEZ FAZER UM ADJUST AQUI PARA FICAR LIGEIRAMENTE DENTRO DA SALA?
-                self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="orientate", absolute_angle = 90.0, flag_not_obs=True, wait_for_end_of=True)
+
+
 
                 """ ANTIGAS COORDENADAS
                 
@@ -1825,7 +1840,7 @@ class SticklerForTheRulesMain():
                 person_detected = []
                 nr_persons_fb_room = 0
                 person_forbidden_room = False
-                tetas = [[-60, -10], [-30, -10]]
+                tetas = [[60, -10], [30, -10]]
                 if self.nr_times_tracking_fb < 3:
                     person_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_legs_visible=True, only_detect_person_arm_raised=False, characteristics=False)
                     for person in person_found:
@@ -1871,6 +1886,9 @@ class SticklerForTheRulesMain():
                 self.set_speech(filename="sftr/guest_breaking_rule_forbidden_room", wait_for_end_of=True)
                 self.set_speech(filename="sftr/action_forbidden_room", wait_for_end_of=True)
                 self.set_speech(filename="sftr/follow_robot_outside_room", wait_for_end_of=True)
+
+                while True:
+                    pass
                 self.state = self.Navigation_out_forbidden_room
                        
             elif self.state == self.Navigation_out_forbidden_room:

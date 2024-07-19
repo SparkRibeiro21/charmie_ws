@@ -1229,6 +1229,10 @@ class RestaurantMain():
                         print('Barman position', p.position_relative)
                         self.barman_position.append(p)
                         barman_not_found = False
+                    
+                    if barman_not_found:
+                        self.set_speech(filename="restaurant/search_barman", wait_for_end_of=True)
+
 
                 barman_final_position = 100000.0
                 if len(self.barman_position) > 0:
@@ -1247,7 +1251,10 @@ class RestaurantMain():
                     print('barman on my right')
 
 
-                self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)     
+                # self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], ang=-10, wait_for_end_of=True)     
+                
+                self.set_navigation(movement="rotate", target=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], flag_not_obs=True, wait_for_end_of=True)   
+                
                 # BARMAN, ARE YOU THE GUY ON MY FACE?
                 # self.set_speech(filename="restaurant/confirm_barman", wait_for_end_of=False)
                 path = self.detected_person_to_face_path(person=self.barman_position, send_to_face=True)
@@ -1274,6 +1281,9 @@ class RestaurantMain():
                     # self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
 
                     self.set_neck(position=self.look_forward, wait_for_end_of=True)
+
+                    self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+                    
                 
                     # next state
                     self.state = self.Detecting_waving_customers
@@ -1283,9 +1293,13 @@ class RestaurantMain():
                     self.set_rgb(command=RED+BLINK_LONG)
                     ##### SPEAK: Sorry, TRY AGAIN
                     self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+                    self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
                     self.state = self.Looking_for_barman
+                    
                 else:
                     self.set_rgb(command=YELLOW+BLINK_LONG)
+                    self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+
                     ##### ERROR
                     print("ERROR")
                     self.state = self.Looking_for_barman
@@ -1303,6 +1317,9 @@ class RestaurantMain():
 
                 self.set_rgb(command=ORANGE+HALF_ROTATE)
 
+                self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+
+
                 ##### NECK: Rotate left and right for better view
                 # tetas = [-120, -60, 0, 60, 120]
                 ##### YOLO POSE SEARCH FOR ONLY_DETECT_PERSON_ARM_RAISED
@@ -1318,7 +1335,7 @@ class RestaurantMain():
 
                 print("FOUND:", len(customers_found)) 
                 for p in customers_found:
-                    self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
+                    # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
                     print("ID:", p.index_person)
                     print('Customer position', p.position_relative)
                     customers_list.append(p)
@@ -1377,9 +1394,12 @@ class RestaurantMain():
                     self.set_speech(filename="restaurant/found_customer", wait_for_end_of=True)
                     dist_array = []
                     ##### NECK: look waving customers
+                    # self.set_speech(filename="restaurant/look_detected_waving_customers", wait_for_end_of=False)
 
+                    time.sleep(1)
+                        
                     for p in customers_list:
-                        self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
+                        # self.set_neck_coords(position=[p.position_relative.x, p.position_relative.y], wait_for_end_of=True)
                         dist = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
                         dist_array.append(dist)
                         print('\n \n coordenadas cliente :', p.position_relative.x, p.position_relative.y)
@@ -1474,9 +1494,9 @@ class RestaurantMain():
 
                 ##### MOVE TO CUSTOMER 1
                 self.set_navigation(movement="rotate", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], reached_radius=2.0, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], reached_radius=1.5, flag_not_obs=False, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_QUICK)
-                self.set_navigation(movement="rotate", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=[sorted_persons[0].position_absolute.x, sorted_persons[0].position_absolute.y], flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 ##### NECK: Look to customer 1
                 self.set_neck_coords(position=[sorted_persons[0].position_absolute.x, sorted_persons[0].position_absolute.y], wait_for_end_of=True)
@@ -1614,7 +1634,7 @@ class RestaurantMain():
 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=[sorted_persons[1].position_relative.x, sorted_persons[1].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_persons[1].position_relative.x, sorted_persons[1].position_relative.y], reached_radius=2.0, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_persons[1].position_relative.x, sorted_persons[1].position_relative.y], reached_radius=1.5, flag_not_obs=False, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_QUICK)
                 self.set_navigation(movement="rotate", target=[sorted_persons[1].position_relative.x, sorted_persons[1].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
@@ -1689,7 +1709,7 @@ class RestaurantMain():
 
                 ##### MOVE TO THE BARMAN TABLE
                 self.set_navigation(movement="rotate", target=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], flag_not_obs=False, wait_for_end_of=True, reached_radius=2.0)
+                self.set_navigation(movement="move", target=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], flag_not_obs=False, wait_for_end_of=True, reached_radius=1.5)
                 self.set_rgb(command=GREEN+BLINK_QUICK)
                 self.set_navigation(movement="rotate", target=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
@@ -1733,12 +1753,14 @@ class RestaurantMain():
 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], reached_radius=2.2, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], reached_radius=1.5, flag_not_obs=False, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_QUICK)
                 self.set_navigation(movement="rotate", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_QUICK)
                 
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_neck_coords(position=[sorted_persons[0].position_absolute.x, sorted_persons[0].position_absolute.y], wait_for_end_of=True)
+                
                 ##### SPEAK: Here are the items, CAN YOU PICK FROM MY TRAY?
                 self.set_speech(filename="restaurant/pick_tray", wait_for_end_of=True)
 
@@ -1767,12 +1789,14 @@ class RestaurantMain():
                 ##### MOVE TO CUSTOMER 2
                 self.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 self.set_navigation(movement="rotate", target=[sorted_persons[1].position_relative.x, sorted_persons[1].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=[sorted_persons[1].position_relative.x, sorted_persons[1].position_relative.y], reached_radius=2.2, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_persons[1].position_relative.x, sorted_persons[1].position_relative.y], reached_radius=1.5, flag_not_obs=False, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_QUICK)
                 self.set_navigation(movement="rotate", target=[sorted_persons[1].position_relative.x, sorted_persons[1].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_QUICK)
                 
-                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                # self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_neck_coords(position=[sorted_persons[1].position_absolute.x, sorted_persons[1].position_absolute.y], wait_for_end_of=True)
+                
 
                 ##### SPEAK: Here are the items, CAN YOU PICK FROM MY TRAY?
                 self.set_speech(filename="restaurant/pick_tray", wait_for_end_of=True)
@@ -1884,13 +1908,149 @@ class RestaurantMain():
                 self.set_rgb(command=GREEN+BLINK_QUICK)
                 
                 self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                # self.set_neck_coords(position=[sorted_persons[1].position_absolute.x, sorted_persons[1].position_absolute.y], wait_for_end_of=True)
+                
+                # IR BUSCAR PEDIDO E VOLTAR BARMAN
 
+                ##### NECK MOVEMENT FORWARD POSITION
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                
+                ##### BACK TO STANDART FACE
+                self.set_face("charmie_face")
+                
+                ##### SPEAK: Start Movement Alert
+                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
+
+                self.set_rgb(command=BLUE+ROTATE)
+
+                # ATIVAR NAVEGAÇAO POR OBSTCLES
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+
+                ##### MOVE TO CUSTOMER 1
+                self.set_navigation(movement="rotate", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], reached_radius=1.5, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_QUICK)
+                self.set_navigation(movement="rotate", target=[sorted_persons[0].position_absolute.x, sorted_persons[0].position_absolute.y], flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                ##### NECK: Look to customer 1
+                self.set_neck_coords(position=[sorted_persons[0].position_absolute.x, sorted_persons[0].position_absolute.y], wait_for_end_of=True)
+                time.sleep(3)
+
+                order_collected_customer_1 = False
+                
+                while not order_collected_customer_1:
+
+                    self.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
+
+                    # old: self.set_speech(filename="restaurant/green_face", wait_for_end_of=True)
+                    self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                    ##### AUDIO: Listen the order and repeat for confirmation
+                    command = self.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
+                    print("Finished:", command)
+                    keyword_list = command.split(" ")
+                    self.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
+                    for kw in keyword_list:
+                        print(kw)
+                        self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+
+                    ##### AUDIO: Listen "YES" OR "NO"
+                    ##### "Please say yes or no to confirm the order"
+                    confirmation = self.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+
+                    ##### Verifica a resposta recebida
+                    if confirmation.lower() == "yes":
+                        self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                        self.set_rgb(command=GREEN+BLINK_LONG)
+
+                        self.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                        for kw in keyword_list:
+                            print(kw)
+                            self.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+                        ##### SPEAK: Thank you
+                        # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                        order_collected_customer_1 = True  # Sai do loop se a confirmação for "yes"
+                    elif confirmation.lower() == "no":
+                        self.set_rgb(command=RED+BLINK_LONG)
+                        ##### SPEAK: Sorry, TRY AGAIN
+                        self.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+                    else:
+                        self.set_rgb(command=YELLOW+BLINK_LONG)
+                        ##### ERROR
+                        print("ERROR")
+
+                ##### SPEAK: Start moving
+                self.set_speech(filename="restaurant/move_barman", wait_for_end_of=True)
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+
+                self.set_rgb(command=BLUE+ROTATE)
+                
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+
+                ##### MOVE TO THE BARMAN TABLE
+                self.set_navigation(movement="rotate", target=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], flag_not_obs=False, wait_for_end_of=True, reached_radius=1.5)
+                self.set_rgb(command=GREEN+BLINK_QUICK)
+                self.set_navigation(movement="rotate", target=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG)
+
+
+                self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], wait_for_end_of=True)
+
+                ##### SPEAK: Say the order to barman
+                self.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
+
+                ##### SPEAK: Say order elements
+                ##### Itera sobre cada elemento do pedido
+                for pedido in self.all_orders:
+                    for elemento in pedido:
+                        # Define o nome do arquivo correspondente ao elemento
+                        filename = "objects_names/" + elemento.lower().replace(" ", "_")  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
+                        
+                        # SPEAK: Diz o elemento do pedido
+                        self.set_speech(filename=filename, wait_for_end_of=True)
+
+                ##### SPEAK: Say to the barman put the order in the tray
+                self.set_speech(filename="restaurant/tray_order", wait_for_end_of=True)
+
+                time.sleep(20)
+
+
+
+
+
+
+                ###### SPEAK: Start Movement Alert
+                self.set_speech(filename="restaurant/movement_alert", wait_for_end_of=True)
+
+                self.set_rgb(command=BLUE+ROTATE)
+
+                ##### NAVIGATION TO FIRST CUSTOMER
+                ##### MOVE TO CUSTOMER 1
+
+                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], reached_radius=1.5, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_QUICK)
+                self.set_navigation(movement="rotate", target=[sorted_persons[0].position_relative.x, sorted_persons[0].position_relative.y], flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_QUICK)
+                
+                self.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.set_neck_coords(position=[sorted_persons[0].position_absolute.x, sorted_persons[0].position_absolute.y], wait_for_end_of=True)
+                
                 ##### SPEAK: Here are the items, CAN YOU PICK FROM MY TRAY?
                 self.set_speech(filename="restaurant/pick_tray", wait_for_end_of=True)
-                
+
                 time.sleep(10)
+
                 ##### SPEAK: Hope you enjoy!
                 self.set_speech(filename="restaurant/enjoy_order", wait_for_end_of=True)
+
                                 
                 # next state
                 self.state = self.Final_State

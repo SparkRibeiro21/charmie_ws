@@ -39,7 +39,7 @@ foods_dict = {
     "Candy":            ["candy", "candi", "kai chi"],
     "Crisps":           ["crisps", "crispy", "chris", "crispies", "grapes", "species", "creepy", "creeps", "greece"],
     "Liquorice":        ["liquorice", "liqueur", "rice", "rise", "lekou"],
-    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "gringles"],
+    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "gringles", "ringles"],
     "Stroopwafel":      ["stroopwafle", "stroke", "waffle", "stop", "drop", "struck", "strip", "powerful"],
     "Tictac":           ["tictac", "tak ", "tuke", "tiktok", "tik", "tek", "cheek", "chalk", "eak", "diktak"],
 
