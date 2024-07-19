@@ -20,7 +20,7 @@ class ArmUfactory(Node):
 		self.HEIGHT_TABLE_PLACE_OBJECTS = 76.0
 
 
-		self.HEIGHT_TOP_DISHWASHER_RACK = 60.0
+		self.HEIGHT_TOP_DISHWASHER_RACK = 59.0
 		self.HEIGHT_BOTTOM_DISHWASHER_RACK = 25.0
 
 
@@ -322,6 +322,27 @@ class ArmUfactory(Node):
 		self.side_washing_machine_2 = [-145.9, 2.6, -60.6, 285.5, 119.1, 39.3]
 		# self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 70.6]	
 		self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 160.6]
+
+
+
+
+		# funilocopo robocup:
+		# self.pre_pick_spoon_tray_joints
+		self.pre_pick_aprox_spoon_tray = [ -297.0,  260.0+height_top_rack,  -24.1, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		# open gripper
+		# self.pre_pick_funilocopo_tray =
+		# self.pick_funilocopo_tray = 					[-131.2, 430.0, -157.8, math.radians(-130.0), math.radians(0.0), math.radians( -90.0)]
+		# self.lift_funilocopo_a_bit_from_tray = 			[-131.2, 380.0, -157.8, math.radians(-130.0), math.radians(0.0), math.radians( -90.0)]
+		# self.lift_funilocopo_more =						[-394.4, 120.0, 74.4, math.radians(173.3), math.radians(0.0), math.radians( -90.0)]
+		self.put_cutlery_in_dishwasher_using_traycup = [ -57.7,  351.0+height_top_rack,  754.3, math.radians(89.9), math.radians(   0.0), math.radians( -92.0)]
+		self.put_cutlery_in_dishwasher_using_traycup2 = [ -57.7,  351.0+height_top_rack,  754.3, math.radians(90.0), math.radians(  -0.1), math.radians(-161.1)]
+		self.put_cutlery_in_dishwasher_using_traycup3 = [ -65.6,  374.2+height_top_rack,  754.3, math.radians(90.0), math.radians(  -0.1), math.radians(135.3)]
+		# self.put_cutlery_in_dishwasher_using_traycup2 = [ -57.7,  351.0+height_top_rack,  754.3, math.radians(90.0), math.radians(  -0.1), math.radians(-161.1)]
+		# open gripper
+		# self.lift_funilocopo_more
+		# get_lower_order_position_joints
+
+
 
   
 		print('Nada')
@@ -1898,7 +1919,168 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 		
+	def place_cutlery_in_dishwasher_traycup(self):
+		
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
 
+		elif self.estado_tr == 1:
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_spoon_tray_joints)
+			self.joint_values_req.speed = math.radians(40)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			self.position_values_req.pose = self.pre_pick_aprox_spoon_tray
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 4:
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 5:
+			self.position_values_req.pose = self.pre_pick_funilocopo_tray
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
+			self.position_values_req.pose = self.pick_funilocopo_tray
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 7:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 8:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 9:
+			self.position_values_req.pose = self.lift_funilocopo_a_bit_from_tray
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 10:
+			self.position_values_req.pose = self.lift_funilocopo_more
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 11:
+			self.position_values_req.pose = self.put_cutlery_in_dishwasher_using_traycup
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 12:
+			self.position_values_req.pose = self.put_cutlery_in_dishwasher_using_traycup2
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 13:
+			self.position_values_req.pose = self.put_cutlery_in_dishwasher_using_traycup3
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 14:
+			self.position_values_req.pose = self.put_cutlery_in_dishwasher_using_traycup2
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 15:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 16:
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 17:
+			self.position_values_req.pose = self.lift_funilocopo_more
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 14.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 18:
+			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 19:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+		
 	def open_dishwasher_rack(self):
 
 		if self.estado_tr == 0:
@@ -2108,7 +2290,8 @@ class ArmUfactory(Node):
 			self.place_bowl_in_dishwasher()
 		elif self.next_arm_movement == "place_cutlery_in_dishwasher":
 			# self.place_cutlery_in_dishwasher_robocup24()
-			self.place_cutlery_in_dishwasher_lar()
+			# self.place_cutlery_in_dishwasher_lar()
+			self.place_cutlery_in_dishwasher_traycup()
 		elif self.next_arm_movement == "open_dishwasher_rack":
 			self.open_dishwasher_rack()
 		elif self.next_arm_movement == "close_dishwasher_rack":

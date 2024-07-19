@@ -1630,10 +1630,27 @@ class CleanTableMain():
         self.kitchen_table = [-0.5, 4.5]
         self.dishwasher = [-1.0, 2.0]
 
+
+        ### ROBOCUP24
+        self.MAX_SPEED = 40
+
+        self.pre_room_door = [0.45, 3.55]
+        self.post_room_door = [0.45, 4.70]
+        self.front_of_start_door = [0.0, 1.0]
+        self.front_sofa = [0.45, 5.8]
+        self.midway_living_room = [-0.9, 8.5]
+        self.close_to_garbage_bin = [-2.76, 5.9]
+        self.close_to_dishwasher = [-2.26, 8.0]
+        self.close_to_table_sb = [-4.26, 8.8]
+        self.pre_table = [-4.76, 6.0]
+
+        self.TABLE_APPROACH_OBSTACLES = 0.30
+
+
         self.first_time_giving_audio_instructions = True
 
 
-        self.state = self.Close_dishwasher_door
+        self.state = self.Place_cutlery_funilocopo
 
 
         self.node.get_logger().info("IN SERVE THE CLEAN THE TABLE MAIN")
@@ -1676,13 +1693,37 @@ class CleanTableMain():
 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 
-                self.set_navigation(movement="move", target=self.front_of_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.front_of_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
-                self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.kitchen_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
+
+                self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.front_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+
+                self.set_navigation(movement="rotate", target=self.close_to_table_sb, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.close_to_table_sb, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                
+
+                self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=False)
+
+                # self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.kitchen_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= 225.0, flag_not_obs = True, wait_for_end_of=True)
 
                 self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
                 
@@ -1767,10 +1808,23 @@ class CleanTableMain():
                 self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs = True, wait_for_end_of=True)
                 """
                 # self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
-            
+                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                self.set_initial_position([0.0, 0.0, 90.0])
-                time.sleep(2)
+                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
+
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
+
+
+                self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_obstacle", adjust_direction=180.0, adjust_min_dist=self.TABLE_APPROACH_OBSTACLES, wait_for_end_of=True)
+                    
+                # self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.kitchen_table, max_speed=20.0, reached_radius=1.0, flag_not_obs=False, wait_for_end_of=True)
+
+                                
+                self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
+
+                # self.set_navigation(movement="adjust_angle", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
 
                 self.set_speech(filename="clean_the_table/approaching_dishwasher", wait_for_end_of=False)
 
@@ -1832,7 +1886,7 @@ class CleanTableMain():
             elif self.state == self.Open_dishwasher_door:
 
                 ### CODE HERE (NOT IMPLEMENTED FOR NOW ...)
-                time.sleep(2)
+                time.sleep(3)
                 self.set_speech(filename="clean_the_table/can_not_open_dishwasher_door_quick", wait_for_end_of=False)
                 # time.sleep(3)
 
@@ -1849,12 +1903,12 @@ class CleanTableMain():
 
 
                 # The 175 rather than 180 is to force the adjustement
-                self.set_navigation(movement="orientate", absolute_angle=180.0, flag_not_obs = True, wait_for_end_of=True)    
-                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs = True, wait_for_end_of=True)    
+                self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
 
                 time.sleep(1)
 
-                self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=False)
+                self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=False)
 
                 ### CODE HERE (NOT IMPLEMENTED FOR NOW ...)
                 # time.sleep(5)
@@ -1864,7 +1918,7 @@ class CleanTableMain():
 
                 # JUST FOR DEBUG
                 # self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=False)
-                self.SELECTED_CUTLERY = ["Fork", "Knife"]
+                # self.SELECTED_CUTLERY = ["Fork", "Knife"]
 
 
                 self.state = self.Place_cup
@@ -1943,6 +1997,24 @@ class CleanTableMain():
                 
                 self.set_arm(command="place_bowl_in_dishwasher", wait_for_end_of=True)
 
+                self.state = self.Place_cutlery_funilocopo
+
+            elif self.state == self.Place_cutlery_funilocopo:
+
+                # self.set_neck(position=self.look_forwas, wait_for_end_of=False)
+                
+                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
+
+                #### MISSING IN ARM_CLEAN_TABLE
+                # self.set_arm(command="ask_for_objects_to_get_funilocopo", wait_for_end_of=True)
+                
+                self.set_speech(filename="clean_the_table/placing_cutlery", wait_for_end_of=False)
+
+                # self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
+                
+                #### MISSING IN ARM_CLEAN_TABLE
+                self.set_arm(command="place_cutlery_in_dishwasher", wait_for_end_of=True)
+
                 self.state = self.Place_plate
 
 
@@ -1995,27 +2067,7 @@ class CleanTableMain():
                 self.set_arm(command="place_plate_in_dishwasher", wait_for_end_of=True)
 
                 # self.state = self.Place_cutlery_funilocopo
-                self.state = self.Place_cutlery1
-
-
-            elif self.state == self.Place_cutlery_funilocopo:
-
-                self.set_neck(position=self.look_judge, wait_for_end_of=False)
-                
-                self.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
-
-                #### MISSING IN ARM_CLEAN_TABLE
-                self.set_arm(command="ask_for_objects_to_get_funilocopo", wait_for_end_of=True)
-                
-                self.set_speech(filename="clean_the_table/placing_cutlery", wait_for_end_of=False)
-
-                self.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
-                
-                #### MISSING IN ARM_CLEAN_TABLE
-                self.set_arm(command="place_funilocopo_cutlery_in_dishwasher", wait_for_end_of=True)
-
                 self.state = self.Close_dishwasher_door
-
 
                 
             elif self.state == self.Place_cutlery1:
@@ -2128,12 +2180,12 @@ class CleanTableMain():
 
             elif self.state == self.Close_dishwasher_door:
 
-                self.set_initial_position([0.0, 0.0, 180.0])
-                time.sleep(3)
+                # self.set_initial_position([0.0, 0.0, 180.0])
+                # time.sleep(3)
 
                 self.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                self.set_speech(filename="clean_the_table/close_bottom_rack", wait_for_end_of=False)
+                self.set_speech(filename="clean_the_table/close_bottom_rack", wait_for_end_of=True)
 
                 self.set_arm(command="pre_dishwasher_to_initial_position", wait_for_end_of=False)
 
