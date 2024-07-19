@@ -1570,7 +1570,7 @@ class ServeBreakfastMain():
         self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
         self.MAX_SPEED = 30
         self.TABLE_APPROACH_OBSTACLES = 0.45
-        self.COUNTER_APPROACH_OBSTACLES = 0.5
+        self.COUNTER_APPROACH_OBSTACLES = 0.20
         self.GET_MILK = False
         self.GET_CORNFLAKES = True
         self.GET_DISHES = True
@@ -1729,7 +1729,7 @@ class ServeBreakfastMain():
                     self.set_neck(position=self.look_navigation, wait_for_end_of=False)
                     self.set_speech(filename="generic/sb_moving_kitchen_counter", wait_for_end_of=False)
 
-
+                    """
                     self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     self.set_rgb(BLUE+ROTATE)
                     # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
@@ -1749,9 +1749,12 @@ class ServeBreakfastMain():
                     self.set_navigation(movement="rotate", target=self.close_to_table_sb, flag_not_obs=True, wait_for_end_of=True)
                     self.set_navigation(movement="move", target=self.close_to_table_sb, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     self.set_rgb(BLUE+ROTATE)
+                    """
+
+                    self.set_initial_position([0.0, 0.0, 90.0])
 
                     self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
-                    self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=self.COUNTER_APPROACH_OBSTACLES, wait_for_end_of=True)
+                    
                 
                     self.set_speech(filename="generic/sb_arrived_kitchen_counter", wait_for_end_of=False)
                     self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
@@ -1932,6 +1935,9 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
+                self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=self.COUNTER_APPROACH_OBSTACLES, wait_for_end_of=True)
+                    
                 # self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_navigation(movement="move", target=self.kitchen_table, max_speed=20.0, reached_radius=1.0, flag_not_obs=False, wait_for_end_of=True)
 

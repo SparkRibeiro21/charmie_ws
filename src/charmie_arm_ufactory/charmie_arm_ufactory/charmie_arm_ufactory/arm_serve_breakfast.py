@@ -234,7 +234,7 @@ class ArmUfactory(Node):
 
 		# pour positions
 		self.new_cornflakes_pre_pick_tray_position = [-204.9, -51.0, -31.9, -30.2, 70.9, 253.9]
-		self.new_cornflakes_pick_tray_position = [-219.8, 309.7, 146.3, math.radians(178.7), math.radians(  30.2), math.radians( -90.1)]
+		self.new_cornflakes_pick_tray_position = [-230.0, 309.6, 146.5, math.radians(178.7), math.radians(  30.2), math.radians( -90.1)]
 		# close gripper
 		self.new_cornflakes_post_pick_tray_position = [-219.8, 109.7, 146.3, math.radians(178.7), math.radians(  30.2), math.radians( -90.1)]
 		self.new_cornflakes_pre_pour = [-161.5, -12.8, -78.8,  84.6, -19.2, 182.0]
@@ -316,7 +316,7 @@ class ArmUfactory(Node):
 		
 		
 		# 5
-		self.place_spoon_table_joints = 				[-455.4, 239.3+height_adjust, 459.7, math.radians(104.1), math.radians(-48.0), math.radians(161.3)]
+		self.place_spoon_table_joints =         [-455.4, 239.3+height_adjust, 459.7, math.radians(114.0), math.radians(-44.7), math.radians(147.6)]
 		# 6
 		# self.small_up_after_drop_spoon_table = 			[-501.6, 209.3+height_adjust, 513.9, math.radians(122.1), math.radians(-40.0), math.radians(135.7)]
 		# 7
