@@ -128,6 +128,12 @@ def generate_launch_description():
                         emulate_tty=True
                         )
     
+    yolo_pose = Node(package='charmie_yolo_pose',
+                        executable='yolo_pose_characteristics',
+                        name='yolo_pose_characteristics',
+                        emulate_tty=True
+                        )
+    
     point_cloud = Node(package='charmie_point_cloud',
                         executable='point_cloud',
                         name='point_cloud',
@@ -178,7 +184,8 @@ def generate_launch_description():
         odometry,
         navigation,
         point_cloud,
-        yolo_objects,
+        # yolo_objects,
+        yolo_pose,
         lidar,
         obstacles,
         # clean_table,
