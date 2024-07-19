@@ -19,10 +19,8 @@ class ArmUfactory(Node):
 		# self.HEIGHT_TABLE_PLACE_OBJECTS = 58.0
 		self.HEIGHT_TABLE_PLACE_OBJECTS = 76.0
 
-
-		self.HEIGHT_TOP_DISHWASHER_RACK = 59.0
-		self.HEIGHT_BOTTOM_DISHWASHER_RACK = 25.0
-
+		self.HEIGHT_TOP_DISHWASHER_RACK = 66.0
+		self.HEIGHT_BOTTOM_DISHWASHER_RACK = 28.0
 
 		# ARM TOPICS
 		self.arm_command_subscriber = self.create_subscription(ArmController, "arm_command", self.arm_command_callback, 10)
@@ -2001,7 +1999,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 10:
 			self.position_values_req.pose = self.lift_funilocopo_more
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -2010,7 +2008,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 11:
 			self.position_values_req.pose = self.put_cutlery_in_dishwasher_using_traycup
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -2019,7 +2017,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 12:
 			self.position_values_req.pose = self.put_cutlery_in_dishwasher_using_traycup2
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -2037,7 +2035,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 14:
 			self.position_values_req.pose = self.put_cutlery_in_dishwasher_using_traycup2
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
@@ -2059,7 +2057,7 @@ class ArmUfactory(Node):
 
 		elif self.estado_tr == 17:
 			self.position_values_req.pose = self.lift_funilocopo_more
-			self.position_values_req.speed = 100.0
+			self.position_values_req.speed = 80.0
 			self.position_values_req.acc = 1000.0
 			self.position_values_req.wait = True
 			self.position_values_req.timeout = 14.0
