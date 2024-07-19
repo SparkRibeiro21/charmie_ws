@@ -192,7 +192,7 @@ class ArmUfactory(Node):
 		# self.get_order_position_joints = 				[ -161.0,   20.0,  -63.0,  256.0,   13.0,   24.0]
 		self.get_lower_order_position_joints = 			[ -184.8,   17.5,  -62.0,  115.2,    4.9,  148.0]
 		self.initial_position_joints = 					[ -224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
-		self.initial_position_joints_alternative_robocup_cornflakes = 					[ -184.0,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
+		self.initial_position_joints_alternative_robocup_cornflakes = 	[ -206.0,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
 		# self.pre_place_bowl_joint = 					[ -171.3,	33.6,  -98.3,   245.1,  92.4, - 15.9]
 		self.pre_place_bowl_joint = 					[ -169.8,	28.0,  -81.8,   246.9,  97.9, - 6.3]
 		self.pre_pick_cereals_tray_joints = 			[-193.2, 37.6, -74.9, -16.7, 126.5, 262.8]
@@ -1414,7 +1414,6 @@ class ArmUfactory(Node):
 
 	def place_cereal_table_alternative_robocup_cornflakes(self):
 
-
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.new_cornflakes_pre_place)
 			self.joint_values_req.speed = math.radians(50)
@@ -1432,7 +1431,20 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr ==  2:
+		elif self.estado_tr == 2:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			self.set_gripper_req.pos = 850.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  4:
 			self.position_values_req.pose = self.new_cornflakes_post_place
 			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
@@ -1441,7 +1453,7 @@ class ArmUfactory(Node):
 			self.future = self.set_position_client.call_async(self.position_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 3:
+		elif self.estado_tr == 5:
 			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
 			self.joint_values_req.speed = math.radians(50)
 			self.joint_values_req.wait = True
@@ -1449,7 +1461,7 @@ class ArmUfactory(Node):
 			self.future = self.set_joint_client.call_async(self.joint_values_req)
 			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 4:
+		elif self.estado_tr == 6:
 			temp = Bool()
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
