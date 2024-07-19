@@ -1762,7 +1762,7 @@ class ServeBreakfastMain():
                             
                             self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object_cornflakes", wait_for_end_of=True)
+                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
                             
                             if not object_in_gripper:
                         
