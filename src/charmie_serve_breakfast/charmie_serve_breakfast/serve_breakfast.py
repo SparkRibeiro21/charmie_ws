@@ -106,8 +106,8 @@ class ServeBreakfastNode(Node):
         # while not self.get_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Audio Server...")
         # while not self.calibrate_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
-        # Face
+        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")        
+        # Face        
         while not self.face_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Face Command...")
         # Neck 
@@ -1584,7 +1584,7 @@ class ServeBreakfastMain():
         self.ATTEMPTS_AT_RECEIVING = 2
         self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
         self.MAX_SPEED = 30
-        self.TABLE_APPROACH_OBSTACLES = 0.25
+        self.TABLE_APPROACH_OBSTACLES = 0.35
         self.COUNTER_APPROACH_OBSTACLES = 0.25
         self.GET_MILK = False
         self.GET_CORNFLAKES = True
@@ -1596,7 +1596,7 @@ class ServeBreakfastMain():
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45]
         self.look_tray = [0, -60]
-        self.search_tetas = [[-45, -35], [-45+15, -35+10], [-45-15, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
+        self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
         # Initial Position
         self.initial_position = [0.0, 0.1, 0.0]
@@ -1960,6 +1960,8 @@ class ServeBreakfastMain():
                 self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs=True, wait_for_end_of=True)
 
                 # self.set_navigation(movement="adjust_angle", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
+                time.sleep(3)
+                self.set_speech(filename="serve_breakfast/remove_decorations_table", wait_for_end_of=False)
 
                 self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=self.TABLE_APPROACH_OBSTACLES, wait_for_end_of=True)
                 
