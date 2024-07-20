@@ -1,133 +1,3 @@
-"""
-NEXT I PROVIDE AN EXAMPLE ON HOW THE CODE OF A TASK SHOULD BE MADE:
-
-->  ->  ->  ->  ->  HOW TO CREATE A TASK?
-
-1) IMPORT ALL ROS2 TOPICS/SERVICES NECESSARY AND WAIT_FOR_SERVICE (THIS IS TIAGO JOB, ASK HIM TO HELP OR EXPLAIN)
-2) PLAN THE STATES AND SET THE STATES FOR YOUR TASK:
-
-        self.Waiting_for_task_start = 0
-        self.Approach_kitchen_counter = 1
-        self.Picking_up_spoon = 2
-        self.Picking_up_milk = 3
-        self.Picking_up_cereal = 4
-        self.Picking_up_bowl = 5
-        self.Approach_kitchen_table = 6
-        self.Placing_bowl = 7
-        self.Placing_cereal = 8
-        self.Placing_milk = 9
-        self.Placing_spoon = 10
-        self.Final_State = 11
-
-# 3) CREATE THE STATE STRUCTURE:
-        
-        if self.state == self.Waiting_for_task_start:
-                # your code here ...
-                                
-                # next state
-                self.state = self.Approach_kitchen_counter
-
-            elif self.state == self.Approach_kitchen_counter:
-                # your code here ...
-                                
-                # next state
-                self.state = self.Picking_up_spoon
-
-            elif self.state == self.Picking_up_spoon:
-                # your code here ...
-                                
-                # next state
-                self.state = self.Picking_up_milk
-
-            (...)
-
-# 4) CREATE THE PSEUDOCODE OF EACH STATE:
-            
-            elif self.state == self.Picking_up_spoon:
-                
-                ##### NECK LOOKS AT TABLE
-
-                ##### MOVES ARM TO TOP OF TABLE POSITION
-
-                ##### SPEAK: Searching for objects
-
-                ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
-                
-                ##### SPEAK: Found spoon
-                
-                ##### SPEAK: Check face to see object detected
-
-                ##### SHOW FACE DETECTED OBJECT
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                ##### IF AN ERROR IS DETECTED:
-
-                    ##### SPEAK: There is a problem picking up the object
-
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                    ##### NECK LOOK JUDGE
-
-                    ##### SPEAK: Need help, put object on my hand as it is on my face
-
-                    ##### SHOW FACE GRIPPER SPOON 
-
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-
-                        ##### SPEAK: Close gripper in 3 2 1 
-
-                        ##### ARM: CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED: 
-
-                            ##### SPEAK: There seems to be a problem, please retry.
-
-                            ##### ARM OPEN GRIPPER
-                        
-                ##### NECK LOOK TRAY
-                        
-                ##### ARM PLACE OBJECT IN TRAY
-
-                self.state = self.Picking_up_milk
-
-# 5) REPLACE ALL THE SPEAKS IN PSEUDOCODE WITH self.set_speech(...), CREATE FILES IN ros2 run charmie_speakers save_audio
-
-# 6) TEST ALL SENTENCES ALONE TO SEE IF EVERYTHING IS OK
-
-# 5) REPLACE ALL THE FACE IN PSEUDOCODE WITH self.set_face(...)
-
-# 6) TEST ALL FACES WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 7) REPLACE ALL THE START_BUTTON AND RGB IN PSEUDOCODE WITH self.set_rgb(...) and self.wait_for_start_button()
-
-# 8) TEST ALL START_BUTTON AND RGB WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 9) REPLACE ALL THE AUDIO IN PSEUDOCODE WITH self.get_audio(...)
-
-# 10) TEST ALL AUDIO WITH THE PREVIOUS GETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 11) REPLACE ALL THE NECK IN PSEUDOCODE WITH self.set_neck(...) OR ANY OF ALL THE OTHER FORMS TO SET THE NECK
-
-# 12) TEST ALL NECK WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 13) REPLACE ALL THE YOLO DETECTIONS IN PSEUDOCODE WITH self.activate_yolo_pose(...) and self.activate_yolo_objects
-
-# 14) TEST ALL YOLOS WITH THE PREVIOUS ACTIVATES ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 15) REPLACE ALL THE ARM MOVE WITH self.set_arm(...)
-
-# 16) TEST ALL ARM MOVE WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 17) REPLACE THE SET INITIAL POSITION MOVE WITH self.set_initial_position(...)
-
-# 18) TEST ALL SET INITIAL POSITION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 19) REPLACE THE NAVIGATION MOVE, ROTATE AND ORIENTATE WITH self.set_navigation(...)
-
-# 20) TEST ALL SET NAVIGATION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-"""
 #!/usr/bin/env python3
 
 import rclpy
@@ -1718,7 +1588,7 @@ class EGPSRMain():
 
         self.pre_room_door = [0.45, 3.55]
         self.post_room_door = [0.45, 4.70]
-        self.front_of_start_door = [0.0, 1.0]
+        self.front_of_start_door = [0.0, 1.5]
         self.front_sofa = [0.45, 5.8]
         self.midway_living_room = [-0.9, 8.5]
         self.close_to_garbage_bin = [-2.76, 5.9]
@@ -1792,7 +1662,8 @@ class EGPSRMain():
             elif self.state == self.Search_hallway:
                 print("State:", self.state, "- Search_room1")
 
-                self.check_people_waving_in_room(local_room="Hallway")
+                tetas = [[-60, -10], [0, -10], [60, -10]]
+                self.check_people_waving_in_room(local_room="Hallway", tetas=tetas)
                 
                 self.state = self.Approach_living_room
 
@@ -1821,7 +1692,8 @@ class EGPSRMain():
             elif self.state == self.Search_living_room:
                 print("State:", self.state, "- Search_room2")
 
-                self.check_people_waving_in_room(local_room="Living Room")
+                tetas = [[-60, -10], [0, -10], [60, -10]]
+                self.check_people_waving_in_room(local_room="Living Room", tetas=tetas)
 
                 self.state = self.Approach_kitchen 
 
@@ -1844,7 +1716,8 @@ class EGPSRMain():
             elif self.state == self.Search_kitchen:
                 print("State:", self.state, "- Search_room3")
 
-                self.check_people_waving_in_room(local_room="Kitchen")
+                tetas = [[-30, -10], [30, -10]]
+                self.check_people_waving_in_room(local_room="Kitchen", tetas=tetas)
 
                 self.state = self.Final_State
 
@@ -1867,7 +1740,8 @@ class EGPSRMain():
             elif self.state == self.Search_office:
                 print("State:", self.state, "- Search_room3")
 
-                self.check_people_waving_in_room(local_room="Office")
+                tetas = [[-60, -10], [0, -10], [60, -10]]
+                self.check_people_waving_in_room(local_room="Office", tetas=tetas)
 
                 self.state = self.Final_State
                 
@@ -1885,14 +1759,13 @@ class EGPSRMain():
                 pass
 
 
-    def check_people_waving_in_room(self, local_room):
+    def check_people_waving_in_room(self, local_room, tetas):
 
         still_people_to_analyse = True
         while still_people_to_analyse:
             
             self.set_speech(filename="gpsr/searching_egpsr", wait_for_end_of=True)
         
-            tetas = [[-60, -10], [0, -10], [60, -10]]
             people_found = self.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
 
             people_waving_in_same_room = 0
