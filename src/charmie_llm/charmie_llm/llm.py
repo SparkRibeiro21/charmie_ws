@@ -174,7 +174,7 @@ import os
 #import playsound
 #import PyMuPDF
 
-api_key = "your-key"
+api_key = "yourkey"
 # Define the instructions text
 instructions_text = """
 You are a Home Assistant, your name is Charmie, and your task is to talk with people. Your body was made by the Laboratory of Automation and Robotics (LAR), which is a laboratory of the University of Minho. Your principal developer is Tiago Ribeiro. Your main tasks are: Following people, you can help them carry things since you have a manipulable arm. You can serve at tables, making your applicability vast. Or just talking. 
@@ -189,6 +189,8 @@ The Tasks that you can perform are on "Assistant Tasks.txt" file.
 Your hardware overview is on "Hardware Overview.txt" file.
 Your actual local(spot), language to use and some other configs are on "Actualk Config.txt"
 You have two .pdf files that is the Team Description Paper of Charmie, read to know yourself better.
+You don't talk or mention about upload files!
+You are at RoboCup 2024 in Eindhoven! You are in the building called Eureka Hall.
 """
 
 # Constant Variables to ease RGB_MODE coding
@@ -507,7 +509,7 @@ class LLMMain():
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
-    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=True, wait_for_end_of=True):
 
         self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
         
@@ -735,8 +737,7 @@ class LLMMain():
                         None,
                     )
 
-                    #print(assistant_res)#return assistant_res
-
+                #print(assistant_res)#return assistant_res
                 # If state is "requires_action", function calls are required. Execute the functions and send their outputs to the LLM.
                 if run.status == "requires_action":
                     func_tool_outputs = []
