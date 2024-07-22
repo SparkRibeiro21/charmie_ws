@@ -17,7 +17,7 @@ class ArmUfactory(Node):
 		# THIS VALUE HAS TO BE IN "cm" 1cm = 0.01m
 		# self.HEIGHT_TABLE_PLACE_OBJECTS = 91.0
 		# self.HEIGHT_TABLE_PLACE_OBJECTS = 58.0
-		self.HEIGHT_TABLE_PLACE_OBJECTS = 76.0
+		self.HEIGHT_TABLE_PLACE_OBJECTS = 78.0
 
 		# ARM TOPICS
 		self.arm_command_subscriber = self.create_subscription(ArmController, "arm_command", self.arm_command_callback, 10)
@@ -190,8 +190,9 @@ class ArmUfactory(Node):
 		
 		# SET JOINTS VARIABLES
 		# self.get_order_position_joints = 				[ -161.0,   20.0,  -63.0,  256.0,   13.0,   24.0]
-		self.get_lower_order_position_joints = 			[ -184.9,   17.5,  -62.0,  115.2,    4.9,  148.0]
+		self.get_lower_order_position_joints = 			[ -184.8,   17.5,  -62.0,  115.2,    4.9,  148.0]
 		self.initial_position_joints = 					[ -224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
+		self.initial_position_joints_alternative_robocup_cornflakes = 	[ -206.0,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
 		# self.pre_place_bowl_joint = 					[ -171.3,	33.6,  -98.3,   245.1,  92.4, - 15.9]
 		self.pre_place_bowl_joint = 					[ -169.8,	28.0,  -81.8,   246.9,  97.9, - 6.3]
 		self.pre_pick_cereals_tray_joints = 			[-193.2, 37.6, -74.9, -16.7, 126.5, 262.8]
@@ -217,7 +218,57 @@ class ArmUfactory(Node):
 		self.place_cornflakes_in_tray =					[ -198.0,  420.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 		self.step_away_from_cornflakes_in_tray =		[ -198.0,  300.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 			
-   
+		
+		### ALTERNATIVE ###
+		self.above_cornflakes_place_spot_alternative = 	[-232.7, -13.0, -37.8, -2.9, 51.8, 219.7]
+		self.place_cornflakes_in_tray_alternative = 	[-221.6, 377.9, 107.6, math.radians(-179.0), math.radians(  -0.1), math.radians( -89.4)]
+		self.step_away_from_cornflakes_in_tray_alternative = [-224.5, 378.1, 273.4, math.radians(-179.0), math.radians(  -0.1), math.radians( -89.4)] 
+		
+		self.pre_pick_cereals_tray_joints_cornflakes_alternative = 	[-238.9, -5.6, -69.0, -2.4, 75.5, 213.1]
+		self.pick_cereals_tray_cornflakes_alternative = 			[-222.5, 377.9, 159.4, math.radians(-179.0), math.radians(-0.1), math.radians(-89.4)]							
+		self.post_pick_cereals_tray_cornflakes_alternative = 		[-221.5, 277.3, 159.6, math.radians(-179.0), math.radians(-0.1), math.radians(-89.4)]							
+		self.placing_cereal_at_table_cornflakes_alternative = 		[-579.5, 150.0+height_adjust, 812.9, math.radians(40.6), math.radians(4.5), math.radians(-90.1)]
+		self.pos_placing_cereal_at_table_cornflakes_alternative = 	[-579.5,   0.0+height_adjust, 812.9, math.radians(40.6), math.radians(4.5), math.radians(-90.1)]
+  
+
+
+		# pour positions
+		self.new_cornflakes_pre_pick_tray_position = [-204.9, -51.0, -31.9, -30.2, 70.9, 253.9]
+		self.new_cornflakes_pick_tray_position = [-230.0, 309.6, 146.5, math.radians(178.7), math.radians(  30.2), math.radians( -90.1)]
+		# close gripper
+		self.new_cornflakes_post_pick_tray_position = [-219.8, 109.7, 146.3, math.radians(178.7), math.radians(  30.2), math.radians( -90.1)]
+		self.new_cornflakes_pre_pour = [-161.5, -12.8, -78.8,  84.6, -19.2, 182.0]
+		self.new_cornflakes_pour1 = [-602.3, 130.7+height_adjust, 628.1, math.radians(-37.2), math.radians(  85.9), math.radians( 142.4)]
+		self.new_cornflakes_pour2 = [-602.4, 131.0+height_adjust, 628.0, math.radians(-37.2), math.radians(  85.9), math.radians( 142.4)]
+		self.new_cornflakes_pour3 = [-602.4, 131.0+height_adjust, 628.0, math.radians(-37.2), math.radians(  85.9), math.radians( 142.4)]
+		self.new_cornflakes_pour4 = [-605.1, 148.1+height_adjust, 576.4, math.radians(-86.7), math.radians(   5.2), math.radians(  89.9)]
+		
+		# pour 3
+		# pour 2 
+		# pour 1
+		# self.new_cornflakes_pre_pour
+
+
+		# place positions
+		self.new_cornflakes_pre_place = [-153.6,  10.2, -124.9,  95.3, -46.5, 148.7]
+		self.new_cornflakes_place = [-555.4,  92.6+height_adjust, 784.8, math.radians( 77.5), math.radians(  8.4), math.radians(-112.7)]
+		self.new_cornflakes_post_place = [-392.7,  30.7+height_adjust, 745.5, math.radians( 77.5), math.radians(  8.4), math.radians(-112.7)]
+		
+		# get lower order posiiton joints
+
+		
+
+
+		# -184.8 joints (low order)
+		# -238.9 joints (pre pick cron)
+		# -222.5 linear (aprox pick corn)
+		# close 
+		# -221.5 linear (pos pick corn)
+		# 3 -184.8 joints (low order)
+
+
+
+
 		# self.pre_place_bowl_linear = 					[-667.9, 149.0+height_adjust, 481.1, math.radians(59.4), math.radians(39.8), math.radians(175.8)]
 		# self.place_bowl_table_final = 					[-719.1, 320.5+height_adjust, 557.6, math.radians(59.4), math.radians(39.8), math.radians(175.8)]				
 		# self.little_adjustment_after_placing_bowl = 	[-709.5, 289.1+height_adjust, 543.2, math.radians(59.4), math.radians(39.8), math.radians(175.8)]
@@ -265,7 +316,7 @@ class ArmUfactory(Node):
 		
 		
 		# 5
-		self.place_spoon_table_joints = 				[-455.4, 239.3+height_adjust, 459.7, math.radians(104.1), math.radians(-48.0), math.radians(161.3)]
+		self.place_spoon_table_joints =         [-455.4, 239.3+height_adjust, 459.7, math.radians(114.0), math.radians(-44.7), math.radians(147.6)]
 		# 6
 		# self.small_up_after_drop_spoon_table = 			[-501.6, 209.3+height_adjust, 513.9, math.radians(122.1), math.radians(-40.0), math.radians(135.7)]
 		# 7
@@ -556,6 +607,32 @@ class ArmUfactory(Node):
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def ask_for_objects_to_initial_position_alternative_robocup_cornflakes(self):
+
+		# if self.estado_tr == 0:
+		# 	self.set_gripper_req.pos = 0.0
+		# 	self.set_gripper_req.wait = True
+		# 	self.set_gripper_req.timeout = 4.0
+		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
+		# 	self.future.add_done_callback(partial(self.callback_service_tr))
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints_alternative_robocup_cornflakes)
+			self.joint_values_req.speed = math.radians(60)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 
 	def verify_if_object_is_grabbed(self):
 		# aqui quero fechar, verificar se tenho algo e se tiver colocar uma flag a 1, se não tiver manter a 0. 
@@ -882,6 +959,76 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")
 
+	def collect_cornflakes_to_tray_alternative_robocup_cornflakes(self):
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.above_cornflakes_place_spot_alternative)
+			self.joint_values_req.speed = math.radians(60)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			self.position_values_req.pose = self.place_cornflakes_in_tray_alternative # -221.6
+			self.position_values_req.speed = 200.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 4:
+			self.position_values_req.pose = self.step_away_from_cornflakes_in_tray_alternative # -224.5
+			self.position_values_req.speed = 200.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		if self.estado_tr == 5:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 5000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+					
+		elif self.estado_tr == 7:
+			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
+			self.joint_values_req.speed = math.radians(60)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 8:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")
+
+
 	def collect_bowl_to_initial_position(self):
 
 		if self.estado_tr == 0:
@@ -1079,7 +1226,146 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+
+	def pour_cereals_bowl_alternative_robocup_cornflakes(self):
+
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr == 1:
+			self.joint_values_req.angles = self.deg_to_rad(self.new_cornflakes_pre_pick_tray_position)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  2:
+			self.position_values_req.pose = self.new_cornflakes_pick_tray_position
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 4:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+  
+		elif self.estado_tr ==  5:
+			self.position_values_req.pose = self.new_cornflakes_post_pick_tray_position
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
+			self.joint_values_req.angles = self.deg_to_rad(self.new_cornflakes_pre_pour)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		
+		elif self.estado_tr ==  7:
+			self.position_values_req.pose = self.new_cornflakes_pour1
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  8:
+			self.position_values_req.pose = self.new_cornflakes_pour2
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  9:
+			self.position_values_req.pose = self.new_cornflakes_pour3
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  10:
+			self.position_values_req.pose = self.new_cornflakes_pour4
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  11:
+			self.position_values_req.pose = self.new_cornflakes_pour3
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  12:
+			self.position_values_req.pose = self.new_cornflakes_pour2
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  13:
+			self.position_values_req.pose = self.new_cornflakes_pour1
+			self.position_values_req.speed = 100.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 14:
+			self.joint_values_req.angles = self.deg_to_rad(self.new_cornflakes_pre_pour)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 15:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
 	def place_cereal_table(self):   
+
 		if self.estado_tr ==  0:
 			self.position_values_req.pose = self.placing_cereal_at_table
 			self.position_values_req.speed = 120.0
@@ -1125,6 +1411,64 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 	
+
+	def place_cereal_table_alternative_robocup_cornflakes(self):
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.new_cornflakes_pre_place)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  1:
+			self.position_values_req.pose = self.new_cornflakes_place
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			self.set_gripper_req.pos = 850.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr ==  4:
+			self.position_values_req.pose = self.new_cornflakes_post_place
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 5:
+			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
+			self.joint_values_req.speed = math.radians(50)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+	
+
 	def pour_milk_bowl(self):
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_milk_tray_joints)
@@ -1429,10 +1773,17 @@ class ArmUfactory(Node):
    
 		elif self.next_arm_movement == "place_bowl_table":
 			self.place_bowl_table()
+
 		elif self.next_arm_movement == "pour_cereals_bowl":
 			self.pour_cereals_bowl()
 		elif self.next_arm_movement == "place_cereal_table":
 			self.place_cereal_table()
+
+		elif self.next_arm_movement == "pour_cereals_bowl_alternative_robocup_cornflakes":
+			self.pour_cereals_bowl_alternative_robocup_cornflakes()
+		elif self.next_arm_movement == "place_cereal_table_alternative_robocup_cornflakes":
+			self.place_cereal_table_alternative_robocup_cornflakes()
+	
 		elif self.next_arm_movement == "pour_milk_bowl":
 			self.pour_milk_bowl()
 		elif self.next_arm_movement == "place_milk_table":
@@ -1456,6 +1807,9 @@ class ArmUfactory(Node):
 
 		elif self.next_arm_movement == "ask_for_objects_to_initial_position":
 			self.ask_for_objects_to_initial_position()
+		elif self.next_arm_movement == "ask_for_objects_to_initial_position_alternative_robocup_cornflakes":
+			self.ask_for_objects_to_initial_position_alternative_robocup_cornflakes()
+
 		elif self.next_arm_movement == "verify_if_object_is_grabbed":
 			self.verify_if_object_is_grabbed()
 		elif self.next_arm_movement == "close_gripper":
@@ -1475,6 +1829,9 @@ class ArmUfactory(Node):
 		elif self.next_arm_movement == "collect_bowl_to_initial_position":
 			self.collect_bowl_to_initial_position()
 		
+
+		elif self.next_arm_movement == "collect_cornflakes_to_tray_alternative_robocup_cornflakes":
+			self.collect_cornflakes_to_tray_alternative_robocup_cornflakes()
 
 
 		else:

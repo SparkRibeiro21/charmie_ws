@@ -1,0 +1,1 @@
+I have detected a person requesting assistance. Please check my face to see the detected person.

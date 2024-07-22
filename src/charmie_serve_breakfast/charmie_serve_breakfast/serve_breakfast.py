@@ -106,8 +106,8 @@ class ServeBreakfastNode(Node):
         # while not self.get_audio_client.wait_for_service(1.0):
         #     self.get_logger().warn("Waiting for Audio Server...")
         # while not self.calibrate_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
-        # Face
+        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")        
+        # Face        
         while not self.face_command_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Face Command...")
         # Neck 
@@ -798,6 +798,21 @@ class ServeBreakfastMain():
         wait_for_end_of=False
         
         self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
+        
+        if command != "" and command != "charmie_face" and command != "charmie_face_green_yes_no":
+            home = str(Path.home())
+            midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_media_faces"
+            complete_path = home+'/'+midpath+'/'
+            image = cv2.imread(complete_path + command + ".jpg")
+            cv2.imshow(command, image) 
+            cv2.waitKey(200)
+        elif custom != "":
+            home = str(Path.home())
+            midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+            complete_path = home+'/'+midpath+'/'
+            image = cv2.imread(complete_path + custom + ".jpg")
+            cv2.imshow(custom, image) 
+            cv2.waitKey(200)
         
         if wait_for_end_of:
             while not self.node.waited_for_end_of_face:
@@ -1569,8 +1584,9 @@ class ServeBreakfastMain():
         self.ATTEMPTS_AT_RECEIVING = 2
         self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
         self.MAX_SPEED = 30
-        self.TABLE_APPROACH_OBSTACLES = 0.45
-        self.GET_MILK = True
+        self.TABLE_APPROACH_OBSTACLES = 0.35
+        self.COUNTER_APPROACH_OBSTACLES = 0.25
+        self.GET_MILK = False
         self.GET_CORNFLAKES = True
         self.GET_DISHES = True
         
@@ -1580,7 +1596,7 @@ class ServeBreakfastMain():
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45]
         self.look_tray = [0, -60]
-        self.search_tetas = [[-45, -45], [-45+15, -45+10], [-45-15, -45+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
+        self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
         # Initial Position
         self.initial_position = [0.0, 0.1, 0.0]
@@ -1591,7 +1607,19 @@ class ServeBreakfastMain():
         self.side_table = [-0.4, 4.5]
         self.kitchen_counter = [-0.4, 5.5]
         self.kitchen_table = [-2.0, 6.8]
+        
+        ### ROBOCUP24
+        self.MAX_SPEED = 40
 
+        self.pre_room_door = [0.45, 3.55]
+        self.post_room_door = [0.45, 4.70]
+        self.front_of_start_door = [0.0, 1.0]
+        self.front_sofa = [0.45, 5.8]
+        self.midway_living_room = [-0.9, 8.5]
+        self.close_to_garbage_bin = [-2.76, 5.9]
+        self.close_to_dishwasher = [-2.26, 8.0]
+        self.close_to_table_sb = [-4.26, 8.8]
+        self.pre_table = [-4.76, 6.0]
 
         self.state = self.Waiting_for_task_start
 
@@ -1628,14 +1656,14 @@ class ServeBreakfastMain():
 
                 self.wait_for_door_start()
 
-                self.state = self.Approach_milk_location
+                self.state = self.Approach_cornflakes_location
 
 
             elif self.state == self.Approach_milk_location:
                 
                 self.set_neck(position=self.look_navigation, wait_for_end_of=False)
                     
-                self.set_navigation(movement="move", target=self.front_of_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     
                 if self.GET_MILK:
                     self.set_speech(filename="generic/moving_drinks_location", wait_for_end_of=False)
@@ -1714,16 +1742,36 @@ class ServeBreakfastMain():
                 if self.GET_CORNFLAKES:
                     
                     self.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                    
-                    self.set_speech(filename="generic/moving_snacks_location", wait_for_end_of=False)
+                    self.set_speech(filename="generic/sb_moving_kitchen_counter", wait_for_end_of=False)
 
-                    self.set_navigation(movement="rotate", target=self.side_table, flag_not_obs=True, wait_for_end_of=True)
-                    self.set_navigation(movement="move", target=self.side_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     
-                    self.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_rgb(BLUE+ROTATE)
+                    # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.pre_room_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_rgb(MAGENTA+ROTATE)
+                    self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                    self.set_rgb(BLUE+ROTATE)
+                    self.set_navigation(movement="rotate", target=self.front_sofa, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.front_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_rgb(MAGENTA+ROTATE)
+                    self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_rgb(BLUE+ROTATE)
+
+                    self.set_navigation(movement="rotate", target=self.close_to_table_sb, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_navigation(movement="move", target=self.close_to_table_sb, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                    self.set_rgb(BLUE+ROTATE)
                     
-                    self.set_speech(filename="generic/arrived_snacks_location", wait_for_end_of=False)
-                
+                    # debug
+                    # self.set_initial_position([0.0, 0.0, 90.0])
+
+                    self.set_speech(filename="generic/sb_arrived_kitchen_counter", wait_for_end_of=False)
+                    self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
+                    
+                    
                 self.state = self.Detect_and_pick_cornflakes
 
 
@@ -1762,7 +1810,7 @@ class ServeBreakfastMain():
                             
                             self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object_cornflakes", wait_for_end_of=True)
+                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
                             
                             if not object_in_gripper:
                         
@@ -1780,11 +1828,11 @@ class ServeBreakfastMain():
                                 
                     self.set_face("charmie_face")
                         
-                    self.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
+                    self.set_arm(command="collect_cornflakes_to_tray_alternative_robocup_cornflakes", wait_for_end_of=True)
                     
-                    self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    self.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=True)
 
-                self.state = self.Approach_dishes_location
+                self.state = self.Detect_and_pick_dishes
 
 
             elif self.state == self.Approach_dishes_location:
@@ -1802,6 +1850,7 @@ class ServeBreakfastMain():
                     self.set_speech(filename="generic/arrived_dishes_location", wait_for_end_of=True)
                 
                 self.state = self.Detect_and_pick_dishes
+
 
             elif self.state == self.Detect_and_pick_dishes:
 
@@ -1867,7 +1916,7 @@ class ServeBreakfastMain():
 
                             self.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
                                 
-                    self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+                    self.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=False)
 
                     # SPOON
                     self.detected_object_to_face_path(object=correct_object_spoon, send_to_face=True, bb_color=(0,255,0))
@@ -1889,6 +1938,9 @@ class ServeBreakfastMain():
                     self.set_face("charmie_face")
 
                 self.state = self.Approach_kitchen_table
+                
+                # debug
+                # self.state = self.Placing_bowl
 
 
             elif self.state == self.Approach_kitchen_table:
@@ -1897,18 +1949,23 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
 
-                self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.kitchen_table, max_speed=20.0, reached_radius=1.0, flag_not_obs=False, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=self.COUNTER_APPROACH_OBSTACLES, wait_for_end_of=True)
+                    
+                # self.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
+                # self.set_navigation(movement="move", target=self.kitchen_table, max_speed=20.0, reached_radius=1.0, flag_not_obs=False, wait_for_end_of=True)
 
-                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
+                self.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=False)
                                 
-                self.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs=True, wait_for_end_of=True)
 
                 # self.set_navigation(movement="adjust_angle", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
+                time.sleep(3)
+                self.set_speech(filename="serve_breakfast/remove_decorations_table", wait_for_end_of=False)
 
                 self.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=self.TABLE_APPROACH_OBSTACLES, wait_for_end_of=True)
                 
-                self.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= 225.0, flag_not_obs=True, wait_for_end_of=True)
                 
                 self.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
                 
@@ -1930,11 +1987,11 @@ class ServeBreakfastMain():
 
                 if self.GET_CORNFLAKES:
                     ##### ARM POUR IN BOWL
-                    self.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
+                    self.set_arm(command="pour_cereals_bowl_alternative_robocup_cornflakes", wait_for_end_of=True)
                     self.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=False)
                     
                     ##### ARM PLACE OBJECT
-                    self.set_arm(command="place_cereal_table", wait_for_end_of=True)
+                    self.set_arm(command="place_cereal_table_alternative_robocup_cornflakes", wait_for_end_of=True)
                     self.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
                 
                 self.state = self.Placing_milk
