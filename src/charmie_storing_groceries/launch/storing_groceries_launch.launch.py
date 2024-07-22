@@ -170,7 +170,7 @@ def generate_launch_description():
         charmie_both_cameras_launch_description,
         # lidar,
         # obstacles,
-        face,
+        # face,
         neck,
         point_cloud,
         yolo_objects,
