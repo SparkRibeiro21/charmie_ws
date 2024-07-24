@@ -12,7 +12,7 @@
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
   * [RoboCup@Home 2024 :netherlands:](#robocuphome-2024-netherlands)
   * [RoboCup@Home 2023 :fr:](#robocuphome-2023-fr)
-* [Videos of Tasks from Pevious Events :gear:](#gear-videos-of-tasks-from-previous-events)
+* [Videos from Pevious Events :gear:](#gear-videos-from-previous-events)
 * [Results :trophy:](#trophy-results)
 * [Extended Scores :chart_with_upwards_trend:](#chart_with_upwards_trend-extended-scores)
 * [Social Media :handshake:](#handshake-connect-with-us)
@@ -49,11 +49,11 @@ To setup the realsense package in your workspace, please follow the installation
 
 [Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=gNx9OYljlcw)
 
-## :gear: Videos of Tasks from Previous Events 
+## :gear: Videos from Previous Events 
 <details>
   <summary>Click to expand</summary>
 
-  ## Receptionist Task (RoboCup@Home 2023)
+  ## Receptionist (RoboCup@Home 2023)
 
   [![Video Title](https://img.youtube.com/vi/rYzFhlLRpxc/0.jpg)](https://www.youtube.com/watch?v=rYzFhlLRpxc)
 
