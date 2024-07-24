@@ -78,7 +78,7 @@ To setup the realsense package in your workspace, please follow the installation
 |RoboCup 2024|400|400|400|400|400|400|400|400|400|400|400|399|
 |RoboCup Portugal Open 2024|400|400|400|400|400|400|400|400|400|400|400|399|
 |RoboCup 2023|400|400|400|400|400|400|400|400|400|400|400|399|
-|RoboCup Portugal Open 2023|400|400|400|400|400|400|400|400|400|400|400|399|
+|RoboCup Portugal Open 2023||400||||400||||||400|
 
 
 ## :handshake: Connect with us
