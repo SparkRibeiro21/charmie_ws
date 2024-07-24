@@ -14,6 +14,7 @@
   * [RoboCup@Home 2023 :fr:](#robocuphome-2023-fr)
 * [Videos of Tasks from Pevious Events :gear:](#gear-videos-of-tasks-from-previous-events)
 * [Results :trophy:](#trophy-results)
+* [Extended Scores :chart_with_upwards_trend:](#chart_with_upwards_trend-extended-scores)
 * [Social Media :handshake:](#handshake-connect-with-us)
 
 ## :book: Project Description
