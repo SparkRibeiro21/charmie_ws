@@ -75,9 +75,9 @@ To setup the realsense package in your workspace, please follow the installation
 ## :chart_with_upwards_trend: Extended Scores
 |Event|Poster|Carry My Luggage|Receptionist|Storing Groceries|Serve Breakfast|GPSR|Total Stage 1|Clean the Table|Restaurant|Stickler for the rules|EGPSR|Total Stage 2|Total Event|
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
-|RoboCup 2024|-|400|400|400|400|400|400|400|400|400|400|400|399|
+|RoboCup 2024|34|400|400|400|400|400|400|400|400|400|400|400|399|
 |RoboCup Portugal Open 2024|-|400|400|400|400|400|400|400|400|400|400|400|399|
-|RoboCup 2023|-|400|400|400|400|400|400|400|400|400|400|400|399|
+|RoboCup 2023|32|400|400|400|400|400|400|400|400|400|400|400|399|
 |RoboCup Portugal Open 2023|-|-|400|-|-|-|400|-|-|-|-|0|400|
 
 
