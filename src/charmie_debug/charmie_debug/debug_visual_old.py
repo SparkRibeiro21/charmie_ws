@@ -6,7 +6,6 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson
-from charmie_interfaces.srv import  SpeechCommand, SaveSpeechCommand
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -15,11 +14,6 @@ import math
 import threading
 from pathlib import Path
 import json
-
-import pygame_widgets
-import pygame
-from pygame_widgets.toggle import Toggle
-from pygame_widgets.button import Button
 
 DEBUG_DRAW = False
 
@@ -419,14 +413,6 @@ class DebugVisualNode(Node):
         # Obstacles
         self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
 
-
-
-        ### Services (Clients) ###
-        # Speakers
-        self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
-        self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
-
-
         self.robot = Robot()
 
 
@@ -551,9 +537,7 @@ def main(args=None):
     rclpy.init(args=args)
     node = DebugVisualNode()
     th_main = threading.Thread(target=thread_main_debug_visual, args=(node,), daemon=True)
-    th_nodes = threading.Thread(target=thread_check_nodes, args=(node,), daemon=True)
     th_main.start()
-    th_nodes.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
@@ -562,79 +546,7 @@ def thread_main_debug_visual(node: DebugVisualNode):
     main = DebugVisualMain(node)
     main.main()
 
-def thread_check_nodes(node: DebugVisualNode):
-    check_nodes = CheckNodesMain(node)
-    check_nodes.main()
-
 class DebugVisualMain():
-
-    def __init__(self, node: DebugVisualNode):
-        self.node = node
-        self.state = 0
-        self.hand_raised = 0
-        self.person_coordinates = Pose2D()
-        self.person_coordinates.x = 0.0
-        self.person_coordinates.y = 0.0
-
-        self.neck_pose = Pose2D()
-        self.neck_pose.x = 180.0
-        self.neck_pose.y = 193.0
-
-        self.target_x = 0.0
-        self.target_y = 0.0
-
-        self.pedido = ''
-
-        self.i = 0
-
-        self.aux_test_button = True
-
-    def test_button_function(self):
-
-        if self.aux_test_button:
-            print("UP UP UP")
-            self.aux_test_button = False
-        else:
-            print("DOWN DOWN DOWN")
-            self.aux_test_button = True
-
-
-    def main(self):
-
-        pygame.init()
-        win = pygame.display.set_mode((600, 600))
-        button = Button(win, 100, 100, 300, 150,
-                     
-        # Optional Parameters
-        text='Hello',  # Text to display
-        fontSize=50,  # Size of font
-        margin=20,  # Minimum distance between text/image and edge of button
-        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(0, 200, 20),  # Colour of button when being clicked
-        radius=10,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: self.test_button_function()  # Function to call when clicked on  
-        )
-
-        run = True
-        while run:
-            events = pygame.event.get()
-            for event in events:
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    run = False
-                    quit()
-            
-            win.fill((255, 255, 255))
-            
-            pygame_widgets.update(events)
-            pygame.display.update()
-
-        # while True:
-        #     # pass
-        #     self.node.robot.update_debug_drawings()
-
-class CheckNodesMain():
 
     def __init__(self, node: DebugVisualNode):
         self.node = node
@@ -659,13 +571,5 @@ class CheckNodesMain():
     def main(self):
 
         while True:
-            # Speakers
-            if not self.node.speech_command_client.wait_for_service(0.1):
-                self.node.get_logger().warn("Waiting for Server Speech Command...")
-            if not self.node.save_speech_command_client.wait_for_service(0.1):
-                self.node.get_logger().warn("Waiting for Server Save Speech Command...")
-            # Audio
-            # while not self.get_audio_client.wait_for_service(1.0):
-            #     self.get_logger().warn("Waiting for Audio Server...")
-            # while not self.calibrate_audio_client.wait_for_service(1.0):
-            #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
+            # pass
+            self.node.robot.update_debug_drawings()

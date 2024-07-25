@@ -36,6 +36,7 @@ setup(
             "debug_search_for_person = charmie_debug.debug_search_for_person:main",
 		    "debug_spkr_face = charmie_debug.debug_spkr_face:main",
 		    "debug_visual = charmie_debug.debug_visual:main",
+            "debug_visual_old = charmie_debug.debug_visual_old:main",
             "debug_yolos = charmie_debug.debug_yolos:main",
 		    "node_template = charmie_debug.node_template:main",
             "rosbag_2_video_converter = charmie_debug.rosbag_2_video_converter:main",
