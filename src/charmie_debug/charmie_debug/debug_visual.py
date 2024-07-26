@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson
-from charmie_interfaces.srv import  SpeechCommand, SaveSpeechCommand
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -15,11 +15,13 @@ import math
 import threading
 from pathlib import Path
 import json
+import os
 
 import pygame_widgets
 import pygame
 from pygame_widgets.toggle import Toggle
 from pygame_widgets.button import Button
+from pygame_widgets.textbox import TextBox
 
 DEBUG_DRAW = False
 
@@ -425,6 +427,29 @@ class DebugVisualNode(Node):
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
+        # Audio
+        self.get_audio_client = self.create_client(GetAudio, "audio_command")
+        self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
+        # Face
+        self.face_command_client = self.create_client(SetFace, "face_command")
+        # Neck
+        self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
+        self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
+        self.set_neck_coordinates_client = self.create_client(SetNeckCoordinates, "neck_to_coords")
+        self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
+        self.neck_track_object_client = self.create_client(TrackObject, "neck_track_object")
+        # Yolo Pose
+        self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
+        # Yolo Objects
+        self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Arm (CHARMIE)
+        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        # Navigation
+        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+        # Obstacles
+        self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
+        # Point Cloud
+        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
 
 
         self.robot = Robot()
@@ -545,94 +570,6 @@ class DebugVisualNode(Node):
         # ROS2 Image Bridge for OpenCV
         br = CvBridge()
         self.robot.current_frame = br.imgmsg_to_cv2(img, "bgr8")
-        
-    
-def main(args=None):
-    rclpy.init(args=args)
-    node = DebugVisualNode()
-    th_main = threading.Thread(target=thread_main_debug_visual, args=(node,), daemon=True)
-    th_nodes = threading.Thread(target=thread_check_nodes, args=(node,), daemon=True)
-    th_main.start()
-    th_nodes.start()
-    rclpy.spin(node)
-    rclpy.shutdown()
-
-
-def thread_main_debug_visual(node: DebugVisualNode):
-    main = DebugVisualMain(node)
-    main.main()
-
-def thread_check_nodes(node: DebugVisualNode):
-    check_nodes = CheckNodesMain(node)
-    check_nodes.main()
-
-class DebugVisualMain():
-
-    def __init__(self, node: DebugVisualNode):
-        self.node = node
-        self.state = 0
-        self.hand_raised = 0
-        self.person_coordinates = Pose2D()
-        self.person_coordinates.x = 0.0
-        self.person_coordinates.y = 0.0
-
-        self.neck_pose = Pose2D()
-        self.neck_pose.x = 180.0
-        self.neck_pose.y = 193.0
-
-        self.target_x = 0.0
-        self.target_y = 0.0
-
-        self.pedido = ''
-
-        self.i = 0
-
-        self.aux_test_button = True
-
-    def test_button_function(self):
-
-        if self.aux_test_button:
-            print("UP UP UP")
-            self.aux_test_button = False
-        else:
-            print("DOWN DOWN DOWN")
-            self.aux_test_button = True
-
-
-    def main(self):
-
-        pygame.init()
-        win = pygame.display.set_mode((600, 600))
-        button = Button(win, 100, 100, 300, 150,
-                     
-        # Optional Parameters
-        text='Hello',  # Text to display
-        fontSize=50,  # Size of font
-        margin=20,  # Minimum distance between text/image and edge of button
-        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(0, 200, 20),  # Colour of button when being clicked
-        radius=10,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: self.test_button_function()  # Function to call when clicked on  
-        )
-
-        run = True
-        while run:
-            events = pygame.event.get()
-            for event in events:
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    run = False
-                    quit()
-            
-            win.fill((255, 255, 255))
-            
-            pygame_widgets.update(events)
-            pygame.display.update()
-
-        # while True:
-        #     # pass
-        #     self.node.robot.update_debug_drawings()
 
 class CheckNodesMain():
 
@@ -655,6 +592,10 @@ class CheckNodesMain():
 
         self.i = 0
 
+        self.CHECK_SPEAKER_NODE = False
+        self.CHECK_AUDIO_NODE = False
+        self.CHECK_FACE_NODE = False
+
 
     def main(self):
 
@@ -662,10 +603,176 @@ class CheckNodesMain():
             # Speakers
             if not self.node.speech_command_client.wait_for_service(0.1):
                 self.node.get_logger().warn("Waiting for Server Speech Command...")
-            if not self.node.save_speech_command_client.wait_for_service(0.1):
-                self.node.get_logger().warn("Waiting for Server Save Speech Command...")
+                self.CHECK_SPEAKER_NODE = False
+            else:
+                self.CHECK_SPEAKER_NODE = True
+            # Audio
+            if not self.node.get_audio_client.wait_for_service(0.1):
+                self.node.get_logger().warn("Waiting for Server Audio Command...")
+                self.CHECK_AUDIO_NODE = False
+            else:
+                self.CHECK_AUDIO_NODE = True
+            # Face
+            if not self.node.face_command_client.wait_for_service(0.1):
+                self.node.get_logger().warn("Waiting for Server Face Command...")
+                self.CHECK_FACE_NODE = False
+            else:
+                self.CHECK_FACE_NODE = True
+
+            # if not self.node.save_speech_command_client.wait_for_service(0.1):
+            #      self.node.get_logger().warn("Waiting for Server Save Speech Command...")
             # Audio
             # while not self.get_audio_client.wait_for_service(1.0):
             #     self.get_logger().warn("Waiting for Audio Server...")
             # while not self.calibrate_audio_client.wait_for_service(1.0):
             #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
+    
+def main(args=None):
+    rclpy.init(args=args)
+    node = DebugVisualNode()
+    check_nodes = CheckNodesMain(node)
+    th_nodes = threading.Thread(target=thread_check_nodes, args=(node,check_nodes,), daemon=True)
+    th_main = threading.Thread(target=thread_main_debug_visual, args=(node,check_nodes,), daemon=True)
+    th_main.start()
+    th_nodes.start()
+    rclpy.spin(node)
+    rclpy.shutdown()
+
+
+def thread_main_debug_visual(node: DebugVisualNode, check_nodes: CheckNodesMain):
+    main = DebugVisualMain(node, check_nodes)
+    main.main()
+
+def thread_check_nodes(node: DebugVisualNode, check_nodes: CheckNodesMain):
+    check_nodes.main()
+
+class DebugVisualMain():
+
+    def __init__(self, node: DebugVisualNode, check_nodes: CheckNodesMain):
+        
+        self.node = node
+        self.check_nodes = check_nodes
+
+        self.aux_test_button = False
+        
+        # info regarding the paths for the recorded files intended to be played
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        home = str(Path.home())
+        midpath = "/charmie_ws/src/configuration_files/logos/"
+        self.complete_path = home+midpath
+
+
+
+        pygame.init()
+
+        WIDTH, HEIGHT = 900, 500
+        self.FPS = 30
+
+
+        os.environ['SDL_VIDEO_CENTERED'] = '1'
+        info = pygame.display.Info()
+        screen_width, screen_height = info.current_w, info.current_h
+        print(screen_width, screen_height)
+        self.WIN = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+
+        # self.text_font = pygame.font.SysFont("Arial", 30)
+        self.text_font_t = pygame.font.SysFont(None, 30)
+        self.text_font = pygame.font.SysFont(None,24)
+
+        # self.WIN = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+        self.button = Button(self.WIN, 100, 100, 300, 150,
+        # Optional Parameters
+        text='Hello',  # Text to display
+        fontSize=50,  # Size of font
+        margin=20,  # Minimum distance between text/image and edge of button
+        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
+        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
+        pressedColour=(0, 200, 20),  # Colour of button when being clicked
+        radius=10,  # Radius of border corners (leave empty for not curved)
+        onClick=lambda: self.test_button_function()  # Function to call when clicked on  
+        )
+
+        self.toggle = Toggle(self.WIN, 200, 200, 100, 40,
+                        onClick=lambda: self.test_button_function())  # Function to call when clicked on  )
+
+
+        self.textbox = TextBox(self.WIN, 100, 100, 800, 80, fontSize=50,
+                  borderColour=(255, 0, 0), textColour=(0, 200, 0),
+                  onSubmit=self.output, radius=10, borderThickness=5)
+
+        icon = pygame.image.load(self.complete_path+"logo_light_cropped_squared.png")
+        pygame.display.set_icon(icon)
+        pygame.display.set_caption("CHARMIE Debug Node")
+
+        self.SPEAKER_NODE_RECT = pygame.Rect(20, 50, 10, 10)
+        self.AUDIO_NODE_RECT = pygame.Rect(20, 75, 10, 10)
+        self.FACE_NODE_RECT = pygame.Rect(20, 100, 10, 10)
+
+    def test_button_function(self):
+
+        if self.aux_test_button:
+            print("UP UP UP")
+            self.aux_test_button = False
+        else:
+            print("DOWN DOWN DOWN")
+            self.aux_test_button = True
+
+    def output(self):
+        # Get text in the textbox
+        print(self.textbox.getText())
+
+    
+    def draw_text(self, text, font, text_col, x, y):
+        img = font.render(text, True, text_col)
+        self.WIN.blit(img, (x, y))
+
+
+    def draw_nodes_check(self):
+
+        RED = (255,0,0)
+        GREEN = (0,255,0)
+        
+        self.draw_text("Check Nodes:", self.text_font_t, (255,255,255), 10, 10)
+
+        self.draw_text("audio", self.text_font, (255,255,255), 20+10+10, 75-2)
+        self.draw_text("face", self.text_font, (255,255,255), 20+10+10, 100-2)
+        self.draw_text("speakers", self.text_font, (255,255,255), 20+10+10, 50-2)
+
+        if self.check_nodes.CHECK_SPEAKER_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.SPEAKER_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.SPEAKER_NODE_RECT)
+
+        if self.check_nodes.CHECK_AUDIO_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.AUDIO_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.AUDIO_NODE_RECT)
+
+        if self.check_nodes.CHECK_FACE_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.FACE_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.FACE_NODE_RECT)
+
+
+    def main(self):
+
+
+        clock = pygame.time.Clock()
+        run = True
+        while run:
+            clock.tick(self.FPS)
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    run = False
+                    quit()
+            
+            self.WIN.fill((0, 0, 0))
+            self.draw_nodes_check()
+            
+            pygame_widgets.update(events)
+            pygame.display.update()
+
+            # print(self.toggle.getValue())
+        
