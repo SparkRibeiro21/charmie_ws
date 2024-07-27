@@ -174,7 +174,7 @@ def generate_launch_description():
         neck,
         point_cloud,
         yolo_objects,
-        arm,
+        # arm,
         lidar,
         obstacles
         # storing_groceries,

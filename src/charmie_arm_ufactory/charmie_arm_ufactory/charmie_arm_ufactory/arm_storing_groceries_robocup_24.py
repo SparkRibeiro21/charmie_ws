@@ -104,8 +104,7 @@ class ArmUfactory(Node):
 		self.estado_tr = 0
 
 		# initial debug movement 
-		# self.next_arm_movement = "debug_initial"
-		self.next_arm_movement = ""
+		self.next_arm_movement = "debug_initial"
 		self.adjust_position = 0.0
 
 		self.setup()
@@ -153,23 +152,23 @@ class ArmUfactory(Node):
 		# self.inside_wardrobe_left_door_2 = [-209.4, 66.3, -124.0, -1.9, 35.1, 332.5]
 		# self.inside_wardrobe_left_door_3 = [-215.5, 48.3, -79.9, 10.8, 9.3, 314.0]
 
-		self.inside_wardrobe_left_door = [-211.1, 55.3, -115.5, 18.0, 36.0, 316.8]
-		self.inside_wardrobe_left_door_2 = [-210.7, 64.5, -136.5, 4.7, 57.1, 328.5]
-		self.inside_wardrobe_left_door_2_new = [-210.5, 73.5, -154.6, 0.2, 72.7, 331.4]
-		# self.inside_wardrobe_left_door = [-197.4, 41.1, -88.0, 13.1, 19.9, 331.0]
-		# self.inside_wardrobe_left_door_2_new = [-195.7, 69.9, -150.7, -2.2, 72.3, 346.7]
+		# self.inside_wardrobe_left_door = [-211.1, 55.3, -115.5, 18.0, 36.0, 316.8]
+		# self.inside_wardrobe_left_door_2 = [-210.7, 64.5, -136.5, 4.7, 57.1, 328.5]
+		# self.inside_wardrobe_left_door_2_new = [-210.5, 73.5, -154.6, 0.2, 72.7, 331.4]
+		self.inside_wardrobe_left_door = [-197.4, 41.1, -88.0, 13.1, 19.9, 331.0]
+		self.inside_wardrobe_left_door_2_new = [-195.7, 69.9, -150.7, -2.2, 72.3, 346.7]
 
-		self.inside_wardrobe_right_door = [-221.7, 78.3, -102.5, 135.4, 73.8, 106.3]
-		self.inside_wardrobe_right_door_2 = [-216.0, 98.2, -137.8, 154.7, 104.1, 111.5]
-		# self.inside_wardrobe_right_door = [-215.4, 73.7, -89.9, 143.0, 78.3, 99.3]
-		# self.inside_wardrobe_right_door_2 = [-206.8, 86.4, -111.4, 159.0, 115.6, 100.5]
+		# self.inside_wardrobe_right_door = [-221.7, 78.3, -102.5, 135.4, 73.8, 106.3]
+		# self.inside_wardrobe_right_door_2 = [-216.0, 98.2, -137.8, 154.7, 104.1, 111.5]
+		self.inside_wardrobe_right_door = [-215.4, 73.7, -89.9, 143.0, 78.3, 99.3]
+		self.inside_wardrobe_right_door_2 = [-206.8, 86.4, -111.4, 159.0, 115.6, 100.5]
 		
 
-		self.wardrobe_left_door_outside = [-217.2, 88.2, -121.2, -1.0, 30.9, 317.8]
-		self.wardrobe_left_door_outside = [-213.5, 95.5, -147.2, -11.4, 60.9, 328.0]
-		self.wardrobe_left_door_outside_2 = [-219.5, 46.8, -87.5, -17.4, 52.2, 327.0]
-		# self.wardrobe_left_door_outside = [-199.9, 70.9, -95.8, -12.7, 36.3, 345.3]
+		# self.wardrobe_left_door_outside = [-217.2, 88.2, -121.2, -1.0, 30.9, 317.8]
+		# self.wardrobe_left_door_outside = [-213.5, 95.5, -147.2, -11.4, 60.9, 328.0]
 		# self.wardrobe_left_door_outside_2 = [-219.5, 46.8, -87.5, -17.4, 52.2, 327.0]
+		self.wardrobe_left_door_outside = [-199.9, 70.9, -95.8, -12.7, 36.3, 345.3]
+		self.wardrobe_left_door_outside_2 = [-219.5, 46.8, -87.5, -17.4, 52.2, 327.0]
 
 		self.wardrobe_right_door_outside = [-226.5, 49.5, -65.4, 141.6, 127.0, 105.8]
 		self.wardrobe_right_door_outside_2 = [-224.4, 33.2, -59.0, 146.3, 118.5, 110.6]
@@ -183,8 +182,8 @@ class ArmUfactory(Node):
 		self.arm_check_right_door =   [ -211.4, 19.6, -65.5, 138.3, 53.0, 116.6]
 		# self.arm_check_left_door =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 106.3]
 		self.arm_check_left_door =    [ -215.4, 73.7, -89.8, 143.0, 78.3, 99.3]
-		# self.arm_check_right_door_inside_cabinet =   [ -195.9, 67.2, -140.7, 134.5, 23.2, 220.3]
-		self.arm_check_right_door_inside_cabinet_2 =   [ -207.6, 62.8, -140.4, 112.8, 30.4, 241.6]
+		self.arm_check_right_door_inside_cabinet =   [ -195.9, 67.2, -140.7, 134.5, 23.2, 220.3]
+		# self.arm_check_right_door_inside_cabinet_2 =   [ -207.6, 62.8, -140.4, 112.8, 30.4, 241.6]
 		# self.arm_check_left_door_inside_cabinet =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 16.3]
 		self.arm_check_left_door_inside_cabinet = [ -215.4, 73.7, -89.8, 143.0, 78.3, 99.3]
 
@@ -985,7 +984,7 @@ class ArmUfactory(Node):
 	def check_right_door_inside(self):
 		if self.estado_tr == 0:
 			print('a')
-			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door_inside_cabinet_2)
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door_inside_cabinet)
 			self.joint_values_req.speed = 0.8
 			self.joint_values_req.wait = True
 			self.joint_values_req.radius = 0.0
@@ -1174,7 +1173,6 @@ class ArmUfactory(Node):
 			self.future.add_done_callback(partial(self.callback_service_tr))
 			print('b')
 
-		
 		elif self.estado_tr == 2:
 			temp = Bool()
 			temp.data = True

@@ -4,7 +4,7 @@ from example_interfaces.msg import Bool, Int16, String, Float32
 from xarm_msgs.msg import RobotMsg
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint, GetFloat32List
 from geometry_msgs.msg import Pose, Point, Quaternion
-from charmie_interfaces.msg import RobotSpeech, ListOfFloats
+from charmie_interfaces.msg import RobotSpeech, ListOfFloats, ArmController
 from charmie_interfaces.srv import ArmTrigger
 from std_srvs.srv import SetBool
 from functools import partial
@@ -21,10 +21,10 @@ class ArmUfactory(Node):
 		self.get_logger().info("Initialised my test Node")	
 
 		# ARM TOPICS
-		self.arm_command_subscriber = self.create_subscription(String, "arm_command", self.arm_command_callback, 10)
+		self.arm_command_subscriber = self.create_subscription(ArmController, "arm_command", self.arm_command_callback, 10)
 		self.arm_value_subscriber = self.create_subscription(Float32, "arm_value", self.arm_value_callback, 10)
 		self.flag_arm_finish_publisher = self.create_publisher(Bool, 'arm_finished_movement', 10)
-		self.arm_pose_publisher = self.create_publisher(ListOfFloats, 'arm_current_pose', 10)
+		self.arm_pose_publisher = self.create_publisher(ArmController, 'arm_current_pose', 10)
 		self.get_joints_robot_subscriber = self.create_subscription(RobotMsg, '/xarm/robot_states', self.get_joints_robot_callback, 10)
 		self.arm_set_pose_subscriber = self.create_subscription(ListOfFloats, 'arm_set_desired_pose', self.arm_desired_pose_callback, 10)
 		self.arm_set_height_subscriber = self.create_subscription(Float32, 'arm_set_desired_height', self.arm_desired_height_callback, 10)
@@ -106,6 +106,7 @@ class ArmUfactory(Node):
 		self.plan_exec_req = PlanExec.Request()
 		self.plan_pose_resp = PlanPose.Response()
 		self.joint_plan_req = PlanJoint.Request()
+		self.move_line_tool_req = MoveCartesian.Request()
 
 		self.resultado = []
 		self.wrong_movement_received = False
@@ -143,7 +144,7 @@ class ArmUfactory(Node):
   		
 	def arm_desired_pose_callback(self, arm_desired_pose: ListOfFloats):
 		self.get_logger().info(f"Received pose selection: {arm_desired_pose.pose}")
-		self.arm_pose = arm_desired_pose.pose
+		# self.arm_pose = arm_desired_pose.pose
 
 	def arm_desired_height_callback(self, arm_desired_height: Float32):
 		self.get_logger().info(f"Received value selection: {arm_desired_height.data}")
@@ -151,11 +152,18 @@ class ArmUfactory(Node):
 
 	def arm_value_callback(self, value: Float32):
 		self.get_logger().info(f"Received value selection: {value.data}")
-		self.value = value.data
+		# self.value = value.data
 
-	def arm_command_callback(self, move: String):
-		self.get_logger().info(f"Received movement selection: {move.data}")
-		self.next_arm_movement = move.data
+	
+	def arm_command_callback(self, move: ArmController):
+		self.get_logger().info(f"Received movement selection: {move}")
+		self.next_arm_movement = move.command
+		self.adjust_position = move.adjust_position
+		self.value = move.adjust_position
+		self.arm_pose = move.pose
+		print('values of arm controller', move)
+		# self.arm_pose = move.pose
+
 		self.movement_selection()
 		# this is used when a wrong command is received
 		if self.wrong_movement_received:
@@ -197,6 +205,22 @@ class ArmUfactory(Node):
 		self.inside_wardrobe_final = [-215.4, 41.1, -119.8, 3.7, 62.0, 326.8]
 		self.inside_wardrobe_final_2 = [-214.6, 54.9, -124.3, 4.0, 52.7, 326.7]
 
+
+
+		# self.arm_check_right_door =   [ -219.0, 23.6, -79.5, 124.3, 50.6, 131.8]
+		self.arm_check_right_door =   [ -211.4, 19.6, -65.5, 138.3, 53.0, 116.6]
+		# self.arm_check_left_door =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 106.3]
+		self.arm_check_left_door =    [ -215.4, 73.7, -89.8, 143.0, 78.3, 99.3]
+		# self.arm_check_right_door_inside_cabinet =   [ -195.9, 67.2, -140.7, 134.5, 23.2, 220.3]
+		self.arm_check_right_door_inside_cabinet_2 =   [ -207.6, 62.8, -140.4, 112.8, 30.4, 241.6]
+		# self.arm_check_left_door_inside_cabinet =    [ -221.7, 78.5, -102.3, 135.4, 73.8, 16.3]
+		self.arm_check_left_door_inside_cabinet = [ -215.4, 73.7, -89.8, 143.0, 78.3, 99.3]
+
+
+
+
+
+
 		self.inside_wardrobe_side = [-303.8, -3.8, -114.7, 132.0, 98.9, 220.7]
 		self.inside_wardrobe_side_1 = [-275.7, -8.1, -116.8, 116.7, 76.0, 211.8]
 		self.pulling_door_side = [-283.6, -8.2, -115.2, 103.5, 93.3, 214.5]
@@ -236,11 +260,11 @@ class ArmUfactory(Node):
 		self.close_dishwasher = [-215.4, 80.8, -152.9, 96.3, 69.9, 70.6]
 
 
-		self.place_arm_right_side_door_0 = [-182.6, -14.0, -53.2, 116.9, -0.7, 238.8]
-		self.place_arm_right_side_door = [-182.3, 57.0, -124.2, 78.9, -0.7, 277.5]
-		self.place_arm_right_side_door_2 = [-188.6, 68.6, -138.3, 0.3, 37.5, 352.8]
-		self.place_arm_right_side_door_3 = [-196.9, 44.7, -53.2, 165.9, 23.7, 180.5]
-		self.place_arm_right_side_door_4 = [-186.8, 100.4, -109.2, 58.9, -0.7, 295.5]
+		self.place_arm_right_side_door_0 = [-182.6, -14.0, -53.2, 116.9, -0.7, -60.8]
+		self.place_arm_right_side_door = [-177.8, 57.0, -122.6, 77.3, -5.5, -86.5]
+		self.place_arm_right_side_door_2 = [-177.3, 65.9, -131.3, -9.5, 36.7, 9.7]
+		self.place_arm_right_side_door_3 = [-183.8, 43.7, -49.7, 182.4, 29.7, -183.5]
+		self.place_arm_right_side_door_4 = [-175.8, 99.4, -107.4, 67.3, -3.0, -56.9]
 
 		self.place_arm_left_side_door = [-178.0, 95.0, -99.0, 185.5, 88.0, -5.0]
 		self.place_arm_left_side_door_2 = [-178.7, 97.3, -116.7, 182.7, 85.9, -1.1]
@@ -792,6 +816,125 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def check_right_door_inside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door_inside_cabinet_2)
+			self.joint_values_req.speed = 0.8
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def check_right_door(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_right_door)
+			self.joint_values_req.speed = 0.6
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	
+	def check_left_door(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_left_door)
+			self.joint_values_req.speed = 0.6
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+	def check_left_door_inside(self):
+		if self.estado_tr == 0:
+			print('a')
+			self.joint_values_req.angles = self.deg_to_rad(self.arm_check_left_door_inside_cabinet)
+			self.joint_values_req.speed = 0.8
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+			print('b')
+
+		elif self.estado_tr == 1:
+			print('.')
+			if self.returning != 0:
+				print('no')
+				self.estado_tr = 0
+				self.movement_selection()
+			else:
+				print('yes')
+				self.estado_tr = 2
+				self.movement_selection()
+
+		elif self.estado_tr == 2:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
 	def get_arm_position(self):
 		if self.estado_tr == 0: 
 			self.future = self.get_position_client.call_async(self.get_position_req)
@@ -808,13 +951,15 @@ class ArmUfactory(Node):
 			arm_pose = self.resultado.datas
 			print('arm pose:', arm_pose)
 			print('--')
-			arm_pose_ = ListOfFloats()
+			arm_controller = ArmController()
+			arm_pose_ = []
 			for a in arm_pose:
-				arm_pose_.pose.append(a)
+				arm_pose_.append(a)
 				print(a)	
 
-			print(arm_pose_.pose)
-			self.arm_pose_publisher.publish(arm_pose_)
+			arm_controller.pose = arm_pose_
+			print(arm_controller.pose)
+			self.arm_pose_publisher.publish(arm_controller)
 
 	def debug(self, set_desired_pose_arm):
 		if self.estado_tr == 0:
@@ -2453,17 +2598,30 @@ class ArmUfactory(Node):
 		elif self.next_arm_movement == "close_gripper_with_check_object":
 			self.close_gripper_with_check_object()
 		elif self.next_arm_movement == "go_left":
+			print('value:', self.value)
 			self.go_left(self.value)
+			
 		elif self.next_arm_movement == "go_right":
+			print('value:', self.value)
 			self.go_right(self.value)
+			print('value:', self.value)
 		elif self.next_arm_movement == "go_up":
+			print('value:', self.value)
 			self.go_up(self.value)
+			print('value:', self.value)
 		elif self.next_arm_movement == "go_down":
+			
+			print('value:', self.value)
 			self.go_down(self.value)
+			print('value:', self.value)
 		elif self.next_arm_movement == "go_front":
+			print('value:', self.value)
 			self.go_front(self.value)
+			print('value:', self.value)
 		elif self.next_arm_movement == "go_back":
+			print('value:', self.value)
 			self.go_back(self.value)
+			print('value:', self.value)
 		elif self.next_arm_movement == "get_arm_position":
 			self.get_arm_position()
 		elif self.next_arm_movement == "move_linear":
@@ -2552,6 +2710,14 @@ class ArmUfactory(Node):
 			self.close_door_push_right_side()
 		elif self.next_arm_movement == "close_door_push_left_side":
 			self.close_door_push_left_side()
+		elif self.next_arm_movement == "check_left_door":
+			self.check_left_door()
+		elif self.next_arm_movement == "check_left_door_inside":
+			self.check_left_door_inside()
+		elif self.next_arm_movement == "check_right_door":
+			self.check_right_door()
+		elif self.next_arm_movement == "check_right_door_inside":
+			self.check_right_door_inside()
 
 
 		

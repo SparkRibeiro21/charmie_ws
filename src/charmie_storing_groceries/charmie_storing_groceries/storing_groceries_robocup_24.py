@@ -532,12 +532,9 @@ class StoringGroceriesMain():
         self.shelf_5_height_to_place = 1.43 + 0.05
         self.shelf_6_height_to_place = 1.72
 
-        # self.wardrobe_width = 0.8
-        # self.door_width = 0.4
-        self.wardrobe_width = 0.9
-        self.door_width = 0.45
-        # self.wardrobe_depth = 0.27
-        self.wardrobe_depth = 0.3
+        self.wardrobe_width = 0.8
+        self.door_width = 0.4
+        self.wardrobe_depth = 0.27
         self.robot_radius = 0.28
 
         # Initial Position
@@ -2558,7 +2555,6 @@ class StoringGroceriesMain():
             print('Distance I am from door', distance_to_close)
 
             distance_x_to_center = cabinet_position.x
-            
             distance_y_to_center_original = cabinet_position.y - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius - self.robot_radius
             distance_y_to_center = abs(cabinet_position.y) - self.wardrobe_depth - self.door_width - self.robot_radius - self.robot_radius
             ### ISTO CENTRA QD PORTA FECHADA É A ESQUERDA. -> door_position.x + self.node.wardrobe_width/4 
@@ -2611,7 +2607,6 @@ class StoringGroceriesMain():
             tetas = [[0, 0]]
             objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
             print('pos-search')
-            cabinet_found = False
             for obj in objects_found:
                 if obj.object_name == 'Cabinet':
                     cabinet_found = True
@@ -2632,8 +2627,7 @@ class StoringGroceriesMain():
             dist_to_bag = (math.sqrt(distance_x_to_center**2 + distance_y_to_center_original**2))
             print(ang_to_bag, dist_to_bag)
             self.set_rgb(command=WHITE+ROTATE)
-            if cabinet_found == True:
-                self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
+            self.set_navigation(movement="adjust", adjust_distance=dist_to_bag, adjust_direction=ang_to_bag, wait_for_end_of=True)
             self.set_rgb(command=GREEN+BLINK_LONG)
 
             time.sleep(2)
@@ -2739,8 +2733,6 @@ class StoringGroceriesMain():
                 print('right door')
                 
                 self.set_arm(command="check_right_door_inside", wait_for_end_of=True)
-                # self.set_arm(command="check_right_door", wait_for_end_of=True)
-                
 
                 # distance_in_y_to_get_inside_cabinet = average_depth_door - 0.175 # nova posição do braço está 0.175 cm à frente da que viu o armário
                 distance_in_y_to_get_inside_cabinet = average_depth_door - 0.230 # nova posição do braço está 0.230 cm à frente da que viu o armário
@@ -2802,7 +2794,7 @@ class StoringGroceriesMain():
                 self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 print('left door')
-                self.set_arm(command="check_left_door_inside", wait_for_end_of=True)
+                self.set_arm(command="check_left_door", wait_for_end_of=True)
 
                 distance_in_y_to_get_inside_cabinet = average_depth_door
 
@@ -3072,8 +3064,8 @@ class StoringGroceriesMain():
 
 
         # self.state = self.Approach_kitchen_table
-        # self.state = self.Waiting_for_task_start
-        self.state = self.Approach_cabinet_first_time
+        self.state = self.Waiting_for_task_start
+        # self.state = self.Approach_cabinet_first_time
         # self.state = self.Approach_tables_first_time
         # self.state = self.Final_State
 
@@ -3102,7 +3094,7 @@ class StoringGroceriesMain():
 
                 time.sleep(1)
                 print('State 0 = Initial')
-            
+
                 self.set_face("charmie_face")
                 self.set_initial_position(self.initial_position)
                 
@@ -3137,89 +3129,74 @@ class StoringGroceriesMain():
 
                 ##### MOVEMENT TO THE CABINET
 
-                # self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(BLUE+ROTATE)
-                # # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.pre_room_door, max_speed=30.0, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(MAGENTA+ROTATE)
-                # self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
-                # self.set_rgb(BLUE+ROTATE)
-                # self.set_navigation(movement="rotate", target=self.front_sofa, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.front_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(MAGENTA+ROTATE)
-                # self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                # self.set_navigation(movement="rotate", target=self.pre_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_room_door, max_speed=30.0, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.post_room_door, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.post_room_door, reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.front_sofa, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.front_sofa, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
 
-                # self.set_navigation(movement="rotate", target=self.close_to_dishwasher, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.close_to_dishwasher, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.close_to_dishwasher, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.close_to_dishwasher, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
 
-                # self.set_navigation(movement="rotate", target=self.close_to_garbage_bin, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.close_to_garbage_bin, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(BLUE+ROTATE)
+                self.set_navigation(movement="rotate", target=self.close_to_garbage_bin, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.close_to_garbage_bin, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(BLUE+ROTATE)
 
-                # self.set_navigation(movement="rotate", target=self.pre_table, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="move", target=self.pre_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(MAGENTA+ROTATE)
+                self.set_navigation(movement="rotate", target=self.pre_table, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=self.pre_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(MAGENTA+ROTATE)
 
-                # # self.set_face("charmie_face")
-                # # self.set_initial_position(self.initial_position)
+                # self.set_face("charmie_face")
+                # self.set_initial_position(self.initial_position)
                     
-                # # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
+                # self.set_neck(position=self.look_navigation, wait_for_end_of=True)
 
-                # # self.set_rgb(command=WHITE+ROTATE)
-                
-                
-                # # self.set_rgb(command=BLUE+ROTATE)                
-                # # self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs=True, wait_for_end_of=True)
-                # # self.set_rgb(command=GREEN+BLINK_LONG)
-                
-
-                # time.sleep(1)
-
-                # self.activate_obstacles(obstacles_lidar_up=False, obstacles_camera_head=False)
-
-                # """ self.set_rgb(command=BLUE+ROTATE)
-                # self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_rgb(command=GREEN+BLINK_LONG) """
-                
-                # self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
-                
-                # self.activate_yolo_objects(activate_objects=True)
-                
-                # self.set_neck(position=self.look_table_objects_front)
-                
-                # tetas = [[-120, -30], [-90, -30], [-60, -30]]
-                # # tetas = [[-30, -30], [0, -30], [30, -30]]
-                # objects_found_table = []
-                # while objects_found_table == []:
-                #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
-
-                # print('Objects found on table: ')
-                # for obj in objects_found_table:
-                #     print(obj.object_name)
-
-                
-
-                # self.set_neck(position=self.look_forward, wait_for_end_of=False)
-
-
-
-                self.set_face("charmie_face")
-                self.initial_position_ = [0.0, 0.1, 180.0]
-                self.set_initial_position(self.initial_position_)
-                    
-                self.set_neck(position=self.look_navigation, wait_for_end_of=True)
-
-                self.set_rgb(command=WHITE+ROTATE)
+                # self.set_rgb(command=WHITE+ROTATE)
                 
                 
                 # self.set_rgb(command=BLUE+ROTATE)                
                 # self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_rgb(command=GREEN+BLINK_LONG)
+                
+
+                time.sleep(1)
+
+                self.activate_obstacles(obstacles_lidar_up=False, obstacles_camera_head=False)
+
+                """ self.set_rgb(command=BLUE+ROTATE)
+                self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG) """
+                
+                self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
+                
+                self.activate_yolo_objects(activate_objects=True)
+                
+                self.set_neck(position=self.look_table_objects_front)
+                
+                tetas = [[-120, -30], [-90, -30], [-60, -30]]
+                # tetas = [[-30, -30], [0, -30], [30, -30]]
+                objects_found_table = []
+                while objects_found_table == []:
+                    objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+
+                print('Objects found on table: ')
+                for obj in objects_found_table:
+                    print(obj.object_name)
+
+                
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
                 
                 self.set_rgb(command=BLUE+ROTATE)                
                 self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs=True, wait_for_end_of=True)
@@ -3240,7 +3217,7 @@ class StoringGroceriesMain():
 
                 while cabinet_found == False:
                     print('inside')
-                    tetas = [[0, -20], [0, 0]]
+                    tetas = [[-20, -10]]
                     objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
                     print('pos-search')
                     for obj in objects_found:
@@ -3256,9 +3233,6 @@ class StoringGroceriesMain():
                 self.open_cabinet_door(objects_found, wanted_object)
 
                 self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                while True:
-                    pass
 
                 self.set_rgb(command=BLUE+ROTATE)
                 self.set_navigation(movement="adjust_angle", absolute_angle=180.0, flag_not_obs=True, wait_for_end_of=True)
