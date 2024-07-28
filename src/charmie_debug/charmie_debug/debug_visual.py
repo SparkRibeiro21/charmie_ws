@@ -5,8 +5,9 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
+from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -422,8 +423,9 @@ class DebugVisualNode(Node):
         self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
 
 
-
         ### Services (Clients) ###
+		# Arm (Ufactory)
+        self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
@@ -450,6 +452,8 @@ class DebugVisualNode(Node):
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        # Low level
+        self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
 
 
         self.robot = Robot()
@@ -580,6 +584,8 @@ class CheckNodesMain():
         self.CHECK_ARM_NODE = False
         self.CHECK_AUDIO_NODE = False
         self.CHECK_FACE_NODE = False
+        self.CHECK_HEAD_CAMERA_NODE = False
+        self.CHECK_HAND_CAMERA_NODE = False
         self.CHECK_LIDAR_NODE = False
         self.CHECK_LOW_LEVEL_NODE = False
         self.CHECK_NAVIGATION_NODE = False
@@ -588,34 +594,111 @@ class CheckNodesMain():
         self.CHECK_ODOMETRY_NODE = False
         self.CHECK_POINT_CLOUD_NODE = False
         self.CHECK_PS4_CONTROLLER_NODE = False
-        self.CHECK_SPEAKER_NODE = False
+        self.CHECK_SPEAKERS_NODE = False
         self.CHECK_YOLO_OBJECTS_NODE = False
         self.CHECK_YOLO_POSE_NODE = False
-        self.CHECK_HEAD_CAMERA_NODE = False
-        self.CHECK_HAND_CAMERA_NODE = False
+
+        self.WAIT_TIME_CHECK_NODE = 0.0
 
     def main(self):
 
         while True:
-            # Speakers
-            if not self.node.speech_command_client.wait_for_service(0.1):
-                # self.node.get_logger().warn("Waiting for Server Speech Command...")
-                self.CHECK_SPEAKER_NODE = False
+
+            # ARM_UFACTORY
+            if not self.node.set_position_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.get_logger().warn("Waiting for Arm (uFactory) ...")
+                self.CHECK_ARM_UFACTORY_NODE = False
             else:
-                self.CHECK_SPEAKER_NODE = True
-            # Audio
-            if not self.node.get_audio_client.wait_for_service(0.1):
-                # self.node.get_logger().warn("Waiting for Server Audio Command...")
+                self.CHECK_ARM_UFACTORY_NODE = True
+
+            # ARM_CHARMIE
+            if not self.node.arm_trigger_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Arm (CHARMIE) ...")
+                self.CHECK_ARM_NODE = False
+            else:
+                self.CHECK_ARM_NODE = True
+
+            # AUDIO
+            if not self.node.get_audio_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Audio ...")
                 self.CHECK_AUDIO_NODE = False
             else:
                 self.CHECK_AUDIO_NODE = True
-            # Face
-            if not self.node.face_command_client.wait_for_service(0.1):
-                # self.node.get_logger().warn("Waiting for Server Face Command...")
+
+            # FACE
+            if not self.node.face_command_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Face ...")
                 self.CHECK_FACE_NODE = False
             else:
                 self.CHECK_FACE_NODE = True
-    
+
+            # HEAD CAMERA
+
+            # HAND CAMERA
+
+            # LIDAR
+
+            # LOW LEVEL
+            if not self.node.set_acceleration_ramp_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Navigation ...")
+                self.CHECK_LOW_LEVEL_NODE = False
+            else:
+                self.CHECK_LOW_LEVEL_NODE = True
+
+            # NAVIGATION
+            if not self.node.nav_trigger_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Navigation ...")
+                self.CHECK_NAVIGATION_NODE = False
+            else:
+                self.CHECK_NAVIGATION_NODE = True
+
+            # NECK
+            if not self.node.set_neck_position_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Neck ...")
+                self.CHECK_NECK_NODE = False
+            else:
+                self.CHECK_NECK_NODE = True
+            
+            # OBSTACLES
+            if not self.node.activate_obstacles_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Obstacles ...")
+                self.CHECK_OBSTACLES_NODE = False
+            else:
+                self.CHECK_OBSTACLES_NODE = True
+
+            # ODOMETRY
+
+            # POINT CLOUD
+            if not self.node.point_cloud_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Speech ...")
+                self.CHECK_POINT_CLOUD_NODE = False
+            else:
+                self.CHECK_POINT_CLOUD_NODE = True
+
+            # PS4 CONTROLLER
+
+            # SPEAKERS
+            if not self.node.speech_command_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Speech ...")
+                self.CHECK_SPEAKERS_NODE = False
+            else:
+                self.CHECK_SPEAKERS_NODE = True
+                
+            # YOLO OBJECTS
+            if not self.node.activate_yolo_objects_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Yolo Objects ...")
+                self.CHECK_YOLO_OBJECTS_NODE = False
+            else:
+                self.CHECK_YOLO_OBJECTS_NODE = True
+            
+            # YOLO POSE
+            if not self.node.activate_yolo_pose_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Yolo Pose ...")
+                self.CHECK_YOLO_POSE_NODE = False
+            else:
+                self.CHECK_YOLO_POSE_NODE = True
+
+
 def main(args=None):
     rclpy.init(args=args)
     node = DebugVisualNode()
@@ -650,13 +733,10 @@ class DebugVisualMain():
         midpath = "/charmie_ws/src/configuration_files/logos/"
         self.complete_path = home+midpath
 
-
-
         pygame.init()
 
         WIDTH, HEIGHT = 900, 500
         self.FPS = 30
-
 
         os.environ['SDL_VIDEO_CENTERED'] = '1'
         info = pygame.display.Info()
@@ -703,23 +783,20 @@ class DebugVisualMain():
         self.CHARMIE_ARM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*1, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_AUDIO_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*2, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_FACE_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LIDAR_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LOW_LEVEL_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*5, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_NAVIGATION_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_NECK_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_OBSTACLES_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_ODOMETRY_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_POINT_CLOUD_NODE_RECT      = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_PS4_CONTROLLER_NODE_RECT   = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.HEAD_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.HAND_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-
-        # self.SPEAKER_NODE_RECT  = pygame.Rect(20, 50, 10, 10)
-        # self.AUDIO_NODE_RECT    = pygame.Rect(20, 75, 10, 10)
-        # self.FACE_NODE_RECT     = pygame.Rect(20, 100, 10, 10)
+        self.HEAD_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.HAND_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*5, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LIDAR_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LOW_LEVEL_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NAVIGATION_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NECK_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_OBSTACLES_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_ODOMETRY_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_POINT_CLOUD_NODE_RECT      = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_PS4_CONTROLLER_NODE_RECT   = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        
 
     def test_button_function(self):
 
@@ -749,8 +826,18 @@ class DebugVisualMain():
         self.draw_text("Check Nodes:", self.text_font_t, (255,255,255), 10, 10)
 
         # ARM_UFACTORY
-
+        self.draw_text("Arm (uFactory)", self.text_font, (255,255,255), self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_ARM_UFACTORY_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.ARM_UFACTORY_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.ARM_UFACTORY_NODE_RECT)
+            
         # ARM_CHARMIE
+        self.draw_text("Arm (CHARMIE)", self.text_font, (255,255,255), self.CHARMIE_ARM_NODE_RECT.x+2*self.CHARMIE_ARM_NODE_RECT.width, self.CHARMIE_ARM_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_ARM_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_ARM_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_ARM_NODE_RECT)
 
         # AUDIO
         self.draw_text("Audio", self.text_font, (255,255,255), self.CHARMIE_AUDIO_NODE_RECT.x+2*self.CHARMIE_AUDIO_NODE_RECT.width, self.CHARMIE_AUDIO_NODE_RECT.y-2)
@@ -761,64 +848,107 @@ class DebugVisualMain():
 
         # FACE
         self.draw_text("Face", self.text_font, (255,255,255), self.CHARMIE_FACE_NODE_RECT.x+2*self.CHARMIE_FACE_NODE_RECT.width, self.CHARMIE_FACE_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_AUDIO_NODE:
+        if self.check_nodes.CHECK_FACE_NODE:
             pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_FACE_NODE_RECT)
         else:
             pygame.draw.rect(self.WIN, RED, self.CHARMIE_FACE_NODE_RECT)
 
+        # HEAD CAMERA
+        self.draw_text("Head Camera", self.text_font, (255,255,255), self.HEAD_CAMERA_NODE_RECT.x+2*self.HEAD_CAMERA_NODE_RECT.width, self.HEAD_CAMERA_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_HEAD_CAMERA_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.HEAD_CAMERA_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.HEAD_CAMERA_NODE_RECT)
+        pygame.draw.rect(self.WIN, BLUE, self.HEAD_CAMERA_NODE_RECT)
+
+        # HAND CAMERA
+        self.draw_text("Hand Camera", self.text_font, (255,255,255), self.HAND_CAMERA_NODE_RECT.x+2*self.HAND_CAMERA_NODE_RECT.width, self.HAND_CAMERA_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_HAND_CAMERA_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.HAND_CAMERA_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.HAND_CAMERA_NODE_RECT)
+        pygame.draw.rect(self.WIN, BLUE, self.HAND_CAMERA_NODE_RECT)
+
         # LIDAR
+        self.draw_text("Lidar", self.text_font, (255,255,255), self.CHARMIE_LIDAR_NODE_RECT.x+2*self.CHARMIE_LIDAR_NODE_RECT.width, self.CHARMIE_LIDAR_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_LIDAR_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_LIDAR_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_LIDAR_NODE_RECT)
+        pygame.draw.rect(self.WIN, BLUE, self.CHARMIE_LIDAR_NODE_RECT)
 
         # LOW LEVEL
-
+        self.draw_text("Low Level", self.text_font, (255,255,255), self.CHARMIE_LOW_LEVEL_NODE_RECT.x+2*self.CHARMIE_LOW_LEVEL_NODE_RECT.width, self.CHARMIE_LOW_LEVEL_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_LOW_LEVEL_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_LOW_LEVEL_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_LOW_LEVEL_NODE_RECT)
+        
         # NAVIGATION
+        self.draw_text("Navigation", self.text_font, (255,255,255), self.CHARMIE_NAVIGATION_NODE_RECT.x+2*self.CHARMIE_NAVIGATION_NODE_RECT.width, self.CHARMIE_NAVIGATION_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_NAVIGATION_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_NAVIGATION_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_NAVIGATION_NODE_RECT)
 
         # NECK
+        self.draw_text("Neck", self.text_font, (255,255,255), self.CHARMIE_NECK_NODE_RECT.x+2*self.CHARMIE_NECK_NODE_RECT.width, self.CHARMIE_NECK_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_NECK_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_NECK_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_NECK_NODE_RECT)
 
         # OBSTACLES
+        self.draw_text("Obstacles", self.text_font, (255,255,255), self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_OBSTACLES_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_OBSTACLES_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_OBSTACLES_NODE_RECT)
 
         # ODOMETRY
+        self.draw_text("Odometry", self.text_font, (255,255,255), self.CHARMIE_ODOMETRY_NODE_RECT.x+2*self.CHARMIE_ODOMETRY_NODE_RECT.width, self.CHARMIE_ODOMETRY_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_ODOMETRY_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_ODOMETRY_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_ODOMETRY_NODE_RECT)
+        pygame.draw.rect(self.WIN, BLUE, self.CHARMIE_ODOMETRY_NODE_RECT)
 
         # POINT CLOUD
+        self.draw_text("Point Cloud", self.text_font, (255,255,255), self.CHARMIE_POINT_CLOUD_NODE_RECT.x+2*self.CHARMIE_POINT_CLOUD_NODE_RECT.width, self.CHARMIE_POINT_CLOUD_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_POINT_CLOUD_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_POINT_CLOUD_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_POINT_CLOUD_NODE_RECT)
 
         # PS4 CONTROLLER
+        self.draw_text("PS4 Controller", self.text_font, (255,255,255), self.CHARMIE_PS4_CONTROLLER_NODE_RECT.x+2*self.CHARMIE_PS4_CONTROLLER_NODE_RECT.width, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_PS4_CONTROLLER_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
+        pygame.draw.rect(self.WIN, BLUE, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
 
         # SPEAKERS
         self.draw_text("Speakers", self.text_font, (255,255,255), self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_AUDIO_NODE:
+        if self.check_nodes.CHECK_SPEAKERS_NODE:
             pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_SPEAKERS_NODE_RECT)
         else:
             pygame.draw.rect(self.WIN, RED, self.CHARMIE_SPEAKERS_NODE_RECT)
 
         # YOLO OBJECTS
+        self.draw_text("YOLO Objects", self.text_font, (255,255,255), self.CHARMIE_YOLO_OBJECTS_NODE_RECT.x+2*self.CHARMIE_YOLO_OBJECTS_NODE_RECT.width, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_YOLO_OBJECTS_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
+        else:
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
 
         # YOLO POSE
-
-        # HEAD CAMERA
-
-        # HAND CAMERA
-
-
-
-        """
-        self.draw_text("audio", self.text_font, (255,255,255), 20+10+10, 75-2)
-        self.draw_text("face", self.text_font, (255,255,255), 20+10+10, 100-2)
-        self.draw_text("speakers", self.text_font, (255,255,255), 20+10+10, 50-2)
-
-        if self.check_nodes.CHECK_SPEAKER_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.SPEAKER_NODE_RECT)
+        self.draw_text("YOLO Pose", self.text_font, (255,255,255), self.CHARMIE_YOLO_POSE_NODE_RECT.x+2*self.CHARMIE_YOLO_POSE_NODE_RECT.width, self.CHARMIE_YOLO_POSE_NODE_RECT.y-2)
+        if self.check_nodes.CHECK_YOLO_POSE_NODE:
+            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_YOLO_POSE_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.SPEAKER_NODE_RECT)
+            pygame.draw.rect(self.WIN, RED, self.CHARMIE_YOLO_POSE_NODE_RECT)
 
-        if self.check_nodes.CHECK_AUDIO_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.AUDIO_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, RED, self.AUDIO_NODE_RECT)
-
-        if self.check_nodes.CHECK_FACE_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.FACE_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, RED, self.FACE_NODE_RECT)
-        """
 
     def main(self):
 
@@ -842,3 +972,9 @@ class DebugVisualMain():
 
             # print(self.toggle.getValue())
         
+
+
+# CHANGE ORDER OF HOW SERVICES ARE INITIALISED SO THAT WHEN I GET GREEN IT IS NOT WAITING FOR ANY OTHER SERVICE
+# EXAMPLE (OBSTACLES WAITING FOR POINT CLOUD)
+
+# testar se arm ufactory se liga se nao tiver braço
