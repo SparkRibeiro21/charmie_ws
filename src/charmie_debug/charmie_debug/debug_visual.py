@@ -393,7 +393,9 @@ class DebugVisualNode(Node):
         ### Topics ###
         # Intel Realsense
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
+        self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)
         
         # get neck position
         self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
@@ -462,8 +464,12 @@ class DebugVisualNode(Node):
 
         self.head_rgb = Image()
         self.hand_rgb = Image()
+        self.head_depth = Image()
+        self.hand_depth = Image()
         self.new_head_rgb = False
         self.new_hand_rgb = False
+        self.new_head_depth = False
+        self.new_hand_depth = False
         self.robot = Robot()
 
         self.lidar_time = 0.0
@@ -490,6 +496,14 @@ class DebugVisualNode(Node):
         self.head_camera_time = time.time()
         
         self.head_camera_fps = str(round(1/(self.head_camera_time-self.last_head_camera_time), 2))
+
+    def get_aligned_depth_image_head_callback(self, img: Image):
+        self.head_depth = img
+        self.new_head_depth = True
+        
+    def get_aligned_depth_image_hand_callback(self, img: Image):
+        self.hand_depth = img
+        self.new_hand_depth = True
 
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
@@ -1020,7 +1034,7 @@ class DebugVisualMain():
         # self.draw_text("Head Camera:", self.text_font_t, (255,255,255), 250, 10)
         separator = 10
 
-        print(self.node.head_camera_fps)
+        # print(self.node.head_camera_fps)
 
         if self.node.new_head_rgb:
             opencv_image = self.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
@@ -1032,10 +1046,11 @@ class DebugVisualMain():
             # print(height, width)
             image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
             self.WIN.blit(image_surface, (200, separator))
-            self.draw_text("Arm (uFactory)", self.text_font, (255,255,255), self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
+            self.draw_text(str(self.node.head_camera_fps), self.text_font, (255,255,255), 200, separator)
         else:
             temp_rect = pygame.Rect(200, separator, 640, 360)
             pygame.draw.rect(self.WIN, (128,128,128), temp_rect)
+            self.draw_text("No image available ...", self.text_font_t, (255,255,255), 200+220, separator+180)
 
         if self.node.new_hand_rgb:
             opencv_image = self.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
@@ -1050,6 +1065,58 @@ class DebugVisualMain():
         else:
             temp_rect = pygame.Rect(200, 360+2*separator, 640, 360)
             pygame.draw.rect(self.WIN, (128,128,128), temp_rect)
+            self.draw_text("No image available ...", self.text_font_t, (255,255,255), 200+220, 360+2*separator+180)
+
+
+
+        if self.node.new_head_depth:
+            opencv_image = self.br.imgmsg_to_cv2(self.node.head_depth, "passthrough")
+            opencv_image = cv2.resize(opencv_image, (640, 360), interpolation=cv2.INTER_NEAREST)
+            
+            """
+            # Get the minimum and maximum values in the depth image
+            min_val, max_val, _, _ = cv2.minMaxLoc(opencv_image)
+
+            # Avoid zero values (invalid measurements) in the depth image
+            if min_val == 0:
+                min_val = np.min(opencv_image[opencv_image > 0])
+            if max_val == 0:
+                max_val = np.max(opencv_image[opencv_image > 0])
+
+            print(min_val, max_val)
+            """
+
+            min_val = 0
+            max_val = 6000
+
+            # Normalize the depth image to fall between 0 and 1
+            # depth_normalized = cv2.normalize(opencv_image, None, 0, 1, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+            # Normalize the depth image to fall between 0 and 1
+            depth_normalized = (opencv_image - min_val) / (max_val - min_val)
+            depth_normalized = np.clip(depth_normalized, 0, 1)
+            
+            # Convert the normalized depth image to an 8-bit image (0-255)
+            depth_8bit = (depth_normalized * 255).astype(np.uint8)
+
+            # Apply a colormap to the 8-bit depth image
+            opencv_image = cv2.applyColorMap(depth_8bit, cv2.COLORMAP_JET)
+            
+            # Convert the image to RGB (OpenCV loads as BGR by default)
+            opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+            
+            # Convert the image to a banded surface (Pygame compatible format)
+            height, width, channels = opencv_image.shape
+            # print(height, width)
+            image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
+            self.WIN.blit(image_surface, (200+640+separator, separator))
+
+        else:
+            temp_rect = pygame.Rect(200+640+separator, separator, 640, 360)
+            pygame.draw.rect(self.WIN, (128,128,128), temp_rect)
+            self.draw_text("No image available ...", self.text_font_t, (255,255,255), 200+640+220, separator+180)
+
+
+
 
     def main(self):
 
