@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
-from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson
+from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -17,6 +17,7 @@ import threading
 from pathlib import Path
 import json
 import os
+import time
 
 import pygame_widgets
 import pygame
@@ -389,6 +390,11 @@ class DebugVisualNode(Node):
         super().__init__("Robot")
         self.get_logger().info("Initialised CHARMIE Debug Visual Node")
 
+        ### Topics ###
+        # Intel Realsense
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
+        
         # get neck position
         self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
         
@@ -410,9 +416,6 @@ class DebugVisualNode(Node):
         self.search_for_person_subscriber = self.create_subscription(ListOfDetectedPerson, "search_for_person_detections", self.search_for_person_detections_callback, 10)
         self.search_for_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_object_detections", self.search_for_object_detections_callback, 10)
         
-        # Intel Realsense Subscribers
-        self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
-
         # IMU
         self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
        
@@ -422,6 +425,8 @@ class DebugVisualNode(Node):
         # Obstacles
         self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
 
+        # PS4 Controller
+        self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_callback, 10)
 
         ### Services (Clients) ###
 		# Arm (Ufactory)
@@ -455,9 +460,39 @@ class DebugVisualNode(Node):
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
 
-
+        self.head_rgb = Image()
+        self.hand_rgb = Image()
+        self.new_head_rgb = False
+        self.new_hand_rgb = False
         self.robot = Robot()
 
+        self.lidar_time = 0.0
+        self.head_camera_time = 0.0
+        self.hand_camera_time = 0.0
+        self.odometry_time = 0.0
+        self.ps4_controller_time = 0.0
+
+
+        self.last_head_camera_time = 0.0
+        self.head_camera_fps = 0.0
+        
+
+    def get_color_image_hand_callback(self, img: Image):
+        self.hand_rgb = img
+        self.new_hand_rgb = True
+        self.hand_camera_time = time.time()
+
+    def get_color_image_head_callback(self, img: Image):
+        self.head_rgb = img
+        self.new_head_rgb = True
+
+        self.last_head_camera_time = self.head_camera_time
+        self.head_camera_time = time.time()
+        
+        self.head_camera_fps = str(round(1/(self.head_camera_time-self.last_head_camera_time), 2))
+
+    def ps4_controller_callback(self, controller: PS4Controller):
+        self.ps4_controller_time = time.time()
 
     def get_orientation_callback(self, orientation: Float32):
         # self.robot.imu_orientation = orientation.data
@@ -483,6 +518,9 @@ class DebugVisualNode(Node):
 
     def lidar_callback(self, scan: LaserScan):
         self.robot.scan = scan
+
+        self.lidar_time = time.time()
+
         # print(scan)
         """
         START_RAD = scan.angle_min
@@ -561,6 +599,7 @@ class DebugVisualNode(Node):
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot.robot_x = pose.x
         self.robot.robot_y = pose.y
+        self.odometry_time = time.time()
         # self.robot.robot_t = pose.theta
         
     def search_for_person_detections_callback(self, points: ListOfDetectedPerson):
@@ -599,10 +638,13 @@ class CheckNodesMain():
         self.CHECK_YOLO_POSE_NODE = False
 
         self.WAIT_TIME_CHECK_NODE = 0.0
+        self.MIN_TIMEOUT_FOR_CHECK_NODE = 1.0
 
     def main(self):
 
         while True:
+
+            current_time = time.time()
 
             # ARM_UFACTORY
             if not self.node.set_position_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -633,10 +675,25 @@ class CheckNodesMain():
                 self.CHECK_FACE_NODE = True
 
             # HEAD CAMERA
+            if current_time - self.node.head_camera_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                self.CHECK_HEAD_CAMERA_NODE = False
+            else:
+                self.CHECK_HEAD_CAMERA_NODE = True
 
             # HAND CAMERA
+            if current_time - self.node.hand_camera_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                self.CHECK_HAND_CAMERA_NODE = False
+            else:
+                self.CHECK_HAND_CAMERA_NODE = True
 
             # LIDAR
+            if current_time - self.node.lidar_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                self.CHECK_LIDAR_NODE = False
+            else:
+                self.CHECK_LIDAR_NODE = True
 
             # LOW LEVEL
             if not self.node.set_acceleration_ramp_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -667,6 +724,11 @@ class CheckNodesMain():
                 self.CHECK_OBSTACLES_NODE = True
 
             # ODOMETRY
+            if current_time - self.node.odometry_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                self.CHECK_ODOMETRY_NODE = False
+            else:
+                self.CHECK_ODOMETRY_NODE = True
 
             # POINT CLOUD
             if not self.node.point_cloud_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -676,6 +738,11 @@ class CheckNodesMain():
                 self.CHECK_POINT_CLOUD_NODE = True
 
             # PS4 CONTROLLER
+            if current_time - self.node.ps4_controller_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                self.CHECK_PS4_CONTROLLER_NODE = False
+            else:
+                self.CHECK_PS4_CONTROLLER_NODE = True
 
             # SPEAKERS
             if not self.node.speech_command_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -733,6 +800,8 @@ class DebugVisualMain():
         midpath = "/charmie_ws/src/configuration_files/logos/"
         self.complete_path = home+midpath
 
+        self.br = CvBridge()
+
         pygame.init()
 
         WIDTH, HEIGHT = 900, 500
@@ -748,6 +817,7 @@ class DebugVisualMain():
         self.text_font_t = pygame.font.SysFont(None, 30)
         self.text_font = pygame.font.SysFont(None,24)
 
+        """
         # self.WIN = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
         self.button = Button(self.WIN, 500, 100, 300, 150,
         # Optional Parameters
@@ -768,6 +838,7 @@ class DebugVisualMain():
         self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
                   borderColour=(255, 0, 0), textColour=(0, 200, 0),
                   onSubmit=self.output, radius=10, borderThickness=5)
+        """
 
         icon = pygame.image.load(self.complete_path+"logo_light_cropped_squared.png")
         pygame.display.set_icon(icon)
@@ -859,23 +930,20 @@ class DebugVisualMain():
             pygame.draw.rect(self.WIN, GREEN, self.HEAD_CAMERA_NODE_RECT)
         else:
             pygame.draw.rect(self.WIN, RED, self.HEAD_CAMERA_NODE_RECT)
-        pygame.draw.rect(self.WIN, BLUE, self.HEAD_CAMERA_NODE_RECT)
-
+        
         # HAND CAMERA
         self.draw_text("Hand Camera", self.text_font, (255,255,255), self.HAND_CAMERA_NODE_RECT.x+2*self.HAND_CAMERA_NODE_RECT.width, self.HAND_CAMERA_NODE_RECT.y-2)
         if self.check_nodes.CHECK_HAND_CAMERA_NODE:
             pygame.draw.rect(self.WIN, GREEN, self.HAND_CAMERA_NODE_RECT)
         else:
             pygame.draw.rect(self.WIN, RED, self.HAND_CAMERA_NODE_RECT)
-        pygame.draw.rect(self.WIN, BLUE, self.HAND_CAMERA_NODE_RECT)
-
+        
         # LIDAR
         self.draw_text("Lidar", self.text_font, (255,255,255), self.CHARMIE_LIDAR_NODE_RECT.x+2*self.CHARMIE_LIDAR_NODE_RECT.width, self.CHARMIE_LIDAR_NODE_RECT.y-2)
         if self.check_nodes.CHECK_LIDAR_NODE:
             pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_LIDAR_NODE_RECT)
         else:
             pygame.draw.rect(self.WIN, RED, self.CHARMIE_LIDAR_NODE_RECT)
-        pygame.draw.rect(self.WIN, BLUE, self.CHARMIE_LIDAR_NODE_RECT)
 
         # LOW LEVEL
         self.draw_text("Low Level", self.text_font, (255,255,255), self.CHARMIE_LOW_LEVEL_NODE_RECT.x+2*self.CHARMIE_LOW_LEVEL_NODE_RECT.width, self.CHARMIE_LOW_LEVEL_NODE_RECT.y-2)
@@ -911,7 +979,6 @@ class DebugVisualMain():
             pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_ODOMETRY_NODE_RECT)
         else:
             pygame.draw.rect(self.WIN, RED, self.CHARMIE_ODOMETRY_NODE_RECT)
-        pygame.draw.rect(self.WIN, BLUE, self.CHARMIE_ODOMETRY_NODE_RECT)
 
         # POINT CLOUD
         self.draw_text("Point Cloud", self.text_font, (255,255,255), self.CHARMIE_POINT_CLOUD_NODE_RECT.x+2*self.CHARMIE_POINT_CLOUD_NODE_RECT.width, self.CHARMIE_POINT_CLOUD_NODE_RECT.y-2)
@@ -926,7 +993,6 @@ class DebugVisualMain():
             pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
         else:
             pygame.draw.rect(self.WIN, RED, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
-        pygame.draw.rect(self.WIN, BLUE, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
 
         # SPEAKERS
         self.draw_text("Speakers", self.text_font, (255,255,255), self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
@@ -949,6 +1015,41 @@ class DebugVisualMain():
         else:
             pygame.draw.rect(self.WIN, RED, self.CHARMIE_YOLO_POSE_NODE_RECT)
 
+    def draw_cameras(self):
+
+        # self.draw_text("Head Camera:", self.text_font_t, (255,255,255), 250, 10)
+        separator = 10
+
+        print(self.node.head_camera_fps)
+
+        if self.node.new_head_rgb:
+            opencv_image = self.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+            opencv_image = cv2.resize(opencv_image, (640, 360), interpolation=cv2.INTER_NEAREST)
+            # Convert the image to RGB (OpenCV loads as BGR by default)
+            opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+            # Convert the image to a banded surface (Pygame compatible format)
+            height, width, channels = opencv_image.shape
+            # print(height, width)
+            image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
+            self.WIN.blit(image_surface, (200, separator))
+            self.draw_text("Arm (uFactory)", self.text_font, (255,255,255), self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
+        else:
+            temp_rect = pygame.Rect(200, separator, 640, 360)
+            pygame.draw.rect(self.WIN, (128,128,128), temp_rect)
+
+        if self.node.new_hand_rgb:
+            opencv_image = self.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
+            opencv_image = cv2.resize(opencv_image, (640, 360), interpolation=cv2.INTER_NEAREST)
+            # Convert the image to RGB (OpenCV loads as BGR by default)
+            opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+            # Convert the image to a banded surface (Pygame compatible format)
+            height, width, channels = opencv_image.shape
+            # print(height, width)
+            image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
+            self.WIN.blit(image_surface, (200, 360+2*separator))
+        else:
+            temp_rect = pygame.Rect(200, 360+2*separator, 640, 360)
+            pygame.draw.rect(self.WIN, (128,128,128), temp_rect)
 
     def main(self):
 
@@ -966,6 +1067,7 @@ class DebugVisualMain():
             
             self.WIN.fill((0, 0, 0))
             self.draw_nodes_check()
+            self.draw_cameras()
             
             pygame_widgets.update(events)
             pygame.display.update()
