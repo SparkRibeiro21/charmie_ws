@@ -806,7 +806,13 @@ class DebugVisualMain():
         self.node = node
         self.check_nodes = check_nodes
 
-        self.aux_test_button = False
+        self.RED = (255,0,0)
+        self.GREEN = (0,255,0)
+        self.BLUE = (0,0,255)
+        self.WHITE = (255,255,255)
+        self.GREY = (128,128,128)
+
+        self.pause_button = False
         
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -831,28 +837,31 @@ class DebugVisualMain():
         self.text_font_t = pygame.font.SysFont(None, 30)
         self.text_font = pygame.font.SysFont(None,24)
 
-        """
+        
         # self.WIN = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-        self.button = Button(self.WIN, 500, 100, 300, 150,
+        
+        self.button = Button(self.WIN, 640+200+10, 10+360-50, 100, 100,
         # Optional Parameters
-        text='Hello',  # Text to display
-        fontSize=50,  # Size of font
-        margin=20,  # Minimum distance between text/image and edge of button
+        text='Pause',  # Text to display
+        fontSize=20,  # Size of font
+        textColour=self.WHITE,
+        margin=0,  # Minimum distance between text/image and edge of button
         inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
         hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(0, 200, 20),  # Colour of button when being clicked
+        pressedColour=(255, 75, 0),  # Colour of button when being clicked
         radius=10,  # Radius of border corners (leave empty for not curved)
         onClick=lambda: self.test_button_function()  # Function to call when clicked on  
         )
 
-        self.toggle = Toggle(self.WIN, 500, 300, 100, 40,
-                        onClick=lambda: self.test_button_function())  # Function to call when clicked on  )
 
+        # self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
+        #           borderColour=(255, 0, 0), textColour=(0, 200, 0),
+        #           onSubmit=self.output, radius=10, borderThickness=5)
+        
 
-        self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
-                  borderColour=(255, 0, 0), textColour=(0, 200, 0),
-                  onSubmit=self.output, radius=10, borderThickness=5)
-        """
+        self.toggle_pause_cams = Toggle(self.WIN, 200+640, 200+8, 40, 16)
+        self.toggle_head_rgb_depth = Toggle(self.WIN, 200+640, 200+8+50, 40, 16)
+        self.toggle_hand_rgb_depth = Toggle(self.WIN, 200+640, 200+8+100, 40, 16)
 
         icon = pygame.image.load(self.complete_path+"logo_light_cropped_squared.png")
         pygame.display.set_icon(icon)
@@ -883,14 +892,29 @@ class DebugVisualMain():
         self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         
 
+        self.curr_head_rgb = Image()
+        self.last_head_rgb = Image()
+        self.curr_head_depth = Image()
+        self.last_head_depth = Image()
+        self.curr_hand_rgb = Image()
+        self.last_hand_rgb = Image()
+        self.curr_hand_depth = Image()
+        self.last_hand_depth = Image()
+        
+
+
     def test_button_function(self):
 
-        if self.aux_test_button:
-            print("UP UP UP")
-            self.aux_test_button = False
-        else:
-            print("DOWN DOWN DOWN")
-            self.aux_test_button = True
+        self.pause_button = not self.pause_button
+
+        # self.button.text = 'Play'
+
+        # if self.pause_button:
+        #     print("UP UP UP")
+        #     self.pause_button = False
+        # else:
+        #     print("DOWN DOWN DOWN")
+        #     self.pause_button = True
 
     def output(self):
         # Get text in the textbox
@@ -904,216 +928,298 @@ class DebugVisualMain():
 
     def draw_nodes_check(self):
 
-        RED = (255,0,0)
-        GREEN = (0,255,0)
-        BLUE = (0,0,255)
-        
-        self.draw_text("Check Nodes:", self.text_font_t, (255,255,255), 10, 10)
+        self.draw_text("Check Nodes:", self.text_font_t, self.WHITE, 10, 10)
 
         # ARM_UFACTORY
-        self.draw_text("Arm (uFactory)", self.text_font, (255,255,255), self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
+        self.draw_text("Arm (uFactory)", self.text_font, self.WHITE, self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
         if self.check_nodes.CHECK_ARM_UFACTORY_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.ARM_UFACTORY_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.ARM_UFACTORY_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.ARM_UFACTORY_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.ARM_UFACTORY_NODE_RECT)
             
         # ARM_CHARMIE
-        self.draw_text("Arm (CHARMIE)", self.text_font, (255,255,255), self.CHARMIE_ARM_NODE_RECT.x+2*self.CHARMIE_ARM_NODE_RECT.width, self.CHARMIE_ARM_NODE_RECT.y-2)
+        self.draw_text("Arm (CHARMIE)", self.text_font, self.WHITE, self.CHARMIE_ARM_NODE_RECT.x+2*self.CHARMIE_ARM_NODE_RECT.width, self.CHARMIE_ARM_NODE_RECT.y-2)
         if self.check_nodes.CHECK_ARM_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_ARM_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_ARM_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_ARM_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_ARM_NODE_RECT)
 
         # AUDIO
-        self.draw_text("Audio", self.text_font, (255,255,255), self.CHARMIE_AUDIO_NODE_RECT.x+2*self.CHARMIE_AUDIO_NODE_RECT.width, self.CHARMIE_AUDIO_NODE_RECT.y-2)
+        self.draw_text("Audio", self.text_font, self.WHITE, self.CHARMIE_AUDIO_NODE_RECT.x+2*self.CHARMIE_AUDIO_NODE_RECT.width, self.CHARMIE_AUDIO_NODE_RECT.y-2)
         if self.check_nodes.CHECK_AUDIO_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_AUDIO_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_AUDIO_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_AUDIO_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_AUDIO_NODE_RECT)
 
         # FACE
-        self.draw_text("Face", self.text_font, (255,255,255), self.CHARMIE_FACE_NODE_RECT.x+2*self.CHARMIE_FACE_NODE_RECT.width, self.CHARMIE_FACE_NODE_RECT.y-2)
+        self.draw_text("Face", self.text_font, self.WHITE, self.CHARMIE_FACE_NODE_RECT.x+2*self.CHARMIE_FACE_NODE_RECT.width, self.CHARMIE_FACE_NODE_RECT.y-2)
         if self.check_nodes.CHECK_FACE_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_FACE_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_FACE_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_FACE_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_FACE_NODE_RECT)
 
         # HEAD CAMERA
-        self.draw_text("Head Camera", self.text_font, (255,255,255), self.HEAD_CAMERA_NODE_RECT.x+2*self.HEAD_CAMERA_NODE_RECT.width, self.HEAD_CAMERA_NODE_RECT.y-2)
+        self.draw_text("Head Camera", self.text_font, self.WHITE, self.HEAD_CAMERA_NODE_RECT.x+2*self.HEAD_CAMERA_NODE_RECT.width, self.HEAD_CAMERA_NODE_RECT.y-2)
         if self.check_nodes.CHECK_HEAD_CAMERA_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.HEAD_CAMERA_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.HEAD_CAMERA_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.HEAD_CAMERA_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.HEAD_CAMERA_NODE_RECT)
         
         # HAND CAMERA
-        self.draw_text("Hand Camera", self.text_font, (255,255,255), self.HAND_CAMERA_NODE_RECT.x+2*self.HAND_CAMERA_NODE_RECT.width, self.HAND_CAMERA_NODE_RECT.y-2)
+        self.draw_text("Hand Camera", self.text_font, self.WHITE, self.HAND_CAMERA_NODE_RECT.x+2*self.HAND_CAMERA_NODE_RECT.width, self.HAND_CAMERA_NODE_RECT.y-2)
         if self.check_nodes.CHECK_HAND_CAMERA_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.HAND_CAMERA_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.HAND_CAMERA_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.HAND_CAMERA_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.HAND_CAMERA_NODE_RECT)
         
         # LIDAR
-        self.draw_text("Lidar", self.text_font, (255,255,255), self.CHARMIE_LIDAR_NODE_RECT.x+2*self.CHARMIE_LIDAR_NODE_RECT.width, self.CHARMIE_LIDAR_NODE_RECT.y-2)
+        self.draw_text("Lidar", self.text_font, self.WHITE, self.CHARMIE_LIDAR_NODE_RECT.x+2*self.CHARMIE_LIDAR_NODE_RECT.width, self.CHARMIE_LIDAR_NODE_RECT.y-2)
         if self.check_nodes.CHECK_LIDAR_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_LIDAR_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_LIDAR_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_LIDAR_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_LIDAR_NODE_RECT)
 
         # LOW LEVEL
-        self.draw_text("Low Level", self.text_font, (255,255,255), self.CHARMIE_LOW_LEVEL_NODE_RECT.x+2*self.CHARMIE_LOW_LEVEL_NODE_RECT.width, self.CHARMIE_LOW_LEVEL_NODE_RECT.y-2)
+        self.draw_text("Low Level", self.text_font, self.WHITE, self.CHARMIE_LOW_LEVEL_NODE_RECT.x+2*self.CHARMIE_LOW_LEVEL_NODE_RECT.width, self.CHARMIE_LOW_LEVEL_NODE_RECT.y-2)
         if self.check_nodes.CHECK_LOW_LEVEL_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_LOW_LEVEL_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_LOW_LEVEL_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_LOW_LEVEL_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_LOW_LEVEL_NODE_RECT)
         
         # NAVIGATION
-        self.draw_text("Navigation", self.text_font, (255,255,255), self.CHARMIE_NAVIGATION_NODE_RECT.x+2*self.CHARMIE_NAVIGATION_NODE_RECT.width, self.CHARMIE_NAVIGATION_NODE_RECT.y-2)
+        self.draw_text("Navigation", self.text_font, self.WHITE, self.CHARMIE_NAVIGATION_NODE_RECT.x+2*self.CHARMIE_NAVIGATION_NODE_RECT.width, self.CHARMIE_NAVIGATION_NODE_RECT.y-2)
         if self.check_nodes.CHECK_NAVIGATION_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_NAVIGATION_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_NAVIGATION_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_NAVIGATION_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_NAVIGATION_NODE_RECT)
 
         # NECK
-        self.draw_text("Neck", self.text_font, (255,255,255), self.CHARMIE_NECK_NODE_RECT.x+2*self.CHARMIE_NECK_NODE_RECT.width, self.CHARMIE_NECK_NODE_RECT.y-2)
+        self.draw_text("Neck", self.text_font, self.WHITE, self.CHARMIE_NECK_NODE_RECT.x+2*self.CHARMIE_NECK_NODE_RECT.width, self.CHARMIE_NECK_NODE_RECT.y-2)
         if self.check_nodes.CHECK_NECK_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_NECK_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_NECK_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_NECK_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_NECK_NODE_RECT)
 
         # OBSTACLES
-        self.draw_text("Obstacles", self.text_font, (255,255,255), self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
+        self.draw_text("Obstacles", self.text_font, self.WHITE, self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
         if self.check_nodes.CHECK_OBSTACLES_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_OBSTACLES_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_OBSTACLES_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_OBSTACLES_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_OBSTACLES_NODE_RECT)
 
         # ODOMETRY
-        self.draw_text("Odometry", self.text_font, (255,255,255), self.CHARMIE_ODOMETRY_NODE_RECT.x+2*self.CHARMIE_ODOMETRY_NODE_RECT.width, self.CHARMIE_ODOMETRY_NODE_RECT.y-2)
+        self.draw_text("Odometry", self.text_font, self.WHITE, self.CHARMIE_ODOMETRY_NODE_RECT.x+2*self.CHARMIE_ODOMETRY_NODE_RECT.width, self.CHARMIE_ODOMETRY_NODE_RECT.y-2)
         if self.check_nodes.CHECK_ODOMETRY_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_ODOMETRY_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_ODOMETRY_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_ODOMETRY_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_ODOMETRY_NODE_RECT)
 
         # POINT CLOUD
-        self.draw_text("Point Cloud", self.text_font, (255,255,255), self.CHARMIE_POINT_CLOUD_NODE_RECT.x+2*self.CHARMIE_POINT_CLOUD_NODE_RECT.width, self.CHARMIE_POINT_CLOUD_NODE_RECT.y-2)
+        self.draw_text("Point Cloud", self.text_font, self.WHITE, self.CHARMIE_POINT_CLOUD_NODE_RECT.x+2*self.CHARMIE_POINT_CLOUD_NODE_RECT.width, self.CHARMIE_POINT_CLOUD_NODE_RECT.y-2)
         if self.check_nodes.CHECK_POINT_CLOUD_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_POINT_CLOUD_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_POINT_CLOUD_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_POINT_CLOUD_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_POINT_CLOUD_NODE_RECT)
 
         # PS4 CONTROLLER
-        self.draw_text("PS4 Controller", self.text_font, (255,255,255), self.CHARMIE_PS4_CONTROLLER_NODE_RECT.x+2*self.CHARMIE_PS4_CONTROLLER_NODE_RECT.width, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.y-2)
+        self.draw_text("PS4 Controller", self.text_font, self.WHITE, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.x+2*self.CHARMIE_PS4_CONTROLLER_NODE_RECT.width, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.y-2)
         if self.check_nodes.CHECK_PS4_CONTROLLER_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
 
         # SPEAKERS
-        self.draw_text("Speakers", self.text_font, (255,255,255), self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
+        self.draw_text("Speakers", self.text_font, self.WHITE, self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
         if self.check_nodes.CHECK_SPEAKERS_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_SPEAKERS_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_SPEAKERS_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_SPEAKERS_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_SPEAKERS_NODE_RECT)
 
         # YOLO OBJECTS
-        self.draw_text("YOLO Objects", self.text_font, (255,255,255), self.CHARMIE_YOLO_OBJECTS_NODE_RECT.x+2*self.CHARMIE_YOLO_OBJECTS_NODE_RECT.width, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.y-2)
+        self.draw_text("YOLO Objects", self.text_font, self.WHITE, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.x+2*self.CHARMIE_YOLO_OBJECTS_NODE_RECT.width, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.y-2)
         if self.check_nodes.CHECK_YOLO_OBJECTS_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
 
         # YOLO POSE
-        self.draw_text("YOLO Pose", self.text_font, (255,255,255), self.CHARMIE_YOLO_POSE_NODE_RECT.x+2*self.CHARMIE_YOLO_POSE_NODE_RECT.width, self.CHARMIE_YOLO_POSE_NODE_RECT.y-2)
+        self.draw_text("YOLO Pose", self.text_font, self.WHITE, self.CHARMIE_YOLO_POSE_NODE_RECT.x+2*self.CHARMIE_YOLO_POSE_NODE_RECT.width, self.CHARMIE_YOLO_POSE_NODE_RECT.y-2)
         if self.check_nodes.CHECK_YOLO_POSE_NODE:
-            pygame.draw.rect(self.WIN, GREEN, self.CHARMIE_YOLO_POSE_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_YOLO_POSE_NODE_RECT)
         else:
-            pygame.draw.rect(self.WIN, RED, self.CHARMIE_YOLO_POSE_NODE_RECT)
+            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_YOLO_POSE_NODE_RECT)
 
     def draw_cameras(self):
 
         # self.draw_text("Head Camera:", self.text_font_t, (255,255,255), 250, 10)
-        separator = 10
+        
+        initial_height = 10
+        initial_width = 200
+
+        width_ = 640
+        height_ = 360
 
         # print(self.node.head_camera_fps)
+        self.curr_head_rgb = self.node.head_rgb
+        self.curr_head_depth = self.node.head_depth
+        self.curr_hand_rgb = self.node.hand_rgb
+        self.curr_hand_depth = self.node.hand_depth
 
-        if self.node.new_head_rgb:
-            opencv_image = self.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
-            opencv_image = cv2.resize(opencv_image, (640, 360), interpolation=cv2.INTER_NEAREST)
-            # Convert the image to RGB (OpenCV loads as BGR by default)
-            opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-            # Convert the image to a banded surface (Pygame compatible format)
-            height, width, channels = opencv_image.shape
-            # print(height, width)
-            image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-            self.WIN.blit(image_surface, (200, separator))
-            self.draw_text(str(self.node.head_camera_fps), self.text_font, (255,255,255), 200, separator)
-        else:
-            temp_rect = pygame.Rect(200, separator, 640, 360)
-            pygame.draw.rect(self.WIN, (128,128,128), temp_rect)
-            self.draw_text("No image available ...", self.text_font_t, (255,255,255), 200+220, separator+180)
-
-        if self.node.new_hand_rgb:
-            opencv_image = self.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
-            opencv_image = cv2.resize(opencv_image, (640, 360), interpolation=cv2.INTER_NEAREST)
-            # Convert the image to RGB (OpenCV loads as BGR by default)
-            opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-            # Convert the image to a banded surface (Pygame compatible format)
-            height, width, channels = opencv_image.shape
-            # print(height, width)
-            image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-            self.WIN.blit(image_surface, (200, 360+2*separator))
-        else:
-            temp_rect = pygame.Rect(200, 360+2*separator, 640, 360)
-            pygame.draw.rect(self.WIN, (128,128,128), temp_rect)
-            self.draw_text("No image available ...", self.text_font_t, (255,255,255), 200+220, 360+2*separator+180)
-
-
-
-        if self.node.new_head_depth:
-            opencv_image = self.br.imgmsg_to_cv2(self.node.head_depth, "passthrough")
-            opencv_image = cv2.resize(opencv_image, (640, 360), interpolation=cv2.INTER_NEAREST)
-            
-            """
-            # Get the minimum and maximum values in the depth image
-            min_val, max_val, _, _ = cv2.minMaxLoc(opencv_image)
-
-            # Avoid zero values (invalid measurements) in the depth image
-            if min_val == 0:
-                min_val = np.min(opencv_image[opencv_image > 0])
-            if max_val == 0:
-                max_val = np.max(opencv_image[opencv_image > 0])
-
-            print(min_val, max_val)
-            """
-
-            min_val = 0
-            max_val = 6000
-
-            # Normalize the depth image to fall between 0 and 1
-            # depth_normalized = cv2.normalize(opencv_image, None, 0, 1, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-            # Normalize the depth image to fall between 0 and 1
-            depth_normalized = (opencv_image - min_val) / (max_val - min_val)
-            depth_normalized = np.clip(depth_normalized, 0, 1)
-            
-            # Convert the normalized depth image to an 8-bit image (0-255)
-            depth_8bit = (depth_normalized * 255).astype(np.uint8)
-
-            # Apply a colormap to the 8-bit depth image
-            opencv_image = cv2.applyColorMap(depth_8bit, cv2.COLORMAP_JET)
-            
-            # Convert the image to RGB (OpenCV loads as BGR by default)
-            opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-            
-            # Convert the image to a banded surface (Pygame compatible format)
-            height, width, channels = opencv_image.shape
-            # print(height, width)
-            image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-            self.WIN.blit(image_surface, (200+640+separator, separator))
+        if self.pause_button:
+            used_img_head_rgb = self.last_head_rgb
+            used_img_head_depth = self.last_head_depth
+            used_img_hand_rgb = self.last_hand_rgb
+            used_img_hand_depth = self.last_hand_depth
 
         else:
-            temp_rect = pygame.Rect(200+640+separator, separator, 640, 360)
-            pygame.draw.rect(self.WIN, (128,128,128), temp_rect)
-            self.draw_text("No image available ...", self.text_font_t, (255,255,255), 200+640+220, separator+180)
+            used_img_head_rgb = self.curr_head_rgb 
+            used_img_head_depth = self.curr_head_depth 
+            used_img_hand_rgb = self.curr_hand_rgb
+            used_img_hand_depth = self.curr_hand_depth
+
+        self.last_head_rgb = used_img_head_rgb 
+        self.last_head_depth = used_img_head_depth 
+        self.last_hand_rgb = used_img_hand_rgb
+        self.last_hand_depth = used_img_hand_depth
+
+
+        if not self.toggle_head_rgb_depth.getValue():
+
+            if self.node.new_head_rgb:
+
+                opencv_image = self.br.imgmsg_to_cv2(used_img_head_rgb, "bgr8")
+                opencv_image = cv2.resize(opencv_image, (width_, height_), interpolation=cv2.INTER_NEAREST)
+                # Convert the image to RGB (OpenCV loads as BGR by default)
+                opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+                # Convert the image to a banded surface (Pygame compatible format)
+                height, width, channels = opencv_image.shape
+                # print(height, width)
+                image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
+                self.WIN.blit(image_surface, (initial_width, initial_height))
+                # self.draw_text(str(self.node.head_camera_fps), self.text_font, self.WHITE, initial_width, initial_height)
+            else:
+                temp_rect = pygame.Rect(initial_width, initial_height, width_, height_)
+                pygame.draw.rect(self.WIN, self.GREY, temp_rect)
+                self.draw_text("No image available ...", self.text_font_t, self.WHITE, initial_width+(width_//3), initial_height+(height_//2))
+        else:
+            if self.node.new_head_depth:
+
+                opencv_image = self.br.imgmsg_to_cv2(used_img_head_depth, "passthrough")
+                opencv_image = cv2.resize(opencv_image, (width_, height_), interpolation=cv2.INTER_NEAREST)
+                
+                """
+                # Get the minimum and maximum values in the depth image
+                min_val, max_val, _, _ = cv2.minMaxLoc(opencv_image)
+
+                # Avoid zero values (invalid measurements) in the depth image
+                if min_val == 0:
+                    min_val = np.min(opencv_image[opencv_image > 0])
+                if max_val == 0:
+                    max_val = np.max(opencv_image[opencv_image > 0])
+
+                print(min_val, max_val)
+                """
+
+                min_val = 0
+                max_val = 6000
+
+                # Normalize the depth image to fall between 0 and 1
+                # depth_normalized = cv2.normalize(opencv_image, None, 0, 1, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+                # Normalize the depth image to fall between 0 and 1
+                depth_normalized = (opencv_image - min_val) / (max_val - min_val)
+                depth_normalized = np.clip(depth_normalized, 0, 1)
+                
+                # Convert the normalized depth image to an 8-bit image (0-255)
+                depth_8bit = (depth_normalized * 255).astype(np.uint8)
+
+                # Apply a colormap to the 8-bit depth image
+                opencv_image = cv2.applyColorMap(depth_8bit, cv2.COLORMAP_JET)
+                
+                # Convert the image to RGB (OpenCV loads as BGR by default)
+                opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+                
+                # Convert the image to a banded surface (Pygame compatible format)
+                height, width, channels = opencv_image.shape
+                # print(height, width)
+                image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
+                self.WIN.blit(image_surface, (initial_width, initial_height))
+
+            else:
+                temp_rect = pygame.Rect(initial_width, initial_height, width_, height_)
+                pygame.draw.rect(self.WIN, self.GREY, temp_rect)
+                self.draw_text("No image available ...", self.text_font_t, self.WHITE, initial_width+(width_//3), initial_height+(height_//2))
+
+
+
+        if not self.toggle_hand_rgb_depth.getValue():
+
+            if self.node.new_hand_rgb:
+
+                opencv_image = self.br.imgmsg_to_cv2(used_img_hand_rgb, "bgr8")
+                opencv_image = cv2.resize(opencv_image, (width_, height_), interpolation=cv2.INTER_NEAREST)
+                # Convert the image to RGB (OpenCV loads as BGR by default)
+                opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+                # Convert the image to a banded surface (Pygame compatible format)
+                height, width, channels = opencv_image.shape
+                # print(height, width)
+                image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
+                self.WIN.blit(image_surface, (initial_width, height_+2*initial_height))
+            else:
+                temp_rect = pygame.Rect(initial_width, height_+2*initial_height, width_, height_)
+                pygame.draw.rect(self.WIN, self.GREY, temp_rect)
+                self.draw_text("No image available ...", self.text_font_t, self.WHITE, initial_width+(width_//3), height_+2*initial_height+(height_//2))
+
+        else:
+
+            if self.node.new_hand_depth:
+
+                opencv_image = self.br.imgmsg_to_cv2(used_img_hand_depth, "passthrough")
+                opencv_image = cv2.resize(opencv_image, (width_, height_), interpolation=cv2.INTER_NEAREST)
+                
+                """
+                # Get the minimum and maximum values in the depth image
+                min_val, max_val, _, _ = cv2.minMaxLoc(opencv_image)
+
+                # Avoid zero values (invalid measurements) in the depth image
+                if min_val == 0:
+                    min_val = np.min(opencv_image[opencv_image > 0])
+                if max_val == 0:
+                    max_val = np.max(opencv_image[opencv_image > 0])
+
+                print(min_val, max_val)
+                """
+
+                min_val = 0
+                max_val = 3000
+
+                # Normalize the depth image to fall between 0 and 1
+                # depth_normalized = cv2.normalize(opencv_image, None, 0, 1, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+                # Normalize the depth image to fall between 0 and 1
+                depth_normalized = (opencv_image - min_val) / (max_val - min_val)
+                depth_normalized = np.clip(depth_normalized, 0, 1)
+                
+                # Convert the normalized depth image to an 8-bit image (0-255)
+                depth_8bit = (depth_normalized * 255).astype(np.uint8)
+
+                # Apply a colormap to the 8-bit depth image
+                opencv_image = cv2.applyColorMap(depth_8bit, cv2.COLORMAP_JET)
+                
+                # Convert the image to RGB (OpenCV loads as BGR by default)
+                opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+                
+                # Convert the image to a banded surface (Pygame compatible format)
+                height, width, channels = opencv_image.shape
+                # print(height, width)
+                image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
+                self.WIN.blit(image_surface, (initial_width, height_+2*initial_height))
+
+            else:
+                temp_rect = pygame.Rect(initial_width, height_+2*initial_height, width_, height_)
+                pygame.draw.rect(self.WIN, self.GREY, temp_rect)
+                self.draw_text("No image available ...", self.text_font_t, self.WHITE, initial_width+(width_//3), initial_height+(height_//2))
+
+
+
 
 
 
@@ -1138,8 +1244,6 @@ class DebugVisualMain():
             
             pygame_widgets.update(events)
             pygame.display.update()
-
-            # print(self.toggle.getValue())
         
 
 
