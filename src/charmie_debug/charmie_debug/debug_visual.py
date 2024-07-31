@@ -812,7 +812,7 @@ class DebugVisualMain():
         self.WHITE = (255,255,255)
         self.GREY = (128,128,128)
 
-        self.pause_button = False
+        # self.pause_button = False
         
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -840,18 +840,18 @@ class DebugVisualMain():
         
         # self.WIN = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
         
-        self.button = Button(self.WIN, 640+200+10, 10+360-50, 100, 100,
+        # self.button = Button(self.WIN, 640+200+10, 10+360-50, 100, 100,
         # Optional Parameters
-        text='Pause',  # Text to display
-        fontSize=20,  # Size of font
-        textColour=self.WHITE,
-        margin=0,  # Minimum distance between text/image and edge of button
-        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(255, 75, 0),  # Colour of button when being clicked
-        radius=10,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: self.test_button_function()  # Function to call when clicked on  
-        )
+        # text='Pause',  # Text to display
+        # fontSize=20,  # Size of font
+        # textColour=self.WHITE,
+        # margin=0,  # Minimum distance between text/image and edge of button
+        # inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
+        # hoverColour=(150, 0, 0),  # Colour of button when being hovered over
+        # pressedColour=(255, 75, 0),  # Colour of button when being clicked
+        # radius=10,  # Radius of border corners (leave empty for not curved)
+        # onClick=lambda: self.test_button_function()  # Function to call when clicked on  
+        # )
 
 
         # self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
@@ -903,9 +903,9 @@ class DebugVisualMain():
         
 
 
-    def test_button_function(self):
+    # def test_button_function(self):
 
-        self.pause_button = not self.pause_button
+        # self.pause_button = not self.pause_button
 
         # self.button.text = 'Play'
 
@@ -1050,8 +1050,6 @@ class DebugVisualMain():
             pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_YOLO_POSE_NODE_RECT)
 
     def draw_cameras(self):
-
-        # self.draw_text("Head Camera:", self.text_font_t, (255,255,255), 250, 10)
         
         initial_height = 10
         initial_width = 200
@@ -1059,13 +1057,13 @@ class DebugVisualMain():
         width_ = 640
         height_ = 360
 
-        # print(self.node.head_camera_fps)
+
         self.curr_head_rgb = self.node.head_rgb
         self.curr_head_depth = self.node.head_depth
         self.curr_hand_rgb = self.node.hand_rgb
         self.curr_hand_depth = self.node.hand_depth
 
-        if self.pause_button:
+        if self.toggle_pause_cams.getValue():
             used_img_head_rgb = self.last_head_rgb
             used_img_head_depth = self.last_head_depth
             used_img_hand_rgb = self.last_hand_rgb
