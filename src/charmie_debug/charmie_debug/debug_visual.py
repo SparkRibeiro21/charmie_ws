@@ -473,20 +473,33 @@ class DebugVisualNode(Node):
         self.robot = Robot()
 
         self.lidar_time = 0.0
-        self.head_camera_time = 0.0
-        self.hand_camera_time = 0.0
         self.odometry_time = 0.0
         self.ps4_controller_time = 0.0
 
+        self.head_camera_time = 0.0
+        self.head_depth_camera_time = 0.0
+        self.hand_camera_time = 0.0
+        self.hand_depth_camera_time = 0.0
 
         self.last_head_camera_time = 0.0
-        self.head_camera_fps = 0.0
+        self.last_head_depth_camera_time = 0.0
+        self.last_hand_camera_time = 0.0
+        self.last_hand_depth_camera_time = 0.0
+
+        self.head_rgb_fps = 0.0
+        self.head_depth_fps = 0.0
+        self.hand_rgb_fps = 0.0
+        self.hand_depth_fps = 0.0
         
 
     def get_color_image_hand_callback(self, img: Image):
         self.hand_rgb = img
         self.new_hand_rgb = True
+
+        self.last_hand_camera_time = self.hand_camera_time
         self.hand_camera_time = time.time()
+
+        self.hand_rgb_fps = str(round(1/(self.hand_camera_time-self.last_hand_camera_time), 2))
 
     def get_color_image_head_callback(self, img: Image):
         self.head_rgb = img
@@ -495,15 +508,27 @@ class DebugVisualNode(Node):
         self.last_head_camera_time = self.head_camera_time
         self.head_camera_time = time.time()
         
-        self.head_camera_fps = str(round(1/(self.head_camera_time-self.last_head_camera_time), 2))
+        self.head_rgb_fps = str(round(1/(self.head_camera_time-self.last_head_camera_time), 2))
+
+    def get_aligned_depth_image_hand_callback(self, img: Image):
+        self.hand_depth = img
+        self.new_hand_depth = True
+
+        self.last_hand_depth_camera_time = self.hand_depth_camera_time
+        self.hand_depth_camera_time = time.time()
+        
+        self.head_depth_fps = str(round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 2))
+
 
     def get_aligned_depth_image_head_callback(self, img: Image):
         self.head_depth = img
         self.new_head_depth = True
         
-    def get_aligned_depth_image_hand_callback(self, img: Image):
-        self.hand_depth = img
-        self.new_hand_depth = True
+        self.last_head_depth_camera_time = self.head_depth_camera_time
+        self.head_depth_camera_time = time.time()
+        
+        self.hand_depth_fps = str(round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 2))
+
 
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
@@ -811,6 +836,7 @@ class DebugVisualMain():
         self.BLUE = (0,0,255)
         self.WHITE = (255,255,255)
         self.GREY = (128,128,128)
+        self.BLACK = (0,0,0)
 
         # self.pause_button = False
         
@@ -859,16 +885,12 @@ class DebugVisualMain():
         #           onSubmit=self.output, radius=10, borderThickness=5)
         
 
-        self.toggle_pause_cams = Toggle(self.WIN, 200+640, 200+8, 40, 16)
-        self.toggle_head_rgb_depth = Toggle(self.WIN, 200+640, 200+8+50, 40, 16)
-        self.toggle_hand_rgb_depth = Toggle(self.WIN, 200+640, 200+8+100, 40, 16)
-
         icon = pygame.image.load(self.complete_path+"logo_light_cropped_squared.png")
         pygame.display.set_icon(icon)
         pygame.display.set_caption("CHARMIE Debug Node")
 
 
-        self.init_pos_w_rect_check_nodes = 20
+        self.init_pos_w_rect_check_nodes = 15
         self.init_pos_h_rect_check_nodes = 50
         self.deviation_pos_h_rect_check_nodes = 25
         self.square_size_rect_check_nodes = 10
@@ -890,7 +912,10 @@ class DebugVisualMain():
         self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        
+
+        self.toggle_pause_cams = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5), 40, 16)
+        self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5), 40, 16)
+        self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25.5), 40, 16)
 
         self.curr_head_rgb = Image()
         self.last_head_rgb = Image()
@@ -925,20 +950,24 @@ class DebugVisualMain():
         img = font.render(text, True, text_col)
         self.WIN.blit(img, (x, y))
 
+    def draw_transparent_rect(self, x, y, width, height, color, alpha):
+        temp_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        temp_surface.fill((*color, alpha))
+        self.WIN.blit(temp_surface, (x, y))
 
     def draw_nodes_check(self):
 
         self.draw_text("Check Nodes:", self.text_font_t, self.WHITE, 10, 10)
 
         # ARM_UFACTORY
-        self.draw_text("Arm (uFactory)", self.text_font, self.WHITE, self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
+        self.draw_text("Arm uFactory", self.text_font, self.WHITE, self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
         if self.check_nodes.CHECK_ARM_UFACTORY_NODE:
             pygame.draw.rect(self.WIN, self.GREEN, self.ARM_UFACTORY_NODE_RECT)
         else:
             pygame.draw.rect(self.WIN, self.RED, self.ARM_UFACTORY_NODE_RECT)
             
         # ARM_CHARMIE
-        self.draw_text("Arm (CHARMIE)", self.text_font, self.WHITE, self.CHARMIE_ARM_NODE_RECT.x+2*self.CHARMIE_ARM_NODE_RECT.width, self.CHARMIE_ARM_NODE_RECT.y-2)
+        self.draw_text("Arm", self.text_font, self.WHITE, self.CHARMIE_ARM_NODE_RECT.x+2*self.CHARMIE_ARM_NODE_RECT.width, self.CHARMIE_ARM_NODE_RECT.y-2)
         if self.check_nodes.CHECK_ARM_NODE:
             pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_ARM_NODE_RECT)
         else:
@@ -1052,11 +1081,10 @@ class DebugVisualMain():
     def draw_cameras(self):
         
         initial_height = 10
-        initial_width = 200
+        initial_width = 165
 
         width_ = 640
         height_ = 360
-
 
         self.curr_head_rgb = self.node.head_rgb
         self.curr_head_depth = self.node.head_depth
@@ -1094,7 +1122,10 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (initial_width, initial_height))
-                # self.draw_text(str(self.node.head_camera_fps), self.text_font, self.WHITE, initial_width, initial_height)
+                self.draw_transparent_rect(initial_width, initial_height, 55, 4*initial_height, self.BLACK, 85)
+                self.draw_text(str(self.node.head_rgb_fps), self.text_font, self.WHITE, initial_width, initial_height)
+                self.draw_text(str(self.node.head_depth_fps), self.text_font, self.WHITE, initial_width, 3*initial_height)
+
             else:
                 temp_rect = pygame.Rect(initial_width, initial_height, width_, height_)
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
@@ -1141,6 +1172,9 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (initial_width, initial_height))
+                self.draw_transparent_rect(initial_width, initial_height, 55, 4*initial_height, self.BLACK, 85)
+                self.draw_text(str(self.node.head_rgb_fps), self.text_font, self.WHITE, initial_width, initial_height)
+                self.draw_text(str(self.node.head_depth_fps), self.text_font, self.WHITE, initial_width, 3*initial_height)
 
             else:
                 temp_rect = pygame.Rect(initial_width, initial_height, width_, height_)
@@ -1162,6 +1196,10 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (initial_width, height_+2*initial_height))
+                self.draw_transparent_rect(initial_width, height_+2*initial_height, 55, 4*initial_height, self.BLACK, 85)
+                self.draw_text(str(self.node.hand_rgb_fps), self.text_font, self.WHITE, initial_width, height_+2*initial_height)
+                self.draw_text(str(self.node.hand_depth_fps), self.text_font, self.WHITE, initial_width, height_+3*initial_height+initial_height)
+                
             else:
                 temp_rect = pygame.Rect(initial_width, height_+2*initial_height, width_, height_)
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
@@ -1210,15 +1248,20 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (initial_width, height_+2*initial_height))
-
+                self.draw_transparent_rect(initial_width, height_+2*initial_height, 55, 4*initial_height, self.BLACK, 85)
+                self.draw_text(str(self.node.hand_rgb_fps), self.text_font, self.WHITE, initial_width, height_+2*initial_height)
+                self.draw_text(str(self.node.hand_depth_fps), self.text_font, self.WHITE, initial_width, height_+3*initial_height+initial_height)
+                
             else:
                 temp_rect = pygame.Rect(initial_width, height_+2*initial_height, width_, height_)
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
                 self.draw_text("No image available ...", self.text_font_t, self.WHITE, initial_width+(width_//3), initial_height+(height_//2))
 
 
-
-
+        first_pos_h = 18
+        self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*first_pos_h)
+        self.draw_text("Depth Head:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+3))
+        self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+6))
 
 
 
@@ -1239,7 +1282,7 @@ class DebugVisualMain():
             self.WIN.fill((0, 0, 0))
             self.draw_nodes_check()
             self.draw_cameras()
-            
+
             pygame_widgets.update(events)
             pygame.display.update()
         
@@ -1249,3 +1292,5 @@ class DebugVisualMain():
 # EXAMPLE (OBSTACLES WAITING FOR POINT CLOUD)
 
 # testar se arm ufactory se liga se nao tiver braço
+# try catch when we get error for images
+# por tudo percentual ao ecrã
