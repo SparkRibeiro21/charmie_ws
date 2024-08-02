@@ -838,6 +838,11 @@ class DebugVisualMain():
         self.GREY = (128,128,128)
         self.BLACK = (0,0,0)
 
+        self.cam_width_ = 640
+        self.cam_height_ = 360
+        self.cams_initial_height = 10
+        self.cams_initial_width = 165
+
         # self.pause_button = False
         
         # info regarding the paths for the recorded files intended to be played
@@ -857,7 +862,8 @@ class DebugVisualMain():
         info = pygame.display.Info()
         screen_width, screen_height = info.current_w, info.current_h
         print(screen_width, screen_height)
-        self.WIN = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+        # self.WIN = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+        self.WIN = pygame.display.set_mode((1387, 752), pygame.RESIZABLE)
 
         # self.text_font = pygame.font.SysFont("Arial", 30)
         self.text_font_t = pygame.font.SysFont(None, 30)
@@ -917,6 +923,23 @@ class DebugVisualMain():
         self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5), 40, 16)
         self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25.5), 40, 16)
 
+        self.toggle_activate_objects_head =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+50, 40, 16)
+        self.toggle_activate_furniture_head = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90,  self.cams_initial_height+50, 40, 16)
+        self.toggle_activate_shoes_head =     Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+192, self.cams_initial_height+50, 40, 16)
+        self.toggle_activate_objects_hand =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+298, self.cams_initial_height+50, 40, 16)
+        self.toggle_activate_furniture_hand = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+390, self.cams_initial_height+50, 40, 16)
+        self.toggle_activate_shoes_hand =     Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+492, self.cams_initial_height+50, 40, 16)
+
+        self.toggle_pose_activate =       Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+80+50, 40, 16)
+        self.toggle_pose_waving =         Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+93,  self.cams_initial_height+80+50, 40, 16)
+        self.toggle_pose_front_close =    Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+182, self.cams_initial_height+80+50, 40, 16)
+        self.toggle_pose_legs_visible =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+302, self.cams_initial_height+80+50, 40, 16)
+        self.toggle_pose_characteristcs = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+427, self.cams_initial_height+80+50, 40, 16)
+        
+        self.toggle_obstacles_lidar_top =    Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+160+50, 40, 16)
+        self.toggle_obstacles_lidar_bottom = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100,  self.cams_initial_height+160+50, 40, 16)
+        self.toggle_obstacles_head_camera =  Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233, self.cams_initial_height+160+50, 40, 16)
+        
         self.curr_head_rgb = Image()
         self.last_head_rgb = Image()
         self.curr_head_depth = Image()
@@ -926,7 +949,6 @@ class DebugVisualMain():
         self.curr_hand_depth = Image()
         self.last_hand_depth = Image()
         
-
 
     # def test_button_function(self):
 
@@ -941,9 +963,9 @@ class DebugVisualMain():
         #     print("DOWN DOWN DOWN")
         #     self.pause_button = True
 
-    def output(self):
+    # def output(self):
         # Get text in the textbox
-        print(self.textbox.getText())
+        # print(self.textbox.getText())
 
     
     def draw_text(self, text, font, text_col, x, y):
@@ -1080,11 +1102,6 @@ class DebugVisualMain():
 
     def draw_cameras(self):
         
-        initial_height = 10
-        initial_width = 165
-
-        width_ = 640
-        height_ = 360
 
         self.curr_head_rgb = self.node.head_rgb
         self.curr_head_depth = self.node.head_depth
@@ -1112,29 +1129,39 @@ class DebugVisualMain():
         if not self.toggle_head_rgb_depth.getValue():
 
             if self.node.new_head_rgb:
-
-                opencv_image = self.br.imgmsg_to_cv2(used_img_head_rgb, "bgr8")
-                opencv_image = cv2.resize(opencv_image, (width_, height_), interpolation=cv2.INTER_NEAREST)
+                
+                try:
+                    opencv_image = self.br.imgmsg_to_cv2(used_img_head_rgb, "bgr8")
+                except CvBridgeError as e:
+                    self.node.get_logger().error(f"Conversion error (HEAD RGB): {e}")
+                    opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
+                
+                opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
                 # Convert the image to RGB (OpenCV loads as BGR by default)
                 opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
                 # Convert the image to a banded surface (Pygame compatible format)
                 height, width, channels = opencv_image.shape
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-                self.WIN.blit(image_surface, (initial_width, initial_height))
-                self.draw_transparent_rect(initial_width, initial_height, 55, 4*initial_height, self.BLACK, 85)
-                self.draw_text(str(self.node.head_rgb_fps), self.text_font, self.WHITE, initial_width, initial_height)
-                self.draw_text(str(self.node.head_depth_fps), self.text_font, self.WHITE, initial_width, 3*initial_height)
+                self.WIN.blit(image_surface, (self.cams_initial_width, self.cams_initial_height))
+                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 55, 4*self.cams_initial_height, self.BLACK, 85)
+                self.draw_text(str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
+                self.draw_text(str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
 
             else:
-                temp_rect = pygame.Rect(initial_width, initial_height, width_, height_)
+                temp_rect = pygame.Rect(self.cams_initial_width, self.cams_initial_height, self.cam_width_, self.cam_height_)
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
-                self.draw_text("No image available ...", self.text_font_t, self.WHITE, initial_width+(width_//3), initial_height+(height_//2))
+                self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cams_initial_height+(self.cam_height_//2))
         else:
             if self.node.new_head_depth:
 
-                opencv_image = self.br.imgmsg_to_cv2(used_img_head_depth, "passthrough")
-                opencv_image = cv2.resize(opencv_image, (width_, height_), interpolation=cv2.INTER_NEAREST)
+                try:
+                    opencv_image = self.br.imgmsg_to_cv2(used_img_head_depth, "passthrough")
+                except CvBridgeError as e:
+                    self.node.get_logger().error(f"Conversion error (HEAD Depth): {e}")
+                    opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
+                
+                opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
                 
                 """
                 # Get the minimum and maximum values in the depth image
@@ -1171,15 +1198,15 @@ class DebugVisualMain():
                 height, width, channels = opencv_image.shape
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-                self.WIN.blit(image_surface, (initial_width, initial_height))
-                self.draw_transparent_rect(initial_width, initial_height, 55, 4*initial_height, self.BLACK, 85)
-                self.draw_text(str(self.node.head_rgb_fps), self.text_font, self.WHITE, initial_width, initial_height)
-                self.draw_text(str(self.node.head_depth_fps), self.text_font, self.WHITE, initial_width, 3*initial_height)
+                self.WIN.blit(image_surface, (self.cams_initial_width, self.cams_initial_height))
+                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 55, 4*self.cams_initial_height, self.BLACK, 85)
+                self.draw_text(str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
+                self.draw_text(str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
 
             else:
-                temp_rect = pygame.Rect(initial_width, initial_height, width_, height_)
+                temp_rect = pygame.Rect(self.cams_initial_width, self.cams_initial_height, self.cam_width_, self.cam_height_)
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
-                self.draw_text("No image available ...", self.text_font_t, self.WHITE, initial_width+(width_//3), initial_height+(height_//2))
+                self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cams_initial_height+(self.cam_height_//2))
 
 
 
@@ -1187,30 +1214,40 @@ class DebugVisualMain():
 
             if self.node.new_hand_rgb:
 
-                opencv_image = self.br.imgmsg_to_cv2(used_img_hand_rgb, "bgr8")
-                opencv_image = cv2.resize(opencv_image, (width_, height_), interpolation=cv2.INTER_NEAREST)
+                try:
+                    opencv_image = self.br.imgmsg_to_cv2(used_img_hand_rgb, "bgr8")
+                except CvBridgeError as e:
+                    self.node.get_logger().error(f"Conversion error (HAND RGB): {e}")
+                    opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
+                
+                opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
                 # Convert the image to RGB (OpenCV loads as BGR by default)
                 opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
                 # Convert the image to a banded surface (Pygame compatible format)
                 height, width, channels = opencv_image.shape
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-                self.WIN.blit(image_surface, (initial_width, height_+2*initial_height))
-                self.draw_transparent_rect(initial_width, height_+2*initial_height, 55, 4*initial_height, self.BLACK, 85)
-                self.draw_text(str(self.node.hand_rgb_fps), self.text_font, self.WHITE, initial_width, height_+2*initial_height)
-                self.draw_text(str(self.node.hand_depth_fps), self.text_font, self.WHITE, initial_width, height_+3*initial_height+initial_height)
+                self.WIN.blit(image_surface, (self.cams_initial_width, self.cam_height_+2*self.cams_initial_height))
+                self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 55, 4*self.cams_initial_height, self.BLACK, 85)
+                self.draw_text(str(self.node.hand_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+2*self.cams_initial_height)
+                self.draw_text(str(self.node.hand_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+3*self.cams_initial_height+self.cams_initial_height)
                 
             else:
-                temp_rect = pygame.Rect(initial_width, height_+2*initial_height, width_, height_)
+                temp_rect = pygame.Rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, self.cam_width_, self.cam_height_)
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
-                self.draw_text("No image available ...", self.text_font_t, self.WHITE, initial_width+(width_//3), height_+2*initial_height+(height_//2))
+                self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cam_height_+2*self.cams_initial_height+(self.cam_height_//2))
 
         else:
 
             if self.node.new_hand_depth:
 
-                opencv_image = self.br.imgmsg_to_cv2(used_img_hand_depth, "passthrough")
-                opencv_image = cv2.resize(opencv_image, (width_, height_), interpolation=cv2.INTER_NEAREST)
+                try:
+                    opencv_image = self.br.imgmsg_to_cv2(used_img_hand_depth, "passthrough")
+                except CvBridgeError as e:
+                    self.node.get_logger().error(f"Conversion error (HEAD Depth): {e}")
+                    opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
+                
+                opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
                 
                 """
                 # Get the minimum and maximum values in the depth image
@@ -1247,15 +1284,15 @@ class DebugVisualMain():
                 height, width, channels = opencv_image.shape
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-                self.WIN.blit(image_surface, (initial_width, height_+2*initial_height))
-                self.draw_transparent_rect(initial_width, height_+2*initial_height, 55, 4*initial_height, self.BLACK, 85)
-                self.draw_text(str(self.node.hand_rgb_fps), self.text_font, self.WHITE, initial_width, height_+2*initial_height)
-                self.draw_text(str(self.node.hand_depth_fps), self.text_font, self.WHITE, initial_width, height_+3*initial_height+initial_height)
+                self.WIN.blit(image_surface, (self.cams_initial_width, self.cam_height_+2*self.cams_initial_height))
+                self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 55, 4*self.cams_initial_height, self.BLACK, 85)
+                self.draw_text(str(self.node.hand_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+2*self.cams_initial_height)
+                self.draw_text(str(self.node.hand_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+3*self.cams_initial_height+self.cams_initial_height)
                 
             else:
-                temp_rect = pygame.Rect(initial_width, height_+2*initial_height, width_, height_)
+                temp_rect = pygame.Rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, self.cam_width_, self.cam_height_)
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
-                self.draw_text("No image available ...", self.text_font_t, self.WHITE, initial_width+(width_//3), initial_height+(height_//2))
+                self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cam_height_+2*self.cams_initial_height+(self.cam_height_//2))
 
 
         first_pos_h = 18
@@ -1264,6 +1301,17 @@ class DebugVisualMain():
         self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+6))
 
 
+    def draw_activates(self):
+
+
+        self.draw_text("Activate YOLO Objects: (Head/Hand)", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, self.cams_initial_height)
+        self.draw_text("Activate YOLO Pose:", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 80+self.cams_initial_height)
+        self.draw_text("Activate Obstacles:", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+self.cams_initial_height)
+        
+        self.draw_text("Objects:      Furniture:      Shoes:      /      Objects:      Furniture:      Shoes:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 25+self.cams_initial_height)
+        self.draw_text("Activate:      Waving:      Front Close:      Legs Visible:      Characteristics:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 80+25+self.cams_initial_height)
+        self.draw_text("Lidar Top:      Lidar Bottom:      Head Camera:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+25+self.cams_initial_height)
+        
 
     def main(self):
 
@@ -1282,6 +1330,10 @@ class DebugVisualMain():
             self.WIN.fill((0, 0, 0))
             self.draw_nodes_check()
             self.draw_cameras()
+            self.draw_activates()
+
+            # width, height = self.WIN.get_size()
+            # print(f"Window width: {width}, Window height: {height}")
 
             pygame_widgets.update(events)
             pygame.display.update()
@@ -1290,7 +1342,9 @@ class DebugVisualMain():
 
 # CHANGE ORDER OF HOW SERVICES ARE INITIALISED SO THAT WHEN I GET GREEN IT IS NOT WAITING FOR ANY OTHER SERVICE
 # EXAMPLE (OBSTACLES WAITING FOR POINT CLOUD)
-
 # testar se arm ufactory se liga se nao tiver braço
+
+
+
 # try catch when we get error for images
 # por tudo percentual ao ecrã

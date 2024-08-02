@@ -277,7 +277,7 @@ class PointCloudNode(Node):
         self.head_depth_img = img
         if self.ACTIVATE_HEAD_DEPTH_OBSTACLES:
             self.publish_head_depth_obstacles()
-        print("Received Head Depth Image")
+        # print("Received Head Depth Image")
 
 
     def get_color_image_hand_callback(self, img: Image):
