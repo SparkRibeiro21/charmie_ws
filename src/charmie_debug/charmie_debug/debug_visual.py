@@ -530,6 +530,34 @@ class DebugVisualNode(Node):
         self.hand_depth_fps = str(round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 2))
 
 
+    ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
+    def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
+        request = ActivateYoloPose.Request()
+        request.activate = activate
+        request.only_detect_person_legs_visible = only_detect_person_legs_visible
+        request.minimum_person_confidence = minimum_person_confidence
+        request.minimum_keypoints_to_detect_person = minimum_keypoints_to_detect_person
+        request.only_detect_person_arm_raised = only_detect_person_arm_raised
+        request.only_detect_person_right_in_front = only_detect_person_right_in_front
+        request.characteristics = characteristics
+
+        self.activate_yolo_pose_client.call_async(request)
+
+    ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
+    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
+        request = ActivateYoloObjects.Request()
+        request.activate_objects = activate_objects
+        request.activate_shoes = activate_shoes
+        request.activate_doors = activate_doors
+        request.activate_objects_hand = activate_objects_hand
+        request.activate_shoes_hand = activate_shoes_hand
+        request.activate_doors_hand = activate_doors_hand
+        request.minimum_objects_confidence = minimum_objects_confidence
+        request.minimum_shoes_confidence = minimum_shoes_confidence
+        request.minimum_doors_confidence = minimum_doors_confidence
+
+        self.activate_yolo_objects_client.call_async(request)
+
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
 
@@ -940,6 +968,13 @@ class DebugVisualMain():
         self.toggle_obstacles_lidar_bottom = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100,  self.cams_initial_height+160+50, 40, 16)
         self.toggle_obstacles_head_camera =  Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233, self.cams_initial_height+160+50, 40, 16)
         
+        self.last_toggle_activate_objects_head =   False 
+        self.last_toggle_activate_furniture_head = False
+        self.last_toggle_activate_shoes_head =     False
+        self.last_toggle_activate_objects_hand =   False
+        self.last_toggle_activate_furniture_hand = False
+        self.last_toggle_activate_shoes_hand =     False
+
         self.curr_head_rgb = Image()
         self.last_head_rgb = Image()
         self.curr_head_depth = Image()
@@ -1312,6 +1347,27 @@ class DebugVisualMain():
         self.draw_text("Activate:      Waving:      Front Close:      Legs Visible:      Characteristics:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 80+25+self.cams_initial_height)
         self.draw_text("Lidar Top:      Lidar Bottom:      Head Camera:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+25+self.cams_initial_height)
         
+
+        # this is done to make sure that the same value used for checking pressed is the same used to attribute to last toggle
+        toggle_activate_objects_head   = self.toggle_activate_objects_head.getValue()
+        toggle_activate_furniture_head = self.toggle_activate_furniture_head.getValue()
+        toggle_activate_shoes_head     = self.toggle_activate_shoes_head.getValue()
+        toggle_activate_objects_hand   = self.toggle_activate_objects_hand.getValue()
+        toggle_activate_furniture_hand = self.toggle_activate_furniture_hand.getValue()
+        toggle_activate_shoes_hand     = self.toggle_activate_shoes_hand.getValue()
+
+
+        if toggle_activate_objects_head != self.last_toggle_activate_objects_head:
+            print("CHANGED STATUS")
+
+
+        self.last_toggle_activate_objects_head =   toggle_activate_objects_head 
+        self.last_toggle_activate_furniture_head = toggle_activate_furniture_head
+        self.last_toggle_activate_shoes_head =     toggle_activate_shoes_head
+        self.last_toggle_activate_objects_hand =   toggle_activate_objects_hand
+        self.last_toggle_activate_furniture_hand = toggle_activate_furniture_hand
+        self.last_toggle_activate_shoes_hand =     toggle_activate_shoes_hand
+
 
     def main(self):
 
