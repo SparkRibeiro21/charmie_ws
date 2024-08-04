@@ -1357,8 +1357,13 @@ class DebugVisualMain():
         toggle_activate_shoes_hand     = self.toggle_activate_shoes_hand.getValue()
 
 
-        if toggle_activate_objects_head != self.last_toggle_activate_objects_head:
-            print("CHANGED STATUS")
+        if toggle_activate_objects_head     != self.last_toggle_activate_objects_head or \
+            toggle_activate_furniture_head  != self.last_toggle_activate_furniture_head or \
+            toggle_activate_shoes_head      != self.last_toggle_activate_shoes_head or \
+            toggle_activate_objects_hand    != self.last_toggle_activate_objects_hand or \
+            toggle_activate_furniture_hand  != self.last_toggle_activate_furniture_hand or \
+            toggle_activate_shoes_hand      != self.last_toggle_activate_shoes_hand:
+            print("YOLO OBJECTS - CHANGED STATUS")
 
 
         self.last_toggle_activate_objects_head =   toggle_activate_objects_head 
