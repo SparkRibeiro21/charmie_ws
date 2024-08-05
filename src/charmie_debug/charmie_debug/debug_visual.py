@@ -462,6 +462,11 @@ class DebugVisualNode(Node):
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
 
+        self.activate_yolo_pose_success = True
+        self.activate_yolo_pose_message = ""
+        self.activate_yolo_objects_success = True
+        self.activate_yolo_objects_message = ""
+
         self.head_rgb = Image()
         self.hand_rgb = Image()
         self.head_depth = Image()
@@ -983,7 +988,26 @@ class DebugVisualMain():
         self.last_hand_rgb = Image()
         self.curr_hand_depth = Image()
         self.last_hand_depth = Image()
+    
+
+    
+    def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
+        self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, only_detect_person_arm_raised=only_detect_person_arm_raised, characteristics=characteristics)
+
+        self.node.activate_yolo_pose_success = True
+        self.node.activate_yolo_pose_message = "Activated with selected parameters"
+
+        return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
+
+    def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
+        
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
+
+        self.node.activate_yolo_objects_success = True
+        self.node.activate_yolo_objects_message = "Activated with selected parameters"
+
+        return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
 
     # def test_button_function(self):
 
@@ -1363,7 +1387,16 @@ class DebugVisualMain():
             toggle_activate_objects_hand    != self.last_toggle_activate_objects_hand or \
             toggle_activate_furniture_hand  != self.last_toggle_activate_furniture_hand or \
             toggle_activate_shoes_hand      != self.last_toggle_activate_shoes_hand:
-            print("YOLO OBJECTS - CHANGED STATUS")
+            
+            # if self.check_nodes.CHECK_YOLO_OBJECTS_NODE:
+            print("YOLO OBJECTS - CHANGED STATUS.")
+
+            # def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
+            self.activate_yolo_objects(activate_objects=toggle_activate_objects_head, activate_shoes=toggle_activate_shoes_head, \
+                                        activate_doors=toggle_activate_furniture_head, activate_objects_hand=toggle_activate_objects_hand, \
+                                        activate_shoes_hand=toggle_activate_shoes_hand, activate_doors_hand=toggle_activate_furniture_hand)
+            # else:
+            #     print("YOLO OBJECTS - NOT ACTIVATED.")
 
 
         self.last_toggle_activate_objects_head =   toggle_activate_objects_head 
