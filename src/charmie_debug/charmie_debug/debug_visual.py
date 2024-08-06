@@ -1454,7 +1454,7 @@ class DebugVisualMain():
             
             print("OBSTACLES - CHANGED STATUS.")
 
-            self.activate_obstacles(self, obstacles_lidar_up=toggle_obstacles_lidar_top, obstacles_lidar_bottom=toggle_obstacles_lidar_bottom, \
+            self.activate_obstacles(obstacles_lidar_up=toggle_obstacles_lidar_top, obstacles_lidar_bottom=toggle_obstacles_lidar_bottom, \
                                     obstacles_camera_head=toggle_obstacles_head_camera)
 
 
@@ -1475,6 +1475,11 @@ class DebugVisualMain():
         self.last_toggle_obstacles_lidar_bottom = toggle_obstacles_lidar_bottom
         self.last_toggle_obstacles_head_camera =  toggle_obstacles_head_camera
 
+    
+    def draw_detections(self):
+
+        DET2 = pygame.Rect(100, 100, 300, 500)
+        pygame.draw.rect(self.WIN, self.RED, DET2, width=2)
 
     def main(self):
 
@@ -1494,6 +1499,13 @@ class DebugVisualMain():
             self.draw_nodes_check()
             self.draw_cameras()
             self.draw_activates()
+            self.draw_detections()
+
+
+            # self.HEAD_CAMERA_NODE_RECT2 = pygame.Rect(100, 100, 300, 500)
+            # pygame.draw.rect(self.WIN, self.RED, self.HEAD_CAMERA_NODE_RECT2, width=10)
+
+
 
             # width, height = self.WIN.get_size()
             # print(f"Window width: {width}, Window height: {height}")
@@ -1507,7 +1519,6 @@ class DebugVisualMain():
 # EXAMPLE (OBSTACLES WAITING FOR POINT CLOUD)
 # testar se arm ufactory se liga se nao tiver braço
 
-
-
-# try catch when we get error for images
 # por tudo percentual ao ecrã
+
+# pôr FPS a cada segundo (ou a cada d_t definido) e não quando há uma imagem nova, porque senão está sempre a oscilar ...
