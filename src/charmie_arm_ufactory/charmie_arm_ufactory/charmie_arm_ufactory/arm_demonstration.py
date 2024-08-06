@@ -2248,7 +2248,7 @@ class ArmUfactory(Node):
 	
 	def move_to_goal(self):
 		self.setup()
-		#self.say_hello()
+		# self.say_hello()
 		#self.plan_and_execute()
 		self.demonstration()
 		

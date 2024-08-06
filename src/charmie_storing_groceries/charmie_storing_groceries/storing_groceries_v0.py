@@ -120,7 +120,7 @@ class StoringGroceriesNode(Node):
         self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
         self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_hand_image_callback, 10)
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_callback, 10)
-        
+        self.aligned_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_rgb_hand_image_callback, 10)
         # Objects detected
         # self.objects_filtered_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered', self.get_objects_callback, 10)
         # Yolo Objects
@@ -259,6 +259,9 @@ class StoringGroceriesNode(Node):
         self.first_depth_image_hand_received = True
         self.new_image_hand_flag = True
         # print("Received Depth Image")
+
+    def get_rgb_hand_image_callback(self, img:Image):
+        self.rgb_hand_image = img
 
     def get_color_image_callback(self, img: Image):
 
@@ -2425,6 +2428,7 @@ class StoringGroceriesMain():
 
         if self.node.new_image_hand_flag:
             current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img_hand, desired_encoding="passthrough")
+            current_frame_rgb_hand = self.node.br.imgmsg_to_cv2(self.node.rgb_hand_image, desired_encoding="passthrough")  
             height, width = current_frame_depth_hand.shape
             current_frame_depth_hand_half = current_frame_depth_hand[height//2:height,:]
             current_frame_depth_hand_center = current_frame_depth_hand[height//4:height-height//4, width//3:width-width//3]
@@ -2469,7 +2473,9 @@ class StoringGroceriesMain():
                 cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
                 cv2.rectangle(blank_image, (width//3, height//4), (width - width//3, height - height//4), (0, 255, 0), 3)
                 cv2.imshow("New Img Distance Inspection", blank_image)
-                cv2.waitKey(10)
+                cv2.waitKey(0)
+                cv2.imshow("Original: ", current_frame_rgb_hand)
+                cv2.waitKey(0)
 
                 # cv2.imwrite('Distance_to_door' + ".jpg", blank_image) 
                 # time.sleep(0.5)

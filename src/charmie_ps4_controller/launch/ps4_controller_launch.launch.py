@@ -111,18 +111,18 @@ def generate_launch_description():
                 )
 
     arm = Node(package='charmie_arm_ufactory',
-                        executable='arm_hello',
-                        name='arm_hello',
+                        executable='arm_clean_table',
+                        name='arm_clean_table',
                 emulate_tty=True
                         )
     
 
     return LaunchDescription([
-        # LaunchDescription(declared_arguments + [robot_driver_launch]),
+        LaunchDescription(declared_arguments + [robot_driver_launch]),
         # face,
-        # speakers,
+        speakers,
         neck,
         low_level,
-        ps4_controller,
-        # arm,
+        # ps4_controller,
+        # arm
     ])

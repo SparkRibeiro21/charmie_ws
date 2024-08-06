@@ -2207,6 +2207,151 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+	def hello(self):
+		
+		# Removed safety waypoints
+		"""
+		if self.estado_tr == 0:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+	
+		elif self.estado_tr == 1: 
+			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
+			print('ll')
+
+		elif self.estado_tr == 2: # safety
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		"""
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 4:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 5:
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
+			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 7:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 8:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 9:
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 10:
+			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 11:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 12:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 13:
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 14:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			print('FEITO Abrir fechar garra')
+			self.get_logger().info("FINISHED MOVEMENT")	
 
 
 	def movement_selection(self):
@@ -2215,6 +2360,8 @@ class ArmUfactory(Node):
 		print('valor vindo do pick and place: ', self.next_arm_movement)
 		if self.next_arm_movement == "debug_initial":
 			self.open_close_gripper()
+		elif self.next_arm_movement == "hello":
+			self.hello()
 			""" elif self.next_arm_movement == "hello":
 			self.hello()
 		elif self.next_arm_movement == "place_objects":

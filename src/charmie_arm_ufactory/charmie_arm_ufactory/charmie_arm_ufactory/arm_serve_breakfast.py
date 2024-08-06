@@ -1764,12 +1764,12 @@ class ArmUfactory(Node):
 		print('valor vindo do pick and place: ', self.next_arm_movement)
 		if self.next_arm_movement == "debug_initial":
 			self.open_close_gripper()
-			""" elif self.next_arm_movement == "hello":
+		elif self.next_arm_movement == "hello":
 			self.hello()
 		elif self.next_arm_movement == "place_objects":
 			self.place_objects_table()
 		elif self.next_arm_movement == "pick_objects":
-			self.pick_objects_barman() """
+			self.pick_objects_barman()
    
 		elif self.next_arm_movement == "place_bowl_table":
 			self.place_bowl_table()

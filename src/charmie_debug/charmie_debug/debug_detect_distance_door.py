@@ -184,6 +184,7 @@ class TestNode(Node):
 
     def get_arm_current_pose_callback(self, arm_pose: ArmController):
         self.arm_current_pose = arm_pose.pose
+        print('arm current pose callback: ', self.arm_current_pose)
 
     def call_point_cloud_server(self, req, camera):
         request = GetPointCloud.Request()
@@ -1770,11 +1771,11 @@ class RestaurantMain():
             
                 print('a')
                 while True:
-                    # self.close_house_door_push_left_side()
+                    self.close_house_door_push_left_side()
                     # self.close_house_door_push_right_side()
                     # self.open_house_door_push()
                     # self.open_house_door_pull()
-                    self.close_dishwasher_door()
+                    # self.close_dishwasher_door()
                     # self.open_washing_machine_door()
                     # self.open_cabinet_door()
                     # self.close_cabinet_door()
@@ -2438,6 +2439,7 @@ class RestaurantMain():
 
         if self.node.new_image_hand_flag:
             current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_img_hand, desired_encoding="passthrough")
+            current_frame_depth_hand_copy = current_frame_depth_hand.copy()
             height, width = current_frame_depth_hand.shape
             current_frame_depth_hand_half = current_frame_depth_hand[height//2:height,:]
             current_frame_depth_hand_center = current_frame_depth_hand[height//4:height-height//4, width//3:width-width//3]
@@ -2482,7 +2484,9 @@ class RestaurantMain():
                 cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
                 cv2.rectangle(blank_image, (width//3, height//4), (width - width//3, height - height//4), (0, 255, 0), 3)
                 cv2.imshow("New Img Distance Inspection", blank_image)
-                cv2.waitKey(10)
+                cv2.waitKey(0)
+                cv2.imshow("Original: ", current_frame_depth_hand_copy)
+                
 
                 # cv2.imwrite('Distance_to_door' + ".jpg", blank_image) 
                 # time.sleep(0.5)
@@ -3596,22 +3600,23 @@ class RestaurantMain():
                     
                     # arm_height = object_location[1]
                     arm_height = (object_location_1[1] + object_location_2[1]) / 2 
+                    arm_height = arm_height + 30.0
                     arm_centered_x = 200.0
                     # arm_depth retira 20 cm ao ponto acima da máq de lavar que é onde eu quero teoricamente ir para abrir
                     print(object_location[0], object_location_2[0])
                     arm_depth = (object_location[0] + object_location_2[0]) / 2
-                    arm_depth = object_location_2[0] + 20.0 
+                    arm_depth = object_location_2[0] + 60.0 
 
 
-                    set_pose_arm = ListOfFloats()
+                    set_pose_arm = []
                     """ new_depth = Float32()
                     new_depth.data = arm_depth """
                     
                     object_x = arm_depth
-                    object_y = arm_height
+                    object_y = arm_height + 20.0
                     object_z = arm_centered_x
 
-                    print('x y e z do ponto que quero alcançar:',object_x, object_y, object_z)   
+                    print('x y e z do ponto que quero alcançar:', object_x, object_y, object_z)   
 
                     
                     # print(self.node.arm_current_pose)
@@ -3619,35 +3624,46 @@ class RestaurantMain():
                     # self.set_arm(command="front_robot_oriented_front", wait_for_end_of=True)
                     self.set_arm(command="arm_prepare_open_drawer", wait_for_end_of=True)
                     self.set_arm(command="open_gripper", wait_for_end_of=True)
+                    # self.set_arm(command="close_gripper", wait_for_end_of=True)
 
+                    time.sleep(2)
                     self.set_arm(command="get_arm_position", wait_for_end_of=True)
-                
-                    set_pose_arm.pose[:] = array('f')
+                    time.sleep(2)
 
+                    # dist_nav_in_front = abs(arm_depth)/ 1000 - 0.500 - 0.3 #0.3 = robot radius
+
+                    # dist final = 500 + raio robo
+                    # dist final = dist_atual - nav_front
+
+                    # print('I will navigate for: ', dist_nav_in_front, 'meters')
+
+                    # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=dist_nav_in_front, adjust_direction=0.0, wait_for_end_of=True)
+
+                    # print('new arm position = ', object_x + (dist_nav_in_front * 1000))
                     # Set the pose values
-                    set_pose_arm.pose.append(object_x)
-                    set_pose_arm.pose.append(object_y)
-                    set_pose_arm.pose.append(object_z)
-                    set_pose_arm.pose.append(self.node.arm_current_pose[3])
-                    set_pose_arm.pose.append(self.node.arm_current_pose[4])
-                    set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                    set_pose_arm.append(object_x)
+                    set_pose_arm.append(object_y)
+                    set_pose_arm.append(object_z)
+                    set_pose_arm.append(self.node.arm_current_pose[3])
+                    set_pose_arm.append(self.node.arm_current_pose[4])
+                    set_pose_arm.append(self.node.arm_current_pose[5])
 
                     # Publish the pose
-                    self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                    # self.node.arm_set_pose_publisher.publish(set_pose_arm)
                     print('Desired pose:', set_pose_arm)
 
-                    self.set_arm(command="change_height_open_drawer", wait_for_end_of=True)
+                    self.set_arm(command="change_height_open_drawer", pose=set_pose_arm, wait_for_end_of=True)
 
                     self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=180.0, wait_for_end_of=True)
 
-                    arm_value = Float32()
-                    arm_value.data = -200.0
-                    self.node.arm_value_publisher.publish(arm_value)
-                    print(arm_value)
+                    # arm_value = Float32()
+                    # arm_value.data = -200.0
+                    # self.node.arm_value_publisher.publish(arm_value)
+                    # print(arm_value)
 
-                    time.sleep(3.0)
+                    # time.sleep(3.0)
 
-                    self.set_arm(command="go_back", wait_for_end_of=True)
+                    self.set_arm(command="go_back", adjust_position=-200.0, wait_for_end_of=True)
                     self.set_arm(command="go_initial_position", wait_for_end_of=True)                    
 
                     while True:
@@ -3983,7 +3999,6 @@ class RestaurantMain():
                     arm_depth = object_location_2[0]
                     arm_depth = object_location_2[0] + 50.0 
 
-                    set_pose_arm = ListOfFloats()
                     """ new_depth = Float32()
                     new_depth.data = arm_depth """
                     
@@ -3999,25 +4014,26 @@ class RestaurantMain():
                     self.set_arm(command="prepare_to_close_drawer", wait_for_end_of=True)
                     self.set_arm(command="close_gripper", wait_for_end_of=True)
 
+                    time.sleep(2)
                     self.set_arm(command="get_arm_position", wait_for_end_of=True)
-                    time.sleep(3)
+                    time.sleep(2)
                 
-                    set_pose_arm.pose[:] = array('f')
+                    set_pose_arm = []
 
                     # Set the pose values
-                    set_pose_arm.pose.append(object_x)
-                    set_pose_arm.pose.append(object_y)
-                    set_pose_arm.pose.append(object_z)
-                    set_pose_arm.pose.append(self.node.arm_current_pose[3])
-                    set_pose_arm.pose.append(self.node.arm_current_pose[4])
-                    set_pose_arm.pose.append(self.node.arm_current_pose[5])
+                    set_pose_arm.append(object_x)
+                    set_pose_arm.append(object_y)
+                    set_pose_arm.append(object_z)
+                    set_pose_arm.append(self.node.arm_current_pose[3])
+                    set_pose_arm.append(self.node.arm_current_pose[4])
+                    set_pose_arm.append(self.node.arm_current_pose[5])
 
                     # Publish the pose
-                    self.node.arm_set_pose_publisher.publish(set_pose_arm)
+                    # self.node.arm_set_pose_publisher.publish(set_pose_arm)
                     print('Desired pose:', set_pose_arm)
 
                     # self.set_arm(command="change_height_close_drawer", wait_for_end_of=True)
-                    self.set_arm(command="change_height_close_drawer_javardo", wait_for_end_of=True)
+                    self.set_arm(command="change_height_close_drawer_javardo", pose=set_pose_arm, wait_for_end_of=True)
 
                     self.set_arm(command="get_arm_position", wait_for_end_of=True)
                     radius_robot = 300.0
@@ -4029,10 +4045,10 @@ class RestaurantMain():
 
                     self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=distance_to_close, adjust_direction=0.0, wait_for_end_of=True)
 
-                    time.sleep(3.0)
+                    time.sleep(1.5)
 
-                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=360.0, wait_for_end_of=True)
-                    time.sleep(3.0)
+                    self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=180.0, wait_for_end_of=True)
+                    time.sleep(1)
 
                     # self.set_arm(command="go_back", wait_for_end_of=True)
                     # self.set_arm(command="go_initial_position", wait_for_end_of=True)                    
@@ -5112,7 +5128,9 @@ class RestaurantMain():
 
                             # Set the pose values
                             set_pose_arm.append(self.node.arm_current_pose[0])
-                            set_pose_arm.append(handler_y + 300.0)
+                            # set_pose_arm.append(handler_y + 300.0)
+                            set_pose_arm.append(270.0)
+                            
                             set_pose_arm.append(90.0)
                             set_pose_arm.append(self.node.arm_current_pose[3])
                             set_pose_arm.append(self.node.arm_current_pose[4])
@@ -5605,7 +5623,8 @@ class RestaurantMain():
 
                             # Set the pose values
                             set_pose_arm.append(self.node.arm_current_pose[0])
-                            set_pose_arm.append(handler_y + 300.0)
+                            # set_pose_arm.append(handler_y + 300.0)
+                            set_pose_arm.append(270.0)
                             set_pose_arm.append(90.0)
                             set_pose_arm.append(self.node.arm_current_pose[3])
                             set_pose_arm.append(self.node.arm_current_pose[4])
@@ -6012,6 +6031,8 @@ class RestaurantMain():
                         print('eee')
                         # set_pose_arm = ListOfFloats()
 
+                        self.initial_position_ = [0.0, 0.1, 0.0]
+                        self.set_initial_position(self.initial_position_)
 
                         objects = []
                         seen_names = set()

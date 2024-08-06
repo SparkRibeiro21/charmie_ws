@@ -104,8 +104,8 @@ class ArmUfactory(Node):
 		self.estado_tr = 0
 
 		# initial debug movement 
-		# self.next_arm_movement = "debug_initial"
-		self.next_arm_movement = ""
+		self.next_arm_movement = "debug_initial"
+		# self.next_arm_movement = ""
 		self.adjust_position = 0.0
 
 		self.setup()

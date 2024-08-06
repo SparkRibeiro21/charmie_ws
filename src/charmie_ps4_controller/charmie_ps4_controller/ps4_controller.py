@@ -792,11 +792,11 @@ class ControllerNode(Node):
         if self.CONTROL_ARM:
             if self.arm_ready: 
                 if ps4_controller.share == 2:
-                    # self.arm_ready = False
+                    self.arm_ready = False
                     # Command to say hello 
-                    # success, message = self.set_arm(command="hello", wait_for_end_of=False)
+                    success, message = self.set_arm(command="hello", wait_for_end_of=False)
                     # success, message = self.set_arm(command="place_objects", wait_for_end_of=False)
-                    success, message = self.set_arm(command="pick_objects", wait_for_end_of=False)
+                    # success, message = self.set_arm(command="pick_objects", wait_for_end_of=False)
                     print(success, message)
                 if ps4_controller.options == 2:
                     # Command to say hello 
