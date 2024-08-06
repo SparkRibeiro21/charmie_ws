@@ -466,6 +466,8 @@ class DebugVisualNode(Node):
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.activate_obstacles_success = True
+        self.activate_obstacles_message = ""
 
         self.head_rgb = Image()
         self.hand_rgb = Image()
@@ -562,6 +564,15 @@ class DebugVisualNode(Node):
         request.minimum_doors_confidence = minimum_doors_confidence
 
         self.activate_yolo_objects_client.call_async(request)
+
+    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
+    def call_activate_obstacles_server(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False):
+        request = ActivateObstacles.Request()
+        request.activate_lidar_up = obstacles_lidar_up
+        request.activate_lidar_bottom = obstacles_lidar_bottom
+        request.activate_camera_head = obstacles_camera_head
+
+        self.activate_obstacles_client.call_async(request)
 
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
@@ -980,6 +991,16 @@ class DebugVisualMain():
         self.last_toggle_activate_furniture_hand = False
         self.last_toggle_activate_shoes_hand =     False
 
+        self.last_toggle_pose_activate =       False
+        self.last_toggle_pose_waving =         False
+        self.last_toggle_pose_front_close =    False
+        self.last_toggle_pose_legs_visible =   False
+        self.last_toggle_pose_characteristcs = False
+        
+        self.last_toggle_obstacles_lidar_top =    False
+        self.last_toggle_obstacles_lidar_bottom = False
+        self.last_toggle_obstacles_head_camera =  False
+
         self.curr_head_rgb = Image()
         self.last_head_rgb = Image()
         self.curr_head_depth = Image()
@@ -990,7 +1011,6 @@ class DebugVisualMain():
         self.last_hand_depth = Image()
     
 
-    
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
         self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, only_detect_person_arm_raised=only_detect_person_arm_raised, characteristics=characteristics)
@@ -1008,6 +1028,15 @@ class DebugVisualMain():
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
+    
+    def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
+        
+        self.node.call_activate_obstacles_server(obstacles_lidar_up=obstacles_lidar_up, obstacles_lidar_bottom=obstacles_lidar_bottom, obstacles_camera_head=obstacles_camera_head)
+
+        self.node.activate_obstacles_success = True
+        self.node.activate_obstacles_message = "Activated with selected parameters"
+
+        return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     # def test_button_function(self):
 
@@ -1359,7 +1388,6 @@ class DebugVisualMain():
         self.draw_text("Depth Head:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+3))
         self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+6))
 
-
     def draw_activates(self):
 
 
@@ -1373,6 +1401,7 @@ class DebugVisualMain():
         
 
         # this is done to make sure that the same value used for checking pressed is the same used to attribute to last toggle
+        # YOLO OBJECTS ACTIVATE
         toggle_activate_objects_head   = self.toggle_activate_objects_head.getValue()
         toggle_activate_furniture_head = self.toggle_activate_furniture_head.getValue()
         toggle_activate_shoes_head     = self.toggle_activate_shoes_head.getValue()
@@ -1380,6 +1409,17 @@ class DebugVisualMain():
         toggle_activate_furniture_hand = self.toggle_activate_furniture_hand.getValue()
         toggle_activate_shoes_hand     = self.toggle_activate_shoes_hand.getValue()
 
+        # YOLO POSE ACTIVATE
+        toggle_pose_activate        = self.toggle_pose_activate.getValue()
+        toggle_pose_waving          = self.toggle_pose_waving.getValue()
+        toggle_pose_front_close     = self.toggle_pose_front_close.getValue()
+        toggle_pose_legs_visible    = self.toggle_pose_legs_visible.getValue()
+        toggle_pose_characteristcs  = self.toggle_pose_characteristcs.getValue()
+
+        # OBSTACLES ACTIVATE
+        toggle_obstacles_lidar_top      = self.toggle_obstacles_lidar_top.getValue()
+        toggle_obstacles_lidar_bottom   = self.toggle_obstacles_lidar_bottom.getValue()
+        toggle_obstacles_head_camera    = self.toggle_obstacles_head_camera.getValue()
 
         if toggle_activate_objects_head     != self.last_toggle_activate_objects_head or \
             toggle_activate_furniture_head  != self.last_toggle_activate_furniture_head or \
@@ -1388,15 +1428,34 @@ class DebugVisualMain():
             toggle_activate_furniture_hand  != self.last_toggle_activate_furniture_hand or \
             toggle_activate_shoes_hand      != self.last_toggle_activate_shoes_hand:
             
-            # if self.check_nodes.CHECK_YOLO_OBJECTS_NODE:
             print("YOLO OBJECTS - CHANGED STATUS.")
 
-            # def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
             self.activate_yolo_objects(activate_objects=toggle_activate_objects_head, activate_shoes=toggle_activate_shoes_head, \
-                                        activate_doors=toggle_activate_furniture_head, activate_objects_hand=toggle_activate_objects_hand, \
-                                        activate_shoes_hand=toggle_activate_shoes_hand, activate_doors_hand=toggle_activate_furniture_hand)
-            # else:
-            #     print("YOLO OBJECTS - NOT ACTIVATED.")
+                                       activate_doors=toggle_activate_furniture_head, activate_objects_hand=toggle_activate_objects_hand, \
+                                       activate_shoes_hand=toggle_activate_shoes_hand, activate_doors_hand=toggle_activate_furniture_hand)
+
+
+        if toggle_pose_activate         != self.last_toggle_pose_activate or \
+            toggle_pose_waving          != self.last_toggle_pose_waving or \
+            toggle_pose_front_close     != self.last_toggle_pose_front_close or \
+            toggle_pose_legs_visible    != self.last_toggle_pose_legs_visible or \
+            toggle_pose_characteristcs  != self.last_toggle_pose_characteristcs:
+            
+            print("YOLO POSE - CHANGED STATUS.")
+
+            self.activate_yolo_pose(activate=toggle_pose_activate, only_detect_person_legs_visible=toggle_pose_legs_visible, \
+                                    only_detect_person_right_in_front=toggle_pose_front_close, only_detect_person_arm_raised=toggle_pose_waving, \
+                                    characteristics=toggle_pose_characteristcs)
+        
+
+        if toggle_obstacles_lidar_top     != self.last_toggle_obstacles_lidar_top or \
+            toggle_obstacles_lidar_bottom != self.last_toggle_obstacles_lidar_bottom or \
+            toggle_obstacles_head_camera  != self.last_toggle_obstacles_head_camera:
+            
+            print("OBSTACLES - CHANGED STATUS.")
+
+            self.activate_obstacles(self, obstacles_lidar_up=toggle_obstacles_lidar_top, obstacles_lidar_bottom=toggle_obstacles_lidar_bottom, \
+                                    obstacles_camera_head=toggle_obstacles_head_camera)
 
 
         self.last_toggle_activate_objects_head =   toggle_activate_objects_head 
@@ -1405,6 +1464,16 @@ class DebugVisualMain():
         self.last_toggle_activate_objects_hand =   toggle_activate_objects_hand
         self.last_toggle_activate_furniture_hand = toggle_activate_furniture_hand
         self.last_toggle_activate_shoes_hand =     toggle_activate_shoes_hand
+
+        self.last_toggle_pose_activate =       toggle_pose_activate
+        self.last_toggle_pose_waving =         toggle_pose_waving
+        self.last_toggle_pose_front_close =    toggle_pose_front_close
+        self.last_toggle_pose_legs_visible =   toggle_pose_legs_visible
+        self.last_toggle_pose_characteristcs = toggle_pose_characteristcs
+        
+        self.last_toggle_obstacles_lidar_top =    toggle_obstacles_lidar_top
+        self.last_toggle_obstacles_lidar_bottom = toggle_obstacles_lidar_bottom
+        self.last_toggle_obstacles_head_camera =  toggle_obstacles_head_camera
 
 
     def main(self):
