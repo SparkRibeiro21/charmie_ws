@@ -430,6 +430,16 @@ class DebugVisualNode(Node):
         # PS4 Controller
         self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_callback, 10)
 
+        # Yolo Pose
+        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+        # Yolo Objects
+        self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
+        self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
+        self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
+        self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'doors_detected_filtered_hand', self.doors_detected_filtered_hand_callback, 10)
+        self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
+        self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
+
         ### Services (Clients) ###
 		# Arm (Ufactory)
         self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
@@ -478,6 +488,21 @@ class DebugVisualNode(Node):
         self.new_head_depth = False
         self.new_hand_depth = False
         self.robot = Robot()
+
+        self.detected_people = Yolov8Pose()
+        self.detected_objects = Yolov8Objects()
+        self.detected_objects_hand = Yolov8Objects()
+        self.detected_doors = Yolov8Objects()
+        self.detected_doors_hand = Yolov8Objects()
+        self.detected_shoes = Yolov8Objects()
+        self.detected_shoes_hand = Yolov8Objects()
+        self.new_detected_people = False
+        self.new_detected_objects = False
+        self.new_detected_objects_hand = False
+        self.new_detected_doors = False
+        self.new_detected_doors_hand = False
+        self.new_detected_shoes = False
+        self.new_detected_shoes_hand = False
 
         self.lidar_time = 0.0
         self.odometry_time = 0.0
@@ -573,6 +598,35 @@ class DebugVisualNode(Node):
         request.activate_camera_head = obstacles_camera_head
 
         self.activate_obstacles_client.call_async(request)
+
+    
+    def person_pose_filtered_callback(self, det_people: Yolov8Pose):
+        self.detected_people = det_people
+        self.new_detected_people = True
+    
+    def object_detected_filtered_callback(self, det_object: Yolov8Objects):
+        self.detected_objects = det_object
+        self.new_detected_objects = True
+
+    def object_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
+        self.detected_objects_hand = det_object
+        self.new_detected_objects_hand = True
+
+    def doors_detected_filtered_callback(self, det_object: Yolov8Objects):
+        self.detected_doors = det_object
+        self.new_detected_doors = True
+
+    def doors_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
+        self.detected_doors_hand = det_object
+        self.new_detected_doors_hand = True
+
+    def shoes_detected_filtered_callback(self, det_object: Yolov8Objects):
+        self.detected_shoes = det_object
+        self.new_detected_shoes = True
+
+    def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
+        self.detected_shoes_hand = det_object
+        self.new_detected_shoes_hand = True
 
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
@@ -1478,8 +1532,33 @@ class DebugVisualMain():
     
     def draw_detections(self):
 
-        DET2 = pygame.Rect(100, 100, 300, 500)
-        pygame.draw.rect(self.WIN, self.RED, DET2, width=2)
+
+        print(len(self.node.detected_people.persons))
+
+        if self.toggle_pose_activate.getValue():
+            pass
+
+            for p in self.node.detected_people.persons:
+
+
+                # self.cam_width_ = 640
+                # self.cam_height_ = 360
+                # self.cams_initial_height = 10
+                # self.cams_initial_width = 165
+
+                DET2 = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), int(p.box_height/2))
+                pygame.draw.rect(self.WIN, self.RED, DET2, width=2)
+
+
+
+
+        if len(self.node.detected_people.persons) > 0:
+            print(self.node.detected_people.persons[0].image_rgb_frame.height, self.node.detected_people.persons[0].image_rgb_frame.width)
+
+
+
+        # self.detected_people = det_people
+        # self.new_detected_people = True
 
     def main(self):
 
