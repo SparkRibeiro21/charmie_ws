@@ -1,8 +1,5 @@
 {
-<<<<<<< HEAD
-"confirm_barman": "Are you the barman? To confirm the order please respond with robot yes or robot no."
-=======
-"look_detected_waving_customers": "I will look at the detected waving customers.",
->>>>>>> Bruno
+"Thanks_for_standind_behind_me_1": "Thanks for standind behind me. Please keep following me.",
+"Thanks_for_standind_behind_me_2": "Thanks for standind behind me."
 }
 
