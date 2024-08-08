@@ -211,14 +211,15 @@ def launch_setup(context, *args, **kwargs):
     # Change point cloud topic name accordingly
     sensor_manager_hand_camera_parameters = {
         'sensors': ['hand_camera'],
-        'octomap_resolution': 0.03, #tamanho de cada pixel (ou voxel). Quanto maior, mais lento todo o processo
+        'octomap_resolution': 0.04, #tamanho de cada pixel (ou voxel). Quanto maior, mais lento todo o processo
         'hand_camera.sensor_plugin': 'occupancy_map_monitor/PointCloudOctomapUpdater',
-        'hand_camera.point_cloud_topic': '/CHARMIE/D405_hand/depth/color/points',
+        # 'hand_camera.point_cloud_topic': '/CHARMIE/D405_hand/depth/color/points',
+        'hand_camera.point_cloud_topic': '/camera/camera/depth/color/points',
         'hand_camera.max_range': 0.6, #distância máxima considerada
-        'hand_camera.point_subsample': 3, #em teoria só escolhe 1 em cada 2 pontos, o que torna mais rápida a resposta
+        'hand_camera.point_subsample': 7, #em teoria só escolhe 1 em cada 2 pontos, o que torna mais rápida a resposta
         'hand_camera.padding_offset': 0.1,
         'hand_camera.padding_scale': 1.0,
-        'hand_camera.max_update_rate': 50.0, #frequência de update da imagem
+        'hand_camera.max_update_rate': 10.0, #frequência de update da imagem
         'hand_camera.filtered_cloud_topic': 'filtered_cloud',
     }
 
