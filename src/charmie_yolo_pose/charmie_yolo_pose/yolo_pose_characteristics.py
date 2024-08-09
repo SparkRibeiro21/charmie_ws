@@ -55,7 +55,7 @@ class YoloPoseNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("yolo_model", "s") 
-        self.declare_parameter("debug_draw", True) 
+        self.declare_parameter("debug_draw", False) 
         self.declare_parameter("activate", True)
 
         # info regarding the paths for the recorded files intended to be played
@@ -475,6 +475,11 @@ class YoloPoseNode(Node):
 
                 self.waiting_for_pcloud = True
                 self.call_point_cloud_server(req2)
+        
+        else:
+            yolov8_pose_filtered = Yolov8Pose()
+            self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
+
         
 
     def post_receiving_pcloud(self, new_pcloud):

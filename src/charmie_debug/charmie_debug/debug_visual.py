@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
-from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller
+from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -472,6 +472,9 @@ class DebugVisualNode(Node):
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
 
+        self.create_timer(1.0, self.check_yolos_timer)
+        self.is_yolo_pose_comm = False
+
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
@@ -522,6 +525,15 @@ class DebugVisualNode(Node):
         self.head_depth_fps = 0.0
         self.hand_rgb_fps = 0.0
         self.hand_depth_fps = 0.0
+
+    def check_yolos_timer(self):
+        
+        if self.new_detected_people:
+            self.new_detected_people = False
+            self.is_yolo_pose_comm = True
+        else:
+            self.is_yolo_pose_comm = False
+
         
 
     def get_color_image_hand_callback(self, img: Image):
@@ -938,6 +950,7 @@ class DebugVisualMain():
         self.BLACK = (0,0,0)
         self.ORANGE = (255,153,51)
         self.MAGENTA = (255, 51, 255)
+        self.YELLOW = (255,255,0)
 
         self.cam_width_ = 640
         self.cam_height_ = 360
@@ -1020,9 +1033,10 @@ class DebugVisualMain():
         self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
 
-        self.toggle_pause_cams = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5), 40, 16)
-        self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5), 40, 16)
-        self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25.5), 40, 16)
+        self.toggle_record = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(18.75)), 40, 16)
+        self.toggle_pause_cams = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*21.25), 40, 16)
+        self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23.75), 40, 16)
+        self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*26.25), 40, 16)
 
         self.toggle_activate_objects_head =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+50, 40, 16)
         self.toggle_activate_furniture_head = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90,  self.cams_initial_height+50, 40, 16)
@@ -1066,6 +1080,9 @@ class DebugVisualMain():
         self.last_hand_rgb = Image()
         self.curr_hand_depth = Image()
         self.last_hand_depth = Image()
+
+        self.curr_detected_people = Yolov8Pose()
+        self.last_detected_people = Yolov8Pose()
     
 
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
@@ -1440,10 +1457,11 @@ class DebugVisualMain():
                 self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cam_height_+2*self.cams_initial_height+(self.cam_height_//2))
 
 
-        first_pos_h = 18
-        self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*first_pos_h)
-        self.draw_text("Depth Head:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+3))
-        self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+6))
+        first_pos_h = 17.5
+        self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*first_pos_h)
+        self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+2.5))
+        self.draw_text("Depth Head:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+5))
+        self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+7.5))
 
     def draw_activates(self):
 
@@ -1537,59 +1555,126 @@ class DebugVisualMain():
         MIN_DRAW_CONF = 0.5
         CIRCLE_RADIUS = 4
         BB_WIDTH = 3
+        MIN_KP_LINE_WIDTH = 3
+
+        self.curr_detected_people = self.node.detected_people
+
+        if self.toggle_pause_cams.getValue():
+            used_detected_people = self.last_detected_people
+
+        else:
+            used_detected_people = self.curr_detected_people 
+
+        self.last_detected_people = used_detected_people 
 
         # print(len(self.node.detected_people.persons))
 
-        if self.toggle_pose_activate.getValue():
-            pass
+        # if self.node.is_yolo_pose_comm:
 
-            for p in self.node.detected_people.persons:
+        for p in used_detected_people.persons:
 
-                PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), int(p.box_height/2))
-                pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=BB_WIDTH)
+            PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), int(p.box_height/2))
+            pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=BB_WIDTH)
 
-                self.draw_circle_keypoint(p.kp_nose_conf,           p.kp_nose_x,            p.kp_nose_y,            self.GREEN, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_eye_left_conf,       p.kp_eye_left_x,        p.kp_eye_left_y,        self.GREEN, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_eye_right_conf,      p.kp_eye_right_x,       p.kp_eye_right_y,       self.GREEN, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_ear_left_conf,       p.kp_ear_left_x,        p.kp_eye_left_y,        self.GREEN, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_ear_right_conf,      p.kp_ear_right_x,       p.kp_eye_right_y,       self.GREEN, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                
-                self.draw_circle_keypoint(p.kp_shoulder_left_conf,  p.kp_shoulder_left_x,   p.kp_shoulder_left_y,   self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_shoulder_right_conf, p.kp_shoulder_right_x,  p.kp_shoulder_right_y,  self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_elbow_left_conf,     p.kp_elbow_left_x,      p.kp_elbow_left_y,      self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_elbow_right_conf,    p.kp_elbow_right_x,     p.kp_elbow_right_y,     self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_wrist_left_conf,     p.kp_wrist_left_x,      p.kp_wrist_left_y,      self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_wrist_right_conf,    p.kp_wrist_right_x,     p.kp_wrist_right_y,     self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                
-                self.draw_circle_keypoint(p.kp_hip_left_conf,       p.kp_hip_left_x,        p.kp_hip_left_y,        self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_hip_right_conf,      p.kp_hip_right_x,       p.kp_hip_right_y,       self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_knee_left_conf,      p.kp_knee_left_x,       p.kp_knee_left_y,       self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_knee_right_conf,     p.kp_knee_right_x,      p.kp_knee_right_y,      self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_ankle_left_conf,     p.kp_ankle_left_x,      p.kp_ankle_left_y,      self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                self.draw_circle_keypoint(p.kp_ankle_right_conf,    p.kp_ankle_right_x,     p.kp_ankle_right_y,     self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
-                
-
-
+            if int(p.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
+                self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), 30/2, self.RED, 85)
+                self.draw_text("id:"+str(p.index_person)+" "+str(int(round(p.conf_person,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2))
+            else:
+                self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2-30/2), int(p.box_width/2), 30/2, self.RED, 85)
+                self.draw_text("id:"+str(p.index_person)+" "+str(int(round(p.conf_person,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2-30/2))
+            
+            self.draw_line_between_two_keypoints(p.kp_nose_conf, p.kp_nose_x, p.kp_nose_y, p.kp_eye_left_conf, p.kp_eye_left_x, p.kp_eye_left_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_nose_conf, p.kp_nose_x, p.kp_nose_y, p.kp_eye_right_conf, p.kp_eye_right_x, p.kp_eye_right_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_eye_left_conf, p.kp_eye_left_x, p.kp_eye_left_y, p.kp_ear_left_conf, p.kp_ear_left_x, p.kp_ear_left_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_eye_right_conf, p.kp_eye_right_x, p.kp_eye_right_y, p.kp_ear_right_conf, p.kp_ear_right_x, p.kp_ear_right_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_ear_left_conf, p.kp_ear_left_x, p.kp_ear_left_y, p.kp_shoulder_left_conf, p.kp_shoulder_left_x, p.kp_shoulder_left_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_ear_right_conf, p.kp_ear_right_x, p.kp_ear_right_y, p.kp_shoulder_right_conf, p.kp_shoulder_right_x, p.kp_shoulder_right_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            
+            self.draw_line_between_two_keypoints(p.kp_shoulder_left_conf, p.kp_shoulder_left_x, p.kp_shoulder_left_y, p.kp_shoulder_right_conf, p.kp_shoulder_right_x, p.kp_shoulder_right_y, self.BLUE_L, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_shoulder_left_conf, p.kp_shoulder_left_x, p.kp_shoulder_left_y, p.kp_elbow_left_conf, p.kp_elbow_left_x, p.kp_elbow_left_y, self.BLUE_L, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_shoulder_right_conf, p.kp_shoulder_right_x, p.kp_shoulder_right_y, p.kp_elbow_right_conf, p.kp_elbow_right_x, p.kp_elbow_right_y, self.BLUE_L, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_elbow_left_conf, p.kp_elbow_left_x, p.kp_elbow_left_y, p.kp_wrist_left_conf, p.kp_wrist_left_x, p.kp_wrist_left_y, self.BLUE_L, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_elbow_right_conf, p.kp_elbow_right_x, p.kp_elbow_right_y, p.kp_wrist_right_conf, p.kp_wrist_right_x, p.kp_wrist_right_y, self.BLUE_L, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            
+            self.draw_line_between_two_keypoints(p.kp_shoulder_left_conf, p.kp_shoulder_left_x, p.kp_shoulder_left_y, p.kp_hip_left_conf, p.kp_hip_left_x, p.kp_hip_left_y, self.MAGENTA, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_shoulder_right_conf, p.kp_shoulder_right_x, p.kp_shoulder_right_y, p.kp_hip_right_conf, p.kp_hip_right_x, p.kp_hip_right_y, self.MAGENTA, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            # self.draw_line_between_two_keypoints(p.kp_shoulder_left_conf, p.kp_shoulder_left_x, p.kp_shoulder_left_y, p.kp_hip_right_conf, p.kp_hip_right_x, p.kp_hip_right_y, self.MAGENTA, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            # self.draw_line_between_two_keypoints(p.kp_shoulder_right_conf, p.kp_shoulder_right_x, p.kp_shoulder_right_y, p.kp_hip_left_conf, p.kp_hip_left_x, p.kp_hip_left_y, self.MAGENTA, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            
+            self.draw_line_between_two_keypoints(p.kp_hip_left_conf, p.kp_hip_left_x, p.kp_hip_left_y, p.kp_hip_right_conf, p.kp_hip_right_x, p.kp_hip_right_y, self.ORANGE, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_hip_left_conf, p.kp_hip_left_x, p.kp_hip_left_y, p.kp_knee_left_conf, p.kp_knee_left_x, p.kp_knee_left_y, self.ORANGE, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_hip_right_conf, p.kp_hip_right_x, p.kp_hip_right_y, p.kp_knee_right_conf, p.kp_knee_right_x, p.kp_knee_right_y, self.ORANGE, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_knee_left_conf, p.kp_knee_left_x, p.kp_knee_left_y, p.kp_ankle_left_conf, p.kp_ankle_left_x, p.kp_ankle_left_y, self.ORANGE, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            self.draw_line_between_two_keypoints(p.kp_knee_right_conf, p.kp_knee_right_x, p.kp_knee_right_y, p.kp_ankle_right_conf, p.kp_ankle_right_x, p.kp_ankle_right_y, self.ORANGE, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+            
+            self.draw_circle_keypoint(p.kp_nose_conf,           p.kp_nose_x,            p.kp_nose_y,            self.GREEN, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_eye_left_conf,       p.kp_eye_left_x,        p.kp_eye_left_y,        self.GREEN, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_eye_right_conf,      p.kp_eye_right_x,       p.kp_eye_right_y,       self.GREEN, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_ear_left_conf,       p.kp_ear_left_x,        p.kp_ear_left_y,        self.GREEN, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_ear_right_conf,      p.kp_ear_right_x,       p.kp_ear_right_y,       self.GREEN, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            
+            self.draw_circle_keypoint(p.kp_shoulder_left_conf,  p.kp_shoulder_left_x,   p.kp_shoulder_left_y,   self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_shoulder_right_conf, p.kp_shoulder_right_x,  p.kp_shoulder_right_y,  self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_elbow_left_conf,     p.kp_elbow_left_x,      p.kp_elbow_left_y,      self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_elbow_right_conf,    p.kp_elbow_right_x,     p.kp_elbow_right_y,     self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_wrist_left_conf,     p.kp_wrist_left_x,      p.kp_wrist_left_y,      self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_wrist_right_conf,    p.kp_wrist_right_x,     p.kp_wrist_right_y,     self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            
+            self.draw_circle_keypoint(p.kp_hip_left_conf,       p.kp_hip_left_x,        p.kp_hip_left_y,        self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_hip_right_conf,      p.kp_hip_right_x,       p.kp_hip_right_y,       self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_knee_left_conf,      p.kp_knee_left_x,       p.kp_knee_left_y,       self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_knee_right_conf,     p.kp_knee_right_x,      p.kp_knee_right_y,      self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_ankle_left_conf,     p.kp_ankle_left_x,      p.kp_ankle_left_y,      self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            self.draw_circle_keypoint(p.kp_ankle_right_conf,    p.kp_ankle_right_x,     p.kp_ankle_right_y,     self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+            
+            self.check_face_for_characteristics(p, MIN_DRAW_CONF, BB_WIDTH)
 
     def draw_circle_keypoint(self, conf, x, y, color, min_draw_conf, circle_radius):
         if conf > min_draw_conf:
             pygame.draw.circle(self.WIN, color, (self.cams_initial_width+(x)/2, self.cams_initial_height+(y)/2), radius=circle_radius, width=0)
                 
-
-    """
-    def line_between_two_keypoints(self, current_frame_draw, KP_ONE, KP_TWO, xy, conf, colour):
-
-        if conf[0][KP_ONE] > MIN_KP_CONF_VALUE and conf[0][KP_TWO] > MIN_KP_CONF_VALUE:    
-            p1 = (int(xy[0][KP_ONE][0]), int(xy[0][KP_ONE][1]))
-            p2 = (int(xy[0][KP_TWO][0]), int(xy[0][KP_TWO][1]))
-            cv2.line(current_frame_draw, p1, p2, colour, 2) 
-        else:
-            if DRAW_LOW_CONF_KP: 
-                p1 = (int(xy[0][KP_ONE][0]), int(xy[0][KP_ONE][1]))
-                p2 = (int(xy[0][KP_TWO][0]), int(xy[0][KP_TWO][1]))
-                cv2.line(current_frame_draw, p1, p2, (0,0,255), 2) 
-    """
+    def draw_line_between_two_keypoints(self, conf1, x1, y1, conf2, x2, y2, color, min_draw_conf, min_kp_line_width):
+        if conf1 > min_draw_conf and conf2 > min_draw_conf:  
+            pygame.draw.line(self.WIN, color, (self.cams_initial_width+(x1)/2, self.cams_initial_height+(y1)/2), (self.cams_initial_width+(x2)/2, self.cams_initial_height+(y2)/2), min_kp_line_width)
     
+    def check_face_for_characteristics(self, p: DetectedPerson, min_draw_conf, bb_width):
+
+        if p.gender != "None" or p.age_estimate != "None" or p.ethnicity != "None":
+
+            if p.kp_shoulder_right_conf > min_draw_conf and p.kp_shoulder_left_conf > min_draw_conf and \
+                p.kp_eye_right_conf > min_draw_conf and p.kp_eye_left_conf > min_draw_conf and p.kp_nose_conf > min_draw_conf:
+            
+                y1 = p.box_top_left_y
+                y2 = max(p.kp_shoulder_right_y, p.kp_shoulder_left_y)
+                y_height = y2-y1
+
+                x1 = min(p.kp_shoulder_right_x, p.kp_shoulder_left_x, p.kp_nose_x, p.kp_eye_right_x, p.kp_eye_left_x)
+                x2 = max(p.kp_shoulder_right_x, p.kp_shoulder_left_x, p.kp_nose_x, p.kp_eye_right_x, p.kp_eye_left_x)
+                x_width = x2-x1
+            
+                # CHARS_BB = pygame.Rect(int(self.cams_initial_width+(x1)/2), int(self.cams_initial_height+(y1)/2), int(x_width/2), int(y_height/2))
+                # pygame.draw.rect(self.WIN, self.YELLOW, CHARS_BB, width=bb_width)
+                
+                if int(p.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
+                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2+30/2), int(p.box_width/2), 6*(30/2), self.RED, 85)
+                    self.draw_text(str(p.gender), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),            int(self.cams_initial_height+(p.box_top_left_y)/2+1*(30/2)))
+                    self.draw_text(str(p.ethnicity), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),         int(self.cams_initial_height+(p.box_top_left_y)/2+2*(30/2)))
+                    self.draw_text(str(p.age_estimate), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),      int(self.cams_initial_height+(p.box_top_left_y)/2+3*(30/2)))
+                    self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),   int(self.cams_initial_height+(p.box_top_left_y)/2+4*(30/2)))
+                    self.draw_text(str(p.shirt_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+5*(30/2)))
+                    self.draw_text(str(p.pants_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+6*(30/2)))
+                else:
+                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), 6*(30/2), self.RED, 85)
+                    self.draw_text(str(p.gender), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),            int(self.cams_initial_height+(p.box_top_left_y)/2+0*(30/2)))
+                    self.draw_text(str(p.ethnicity), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),         int(self.cams_initial_height+(p.box_top_left_y)/2+1*(30/2)))
+                    self.draw_text(str(p.age_estimate), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),      int(self.cams_initial_height+(p.box_top_left_y)/2+2*(30/2)))
+                    self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),   int(self.cams_initial_height+(p.box_top_left_y)/2+3*(30/2)))
+                    self.draw_text(str(p.shirt_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+4*(30/2)))
+                    self.draw_text(str(p.pants_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+5*(30/2)))
+                
+
+
+
     def main(self):
 
 
@@ -1626,8 +1711,17 @@ class DebugVisualMain():
 
 # CHANGE ORDER OF HOW SERVICES ARE INITIALISED SO THAT WHEN I GET GREEN IT IS NOT WAITING FOR ANY OTHER SERVICE
 # EXAMPLE (OBSTACLES WAITING FOR POINT CLOUD)
-# testar se arm ufactory se liga se nao tiver braço
+    # testar se arm ufactory se liga se nao tiver braço
 
-# por tudo percentual ao ecrã
+    # NOT # por tudo percentual ao ecrã
 
-# pôr FPS a cada segundo (ou a cada d_t definido) e não quando há uma imagem nova, porque senão está sempre a oscilar ...
+    # NOT # pôr FPS a cada segundo (ou a cada d_t definido) e não quando há uma imagem nova, porque senão está sempre a oscilar ...
+
+# save vide ao lado dos toggles da depth
+
+    # sistema para deixar de imprimir quando nao está a obter respostas dos yolos
+
+    # quando se faz pause, pausar também as detecoes
+
+    # pose:
+    # corte cara caracteristicas
