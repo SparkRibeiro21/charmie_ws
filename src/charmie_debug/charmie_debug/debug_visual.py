@@ -18,6 +18,7 @@ from pathlib import Path
 import json
 import os
 import time
+from datetime import datetime
 
 import pygame_widgets
 import pygame
@@ -961,23 +962,22 @@ class DebugVisualMain():
         
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
-        home = str(Path.home())
-        midpath = "/charmie_ws/src/configuration_files/logos/"
-        self.complete_path = home+midpath
+        self.home = str(Path.home())
+        logo_midpath = "/charmie_ws/src/configuration_files/logos/"
 
         self.br = CvBridge()
 
         pygame.init()
 
-        WIDTH, HEIGHT = 900, 500
-        self.FPS = 30
+        self.WIDTH, self.HEIGHT = 1387, 752
+        self.FPS = 20
 
         os.environ['SDL_VIDEO_CENTERED'] = '1'
         info = pygame.display.Info()
         screen_width, screen_height = info.current_w, info.current_h
         print(screen_width, screen_height)
         # self.WIN = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
-        self.WIN = pygame.display.set_mode((1387, 752), pygame.RESIZABLE)
+        self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.RESIZABLE)
 
         # self.text_font = pygame.font.SysFont("Arial", 30)
         self.text_font_t = pygame.font.SysFont(None, 30)
@@ -1005,11 +1005,13 @@ class DebugVisualMain():
         #           onSubmit=self.output, radius=10, borderThickness=5)
         
 
-        icon = pygame.image.load(self.complete_path+"logo_light_cropped_squared.png")
+        icon = pygame.image.load(self.home+logo_midpath+"logo_light_cropped_squared.png")
         pygame.display.set_icon(icon)
         pygame.display.set_caption("CHARMIE Debug Node")
 
-
+        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.current_datetime = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+        
         self.init_pos_w_rect_check_nodes = 15
         self.init_pos_h_rect_check_nodes = 50
         self.deviation_pos_h_rect_check_nodes = 25
@@ -1055,7 +1057,9 @@ class DebugVisualMain():
         self.toggle_obstacles_lidar_bottom = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100,  self.cams_initial_height+160+50, 40, 16)
         self.toggle_obstacles_head_camera =  Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233, self.cams_initial_height+160+50, 40, 16)
         
-        self.last_toggle_activate_objects_head =   False 
+        self.last_toggle_record = False
+
+        self.last_toggle_activate_objects_head =   False
         self.last_toggle_activate_furniture_head = False
         self.last_toggle_activate_shoes_head =     False
         self.last_toggle_activate_objects_hand =   False
@@ -1672,7 +1676,27 @@ class DebugVisualMain():
                     self.draw_text(str(p.shirt_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+4*(30/2)))
                     self.draw_text(str(p.pants_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+5*(30/2)))
                 
+    def check_record_data(self):
+        
+        if self.toggle_record.getValue() and not self.last_toggle_record:
+            print("STARTED RECORDING")
+            self.current_datetime = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))       
+            self.video = cv2.VideoWriter(self.current_datetime+".avi", self.fourcc, self.FPS, (self.WIDTH, self.HEIGHT))
 
+        if not self.toggle_record.getValue() and self.last_toggle_record:
+            print("STOPPED RECORDING")
+            self.video.release()
+
+        if self.toggle_record.getValue():
+            # transform the pixels to the format used by open-cv
+            pixels = cv2.rotate(pygame.surfarray.pixels3d(self.WIN), cv2.ROTATE_90_CLOCKWISE)
+            pixels = cv2.flip(pixels, 1)
+            pixels = cv2.cvtColor(pixels, cv2.COLOR_RGB2BGR)
+
+            # write the frame
+            self.video.write(pixels)
+
+        self.last_toggle_record = self.toggle_record.getValue()
 
 
     def main(self):
@@ -1694,19 +1718,11 @@ class DebugVisualMain():
             self.draw_cameras()
             self.draw_activates()
             self.draw_detections()
-
-
-            # self.HEAD_CAMERA_NODE_RECT2 = pygame.Rect(100, 100, 300, 500)
-            # pygame.draw.rect(self.WIN, self.RED, self.HEAD_CAMERA_NODE_RECT2, width=10)
-
-
-
-            # width, height = self.WIN.get_size()
-            # print(f"Window width: {width}, Window height: {height}")
-
+            
             pygame_widgets.update(events)
             pygame.display.update()
-        
+
+            self.check_record_data()
 
 
 # CHANGE ORDER OF HOW SERVICES ARE INITIALISED SO THAT WHEN I GET GREEN IT IS NOT WAITING FOR ANY OTHER SERVICE
@@ -1717,11 +1733,14 @@ class DebugVisualMain():
 
     # NOT # pôr FPS a cada segundo (ou a cada d_t definido) e não quando há uma imagem nova, porque senão está sempre a oscilar ...
 
-# save vide ao lado dos toggles da depth
-
     # sistema para deixar de imprimir quando nao está a obter respostas dos yolos
 
     # quando se faz pause, pausar também as detecoes
 
     # pose:
     # corte cara caracteristicas
+
+# save video ao lado dos toggles da depth
+    # nome da data
+# criar path para guardar os videos
+    # perceber o tamanho 
