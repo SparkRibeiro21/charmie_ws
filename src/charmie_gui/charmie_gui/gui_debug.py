@@ -964,6 +964,7 @@ class DebugVisualMain():
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
         logo_midpath = "/charmie_ws/src/configuration_files/logos/"
+        self.save_recordings_midpath = "/charmie_ws/src/charmie_gui/charmie_gui/saved_gui_recordings/"
 
         self.br = CvBridge()
 
@@ -1689,7 +1690,7 @@ class DebugVisualMain():
         if self.toggle_record.getValue() and not self.last_toggle_record:
             print("STARTED RECORDING")
             self.current_datetime = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))       
-            self.video = cv2.VideoWriter(self.current_datetime+".avi", self.fourcc, self.FPS, (self.WIDTH, self.HEIGHT))
+            self.video = cv2.VideoWriter(self.home+self.save_recordings_midpath+self.current_datetime+".avi", self.fourcc, self.FPS, (self.WIDTH, self.HEIGHT))
 
         if not self.toggle_record.getValue() and self.last_toggle_record:
             print("STOPPED RECORDING")
@@ -1754,8 +1755,8 @@ class DebugVisualMain():
     # nome da data
     # perceber o tamanho 
 
-# novo package gui
-# criar path para guardar os videos
+    # novo package gui
+    # criar path para guardar os videos
 
     # criar copia do restaurante do robocup24
     # print people
