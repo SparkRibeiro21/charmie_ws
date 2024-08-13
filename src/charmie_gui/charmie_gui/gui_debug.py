@@ -942,16 +942,17 @@ class DebugVisualMain():
         self.node = node
         self.check_nodes = check_nodes
 
-        self.RED = (255,0,0)
-        self.GREEN = (0,255,0)
-        self.BLUE = (0,0,255)
-        self.BLUE_L = (0,128,255)
-        self.WHITE = (255,255,255)
-        self.GREY = (128,128,128)
-        self.BLACK = (0,0,0)
-        self.ORANGE = (255,153,51)
-        self.MAGENTA = (255, 51, 255)
-        self.YELLOW = (255,255,0)
+        self.RED     = (255,  0,  0)
+        self.GREEN   = (  0,255,  0)
+        self.BLUE    = ( 50, 50,255)
+        self.BLUE_L  = (  0,128,255)
+        self.WHITE   = (255,255,255)
+        self.GREY    = (128,128,128)
+        self.BLACK   = (  0,  0,  0)
+        self.ORANGE  = (255,153, 51)
+        self.MAGENTA = (255, 51,255)
+        self.YELLOW  = (255,255,  0)
+        self.PURPLE  = (132, 56,255)
 
         self.cam_width_ = 640
         self.cam_height_ = 360
@@ -1089,6 +1090,8 @@ class DebugVisualMain():
         self.curr_detected_people = Yolov8Pose()
         self.last_detected_people = Yolov8Pose()
     
+        self.curr_detected_objects = Yolov8Objects()
+        self.last_detected_objects = Yolov8Objects()
 
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
@@ -1683,7 +1686,91 @@ class DebugVisualMain():
                     self.draw_text(str(p.pants_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+5*(30/2)))
              
     def draw_object_detections(self):
-        pass
+
+        # MIN_DRAW_CONF = 0.5
+        # CIRCLE_RADIUS = 4
+        BB_WIDTH = 3
+        # MIN_KP_LINE_WIDTH = 3
+
+        self.curr_detected_objects = self.node.detected_objects
+
+        if self.toggle_pause_cams.getValue():
+            used_detected_objects = self.last_detected_objects
+
+        else:
+            used_detected_objects = self.curr_detected_objects 
+
+        self.last_detected_objects = used_detected_objects 
+
+        # print(len(self.node.detected_people.persons))
+
+        # if self.node.is_yolo_pose_comm:
+           
+        if len(used_detected_objects.objects) > 0:
+            print("DETECTED OBJECTS:")
+
+        for o in used_detected_objects.objects:
+
+            print("id:", o.index, "name:", o.object_name, "class:", o.object_class, "acc:", round(o.confidence,2), "room:", o.room_location, "furn:", o.furniture_location)
+
+            if o.object_class == "Cleaning Supplies":
+                bb_color = self.YELLOW
+            elif o.object_class == "Drinks":
+                bb_color = self.PURPLE
+            elif o.object_class == "Foods":
+                bb_color = self.BLUE_L
+            elif o.object_class == "Fruits":
+                bb_color = self.ORANGE
+            elif o.object_class == "Toys":
+                bb_color = self.BLUE
+            elif o.object_class == "Snacks":
+                bb_color = self.MAGENTA
+            elif o.object_class == "Dishes":
+                bb_color = self.GREY
+            elif o.object_class == "Footwear":
+                bb_color = self.RED
+            elif o.object_class == "Furniture":
+                bb_color = self.GREEN
+            else:
+                bb_color = self.BLACK
+            
+            OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2), int(o.box_width/2), int(o.box_height/2))
+            pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=BB_WIDTH)
+        
+        # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
+        for o in used_detected_objects.objects:
+
+            if o.object_class == "Cleaning Supplies":
+                bb_color = self.YELLOW
+            elif o.object_class == "Drinks":
+                bb_color = self.PURPLE
+            elif o.object_class == "Foods":
+                bb_color = self.BLUE_L
+            elif o.object_class == "Fruits":
+                bb_color = self.ORANGE
+            elif o.object_class == "Toys":
+                bb_color = self.BLUE
+            elif o.object_class == "Snacks":
+                bb_color = self.MAGENTA
+            elif o.object_class == "Dishes":
+                bb_color = self.GREY
+            elif o.object_class == "Footwear":
+                bb_color = self.RED
+            elif o.object_class == "Furniture":
+                bb_color = self.GREEN
+            else:
+                bb_color = self.BLACK
+
+            text = str(o.object_name)
+            text_width, text_height = self.text_font_t.size(text)
+
+            if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2))
+            else:
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2-30/2), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2-30/2))
+
 
     def check_record_data(self):
         
