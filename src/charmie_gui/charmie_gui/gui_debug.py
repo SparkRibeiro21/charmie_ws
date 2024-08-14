@@ -1092,6 +1092,8 @@ class DebugVisualMain():
     
         self.curr_detected_objects = Yolov8Objects()
         self.last_detected_objects = Yolov8Objects()
+        self.curr_detected_objects_hand = Yolov8Objects()
+        self.last_detected_objects_hand = Yolov8Objects()
 
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
@@ -1693,76 +1695,40 @@ class DebugVisualMain():
         # MIN_KP_LINE_WIDTH = 3
 
         self.curr_detected_objects = self.node.detected_objects
+        self.curr_detected_objects_hand = self.node.detected_objects_hand
 
         if self.toggle_pause_cams.getValue():
             used_detected_objects = self.last_detected_objects
+            used_detected_objects_hand = self.last_detected_objects_hand
 
         else:
             used_detected_objects = self.curr_detected_objects 
+            used_detected_objects_hand = self.curr_detected_objects_hand
 
         self.last_detected_objects = used_detected_objects 
+        self.last_detected_objects_hand = used_detected_objects_hand
 
         # print(len(self.node.detected_people.persons))
-
         # if self.node.is_yolo_pose_comm:
            
+        # HEAD DETECTIONS
         if len(used_detected_objects.objects) > 0:
-            print("DETECTED OBJECTS:")
+            print("DETECTED OBJECTS HEAD:")
 
         for o in used_detected_objects.objects:
 
             print("id:", o.index, "name:", o.object_name, "class:", o.object_class, "acc:", round(o.confidence,2), "room:", o.room_location, "furn:", o.furniture_location)
 
-            if o.object_class == "Cleaning Supplies":
-                bb_color = self.YELLOW
-            elif o.object_class == "Drinks":
-                bb_color = self.PURPLE
-            elif o.object_class == "Foods":
-                bb_color = self.BLUE_L
-            elif o.object_class == "Fruits":
-                bb_color = self.ORANGE
-            elif o.object_class == "Toys":
-                bb_color = self.BLUE
-            elif o.object_class == "Snacks":
-                bb_color = self.MAGENTA
-            elif o.object_class == "Dishes":
-                bb_color = self.GREY
-            elif o.object_class == "Footwear":
-                bb_color = self.RED
-            elif o.object_class == "Furniture":
-                bb_color = self.GREEN
-            else:
-                bb_color = self.BLACK
-            
+            bb_color = self.object_class_to_bb_color(o.object_class)
             OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2), int(o.box_width/2), int(o.box_height/2))
             pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=BB_WIDTH)
         
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in used_detected_objects.objects:
 
-            if o.object_class == "Cleaning Supplies":
-                bb_color = self.YELLOW
-            elif o.object_class == "Drinks":
-                bb_color = self.PURPLE
-            elif o.object_class == "Foods":
-                bb_color = self.BLUE_L
-            elif o.object_class == "Fruits":
-                bb_color = self.ORANGE
-            elif o.object_class == "Toys":
-                bb_color = self.BLUE
-            elif o.object_class == "Snacks":
-                bb_color = self.MAGENTA
-            elif o.object_class == "Dishes":
-                bb_color = self.GREY
-            elif o.object_class == "Footwear":
-                bb_color = self.RED
-            elif o.object_class == "Furniture":
-                bb_color = self.GREEN
-            else:
-                bb_color = self.BLACK
-
             text = str(o.object_name)
             text_width, text_height = self.text_font_t.size(text)
+            bb_color = self.object_class_to_bb_color(o.object_class)
 
             if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
                 self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2), text_width, text_height, bb_color, 255)
@@ -1770,6 +1736,58 @@ class DebugVisualMain():
             else:
                 self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2-30/2), text_width, text_height, bb_color, 255)
                 self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2-30/2))
+
+        # HAND DETECTIONS
+        if len(used_detected_objects_hand.objects) > 0:
+            print("DETECTED OBJECTS HAND:")
+
+        for o in used_detected_objects_hand.objects:
+
+            print("id:", o.index, "name:", o.object_name, "class:", o.object_class, "acc:", round(o.confidence,2), "room:", o.room_location, "furn:", o.furniture_location)
+
+            bb_color = self.object_class_to_bb_color(o.object_class)
+            OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2), int(o.box_width/2), int(o.box_height/2))
+            pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=BB_WIDTH)
+        
+        # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
+        for o in used_detected_objects_hand.objects:
+
+            text = str(o.object_name)
+            text_width, text_height = self.text_font_t.size(text)
+            bb_color = self.object_class_to_bb_color(o.object_class)
+
+            if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2))
+            else:
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2-30/2), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2-30/2))
+
+
+    def object_class_to_bb_color(self, object_class):
+
+        if object_class == "Cleaning Supplies":
+            bb_color = self.YELLOW
+        elif object_class == "Drinks":
+            bb_color = self.PURPLE
+        elif object_class == "Foods":
+            bb_color = self.BLUE_L
+        elif object_class == "Fruits":
+            bb_color = self.ORANGE
+        elif object_class == "Toys":
+            bb_color = self.BLUE
+        elif object_class == "Snacks":
+            bb_color = self.MAGENTA
+        elif object_class == "Dishes":
+            bb_color = self.GREY
+        elif object_class == "Footwear":
+            bb_color = self.RED
+        elif object_class == "Furniture":
+            bb_color = self.GREEN
+        else:
+            bb_color = self.BLACK
+
+        return bb_color
 
 
     def check_record_data(self):
@@ -1827,8 +1845,6 @@ class DebugVisualMain():
 
     # testar se arm ufactory se liga se nao tiver braço
 
-    # NOT # por tudo percentual ao ecrã
-
     # NOT # pôr FPS a cada segundo (ou a cada d_t definido) e não quando há uma imagem nova, porque senão está sempre a oscilar ...
 
     # sistema para deixar de imprimir quando nao está a obter respostas dos yolos
@@ -1847,6 +1863,10 @@ class DebugVisualMain():
 
     # criar copia do restaurante do robocup24
     # print people
+
+# quando fecho a janela desligar todas as threads
+
+# por tudo percentual ao ecrã
 
 # yolo objects head
 # yolo objects hand
