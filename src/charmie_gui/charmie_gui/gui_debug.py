@@ -1815,7 +1815,6 @@ class DebugVisualMain():
 
     def main(self):
 
-
         clock = pygame.time.Clock()
         run = True
         while run:
@@ -1823,10 +1822,11 @@ class DebugVisualMain():
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
-                    pygame.quit()
                     run = False
-                    quit()
-            
+                    pygame.quit()
+                    print("OVER")
+                    os._exit(0)  # Force exit of the entire application
+        
             self.WIN.fill((0, 0, 0))
             self.draw_nodes_check()
             self.draw_cameras()
@@ -1838,7 +1838,6 @@ class DebugVisualMain():
             pygame.display.update()
 
             self.check_record_data()
-
 
     # CHANGE ORDER OF HOW SERVICES ARE INITIALISED SO THAT WHEN I GET GREEN IT IS NOT WAITING FOR ANY OTHER SERVICE
     # EXAMPLE (OBSTACLES WAITING FOR POINT CLOUD)
@@ -1864,7 +1863,7 @@ class DebugVisualMain():
     # criar copia do restaurante do robocup24
     # print people
 
-# quando fecho a janela desligar todas as threads
+    # quando fecho a janela desligar todas as threads
 
 # por tudo percentual ao ecrã
 
