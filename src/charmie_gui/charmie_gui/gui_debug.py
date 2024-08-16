@@ -1094,6 +1094,14 @@ class DebugVisualMain():
         self.last_detected_objects = Yolov8Objects()
         self.curr_detected_objects_hand = Yolov8Objects()
         self.last_detected_objects_hand = Yolov8Objects()
+        self.curr_detected_shoes = Yolov8Objects()
+        self.last_detected_shoes = Yolov8Objects()
+        self.curr_detected_shoes_hand = Yolov8Objects()
+        self.last_detected_shoes_hand = Yolov8Objects()
+        self.curr_detected_furniture = Yolov8Objects()
+        self.last_detected_furniture = Yolov8Objects()
+        self.curr_detected_furniture_hand = Yolov8Objects()
+        self.last_detected_furniture_hand = Yolov8Objects()
 
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
@@ -1710,7 +1718,18 @@ class DebugVisualMain():
 
         # print(len(self.node.detected_people.persons))
         # if self.node.is_yolo_pose_comm:
-           
+
+        if len(used_detected_objects.objects) > 0:
+            pass 
+            # print("DETECTED OBJECTS HEAD:")
+        self.draw_object_bounding_boxes(used_detected_objects, BB_WIDTH, "head")
+
+        if len(used_detected_objects_hand.objects) > 0:
+            pass
+            # print("DETECTED OBJECTS HAND:")
+        self.draw_object_bounding_boxes(used_detected_objects_hand, BB_WIDTH, "hand")
+
+        """
         # HEAD DETECTIONS
         if len(used_detected_objects.objects) > 0:
             print("DETECTED OBJECTS HEAD:")
@@ -1736,7 +1755,8 @@ class DebugVisualMain():
             else:
                 self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2-30/2), text_width, text_height, bb_color, 255)
                 self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2-30/2))
-
+        """
+        """
         # HAND DETECTIONS
         if len(used_detected_objects_hand.objects) > 0:
             print("DETECTED OBJECTS HAND:")
@@ -1762,6 +1782,36 @@ class DebugVisualMain():
             else:
                 self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2-30/2), text_width, text_height, bb_color, 255)
                 self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2-30/2))
+        """
+
+    def draw_object_bounding_boxes(self, objects, bb_width, head_or_hand):
+
+        if head_or_hand.lower() == "head":
+            window_cam_height = self.cams_initial_height
+        else: # "hand"
+            window_cam_height = self.cam_height_+2*self.cams_initial_height
+
+        for o in objects.objects:
+
+            # print("id:", o.index, "name:", o.object_name, "class:", o.object_class, "acc:", round(o.confidence,2), "room:", o.room_location, "furn:", o.furniture_location)
+
+            bb_color = self.object_class_to_bb_color(o.object_class)
+            OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2), int(o.box_width/2), int(o.box_height/2))
+            pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=bb_width)
+        
+        # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
+        for o in objects.objects:
+
+            text = str(o.object_name)
+            text_width, text_height = self.text_font_t.size(text)
+            bb_color = self.object_class_to_bb_color(o.object_class)
+
+            if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2))
+            else:
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2-30/2), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2-30/2))
 
 
     def object_class_to_bb_color(self, object_class):
