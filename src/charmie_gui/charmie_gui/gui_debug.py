@@ -954,6 +954,8 @@ class DebugVisualMain():
         self.YELLOW  = (255,255,  0)
         self.PURPLE  = (132, 56,255)
 
+        self.BB_WIDTH = 3
+
         self.cam_width_ = 640
         self.cam_height_ = 360
         self.cams_initial_height = 10
@@ -1572,7 +1574,6 @@ class DebugVisualMain():
 
         MIN_DRAW_CONF = 0.5
         CIRCLE_RADIUS = 4
-        BB_WIDTH = 3
         MIN_KP_LINE_WIDTH = 3
 
         self.curr_detected_people = self.node.detected_people
@@ -1597,7 +1598,7 @@ class DebugVisualMain():
             print("id:", p.index_person, "acc:", round(p.conf_person,2), "loc:", p.room_location, "wave:", p.arm_raised, "point:", p.pointing_at)
 
             PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), int(p.box_height/2))
-            pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=BB_WIDTH)
+            pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=self.BB_WIDTH)
 
             if int(p.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
                 self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), 30/2, self.RED, 85)
@@ -1650,7 +1651,7 @@ class DebugVisualMain():
             self.draw_circle_keypoint(p.kp_ankle_left_conf,     p.kp_ankle_left_x,      p.kp_ankle_left_y,      self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
             self.draw_circle_keypoint(p.kp_ankle_right_conf,    p.kp_ankle_right_x,     p.kp_ankle_right_y,     self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
             
-            self.check_face_for_characteristics(p, MIN_DRAW_CONF, BB_WIDTH)
+            self.check_face_for_characteristics(p, MIN_DRAW_CONF)
 
     def draw_circle_keypoint(self, conf, x, y, color, min_draw_conf, circle_radius):
         if conf > min_draw_conf:
@@ -1660,7 +1661,7 @@ class DebugVisualMain():
         if conf1 > min_draw_conf and conf2 > min_draw_conf:  
             pygame.draw.line(self.WIN, color, (self.cams_initial_width+(x1)/2, self.cams_initial_height+(y1)/2), (self.cams_initial_width+(x2)/2, self.cams_initial_height+(y2)/2), min_kp_line_width)
     
-    def check_face_for_characteristics(self, p: DetectedPerson, min_draw_conf, bb_width):
+    def check_face_for_characteristics(self, p: DetectedPerson, min_draw_conf):
 
         if p.gender != "None" or p.age_estimate != "None" or p.ethnicity != "None":
 
@@ -1676,7 +1677,7 @@ class DebugVisualMain():
                 x_width = x2-x1
             
                 # CHARS_BB = pygame.Rect(int(self.cams_initial_width+(x1)/2), int(self.cams_initial_height+(y1)/2), int(x_width/2), int(y_height/2))
-                # pygame.draw.rect(self.WIN, self.YELLOW, CHARS_BB, width=bb_width)
+                # pygame.draw.rect(self.WIN, self.YELLOW, CHARS_BB, width=self.BB_WIDTH)
                 
                 if int(p.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
                     self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2+30/2), int(p.box_width/2), 6*(30/2), self.RED, 85)
@@ -1697,94 +1698,54 @@ class DebugVisualMain():
              
     def draw_object_detections(self):
 
-        # MIN_DRAW_CONF = 0.5
-        # CIRCLE_RADIUS = 4
-        BB_WIDTH = 3
-        # MIN_KP_LINE_WIDTH = 3
-
         self.curr_detected_objects = self.node.detected_objects
         self.curr_detected_objects_hand = self.node.detected_objects_hand
+        self.curr_detected_shoes = self.node.detected_shoes
+        self.curr_detected_shoes_hand = self.node.detected_shoes_hand
+        self.curr_detected_furniture = self.node.detected_doors
+        self.curr_detected_furniture_hand = self.node.detected_doors_hand
 
         if self.toggle_pause_cams.getValue():
             used_detected_objects = self.last_detected_objects
             used_detected_objects_hand = self.last_detected_objects_hand
-
+            used_detected_shoes = self.last_detected_shoes
+            used_detected_shoes_hand = self.last_detected_shoes_hand
+            used_detected_furniture = self.last_detected_furniture
+            used_detected_furniture_hand = self.last_detected_furniture_hand
         else:
             used_detected_objects = self.curr_detected_objects 
             used_detected_objects_hand = self.curr_detected_objects_hand
+            used_detected_shoes = self.curr_detected_shoes
+            used_detected_shoes_hand = self.curr_detected_shoes_hand
+            used_detected_furniture = self.curr_detected_furniture
+            used_detected_furniture_hand = self.curr_detected_furniture_hand
 
         self.last_detected_objects = used_detected_objects 
         self.last_detected_objects_hand = used_detected_objects_hand
+        self.last_detected_shoes = used_detected_shoes
+        self.last_detected_shoes_hand = used_detected_shoes_hand
+        self.last_detected_furniture = used_detected_furniture
+        self.last_detected_furniture_hand = used_detected_furniture_hand
 
         # print(len(self.node.detected_people.persons))
         # if self.node.is_yolo_pose_comm:
 
-        if len(used_detected_objects.objects) > 0:
-            pass 
-            # print("DETECTED OBJECTS HEAD:")
-        self.draw_object_bounding_boxes(used_detected_objects, BB_WIDTH, "head")
-
-        if len(used_detected_objects_hand.objects) > 0:
-            pass
-            # print("DETECTED OBJECTS HAND:")
-        self.draw_object_bounding_boxes(used_detected_objects_hand, BB_WIDTH, "hand")
-
-        """
-        # HEAD DETECTIONS
-        if len(used_detected_objects.objects) > 0:
+        if len(used_detected_objects.objects) > 0 or len(used_detected_shoes.objects) > 0 or len(used_detected_furniture.objects) > 0:
             print("DETECTED OBJECTS HEAD:")
+            pass
+        self.draw_object_bounding_boxes(used_detected_objects, "head")
+        self.draw_object_bounding_boxes(used_detected_shoes, "head")
+        self.draw_object_bounding_boxes(used_detected_furniture, "head")
 
-        for o in used_detected_objects.objects:
-
-            print("id:", o.index, "name:", o.object_name, "class:", o.object_class, "acc:", round(o.confidence,2), "room:", o.room_location, "furn:", o.furniture_location)
-
-            bb_color = self.object_class_to_bb_color(o.object_class)
-            OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2), int(o.box_width/2), int(o.box_height/2))
-            pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=BB_WIDTH)
-        
-        # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
-        for o in used_detected_objects.objects:
-
-            text = str(o.object_name)
-            text_width, text_height = self.text_font_t.size(text)
-            bb_color = self.object_class_to_bb_color(o.object_class)
-
-            if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2))
-            else:
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2-30/2), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cams_initial_height+(o.box_top_left_y)/2-30/2))
-        """
-        """
-        # HAND DETECTIONS
-        if len(used_detected_objects_hand.objects) > 0:
+        if len(used_detected_objects_hand.objects) > 0 or len(used_detected_shoes_hand.objects) > 0 or len(used_detected_furniture_hand.objects) > 0:
             print("DETECTED OBJECTS HAND:")
+            pass
+        self.draw_object_bounding_boxes(used_detected_objects_hand, "hand")
+        self.draw_object_bounding_boxes(used_detected_shoes_hand, "hand")
+        self.draw_object_bounding_boxes(used_detected_furniture_hand, "hand")
 
-        for o in used_detected_objects_hand.objects:
 
-            print("id:", o.index, "name:", o.object_name, "class:", o.object_class, "acc:", round(o.confidence,2), "room:", o.room_location, "furn:", o.furniture_location)
-
-            bb_color = self.object_class_to_bb_color(o.object_class)
-            OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2), int(o.box_width/2), int(o.box_height/2))
-            pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=BB_WIDTH)
-        
-        # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
-        for o in used_detected_objects_hand.objects:
-
-            text = str(o.object_name)
-            text_width, text_height = self.text_font_t.size(text)
-            bb_color = self.object_class_to_bb_color(o.object_class)
-
-            if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2))
-            else:
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2-30/2), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(self.cam_height_+2*self.cams_initial_height+(o.box_top_left_y)/2-30/2))
-        """
-
-    def draw_object_bounding_boxes(self, objects, bb_width, head_or_hand):
+    def draw_object_bounding_boxes(self, objects, head_or_hand):
 
         if head_or_hand.lower() == "head":
             window_cam_height = self.cams_initial_height
@@ -1797,7 +1758,7 @@ class DebugVisualMain():
 
             bb_color = self.object_class_to_bb_color(o.object_class)
             OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2), int(o.box_width/2), int(o.box_height/2))
-            pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=bb_width)
+            pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=self.BB_WIDTH)
         
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in objects.objects:
@@ -1915,9 +1876,9 @@ class DebugVisualMain():
 
     # quando fecho a janela desligar todas as threads
 
-# por tudo percentual ao ecrã
+    # yolo objects head
+    # yolo objects hand
 
-# yolo objects head
-# yolo objects hand
+# por tudo percentual ao ecrã
 
 # MAPA
