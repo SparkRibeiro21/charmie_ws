@@ -997,16 +997,12 @@ class DebugVisualMain():
         info = pygame.display.Info()
         screen_width, screen_height = info.current_w, info.current_h
         print(screen_width, screen_height)
-        # self.WIN = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
         self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.RESIZABLE)
 
         # self.text_font = pygame.font.SysFont("Arial", 30)
         self.text_font_t = pygame.font.SysFont(None, 30)
         self.text_font = pygame.font.SysFont(None,24)
 
-        
-        # self.WIN = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-        
         # self.button = Button(self.WIN, 640+200+10, 10+360-50, 100, 100,
         # Optional Parameters
         # text='Pause',  # Text to display
@@ -1818,10 +1814,12 @@ class DebugVisualMain():
             print("STARTED RECORDING")
             self.current_datetime = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))       
             self.video = cv2.VideoWriter(self.home+self.save_recordings_midpath+self.current_datetime+".avi", self.fourcc, self.FPS, (self.WIDTH, self.HEIGHT))
+            self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT), 0)
 
         if not self.toggle_record.getValue() and self.last_toggle_record:
             print("STOPPED RECORDING")
             self.video.release()
+            self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.RESIZABLE)
 
         if self.toggle_record.getValue():
             # transform the pixels to the format used by open-cv
@@ -1848,7 +1846,11 @@ class DebugVisualMain():
                     pygame.quit()
                     print("OVER")
                     os._exit(0)  # Force exit of the entire application
-        
+                
+            # Get current window size
+            self.WIDTH, self.HEIGHT = self.WIN.get_size()
+            # print(self.WIDTH, self.HEIGHT)
+    
             self.WIN.fill((0, 0, 0))
             self.draw_nodes_check()
             self.draw_cameras()
@@ -1889,6 +1891,8 @@ class DebugVisualMain():
 
     # yolo objects head
     # yolo objects hand
+
+    # stop resize while recording (crashes recording - stops)
 
 # por tudo percentual ao ecrã
 
