@@ -671,7 +671,6 @@ class DebugVisualNode(Node):
 
         self.robot.imu_orientation_norm_rad = math.radians(imu_orientation_norm)
         self.robot.robot_t = -self.robot.imu_orientation_norm_rad
-
         
     def get_camera_obstacles_callback(self, points: ListOfPoints):
         self.robot.camera_obstacle_points = points.coords
@@ -1016,11 +1015,9 @@ class DebugVisualMain():
         # onClick=lambda: self.test_button_function()  # Function to call when clicked on  
         # )
 
-
         # self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
         #           borderColour=(255, 0, 0), textColour=(0, 200, 0),
-        #           onSubmit=self.output, radius=10, borderThickness=5)
-        
+        #           onSubmit=self.output, radius=10, borderThickness=5)        
 
         icon = pygame.image.load(self.home+logo_midpath+"logo_light_cropped_squared.png")
         pygame.display.set_icon(icon)
@@ -1832,6 +1829,48 @@ class DebugVisualMain():
 
         self.last_toggle_record = self.toggle_record.getValue()
 
+    def adjust_window_size(self):
+
+        # default values are: self.WIDTH, self.HEIGHT = 1387, 752
+        # self.cam_width_ = 640
+        # self.cam_height_ = 360
+
+        # Get current window size
+        self.WIDTH, self.HEIGHT = self.WIN.get_size()
+        # print(self.WIDTH, self.HEIGHT)
+
+        custom_height = self.HEIGHT - 752
+        print("custom_height:", custom_height)
+
+        self.cam_height_ = int(360 + custom_height/2)
+
+        cam_height_ratio = self.cam_height_/360
+
+        self.cam_width_ = int(640*cam_height_ratio)
+
+        ratio = self.cam_width_ / self.cam_height_
+
+        print(ratio, cam_height_ratio)
+        
+        # adjust activate toggle positions
+        self.toggle_activate_objects_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
+        self.toggle_activate_furniture_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90)
+        self.toggle_activate_shoes_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+192)
+        self.toggle_activate_objects_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+298)
+        self.toggle_activate_furniture_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+390)
+        self.toggle_activate_shoes_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+492)
+
+        self.toggle_pose_activate.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
+        self.toggle_pose_waving.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+93)
+        self.toggle_pose_front_close.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+182)
+        self.toggle_pose_legs_visible.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+302)
+        self.toggle_pose_characteristcs.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+427)
+        
+        self.toggle_obstacles_lidar_top.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
+        self.toggle_obstacles_lidar_bottom.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100)
+        self.toggle_obstacles_head_camera.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233)
+
+
 
     def main(self):
 
@@ -1846,12 +1885,10 @@ class DebugVisualMain():
                     pygame.quit()
                     print("OVER")
                     os._exit(0)  # Force exit of the entire application
-                
-            # Get current window size
-            self.WIDTH, self.HEIGHT = self.WIN.get_size()
-            # print(self.WIDTH, self.HEIGHT)
-    
+
+
             self.WIN.fill((0, 0, 0))
+            self.adjust_window_size()  
             self.draw_nodes_check()
             self.draw_cameras()
             self.draw_activates()
@@ -1892,8 +1929,10 @@ class DebugVisualMain():
     # yolo objects head
     # yolo objects hand
 
-    # stop resize while recording (crashes recording - stops)
+    # stop resize while recording (crashes recording - opencv bug)
 
 # por tudo percentual ao ecrã
+# toggles activates - mal
+# detecoes mal (obj)
 
 # MAPA
