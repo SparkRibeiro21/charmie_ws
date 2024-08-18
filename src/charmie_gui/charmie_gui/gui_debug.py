@@ -974,6 +974,7 @@ class DebugVisualMain():
 
         self.cam_width_ = 640
         self.cam_height_ = 360
+        self.camera_resize_ratio = 1.0
         self.cams_initial_height = 10
         self.cams_initial_width = 165
 
@@ -1758,10 +1759,9 @@ class DebugVisualMain():
 
         for o in objects.objects:
 
-            # print("id:", o.index, "name:", o.object_name, "class:", o.object_class, "acc:", round(o.confidence,2), "room:", o.room_location, "furn:", o.furniture_location)
-
+            print("id:", o.index, "name:", o.object_name, "class:", o.object_class, "acc:", round(o.confidence,2), "room:", o.room_location, "furn:", o.furniture_location)
             bb_color = self.object_class_to_bb_color(o.object_class)
-            OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2), int(o.box_width/2), int(o.box_height/2))
+            OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio), int(o.box_width/2*self.camera_resize_ratio), int(o.box_height/2*self.camera_resize_ratio))
             pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=self.BB_WIDTH)
         
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
@@ -1772,11 +1772,11 @@ class DebugVisualMain():
             bb_color = self.object_class_to_bb_color(o.object_class)
 
             if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2))
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio))
             else:
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2-30/2), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)/2), int(window_cam_height+(o.box_top_left_y)/2-30/2))
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2))
 
 
     def object_class_to_bb_color(self, object_class):
@@ -1831,7 +1831,8 @@ class DebugVisualMain():
 
     def adjust_window_size(self):
 
-        # default values are: self.WIDTH, self.HEIGHT = 1387, 752
+        # default values are: 
+        # self.WIDTH, self.HEIGHT = 1387, 752
         # self.cam_width_ = 640
         # self.cam_height_ = 360
 
@@ -1840,17 +1841,11 @@ class DebugVisualMain():
         # print(self.WIDTH, self.HEIGHT)
 
         custom_height = self.HEIGHT - 752
-        print("custom_height:", custom_height)
-
         self.cam_height_ = int(360 + custom_height/2)
-
         cam_height_ratio = self.cam_height_/360
-
         self.cam_width_ = int(640*cam_height_ratio)
-
-        ratio = self.cam_width_ / self.cam_height_
-
-        print(ratio, cam_height_ratio)
+        self.camera_resize_ratio = cam_height_ratio
+        # print(self.cam_width_, self.cam_height_, self.camera_resize_ratio )
         
         # adjust activate toggle positions
         self.toggle_activate_objects_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
@@ -1869,8 +1864,6 @@ class DebugVisualMain():
         self.toggle_obstacles_lidar_top.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
         self.toggle_obstacles_lidar_bottom.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100)
         self.toggle_obstacles_head_camera.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233)
-
-
 
     def main(self):
 
@@ -1932,7 +1925,9 @@ class DebugVisualMain():
     # stop resize while recording (crashes recording - opencv bug)
 
 # por tudo percentual ao ecrã
-# toggles activates - mal
-# detecoes mal (obj)
+    # toggles activates - mal
+    # detecoes mal (obj)
+# detecoes mal (pose)
+
 
 # MAPA
