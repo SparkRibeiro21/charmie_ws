@@ -1071,7 +1071,7 @@ class DebugVisualMain():
         self.toggle_obstacles_lidar_top =    Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+160+50, 40, 16)
         self.toggle_obstacles_lidar_bottom = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100,  self.cams_initial_height+160+50, 40, 16)
         self.toggle_obstacles_head_camera =  Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233, self.cams_initial_height+160+50, 40, 16)
-        
+
         self.last_toggle_record = False
 
         self.last_toggle_activate_objects_head =   False
@@ -1601,7 +1601,9 @@ class DebugVisualMain():
 
             for p in used_detected_people.persons:
 
-                print("id:", p.index_person, "acc:", round(p.conf_person,2), "loc:", p.room_location, "wave:", p.arm_raised, "point:", p.pointing_at)
+                room_and_furn_str = str(p.room_location + " (" + p.furniture_location + ")")
+                relative_coords_str = str("("+str(round(p.position_relative.x,2))+", "+str(round(p.position_relative.y,2))+", "+str(round(p.position_relative.z,2))+")")
+                print("id:", p.index_person, "|", str(int(round(p.conf_person,2)*100)) + "%", "|", room_and_furn_str.ljust(22), "|", relative_coords_str.ljust(22), "|", "wave:", p.arm_raised, "|", "point:", p.pointing_at)
 
                 PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), int(p.box_height/2))
                 pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=self.BB_WIDTH)
@@ -1759,7 +1761,10 @@ class DebugVisualMain():
 
         for o in objects.objects:
 
-            print("id:", o.index, "name:", o.object_name, "class:", o.object_class, "acc:", round(o.confidence,2), "room:", o.room_location, "furn:", o.furniture_location)
+            name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
+            room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
+            relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
+            print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
             bb_color = self.object_class_to_bb_color(o.object_class)
             OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio), int(o.box_width/2*self.camera_resize_ratio), int(o.box_height/2*self.camera_resize_ratio))
             pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=self.BB_WIDTH)
@@ -1929,5 +1934,7 @@ class DebugVisualMain():
     # detecoes mal (obj)
 # detecoes mal (pose)
 
+    # more user friendly prints of objects detected (with locations) (obj)
+# more user friendly prints of objects detected (with locations) (pose)
 
 # MAPA
