@@ -1605,15 +1605,15 @@ class DebugVisualMain():
                 relative_coords_str = str("("+str(round(p.position_relative.x,2))+", "+str(round(p.position_relative.y,2))+", "+str(round(p.position_relative.z,2))+")")
                 print("id:", p.index_person, "|", str(int(round(p.conf_person,2)*100)) + "%", "|", room_and_furn_str.ljust(22), "|", relative_coords_str.ljust(22), "|", "wave:", p.arm_raised, "|", "point:", p.pointing_at)
 
-                PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), int(p.box_height/2))
+                PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio), int(p.box_width/2*self.camera_resize_ratio), int(p.box_height/2*self.camera_resize_ratio))
                 pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=self.BB_WIDTH)
 
                 if int(p.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
-                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), 30/2, self.RED, 85)
-                    self.draw_text("id:"+str(p.index_person)+" "+str(int(round(p.conf_person,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2))
+                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio), int(p.box_width/2*self.camera_resize_ratio), 30/2, self.RED, 85)
+                    self.draw_text("id:"+str(p.index_person)+" "+str(int(round(p.conf_person,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio))
                 else:
-                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2-30/2), int(p.box_width/2), 30/2, self.RED, 85)
-                    self.draw_text("id:"+str(p.index_person)+" "+str(int(round(p.conf_person,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2-30/2))
+                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio-30/2), int(p.box_width/2*self.camera_resize_ratio), 30/2, self.RED, 85)
+                    self.draw_text("id:"+str(p.index_person)+" "+str(int(round(p.conf_person,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio-30/2))
                 
                 self.draw_line_between_two_keypoints(p.kp_nose_conf, p.kp_nose_x, p.kp_nose_y, p.kp_eye_left_conf, p.kp_eye_left_x, p.kp_eye_left_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
                 self.draw_line_between_two_keypoints(p.kp_nose_conf, p.kp_nose_x, p.kp_nose_y, p.kp_eye_right_conf, p.kp_eye_right_x, p.kp_eye_right_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
@@ -1663,11 +1663,11 @@ class DebugVisualMain():
 
     def draw_circle_keypoint(self, conf, x, y, color, min_draw_conf, circle_radius):
         if conf > min_draw_conf:
-            pygame.draw.circle(self.WIN, color, (self.cams_initial_width+(x)/2, self.cams_initial_height+(y)/2), radius=circle_radius, width=0)
+            pygame.draw.circle(self.WIN, color, (self.cams_initial_width+(x/2)*self.camera_resize_ratio, self.cams_initial_height+(y/2)*self.camera_resize_ratio), radius=circle_radius, width=0)
                 
     def draw_line_between_two_keypoints(self, conf1, x1, y1, conf2, x2, y2, color, min_draw_conf, min_kp_line_width):
         if conf1 > min_draw_conf and conf2 > min_draw_conf:  
-            pygame.draw.line(self.WIN, color, (self.cams_initial_width+(x1)/2, self.cams_initial_height+(y1)/2), (self.cams_initial_width+(x2)/2, self.cams_initial_height+(y2)/2), min_kp_line_width)
+            pygame.draw.line(self.WIN, color, (self.cams_initial_width+(x1/2)*self.camera_resize_ratio, self.cams_initial_height+(y1/2)*self.camera_resize_ratio), (self.cams_initial_width+(x2/2)*self.camera_resize_ratio, self.cams_initial_height+(y2/2)*self.camera_resize_ratio), min_kp_line_width)
     
     def check_face_for_characteristics(self, p: DetectedPerson, min_draw_conf):
 
@@ -1684,26 +1684,14 @@ class DebugVisualMain():
                 x2 = max(p.kp_shoulder_right_x, p.kp_shoulder_left_x, p.kp_nose_x, p.kp_eye_right_x, p.kp_eye_left_x)
                 x_width = x2-x1
             
-                # CHARS_BB = pygame.Rect(int(self.cams_initial_width+(x1)/2), int(self.cams_initial_height+(y1)/2), int(x_width/2), int(y_height/2))
-                # pygame.draw.rect(self.WIN, self.YELLOW, CHARS_BB, width=self.BB_WIDTH)
-                
-                if int(p.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
-                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2+30/2), int(p.box_width/2), 6*(30/2), self.RED, 85)
-                    self.draw_text(str(p.gender), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),            int(self.cams_initial_height+(p.box_top_left_y)/2+1*(30/2)))
-                    self.draw_text(str(p.ethnicity), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),         int(self.cams_initial_height+(p.box_top_left_y)/2+2*(30/2)))
-                    self.draw_text(str(p.age_estimate), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),      int(self.cams_initial_height+(p.box_top_left_y)/2+3*(30/2)))
-                    self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),   int(self.cams_initial_height+(p.box_top_left_y)/2+4*(30/2)))
-                    self.draw_text(str(p.shirt_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+5*(30/2)))
-                    self.draw_text(str(p.pants_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+6*(30/2)))
-                else:
-                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)/2), int(self.cams_initial_height+(p.box_top_left_y)/2), int(p.box_width/2), 6*(30/2), self.RED, 85)
-                    self.draw_text(str(p.gender), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),            int(self.cams_initial_height+(p.box_top_left_y)/2+0*(30/2)))
-                    self.draw_text(str(p.ethnicity), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),         int(self.cams_initial_height+(p.box_top_left_y)/2+1*(30/2)))
-                    self.draw_text(str(p.age_estimate), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),      int(self.cams_initial_height+(p.box_top_left_y)/2+2*(30/2)))
-                    self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),   int(self.cams_initial_height+(p.box_top_left_y)/2+3*(30/2)))
-                    self.draw_text(str(p.shirt_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+4*(30/2)))
-                    self.draw_text(str(p.pants_color), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)/2),       int(self.cams_initial_height+(p.box_top_left_y)/2+5*(30/2)))
-             
+                self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio+30/2), int(p.box_width/2*self.camera_resize_ratio), 6*(30/2), self.RED, 85)
+                self.draw_text(str(p.gender), self.text_font, self.BLACK,          int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio+1*(30/2)))
+                self.draw_text(str(p.ethnicity), self.text_font, self.BLACK,       int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio+2*(30/2)))
+                self.draw_text(str(p.age_estimate), self.text_font, self.BLACK,    int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio+3*(30/2)))
+                self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio+4*(30/2)))
+                self.draw_text(str(p.shirt_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio+5*(30/2)))
+                self.draw_text(str(p.pants_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio+6*(30/2)))
+            
     def draw_object_detections(self):
 
         self.curr_detected_objects = self.node.detected_objects
@@ -1929,12 +1917,12 @@ class DebugVisualMain():
 
     # stop resize while recording (crashes recording - opencv bug)
 
-# por tudo percentual ao ecrã
+    # por tudo percentual ao ecrã
     # toggles activates - mal
     # detecoes mal (obj)
-# detecoes mal (pose)
+    # detecoes mal (pose)
 
     # more user friendly prints of objects detected (with locations) (obj)
-# more user friendly prints of objects detected (with locations) (pose)
+    # more user friendly prints of objects detected (with locations) (pose)
 
 # MAPA
