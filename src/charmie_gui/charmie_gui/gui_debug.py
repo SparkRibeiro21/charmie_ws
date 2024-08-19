@@ -1235,7 +1235,6 @@ class DebugVisualMain():
     # def output(self):
         # Get text in the textbox
         # print(self.textbox.getText())
-
     
     def draw_text(self, text, font, text_col, x, y):
         img = font.render(text, True, text_col)
@@ -1815,7 +1814,6 @@ class DebugVisualMain():
             self.draw_object_bounding_boxes(used_detected_shoes_hand, "hand")
             self.draw_object_bounding_boxes(used_detected_furniture_hand, "hand")
 
-
     def draw_object_bounding_boxes(self, objects, head_or_hand):
 
         if head_or_hand.lower() == "head":
@@ -1847,7 +1845,6 @@ class DebugVisualMain():
                 self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
                 self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2))
 
-
     def object_class_to_bb_color(self, object_class):
 
         if object_class == "Cleaning Supplies":
@@ -1872,7 +1869,6 @@ class DebugVisualMain():
             bb_color = self.BLACK
 
         return bb_color
-
 
     def check_record_data(self):
         
@@ -1972,6 +1968,7 @@ class DebugVisualMain():
         
         
         pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(2.0, 0.0), radius=10, width=0)
+
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
 
 
@@ -1993,6 +1990,29 @@ class DebugVisualMain():
                     print("OVER")
                     os._exit(0)  # Force exit of the entire application
 
+                # Check if a key is pressed
+                if event.type == pygame.KEYDOWN:
+                    # if event.key == pygame.K_SPACE:
+                    #     print("Space key pressed!")
+                    if event.key == pygame.K_LEFT:
+                        # print("Left arrow key pressed!")
+                        self.button_shift_left_function()
+                    if event.key == pygame.K_RIGHT:
+                        # print("Right arrow key pressed!")
+                        self.button_shift_right_function()
+                    if event.key == pygame.K_UP:
+                        # print("Up arrow key pressed!")
+                        self.button_shift_up_function()
+                    if event.key == pygame.K_DOWN:
+                        # print("Down arrow key pressed!")
+                        self.button_shift_down_function()
+
+                    if event.key == pygame.K_PLUS:
+                        # print("PLUS key pressed!")
+                        self.button_zoom_in_function()
+                    if event.key == pygame.K_MINUS:
+                        # print("MINUS key pressed!")
+                        self.button_zoom_out_function()
 
             self.WIN.fill((0, 0, 0))
             self.adjust_window_size()  
@@ -2047,4 +2067,5 @@ class DebugVisualMain():
     # more user friendly prints of objects detected (with locations) (obj)
     # more user friendly prints of objects detected (with locations) (pose)
 
-# MAPA
+# MAPA:
+    # teclas do teclado a fazer tambem zoom e shift do mapa
