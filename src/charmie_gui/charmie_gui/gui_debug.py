@@ -931,7 +931,6 @@ class CheckNodesMain():
             else:
                 self.CHECK_YOLO_POSE_NODE = True
 
-
 def main(args=None):
     rclpy.init(args=args)
     node = DebugVisualNode()
@@ -942,7 +941,6 @@ def main(args=None):
     th_nodes.start()
     rclpy.spin(node)
     rclpy.shutdown()
-
 
 def thread_main_debug_visual(node: DebugVisualNode, check_nodes: CheckNodesMain):
     main = DebugVisualMain(node, check_nodes)
@@ -977,6 +975,8 @@ class DebugVisualMain():
         self.camera_resize_ratio = 1.0
         self.cams_initial_height = 10
         self.cams_initial_width = 165
+
+        self.MAP_SIDE = 0 
 
         # self.pause_button = False
         
@@ -1858,6 +1858,54 @@ class DebugVisualMain():
         self.toggle_obstacles_lidar_bottom.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100)
         self.toggle_obstacles_head_camera.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233)
 
+    def draw_map(self):
+        
+        self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
+        # print(self.HEIGHT, self.MAP_SIDE)
+
+        self.scale = 2.0
+
+        self.xc = self.MAP_SIDE
+        self.yc = self.MAP_SIDE
+        self.xx_shift = int(self.MAP_SIDE/2 + (self.MAP_SIDE*0.1))
+        self.yy_shift = int(self.MAP_SIDE/2 + (self.MAP_SIDE*0.0))
+        self.xc_adj = self.xc - self.xx_shift
+        self.yc_adj = self.yc - self.yy_shift
+
+        self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
+        self.map_init_height = 260
+
+
+        MAP_BB = pygame.Rect(self.map_init_width, self.map_init_height, self.MAP_SIDE, self.MAP_SIDE)
+        pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
+
+        ### DRAWS REFERENCE 1 METER LINES ###
+        for i in range(20):
+            # 1 meter lines horizontal and vertical
+            if i == 0:
+                pygame.draw.line(self.WIN, self.RED, (int(self.map_init_width+self.xc_adj), self.map_init_height), (int(self.map_init_width+self.xc_adj), self.map_init_height+self.MAP_SIDE-1), 1)
+                pygame.draw.line(self.WIN, self.RED, (self.map_init_width, int(self.map_init_height+self.yc_adj)), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj)), 1)
+            else:
+                if int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.scale)))) < self.map_init_width+self.MAP_SIDE:
+                    pygame.draw.line(self.WIN, self.GREY, (int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.scale)))), self.map_init_height), (int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.scale)))), self.map_init_height+self.MAP_SIDE-1), 1)
+                if int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.scale)))) > self.map_init_width:
+                    pygame.draw.line(self.WIN, self.GREY, (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.scale)))), self.map_init_height), (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.scale)))), self.map_init_height+self.MAP_SIDE-1), 1)
+                if int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.scale)))) < self.map_init_height+self.MAP_SIDE:
+                    pygame.draw.line(self.WIN, self.GREY, (self.map_init_width, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.scale))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.scale))))), 1)
+                if int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.scale)))) >  self.map_init_height:
+                    pygame.draw.line(self.WIN, self.GREY, (self.map_init_width, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.scale))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.scale))))), 1)
+            
+        
+        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(2.0, 0.0), radius=10, width=0)
+        
+        
+        pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
+
+
+    def coords_to_map(self, xx, yy):
+        # pygame.draw.circle(self.WIN, self.GREEN, (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.scale)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.scale))), radius=10, width=0)
+        return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.scale)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.scale)))      
+
     def main(self):
 
         clock = pygame.time.Clock()
@@ -1880,6 +1928,7 @@ class DebugVisualMain():
             self.draw_activates()
             self.draw_pose_detections()
             self.draw_object_detections()
+            self.draw_map()
             
             pygame_widgets.update(events)
             pygame.display.update()
