@@ -987,6 +987,7 @@ class DebugVisualMain():
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
         logo_midpath = "/charmie_ws/src/configuration_files/logos/"
+        configuration_files_midpath = "/charmie_ws/src/configuration_files/"
         self.save_recordings_midpath = "/charmie_ws/src/charmie_gui/charmie_gui/saved_gui_recordings/"
 
         self.br = CvBridge()
@@ -1084,9 +1085,6 @@ class DebugVisualMain():
         onClick=lambda: self.button_shift_right_function()  # Function to call when clicked on  
         )
 
-
-
-
         # self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
         #           borderColour=(255, 0, 0), textColour=(0, 200, 0),
         #           onSubmit=self.output, radius=10, borderThickness=5)        
@@ -1094,6 +1092,22 @@ class DebugVisualMain():
         icon = pygame.image.load(self.home+logo_midpath+"logo_light_cropped_squared.png")
         pygame.display.set_icon(icon)
         pygame.display.set_caption("CHARMIE Debug Node")
+
+        # Open all configuration files
+        try:
+            with open(self.home + configuration_files_midpath + 'rooms_location.json', encoding='utf-8') as json_file:
+                self.house_rooms = json.load(json_file)
+            # print(self.house_rooms)
+
+            with open(self.home + configuration_files_midpath + 'furniture_location.json', encoding='utf-8') as json_file:
+                self.house_furniture = json.load(json_file)
+            # print(self.house_furniture)
+
+            with open(self.home + configuration_files_midpath + 'doors_location.json', encoding='utf-8') as json_file:
+                self.house_doors = json.load(json_file)
+            # print(self.house_doors)
+        except:
+            print("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
 
         self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
         self.current_datetime = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
@@ -1966,15 +1980,36 @@ class DebugVisualMain():
             if self.map_init_height+self.MAP_SIDE > int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))) > self.map_init_height:
                 pygame.draw.line(self.WIN, color, (self.map_init_width, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), 1)
         
+            ### DRAWS THE HOUSE FURNITURE ###
+            for furniture in self.house_furniture:
+                temp_rect = pygame.Rect(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0], \
+                                        self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1], \
+                                        abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[0]), \
+                                        abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[1]))
+                pygame.draw.rect(self.WIN, self.GREY, temp_rect, width=0)
         
-        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(2.0, 0.0), radius=10, width=0)
+            ### DRAWS THE HOUSE WALLS ###
+            for room in self.house_rooms:
+                temp_rect = pygame.Rect(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[0], \
+                                        self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[1], \
+                                        abs(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[0] - self.coords_to_map(room['bot_right_coords'][0], room['bot_right_coords'][1])[0]), \
+                                        abs(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[1] - self.coords_to_map(room['bot_right_coords'][0], room['bot_right_coords'][1])[1]))
+                pygame.draw.rect(self.WIN, self.WHITE, temp_rect, width=3)
+            
+            ### DRAWS THE HOUSE DOORS ###
+            for door in self.house_doors:
+                pygame.draw.line(self.WIN, self.BLACK, (self.coords_to_map(door['top_left_coords'][0],  door['top_left_coords'][1])),\
+                                                        self.coords_to_map(door['bot_right_coords'][0], door['bot_right_coords'][1]), 10)
+        
+        
+        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(0.0, 0.0), radius=10, width=0)
 
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
 
 
     def coords_to_map(self, xx, yy):
         # pygame.draw.circle(self.WIN, self.GREEN, (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE))), radius=10, width=0)
-        return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE)))      
+        return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE)))
 
     def main(self):
 
