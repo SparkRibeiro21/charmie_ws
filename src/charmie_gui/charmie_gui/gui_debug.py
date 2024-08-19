@@ -977,6 +977,9 @@ class DebugVisualMain():
         self.cams_initial_width = 165
 
         self.MAP_SIDE = 0 
+        self.MAP_SCALE = 2.0
+        self.MAP_ADJUST_X = 0.0
+        self.MAP_ADJUST_Y = 0.0
 
         # self.pause_button = False
         
@@ -1003,18 +1006,86 @@ class DebugVisualMain():
         self.text_font_t = pygame.font.SysFont(None, 30)
         self.text_font = pygame.font.SysFont(None,24)
 
-        # self.button = Button(self.WIN, 640+200+10, 10+360-50, 100, 100,
+        self.button_zoom_in = Button(self.WIN, 640+200+10, 10+360-50, 100, 100,
         # Optional Parameters
-        # text='Pause',  # Text to display
-        # fontSize=20,  # Size of font
-        # textColour=self.WHITE,
-        # margin=0,  # Minimum distance between text/image and edge of button
-        # inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        # hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        # pressedColour=(255, 75, 0),  # Colour of button when being clicked
-        # radius=10,  # Radius of border corners (leave empty for not curved)
-        # onClick=lambda: self.test_button_function()  # Function to call when clicked on  
-        # )
+        text='Z+',  # Text to display
+        fontSize=20,  # Size of font
+        textColour=self.WHITE,
+        margin=0,  # Minimum distance between text/image and edge of button
+        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
+        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
+        pressedColour=(255, 75, 0),  # Colour of button when being clicked
+        radius=10,  # Radius of border corners (leave empty for not curved)
+        onClick=lambda: self.button_zoom_in_function()  # Function to call when clicked on  
+        )
+
+        self.button_zoom_out = Button(self.WIN, 640+200+100+10, 10+360-50, 100, 100,
+        # Optional Parameters
+        text='Z-',  # Text to display
+        fontSize=20,  # Size of font
+        textColour=self.WHITE,
+        margin=0,  # Minimum distance between text/image and edge of button
+        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
+        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
+        pressedColour=(255, 75, 0),  # Colour of button when being clicked
+        radius=10,  # Radius of border corners (leave empty for not curved)
+        onClick=lambda: self.button_zoom_out_function()  # Function to call when clicked on  
+        )
+
+        self.button_shift_up = Button(self.WIN, 640+200+200+10, 10+360-50, 100, 100,
+        # Optional Parameters
+        text='U',  # Text to display
+        fontSize=20,  # Size of font
+        textColour=self.WHITE,
+        margin=0,  # Minimum distance between text/image and edge of button
+        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
+        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
+        pressedColour=(255, 75, 0),  # Colour of button when being clicked
+        radius=10,  # Radius of border corners (leave empty for not curved)
+        onClick=lambda: self.button_shift_up_function()  # Function to call when clicked on  
+        )
+
+        self.button_shift_down = Button(self.WIN, 640+200+300+10, 10+360-50, 100, 100,
+        # Optional Parameters
+        text='D',  # Text to display
+        fontSize=20,  # Size of font
+        textColour=self.WHITE,
+        margin=0,  # Minimum distance between text/image and edge of button
+        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
+        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
+        pressedColour=(255, 75, 0),  # Colour of button when being clicked
+        radius=10,  # Radius of border corners (leave empty for not curved)
+        onClick=lambda: self.button_shift_down_function()  # Function to call when clicked on  
+        )
+
+        self.button_shift_left = Button(self.WIN, 640+200+400+10, 10+360-50, 100, 100,
+        # Optional Parameters
+        text='L',  # Text to display
+        fontSize=20,  # Size of font
+        textColour=self.WHITE,
+        margin=0,  # Minimum distance between text/image and edge of button
+        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
+        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
+        pressedColour=(255, 75, 0),  # Colour of button when being clicked
+        radius=10,  # Radius of border corners (leave empty for not curved)
+        onClick=lambda: self.button_shift_left_function()  # Function to call when clicked on  
+        )
+
+        self.button_shift_right = Button(self.WIN, 640+200+500+10, 10+360-50, 100, 100,
+        # Optional Parameters
+        text='R',  # Text to display
+        fontSize=20,  # Size of font
+        textColour=self.WHITE,
+        margin=0,  # Minimum distance between text/image and edge of button
+        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
+        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
+        pressedColour=(255, 75, 0),  # Colour of button when being clicked
+        radius=10,  # Radius of border corners (leave empty for not curved)
+        onClick=lambda: self.button_shift_right_function()  # Function to call when clicked on  
+        )
+
+
+
 
         # self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
         #           borderColour=(255, 0, 0), textColour=(0, 200, 0),
@@ -1143,18 +1214,23 @@ class DebugVisualMain():
 
         return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
-    # def test_button_function(self):
+    def button_zoom_in_function(self):
+        self.MAP_SCALE -= 0.2
 
-        # self.pause_button = not self.pause_button
+    def button_zoom_out_function(self):
+        self.MAP_SCALE += 0.2
 
-        # self.button.text = 'Play'
+    def button_shift_up_function(self):
+        self.MAP_ADJUST_Y += self.MAP_SIDE/self.MAP_SCALE/10
+    
+    def button_shift_down_function(self):
+        self.MAP_ADJUST_Y -= self.MAP_SIDE/self.MAP_SCALE/10
 
-        # if self.pause_button:
-        #     print("UP UP UP")
-        #     self.pause_button = False
-        # else:
-        #     print("DOWN DOWN DOWN")
-        #     self.pause_button = True
+    def button_shift_left_function(self):
+        self.MAP_ADJUST_X += self.MAP_SIDE/self.MAP_SCALE/10
+
+    def button_shift_right_function(self):
+        self.MAP_ADJUST_X -= self.MAP_SIDE/self.MAP_SCALE/10
 
     # def output(self):
         # Get text in the textbox
@@ -1863,12 +1939,10 @@ class DebugVisualMain():
         self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
         # print(self.HEIGHT, self.MAP_SIDE)
 
-        self.scale = 2.0
-
         self.xc = self.MAP_SIDE
         self.yc = self.MAP_SIDE
-        self.xx_shift = int(self.MAP_SIDE/2 + (self.MAP_SIDE*0.1))
-        self.yy_shift = int(self.MAP_SIDE/2 + (self.MAP_SIDE*0.0))
+        self.xx_shift = int(self.MAP_SIDE/2 + self.MAP_ADJUST_X) # (self.MAP_SIDE*self.MAP_ADJUST_X))
+        self.yy_shift = int(self.MAP_SIDE/2 + self.MAP_ADJUST_Y) # (self.MAP_SIDE*self.MAP_ADJUST_Y))
         self.xc_adj = self.xc - self.xx_shift
         self.yc_adj = self.yc - self.yy_shift
 
@@ -1883,28 +1957,27 @@ class DebugVisualMain():
         for i in range(20):
             # 1 meter lines horizontal and vertical
             if i == 0:
-                pygame.draw.line(self.WIN, self.RED, (int(self.map_init_width+self.xc_adj), self.map_init_height), (int(self.map_init_width+self.xc_adj), self.map_init_height+self.MAP_SIDE-1), 1)
-                pygame.draw.line(self.WIN, self.RED, (self.map_init_width, int(self.map_init_height+self.yc_adj)), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj)), 1)
+                color = self.RED
             else:
-                if int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.scale)))) < self.map_init_width+self.MAP_SIDE:
-                    pygame.draw.line(self.WIN, self.GREY, (int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.scale)))), self.map_init_height), (int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.scale)))), self.map_init_height+self.MAP_SIDE-1), 1)
-                if int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.scale)))) > self.map_init_width:
-                    pygame.draw.line(self.WIN, self.GREY, (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.scale)))), self.map_init_height), (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.scale)))), self.map_init_height+self.MAP_SIDE-1), 1)
-                if int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.scale)))) < self.map_init_height+self.MAP_SIDE:
-                    pygame.draw.line(self.WIN, self.GREY, (self.map_init_width, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.scale))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.scale))))), 1)
-                if int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.scale)))) >  self.map_init_height:
-                    pygame.draw.line(self.WIN, self.GREY, (self.map_init_width, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.scale))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.scale))))), 1)
+                color = self.GREY
             
+            if self.map_init_width < int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))) < self.map_init_width+self.MAP_SIDE:
+                pygame.draw.line(self.WIN, color, (int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height), (int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height+self.MAP_SIDE-1), 1)
+            if self.map_init_width+self.MAP_SIDE > int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))) > self.map_init_width:
+                pygame.draw.line(self.WIN, color, (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height), (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height+self.MAP_SIDE-1), 1)
+            if self.map_init_height < int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))) < self.map_init_height+self.MAP_SIDE:
+                pygame.draw.line(self.WIN, color, (self.map_init_width, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), 1)
+            if self.map_init_height+self.MAP_SIDE > int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))) > self.map_init_height:
+                pygame.draw.line(self.WIN, color, (self.map_init_width, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), 1)
+        
         
         pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(2.0, 0.0), radius=10, width=0)
-        
-        
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
 
 
     def coords_to_map(self, xx, yy):
-        # pygame.draw.circle(self.WIN, self.GREEN, (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.scale)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.scale))), radius=10, width=0)
-        return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.scale)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.scale)))      
+        # pygame.draw.circle(self.WIN, self.GREEN, (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE))), radius=10, width=0)
+        return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE)))      
 
     def main(self):
 
