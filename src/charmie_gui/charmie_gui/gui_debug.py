@@ -1971,14 +1971,10 @@ class DebugVisualMain():
             else:
                 color = self.GREY
             
-            if self.map_init_width < int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))) < self.map_init_width+self.MAP_SIDE:
-                pygame.draw.line(self.WIN, color, (int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height), (int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height+self.MAP_SIDE-1), 1)
-            if self.map_init_width+self.MAP_SIDE > int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))) > self.map_init_width:
-                pygame.draw.line(self.WIN, color, (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height), (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height+self.MAP_SIDE-1), 1)
-            if self.map_init_height < int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))) < self.map_init_height+self.MAP_SIDE:
-                pygame.draw.line(self.WIN, color, (self.map_init_width, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), 1)
-            if self.map_init_height+self.MAP_SIDE > int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))) > self.map_init_height:
-                pygame.draw.line(self.WIN, color, (self.map_init_width, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), 1)
+            pygame.draw.line(self.WIN, color, (int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height), (int(self.map_init_width+self.xc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height+self.MAP_SIDE-1), 1)
+            pygame.draw.line(self.WIN, color, (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height), (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height+self.MAP_SIDE-1), 1)
+            pygame.draw.line(self.WIN, color, (self.map_init_width, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), 1)
+            pygame.draw.line(self.WIN, color, (self.map_init_width, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), 1)
         
             ### DRAWS THE HOUSE FURNITURE ###
             for furniture in self.house_furniture:
@@ -2004,6 +2000,22 @@ class DebugVisualMain():
         
         pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(0.0, 0.0), radius=10, width=0)
 
+
+
+        # FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot) )
+
+        self.WIDTH, self.HEIGHT = self.WIN.get_size()
+        
+        CLEAR_SCREEN_POST_MAP_DRAWINGS = pygame.Rect(0, 0, self.WIDTH, self.map_init_height)
+        pygame.draw.rect(self.WIN, self.BLACK, CLEAR_SCREEN_POST_MAP_DRAWINGS, width=0)
+        CLEAR_SCREEN_POST_MAP_DRAWINGS = pygame.Rect(0, 0, self.map_init_width, self.HEIGHT)
+        pygame.draw.rect(self.WIN, self.BLACK, CLEAR_SCREEN_POST_MAP_DRAWINGS, width=0)
+
+        CLEAR_SCREEN_POST_MAP_DRAWINGS = pygame.Rect(0, self.map_init_height+self.MAP_SIDE, self.WIDTH, self.HEIGHT-(self.map_init_height+self.MAP_SIDE))
+        pygame.draw.rect(self.WIN, self.BLACK, CLEAR_SCREEN_POST_MAP_DRAWINGS, width=0)
+        CLEAR_SCREEN_POST_MAP_DRAWINGS = pygame.Rect(self.map_init_width+self.MAP_SIDE, 0, self.WIDTH-(self.map_init_width+self.MAP_SIDE), self.HEIGHT)
+        pygame.draw.rect(self.WIN, self.BLACK, CLEAR_SCREEN_POST_MAP_DRAWINGS, width=0)
+        
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
 
 
@@ -2050,13 +2062,13 @@ class DebugVisualMain():
                         self.button_zoom_out_function()
 
             self.WIN.fill((0, 0, 0))
+            self.draw_map()
             self.adjust_window_size()  
             self.draw_nodes_check()
             self.draw_cameras()
             self.draw_activates()
             self.draw_pose_detections()
             self.draw_object_detections()
-            self.draw_map()
             
             pygame_widgets.update(events)
             pygame.display.update()
@@ -2104,3 +2116,5 @@ class DebugVisualMain():
 
 # MAPA:
     # teclas do teclado a fazer tambem zoom e shift do mapa
+    # limpar tudo o que está fora do mapa
+# ajustar botoes para canto do mapa
