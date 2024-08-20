@@ -968,6 +968,8 @@ class DebugVisualMain():
         self.YELLOW  = (255,255,  0)
         self.PURPLE  = (132, 56,255)
 
+        self.WIDTH, self.HEIGHT = 1387, 752
+
         self.BB_WIDTH = 3
 
         self.cam_width_ = 640
@@ -976,10 +978,15 @@ class DebugVisualMain():
         self.cams_initial_height = 10
         self.cams_initial_width = 165
 
-        self.MAP_SIDE = 0 
-        self.MAP_SCALE = 2.0
-        self.MAP_ADJUST_X = 0.0
-        self.MAP_ADJUST_Y = 0.0
+        self.camera_resize_ratio = 1.0
+
+        self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
+        self.map_init_height = 260
+
+        self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
+        self.MAP_SCALE = 1.2
+        self.MAP_ADJUST_X = -55.0
+        self.MAP_ADJUST_Y = -200.0
 
         # self.pause_button = False
         
@@ -994,7 +1001,6 @@ class DebugVisualMain():
 
         pygame.init()
 
-        self.WIDTH, self.HEIGHT = 1387, 752
         self.FPS = 20
 
         os.environ['SDL_VIDEO_CENTERED'] = '1'
@@ -1007,84 +1013,32 @@ class DebugVisualMain():
         self.text_font_t = pygame.font.SysFont(None, 30)
         self.text_font = pygame.font.SysFont(None,24)
 
-        self.button_zoom_in = Button(self.WIN, 640+200+10, 10+360-50, 100, 100,
-        # Optional Parameters
-        text='Z+',  # Text to display
-        fontSize=20,  # Size of font
-        textColour=self.WHITE,
-        margin=0,  # Minimum distance between text/image and edge of button
-        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(255, 75, 0),  # Colour of button when being clicked
-        radius=10,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: self.button_zoom_in_function()  # Function to call when clicked on  
-        )
+        self.button_size = 30
 
-        self.button_zoom_out = Button(self.WIN, 640+200+100+10, 10+360-50, 100, 100,
-        # Optional Parameters
-        text='Z-',  # Text to display
-        fontSize=20,  # Size of font
-        textColour=self.WHITE,
-        margin=0,  # Minimum distance between text/image and edge of button
-        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(255, 75, 0),  # Colour of button when being clicked
-        radius=10,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: self.button_zoom_out_function()  # Function to call when clicked on  
-        )
+        self.button_zoom_in = Button(self.WIN, self.map_init_width+self.MAP_SIDE-(5.5*self.button_size*self.camera_resize_ratio), self.map_init_height-(self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                     text='Z+', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                     onClick=lambda: self.button_zoom_in_function())
 
-        self.button_shift_up = Button(self.WIN, 640+200+200+10, 10+360-50, 100, 100,
-        # Optional Parameters
-        text='U',  # Text to display
-        fontSize=20,  # Size of font
-        textColour=self.WHITE,
-        margin=0,  # Minimum distance between text/image and edge of button
-        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(255, 75, 0),  # Colour of button when being clicked
-        radius=10,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: self.button_shift_up_function()  # Function to call when clicked on  
-        )
-
-        self.button_shift_down = Button(self.WIN, 640+200+300+10, 10+360-50, 100, 100,
-        # Optional Parameters
-        text='D',  # Text to display
-        fontSize=20,  # Size of font
-        textColour=self.WHITE,
-        margin=0,  # Minimum distance between text/image and edge of button
-        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(255, 75, 0),  # Colour of button when being clicked
-        radius=10,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: self.button_shift_down_function()  # Function to call when clicked on  
-        )
-
-        self.button_shift_left = Button(self.WIN, 640+200+400+10, 10+360-50, 100, 100,
-        # Optional Parameters
-        text='L',  # Text to display
-        fontSize=20,  # Size of font
-        textColour=self.WHITE,
-        margin=0,  # Minimum distance between text/image and edge of button
-        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(255, 75, 0),  # Colour of button when being clicked
-        radius=10,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: self.button_shift_left_function()  # Function to call when clicked on  
-        )
-
-        self.button_shift_right = Button(self.WIN, 640+200+500+10, 10+360-50, 100, 100,
-        # Optional Parameters
-        text='R',  # Text to display
-        fontSize=20,  # Size of font
-        textColour=self.WHITE,
-        margin=0,  # Minimum distance between text/image and edge of button
-        inactiveColour=(200, 50, 0),  # Colour of button when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of button when being hovered over
-        pressedColour=(255, 75, 0),  # Colour of button when being clicked
-        radius=10,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: self.button_shift_right_function()  # Function to call when clicked on  
-        )
-
+        self.button_zoom_out = Button(self.WIN, self.map_init_width+self.MAP_SIDE-(4.5*self.button_size*self.camera_resize_ratio), self.map_init_height-(self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                     text='Z-', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                     onClick=lambda: self.button_zoom_out_function())
+        
+        self.button_shift_up = Button(self.WIN, self.map_init_width+self.MAP_SIDE-(2*self.button_size*self.camera_resize_ratio), self.map_init_height-(2*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                     text='U', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                     onClick=lambda: self.button_shift_up_function())
+        
+        self.button_shift_down = Button(self.WIN, self.map_init_width+self.MAP_SIDE-(2*self.button_size*self.camera_resize_ratio), self.map_init_height-(self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                     text='D', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                     onClick=lambda: self.button_shift_down_function())
+        
+        self.button_shift_left = Button(self.WIN, self.map_init_width+self.MAP_SIDE-(3*self.button_size*self.camera_resize_ratio), self.map_init_height-(self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                     text='L', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                     onClick=lambda: self.button_shift_left_function())
+        
+        self.button_shift_right = Button(self.WIN, self.map_init_width+self.MAP_SIDE-(1*self.button_size*self.camera_resize_ratio), self.map_init_height-(self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                     text='R', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                     onClick=lambda: self.button_shift_right_function())
+        
         # self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
         #           borderColour=(255, 0, 0), textColour=(0, 200, 0),
         #           onSubmit=self.output, radius=10, borderThickness=5)        
@@ -1944,6 +1898,34 @@ class DebugVisualMain():
         self.toggle_obstacles_lidar_bottom.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100)
         self.toggle_obstacles_head_camera.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233)
 
+        self.button_zoom_in.setX(self.map_init_width+self.MAP_SIDE-(5.5*self.button_size*self.camera_resize_ratio))
+        self.button_zoom_out.setX(self.map_init_width+self.MAP_SIDE-(4.5*self.button_size*self.camera_resize_ratio))
+        self.button_shift_up.setX(self.map_init_width+self.MAP_SIDE-(2*self.button_size*self.camera_resize_ratio))
+        self.button_shift_down.setX(self.map_init_width+self.MAP_SIDE-(2*self.button_size*self.camera_resize_ratio))
+        self.button_shift_left.setX(self.map_init_width+self.MAP_SIDE-(3*self.button_size*self.camera_resize_ratio))
+        self.button_shift_right.setX(self.map_init_width+self.MAP_SIDE-(1*self.button_size*self.camera_resize_ratio))
+
+        self.button_zoom_in.setY(self.map_init_height-self.button_size*self.camera_resize_ratio)
+        self.button_zoom_out.setY(self.map_init_height-self.button_size*self.camera_resize_ratio)
+        self.button_shift_up.setY(self.map_init_height-2*self.button_size*self.camera_resize_ratio)
+        self.button_shift_down.setY(self.map_init_height-self.button_size*self.camera_resize_ratio)
+        self.button_shift_left.setY(self.map_init_height-self.button_size*self.camera_resize_ratio)
+        self.button_shift_right.setY(self.map_init_height-self.button_size*self.camera_resize_ratio)
+
+        self.button_zoom_in.setHeight(self.button_size*self.camera_resize_ratio)
+        self.button_zoom_out.setHeight(self.button_size*self.camera_resize_ratio)
+        self.button_shift_up.setHeight(self.button_size*self.camera_resize_ratio)
+        self.button_shift_down.setHeight(self.button_size*self.camera_resize_ratio)
+        self.button_shift_left.setHeight(self.button_size*self.camera_resize_ratio)
+        self.button_shift_right.setHeight(self.button_size*self.camera_resize_ratio)
+
+        self.button_zoom_in.setWidth(self.button_size*self.camera_resize_ratio)
+        self.button_zoom_out.setWidth(self.button_size*self.camera_resize_ratio)
+        self.button_shift_up.setWidth(self.button_size*self.camera_resize_ratio)
+        self.button_shift_down.setWidth(self.button_size*self.camera_resize_ratio)
+        self.button_shift_left.setWidth(self.button_size*self.camera_resize_ratio)
+        self.button_shift_right.setWidth(self.button_size*self.camera_resize_ratio)
+        
     def draw_map(self):
         
         self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
@@ -1975,28 +1957,28 @@ class DebugVisualMain():
             pygame.draw.line(self.WIN, color, (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height), (int(self.map_init_width+self.xc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE)))), self.map_init_height+self.MAP_SIDE-1), 1)
             pygame.draw.line(self.WIN, color, (self.map_init_width, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj+(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), 1)
             pygame.draw.line(self.WIN, color, (self.map_init_width, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), (self.map_init_width+self.MAP_SIDE-1, int(self.map_init_height+self.yc_adj-(self.MAP_SIDE*(i/(10*self.MAP_SCALE))))), 1)
+    
+        ### DRAWS THE HOUSE FURNITURE ###
+        for furniture in self.house_furniture:
+            temp_rect = pygame.Rect(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0], \
+                                    self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1], \
+                                    abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[0]), \
+                                    abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[1]))
+            pygame.draw.rect(self.WIN, self.GREY, temp_rect, width=0)
+    
+        ### DRAWS THE HOUSE WALLS ###
+        for room in self.house_rooms:
+            temp_rect = pygame.Rect(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[0], \
+                                    self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[1], \
+                                    abs(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[0] - self.coords_to_map(room['bot_right_coords'][0], room['bot_right_coords'][1])[0]), \
+                                    abs(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[1] - self.coords_to_map(room['bot_right_coords'][0], room['bot_right_coords'][1])[1]))
+            pygame.draw.rect(self.WIN, self.WHITE, temp_rect, width=3)
         
-            ### DRAWS THE HOUSE FURNITURE ###
-            for furniture in self.house_furniture:
-                temp_rect = pygame.Rect(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0], \
-                                        self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1], \
-                                        abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[0]), \
-                                        abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[1]))
-                pygame.draw.rect(self.WIN, self.GREY, temp_rect, width=0)
-        
-            ### DRAWS THE HOUSE WALLS ###
-            for room in self.house_rooms:
-                temp_rect = pygame.Rect(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[0], \
-                                        self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[1], \
-                                        abs(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[0] - self.coords_to_map(room['bot_right_coords'][0], room['bot_right_coords'][1])[0]), \
-                                        abs(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[1] - self.coords_to_map(room['bot_right_coords'][0], room['bot_right_coords'][1])[1]))
-                pygame.draw.rect(self.WIN, self.WHITE, temp_rect, width=3)
-            
-            ### DRAWS THE HOUSE DOORS ###
-            for door in self.house_doors:
-                pygame.draw.line(self.WIN, self.BLACK, (self.coords_to_map(door['top_left_coords'][0],  door['top_left_coords'][1])),\
-                                                        self.coords_to_map(door['bot_right_coords'][0], door['bot_right_coords'][1]), 10)
-        
+        ### DRAWS THE HOUSE DOORS ###
+        for door in self.house_doors:
+            pygame.draw.line(self.WIN, self.BLACK, (self.coords_to_map(door['top_left_coords'][0],  door['top_left_coords'][1])),\
+                                                    self.coords_to_map(door['bot_right_coords'][0], door['bot_right_coords'][1]), 10)
+    
         
         pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(0.0, 0.0), radius=10, width=0)
 
@@ -2117,4 +2099,4 @@ class DebugVisualMain():
 # MAPA:
     # teclas do teclado a fazer tambem zoom e shift do mapa
     # limpar tudo o que está fora do mapa
-# ajustar botoes para canto do mapa
+    # ajustar botoes para canto do mapa
