@@ -123,6 +123,8 @@ class Robot():
             
         if self.DEBUG_DRAW_IMAGE:
 
+            """
+            
             ### DRAWS REFERENCE 1 METER LINES ###
             for i in range(20):
                 # 1 meter lines horizontal and vertical
@@ -162,7 +164,7 @@ class Robot():
                             (int(self.xc_adj + self.scale*door['top_left_coords'][0]) , int(self.yc_adj - self.scale*door['top_left_coords'][1])),
                             (int(self.xc_adj + self.scale*door['bot_right_coords'][0]), int(self.yc_adj - self.scale*door['bot_right_coords'][1])),
                             (50,0,50), 3)
-
+            """
 
             ### PRESENT AND PAST LOCATIONS OF ROBOT
             self.all_pos_x_val.append(self.robot_x)
@@ -510,6 +512,10 @@ class DebugVisualNode(Node):
         self.new_detected_shoes = False
         self.new_detected_shoes_hand = False
 
+        self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_t = 0.0
+
         self.lidar_time = 0.0
         self.odometry_time = 0.0
         self.ps4_controller_time = 0.0
@@ -670,7 +676,7 @@ class DebugVisualNode(Node):
             imu_orientation_norm += 360.0
 
         self.robot.imu_orientation_norm_rad = math.radians(imu_orientation_norm)
-        self.robot.robot_t = -self.robot.imu_orientation_norm_rad
+        self.robot_t = -self.robot.imu_orientation_norm_rad
         
     def get_camera_obstacles_callback(self, points: ListOfPoints):
         self.robot.camera_obstacle_points = points.coords
@@ -724,11 +730,11 @@ class DebugVisualNode(Node):
                 # calculate the absolute position according to the robot localisation
                 # dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
 
-                obs_x = value * math.cos(key + self.robot.robot_t + math.pi/2)
-                obs_y = value * math.sin(key + self.robot.robot_t + math.pi/2)
+                obs_x = value * math.cos(key + self.robot_t + math.pi/2)
+                obs_y = value * math.sin(key + self.robot_t + math.pi/2)
 
-                adj_x = (self.robot.robot_radius - self.robot.lidar_radius)*math.cos(self.robot.robot_t + math.pi/2)
-                adj_y = (self.robot.robot_radius - self.robot.lidar_radius)*math.sin(self.robot.robot_t + math.pi/2)
+                adj_x = (self.robot.robot_radius - self.robot.lidar_radius)*math.cos(self.robot_t + math.pi/2)
+                adj_y = (self.robot.robot_radius - self.robot.lidar_radius)*math.sin(self.robot_t + math.pi/2)
 
                 target = Point()
                 target.x = self.robot.robot_x + obs_x + adj_x
@@ -763,8 +769,8 @@ class DebugVisualNode(Node):
         self.robot.object_detected = obj
 
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot.robot_x = pose.x
-        self.robot.robot_y = pose.y
+        self.robot_x = pose.x
+        self.robot_y = pose.y
         self.odometry_time = time.time()
         # self.robot.robot_t = pose.theta
         
@@ -984,9 +990,12 @@ class DebugVisualMain():
         self.map_init_height = 260
 
         self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
-        self.MAP_SCALE = 1.2
-        self.MAP_ADJUST_X = -55.0
-        self.MAP_ADJUST_Y = -200.0
+        self.MAP_SCALE = 1.15
+        self.MAP_ADJUST_X = -2.5
+        self.MAP_ADJUST_Y = -8.5
+
+        self.MAP_ZOOM_INC = 0.2
+        self.MAP_SHIFT_INC = 1.0
 
         # self.pause_button = False
         
@@ -1155,6 +1164,9 @@ class DebugVisualMain():
         self.curr_detected_furniture_hand = Yolov8Objects()
         self.last_detected_furniture_hand = Yolov8Objects()
 
+        # robot info
+        self.robot_radius = 0.560/2 # meter 
+
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
         self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, only_detect_person_arm_raised=only_detect_person_arm_raised, characteristics=characteristics)
@@ -1183,22 +1195,23 @@ class DebugVisualMain():
         return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     def button_zoom_in_function(self):
-        self.MAP_SCALE -= 0.2
+        if self.MAP_SCALE - self.MAP_ZOOM_INC > 0.0:
+            self.MAP_SCALE -= self.MAP_ZOOM_INC
 
     def button_zoom_out_function(self):
-        self.MAP_SCALE += 0.2
+        self.MAP_SCALE += self.MAP_ZOOM_INC
 
     def button_shift_up_function(self):
-        self.MAP_ADJUST_Y += self.MAP_SIDE/self.MAP_SCALE/10
+        self.MAP_ADJUST_Y += self.MAP_SHIFT_INC
     
     def button_shift_down_function(self):
-        self.MAP_ADJUST_Y -= self.MAP_SIDE/self.MAP_SCALE/10
+        self.MAP_ADJUST_Y -= self.MAP_SHIFT_INC
 
     def button_shift_left_function(self):
-        self.MAP_ADJUST_X += self.MAP_SIDE/self.MAP_SCALE/10
+        self.MAP_ADJUST_X += self.MAP_SHIFT_INC
 
     def button_shift_right_function(self):
-        self.MAP_ADJUST_X -= self.MAP_SIDE/self.MAP_SCALE/10
+        self.MAP_ADJUST_X -= self.MAP_SHIFT_INC
 
     # def output(self):
         # Get text in the textbox
@@ -1933,8 +1946,8 @@ class DebugVisualMain():
 
         self.xc = self.MAP_SIDE
         self.yc = self.MAP_SIDE
-        self.xx_shift = int(self.MAP_SIDE/2 + self.MAP_ADJUST_X) # (self.MAP_SIDE*self.MAP_ADJUST_X))
-        self.yy_shift = int(self.MAP_SIDE/2 + self.MAP_ADJUST_Y) # (self.MAP_SIDE*self.MAP_ADJUST_Y))
+        self.xx_shift = int(self.MAP_SIDE/2 + self.MAP_ADJUST_X*self.MAP_SIDE/20) # (self.MAP_SIDE*self.MAP_ADJUST_X))
+        self.yy_shift = int(self.MAP_SIDE/2 + self.MAP_ADJUST_Y*self.MAP_SIDE/20) # (self.MAP_SIDE*self.MAP_ADJUST_Y))
         self.xc_adj = self.xc - self.xx_shift
         self.yc_adj = self.yc - self.yy_shift
 
@@ -1980,10 +1993,29 @@ class DebugVisualMain():
                                                     self.coords_to_map(door['bot_right_coords'][0], door['bot_right_coords'][1]), 10)
     
         
-        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(0.0, 0.0), radius=10, width=0)
+        ### DRAW ROBOT
+        rad = (self.MAP_SIDE*(self.robot_radius/10.0*(1/self.MAP_SCALE)))
+        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(self.node.robot_x, self.node.robot_y), radius=rad, width=0)
+        
+        front_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(self.node.robot_t + math.pi/2)), \
+                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(self.node.robot_t + math.pi/2)))
+        left_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(self.node.robot_t)), \
+                               self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(self.node.robot_t)))
+        right_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]+(rad*math.cos(self.node.robot_t)), \
+                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]+(rad*math.sin(self.node.robot_t)))
+
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), front_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), right_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+            
 
 
 
+
+
+
+
+        
         # FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot) )
 
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
@@ -2042,6 +2074,20 @@ class DebugVisualMain():
                     if event.key == pygame.K_MINUS:
                         # print("MINUS key pressed!")
                         self.button_zoom_out_function()
+
+
+                    if event.key == pygame.K_w:
+                        self.node.robot_y+=0.1
+                    if event.key == pygame.K_s:
+                        self.node.robot_y-=0.1
+                    if event.key == pygame.K_a:
+                        self.node.robot_x-=0.1
+                    if event.key == pygame.K_d:
+                        self.node.robot_x+=0.1
+                    if event.key == pygame.K_q:
+                        self.node.robot_t-=math.radians(10)
+                    if event.key == pygame.K_e:
+                        self.node.robot_t+=math.radians(10)
 
             self.WIN.fill((0, 0, 0))
             self.draw_map()
