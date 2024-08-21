@@ -544,6 +544,10 @@ class DebugVisualNode(Node):
         self.navigation = TarNavSDNL()
         self.is_navigating = False
 
+        self.neck_pan = 0.0
+        self.neck_tilt = 0.0
+
+
     def check_yolos_timer(self):
         
         if self.new_detected_people:
@@ -765,8 +769,8 @@ class DebugVisualNode(Node):
 
     def get_neck_position_callback(self, pose: NeckPosition):
         # print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
-        self.robot.neck_pan = -math.radians(- pose.pan)
-        self.robot.neck_tilt = -math.radians(- pose.tilt)
+        self.neck_pan = -math.radians(- pose.pan)
+        self.neck_tilt = -math.radians(- pose.tilt)
 
 
     def get_person_pose_callback(self, pose: Yolov8Pose):
@@ -2027,15 +2031,17 @@ class DebugVisualMain():
             pygame.draw.circle(self.WIN, self.YELLOW, self.coords_to_map(self.node.all_pos_x_val[i], self.node.all_pos_y_val[i]), radius=1, width=0)
 
 
-
         ### NECK DIRECTION, CAMERA FOV
-        # cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
-        #             (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4)),
-        #             int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4))), (0,255,255), 1)
-        # cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
-        #             (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4)),
-        #             int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
-        
+        neck_visual_lines_length = 1.0
+        rad = (self.MAP_SIDE*(neck_visual_lines_length/10.0*(1/self.MAP_SCALE)))
+        left_vision_range_limit_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)), \
+                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)))
+        right_vision_range_limit_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)), \
+                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)))
+
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), right_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+
 
         ### NAVIGATION TARGETS
         if self.node.navigation.move_or_rotate == "move" or self.node.navigation.move_or_rotate == "rotate":
@@ -2045,7 +2051,19 @@ class DebugVisualMain():
             rad = (self.MAP_SIDE*(self.node.navigation.reached_radius/10.0*(1/self.MAP_SCALE)))
             pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=rad, width=1)
 
-               
+
+
+
+
+
+
+
+
+
+
+
+
+
         ### FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot))
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
         
