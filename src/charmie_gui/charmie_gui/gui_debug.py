@@ -164,7 +164,7 @@ class Robot():
                             (int(self.xc_adj + self.scale*door['top_left_coords'][0]) , int(self.yc_adj - self.scale*door['top_left_coords'][1])),
                             (int(self.xc_adj + self.scale*door['bot_right_coords'][0]), int(self.yc_adj - self.scale*door['bot_right_coords'][1])),
                             (50,0,50), 3)
-            """
+            
 
             ### PRESENT AND PAST LOCATIONS OF ROBOT
             self.all_pos_x_val.append(self.robot_x)
@@ -173,12 +173,14 @@ class Robot():
             for i in range(len(self.all_pos_x_val)):
                 cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.all_pos_x_val[i]), int(self.yc_adj - self.scale * self.all_pos_y_val[i])), 1, (255, 255, 0), -1)
 
+            
             ### ROBOT
             cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
             # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
             cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
                                          int(self.yc_adj - self.scale*self.robot_y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius)+2, (0, 255, 255), -1)
-            
+            """
+
             # NECK DIRECTION, CAMERA FOV
             cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
                      (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4)),
@@ -188,15 +190,16 @@ class Robot():
                       int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
                        
 
-            if self.is_navigating:
-                pass
+            """
+            # if self.is_navigating:
+            #     pass
             
             if self.navigation.move_or_rotate == "move" or self.navigation.move_or_rotate == "rotate":
                 cv2.circle(self.test_image, (int(self.xc_adj + self.navigation.target_coordinates.x*self.scale),
                     int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (0, 255, 0), -1)
                 cv2.circle(self.test_image, (int(self.xc_adj + self.navigation.target_coordinates.x*self.scale),
                     int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.navigation.reached_radius), (0, 255, 0), 1)
-            
+            """
 
 
 
@@ -535,6 +538,12 @@ class DebugVisualNode(Node):
         self.hand_rgb_fps = 0.0
         self.hand_depth_fps = 0.0
 
+        self.all_pos_x_val = []
+        self.all_pos_y_val = []
+
+        self.navigation = TarNavSDNL()
+        self.is_navigating = False
+
     def check_yolos_timer(self):
         
         if self.new_detected_people:
@@ -745,13 +754,13 @@ class DebugVisualNode(Node):
 
 
     def target_pos_callback(self, nav: TarNavSDNL):
-        self.robot.navigation = nav
-        self.robot.is_navigating = True
-        # print(nav)
+        self.navigation = nav
+        self.is_navigating = True
+        print(nav)
 
 
     def flag_navigation_reached_callback(self, flag: Bool):
-        self.robot.is_navigating = False
+        self.is_navigating = False
 
 
     def get_neck_position_callback(self, pose: NeckPosition):
@@ -771,6 +780,10 @@ class DebugVisualNode(Node):
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
         self.robot_y = pose.y
+        
+        self.all_pos_x_val.append(self.robot_x)
+        self.all_pos_y_val.append(self.robot_y)
+        
         self.odometry_time = time.time()
         # self.robot.robot_t = pose.theta
         
@@ -2009,15 +2022,31 @@ class DebugVisualMain():
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), right_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
             
 
+        ### DRAW ROBOT PAST LOCATIONS (MOVEMENT)
+        for i in range(len(self.node.all_pos_x_val)):
+            pygame.draw.circle(self.WIN, self.YELLOW, self.coords_to_map(self.node.all_pos_x_val[i], self.node.all_pos_y_val[i]), radius=1, width=0)
 
 
 
-
-
-
+        ### NECK DIRECTION, CAMERA FOV
+        # cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
+        #             (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4)),
+        #             int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4))), (0,255,255), 1)
+        # cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
+        #             (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4)),
+        #             int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
         
-        # FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot) )
 
+        ### NAVIGATION TARGETS
+        if self.node.navigation.move_or_rotate == "move" or self.node.navigation.move_or_rotate == "rotate":
+            rad = (self.MAP_SIDE*(self.robot_radius/10.0*(1/self.MAP_SCALE)))
+            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=int(rad/2), width=0)
+
+            rad = (self.MAP_SIDE*(self.node.navigation.reached_radius/10.0*(1/self.MAP_SCALE)))
+            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=rad, width=1)
+
+               
+        ### FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot))
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
         
         CLEAR_SCREEN_POST_MAP_DRAWINGS = pygame.Rect(0, 0, self.WIDTH, self.map_init_height)
@@ -2089,6 +2118,10 @@ class DebugVisualMain():
                     if event.key == pygame.K_e:
                         self.node.robot_t+=math.radians(10)
 
+                    if event.key == pygame.K_c:
+                        self.node.all_pos_x_val.clear()
+                        self.node.all_pos_y_val.clear()
+
             self.WIN.fill((0, 0, 0))
             self.draw_map()
             self.adjust_window_size()  
@@ -2146,3 +2179,5 @@ class DebugVisualMain():
     # teclas do teclado a fazer tambem zoom e shift do mapa
     # limpar tudo o que está fora do mapa
     # ajustar botoes para canto do mapa
+# navigation parar de dar quando checgou ao target
+# navigation no geral porque não dá pra testar com o rosbag atual...
