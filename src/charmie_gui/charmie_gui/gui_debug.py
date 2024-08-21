@@ -44,9 +44,9 @@ class Robot():
         self.xc_adj = self.xc - self.xx_shift
         self.yc_adj = self.yc - self.yy_shift
 
-        self.robot_radius = 0.560/2 # meter
-        self.lidar_radius = 0.050/2 # meter
-        self.lidar_to_robot_center = 0.255
+        self.robot_radius = 0.560/2 # meters
+        self.lidar_radius = 0.050/2 # meters
+        self.lidar_to_robot_center = 0.255 # meters
 
         self.robot_x = 0.0
         self.robot_y = 0.0
@@ -198,7 +198,7 @@ class Robot():
                     int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (0, 255, 0), -1)
                 cv2.circle(self.test_image, (int(self.xc_adj + self.navigation.target_coordinates.x*self.scale),
                     int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.navigation.reached_radius), (0, 255, 0), 1)
-            """
+
 
 
 
@@ -220,7 +220,7 @@ class Robot():
                 # calculate the absolute position according to the robot localisation
                 dist_obj = math.sqrt(points.x**2 + points.y**2)
 
-                # if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
+                # if self.DEBUG_DRAW_IMAGE_OVERALL:
                 angle_obj = math.atan2(points.x, points.y)
                 theta_aux = math.pi/2 - (angle_obj - self.robot_t)
 
@@ -237,6 +237,10 @@ class Robot():
 
             # self.robot_t = -self.imu_orientation_norm_rad
             """
+
+
+            """
+            OLD pre guidebug
             for key, value in self.valores_dict.items():
                 # print(f"Ang: {key}, Dist: {value}")
 
@@ -307,6 +311,9 @@ class Robot():
 
 
             """
+
+
+
             for person in self.person_pose.persons:
                 # print(person.position_relative.x/1000, person.position_relative.y/1000)
 
@@ -540,6 +547,11 @@ class DebugVisualNode(Node):
         self.all_pos_x_val = []
         self.all_pos_y_val = []
 
+        self.scan = LaserScan()
+        self.person_pose = Yolov8Pose()
+        self.object_detected = Yolov8Objects()
+        self.search_for_person = ListOfDetectedPerson()
+        self.search_for_object = ListOfDetectedObject()
         self.navigation = TarNavSDNL()
         self.is_navigating = False
 
@@ -549,6 +561,13 @@ class DebugVisualNode(Node):
         self.lidar_obstacle_points = []
         self.camera_obstacle_points = []
         self.final_obstacle_points = []
+
+        self.robot_radius = 0.560/2 # meters
+        self.lidar_radius = 0.050/2 # meters
+        self.lidar_to_robot_center = 0.255 # meters
+
+        self.NORTE = -45.0
+        self.imu_orientation_norm_rad = 0.0
 
 
     def check_yolos_timer(self):
@@ -684,15 +703,14 @@ class DebugVisualNode(Node):
         self.ps4_controller_time = time.time()
 
     def get_orientation_callback(self, orientation: Float32):
-        # self.robot.imu_orientation = orientation.data
-        imu_orientation_norm = orientation.data - self.robot.NORTE
+        imu_orientation_norm = orientation.data - self.NORTE
         if imu_orientation_norm > 180.0:
             imu_orientation_norm -= 360.0
         if imu_orientation_norm < -180.0:
             imu_orientation_norm += 360.0
 
-        self.robot.imu_orientation_norm_rad = math.radians(imu_orientation_norm)
-        self.robot_t = -self.robot.imu_orientation_norm_rad
+        self.imu_orientation_norm_rad = math.radians(imu_orientation_norm)
+        self.robot_t = -self.imu_orientation_norm_rad
         
     def get_camera_obstacles_callback(self, points: ListOfPoints):
         self.camera_obstacle_points = points.coords
@@ -702,27 +720,14 @@ class DebugVisualNode(Node):
     def get_final_obstacles_callback(self, points: ListOfPoints):
         self.final_obstacle_points = points.coords
         # print("Received Points")
-        # print(self.robot.final_obstacle_points)
+        # print(self.final_obstacle_points)
 
     def lidar_callback(self, scan: LaserScan):
-        self.robot.scan = scan
+        self.scan = scan
+        # print(scan)
 
         self.lidar_time = time.time()
 
-        # print(scan)
-        """
-        START_RAD = scan.angle_min
-        STEP_RAD = scan.angle_increment
-
-
-        for i in range(len(scan.ranges)):
-            # print(x)
-            # i = i + 1
-            # self.valores_id[START_RAD+i*STEP_RAD] = i
-            self.robot.valores_dict[START_RAD+i*STEP_RAD] = scan.ranges[i]
-
-        # print(self.robot.valores_dict, "\n")
-        """
         START_RAD = scan.angle_min
         STEP_RAD = scan.angle_increment
         self.min_dist_error = 0.1
@@ -738,19 +743,11 @@ class DebugVisualNode(Node):
             
             if value > self.min_dist_error: # and value < self.max_dist_error:
 
-                # object_rel_pos = Point()
-                # object_rel_pos.x =  -value * math.cos(-key + math.pi/2)
-                # object_rel_pos.y =  self.robot.lidar_to_robot_center + value * math.sin(-key + math.pi/2)
-                # object_rel_pos.z =  0.35 # lidar height on the robot
-                
-                # calculate the absolute position according to the robot localisation
-                # dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
-
                 obs_x = value * math.cos(key + self.robot_t + math.pi/2)
                 obs_y = value * math.sin(key + self.robot_t + math.pi/2)
 
-                adj_x = (self.robot.robot_radius - self.robot.lidar_radius)*math.cos(self.robot_t + math.pi/2)
-                adj_y = (self.robot.robot_radius - self.robot.lidar_radius)*math.sin(self.robot_t + math.pi/2)
+                adj_x = (self.robot_radius - self.lidar_radius)*math.cos(self.robot_t + math.pi/2)
+                adj_y = (self.robot_radius - self.lidar_radius)*math.sin(self.robot_t + math.pi/2)
 
                 target = Point()
                 target.x = self.robot_x + obs_x + adj_x
@@ -778,11 +775,11 @@ class DebugVisualNode(Node):
 
     def get_person_pose_callback(self, pose: Yolov8Pose):
         # print("Received new yolo pose. Number of people = ", pose.num_person)
-        self.robot.person_pose = pose
+        self.person_pose = pose
 
     def get_object_detected_callback(self, obj: Yolov8Objects):
         # print("Received new yolo objects. Number of objects = ", obj.num_person)
-        self.robot.object_detected = obj
+        self.object_detected = obj
 
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
@@ -792,19 +789,14 @@ class DebugVisualNode(Node):
         self.all_pos_y_val.append(self.robot_y)
         
         self.odometry_time = time.time()
-        # self.robot.robot_t = pose.theta
+        # self.robot_t = pose.theta
         
     def search_for_person_detections_callback(self, points: ListOfDetectedPerson):
-        self.robot.search_for_person = points
+        self.search_for_person = points
         
     def search_for_object_detections_callback(self, points: ListOfDetectedObject):
-        self.robot.search_for_object = points
+        self.search_for_object = points
 
-    def get_color_image_callback(self, img: Image):
-        # self.get_logger().info('Receiving color video frame')
-        # ROS2 Image Bridge for OpenCV
-        br = CvBridge()
-        self.robot.current_frame = br.imgmsg_to_cv2(img, "bgr8")
 
 class CheckNodesMain():
 
@@ -993,6 +985,7 @@ class DebugVisualMain():
         self.MAGENTA = (255, 51,255)
         self.YELLOW  = (255,255,  0)
         self.PURPLE  = (132, 56,255)
+        self.CYAN    = (  0,255,255)
 
         self.WIDTH, self.HEIGHT = 1387, 752
 
@@ -2068,7 +2061,6 @@ class DebugVisualMain():
             # calculate the absolute position according to the robot localisation
             dist_obj = math.sqrt(points.x**2 + points.y**2)
 
-            # if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
             angle_obj = math.atan2(points.x, points.y)
             theta_aux = math.pi/2 - (angle_obj - self.node.robot_t)
 
@@ -2080,10 +2072,29 @@ class DebugVisualMain():
             pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(target.x, target.y), radius=1, width=0)
             
 
+        ### PERSON DETECTED
+        rad_person = (self.MAP_SIDE*((self.robot_radius/2)/10.0*(1/self.MAP_SCALE)))
+        for person in self.node.person_pose.persons:
+            pygame.draw.circle(self.WIN, self.CYAN, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=rad_person, width=0)
 
+        ### SEARCH FOR PERSON
+        for person in self.node.search_for_person.persons:
+            pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=rad_person, width=0)
 
+        ### OBJECT_DETECTED
+        rad_object = (self.MAP_SIDE*((self.robot_radius/4.5)/10.0*(1/self.MAP_SCALE)))
+        for object in self.node.object_detected.objects:
+            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-rad_object, \
+                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-rad_object, \
+                                    2*rad_object, 2*rad_object)
+            pygame.draw.rect(self.WIN, self.CYAN, temp_rect, width=0)
 
-
+        ### SEARCH FOR OBJECT
+        for object in self.node.search_for_object.objects:
+            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-rad_object, \
+                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-rad_object, \
+                                    2*rad_object, 2*rad_object)
+            pygame.draw.rect(self.MAGENTA, self.MAGENTA, temp_rect, width=0)
 
         ### FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot))
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
@@ -2222,3 +2233,5 @@ class DebugVisualMain():
 # navigation no geral porque não dá pra testar com o rosbag atual...
 # testar camera obstacle points
 # testar final obstacle points
+# testar search for people 
+# testar search for objects
