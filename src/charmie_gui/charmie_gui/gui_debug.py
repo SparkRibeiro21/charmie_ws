@@ -101,11 +101,11 @@ class Robot():
         self.scan = LaserScan()
         self.valores_dict = {}
 
+        self.lidar_obstacle_points = []
         self.camera_obstacle_points = []
         self.final_obstacle_points = []
-        self.lidar_obstacle_points = []
 
-        self.NORTE = 6.0
+        self.NORTE = -45.0
         self.imu_orientation_norm_rad = 0.0
 
         self.linhas = 720
@@ -179,7 +179,7 @@ class Robot():
             # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
             cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
                                          int(self.yc_adj - self.scale*self.robot_y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius)+2, (0, 255, 255), -1)
-            """
+
 
             # NECK DIRECTION, CAMERA FOV
             cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
@@ -190,7 +190,6 @@ class Robot():
                       int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
                        
 
-            """
             # if self.is_navigating:
             #     pass
             
@@ -547,6 +546,10 @@ class DebugVisualNode(Node):
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
 
+        self.lidar_obstacle_points = []
+        self.camera_obstacle_points = []
+        self.final_obstacle_points = []
+
 
     def check_yolos_timer(self):
         
@@ -692,12 +695,12 @@ class DebugVisualNode(Node):
         self.robot_t = -self.robot.imu_orientation_norm_rad
         
     def get_camera_obstacles_callback(self, points: ListOfPoints):
-        self.robot.camera_obstacle_points = points.coords
+        self.camera_obstacle_points = points.coords
         # print("Received Points")
         # print
         
     def get_final_obstacles_callback(self, points: ListOfPoints):
-        self.robot.final_obstacle_points = points.coords
+        self.final_obstacle_points = points.coords
         # print("Received Points")
         # print(self.robot.final_obstacle_points)
 
@@ -725,7 +728,7 @@ class DebugVisualNode(Node):
         self.min_dist_error = 0.1
         self.max_dist_error = 5.0
 
-        self.robot.lidar_obstacle_points.clear()
+        self.lidar_obstacle_points.clear()
 
         # calculates list of lidar obstacle points
         for i in range(len(scan.ranges)):
@@ -750,11 +753,11 @@ class DebugVisualNode(Node):
                 adj_y = (self.robot.robot_radius - self.robot.lidar_radius)*math.sin(self.robot_t + math.pi/2)
 
                 target = Point()
-                target.x = self.robot.robot_x + obs_x + adj_x
-                target.y = self.robot.robot_y + obs_y + adj_y
+                target.x = self.robot_x + obs_x + adj_x
+                target.y = self.robot_y + obs_y + adj_y
                 target.z = 0.35 # lidar height on the robot
 
-                self.robot.lidar_obstacle_points.append(target)
+                self.lidar_obstacle_points.append(target)
 
 
     def target_pos_callback(self, nav: TarNavSDNL):
@@ -1219,16 +1222,16 @@ class DebugVisualMain():
         self.MAP_SCALE += self.MAP_ZOOM_INC
 
     def button_shift_up_function(self):
-        self.MAP_ADJUST_Y += self.MAP_SHIFT_INC
+        self.MAP_ADJUST_Y -= self.MAP_SHIFT_INC
     
     def button_shift_down_function(self):
-        self.MAP_ADJUST_Y -= self.MAP_SHIFT_INC
+        self.MAP_ADJUST_Y += self.MAP_SHIFT_INC
 
     def button_shift_left_function(self):
-        self.MAP_ADJUST_X += self.MAP_SHIFT_INC
+        self.MAP_ADJUST_X -= self.MAP_SHIFT_INC
 
     def button_shift_right_function(self):
-        self.MAP_ADJUST_X -= self.MAP_SHIFT_INC
+        self.MAP_ADJUST_X += self.MAP_SHIFT_INC
 
     # def output(self):
         # Get text in the textbox
@@ -2014,12 +2017,12 @@ class DebugVisualMain():
         rad = (self.MAP_SIDE*(self.robot_radius/10.0*(1/self.MAP_SCALE)))
         pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(self.node.robot_x, self.node.robot_y), radius=rad, width=0)
         
-        front_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(self.node.robot_t + math.pi/2)), \
-                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(self.node.robot_t + math.pi/2)))
-        left_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(self.node.robot_t)), \
-                               self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(self.node.robot_t)))
-        right_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]+(rad*math.cos(self.node.robot_t)), \
-                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]+(rad*math.sin(self.node.robot_t)))
+        front_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t + math.pi/2)), \
+                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t + math.pi/2)))
+        left_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t)), \
+                               self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t)))
+        right_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]+(rad*math.cos(-self.node.robot_t)), \
+                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]+(rad*math.sin(-self.node.robot_t)))
 
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), front_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
@@ -2034,10 +2037,10 @@ class DebugVisualMain():
         ### NECK DIRECTION, CAMERA FOV
         neck_visual_lines_length = 1.0
         rad = (self.MAP_SIDE*(neck_visual_lines_length/10.0*(1/self.MAP_SCALE)))
-        left_vision_range_limit_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)), \
-                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)))
-        right_vision_range_limit_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)), \
-                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)))
+        left_vision_range_limit_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)), \
+                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)))
+        right_vision_range_limit_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)), \
+                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)))
 
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), right_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
@@ -2052,12 +2055,30 @@ class DebugVisualMain():
             pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=rad, width=1)
 
 
+        ### OBSTACLES POINTS (LIDAR, Depth Head Camera and Final Obstacles Fusion)
+        for points in self.node.lidar_obstacle_points:
+            # pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(self.node.robot_x+points.x, self.node.robot_y+points.y), radius=1, width=0)
+            pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(points.x, points.y), radius=1, width=0)
 
+        for points in self.node.camera_obstacle_points:
+            pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map(points.x, points.y), radius=1, width=0)
 
+        for points in self.node.final_obstacle_points:
 
+            # calculate the absolute position according to the robot localisation
+            dist_obj = math.sqrt(points.x**2 + points.y**2)
 
+            # if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
+            angle_obj = math.atan2(points.x, points.y)
+            theta_aux = math.pi/2 - (angle_obj - self.node.robot_t)
 
+            target = Point()
+            target.x = dist_obj * math.cos(theta_aux) + self.node.robot_x
+            target.y = dist_obj * math.sin(theta_aux) + self.node.robot_y
+            target.z = points.z
 
+            pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(target.x, target.y), radius=1, width=0)
+            
 
 
 
@@ -2199,3 +2220,5 @@ class DebugVisualMain():
     # ajustar botoes para canto do mapa
 # navigation parar de dar quando checgou ao target
 # navigation no geral porque não dá pra testar com o rosbag atual...
+# testar camera obstacle points
+# testar final obstacle points
