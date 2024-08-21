@@ -173,6 +173,18 @@ class DebugVisualNode(Node):
         self.hand_rgb_fps = 0.0
         self.hand_depth_fps = 0.0
 
+        self.head_yp_time = 0.0
+        self.head_yo_time = 0.0
+        self.hand_yo_time = 0.0
+
+        self.last_head_yp_time = 0.0
+        self.last_head_yo_time = 0.0
+        self.last_hand_yo_time = 0.0
+
+        self.head_yp_fps = 0.0
+        self.head_yo_fps = 0.0
+        self.hand_yo_fps = 0.0
+
         self.all_pos_x_val = []
         self.all_pos_y_val = []
 
@@ -230,8 +242,7 @@ class DebugVisualNode(Node):
 
         self.last_hand_camera_time = self.hand_camera_time
         self.hand_camera_time = time.time()
-
-        self.hand_rgb_fps = str(round(1/(self.hand_camera_time-self.last_hand_camera_time), 2))
+        self.hand_rgb_fps = round(1/(self.hand_camera_time-self.last_hand_camera_time), 1)
 
     def get_color_image_head_callback(self, img: Image):
         self.head_rgb = img
@@ -239,8 +250,7 @@ class DebugVisualNode(Node):
 
         self.last_head_camera_time = self.head_camera_time
         self.head_camera_time = time.time()
-        
-        self.head_rgb_fps = str(round(1/(self.head_camera_time-self.last_head_camera_time), 2))
+        self.head_rgb_fps = round(1/(self.head_camera_time-self.last_head_camera_time), 1)
 
     def get_aligned_depth_image_hand_callback(self, img: Image):
         self.hand_depth = img
@@ -248,8 +258,7 @@ class DebugVisualNode(Node):
 
         self.last_hand_depth_camera_time = self.hand_depth_camera_time
         self.hand_depth_camera_time = time.time()
-        
-        self.head_depth_fps = str(round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 2))
+        self.head_depth_fps = round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 1)
 
 
     def get_aligned_depth_image_head_callback(self, img: Image):
@@ -258,8 +267,7 @@ class DebugVisualNode(Node):
         
         self.last_head_depth_camera_time = self.head_depth_camera_time
         self.head_depth_camera_time = time.time()
-        
-        self.hand_depth_fps = str(round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 2))
+        self.hand_depth_fps = round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 1)
 
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
@@ -304,13 +312,25 @@ class DebugVisualNode(Node):
         self.detected_people = det_people
         self.new_detected_people = True
     
+        self.last_head_yp_time = self.head_yp_time
+        self.head_yp_time = time.time()
+        self.head_yp_fps = round(1/(self.head_yp_time-self.last_head_yp_time), 1)
+
     def object_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_objects = det_object
         self.new_detected_objects = True
 
+        self.last_head_yo_time = self.head_yo_time
+        self.head_yo_time = time.time()
+        self.head_yo_fps = round(1/(self.head_yo_time-self.last_head_yo_time), 1)
+
     def object_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
         self.detected_objects_hand = det_object
         self.new_detected_objects_hand = True
+
+        self.last_hand_yo_time = self.hand_yo_time
+        self.hand_yo_time = time.time()
+        self.hand_yo_fps = round(1/(self.hand_yo_time-self.last_hand_yo_time), 1)
 
     def doors_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_doors = det_object
@@ -1036,9 +1056,11 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (self.cams_initial_width, self.cams_initial_height))
-                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 55, 4*self.cams_initial_height, self.BLACK, 85)
-                self.draw_text(str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
-                self.draw_text(str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
+                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 80, 8*self.cams_initial_height, self.BLACK, 85)
+                self.draw_text("RGB: "+str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
+                self.draw_text("Dep: "+str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
+                self.draw_text("Y_O: "+str(self.node.head_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, 5*self.cams_initial_height)
+                self.draw_text("Y_P: "+str(self.node.head_yp_fps), self.text_font, self.WHITE, self.cams_initial_width, 7*self.cams_initial_height)
 
             else:
                 temp_rect = pygame.Rect(self.cams_initial_width, self.cams_initial_height, self.cam_width_, self.cam_height_)
@@ -1091,9 +1113,11 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (self.cams_initial_width, self.cams_initial_height))
-                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 55, 4*self.cams_initial_height, self.BLACK, 85)
-                self.draw_text(str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
-                self.draw_text(str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
+                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 80, 8*self.cams_initial_height, self.BLACK, 85)
+                self.draw_text("RGB: "+str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
+                self.draw_text("Dep: "+str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
+                self.draw_text("Y_O: "+str(self.node.head_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, 5*self.cams_initial_height)
+                self.draw_text("Y_P: "+str(self.node.head_yp_fps), self.text_font, self.WHITE, self.cams_initial_width, 7*self.cams_initial_height)
 
             else:
                 temp_rect = pygame.Rect(self.cams_initial_width, self.cams_initial_height, self.cam_width_, self.cam_height_)
@@ -1120,9 +1144,10 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (self.cams_initial_width, self.cam_height_+2*self.cams_initial_height))
-                self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 55, 4*self.cams_initial_height, self.BLACK, 85)
-                self.draw_text(str(self.node.hand_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+2*self.cams_initial_height)
-                self.draw_text(str(self.node.hand_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+3*self.cams_initial_height+self.cams_initial_height)
+                self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 80, 6*self.cams_initial_height, self.BLACK, 85)
+                self.draw_text("RGB: "+str(self.node.hand_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+2*self.cams_initial_height)
+                self.draw_text("Dep: "+str(self.node.hand_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+3*self.cams_initial_height+self.cams_initial_height)
+                self.draw_text("Y_O: "+str(self.node.hand_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+5*self.cams_initial_height+self.cams_initial_height)
                 
             else:
                 temp_rect = pygame.Rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, self.cam_width_, self.cam_height_)
@@ -1177,9 +1202,10 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (self.cams_initial_width, self.cam_height_+2*self.cams_initial_height))
-                self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 55, 4*self.cams_initial_height, self.BLACK, 85)
-                self.draw_text(str(self.node.hand_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+2*self.cams_initial_height)
-                self.draw_text(str(self.node.hand_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+3*self.cams_initial_height+self.cams_initial_height)
+                self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 80, 6*self.cams_initial_height, self.BLACK, 85)
+                self.draw_text("RGB: "+str(self.node.hand_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+2*self.cams_initial_height)
+                self.draw_text("Dep: "+str(self.node.hand_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+3*self.cams_initial_height+self.cams_initial_height)
+                self.draw_text("Y_O: "+str(self.node.hand_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+5*self.cams_initial_height+self.cams_initial_height)
                 
             else:
                 temp_rect = pygame.Rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, self.cam_width_, self.cam_height_)
@@ -1817,13 +1843,13 @@ class DebugVisualMain():
 
 # TO DO LIST:
 
-    # MAPA:
-        # teclas do teclado a fazer tambem zoom e shift do mapa
-        # limpar tudo o que está fora do mapa
-        # ajustar botoes para canto do mapa
-    # navigation parar de dar quando checgou ao target
-    # navigation no geral porque não dá pra testar com o rosbag atual...
-    # testar camera obstacle points
-    # testar final obstacle points
-    # testar search for people 
-    # testar search for objects
+# MAPA:
+    # teclas do teclado a fazer tambem zoom e shift do mapa
+    # limpar tudo o que está fora do mapa
+    # ajustar botoes para canto do mapa
+# navigation parar de dar quando checgou ao target
+# navigation no geral porque não dá pra testar com o rosbag atual...
+# testar camera obstacle points
+# testar final obstacle points
+# testar search for people 
+# testar search for objects
