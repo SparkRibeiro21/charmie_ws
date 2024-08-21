@@ -26,376 +26,6 @@ from pygame_widgets.toggle import Toggle
 from pygame_widgets.button import Button
 from pygame_widgets.textbox import TextBox
 
-DEBUG_DRAW = False
-
-
-class Robot():
-    def __init__(self):
-        print("New Robot Class Initialised")
-
-        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
-        self.xc = 400
-        self.yc = 400
-        self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
-        self.scale = 0.063*1000
-        self.xx_shift = -110
-        self.yy_shift = -370
-
-        self.xc_adj = self.xc - self.xx_shift
-        self.yc_adj = self.yc - self.yy_shift
-
-        self.robot_radius = 0.560/2 # meters
-        self.lidar_radius = 0.050/2 # meters
-        self.lidar_to_robot_center = 0.255 # meters
-
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0 # math.pi/4
-        # self.neck_hor_angle = math.radians(30)
-        # self.neck_ver_angle = 0.0 # NOT USED ...
-        self.all_pos_x_val = []
-        self.all_pos_y_val = []
-        self.all_pos_t_val = []
-        self.neck_visual_lines_length = 1.0
-        
-        self.flag_get_person = False
-        self.t_ctr = 0.0
-        self.t_ctr2 = 100+1
-
-        self.x_ant = 0.0
-        self.y_ant = 0.0
-
-        # info regarding the paths for the recorded files intended to be played
-        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
-        self.home = str(Path.home())
-        self.midpath = "charmie_ws/src/configuration_files"
-        self.complete_path = self.home+'/'+self.midpath+'/'
-
-        # Open all configuration files
-        try:
-            with open(self.complete_path + 'rooms_location.json', encoding='utf-8') as json_file:
-                self.house_rooms = json.load(json_file)
-            # print(self.house_rooms)
-
-            with open(self.complete_path + 'furniture_location.json', encoding='utf-8') as json_file:
-                self.house_furniture = json.load(json_file)
-            # print(self.house_furniture)
-
-            with open(self.complete_path + 'doors_location.json', encoding='utf-8') as json_file:
-                self.house_doors = json.load(json_file)
-            # print(self.house_doors)
-        except:
-            print("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
-
-        self.neck_pan = 0.0
-        self.neck_tilt = 0.0
-
-        self.person_pose = Yolov8Pose()
-        self.object_detected = Yolov8Objects()
-        self.search_for_person = ListOfDetectedPerson()
-        self.search_for_object = ListOfDetectedObject()
-
-        self.navigation = TarNavSDNL()
-        self.is_navigating = False
-
-        self.scan = LaserScan()
-        self.valores_dict = {}
-
-        self.lidar_obstacle_points = []
-        self.camera_obstacle_points = []
-        self.final_obstacle_points = []
-
-        self.NORTE = -45.0
-        self.imu_orientation_norm_rad = 0.0
-
-        self.linhas = 720
-        self.colunas = 1280
-        self.current_frame = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
-
-    def pose2d_msg_to_position(self, pose: Pose2D):
-        
-        self.robot_x = pose.x
-        self.robot_y = pose.y
-        # self.robot_t = pose.theta
-
-
-    def update_debug_drawings(self):
-            
-        if self.DEBUG_DRAW_IMAGE:
-
-            """
-            
-            ### DRAWS REFERENCE 1 METER LINES ###
-            for i in range(20):
-                # 1 meter lines horizontal and vertical
-                if i == 0:
-                    cv2.line(self.test_image, (int(self.xc_adj - self.scale*i), 0), (int(self.xc_adj - self.scale*i), self.xc*2), (0, 0, 255), 1)
-                    cv2.line(self.test_image, (0, int(self.yc_adj - self.scale*i)), (self.yc*2, int(self.yc_adj - self.scale*i)), (0, 0, 255), 1)
-                else:
-                    cv2.line(self.test_image, (int(self.xc_adj + self.scale*i), 0), (int(self.xc_adj + self.scale*i), self.xc*2), (255, 255, 255), 1)
-                    cv2.line(self.test_image, (int(self.xc_adj - self.scale*i), 0), (int(self.xc_adj - self.scale*i), self.xc*2), (255, 255, 255), 1)
-                    cv2.line(self.test_image, (0, int(self.yc_adj - self.scale*i)), (self.yc*2, int(self.yc_adj - self.scale*i)), (255, 255, 255), 1)
-                    cv2.line(self.test_image, (0, int(self.yc_adj + self.scale*i)), (self.yc*2, int(self.yc_adj + self.scale*i)), (255, 255, 255), 1)
-
-            ### DRAWS THE HOUSE FURNITURE ###
-            for furniture in self.house_furniture:
-                cv2.rectangle(self.test_image, 
-                            (int(self.xc_adj + self.scale*furniture['top_left_coords'][0]) , int(self.yc_adj - self.scale*furniture['top_left_coords'][1])),
-                            (int(self.xc_adj + self.scale*furniture['bot_right_coords'][0]), int(self.yc_adj - self.scale*furniture['bot_right_coords'][1])),
-                            (120,0,120), -1)
-                
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*furniture['top_left_coords'][0]) , int(self.yc_adj - self.scale*furniture['top_left_coords'][1])), 6, (255,0,0), -1)
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*furniture['bot_right_coords'][0]), int(self.yc_adj - self.scale*furniture['bot_right_coords'][1])), 6, (0,0,255), -1)
-
-                            
-            ### DRAWS THE HOUSE WALLS ###
-            for room in self.house_rooms:
-                cv2.rectangle(self.test_image, 
-                            (int(self.xc_adj + self.scale*room['top_left_coords'][0]) , int(self.yc_adj - self.scale*room['top_left_coords'][1])),
-                            (int(self.xc_adj + self.scale*room['bot_right_coords'][0]), int(self.yc_adj - self.scale*room['bot_right_coords'][1])),
-                            (255,0,255), 3)
-                
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*room['top_left_coords'][0]) , int(self.yc_adj - self.scale*room['top_left_coords'][1])), 6, (255,0,0), -1)
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*room['bot_right_coords'][0]), int(self.yc_adj - self.scale*room['bot_right_coords'][1])), 6, (0,0,255), -1)
-            
-            ### DRAWS THE HOUSE DOORS ###
-            for door in self.house_doors:
-                cv2.line(self.test_image, 
-                            (int(self.xc_adj + self.scale*door['top_left_coords'][0]) , int(self.yc_adj - self.scale*door['top_left_coords'][1])),
-                            (int(self.xc_adj + self.scale*door['bot_right_coords'][0]), int(self.yc_adj - self.scale*door['bot_right_coords'][1])),
-                            (50,0,50), 3)
-            
-
-            ### PRESENT AND PAST LOCATIONS OF ROBOT
-            self.all_pos_x_val.append(self.robot_x)
-            self.all_pos_y_val.append(self.robot_y)
-            self.all_pos_t_val.append(self.robot_t)
-            for i in range(len(self.all_pos_x_val)):
-                cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.all_pos_x_val[i]), int(self.yc_adj - self.scale * self.all_pos_y_val[i])), 1, (255, 255, 0), -1)
-
-            
-            ### ROBOT
-            cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
-            # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
-            cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                         int(self.yc_adj - self.scale*self.robot_y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius)+2, (0, 255, 255), -1)
-
-
-            # NECK DIRECTION, CAMERA FOV
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
-                     (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4)),
-                      int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4))), (0,255,255), 1)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
-                     (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4)),
-                      int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
-                       
-
-            # if self.is_navigating:
-            #     pass
-            
-            if self.navigation.move_or_rotate == "move" or self.navigation.move_or_rotate == "rotate":
-                cv2.circle(self.test_image, (int(self.xc_adj + self.navigation.target_coordinates.x*self.scale),
-                    int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (0, 255, 0), -1)
-                cv2.circle(self.test_image, (int(self.xc_adj + self.navigation.target_coordinates.x*self.scale),
-                    int(self.yc_adj - self.navigation.target_coordinates.y*self.scale)), (int)(self.scale*self.navigation.reached_radius), (0, 255, 0), 1)
-
-
-
-
-            for points in self.lidar_obstacle_points:
-
-                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                        int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
-                                        3, (0, 0, 255), -1)
-
-
-            for points in self.camera_obstacle_points:
-            
-                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                        int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
-                                        3, (0, 165, 255), -1)
-                       
-            for points in self.final_obstacle_points:
-
-                # calculate the absolute position according to the robot localisation
-                dist_obj = math.sqrt(points.x**2 + points.y**2)
-
-                # if self.DEBUG_DRAW_IMAGE_OVERALL:
-                angle_obj = math.atan2(points.x, points.y)
-                theta_aux = math.pi/2 - (angle_obj - self.robot_t)
-
-                target = Point()
-                target.x = dist_obj * math.cos(theta_aux) + self.robot_x
-                target.y = dist_obj * math.sin(theta_aux) + self.robot_y
-                target.z = points.z
-
-                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * target.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                    int(self.yc_adj - self.scale * target.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
-                                    3, (255, 255, 255), -1)
-            
-            # print(self.robot_t, self.imu_orientation_norm_rad)
-
-            # self.robot_t = -self.imu_orientation_norm_rad
-            """
-
-
-            """
-            OLD pre guidebug
-            for key, value in self.valores_dict.items():
-                # print(f"Ang: {key}, Dist: {value}")
-
-
-
-                if value > 0.1: 
-                    obs_x = value * math.cos(key + self.robot_t + math.pi/2)
-                    obs_y = value * math.sin(key + self.robot_t + math.pi/2)
-
-                    ### ROBOT
-
-                    cv2.circle(self.test_image, (int(self.xc_adj + self.scale * (self.robot_x + obs_x) + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                                int(self.yc_adj - self.scale * (self.robot_y + obs_y) - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
-                                                2, (0, 0, 255), -1)
-                
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                #                             int(self.yc_adj - self.scale*self.robot_y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius)+2, (0, 255, 255), -1)
-                
-
-
-            for points in self.camera_obstacle_points.coords:
-                # print(f"Ang: {key}, Dist: {value}")
-
-
-
-                # if value > 0.1: 
-                #     obs_x = value * math.cos(key + self.robot_t + math.pi/2)
-                #     obs_y = value * math.sin(key + self.robot_t + math.pi/2)
-
-                ### ROBOT
-
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale * (self.robot_x - (points.y/1000))),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                #                             int(self.yc_adj - self.scale * (self.robot_y + (points.x/1000)))),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
-                #                             2, (0, 255, 255), -1)
-
-                object_rel_pos = Point()
-                object_rel_pos.x =  -points.y/1000
-                object_rel_pos.y =  points.x/1000
-                object_rel_pos.z =  points.z/1000
-                
-                # calculate the absolute position according to the robot localisation
-                angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
-                dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
-
-                theta_aux = math.pi/2 - (angle_obj - self.robot_t)
-
-                target_x = dist_obj * math.cos(theta_aux) + self.robot_x
-                target_y = dist_obj * math.sin(theta_aux) + self.robot_y
-                target_z = object_rel_pos.z
-
-
-
-                print(math.degrees(self.robot_t))
-
-                if target_z > 0.3:
-                    cv2.circle(self.test_image, (int(self.xc_adj + self.scale * target_x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                            int(self.yc_adj - self.scale * target_y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
-                                            2, (255, 0, 0), -1)
-                # else:
-                #     cv2.circle(self.test_image, (int(self.xc_adj + self.scale * target_x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                #                             int(self.yc_adj - self.scale * target_y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
-                #                             2, (255, 100, 100), -1)
-                
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                #                             int(self.yc_adj - self.scale*self.robot_y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius)+2, (0, 255, 255), -1)
-                
-
-
-
-            """
-
-
-
-            for person in self.person_pose.persons:
-                # print(person.position_relative.x/1000, person.position_relative.y/1000)
-
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
-           
-                cv2.circle(self.test_image, (int(self.xc_adj + person.position_absolute.x*self.scale),
-                    int(self.yc_adj - person.position_absolute.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 255, 255), -1)
-                
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
-                #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
-
-
-            for person in self.search_for_person.persons:
-                # print(person.position_relative.x/1000, person.position_relative.y/1000)
-
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
-           
-
-                cv2.circle(self.test_image, (int(self.xc_adj + person.position_absolute.x*self.scale),
-                    int(self.yc_adj - person.position_absolute.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 0, 0), -1)
-                
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
-                #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
-            
-
-            for object in self.object_detected.objects:
-                # print(person.position_relative.x/1000, person.position_relative.y/1000)
-
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
-           
-
-                cv2.rectangle(self.test_image, 
-                              (int(self.xc_adj + object.position_absolute.x*self.scale + self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale + self.lidar_radius*2*self.scale)),
-                              (int(self.xc_adj + object.position_absolute.x*self.scale - self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale - self.lidar_radius*2*self.scale)),
-                              (255, 255, 255), -1)
-                               
-                # cv2.circle(self.test_image, (int(self.xc_adj + object.position_relative.x*self.scale),
-                #     int(self.yc_adj - object.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 0, 0), -1)
-                
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
-                #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
-
-            
-            for object in self.search_for_object.objects:
-                # print(person.position_relative.x/1000, person.position_relative.y/1000)
-
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (person.position_relative.y/1000)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                #     int(self.yc_adj - self.scale*self.robot_y - (person.position_relative.x/1000)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius*2), (0, 255, 255), -1)
-           
-
-                cv2.rectangle(self.test_image, 
-                              (int(self.xc_adj + object.position_absolute.x*self.scale + self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale + self.lidar_radius*2*self.scale)),
-                              (int(self.xc_adj + object.position_absolute.x*self.scale - self.lidar_radius*2*self.scale), int(self.yc_adj - object.position_absolute.y*self.scale - self.lidar_radius*2*self.scale)),
-                              (255, 0, 0), -1)
-                               
-                # cv2.circle(self.test_image, (int(self.xc_adj + object.position_relative.x*self.scale),
-                #     int(self.yc_adj - object.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*5), (255, 0, 0), -1)
-                
-                # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + person.position_relative.x*self.scale),
-                #     int(self.yc_adj - self.scale*self.robot_y - person.position_relative.y*self.scale)), (int)(self.scale*self.lidar_radius*3), (0, 255, 255), -1)
-
-
-            if DEBUG_DRAW:
-                cv2.imshow("Debug Visual - RGB", self.current_frame)
-
-            cv2.imshow("Person Localization", self.test_image)
-            # cv2.imshow("SDNL", self.image_plt)
-            
-            k = cv2.waitKey(1)
-            if k == ord('+'):
-                self.scale /= 0.8
-            if k == ord('-'):
-                self.scale *= 0.8
-            if k == ord('0'):
-                self.all_pos_x_val.clear()
-                self.all_pos_y_val.clear()
-
-            self.test_image[:, :] = 0
-
 class DebugVisualNode(Node):
 
     def __init__(self):
@@ -504,7 +134,6 @@ class DebugVisualNode(Node):
         self.new_hand_rgb = False
         self.new_head_depth = False
         self.new_hand_depth = False
-        self.robot = Robot()
 
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
@@ -948,6 +577,7 @@ class CheckNodesMain():
                 self.CHECK_YOLO_POSE_NODE = False
             else:
                 self.CHECK_YOLO_POSE_NODE = True
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -2111,10 +1741,10 @@ class DebugVisualMain():
         
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
 
-
     def coords_to_map(self, xx, yy):
         # pygame.draw.circle(self.WIN, self.GREEN, (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE))), radius=10, width=0)
         return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE)))
+
 
     def main(self):
 
@@ -2154,7 +1784,6 @@ class DebugVisualMain():
                         # print("MINUS key pressed!")
                         self.button_zoom_out_function()
 
-
                     if event.key == pygame.K_w:
                         self.node.robot_y+=0.1
                     if event.key == pygame.K_s:
@@ -2186,52 +1815,15 @@ class DebugVisualMain():
 
             self.check_record_data()
 
-    # CHANGE ORDER OF HOW SERVICES ARE INITIALISED SO THAT WHEN I GET GREEN IT IS NOT WAITING FOR ANY OTHER SERVICE
-    # EXAMPLE (OBSTACLES WAITING FOR POINT CLOUD)
+# TO DO LIST:
 
-    # testar se arm ufactory se liga se nao tiver braço
-
-    # NOT # pôr FPS a cada segundo (ou a cada d_t definido) e não quando há uma imagem nova, porque senão está sempre a oscilar ...
-
-    # sistema para deixar de imprimir quando nao está a obter respostas dos yolos
-
-    # quando se faz pause, pausar também as detecoes
-
-    # pose:
-    # corte cara caracteristicas
-
-    # save video ao lado dos toggles da depth
-    # nome da data
-    # perceber o tamanho 
-
-    # novo package gui
-    # criar path para guardar os videos
-
-    # criar copia do restaurante do robocup24
-    # print people
-
-    # quando fecho a janela desligar todas as threads
-
-    # yolo objects head
-    # yolo objects hand
-
-    # stop resize while recording (crashes recording - opencv bug)
-
-    # por tudo percentual ao ecrã
-    # toggles activates - mal
-    # detecoes mal (obj)
-    # detecoes mal (pose)
-
-    # more user friendly prints of objects detected (with locations) (obj)
-    # more user friendly prints of objects detected (with locations) (pose)
-
-# MAPA:
-    # teclas do teclado a fazer tambem zoom e shift do mapa
-    # limpar tudo o que está fora do mapa
-    # ajustar botoes para canto do mapa
-# navigation parar de dar quando checgou ao target
-# navigation no geral porque não dá pra testar com o rosbag atual...
-# testar camera obstacle points
-# testar final obstacle points
-# testar search for people 
-# testar search for objects
+    # MAPA:
+        # teclas do teclado a fazer tambem zoom e shift do mapa
+        # limpar tudo o que está fora do mapa
+        # ajustar botoes para canto do mapa
+    # navigation parar de dar quando checgou ao target
+    # navigation no geral porque não dá pra testar com o rosbag atual...
+    # testar camera obstacle points
+    # testar final obstacle points
+    # testar search for people 
+    # testar search for objects
