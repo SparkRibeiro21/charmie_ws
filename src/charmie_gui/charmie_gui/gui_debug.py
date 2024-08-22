@@ -659,8 +659,6 @@ class DebugVisualMain():
 
         self.MAP_ZOOM_INC = 0.2
         self.MAP_SHIFT_INC = 1.0
-
-        # self.pause_button = False
         
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -714,6 +712,9 @@ class DebugVisualMain():
         # self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
         #           borderColour=(255, 0, 0), textColour=(0, 200, 0),
         #           onSubmit=self.output, radius=10, borderThickness=5)        
+        # def output(self):
+        # Get text in the textbox
+        # print(self.textbox.getText())
 
         icon = pygame.image.load(self.home+logo_midpath+"logo_light_cropped_squared.png")
         pygame.display.set_icon(icon)
@@ -875,10 +876,6 @@ class DebugVisualMain():
 
     def button_shift_right_function(self):
         self.MAP_ADJUST_X += self.MAP_SHIFT_INC
-
-    # def output(self):
-        # Get text in the textbox
-        # print(self.textbox.getText())
     
     def draw_text(self, text, font, text_col, x, y):
         img = font.render(text, True, text_col)
@@ -1623,6 +1620,10 @@ class DebugVisualMain():
         self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
         self.map_init_height = 260
 
+        # visual configs:
+        neck_visual_lines_length = 1.0
+        detected_person_radius = 0.2
+        detected_object_radius = 0.08
 
         MAP_BB = pygame.Rect(self.map_init_width, self.map_init_height, self.MAP_SIDE, self.MAP_SIDE)
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
@@ -1663,18 +1664,17 @@ class DebugVisualMain():
     
         
         ### DRAW ROBOT
-        rad = (self.MAP_SIDE*(self.robot_radius/10.0*(1/self.MAP_SCALE)))
-        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(self.node.robot_x, self.node.robot_y), radius=rad, width=0)
+        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(self.node.robot_x, self.node.robot_y), radius=self.size_to_map(self.robot_radius), width=0)
         
-        front_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t + math.pi/2)), \
-                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t + math.pi/2)))
-        left_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t)), \
-                               self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t)))
-        right_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]+(rad*math.cos(-self.node.robot_t)), \
-                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]+(rad*math.sin(-self.node.robot_t)))
+        front_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_t + math.pi/2)), \
+                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_t + math.pi/2)))
+        left_of_robot_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_t)), \
+                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_t)))
+        right_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]+(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_t)), \
+                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]+(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_t)))
 
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), front_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
-        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_of_robot_point,  int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), right_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
             
 
@@ -1684,12 +1684,10 @@ class DebugVisualMain():
 
 
         ### NECK DIRECTION, CAMERA FOV
-        neck_visual_lines_length = 1.0
-        rad = (self.MAP_SIDE*(neck_visual_lines_length/10.0*(1/self.MAP_SCALE)))
-        left_vision_range_limit_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)), \
-                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)))
-        right_vision_range_limit_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)), \
-                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)))
+        left_vision_range_limit_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(neck_visual_lines_length)*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)), \
+                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(neck_visual_lines_length)*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)))
+        right_vision_range_limit_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(neck_visual_lines_length)*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)), \
+                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(neck_visual_lines_length)*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)))
 
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), right_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
@@ -1698,11 +1696,8 @@ class DebugVisualMain():
         ### NAVIGATION TARGETS
         if self.node.is_navigating:
             if self.node.navigation.move_or_rotate == "move" or self.node.navigation.move_or_rotate == "rotate":
-                rad = (self.MAP_SIDE*(self.robot_radius/10.0*(1/self.MAP_SCALE)))
-                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=int(rad/2), width=0)
-
-                rad = (self.MAP_SIDE*(self.node.navigation.reached_radius/10.0*(1/self.MAP_SCALE)))
-                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=rad, width=1)
+                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.robot_radius/2), width=0)
+                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.node.navigation.reached_radius), width=1)
 
 
         ### OBSTACLES POINTS (LIDAR, Depth Head Camera and Final Obstacles Fusion)
@@ -1730,28 +1725,27 @@ class DebugVisualMain():
             
 
         ### PERSON DETECTED
-        rad_person = (self.MAP_SIDE*((0.2)/10.0*(1/self.MAP_SCALE)))
         for person in self.node.person_pose.persons:
-            pygame.draw.circle(self.WIN, self.CYAN, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=rad_person, width=0)
+            pygame.draw.circle(self.WIN, self.CYAN, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
 
         ### SEARCH FOR PERSON
         for person in self.node.search_for_person.persons:
-            pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=rad_person, width=0)
+            pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
 
         ### OBJECT_DETECTED
-        rad_object = (self.MAP_SIDE*((0.08)/10.0*(1/self.MAP_SCALE)))
         for object in self.node.object_detected.objects:
-            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-rad_object, \
-                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-rad_object, \
-                                    2*rad_object, 2*rad_object)
+            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
+                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-self.size_to_map(detected_object_radius), \
+                                    2*self.size_to_map(detected_object_radius), 2*self.size_to_map(detected_object_radius))
             pygame.draw.rect(self.WIN, self.CYAN, temp_rect, width=0)
 
         ### SEARCH FOR OBJECT
         for object in self.node.search_for_object.objects:
-            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-rad_object, \
-                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-rad_object, \
-                                    2*rad_object, 2*rad_object)
+            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
+                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-self.size_to_map(detected_object_radius), \
+                                    2*self.size_to_map(detected_object_radius), 2*self.size_to_map(detected_object_radius))
             pygame.draw.rect(self.WIN, self.MAGENTA, temp_rect, width=0)
+
 
         ### FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot))
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
@@ -1768,10 +1762,12 @@ class DebugVisualMain():
         
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
 
+
     def coords_to_map(self, xx, yy):
-        # pygame.draw.circle(self.WIN, self.GREEN, (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE))), radius=10, width=0)
         return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE)))
 
+    def size_to_map(self, size): # convert physical real size into map size (meters)
+        return self.MAP_SIDE*((size)/10.0*(1/self.MAP_SCALE))
 
     def main(self):
 
@@ -1820,9 +1816,9 @@ class DebugVisualMain():
                     if event.key == pygame.K_d:
                         self.node.robot_x+=0.1
                     if event.key == pygame.K_q:
-                        self.node.robot_t-=math.radians(10)
+                        self.node.robot_t+=math.radians(15)
                     if event.key == pygame.K_e:
-                        self.node.robot_t+=math.radians(10)
+                        self.node.robot_t-=math.radians(15)
 
                     if event.key == pygame.K_c:
                         self.node.all_pos_x_val.clear()
@@ -1841,16 +1837,3 @@ class DebugVisualMain():
             pygame.display.update()
 
             self.check_record_data()
-
-# TO DO LIST:
-
-# MAPA:
-    # teclas do teclado a fazer tambem zoom e shift do mapa
-    # limpar tudo o que está fora do mapa
-    # ajustar botoes para canto do mapa
-    # navigation parar de dar quando checgou ao target
-    # navigation no geral porque não dá pra testar com o rosbag atual...
-    # testar camera obstacle points
-    # testar final obstacle points
-    # testar search for people 
-    # testar search for objects
