@@ -1,5 +1,12 @@
 {
-"Thanks_for_standind_behind_me_1": "Thanks for standind behind me. Please keep following me.",
-"Thanks_for_standind_behind_me_2": "Thanks for standind behind me."
+"ask_customer": "Can you please ask customers to raise their hands.",
+"adjust_position": "I will adjust my position for a closer view and try again.",
+"confirm_real_customer": "Is this person really a customer?",
+"confirm_real_customers": "Are this person really a customer?",
+"discard customers": "I will discard this customers and continue to search for others.",
+"discard customer": "I will discard this customer and continue to search for others.",
+"would_you_like_order": "Hello. My name is Charmie. Would you like to order something?",
+"no_costumers_adjust": "I am still having difficulties detecting waving customers. I will adjust my neck and try again.",
+"no_customers_move": "Barman. I am having trouble finding customers. Are you sure there are customers waving?"
 }
 
