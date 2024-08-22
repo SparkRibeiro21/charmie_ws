@@ -56,7 +56,7 @@ class YoloPoseNode(Node):
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("yolo_model", "s") 
         self.declare_parameter("debug_draw", False) 
-        self.declare_parameter("activate", True)
+        self.declare_parameter("activate", False)
 
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC

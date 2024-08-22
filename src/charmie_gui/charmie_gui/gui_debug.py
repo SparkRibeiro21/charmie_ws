@@ -828,7 +828,7 @@ class DebugVisualMain():
         self.last_detected_furniture_hand = Yolov8Objects()
 
         # robot info
-        self.robot_radius = 0.560/2 # meter 
+        self.robot_radius = self.node.robot_radius
 
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
@@ -1696,12 +1696,13 @@ class DebugVisualMain():
 
 
         ### NAVIGATION TARGETS
-        if self.node.navigation.move_or_rotate == "move" or self.node.navigation.move_or_rotate == "rotate":
-            rad = (self.MAP_SIDE*(self.robot_radius/10.0*(1/self.MAP_SCALE)))
-            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=int(rad/2), width=0)
+        if self.node.is_navigating:
+            if self.node.navigation.move_or_rotate == "move" or self.node.navigation.move_or_rotate == "rotate":
+                rad = (self.MAP_SIDE*(self.robot_radius/10.0*(1/self.MAP_SCALE)))
+                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=int(rad/2), width=0)
 
-            rad = (self.MAP_SIDE*(self.node.navigation.reached_radius/10.0*(1/self.MAP_SCALE)))
-            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=rad, width=1)
+                rad = (self.MAP_SIDE*(self.node.navigation.reached_radius/10.0*(1/self.MAP_SCALE)))
+                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=rad, width=1)
 
 
         ### OBSTACLES POINTS (LIDAR, Depth Head Camera and Final Obstacles Fusion)
@@ -1710,7 +1711,7 @@ class DebugVisualMain():
             pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(points.x, points.y), radius=1, width=0)
 
         for points in self.node.camera_obstacle_points:
-            pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map(points.x, points.y), radius=1, width=0)
+            pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
 
         for points in self.node.final_obstacle_points:
 
@@ -1725,11 +1726,11 @@ class DebugVisualMain():
             target.y = dist_obj * math.sin(theta_aux) + self.node.robot_y
             target.z = points.z
 
-            pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(target.x, target.y), radius=1, width=0)
+            pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map(target.x, target.y), radius=2, width=0)
             
 
         ### PERSON DETECTED
-        rad_person = (self.MAP_SIDE*((self.robot_radius/2)/10.0*(1/self.MAP_SCALE)))
+        rad_person = (self.MAP_SIDE*((0.2)/10.0*(1/self.MAP_SCALE)))
         for person in self.node.person_pose.persons:
             pygame.draw.circle(self.WIN, self.CYAN, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=rad_person, width=0)
 
@@ -1738,7 +1739,7 @@ class DebugVisualMain():
             pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=rad_person, width=0)
 
         ### OBJECT_DETECTED
-        rad_object = (self.MAP_SIDE*((self.robot_radius/4.5)/10.0*(1/self.MAP_SCALE)))
+        rad_object = (self.MAP_SIDE*((0.08)/10.0*(1/self.MAP_SCALE)))
         for object in self.node.object_detected.objects:
             temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-rad_object, \
                                     self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-rad_object, \
@@ -1750,7 +1751,7 @@ class DebugVisualMain():
             temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-rad_object, \
                                     self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-rad_object, \
                                     2*rad_object, 2*rad_object)
-            pygame.draw.rect(self.MAGENTA, self.MAGENTA, temp_rect, width=0)
+            pygame.draw.rect(self.WIN, self.MAGENTA, temp_rect, width=0)
 
         ### FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot))
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
@@ -1847,9 +1848,9 @@ class DebugVisualMain():
     # teclas do teclado a fazer tambem zoom e shift do mapa
     # limpar tudo o que está fora do mapa
     # ajustar botoes para canto do mapa
-# navigation parar de dar quando checgou ao target
-# navigation no geral porque não dá pra testar com o rosbag atual...
-# testar camera obstacle points
-# testar final obstacle points
-# testar search for people 
-# testar search for objects
+    # navigation parar de dar quando checgou ao target
+    # navigation no geral porque não dá pra testar com o rosbag atual...
+    # testar camera obstacle points
+    # testar final obstacle points
+    # testar search for people 
+    # testar search for objects
