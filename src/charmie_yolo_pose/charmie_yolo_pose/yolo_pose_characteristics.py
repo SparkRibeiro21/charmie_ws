@@ -55,7 +55,7 @@ class YoloPoseNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("yolo_model", "s") 
-        self.declare_parameter("debug_draw", True) 
+        self.declare_parameter("debug_draw", False) 
         self.declare_parameter("activate", True)
 
         # info regarding the paths for the recorded files intended to be played
@@ -211,6 +211,7 @@ class YoloPoseNode(Node):
         # float64 minimum_person_confidence           # adjust the minimum accuracy to assume as a person
         # int32 minimum_keypoints_to_detect_person    # minimum necessary keypoints to detect as a person
         # bool only_detect_person_right_in_front      # only detects people who are right in front of the robot (easier to interact)
+        # bool only_detect_person_arm_raised          # only detects people who are asking for assistance (arm raised)
         # bool characteristics                        # whether the person characteristics should be calculated or not (arm pointing, shirt and pants colour, ethnicity, age_estimate, gender) 
         # ---
         # bool success    # indicate successful run of triggered service
@@ -218,7 +219,8 @@ class YoloPoseNode(Node):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE, MIN_PERSON_CONF_VALUE, MIN_KP_TO_DETECT_PERSON, ONLY_DETECT_PERSON_RIGHT_IN_FRONT, ONLY_DETECT_PERSON_ARM_RAISED, GET_CHARACTERISTICS
 
         if request.activate:
-            self.get_logger().info("Activated Yolo Pose %s" %("("+str(request.only_detect_person_legs_visible)+", "
+            self.get_logger().info("Activated Yolo Pose %s" %("("+str(request.activate)+", "
+                                                                 +str(request.only_detect_person_legs_visible)+", "
                                                                  +str(request.minimum_person_confidence)+", "
                                                                  +str(request.minimum_keypoints_to_detect_person)+", "
                                                                  +str(request.only_detect_person_right_in_front)+", "
@@ -473,6 +475,11 @@ class YoloPoseNode(Node):
 
                 self.waiting_for_pcloud = True
                 self.call_point_cloud_server(req2)
+        
+        else:
+            yolov8_pose_filtered = Yolov8Pose()
+            self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
+
         
 
     def post_receiving_pcloud(self, new_pcloud):

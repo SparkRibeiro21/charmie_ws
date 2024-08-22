@@ -1571,9 +1571,9 @@ class EGPSRMain():
         self.Search_living_room = 4
         self.Approach_kitchen = 5
         self.Search_kitchen = 6
-        self.Approach_office = 5
-        self.Search_office = 6
-        self.Final_State = 7
+        self.Approach_office = 7
+        self.Search_office = 8
+        self.Final_State = 9
         
         # Neck Positions
         self.look_forward = [0, 0]
@@ -1643,7 +1643,7 @@ class EGPSRMain():
                 self.wait_for_door_start()
                                                 
                 # next state
-                self.state = self.Search_hallway
+                self.state = self.Approach_hallway
            
 
             elif self.state == self.Approach_hallway:
@@ -1662,7 +1662,7 @@ class EGPSRMain():
             elif self.state == self.Search_hallway:
                 print("State:", self.state, "- Search_room1")
 
-                tetas = [[-60, -10], [0, -10], [60, -10]]
+                tetas = [[0, -10], [-60, -10]]
                 self.check_people_waving_in_room(local_room="Hallway", tetas=tetas)
                 
                 self.state = self.Approach_living_room
@@ -1692,7 +1692,7 @@ class EGPSRMain():
             elif self.state == self.Search_living_room:
                 print("State:", self.state, "- Search_room2")
 
-                tetas = [[-60, -10], [0, -10], [60, -10]]
+                tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10]]
                 self.check_people_waving_in_room(local_room="Living Room", tetas=tetas)
 
                 self.state = self.Approach_kitchen 
@@ -1705,6 +1705,9 @@ class EGPSRMain():
 
                 self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
                 self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.close_to_table_sb, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[-1.9, 8.5], max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=self.close_to_table_sb, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(BLUE+ROTATE)    
                 
                 self.set_speech(filename="gpsr/arrived_kitchen", wait_for_end_of=True)         
@@ -1716,22 +1719,27 @@ class EGPSRMain():
             elif self.state == self.Search_kitchen:
                 print("State:", self.state, "- Search_room3")
 
-                tetas = [[-30, -10], [30, -10]]
+                tetas = [[0, -10], [70, -10]]
                 self.check_people_waving_in_room(local_room="Kitchen", tetas=tetas)
 
-                self.state = self.Final_State
+                self.state = self.Approach_office
 
 
             elif self.state == self.Approach_office:
                 print("State:", self.state, "- Approach_room3")
 
-                self.set_speech(filename="gpsr/moving_kitchen", wait_for_end_of=True)         
+                self.set_speech(filename="gpsr/moving_office", wait_for_end_of=True)         
 
-                self.set_navigation(movement="rotate", target=self.midway_living_room, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.midway_living_room, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=[-3.5, 5.5], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[-3.5, 5.5], max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="rotate", target=[-3.5, 3.5], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="move", target=[-3.5, 3.5], reached_radius=0.6, flag_not_obs=False, wait_for_end_of=True)
+                # self.set_navigation(movement="rotate", target=[-3.5, 2.0], flag_not_obs=True, wait_for_end_of=True)
+                self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
+
                 self.set_rgb(BLUE+ROTATE)    
                 
-                self.set_speech(filename="gpsr/arrived_kitchen", wait_for_end_of=True)         
+                self.set_speech(filename="gpsr/arrived_office", wait_for_end_of=True)         
 
                 # next state
                 self.state = self.Search_office

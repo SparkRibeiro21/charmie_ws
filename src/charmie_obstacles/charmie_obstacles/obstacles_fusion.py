@@ -405,12 +405,15 @@ class DebugVisualNode(Node):
         self.obstacles_head_depth_subscriber = self.create_subscription(PointCloudCoordinates, "obstacles_head_depth", self.get_obstacles_head_depth_callback , 10)
     
         ### Services (Clients) ###
-        # Activates Obstacles
-        self.server_activate_obstacles = self.create_service(ActivateObstacles, "activate_obstacles", self.callback_activate_obstacles) 
+        # Point Cloud
         self.activate_obstacles_head_depth_client = self.create_client(ActivateObstacles, "activate_obstacles_head_depth")
 
         while not self.activate_obstacles_head_depth_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
+
+        ### Services (Server) ###
+        # Activates Obstacles
+        self.server_activate_obstacles = self.create_service(ActivateObstacles, "activate_obstacles", self.callback_activate_obstacles) 
 
         self.robot = Robot()
         self.prev_time = time.time()

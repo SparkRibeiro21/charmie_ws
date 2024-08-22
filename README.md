@@ -12,8 +12,9 @@
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
   * [RoboCup@Home 2024 :netherlands:](#robocuphome-2024-netherlands)
   * [RoboCup@Home 2023 :fr:](#robocuphome-2023-fr)
-* [Videos of Tasks from Pevious Events :gear:](#gear-videos-of-tasks-from-previous-events)
+* [Videos from Pevious Events :gear:](#gear-videos-from-previous-events)
 * [Results :trophy:](#trophy-results)
+* [Extended Scores :chart_with_upwards_trend:](#chart_with_upwards_trend-extended-scores)
 * [Social Media :handshake:](#handshake-connect-with-us)
 
 ## :book: Project Description
@@ -48,11 +49,11 @@ To setup the realsense package in your workspace, please follow the installation
 
 [Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=gNx9OYljlcw)
 
-## :gear: Videos of Tasks from Previous Events 
+## :gear: Videos from Previous Events 
 <details>
   <summary>Click to expand</summary>
 
-  ## Receptionist Task (RoboCup@Home 2023)
+  ## Receptionist (RoboCup@Home 2023)
 
   [![Video Title](https://img.youtube.com/vi/rYzFhlLRpxc/0.jpg)](https://www.youtube.com/watch?v=rYzFhlLRpxc)
 
@@ -64,12 +65,20 @@ To setup the realsense package in your workspace, please follow the installation
 
 |Event|Ranking|Points|
 | ------------- | ------------- | ------------- |
-|RoboCup 2024|5/17|????|
+|RoboCup 2024|5/17|2819|
 |RoboCup Portugal Open 2024|1/3|3140|
 |RoboCup 2023|7/15|932|
 |RoboCup Portugal Open 2023|3/3|400|
 
 
+
+## :chart_with_upwards_trend: Extended Scores
+|Event|Poster|Carry My Luggage|Receptionist|Storing Groceries|Serve Breakfast|GPSR|Total Stage 1|Clean the Table|Restaurant|Stickler for the rules|EGPSR|Total Stage 2|Total Event|
+| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
+|RoboCup 2024|34|15|700|15|480|-|1244|525|100|800|150|1575|2819|
+|RoboCup Portugal Open 2024|-|115|645|135|610|-|1505|15|1120|500|-|1635|3140|
+|RoboCup 2023|32|0|800|-|-|-|832|-|0|100|-|100|932|
+|RoboCup Portugal Open 2023|-|-|400|-|-|-|400|-|-|-|-|0|400|
 
 
 ## :handshake: Connect with us
