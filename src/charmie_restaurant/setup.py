@@ -24,7 +24,9 @@ setup(
     entry_points={
         'console_scripts': [
             "restaurant = charmie_restaurant.restaurant:main",
-            "restaurant_qualification_24 = charmie_restaurant.restaurant_qualification_24:main"
+            "restaurant_nacional_24 = charmie_restaurant.restaurant_nacional_24:main",
+            "restaurant_qualification_24 = charmie_restaurant.restaurant_qualification_24:main",
+            "restaurant_robocup2024 = charmie_restaurant.restaurant_robocup2024:main"
         ],
     },
 )
