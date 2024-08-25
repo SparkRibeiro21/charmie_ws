@@ -53,17 +53,23 @@ To setup the realsense package in your workspace, please follow the installation
 <details>
   <summary>Click to expand</summary>
 
-  ## Carry my Luggage (RoboCup Portugal Open 24)
+  ## Receptionist (RoboCup Portugal Open 2024)
+
+  [![Video Title](https://img.youtube.com/vi/1B0Hf0hebCI/0.jpg)](https://www.youtube.com/watch?v=1B0Hf0hebCI)
+
+  [Youtube Link for Receptionist Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=1B0Hf0hebCI)
+
+  ## Carry my Luggage (RoboCup Portugal Open 2024)
 
   [![Video Title](https://img.youtube.com/vi/jc68am8VqAk/0.jpg)](https://www.youtube.com/watch?v=jc68am8VqAk)
 
-  [Youtube Link for Carry my Luggage Task from RoboCup Portugal Open 24](https://www.youtube.com/watch?v=jc68am8VqAk)
+  [Youtube Link for Carry my Luggage Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=jc68am8VqAk)
 
-  ## Receptionist (RoboCup@Home 2023)
+  ## Receptionist (RoboCup 2023)
 
   [![Video Title](https://img.youtube.com/vi/rYzFhlLRpxc/0.jpg)](https://www.youtube.com/watch?v=rYzFhlLRpxc)
 
-  [Youtube Link for Receptionist Task from RoboCup@Home 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
+  [Youtube Link for Receptionist Task from RoboCup 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
   
 </details>
 
