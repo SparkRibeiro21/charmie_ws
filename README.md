@@ -53,6 +53,12 @@ To setup the realsense package in your workspace, please follow the installation
 <details>
   <summary>Click to expand</summary>
 
+  ## Storing Groceries (RoboCup Portugal Open 2024)
+
+  [![Video Title](https://img.youtube.com/vi/_QoUEJi4D6c/0.jpg)](https://www.youtube.com/watch?v=_QoUEJi4D6c)
+
+  [Youtube Link for Storing Groceries Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=_QoUEJi4D6c)
+
   ## Receptionist (RoboCup Portugal Open 2024)
 
   [![Video Title](https://img.youtube.com/vi/1B0Hf0hebCI/0.jpg)](https://www.youtube.com/watch?v=1B0Hf0hebCI)
