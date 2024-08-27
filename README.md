@@ -53,6 +53,12 @@ To setup the realsense package in your workspace, please follow the installation
 <details>
   <summary>Click to expand</summary>
 
+  ## Serve Breakfast (RoboCup Portugal Open 2024)
+
+  [![Video Title](https://img.youtube.com/vi/ZhBd1PQpAB0/0.jpg)](https://www.youtube.com/watch?v=ZhBd1PQpAB0)
+
+  [Youtube Link for Serve Breakfast Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=ZhBd1PQpAB0)
+
   ## Storing Groceries (RoboCup Portugal Open 2024)
 
   [![Video Title](https://img.youtube.com/vi/_QoUEJi4D6c/0.jpg)](https://www.youtube.com/watch?v=_QoUEJi4D6c)
