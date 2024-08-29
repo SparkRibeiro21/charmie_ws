@@ -53,6 +53,12 @@ To setup the realsense package in your workspace, please follow the installation
 <details>
   <summary>Click to expand</summary>
 
+  ## Carry my Luggage (RoboCup 2024)
+
+  [![Video Title](https://img.youtube.com/vi/_v8LrWhjgxY/0.jpg)](https://www.youtube.com/watch?v=_v8LrWhjgxY)
+
+  [Youtube Link for Carry my Luggage Task from RoboCup 2024](https://www.youtube.com/watch?v=_v8LrWhjgxY)
+
   ## Stickler for the Rules (RoboCup Portugal Open 2024)
 
   [![Video Title](https://img.youtube.com/vi/XCICAehz3OE/0.jpg)](https://www.youtube.com/watch?v=XCICAehz3OE)
