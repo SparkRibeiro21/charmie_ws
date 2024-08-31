@@ -51,7 +51,7 @@ To setup the realsense package in your workspace, please follow the installation
 
 ## :gear: Videos from Previous Events 
 
-### RoboCup 2024
+### RoboCup 2024 :netherlands:
 <details>
   <summary>Click to expand</summary>
 
@@ -93,41 +93,51 @@ To setup the realsense package in your workspace, please follow the installation
 
 </details>
 
-  ## Stickler for the Rules (RoboCup Portugal Open 2024)
+### RoboCup Portugal Open 2024 :portugal:
+<details>
+  <summary>Click to expand</summary>
+ 
+  ### Stickler for the Rules (RoboCup Portugal Open 2024)
 
   [![Video Title](https://img.youtube.com/vi/XCICAehz3OE/0.jpg)](https://www.youtube.com/watch?v=XCICAehz3OE)
 
   [Youtube Link for Stickler for the Rules Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=XCICAehz3OE)
 
-  ## Restaurant (RoboCup Portugal Open 2024)
+  ### Restaurant (RoboCup Portugal Open 2024)
 
   [![Video Title](https://img.youtube.com/vi/AKYIMY_POO4/0.jpg)](https://www.youtube.com/watch?v=AKYIMY_POO4)
 
   [Youtube Link for Restaurant Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=AKYIMY_POO4)
 
-  ## Serve Breakfast (RoboCup Portugal Open 2024)
+  ### Serve Breakfast (RoboCup Portugal Open 2024)
 
   [![Video Title](https://img.youtube.com/vi/ZhBd1PQpAB0/0.jpg)](https://www.youtube.com/watch?v=ZhBd1PQpAB0)
 
   [Youtube Link for Serve Breakfast Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=ZhBd1PQpAB0)
 
-  ## Storing Groceries (RoboCup Portugal Open 2024)
+  ### Storing Groceries (RoboCup Portugal Open 2024)
 
   [![Video Title](https://img.youtube.com/vi/_QoUEJi4D6c/0.jpg)](https://www.youtube.com/watch?v=_QoUEJi4D6c)
 
   [Youtube Link for Storing Groceries Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=_QoUEJi4D6c)
 
-  ## Receptionist (RoboCup Portugal Open 2024)
+  ### Receptionist (RoboCup Portugal Open 2024)
 
   [![Video Title](https://img.youtube.com/vi/1B0Hf0hebCI/0.jpg)](https://www.youtube.com/watch?v=1B0Hf0hebCI)
 
   [Youtube Link for Receptionist Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=1B0Hf0hebCI)
 
-  ## Carry my Luggage (RoboCup Portugal Open 2024)
+  ### Carry my Luggage (RoboCup Portugal Open 2024)
 
   [![Video Title](https://img.youtube.com/vi/jc68am8VqAk/0.jpg)](https://www.youtube.com/watch?v=jc68am8VqAk)
 
   [Youtube Link for Carry my Luggage Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=jc68am8VqAk)
+
+</details>
+
+### RoboCup 2023 :fr:
+<details>
+  <summary>Click to expand</summary>
 
   ## Receptionist (RoboCup 2023)
 
@@ -135,6 +145,7 @@ To setup the realsense package in your workspace, please follow the installation
 
   [Youtube Link for Receptionist Task from RoboCup 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
   
+</details>
 
 ## :trophy: Results
 
