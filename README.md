@@ -53,6 +53,12 @@ To setup the realsense package in your workspace, please follow the installation
 <details>
   <summary>Click to expand</summary>
 
+  ## Enhanced General Purpose Service Robot (RoboCup 2024)
+
+  [![Video Title](https://img.youtube.com/vi/7iA6JAMG6Cc/0.jpg)](https://www.youtube.com/watch?v=7iA6JAMG6Cc)
+
+  [Youtube Link for Enhanced General Purpose Service Robot Task from RoboCup 2024](https://www.youtube.com/watch?v=7iA6JAMG6Cc)
+
   ## Stickler for the Rules (RoboCup 2024)
 
   [![Video Title](https://img.youtube.com/vi/3MXXbcImCNI/0.jpg)](https://www.youtube.com/watch?v=3MXXbcImCNI)
