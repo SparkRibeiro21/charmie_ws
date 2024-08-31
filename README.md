@@ -53,6 +53,12 @@ To setup the realsense package in your workspace, please follow the installation
 <details>
   <summary>Click to expand</summary>
 
+  ## Stickler for the Rules (RoboCup 2024)
+
+  [![Video Title](https://img.youtube.com/vi/3MXXbcImCNI/0.jpg)](https://www.youtube.com/watch?v=3MXXbcImCNI)
+
+  [Youtube Link for Stickler for the Rules Task from RoboCup 2024](https://www.youtube.com/watch?v=3MXXbcImCNI)
+
   ## Clean the Table (RoboCup 2024)
 
   [![Video Title](https://img.youtube.com/vi/5oIssDpQ8qg/0.jpg)](https://www.youtube.com/watch?v=5oIssDpQ8qg)
