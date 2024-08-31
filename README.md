@@ -50,44 +50,48 @@ To setup the realsense package in your workspace, please follow the installation
 [Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=gNx9OYljlcw)
 
 ## :gear: Videos from Previous Events 
+
+### RoboCup 2024
 <details>
   <summary>Click to expand</summary>
 
-  ## Enhanced General Purpose Service Robot (RoboCup 2024)
+  ### Enhanced General Purpose Service Robot (RoboCup 2024)
 
   [![Video Title](https://img.youtube.com/vi/7iA6JAMG6Cc/0.jpg)](https://www.youtube.com/watch?v=7iA6JAMG6Cc)
 
   [Youtube Link for Enhanced General Purpose Service Robot Task from RoboCup 2024](https://www.youtube.com/watch?v=7iA6JAMG6Cc)
 
-  ## Stickler for the Rules (RoboCup 2024)
+  ### Stickler for the Rules (RoboCup 2024)
 
   [![Video Title](https://img.youtube.com/vi/3MXXbcImCNI/0.jpg)](https://www.youtube.com/watch?v=3MXXbcImCNI)
 
   [Youtube Link for Stickler for the Rules Task from RoboCup 2024](https://www.youtube.com/watch?v=3MXXbcImCNI)
 
-  ## Clean the Table (RoboCup 2024)
+  ### Clean the Table (RoboCup 2024)
 
   [![Video Title](https://img.youtube.com/vi/5oIssDpQ8qg/0.jpg)](https://www.youtube.com/watch?v=5oIssDpQ8qg)
 
   [Youtube Link for Clean the Table Task from RoboCup 2024](https://www.youtube.com/watch?v=5oIssDpQ8qg)
 
-  ## Serve Breakfast (RoboCup 2024)
+  ### Serve Breakfast (RoboCup 2024)
 
   [![Video Title](https://img.youtube.com/vi/xynH8cUdYko/0.jpg)](https://www.youtube.com/watch?v=xynH8cUdYko)
 
   [Youtube Link for Serve Breakfast Task from RoboCup 2024](https://www.youtube.com/watch?v=xynH8cUdYko)
 
-  ## Receptionist (RoboCup 2024)
+  ### Receptionist (RoboCup 2024)
 
   [![Video Title](https://img.youtube.com/vi/h5yJNZq_GOI/0.jpg)](https://www.youtube.com/watch?v=h5yJNZq_GOI)
 
   [Youtube Link for Receptionist Task from RoboCup 2024](https://www.youtube.com/watch?v=h5yJNZq_GOI)
 
-  ## Carry my Luggage (RoboCup 2024)
+  ### Carry my Luggage (RoboCup 2024)
 
   [![Video Title](https://img.youtube.com/vi/_v8LrWhjgxY/0.jpg)](https://www.youtube.com/watch?v=_v8LrWhjgxY)
 
   [Youtube Link for Carry my Luggage Task from RoboCup 2024](https://www.youtube.com/watch?v=_v8LrWhjgxY)
+
+</details>
 
   ## Stickler for the Rules (RoboCup Portugal Open 2024)
 
@@ -131,7 +135,6 @@ To setup the realsense package in your workspace, please follow the installation
 
   [Youtube Link for Receptionist Task from RoboCup 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
   
-</details>
 
 ## :trophy: Results
 
