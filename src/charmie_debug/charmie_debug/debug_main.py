@@ -308,7 +308,7 @@ class DebugMain():
                 if dist_aux < dist:
                     dist = dist_aux
                     ##### 4) decorar o ID
-                    id_to_follow = p.index_person
+                    id_to_follow = p.index
                     print("TIME TO FOLLOW A PERSON... PLEASE WAIT")
             time.sleep(3)
         
@@ -321,7 +321,7 @@ class DebugMain():
 
             id_selected_still_correct = False
             for p in lp:
-                if p.index_person == id_to_follow:
+                if p.index == id_to_follow:
                     correct_person = p
                     id_selected_still_correct = True
 

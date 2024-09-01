@@ -898,8 +898,8 @@ class YoloPoseNode(Node):
 
         new_person.image_rgb_frame = self.rgb_img
 
-        new_person.index_person = int(person_id)
-        new_person.conf_person = float(boxes_id.conf)
+        new_person.index = int(person_id)
+        new_person.confidence = float(boxes_id.conf)
         new_person.box_top_left_x = int(boxes_id.xyxy[0][0])
         new_person.box_top_left_y = int(boxes_id.xyxy[0][1])
         new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])

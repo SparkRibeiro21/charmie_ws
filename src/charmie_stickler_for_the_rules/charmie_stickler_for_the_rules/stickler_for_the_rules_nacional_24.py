@@ -1077,8 +1077,8 @@ class SticklerForTheRulesMain():
 
             for people in self.node.detected_people.persons:
                 people_ctr+=1
-                print(" - ", people.index_person, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
-                print(" - ", people.index_person, people.position_relative.x,people.position_relative.y, people.position_relative.z)
+                print(" - ", people.index, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
+                print(" - ", people.index, people.position_relative.x,people.position_relative.y, people.position_relative.z)
                 aux = (people.position_absolute.x, people.position_absolute.y) 
                 person_detected.append(aux)
                 points.append(aux)
