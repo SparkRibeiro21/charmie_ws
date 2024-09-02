@@ -130,7 +130,6 @@ HOW THE CODE OF A TASK SHOULD BE MADE:
 """
 
 #!/usr/bin/env python3
-
 import rclpy
 import threading
 import time
@@ -141,22 +140,37 @@ RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
+ros2_modules = {
+    "charmie_arm": False,
+    "charmie_audio": False,
+    "charmie_face": False,
+    # "charmie_lidar": False, # commented by TR
+    # "charmie_localisation": False, # commented by TR
+    "charmie_low_level": False,
+    "charmie_navigation": False,
+    "charmie_neck": False,
+    "charmie_obstacles": False,
+    # "charmie_odometry": False, # commented by TR
+    "charmie_point_cloud": False,
+    # "charmie_ps4_controller": False, # commented by TR
+    "charmie_speakers": False,
+    "charmie_yolo_objects": False,
+    "charmie_yolo_pose": False,
+}
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
-    node = ROS2TaskNode()
+    node = ROS2TaskNode(ros2_modules)
     robot = RobotStdFunctions(node)
     th_main = threading.Thread(target=ThreadMainTask, args=(robot,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-
 def ThreadMainTask(robot: RobotStdFunctions):
     main = TaskMain(robot)
     main.main()
-
 
 class TaskMain():
 

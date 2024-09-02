@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration
 
 import cv2 
 import threading
@@ -37,9 +37,11 @@ class test_import_class():
 
 class ROS2TaskNode(Node):
 
-    def __init__(self):
+    def __init__(self, ros2_modules):
         super().__init__("ROS2TaskCHARMIE")
         self.get_logger().info("Initialised CHARMIE ROS2Task Node")
+
+        self.ros2_modules = ros2_modules
 
         # path to save detected people in search for person
         home = str(Path.home())
@@ -105,52 +107,84 @@ class ROS2TaskNode(Node):
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
-        
+        # Low level
+        self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
 
-        # if is necessary to wait for a specific service to be ON, uncomment the two following lines
-        # Speakers
-        while not self.speech_command_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Speech Command...")
-        # while not self.save_speech_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Save Speech Command...")
-        # Audio
-        # while not self.get_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Audio Server...")
-        # while not self.calibrate_audio_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Calibrate Audio Server...")
-        # Face
-        # while not self.face_command_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Face Command...")
         """
-        # Neck 
-        while not self.set_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Position Command...")
-        while not self.get_neck_position_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Get Neck Position Command...")
-        while not self.set_neck_coordinates_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
-        while not self.neck_track_person_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
-        while not self.neck_track_object_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
-        # Yolos
-        while not self.activate_yolo_pose_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
-        while not self.activate_yolo_objects_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+            "charmie_arm": False,
+            "charmie_audio": True,
+            "charmie_face": False,
+        "charmie_lidar": False,
+        "charmie_localisation": False,
+            "charmie_low_level": False,
+            "charmie_navigation": False,
+            "charmie_neck": False,
+            "charmie_obstacles": False,
+        "charmie_odometry": False,
+            "charmie_point_cloud": False,
+        "charmie_ps4_controller": False,
+            "charmie_speakers": False,
+            "charmie_yolo_objects": False,
+            "charmie_yolo_pose": False,
         """
-        # Arm (CHARMIE)
-        # while not self.arm_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Arm Trigger Command...")
-        # Navigation
-        # while not self.nav_trigger_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
-        # Obstacles
-        # while not self.activate_obstacles_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
-        # Point Cloud
-        # while not self.point_cloud_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Point Cloud...")
+
+        # waits until all modules are correctly turned ON
+        if self.ros2_modules["charmie_arm"]:
+            while not self.arm_trigger_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Arm Trigger Command...")
+
+        if self.ros2_modules["charmie_audio"]:
+            while not self.get_audio_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Audio Server...")
+            while not self.calibrate_audio_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Calibrate Audio Server...")
+
+        if self.ros2_modules["charmie_face"]:
+            while not self.face_command_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Face Command...")
+
+        if self.ros2_modules["charmie_low_level"]:
+            while not self.set_acceleration_ramp_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Low Level Command...")
+
+        if self.ros2_modules["charmie_navigation"]:
+            while not self.nav_trigger_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+
+        if self.ros2_modules["charmie_neck"]:
+            while not self.set_neck_position_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Set Neck Position Command...")
+            while not self.get_neck_position_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Get Neck Position Command...")
+            while not self.set_neck_coordinates_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Set Neck Coordinates Command...")
+            while not self.neck_track_person_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
+            while not self.neck_track_object_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
+
+        if self.ros2_modules["charmie_obstacles"]:
+            while not self.activate_obstacles_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
+
+        if self.ros2_modules["charmie_point_cloud"]:
+            while not self.point_cloud_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Point Cloud...")
+
+        if self.ros2_modules["charmie_speakers"]:
+            while not self.speech_command_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Speech Command...")
+            while not self.save_speech_command_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Save Speech Command...")
+
+        if self.ros2_modules["charmie_yolo_objects"]:
+            while not self.activate_yolo_objects_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
+
+        if self.ros2_modules["charmie_yolo_pose"]:
+            while not self.activate_yolo_pose_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+        
         
         # Variables 
         self.waited_for_end_of_audio = False
