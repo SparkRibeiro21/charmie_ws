@@ -32,7 +32,7 @@ class test_import_class():
         
 
     def method_import(self):
-        return self.number+1
+        return "Test Import Class: "+str(self.number)
     
 
 class ROS2TaskNode(Node):
@@ -1615,7 +1615,8 @@ class RobotStdFunctions():
         self.node.activate_obstacles_message = "Activated with selected parameters"
 
         return self.node.activate_obstacles_success, self.node.activate_obstacles_message
-    
 
-
+    def get_robot_localization(self):
+        
+        return self.node.robot_x, self.node.robot_y, self.node.robot_t
     

@@ -223,7 +223,9 @@ class TaskMain():
 
                 print(abc.method_import())     
 
-                self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
+
+                print(self.robot.get_robot_localization())
 
                 print("NEXT TASK")
 
