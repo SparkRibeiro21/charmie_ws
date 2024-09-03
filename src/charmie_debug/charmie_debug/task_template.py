@@ -3,7 +3,7 @@ HOW THE CODE OF A TASK SHOULD BE MADE:
 
 ->  ->  ->  ->  ->  HOW TO CREATE A TASK?
 
-1) IMPORT ALL ROS2 TOPICS/SERVICES NECESSARY AND WAIT_FOR_SERVICE (THIS IS TIAGO JOB, ASK HIM TO HELP OR EXPLAIN)
+1) COPY THE TASK TEMPLATE TO YOUR TASK PKG. ALL STD FUNCTIONS ARE INCLUDED FROM CHARMIE_STD_FUNCTIONS (if any doubt ask Tiago Ribeiro)
 2) PLAN THE STATES AND SET THE STATES FOR YOUR TASK:
 
         self.Waiting_for_task_start = 0
@@ -133,7 +133,7 @@ HOW THE CODE OF A TASK SHOULD BE MADE:
 import rclpy
 import threading
 import time
-from charmie_gui.test_import import ROS2TaskNode, RobotStdFunctions, test_import_class
+from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -145,19 +145,19 @@ ros2_modules = {
     "charmie_audio": False,
     "charmie_face": False,
     "charmie_head_camera": False,
-    "charmie_hand_camera": True,
+    "charmie_hand_camera": False,
     "charmie_lidar": False,
     "charmie_localisation": False,
     "charmie_low_level": False,
-    "charmie_navigation": True,
+    "charmie_navigation": False,
     "charmie_neck": False,
     "charmie_obstacles": False,
-    "charmie_odometry": True,
-    "charmie_point_cloud": True,
+    "charmie_odometry": False,
+    "charmie_point_cloud": False,
     "charmie_ps4_controller": False,
     "charmie_speakers": True,
     "charmie_yolo_objects": False,
-    "charmie_yolo_pose": True,
+    "charmie_yolo_pose": False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -220,10 +220,6 @@ class TaskMain():
                 print("State:", self.state, "- Waiting_for_task_start")
 
                 print("Testing the import")
-
-                abc = test_import_class(4)
-
-                print(abc.method_import())     
 
                 print(self.robot.get_robot_localization())
 
