@@ -1,4 +1,4 @@
-import rclpy
+# import rclpy
 from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
@@ -9,7 +9,7 @@ from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, De
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration
 
 import cv2 
-import threading
+# import threading
 import time
 from cv_bridge import CvBridge
 import math
@@ -21,18 +21,6 @@ from datetime import datetime
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
-
-
-
-class test_import_class():
-
-    def __init__(self, number):
-        # create a node instance so all variables ros related can be acessed
-        self.number = number
-        
-
-    def method_import(self):
-        return "Test Import Class: "+str(self.number)
     
 
 class ROS2TaskNode(Node):
@@ -315,11 +303,7 @@ class ROS2TaskNode(Node):
         self.flag_navigation_reached = flag
 
     # request point cloud information from point cloud node
-    def call_point_cloud_server(self, req, camera):
-        request = GetPointCloud.Request()
-        request.data = req
-        request.retrieve_bbox = False
-        request.camera = camera
+    def call_point_cloud_server(self, request=GetPointCloud.Request()):
     
         future = self.point_cloud_client.call_async(request)
         future.add_done_callback(self.callback_call_point_cloud)
@@ -332,53 +316,29 @@ class ROS2TaskNode(Node):
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             self.point_cloud_response = future.result()
             self.waiting_for_pcloud = False
-            # print("Received Back")
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
-    def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
-        request = ActivateYoloPose.Request()
-        request.activate = activate
-        request.only_detect_person_legs_visible = only_detect_person_legs_visible
-        request.minimum_person_confidence = minimum_person_confidence
-        request.minimum_keypoints_to_detect_person = minimum_keypoints_to_detect_person
-        request.only_detect_person_arm_raised = only_detect_person_arm_raised
-        request.only_detect_person_right_in_front = only_detect_person_right_in_front
-        request.characteristics = characteristics
+    def call_activate_yolo_pose_server(self, request=ActivateYoloPose.Request()):
 
         self.activate_yolo_pose_client.call_async(request)
 
+
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
-        request = ActivateYoloObjects.Request()
-        request.activate_objects = activate_objects
-        request.activate_shoes = activate_shoes
-        request.activate_doors = activate_doors
-        request.activate_objects_hand = activate_objects_hand
-        request.activate_shoes_hand = activate_shoes_hand
-        request.activate_doors_hand = activate_doors_hand
-        request.minimum_objects_confidence = minimum_objects_confidence
-        request.minimum_shoes_confidence = minimum_shoes_confidence
-        request.minimum_doors_confidence = minimum_doors_confidence
+    def call_activate_yolo_objects_server(self, request=ActivateYoloObjects.Request()):
 
         self.activate_yolo_objects_client.call_async(request)
 
+
     ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
-    def call_activate_obstacles_server(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False):
-        request = ActivateObstacles.Request()
-        request.activate_lidar_up = obstacles_lidar_up
-        request.activate_lidar_bottom = obstacles_lidar_bottom
-        request.activate_camera_head = obstacles_camera_head
+    def call_activate_obstacles_server(self, request=ActivateObstacles.Request()):
 
         self.activate_obstacles_client.call_async(request)
 
 
     #### FACE SERVER FUNCTIONS #####
-    def call_face_command_server(self, command="", custom="", wait_for_end_of=True):
-        request = SetFace.Request()
-        request.command = command
-        request.custom = custom
+    def call_face_command_server(self, request=SetFace.Request(), wait_for_end_of=True):
         
         future = self.face_command_client.call_async(request)
         
@@ -388,7 +348,7 @@ class ROS2TaskNode(Node):
             self.face_success = True
             self.face_message = "Wait for answer not needed"
     
-    def callback_call_face_command(self, future): #, a, b):
+    def callback_call_face_command(self, future):
 
         try:
             # in this function the order of the line of codes matter
@@ -398,31 +358,23 @@ class ROS2TaskNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.face_success = response.success
             self.face_message = response.message
-            # time.sleep(3)
             self.waited_for_end_of_face = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
 
     #### SPEECH SERVER FUNCTIONS #####
-    def call_speech_command_server(self, filename="", command="", quick_voice=False, wait_for_end_of=True, show_in_face=False):
-        request = SpeechCommand.Request()
-        request.filename = filename
-        request.command = command
-        request.quick_voice = quick_voice
-        request.show_in_face = show_in_face
+    def call_speech_command_server(self, request=SpeechCommand.Request(), wait_for_end_of=True):
     
         future = self.speech_command_client.call_async(request)
-        # print("Sent Command")
 
         if wait_for_end_of:
-            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_speech_command)
         else:
             self.speech_success = True
             self.speech_message = "Wait for answer not needed"
 
-    def callback_call_speech_command(self, future): #, a, b):
+    def callback_call_speech_command(self, future): 
 
         try:
             # in this function the order of the line of codes matter
@@ -432,32 +384,23 @@ class ROS2TaskNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.speech_success = response.success
             self.speech_message = response.message
-            # time.sleep(3)
             self.waited_for_end_of_speaking = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
 
     #### SAVE SPEECH SERVER FUNCTIONS #####
-    def call_save_speech_command_server(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True):
-        request = SaveSpeechCommand.Request()
-        request.filename = filename
-        request.command = command
-        request.quick_voice = quick_voice
-        request.play_command = play_command
-        request.show_in_face = show_in_face
+    def call_save_speech_command_server(self, request = SaveSpeechCommand.Request(), wait_for_end_of=True):
     
         future = self.save_speech_command_client.call_async(request)
-        # print("Sent Command")
 
         if wait_for_end_of:
-            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_save_speech_command)
         else:
             self.speech_success = True
             self.speech_message = "Wait for answer not needed"
     
-    def callback_call_save_speech_command(self, future): #, a, b):
+    def callback_call_save_speech_command(self, future):
 
         try:
             # in this function the order of the line of codes matter
@@ -467,22 +410,15 @@ class ROS2TaskNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.save_speech_success = response.success
             self.save_speech_message = response.message
-            # time.sleep(3)
             self.waited_for_end_of_save_speaking = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
 
     #### AUDIO SERVER FUNCTIONS #####
-    def call_audio_server(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, wait_for_end_of=True):
-        request = GetAudio.Request()
-        request.yes_or_no = yes_or_no
-        request.receptionist = receptionist
-        request.gpsr = gpsr
-        request.restaurant = restaurant
+    def call_audio_server(self, request=GetAudio.Request(), wait_for_end_of=True):
 
         future = self.get_audio_client.call_async(request)
-        # print("Sent Command")
 
         if wait_for_end_of:
             future.add_done_callback(self.callback_call_audio)
@@ -499,19 +435,14 @@ class ROS2TaskNode(Node):
             response = future.result()
             self.get_logger().info(str(response.command))
             self.audio_command = response.command
-            # self.track_object_success = response.success
-            # self.track_object_message = response.message
-            # time.sleep(3)
             self.waited_for_end_of_audio = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
 
-    def call_calibrate_audio_server(self, wait_for_end_of=True):
-        request = CalibrateAudio.Request()
+    def call_calibrate_audio_server(self, request=CalibrateAudio.Request(), wait_for_end_of=True):
 
         future = self.calibrate_audio_client.call_async(request)
-        # print("Sent Command")
 
         if wait_for_end_of:
             future.add_done_callback(self.callback_call_calibrate_audio)
@@ -529,30 +460,22 @@ class ROS2TaskNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.track_person_success = response.success
             self.track_person_message = response.message
-            # self.track_object_success = response.success
-            # self.track_object_message = response.message
-            # time.sleep(3)
             self.waited_for_end_of_calibrate_audio = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
     #### SET NECK POSITION SERVER FUNCTIONS #####
-    def call_neck_position_server(self, position=[0, 0], wait_for_end_of=True):
-        request = SetNeckPosition.Request()
-        request.pan = float(position[0])
-        request.tilt = float(position[1])
+    def call_neck_position_server(self, request = SetNeckPosition.Request(), wait_for_end_of=True):
         
         future = self.set_neck_position_client.call_async(request)
-        # print("Sent Command")
 
         if wait_for_end_of:
-            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_set_neck_command)
         else:
             self.neck_success = True
             self.neck_message = "Wait for answer not needed"
     
-    def callback_call_set_neck_command(self, future): #, a, b):
+    def callback_call_set_neck_command(self, future):
 
         try:
             # in this function the order of the line of codes matter
@@ -562,32 +485,23 @@ class ROS2TaskNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.neck_success = response.success
             self.neck_message = response.message
-            # time.sleep(3)
             self.waited_for_end_of_neck_pos = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
 
     #### SET NECK COORDINATES SERVER FUNCTIONS #####
-    def call_neck_coordinates_server(self, x, y, z, tilt, flag, wait_for_end_of=True):
-        request = SetNeckCoordinates.Request()
-        request.coords.x = float(x)
-        request.coords.y = float(y)
-        request.coords.z = float(z)
-        request.is_tilt = flag
-        request.tilt = float(tilt)
+    def call_neck_coordinates_server(self, request = SetNeckCoordinates.Request(), wait_for_end_of=True):
         
         future = self.set_neck_coordinates_client.call_async(request)
-        # print("Sent Command")
 
         if wait_for_end_of:
-            # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
             future.add_done_callback(self.callback_call_set_neck_coords_command)
         else:
             self.neck_success = True
             self.neck_message = "Wait for answer not needed"
     
-    def callback_call_set_neck_coords_command(self, future): #, a, b):
+    def callback_call_set_neck_coords_command(self, future):
 
         try:
             # in this function the order of the line of codes matter
@@ -597,23 +511,19 @@ class ROS2TaskNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.neck_success = response.success
             self.neck_message = response.message
-            # time.sleep(3)
             self.waited_for_end_of_neck_coords = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
 
     #### GET NECK POSITION SERVER FUNCTIONS #####
-    def call_get_neck_position_server(self):
-        request = GetNeckPosition.Request()
+    def call_get_neck_position_server(self, request=GetNeckPosition.Request()):
         
         future = self.get_neck_position_client.call_async(request)
-        # print("Sent Command")
 
-        # future.add_done_callback(partial(self.callback_call_speech_command, a=filename, b=command))
         future.add_done_callback(self.callback_call_get_neck_command)
     
-    def callback_call_get_neck_command(self, future): #, a, b):
+    def callback_call_get_neck_command(self, future):
 
         try:
             # in this function the order of the line of codes matter
@@ -623,21 +533,16 @@ class ROS2TaskNode(Node):
             self.get_logger().info("Received Neck Position: (%s" %(str(response.pan) + ", " + str(response.tilt)+")"))
             self.get_neck_position[0] = response.pan
             self.get_neck_position[1] = response.tilt
-            # time.sleep(3)
             self.waited_for_end_of_get_neck = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
 
 
     #### NECK SERVER FUNCTIONS #####
-    def call_neck_track_person_server(self, person, body_part="Head", wait_for_end_of=True):
-        request = TrackPerson.Request()
-        request.person = person
-        request.body_part = body_part
+    def call_neck_track_person_server(self, request = TrackPerson.Request(), wait_for_end_of=True):
 
         future = self.neck_track_person_client.call_async(request)
-        # print("Sent Command")
-
+        
         if wait_for_end_of:
             future.add_done_callback(self.callback_call_neck_track_person)
         else:
@@ -654,19 +559,15 @@ class ROS2TaskNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.track_person_success = response.success
             self.track_person_message = response.message
-            # time.sleep(3)
             self.waited_for_end_of_track_person = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
 
-    def call_neck_track_object_server(self, object, wait_for_end_of=True):
-        request = TrackObject.Request()
-        request.object = object
+    def call_neck_track_object_server(self, request=TrackObject.Request(), wait_for_end_of=True):
 
         future = self.neck_track_object_client.call_async(request)
-        # print("Sent Command")
-
+        
         if wait_for_end_of:
             future.add_done_callback(self.callback_call_neck_track_object)
         else:
@@ -683,28 +584,9 @@ class ROS2TaskNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.track_object_success = response.success
             self.track_object_message = response.message
-            # time.sleep(3)
             self.waited_for_end_of_track_object = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -723,7 +605,13 @@ class RobotStdFunctions():
 
     def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
 
-        self.node.call_speech_command_server(filename=filename, command=command, wait_for_end_of=wait_for_end_of, quick_voice=quick_voice, show_in_face=show_in_face)
+        request = SpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+        request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
+
+        self.node.call_speech_command_server(request=request, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
           while not self.node.waited_for_end_of_speaking:
@@ -748,7 +636,14 @@ class RobotStdFunctions():
         
         if len(file) > 0 and len(comm) > 0:
 
-            self.node.call_save_speech_command_server(filename=file, command=comm, quick_voice=quick_voice, play_command=play_command, show_in_face=show_in_face, wait_for_end_of=wait_for_end_of)
+            request = SaveSpeechCommand.Request()
+            request.filename = file
+            request.command = comm
+            request.quick_voice = quick_voice
+            request.play_command = play_command
+            request.show_in_face = show_in_face
+
+            self.node.call_save_speech_command_server(request=request, wait_for_end_of=wait_for_end_of)
             
             if wait_for_end_of:
                 while not self.node.waited_for_end_of_save_speaking:
@@ -820,6 +715,12 @@ class RobotStdFunctions():
 
         if yes_or_no or receptionist or gpsr or restaurant:
 
+            request = GetAudio.Request()
+            request.yes_or_no = yes_or_no
+            request.receptionist = receptionist
+            request.gpsr = gpsr
+            request.restaurant = restaurant
+
             # this code continuously asks for new audio info eveytime it gets an error for mishearing
             audio_error_counter = 0
             keywords = "ERROR"
@@ -827,7 +728,7 @@ class RobotStdFunctions():
                 
                 self.set_speech(filename=question, wait_for_end_of=True)
                 self.set_face(face_hearing)
-                self.node.call_audio_server(yes_or_no=yes_or_no, receptionist=receptionist, gpsr=gpsr, restaurant=restaurant, wait_for_end_of=wait_for_end_of)
+                self.node.call_audio_server(request=request, wait_for_end_of=wait_for_end_of)
                 
                 if wait_for_end_of:
                     while not self.node.waited_for_end_of_audio:
@@ -854,8 +755,10 @@ class RobotStdFunctions():
             return "ERROR: No audio type selected" 
 
     def calibrate_audio(self, wait_for_end_of=True):
+
+        request = CalibrateAudio.Request()
             
-        self.node.call_calibrate_audio_server(wait_for_end_of=wait_for_end_of)
+        self.node.call_calibrate_audio_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
             while not self.node.waited_for_end_of_calibrate_audio:
@@ -866,7 +769,11 @@ class RobotStdFunctions():
     
     def set_face(self, command="", custom="", wait_for_end_of=True):
         
-        self.node.call_face_command_server(command=command, custom=custom, wait_for_end_of=wait_for_end_of)
+        request = SetFace.Request()
+        request.command = command
+        request.custom = custom
+        
+        self.node.call_face_command_server(request=request, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
             while not self.node.waited_for_end_of_face:
@@ -877,7 +784,11 @@ class RobotStdFunctions():
     
     def set_neck(self, position=[0, 0], wait_for_end_of=True):
 
-        self.node.call_neck_position_server(position=position, wait_for_end_of=wait_for_end_of)
+        request = SetNeckPosition.Request()
+        request.pan = float(position[0])
+        request.tilt = float(position[1])
+
+        self.node.call_neck_position_server(request=request, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
           while not self.node.waited_for_end_of_neck_pos:
@@ -886,15 +797,33 @@ class RobotStdFunctions():
 
         return self.node.neck_success, self.node.neck_message
     
-    def set_neck_coords(self, position=[], ang=0.0, wait_for_end_of=True):
+    def set_neck_coords(self, position=[0.0, 0.0], ang=0.0, wait_for_end_of=True):
 
         if len(position) == 2:
-            self.node.call_neck_coordinates_server(x=position[0], y=position[1], z=0.0, tilt=ang, flag=True, wait_for_end_of=wait_for_end_of)
+
+            request = SetNeckCoordinates.Request()
+            request.coords.x = float(position[0])
+            request.coords.y = float(position[1])
+            request.coords.z = float(0.0)
+            request.is_tilt = True
+            request.tilt = float(ang)
+
+            self.node.call_neck_coordinates_server(request=request, wait_for_end_of=wait_for_end_of)
+
         elif len(position) == 3:
             print("You tried neck to coordintes using (x,y,z) please switch to (x,y,theta)")
+
+            request = SetNeckCoordinates.Request()
+            request.coords.x = float(position[0])
+            request.coords.y = float(position[1])
+            request.coords.z = float(position[2])
+            request.is_tilt = False
+            request.tilt = float(0.0)
+
             pass
             # The following line is correct, however since the functionality is not implemented yet, should not be called
-            # self.node.call_neck_coordinates_server(x=position[0], y=position[1], z=position[2], tilt=0.0, flag=False, wait_for_end_of=wait_for_end_of)
+            # self.node.call_neck_coordinates_server(request=request, wait_for_end_of=wait_for_end_of)
+
         else:
             print("Something went wrong")
         
@@ -907,7 +836,9 @@ class RobotStdFunctions():
     
     def get_neck(self, wait_for_end_of=True):
     
-        self.node.call_get_neck_position_server()
+        request=GetNeckPosition.Request()
+
+        self.node.call_get_neck_position_server(request=request)
         
         if wait_for_end_of:
           while not self.node.waited_for_end_of_get_neck:
@@ -919,7 +850,16 @@ class RobotStdFunctions():
     
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
-        self.node.call_activate_yolo_pose_server(activate=activate, only_detect_person_legs_visible=only_detect_person_legs_visible, minimum_person_confidence=minimum_person_confidence, minimum_keypoints_to_detect_person=minimum_keypoints_to_detect_person, only_detect_person_right_in_front=only_detect_person_right_in_front, only_detect_person_arm_raised=only_detect_person_arm_raised, characteristics=characteristics)
+        request = ActivateYoloPose.Request()
+        request.activate = activate
+        request.only_detect_person_legs_visible = only_detect_person_legs_visible
+        request.minimum_person_confidence = minimum_person_confidence
+        request.minimum_keypoints_to_detect_person = minimum_keypoints_to_detect_person
+        request.only_detect_person_right_in_front = only_detect_person_right_in_front
+        request.only_detect_person_arm_raised = only_detect_person_arm_raised
+        request.characteristics = characteristics
+
+        self.node.call_activate_yolo_pose_server(request=request)
 
         self.node.activate_yolo_pose_success = True
         self.node.activate_yolo_pose_message = "Activated with selected parameters"
@@ -928,7 +868,18 @@ class RobotStdFunctions():
 
     def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
         
-        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
+        request = ActivateYoloObjects.Request()
+        request.activate_objects = activate_objects
+        request.activate_shoes = activate_shoes
+        request.activate_doors = activate_doors
+        request.activate_objects_hand = activate_objects_hand
+        request.activate_shoes_hand = activate_shoes_hand
+        request.activate_doors_hand = activate_doors_hand
+        request.minimum_objects_confidence = minimum_objects_confidence
+        request.minimum_shoes_confidence = minimum_shoes_confidence
+        request.minimum_doors_confidence = minimum_doors_confidence
+
+        self.node.call_activate_yolo_objects_server(request=request)
 
         self.node.activate_yolo_objects_success = True
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
@@ -937,7 +888,11 @@ class RobotStdFunctions():
 
     def track_person(self, person, body_part="Head", wait_for_end_of=True):
 
-        self.node.call_neck_track_person_server(person=person, body_part=body_part, wait_for_end_of=wait_for_end_of)
+        request = TrackPerson.Request()
+        request.person = person
+        request.body_part = body_part
+
+        self.node.call_neck_track_person_server(request=request, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
           while not self.node.waited_for_end_of_track_person:
@@ -948,7 +903,10 @@ class RobotStdFunctions():
  
     def track_object(self, object, wait_for_end_of=True):
 
-        self.node.call_neck_track_object_server(object=object, wait_for_end_of=wait_for_end_of)
+        request = TrackObject.Request()
+        request.object = object
+
+        self.node.call_neck_track_object_server(request=request, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
           while not self.node.waited_for_end_of_track_object:
@@ -1583,7 +1541,7 @@ class RobotStdFunctions():
         
         return face_path
 
-    def get_point_cloud(self, bb=BoundingBox(), wait_for_end_of=True):
+    def get_point_cloud(self, bb=BoundingBox(), camera="head", wait_for_end_of=True):
 
         requested_objects = []
             
@@ -1598,8 +1556,13 @@ class RobotStdFunctions():
 
         requested_objects.append(get_pc)
 
+        request = GetPointCloud.Request()
+        request.data = requested_objects
+        request.retrieve_bbox = False
+        request.camera = camera
+
         self.node.waiting_for_pcloud = True
-        self.node.call_point_cloud_server(requested_objects, "hand")
+        self.node.call_point_cloud_server(request=request)
 
         if wait_for_end_of:
             while self.node.waiting_for_pcloud:
@@ -1609,7 +1572,12 @@ class RobotStdFunctions():
 
     def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
         
-        self.node.call_activate_obstacles_server(obstacles_lidar_up=obstacles_lidar_up, obstacles_lidar_bottom=obstacles_lidar_bottom, obstacles_camera_head=obstacles_camera_head)
+        request = ActivateObstacles.Request()
+        request.activate_lidar_up = obstacles_lidar_up
+        request.activate_lidar_bottom = obstacles_lidar_bottom
+        request.activate_camera_head = obstacles_camera_head
+
+        self.node.call_activate_obstacles_server(request=request)
 
         self.node.activate_obstacles_success = True
         self.node.activate_obstacles_message = "Activated with selected parameters"
@@ -1619,4 +1587,23 @@ class RobotStdFunctions():
     def get_robot_localization(self):
         
         return self.node.robot_x, self.node.robot_y, self.node.robot_t
-    
+
+
+
+
+
+
+
+
+
+
+
+class test_import_class():
+
+    def __init__(self, number):
+        # create a node instance so all variables ros related can be acessed
+        self.number = number
+        
+
+    def method_import(self):
+        return "Test Import Class: "+str(self.number)

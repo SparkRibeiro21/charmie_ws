@@ -153,7 +153,7 @@ ros2_modules = {
     # "charmie_odometry": False, # commented by TR
     "charmie_point_cloud": False,
     # "charmie_ps4_controller": False, # commented by TR
-    "charmie_speakers": False,
+    "charmie_speakers": True,
     "charmie_yolo_objects": False,
     "charmie_yolo_pose": False,
 }
@@ -223,10 +223,10 @@ class TaskMain():
 
                 print(abc.method_import())     
 
-                # self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
-
                 print(self.robot.get_robot_localization())
 
+                self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
+                
                 print("NEXT TASK")
 
                 while True:
