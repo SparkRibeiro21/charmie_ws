@@ -7,7 +7,7 @@ from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -113,6 +113,8 @@ class DebugVisualNode(Node):
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+
+        self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
         self.create_timer(1.0, self.check_yolos_timer)
         self.is_yolo_pose_comm = False
@@ -235,6 +237,36 @@ class DebugVisualNode(Node):
         else:
             self.is_yolo_obj_hand_comm = False
 
+
+    def nodes_used_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
+        # Type of service received: 
+        # 
+        # bool charmie_arm
+        # bool charmie_audio
+        # bool charmie_face
+        # bool charmie_head_camera
+        # bool charmie_hand_camera
+        # bool charmie_lidar
+        # bool charmie_localisation
+        # bool charmie_low_level
+        # bool charmie_navigation
+        # bool charmie_neck
+        # bool charmie_obstacles
+        # bool charmie_odometry
+        # bool charmie_point_cloud
+        # bool charmie_ps4_controller
+        # bool charmie_speakers
+        # bool charmie_yolo_objects
+        # bool charmie_yolo_pose
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages
+        print("TASK NODES USED RECEIVED")
+        print(request)
+
+        response.success = True
+        response.message = "Nodes Used Sucessfully Received"
+        return response
 
     def get_color_image_hand_callback(self, img: Image):
         self.hand_rgb = img

@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed
 
 import cv2 
 # import threading
@@ -97,11 +97,18 @@ class ROS2TaskNode(Node):
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+        #GUI
+        self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
+
+    
+        self.send_node_used_to_gui()
 
         """
             "charmie_arm": False,
             "charmie_audio": True,
             "charmie_face": False,
+        "charmie_head_camera": False,
+        "charmie_hand_camera": False,
         "charmie_lidar": False,
         "charmie_localisation": False,
             "charmie_low_level": False,
@@ -236,6 +243,30 @@ class ROS2TaskNode(Node):
 
         self.get_neck_position = [1.0, 1.0]
 
+
+    def send_node_used_to_gui(self):
+
+        nodes_used = NodesUsed.Request()
+
+        nodes_used.charmie_arm              = self.ros2_modules["charmie_arm"]
+        nodes_used.charmie_audio            = self.ros2_modules["charmie_audio"]
+        nodes_used.charmie_face             = self.ros2_modules["charmie_face"]
+        nodes_used.charmie_head_camera      = self.ros2_modules["charmie_head_camera"]
+        nodes_used.charmie_hand_camera      = self.ros2_modules["charmie_hand_camera"]
+        nodes_used.charmie_lidar            = self.ros2_modules["charmie_lidar"]
+        nodes_used.charmie_localisation     = self.ros2_modules["charmie_localisation"]
+        nodes_used.charmie_low_level        = self.ros2_modules["charmie_low_level"]
+        nodes_used.charmie_navigation       = self.ros2_modules["charmie_navigation"]
+        nodes_used.charmie_neck             = self.ros2_modules["charmie_neck"]
+        nodes_used.charmie_obstacles        = self.ros2_modules["charmie_obstacles"]
+        nodes_used.charmie_odometry         = self.ros2_modules["charmie_odometry"]
+        nodes_used.charmie_point_cloud      = self.ros2_modules["charmie_point_cloud"]
+        nodes_used.charmie_ps4_controller   = self.ros2_modules["charmie_ps4_controller"]
+        nodes_used.charmie_speakers         = self.ros2_modules["charmie_speakers"]
+        nodes_used.charmie_yolo_objects     = self.ros2_modules["charmie_yolo_objects"]
+        nodes_used.charmie_yolo_pose        = self.ros2_modules["charmie_yolo_pose"]
+
+        self.nodes_used_client.call_async(nodes_used)
 
     def person_pose_filtered_callback(self, det_people: Yolov8Pose):
         self.detected_people = det_people
