@@ -853,8 +853,8 @@ class RobotStdFunctions():
         request = ActivateYoloPose.Request()
         request.activate = activate
         request.only_detect_person_legs_visible = only_detect_person_legs_visible
-        request.minimum_person_confidence = minimum_person_confidence
-        request.minimum_keypoints_to_detect_person = minimum_keypoints_to_detect_person
+        request.minimum_person_confidence = float(minimum_person_confidence)
+        request.minimum_keypoints_to_detect_person = int(minimum_keypoints_to_detect_person)
         request.only_detect_person_right_in_front = only_detect_person_right_in_front
         request.only_detect_person_arm_raised = only_detect_person_arm_raised
         request.characteristics = characteristics
@@ -875,9 +875,9 @@ class RobotStdFunctions():
         request.activate_objects_hand = activate_objects_hand
         request.activate_shoes_hand = activate_shoes_hand
         request.activate_doors_hand = activate_doors_hand
-        request.minimum_objects_confidence = minimum_objects_confidence
-        request.minimum_shoes_confidence = minimum_shoes_confidence
-        request.minimum_doors_confidence = minimum_doors_confidence
+        request.minimum_objects_confidence = float(minimum_objects_confidence)
+        request.minimum_shoes_confidence = float(minimum_shoes_confidence)
+        request.minimum_doors_confidence = float(minimum_doors_confidence)
 
         self.node.call_activate_yolo_objects_server(request=request)
 
@@ -886,7 +886,7 @@ class RobotStdFunctions():
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
 
-    def track_person(self, person, body_part="Head", wait_for_end_of=True):
+    def track_person(self, person=DetectedPerson(), body_part="Head", wait_for_end_of=True):
 
         request = TrackPerson.Request()
         request.person = person
@@ -901,7 +901,7 @@ class RobotStdFunctions():
 
         return self.node.track_person_success, self.node.track_person_message
  
-    def track_object(self, object, wait_for_end_of=True):
+    def track_object(self, object=DetectedObject(), wait_for_end_of=True):
 
         request = TrackObject.Request()
         request.object = object
@@ -922,7 +922,7 @@ class RobotStdFunctions():
         
         temp = ArmController()
         temp.command = command
-        temp.adjust_position = adjust_position
+        temp.adjust_position = float(adjust_position)
         temp.pose = pose
         self.node.arm_command_publisher.publish(temp)
 
@@ -937,7 +937,7 @@ class RobotStdFunctions():
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
     
-    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, wait_for_end_of=True):
+    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, avoid_people=False, wait_for_end_of=True):
 
         if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
@@ -969,7 +969,7 @@ class RobotStdFunctions():
             navigation.orientation_absolute = float(absolute_angle)
             navigation.flag_not_obs = flag_not_obs
             navigation.reached_radius = float(reached_radius)
-            navigation.avoid_people = False
+            navigation.avoid_people = avoid_people
             navigation.adjust_distance = float(adjust_distance)
             navigation.adjust_direction = float(adjust_direction)
             navigation.adjust_min_dist = float(adjust_min_dist)
@@ -996,9 +996,9 @@ class RobotStdFunctions():
         task_initialpose.header.frame_id = "map"
         task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
 
-        task_initialpose.pose.pose.position.x = initial_position[1]
-        task_initialpose.pose.pose.position.y = -initial_position[0]
-        task_initialpose.pose.pose.position.z = 0.0
+        task_initialpose.pose.pose.position.x = float(initial_position[1])
+        task_initialpose.pose.pose.position.y = float(-initial_position[0])
+        task_initialpose.pose.pose.position.z = float(0.0)
 
         # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
 
@@ -1022,9 +1022,9 @@ class RobotStdFunctions():
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
-    def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False):
+    def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
-        self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible) 
+        self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
         self.set_speech(filename="generic/search_people", wait_for_end_of=False)
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
         time.sleep(0.5)
@@ -1169,7 +1169,7 @@ class RobotStdFunctions():
         face_path = current_datetime + str(person.index)
         
         cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
-        time.sleep(0.5)
+        time.sleep(0.1)
 
         if send_to_face:
             self.set_face(custom=face_path)
@@ -1534,7 +1534,7 @@ class RobotStdFunctions():
         face_path = current_datetime + str(object.index) + str(object.object_name)
         
         cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", object_image) 
-        time.sleep(0.5)
+        time.sleep(0.1)
         
         if send_to_face:
             self.set_face(custom=face_path)
