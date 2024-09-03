@@ -144,15 +144,17 @@ ros2_modules = {
     "charmie_arm": False,
     "charmie_audio": False,
     "charmie_face": False,
-    # "charmie_lidar": False, # commented by TR
-    # "charmie_localisation": False, # commented by TR
+    "charmie_head_camera": False,
+    "charmie_hand_camera": False,
+    "charmie_lidar": False,
+    "charmie_localisation": False,
     "charmie_low_level": False,
     "charmie_navigation": False,
     "charmie_neck": False,
     "charmie_obstacles": False,
-    # "charmie_odometry": False, # commented by TR
+    "charmie_odometry": False,
     "charmie_point_cloud": False,
-    # "charmie_ps4_controller": False, # commented by TR
+    "charmie_ps4_controller": False,
     "charmie_speakers": True,
     "charmie_yolo_objects": False,
     "charmie_yolo_pose": False,
