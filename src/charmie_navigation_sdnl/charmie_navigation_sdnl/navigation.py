@@ -970,7 +970,6 @@ class NavSDNLNode(Node):
         #     print("alfa", o.alfa)
         #     print("dist", o.dist)
         #     print("l_ang", o.length_angular)
-        #     print("l_cm", o.length_cm)
         # print("---")
 
         # self.MIN_DIST_OBS = 10.0

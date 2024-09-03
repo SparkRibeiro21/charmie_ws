@@ -10,7 +10,7 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from charmie_interfaces.msg import SpeechType, RobotSpeech
+from charmie_interfaces.msg import RGB
 from charmie_interfaces.srv import SpeechCommand
 
 # Constant Variables to ease RGB_MODE coding

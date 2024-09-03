@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, String
 from sensor_msgs.msg import LaserScan, Image
-from charmie_interfaces.msg import Encoders, PS4Controller, RobotSpeech, SpeechType, TarNavSDNL, NeckPosition, DetectedPerson, Yolov8Pose, RequestPointCloud
+from charmie_interfaces.msg import Encoders, PS4Controller, SpeechType, TarNavSDNL, NeckPosition, DetectedPerson, Yolov8Pose
 
 
 from cv_bridge import CvBridge
@@ -63,7 +63,6 @@ class TRNode(Node):
         self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.get_lidar_callback, 10)
 
         # Speaker
-        self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
         self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
 
         # Intel Realsense
@@ -98,24 +97,6 @@ class TRNode(Node):
 
         # self.yolo_poses = Yolov8Pose()
 
-
-        """    
-        time.sleep(1)
-        a = NeckPosition()
-        a.pan = 230.0
-        a.tilt = 165.0
-        self.neck_to_position_publisher.publish(a)
-        time.sleep(2)
-
-        # test track person
-        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, 'person_pose_filtered', self.person_pose_filtered_callback, 10) 
-        self.person_pose = Yolov8Pose()
-
-
-        self.request_point_cloud_publisher = self.create_publisher(RequestPointCloud, 'ask_point_cloud', 10) 
-
-        """
-        # self.create_timer(0.1, self.request_point_cloud_person)
         # self.create_timer(10, self.request_audio)
 
         # self.request_audio()
@@ -142,30 +123,7 @@ class TRNode(Node):
         self.audio_command_publisher.publish(sp)
         print("Requested Audio")
 
-
-    def get_speech_callback(self, speech: String):
-        # speech_str = RobotSpeech()
-        
-        
-        # self.start_audio()
-
-        if speech.data == "ERROR":
-            print("I could not understand what you said, can you repeat please?")
-            # speech_str.command = "I could not understand what you said, can you repeat please?"
-            # speech_str.language = 'en'
-            # self.speaker_publisher.publish(speech_str)
-        else:
-            print(speech.data)
-            # speech_str.command = "Hello my name is Tiago."
-            # speech_str.language = 'en'
-            # speech_str.command = "Bom dia, o meu nome é Tiago e gosto de Robôs. Já agora, qual é a comida na cantina hoje?"
-            # speech_str.command = "Qual é a comida na cantina hoje?"
-            # speech_str.command = speech.data
-            # speech_str.language = 'en'
-            # self.speaker_publisher.publish(speech_str)
-        time.sleep(3)
-        self.request_audio()
-        
+      
 
     def done_start_door_callback(self, flag: Bool):
         print("Recebi Fim do Start Door")
@@ -401,31 +359,6 @@ class DebugMain():
 
 
 """
-    def request_point_cloud_person(self):
-        if self.person_pose.num_person > 0:
-            aux = RequestPointCloud()
-            aux.box_top_left_x = self.person_pose.persons[0].box_top_left_x
-            aux.box_top_left_y = self.person_pose.persons[0].box_top_left_y
-            aux.box_width = self.person_pose.persons[0].box_width
-            aux.box_height = self.person_pose.persons[0].box_height
-            aux.retrieve_bbox = False
-
-            p1 = Pose2D()
-            p1.x = float(self.person_pose.persons[0].kp_nose_x)
-            p1.y = float(self.person_pose.persons[0].kp_nose_y)
-            aux.requested_point_coords.append(p1)
-
-            p2 = Pose2D()
-            p2.x = float(self.person_pose.persons[0].kp_shoulder_left_x)
-            p2.y = float(self.person_pose.persons[0].kp_shoulder_left_y)
-            aux.requested_point_coords.append(p2)
-
-            p3 = Pose2D()
-            p3.x = float(self.person_pose.persons[0].kp_hip_right_x)
-            p3.y = float(self.person_pose.persons[0].kp_hip_right_y)
-            aux.requested_point_coords.append(p3)
-
-            self.request_point_cloud_publisher.publish(aux)    
 
     def person_pose_filtered_callback(self, pose: Yolov8Pose):        
         self.person_pose = pose
@@ -561,20 +494,6 @@ class DebugMain():
     
     # def timer_callback4(self):
         
-        # if self.init == True:
-        #     self.start_audio()
-        #     self.init = False 
-        
-        # speak = RobotSpeech()
-        #speak.command = "Red Wine"
-        # speak.language = 'en'
-
-
-        #self.speaker_publisher.publish(speak)
-        
-        
-        
-        # speak = RobotSpeech()
         
 """ 
         speak.command = "RedWine"

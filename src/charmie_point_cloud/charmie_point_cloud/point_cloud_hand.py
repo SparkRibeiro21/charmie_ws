@@ -323,7 +323,7 @@ class PointCloudNode(Node):
                 temp.append(resp_todos)
                 self.pcloud.ENVIO.append(temp)
 
-            # convert ENVIO into RetrievePointCloud ROS Variable
+            # convert ENVIO into GetPointCloud.Response()
             ret = []
             if len(self.pcloud.ENVIO) > 0:
                 for cc in self.pcloud.ENVIO:

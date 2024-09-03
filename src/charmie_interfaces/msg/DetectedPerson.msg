@@ -1,3 +1,5 @@
+# All information interpreted regarding a detected person
+
 int32 index
 float32 confidence
 

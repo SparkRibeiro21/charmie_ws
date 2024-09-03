@@ -446,7 +446,7 @@ class PointCloudNode(Node):
                 temp.append(uteis)
                 self.pcloud_head.ENVIO.append(temp)
 
-            # convert ENVIO into RetrievePointCloud ROS Variable
+            # convert ENVIO into GetPointCloud.Response()
             ret = []
             if len(self.pcloud_head.ENVIO) > 0:
                 for cc in self.pcloud_head.ENVIO:
@@ -633,7 +633,8 @@ class PointCloudNode(Node):
                     temp.append(resp_outros)
                     temp.append(uteis)
                     self.pcloud_head.ENVIO.append(temp)
-                # convert ENVIO into RetrievePointCloud ROS Variable
+                    
+                # convert ENVIO into GetPointCloud.Response()
                 ret = []
                 if len(self.pcloud_head.ENVIO) > 0:
                     for cc in self.pcloud_head.ENVIO:
@@ -797,7 +798,7 @@ class PointCloudNode(Node):
                     temp.append(uteis)
                     self.pcloud_hand.ENVIO.append(temp)
 
-                # convert ENVIO into RetrievePointCloud ROS Variable
+                # convert ENVIO into GetPointCloud.Response()
                 ret = []
                 if len(self.pcloud_hand.ENVIO) > 0:
                     for cc in self.pcloud_hand.ENVIO:

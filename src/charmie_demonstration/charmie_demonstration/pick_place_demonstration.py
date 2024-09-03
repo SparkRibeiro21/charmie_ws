@@ -9,7 +9,7 @@ from geometry_msgs.msg import Pose2D
 from example_interfaces.msg import Bool, String, Int16
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
-from charmie_interfaces.msg import RobotSpeech, TarNavSDNL, Yolov8Pose, NeckPosition, Yolov8Objects, SearchForPerson, ListOfPoints
+from charmie_interfaces.msg import TarNavSDNL, Yolov8Pose, NeckPosition, Yolov8Objects, ListOfPoints
 from charmie_interfaces.srv import SpeechCommand
 
 import time
@@ -48,7 +48,6 @@ class RestaurantNode(Node):
         # Low Level: RGB
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         
-        self.speech_str = RobotSpeech()
         self.talk_neck = NeckPosition()
         self.table_neck = NeckPosition()
         self.turn_around_neck = NeckPosition()

@@ -1,3 +1,5 @@
+# All information interpreted regarding a detected object
+
 string object_name
 string object_class
 int32 index

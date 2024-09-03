@@ -3,7 +3,6 @@ import rclpy
 from rclpy.node import Node
 
 from example_interfaces.msg import Bool, String, Float32, Int16
-# from charmie_interfaces.msg import SpeechType, RobotSpeech
 from charmie_interfaces.srv import GetAudio, CalibrateAudio
 
 import io
@@ -732,14 +731,10 @@ class AudioNode(Node):
 
 
         # I publish and subscribe in the same topic so I can request new hearings when errors are received 
-        # self.audio_command_subscriber = self.create_subscription(SpeechType, "audio_command", self.audio_command_callback, 10)
-        # self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
 
         # self.flag_listening_publisher = self.create_publisher(Bool, "flag_listening", 10)
         # self.get_speech_publisher = self.create_publisher(String, "get_speech", 10)
 
-        # self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
-        
         # self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
         
         # self.calibrate_ambient_noise_subscriber = self.create_subscription(Bool, "calib_ambient_noise", self.calibrate_ambient_noise_callback, 10)
@@ -754,10 +749,8 @@ class AudioNode(Node):
         self.server_calibrate_ambient_noise = self.create_service(CalibrateAudio, "calibrate_audio", self.callback_calibrate_audio)
         self.get_logger().info("Audio Servers have been started")
 
-        # self.speech_str = RobotSpeech()
         # self.flag_speech_done = False
         # self.audio_error = False
-        # self.latest_command = SpeechType()
 
         self.check_diagnostics()
 
@@ -1051,7 +1044,7 @@ class AudioNode(Node):
 
     """
     ### MUST CHANGE TO SERVICES
-    def audio_command_callback(self, comm: SpeechType):
+    def audio_command_callback(self, ):
         print(comm)
 
         # self.latest_command = comm

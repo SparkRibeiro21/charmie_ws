@@ -4,7 +4,7 @@ from rclpy.node import Node
 
 import math
 from example_interfaces.msg import Bool, String, Float32, Int16
-from charmie_interfaces.msg import SpeechType, RobotSpeech
+from charmie_interfaces.msg import RGB
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from functools import partial
 
@@ -20,7 +20,6 @@ class DemonstrationNode(Node):
 		super().__init__("DemonstrationNode")
 		self.get_logger().info("Initialised CHARMIE Demonstration Node")	
 
-		self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
 		self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
 		self.next_arm_movement = 0
 		self.face = Demonstration()
@@ -74,8 +73,8 @@ class DemonstrationNode(Node):
 
 		#self.barman_or_client_subscriber = self.create_subscription(Int16, "barman_or_client", self.go_barman_or_go_client_callback, 10)
 		#self.choose_action_subscriber = self.create_subscription(Int16, 'action', self.choose_action_callback, 10)
-		self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
-	
+		
+		
 		self.flag_arm_finished_movement_ = Bool()
 		self.gripper_reached_target = Bool()
 		self.set_gripper_req = GripperMove.Request()

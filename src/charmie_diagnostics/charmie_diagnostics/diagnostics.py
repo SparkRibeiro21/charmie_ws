@@ -46,7 +46,6 @@ class BSNode(Node):
 
         # Speaker
         self.speakers_diagnostic_subscriber = self.create_subscription(Bool, "speakers_diagnostic", self.speakers_diagnostic, 10)
-        self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
         self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
 
         # Speaker offline
