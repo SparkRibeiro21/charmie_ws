@@ -190,6 +190,7 @@ class DebugVisualNode(Node):
         self.all_pos_x_val = []
         self.all_pos_y_val = []
 
+        self.nodes_used = NodesUsed.Request()
         self.scan = LaserScan()
         self.person_pose = Yolov8Pose()
         self.object_detected = Yolov8Objects()
@@ -261,9 +262,11 @@ class DebugVisualNode(Node):
         # ---
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages
-        print("TASK NODES USED RECEIVED")
-        print(request)
 
+        print("TASK NODES USED RECEIVED")
+        self.nodes_used = request
+        
+        
         response.success = True
         response.message = "Nodes Used Sucessfully Received"
         return response
@@ -933,130 +936,114 @@ class DebugVisualMain():
         self.draw_text("Check Nodes:", self.text_font_t, self.WHITE, 10, 10)
 
         # ARM_UFACTORY
-        self.draw_text("Arm uFactory", self.text_font, self.WHITE, self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_ARM_UFACTORY_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.ARM_UFACTORY_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.ARM_UFACTORY_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_arm, self.check_nodes.CHECK_ARM_UFACTORY_NODE)
+        self.draw_text("Arm uFactory", self.text_font, tc, self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.ARM_UFACTORY_NODE_RECT)
             
         # ARM_CHARMIE
-        self.draw_text("Arm", self.text_font, self.WHITE, self.CHARMIE_ARM_NODE_RECT.x+2*self.CHARMIE_ARM_NODE_RECT.width, self.CHARMIE_ARM_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_ARM_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_ARM_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_ARM_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_arm, self.check_nodes.CHECK_ARM_NODE)
+        self.draw_text("Arm", self.text_font, tc, self.CHARMIE_ARM_NODE_RECT.x+2*self.CHARMIE_ARM_NODE_RECT.width, self.CHARMIE_ARM_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_ARM_NODE_RECT)
 
         # AUDIO
-        self.draw_text("Audio", self.text_font, self.WHITE, self.CHARMIE_AUDIO_NODE_RECT.x+2*self.CHARMIE_AUDIO_NODE_RECT.width, self.CHARMIE_AUDIO_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_AUDIO_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_AUDIO_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_AUDIO_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_audio, self.check_nodes.CHECK_AUDIO_NODE)
+        self.draw_text("Audio", self.text_font, tc, self.CHARMIE_AUDIO_NODE_RECT.x+2*self.CHARMIE_AUDIO_NODE_RECT.width, self.CHARMIE_AUDIO_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_AUDIO_NODE_RECT)
 
         # FACE
-        self.draw_text("Face", self.text_font, self.WHITE, self.CHARMIE_FACE_NODE_RECT.x+2*self.CHARMIE_FACE_NODE_RECT.width, self.CHARMIE_FACE_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_FACE_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_FACE_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_FACE_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_face, self.check_nodes.CHECK_FACE_NODE)
+        self.draw_text("Face", self.text_font, tc, self.CHARMIE_FACE_NODE_RECT.x+2*self.CHARMIE_FACE_NODE_RECT.width, self.CHARMIE_FACE_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_FACE_NODE_RECT)
 
         # HEAD CAMERA
-        self.draw_text("Head Camera", self.text_font, self.WHITE, self.HEAD_CAMERA_NODE_RECT.x+2*self.HEAD_CAMERA_NODE_RECT.width, self.HEAD_CAMERA_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_HEAD_CAMERA_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.HEAD_CAMERA_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.HEAD_CAMERA_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_head_camera, self.check_nodes.CHECK_HEAD_CAMERA_NODE)
+        self.draw_text("Head Camera", self.text_font, tc, self.HEAD_CAMERA_NODE_RECT.x+2*self.HEAD_CAMERA_NODE_RECT.width, self.HEAD_CAMERA_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.HEAD_CAMERA_NODE_RECT)
         
         # HAND CAMERA
-        self.draw_text("Hand Camera", self.text_font, self.WHITE, self.HAND_CAMERA_NODE_RECT.x+2*self.HAND_CAMERA_NODE_RECT.width, self.HAND_CAMERA_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_HAND_CAMERA_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.HAND_CAMERA_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.HAND_CAMERA_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_hand_camera, self.check_nodes.CHECK_HAND_CAMERA_NODE)
+        self.draw_text("Hand Camera", self.text_font, tc, self.HAND_CAMERA_NODE_RECT.x+2*self.HAND_CAMERA_NODE_RECT.width, self.HAND_CAMERA_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.HAND_CAMERA_NODE_RECT)
         
         # LIDAR
-        self.draw_text("Lidar", self.text_font, self.WHITE, self.CHARMIE_LIDAR_NODE_RECT.x+2*self.CHARMIE_LIDAR_NODE_RECT.width, self.CHARMIE_LIDAR_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_LIDAR_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_LIDAR_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_LIDAR_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_lidar, self.check_nodes.CHECK_LIDAR_NODE)
+        self.draw_text("Lidar", self.text_font, tc, self.CHARMIE_LIDAR_NODE_RECT.x+2*self.CHARMIE_LIDAR_NODE_RECT.width, self.CHARMIE_LIDAR_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_NODE_RECT)
         
         # LOCALISATION
-        self.draw_text("Localisation", self.text_font, self.WHITE, self.CHARMIE_LOCALISATION_NODE_RECT.x+2*self.CHARMIE_LOCALISATION_NODE_RECT.width, self.CHARMIE_LOCALISATION_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_LOCALISATION_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_LOCALISATION_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_LOCALISATION_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_localisation, self.check_nodes.CHECK_LOCALISATION_NODE)
+        self.draw_text("Localisation", self.text_font, tc, self.CHARMIE_LOCALISATION_NODE_RECT.x+2*self.CHARMIE_LOCALISATION_NODE_RECT.width, self.CHARMIE_LOCALISATION_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LOCALISATION_NODE_RECT)
 
         # LOW LEVEL
-        self.draw_text("Low Level", self.text_font, self.WHITE, self.CHARMIE_LOW_LEVEL_NODE_RECT.x+2*self.CHARMIE_LOW_LEVEL_NODE_RECT.width, self.CHARMIE_LOW_LEVEL_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_LOW_LEVEL_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_LOW_LEVEL_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_LOW_LEVEL_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_low_level, self.check_nodes.CHECK_LOW_LEVEL_NODE)
+        self.draw_text("Low Level", self.text_font, tc, self.CHARMIE_LOW_LEVEL_NODE_RECT.x+2*self.CHARMIE_LOW_LEVEL_NODE_RECT.width, self.CHARMIE_LOW_LEVEL_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LOW_LEVEL_NODE_RECT)
         
         # NAVIGATION
-        self.draw_text("Navigation", self.text_font, self.WHITE, self.CHARMIE_NAVIGATION_NODE_RECT.x+2*self.CHARMIE_NAVIGATION_NODE_RECT.width, self.CHARMIE_NAVIGATION_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_NAVIGATION_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_NAVIGATION_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_NAVIGATION_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_navigation, self.check_nodes.CHECK_NAVIGATION_NODE)
+        self.draw_text("Navigation", self.text_font, tc, self.CHARMIE_NAVIGATION_NODE_RECT.x+2*self.CHARMIE_NAVIGATION_NODE_RECT.width, self.CHARMIE_NAVIGATION_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAVIGATION_NODE_RECT)
 
         # NECK
-        self.draw_text("Neck", self.text_font, self.WHITE, self.CHARMIE_NECK_NODE_RECT.x+2*self.CHARMIE_NECK_NODE_RECT.width, self.CHARMIE_NECK_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_NECK_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_NECK_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_NECK_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_neck, self.check_nodes.CHECK_NECK_NODE)
+        self.draw_text("Neck", self.text_font, tc, self.CHARMIE_NECK_NODE_RECT.x+2*self.CHARMIE_NECK_NODE_RECT.width, self.CHARMIE_NECK_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_NECK_NODE_RECT)
 
         # OBSTACLES
-        self.draw_text("Obstacles", self.text_font, self.WHITE, self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_OBSTACLES_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_OBSTACLES_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_OBSTACLES_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_obstacles, self.check_nodes.CHECK_OBSTACLES_NODE)
+        self.draw_text("Obstacles", self.text_font, tc, self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_OBSTACLES_NODE_RECT)
 
         # ODOMETRY
-        self.draw_text("Odometry", self.text_font, self.WHITE, self.CHARMIE_ODOMETRY_NODE_RECT.x+2*self.CHARMIE_ODOMETRY_NODE_RECT.width, self.CHARMIE_ODOMETRY_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_ODOMETRY_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_ODOMETRY_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_ODOMETRY_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_odometry, self.check_nodes.CHECK_ODOMETRY_NODE)
+        self.draw_text("Odometry", self.text_font, tc, self.CHARMIE_ODOMETRY_NODE_RECT.x+2*self.CHARMIE_ODOMETRY_NODE_RECT.width, self.CHARMIE_ODOMETRY_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_ODOMETRY_NODE_RECT)
 
         # POINT CLOUD
-        self.draw_text("Point Cloud", self.text_font, self.WHITE, self.CHARMIE_POINT_CLOUD_NODE_RECT.x+2*self.CHARMIE_POINT_CLOUD_NODE_RECT.width, self.CHARMIE_POINT_CLOUD_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_POINT_CLOUD_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_POINT_CLOUD_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_POINT_CLOUD_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_point_cloud, self.check_nodes.CHECK_POINT_CLOUD_NODE)
+        self.draw_text("Point Cloud", self.text_font, tc, self.CHARMIE_POINT_CLOUD_NODE_RECT.x+2*self.CHARMIE_POINT_CLOUD_NODE_RECT.width, self.CHARMIE_POINT_CLOUD_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_POINT_CLOUD_NODE_RECT)
 
         # PS4 CONTROLLER
-        self.draw_text("PS4 Controller", self.text_font, self.WHITE, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.x+2*self.CHARMIE_PS4_CONTROLLER_NODE_RECT.width, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_PS4_CONTROLLER_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_ps4_controller, self.check_nodes.CHECK_PS4_CONTROLLER_NODE)
+        self.draw_text("PS4 Controller", self.text_font, tc, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.x+2*self.CHARMIE_PS4_CONTROLLER_NODE_RECT.width, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
 
         # SPEAKERS
-        self.draw_text("Speakers", self.text_font, self.WHITE, self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_SPEAKERS_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_SPEAKERS_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_SPEAKERS_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers, self.check_nodes.CHECK_SPEAKERS_NODE)
+        self.draw_text("Speakers", self.text_font, tc, self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_SPEAKERS_NODE_RECT)
 
         # YOLO OBJECTS
-        self.draw_text("YOLO Objects", self.text_font, self.WHITE, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.x+2*self.CHARMIE_YOLO_OBJECTS_NODE_RECT.width, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_YOLO_OBJECTS_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_objects, self.check_nodes.CHECK_YOLO_OBJECTS_NODE)
+        self.draw_text("YOLO Objects", self.text_font, tc, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.x+2*self.CHARMIE_YOLO_OBJECTS_NODE_RECT.width, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
 
         # YOLO POSE
-        self.draw_text("YOLO Pose", self.text_font, self.WHITE, self.CHARMIE_YOLO_POSE_NODE_RECT.x+2*self.CHARMIE_YOLO_POSE_NODE_RECT.width, self.CHARMIE_YOLO_POSE_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_YOLO_POSE_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_YOLO_POSE_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_pose, self.check_nodes.CHECK_YOLO_POSE_NODE)
+        self.draw_text("YOLO Pose", self.text_font, tc, self.CHARMIE_YOLO_POSE_NODE_RECT.x+2*self.CHARMIE_YOLO_POSE_NODE_RECT.width, self.CHARMIE_YOLO_POSE_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_YOLO_POSE_NODE_RECT)
+
+    def get_check_nodes_rectangle_and_text_color(self, text_condition, rectangle_condition):
+        
+        rectangle_color_checked = self.GREEN
+        rectangle_color_not_checked = self.RED
+        text_color_used = self.BLUE_L
+        text_color_not_used = self.WHITE
+
+        if text_condition:
+            text_color = text_color_used
         else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_YOLO_POSE_NODE_RECT)
+            text_color = text_color_not_used
+        
+        if rectangle_condition:
+            rectangle_color = rectangle_color_checked
+        else:
+            rectangle_color = rectangle_color_not_checked
+        
+        return text_color, rectangle_color
+
 
     def draw_cameras(self):
         
