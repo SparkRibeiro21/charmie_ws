@@ -223,7 +223,19 @@ class TaskMain():
 
                 print(self.robot.get_robot_localization())
 
-                self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True, breakable_play=True)
+                time.sleep(1.0)
+                self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False, breakable_play=True)
+                time.sleep(1.0)
+                self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False, break_play=True)
+
+                self.robot.set_speech(filename="music/music_pre_start", wait_for_end_of=True)
+                self.robot.set_speech(filename="music/music_soy_el_fuego", wait_for_end_of=False, breakable_play=True)
+                time.sleep(5.0)
+                self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False, break_play=True)
+
+                # time.sleep(1.0)
+                # self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
                 
                 print("NEXT TASK")
 

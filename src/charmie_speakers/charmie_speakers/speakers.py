@@ -60,7 +60,7 @@ class RobotSpeak():
 
 
     # function for pre recorded commands 
-    def play_command(self, filename, show_in_face):
+    def play_command(self, filename, show_in_face=False, breakable_play=False, break_play=False):
                 
         # if there is an audio
         if os.path.isfile(self.complete_path+filename+".wav"):
@@ -83,12 +83,15 @@ class RobotSpeak():
                     message = "Text File not Found. NOT sent to face."
                     # print("File not sent to face!")
 
+            if break_play:
+                pygame.mixer.music.stop()
 
             # play the recorded file 
             pygame.mixer.music.load(self.complete_path+filename+".wav")
             pygame.mixer.music.play()
-            while pygame.mixer.music.get_busy():
-                pass
+            if not breakable_play:
+                while pygame.mixer.music.get_busy():
+                    pass
 
             if show_in_face:
                 # sends empty string to tell face that the audio has finished to be played
@@ -136,7 +139,7 @@ class RobotSpeak():
         print(time.time()-init_time)
 
         if play_command:
-            self.play_command(temp_filename, show_in_face) 
+            self.play_command(filename=temp_filename, show_in_face=show_in_face) 
 
 
     # diagnostics function to know which speaker is being used by the PC - debug purposes
@@ -203,7 +206,7 @@ class SpeakerNode(Node):
         self.speakers_diagnostic_publisher.publish(flag_diagn)
 
         # Initial Speaking "Hello" for debug purposes
-        self.charmie_speech.play_command("generic/introduction_hello", False) 
+        self.charmie_speech.play_command(filename="generic/introduction_hello") 
 
         # Test Function for some quick tests if necessary
         # self.test()
@@ -219,9 +222,12 @@ class SpeakerNode(Node):
         # print("Received request")
 
         # Type of service received: 
-        # string filename # name of audio file to be played
-        # string command  # if there is no filename, a command string can be sent to be played in real time 
-        # bool quick_voice # if you do not want to use the pretty voice that takes more time to load, raising this flag uses the secondary quick voice
+        # string filename     # name of audio file to be played
+        # string command      # if there is no filename, a command string can be sent to be played in real time 
+        # bool quick_voice    # if you do not want to use the pretty voice that takes more time to load, raising this flag uses the secondary quick voice
+        # bool show_in_face   # whether or not it is intended for the speech command to be shown in the face
+        # bool breakable_play # if this command is inteded to be stopped by a following command
+        # bool break_play     # if a command is already playing, it stopps the previous command
         # ---
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
@@ -244,7 +250,8 @@ class SpeakerNode(Node):
         
         else:
             # speakers mode where received filename must be played
-            success, message = self.charmie_speech.play_command(filename=request.filename, show_in_face=request.show_in_face)
+            success, message = self.charmie_speech.play_command(filename=request.filename, show_in_face=request.show_in_face, \
+                                                                breakable_play=request.breakable_play, break_play=request.break_play)
             if success == False:
                 self.get_logger().error("SPEAKERS received (file) does not exist! - %s" %request.filename)
             else:

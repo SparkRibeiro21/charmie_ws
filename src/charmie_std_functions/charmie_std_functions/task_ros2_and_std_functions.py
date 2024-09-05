@@ -634,13 +634,15 @@ class RobotStdFunctions():
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
-    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
 
         request = SpeechCommand.Request()
         request.filename = filename
         request.command = command
         request.quick_voice = quick_voice
         request.show_in_face = show_in_face
+        request.breakable_play = breakable_play
+        request.break_play = break_play
 
         self.node.call_speech_command_server(request=request, wait_for_end_of=wait_for_end_of)
         
