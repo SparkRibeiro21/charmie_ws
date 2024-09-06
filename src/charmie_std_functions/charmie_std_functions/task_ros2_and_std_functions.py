@@ -800,7 +800,7 @@ class RobotStdFunctions():
 
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
-    def set_face(self, command="", custom="", wait_for_end_of=True):
+    def set_face(self, command="", custom="", wait_for_end_of=False):
         
         request = SetFace.Request()
         request.command = command
