@@ -1618,10 +1618,32 @@ class RobotStdFunctions():
         return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     def get_robot_localization(self):
-        
+
         return self.node.robot_x, self.node.robot_y, self.node.robot_t
 
+    def get_head_rgb_image(self):
+        pass
 
+    def get_head_depth_image(self):
+
+        if self.node.first_depth_head_image_received:
+            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_head_img, desired_encoding="passthrough")
+        else:
+            current_frame_depth_head = np.zeros((360, 640), dtype=np.uint8)
+        
+        return self.node.first_depth_head_image_received, current_frame_depth_head
+
+    def get_hand_rgb_image(self):
+        pass
+
+    def get_hand_depth_image(self):
+
+        if self.node.first_depth_hand_image_received:
+            current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
+        else:
+            current_frame_depth_hand = np.zeros((360, 640), dtype=np.uint8)
+        
+        return self.node.first_depth_hand_image_received, current_frame_depth_hand
 
 
 
