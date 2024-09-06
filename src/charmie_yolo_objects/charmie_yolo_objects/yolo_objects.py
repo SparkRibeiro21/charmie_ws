@@ -120,10 +120,7 @@ class Yolo_obj(Node):
         # Intel Realsense
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
-        
-        # Diagnostics        
-        self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
- 
+         
         # Publish Results
         self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
         self.objects_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered_hand', 10)
@@ -159,10 +156,6 @@ class Yolo_obj(Node):
         self.new_hand_rgb = False
         self.waiting_for_pcloud = False
         self.point_cloud_response = GetPointCloud.Response()
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.yolo_object_diagnostic_publisher.publish(flag_diagn)
 
         self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
                                    'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 

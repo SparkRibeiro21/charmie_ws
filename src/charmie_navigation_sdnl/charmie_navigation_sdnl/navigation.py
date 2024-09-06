@@ -868,12 +868,6 @@ class NavSDNLNode(Node):
         self.latest_localisation_y = 0.0
         self.latest_localisation_t = 0.0
 
-        self.navigation_diagnostic_publisher = self.create_publisher(Bool, "navigation_diagnostic", 10)
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.navigation_diagnostic_publisher.publish(flag_diagn)
-
         self.create_service(NavTrigger, 'nav_trigger', self.navigation_trigger_callback)
 
         ori = Bool()

@@ -338,12 +338,6 @@ class OdometryNode(Node):
     
         # self.create_timer(1.0, self.timer_callback)
 
-        self.odometry_diagnostic_publisher = self.create_publisher(Bool, "odometry_diagnostic", 10)
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.odometry_diagnostic_publisher.publish(flag_diagn)
-
         self.initialpose = Pose2D()
 
         self.is_map_odom_link = False

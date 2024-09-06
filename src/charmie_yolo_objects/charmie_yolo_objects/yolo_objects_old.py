@@ -109,10 +109,7 @@ class Yolo_obj(Node):
 
         # Subscriber (Yolov8_Objects TR Parameters)
         # self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_obj_conf", self.get_minimum_object_confidence_callback, 10)
-        
-        # Diagnostics        
-        self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
- 
+         
         # Publish Results
         # self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10) # test removed person_pose (non-filtered)
         self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
@@ -156,10 +153,6 @@ class Yolo_obj(Node):
         self.br = CvBridge()
         self.head_rgb = Image()
         self.hand_rgb = Image()
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.yolo_object_diagnostic_publisher.publish(flag_diagn)
 
         self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
                                    'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 

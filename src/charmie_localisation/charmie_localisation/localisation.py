@@ -88,14 +88,6 @@ class LocalisationNode(Node):
         self.yyy = 0.0
 
 
-        self.loacalisation_diagnostic_publisher = self.create_publisher(Bool, "localisation_diagnostic", 10)
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.loacalisation_diagnostic_publisher.publish(flag_diagn)
-
-
-
     def odom_robot_callback(self, odom:Odometry):
 
         

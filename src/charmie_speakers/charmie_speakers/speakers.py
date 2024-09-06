@@ -142,7 +142,7 @@ class RobotSpeak():
             self.play_command(filename=temp_filename, show_in_face=show_in_face) 
 
 
-    # diagnostics function to know which speaker is being used by the PC - debug purposes
+    # function to know which speaker is being used by the PC - debug purposes
     def get_active_speaker_info(self):
         try:
             # checks which the speakers list available 
@@ -176,9 +176,7 @@ class SpeakerNode(Node):
 
         # TOPICS:
         # To publish the received strings to the face node
-        self.speech_to_face_publisher = self.create_publisher(String, "display_speech_face", 10)    
-        # Diagnostics for the speakers package
-        self.speakers_diagnostic_publisher = self.create_publisher(Bool, "speakers_diagnostic", 10) 
+        self.speech_to_face_publisher = self.create_publisher(String, "display_speech_face", 10)
         
         # SERVICES:
         # Main receive commads 
@@ -190,20 +188,14 @@ class SpeakerNode(Node):
         # print("\nOutput Sound Devices:")
         active_speaker_type = self.charmie_speech.get_active_speaker_info()
 
-        flag_diagn = Bool()
         # if a known system is being used 
         if active_speaker_type != "Unknown":
             # print(f"The active speaker is: {active_speaker_type}")
             self.get_logger().info(f"The active speaker is: {active_speaker_type}")
-            flag_diagn.data = True
         # if an unkown system is being used
         else:
             # print("Unable to determine the active speaker.")
             self.get_logger().info(f"The active speaker is: {active_speaker_type}")
-            flag_diagn.data = False
-
-        # Sends information to diagnostics node
-        self.speakers_diagnostic_publisher.publish(flag_diagn)
 
         # Initial Speaking "Hello" for debug purposes
         self.charmie_speech.play_command(filename="generic/introduction_hello") 

@@ -729,17 +729,6 @@ class AudioNode(Node):
         super().__init__("Audio")
         self.get_logger().info("Initialised CHARMIE Audio v2 Node")
 
-
-        # I publish and subscribe in the same topic so I can request new hearings when errors are received 
-
-        # self.flag_listening_publisher = self.create_publisher(Bool, "flag_listening", 10)
-        # self.get_speech_publisher = self.create_publisher(String, "get_speech", 10)
-
-        # self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
-        
-        # self.calibrate_ambient_noise_subscriber = self.create_subscription(Bool, "calib_ambient_noise", self.calibrate_ambient_noise_callback, 10)
-        self.audio_diagnostic_publisher = self.create_publisher(Bool, "audio_diagnostic", 10)
-
         # Low Level: RGB
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         
@@ -749,10 +738,7 @@ class AudioNode(Node):
         self.server_calibrate_ambient_noise = self.create_service(CalibrateAudio, "calibrate_audio", self.callback_calibrate_audio)
         self.get_logger().info("Audio Servers have been started")
 
-        # self.flag_speech_done = False
-        # self.audio_error = False
-
-        self.check_diagnostics()
+        self.check_microphone()
 
         if DICT_CALIBRATION:
             print("\tCALIBRATION MODE ACTIVATED!")
@@ -884,56 +870,28 @@ class AudioNode(Node):
             self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
 
 
-    def check_diagnostics(self):
+    def check_microphone(self):
 
-        self.flag_diagn = Bool()
-        self.flag_diagn.data = False
-        self.aux_flag_diagn = Bool()
-        self.aux_flag_diagn.data = False
-        
-        """ device_name, host_api = self.charmie_audio.find_speaker_device()
-
-        if device_name:
-            print('It is connected to the correct device, named ', device_name)
-        
-        else:
-            print('It is not onnected to the correct device. Please, change it') """
-        
-        """ audio_devices = self.charmie_audio.list_audio_devices()
-        print("Connected Audio Devices:")
-        for audio_device in audio_devices:
-            print(audio_device)
-        """
+        aux_flag_diagn = False
 
         input_devices = self.charmie_audio.get_pulsectl_device_names()
         # print("Input Sound Devices:")
         for device in input_devices:
             device_type = "External" if self.charmie_audio.is_external_micro(device) else "Internal"
             if device_type == "External":
-                self.aux_flag_diagn.data = True
+                aux_flag_diagn = True
             # print(f"{device.index}: {device.description} ({device_type})")
         
-        if self.aux_flag_diagn.data:
+        if aux_flag_diagn:
             self.get_logger().info(f"( "u"\u2713"+f" ) - External Microphone 'SHURE MV5' Connected!")
         else:
             self.get_logger().info(f"( X ) - External Microphone 'SHURE MV5' NOT CONNECTED!")
 
-
         # temp_threshold = "{:.2f}".format(self.charmie_audio.check_threshold)
         if self.charmie_audio.check_threshold < 50.0 or self.charmie_audio.check_threshold > 10000.0:
-            self.get_logger().info(f"( X ) - Threshold of {self.charmie_audio.check_threshold} value is wrong!")
-            self.flag_diagn.data = False
-        
+            self.get_logger().info(f"( X ) - Threshold of {self.charmie_audio.check_threshold} value is wrong!")        
         else:
             self.get_logger().info(f"( "u"\u2713"+f" ) - Correct Threshold Value! Value of {self.charmie_audio.check_threshold}")
-            if self.aux_flag_diagn.data == True:
-                self.flag_diagn.data = True
-            else:
-                self.flag_diagn.data = False
-            
-        # print(flag_diagn)
-        self.audio_diagnostic_publisher.publish(self.flag_diagn)
-
 
 
     # def calibrate_ambient_noise_callback(self, flag: Bool):

@@ -348,9 +348,6 @@ class ControllerNode(Node):
         # PS4 Controller
         self.controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
 
-        # Disgnostic
-        self.ps4_diagnostic_publisher = self.create_publisher(Bool, "ps4_diagnostic", 10)
-
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
         
@@ -397,11 +394,6 @@ class ControllerNode(Node):
         self.wfeon = Bool()
         self.torso_pos = Pose2D()
         self.select_movement = String()
-
-        # initial commands send to different nodes  
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.ps4_diagnostic_publisher.publish(flag_diagn)
 
         if self.CONTROL_SET_MOVEMENT:
             self.set_movement = Bool()

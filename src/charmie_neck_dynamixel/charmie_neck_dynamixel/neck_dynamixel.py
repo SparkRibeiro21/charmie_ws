@@ -145,9 +145,6 @@ class NeckNode(Node):
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
-        # standard diagnostic publisher
-        self.neck_diagnostic_publisher = self.create_publisher(Bool, "neck_diagnostic", 10)
-
         # SERVICES:
         # Main receive commads 
         self.server_set_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_set_neck_position) 
@@ -186,10 +183,6 @@ class NeckNode(Node):
         self.flag_get_neck_position = False
 
         self.initialise_servos()
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.neck_diagnostic_publisher.publish(flag_diagn)
         
 
     ########## SERVICES ##########

@@ -271,8 +271,6 @@ class LowLevelNode(Node):
         self.get_orientation_publisher = self.create_publisher(Float32, "get_orientation", 10)
         self.flag_orientation_subscriber = self.create_subscription(Bool, "flag_orientation", self.flag_orientation_callback , 10)
 
-        self.low_level_diagnostic_publisher = self.create_publisher(Bool, "low_level_diagnostic", 10)
-
 
         ### TEMP
         self.torso_test_subscriber = self.create_subscription(Pose2D, "torso_test", self.torso_test_callback , 10)
@@ -281,9 +279,6 @@ class LowLevelNode(Node):
         ### Services (Clients) ###
         # Set Acceleration
         self.server_set_acceleration = self.create_service(SetAcceleration, "set_acceleration_ramp", self.callback_set_acceleration) 
-
-        flag_diagn = Bool()
-        flag_diagn.data = False
 
         self.create_timer(0.1, self.timer_callback)
         # self.create_timer(1.0, self.timer_callback2)
@@ -305,14 +300,6 @@ class LowLevelNode(Node):
             self.get_logger().warning(f"Motors are not being powered!")
         else:
             self.get_logger().info(f"Connected to Motor Boards! Accel Ramp Lvl = {aaa[0]}")
-
-        if aaa == [1, 1]:
-            flag_diagn.data = True
-        else:
-            flag_diagn.data = False
-        
-        self.low_level_diagnostic_publisher.publish(flag_diagn)
-
 
         self.flag_get_start_button = False
         self.flag_get_vccs = False

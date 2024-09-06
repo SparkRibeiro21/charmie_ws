@@ -171,11 +171,6 @@ def generate_launch_description():
                      executable='inspection',
                      name='inspection',
                      )
-    #create node inspection
-    diagnostics = Node(package='charmie_diagnostics',
-                     executable='diagnostics',
-                     name='diagnostics',
-                     )
 
     # start recording bag
     # The exclude is to avoid crashes while using intel rs cameras. 
@@ -239,7 +234,6 @@ def generate_launch_description():
         #face,
         #camera,
         #yolopose
-        #diagnostics
         #rviz2
     ])
 
