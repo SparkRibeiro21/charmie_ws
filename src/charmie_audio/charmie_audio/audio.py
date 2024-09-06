@@ -2,14 +2,14 @@
 import rclpy
 from rclpy.node import Node
 
-from example_interfaces.msg import Bool, String, Float32, Int16
+from example_interfaces.msg import String, Float32, Int16
 from charmie_interfaces.srv import GetAudio, CalibrateAudio
 
 import io
 from pydub import AudioSegment
 import speech_recognition as sr
-import tempfile
-import os 
+# import tempfile
+# import os 
 from pathlib import Path
 from datetime import datetime
 
@@ -51,13 +51,10 @@ FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in
     # - dois sistemas de audição em paralelo, para que normalmente use o que ouve e pára no fim da frase
     # mas quando não ouve a paragem usa o que grava com o timeout
 # - modo de ouvir keywords constante (sempre a ouvir à espera de uma certa keyword)
+# - modo de ouvir sons de objetos
 # - mais idiomas (adicionar tambem o portugues)
-# - adicionar a lingua ao speechtype recebido 
-# - solução para palavras iguais
-# - definir keywords com antecedência (deixar tudo pronto para os objetos do dataset ycb)
+# - adicionar a lingua ao speechtype recebido
 # - define all the error, diferent from each other
-# - recalibrar audios quando der erro X vezes?
-# 
 # 
 # ---/---
 #
@@ -73,24 +70,9 @@ FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in
 # - simplificar diagnostic para se ver no terminal
 # - ligação direta aos rgb
 # - ligacao direta à fala
-
-
-"""
-to do sovalhão Tiago Ribeiro:
-
-- testar o timeout do processing do whisper
-
-
-- adicionar que se der erro no check_speech nem vale a pena entrar no keywords...
-    ja esta no calibration mas ainda não está no main
-
-
-- colocar record e listen em paralelo
-  -> 
-- testar o timeout do hearing
-
-"""
-
+# - solução para palavras iguais
+# - definir keywords com antecedência (deixar tudo pronto para os objetos do dataset ycb)
+# - recalibrar audios quando der erro X vezes?
 
 class TimeoutException(Exception):
     pass
@@ -112,7 +94,6 @@ class WhisperAudio():
         self.midpath = "charmie_ws/src/charmie_audio/charmie_audio"
         self.complete_path = self.home+'/'+self.midpath+'/'
         # self.save_temp_path = self.complete_path, "temp.wav"
-        
         
         # os.path.join(self.complete_path, "temp.wav")
         print(self.complete_path+"temp.wav")
@@ -731,6 +712,9 @@ class AudioNode(Node):
 
         # Low Level: RGB
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
+        # Audio: Help in Debug
+        self.audio_interpreted_publisher = self.create_publisher(String, "audio_interpreted", 10)
+        self.audio_final_publisher = self.create_publisher(String, "audio_final", 10)
         
         self.charmie_audio = WhisperAudio(self)
 
@@ -894,21 +878,6 @@ class AudioNode(Node):
             self.get_logger().info(f"( "u"\u2713"+f" ) - Correct Threshold Value! Value of {self.charmie_audio.check_threshold}")
 
 
-    # def calibrate_ambient_noise_callback(self, flag: Bool):
-    #     self.charmie_audio.adjust_ambient_noise()
-
-
-    # def get_speech_done_callback(self, state: Bool):
-    #     print("Received Speech Flag:", state.data)
-    #     self.get_logger().info("Received Speech Flag")
-    #     self.flag_speech_done = True
-    #     if self.audio_error:
-    #         self.audio_error = False
-    #         print("Stopped Waiting until CHARMIE speaking is over")
-    #         ### MUST CHANGE TO SERVICES
-    #         # self.audio_command_publisher.publish(self.latest_command)
-
-
     def callback_calibrate_audio(self, request, response):
         
         # Type of service received: 
@@ -961,6 +930,10 @@ class AudioNode(Node):
             speech_heard = self.charmie_audio.check_speech()
             print("\tYou said: " + speech_heard)
             self.get_logger().info("Finished Processing")
+
+            debug_interpreted_audio = String()
+            debug_interpreted_audio.data = speech_heard
+            self.audio_interpreted_publisher.publish(debug_interpreted_audio)
             
             # publish rgb estou a calcular as keywords
             keywords = self.charmie_audio.check_keywords(speech_heard, command_type)
@@ -989,6 +962,11 @@ class AudioNode(Node):
             # speech.data = keywords
             # self.get_speech_publisher.publish(speech)
 
+        # Debug Audio Final Interpretation (this is we have this data in rosbags for debug)
+        debug_final_audio = String()
+        debug_final_audio.data = keywords
+        self.audio_final_publisher.publish(debug_final_audio)
+
         response.command = keywords
         return response
 
@@ -999,53 +977,6 @@ class AudioNode(Node):
         self.rgb_mode_publisher.publish(rgb)
         print("Published RGB:", command)
 
-
-    """
-    ### MUST CHANGE TO SERVICES
-    def audio_command_callback(self, ):
-        print(comm)
-
-        # self.latest_command = comm
-        self.get_logger().info("Received Audio Command")
-        # publish rgb estou a ouvir
-        self.charmie_audio.hear_speech()
-        # flag = Bool()
-        # flag.data = True
-        # self.flag_listening_publisher.publish(flag)
-        self.get_logger().info("Finished Hearing, Start Processing")
-        
-        if not self.charmie_audio.ERRO_MAXIMO: # temp var unltil i fix the timeout when no speak start is detected
-            # publish rgb estou a criar o speech
-            speech_heard = self.charmie_audio.check_speech()
-            print("\tYou said: " + speech_heard)
-            self.get_logger().info("Finished Processing")
-            
-            # publish rgb estou a calcular as keywords
-            keywords = self.charmie_audio.check_keywords(speech_heard, comm)
-            # print("Keywords:", keywords)
-        else:
-            self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
-            keywords = None
-
-        if keywords == "ERROR" or keywords == None:
-            self.get_logger().info("Got error, gonna retry the hearing")
-            self.speech_str.command = "I did not understand what you said. Could you please repeat?"
-            self.flag_speech_done = False # to prevent that flag may be true from other speak moments that have nothing to do with this node 
-            self.speaker_publisher.publish(self.speech_str)
-            
-            # activates the flag that puts everything on hold waiting for the end of sentece said
-            self.audio_error = True
-
-        ### POR ISTO AUTOMATICO
-
-        else:
-            self.get_logger().info("Success Hearing")
-            speech = String()
-            speech.data = keywords
-            self.get_speech_publisher.publish(speech)
-
-    # def wait_for_end_of_speaking()
-    """
         
 def main(args=None):
     rclpy.init(args=args)

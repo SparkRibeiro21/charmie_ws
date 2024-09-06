@@ -33,6 +33,11 @@ class DebugVisualNode(Node):
         self.get_logger().info("Initialised CHARMIE Debug Visual Node")
 
         ### Topics ###
+
+        # Audio: Help in Debug
+        self.audio_interpreted_subscriber = self.create_subscription(String, "audio_interpreted", self.audio_interpreted_callback, 10)
+        self.audio_final_subscriber = self.create_subscription(String, "audio_final", self.audio_final_callback, 10)
+
         # Intel Realsense
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
@@ -270,6 +275,12 @@ class DebugVisualNode(Node):
         response.success = True
         response.message = "Nodes Used Sucessfully Received"
         return response
+
+    def audio_interpreted_callback(self, str: String):
+        print("Audio Interpreted:", str.data)
+
+    def audio_final_callback(self, str: String):
+        print("Audio Final:", str.data)
 
     def get_color_image_hand_callback(self, img: Image):
         self.hand_rgb = img
