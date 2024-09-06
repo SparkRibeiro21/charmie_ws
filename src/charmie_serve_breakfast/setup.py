@@ -26,7 +26,8 @@ setup(
 		"serve_breakfast_1000_fnr2024 = charmie_serve_breakfast.serve_breakfast_1000_fnr2024:main",
 		"serve_breakfast_just_milk_fnr2024 = charmie_serve_breakfast.serve_breakfast_just_milk_fnr2024:main",
 		"serve_breakfast_pre_fnr2024 = charmie_serve_breakfast.serve_breakfast_pre_fnr2024:main",
-		"serve_breakfast_together = charmie_serve_breakfast.serve_breakfast_together:main",
+		"serve_breakfast_robocup2024 = charmie_serve_breakfast.serve_breakfast_robocup2024:main",
+		"serve_breakfast_together_robocup2024 = charmie_serve_breakfast.serve_breakfast_together_robocup2024:main",
 		"serve_breakfast = charmie_serve_breakfast.serve_breakfast:main"
 		],
     },
