@@ -36,10 +36,13 @@ class ROS2TaskNode(Node):
         midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
         self.complete_path_custom_face = home+'/'+midpath+'/'
 
-        ### Topics (Publisher and Subscribers) ###   
-        # Intel Realsense Subscribers
-        # self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        # self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_head_image_callback, 10)
+        # Intel Realsense Subscribers 
+        # Head
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
+        # Hand
+        self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
+        self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)  
         # Low Level 
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
@@ -196,8 +199,12 @@ class ROS2TaskNode(Node):
         self.waiting_for_pcloud = False
 
         self.br = CvBridge()
+        self.rgb_head_img = Image()
+        self.rgb_hand_img = Image()
         self.depth_head_img = Image()
         self.depth_hand_img = Image()
+        self.first_rgb_head_image_received = False
+        self.first_rgb_hand_image_received = False
         self.first_depth_head_image_received = False
         self.first_depth_hand_image_received = False
         self.detected_people = Yolov8Pose()
@@ -293,13 +300,23 @@ class ROS2TaskNode(Node):
 
     def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
         self.detected_shoes_hand = det_object
+        
+    def get_color_image_head_callback(self, img: Image):
+        self.rgb_head_img = img
+        self.first_rgb_head_image_received = True
+        # print("Received HEAD RGB Image")
 
-    def get_aligned_depth_head_image_callback(self, img: Image):
+    def get_color_image_hand_callback(self, img: Image):
+        self.rgb_hand_img = img
+        self.first_rgb_hand_image_received = True
+        # print("Received HAND RGB Image")   
+    
+    def get_aligned_depth_image_head_callback(self, img: Image):
         self.depth_head_img = img
         self.first_depth_head_image_received = True
-        # print("Received Depth Image")
+        # print("Received HEAD Depth Image")
 
-    def get_aligned_depth_hand_image_callback(self, img: Image):
+    def get_aligned_depth_image_hand_callback(self, img: Image):
         self.depth_hand_img = img
         self.first_depth_hand_image_received = True
         # print("Received HAND Depth Image")
@@ -1622,7 +1639,13 @@ class RobotStdFunctions():
         return self.node.robot_x, self.node.robot_y, self.node.robot_t
 
     def get_head_rgb_image(self):
-        pass
+
+        if self.node.first_rgb_head_image_received:
+            current_frame_rgb_head = self.node.br.imgmsg_to_cv2(self.node.rgb_head_img, "bgr8")
+        else:
+            current_frame_rgb_head = np.zeros((360, 640, 3), dtype=np.uint8)
+        
+        return self.node.first_rgb_head_image_received, current_frame_rgb_head
 
     def get_head_depth_image(self):
 
@@ -1634,7 +1657,13 @@ class RobotStdFunctions():
         return self.node.first_depth_head_image_received, current_frame_depth_head
 
     def get_hand_rgb_image(self):
-        pass
+
+        if self.node.first_rgb_hand_image_received:
+            current_frame_rgb_hand = self.node.br.imgmsg_to_cv2(self.node.rgb_hand_img, "bgr8")
+        else:
+            current_frame_rgb_hand = np.zeros((360, 640, 3), dtype=np.uint8)
+        
+        return self.node.first_rgb_hand_image_received, current_frame_rgb_hand
 
     def get_hand_depth_image(self):
 
