@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 from example_interfaces.msg import String, Float32, Int16
-from charmie_interfaces.srv import GetAudio, CalibrateAudio
+from charmie_interfaces.srv import GetAudio, CalibrateAudio, ContinuousGetAudio
 
 import io
 from pydub import AudioSegment
@@ -719,6 +719,7 @@ class AudioNode(Node):
         self.charmie_audio = WhisperAudio(self)
 
         self.server_audio = self.create_service(GetAudio, "audio_command", self.callback_audio)
+        self.server_continuous_audio = self.create_service(ContinuousGetAudio, "continuous_audio", self.callback_continuous_audio)
         self.server_calibrate_ambient_noise = self.create_service(CalibrateAudio, "calibrate_audio", self.callback_calibrate_audio)
         self.get_logger().info("Audio Servers have been started")
 
@@ -969,6 +970,23 @@ class AudioNode(Node):
 
         response.command = keywords
         return response
+    
+
+    def callback_continuous_audio(self, request, response):
+        
+        # Type of service received: 
+        # string[] keywords # words the robot must hear to answer the service
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+        print(request.keywords)
+
+        time.sleep(5.0)
+        
+        response.success = True
+        response.message = "Finished Continuous Audio Mode"
+        return response
+    
 
     def set_rgb(self, command):
         
@@ -977,7 +995,7 @@ class AudioNode(Node):
         self.rgb_mode_publisher.publish(rgb)
         print("Published RGB:", command)
 
-        
+
 def main(args=None):
     rclpy.init(args=args)
     node = AudioNode()

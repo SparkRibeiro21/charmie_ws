@@ -25,7 +25,7 @@ ros2_modules = {
     "charmie_odometry":         False,
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False, # True
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
@@ -56,11 +56,12 @@ class TaskMain():
         Audio_receptionist = 1
         Audio_restaurant = 2
         Audio_egpsr = 3
-        Calibrate_audio = 4
-        Final_State = 5
+        Continuous_audio = 4
+        Calibrate_audio = 5
+        Final_State = 6
 
         # VARS ...
-        self.state = Audio_egpsr
+        self.state = Continuous_audio
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")
@@ -201,6 +202,21 @@ class TaskMain():
                 time.sleep(5)
 
             
+            elif self.state == Continuous_audio:
+
+                ### CALIBRATION EXAMPLE
+                self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], wait_for_end_of=True)
+
+                # while not self.robot.is_get_continuous_audio_done():
+                    # print(".")
+                    # time.sleep(0.5)
+                    # pass
+
+                print("Continuous Mode Audio Done")
+                
+                while True:
+                    pass
+                
             elif self.state == Calibrate_audio:
 
                 ### CALIBRATION EXAMPLE

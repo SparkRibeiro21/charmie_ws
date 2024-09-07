@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio
 
 import cv2 
 # import threading
@@ -77,6 +77,7 @@ class ROS2TaskNode(Node):
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
         # Audio
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
+        self.continuous_get_audio_client = self.create_client(ContinuousGetAudio, "continuous_audio")
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
         # Face
         self.face_command_client = self.create_client(SetFace, "face_command")
@@ -187,6 +188,7 @@ class ROS2TaskNode(Node):
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
+        self.waited_for_end_of_continuous_audio = False
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_save_speaking = False
         self.waited_for_end_of_neck_pos = False
@@ -226,9 +228,12 @@ class ROS2TaskNode(Node):
         self.save_speech_message = ""
         self.rgb_success = True
         self.rgb_message = ""
+        self.audio_success = True
+        self.audio_message = ""
+        self.continuous_audio_success = True
+        self.continuous_audio_message = ""
         self.calibrate_audio_success = True
         self.calibrate_audio_message = ""
-        self.audio_command = ""
         self.face_success = True
         self.face_message = ""
         self.neck_success = True
@@ -247,6 +252,9 @@ class ROS2TaskNode(Node):
         self.navigation_message = ""
         self.activate_obstacles_success = True
         self.activate_obstacles_message = ""
+
+        self.audio_command = ""
+        self.received_continuous_audio = False
 
         self.get_neck_position = [1.0, 1.0]
 
@@ -471,8 +479,8 @@ class ROS2TaskNode(Node):
         if wait_for_end_of:
             future.add_done_callback(self.callback_call_audio)
         else:
-            self.track_person_success = True
-            self.track_person_message = "Wait for answer not needed"
+            self.audio_success = True
+            self.audio_message = "Wait for answer not needed"
     
     def callback_call_audio(self, future):
 
@@ -482,8 +490,32 @@ class ROS2TaskNode(Node):
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.command))
+            self.audio_success = True
+            self.audio_message = "Finished audio command"
             self.audio_command = response.command
             self.waited_for_end_of_audio = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    
+    def call_continuous_audio_server(self, request=ContinuousGetAudio.Request(), wait_for_end_of=True):
+
+        future = self.continuous_get_audio_client.call_async(request)
+
+        future.add_done_callback(self.callback_call_continuous_audio)
+
+    def callback_call_continuous_audio(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.continuous_audio_success = response.success
+            self.continuous_audio_message = response.message
+            self.waited_for_end_of_continuous_audio = True
+            self.received_continuous_audio = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -495,8 +527,8 @@ class ROS2TaskNode(Node):
         if wait_for_end_of:
             future.add_done_callback(self.callback_call_calibrate_audio)
         else:
-            self.track_person_success = True
-            self.track_person_message = "Wait for answer not needed"
+            self.calibrate_audio_success = True
+            self.calibrate_audio_message = "Wait for answer not needed"
     
     def callback_call_calibrate_audio(self, future):
 
@@ -506,8 +538,8 @@ class ROS2TaskNode(Node):
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
             self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.track_person_success = response.success
-            self.track_person_message = response.message
+            self.calibrate_audio_success = response.success
+            self.calibrate_audio_message = response.message
             self.waited_for_end_of_calibrate_audio = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
@@ -804,6 +836,28 @@ class RobotStdFunctions():
             self.node.get_logger().error("ERROR: No audio type selected")
             return "ERROR: No audio type selected" 
 
+    def get_continuous_audio(self, keywords=[], wait_for_end_of=True):
+
+        request = ContinuousGetAudio.Request()
+        request.keywords = keywords
+            
+        self.node.call_continuous_audio_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_continuous_audio:
+                pass
+        self.node.waited_for_end_of_continuous_audio = False
+
+        return self.node.continuous_audio_success, self.node.continuous_audio_message 
+    
+    def is_get_continuous_audio_done(self):
+
+        if self.node.received_continuous_audio:
+            self.node.received_continuous_audio = False
+            return True
+        
+        return False
+    
     def calibrate_audio(self, wait_for_end_of=True):
 
         request = CalibrateAudio.Request()

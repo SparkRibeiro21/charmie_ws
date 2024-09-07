@@ -50,6 +50,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ActivateYoloPose.srv"
   "srv/ArmTrigger.srv"
   "srv/CalibrateAudio.srv"
+  "srv/ContinuousGetAudio.srv"
   "srv/GetAudio.srv"
   "srv/GetNeckPosition.srv"
   "srv/GetPointCloud.srv"

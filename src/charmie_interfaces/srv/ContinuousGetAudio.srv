@@ -1,0 +1,6 @@
+# Set which keywords must the robot hear to exit audio continuous mode
+
+string[] keywords # words the robot must hear to answer the service
+---
+bool success    # indicate successful run of triggered service
+string message  # informational, e.g. for error messages.
