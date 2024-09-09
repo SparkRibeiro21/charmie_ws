@@ -20,7 +20,7 @@ ros2_modules = {
     "charmie_hand_camera":      False,
     "charmie_lidar":            False,
     "charmie_localisation":     False,
-    "charmie_low_level":        True,
+    "charmie_low_level":        False,
     "charmie_navigation":       False,
     "charmie_neck":             False,
     "charmie_obstacles":        False,
@@ -72,6 +72,9 @@ class TaskMain():
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
 
+        self.ATTEMPTS_AT_RECEIVING = 2
+        self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
+
         # debug print to know we are on the main start of the task
         print("In DebugArm Main...")
 
@@ -83,136 +86,46 @@ class TaskMain():
 
                 # INITIAL STATE
 
-                # self.robot.set_rgb(command=CYAN+HALF_ROTATE)
-
-                # self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
-
-                # self.robot.wait_for_start_button()
-
-                # self.robot.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
-
-
-
-                # DETECTION
-
-                self.robot.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-                
-                self.robot.set_arm(command="search_for_objects", wait_for_end_of=True)
-
-                self.robot.set_speech(filename="serve_breakfast/found_all_sb_objects", wait_for_end_of=True)
-
-                self.robot.set_arm(command="search_for_objects_to_ask_for_objects", wait_for_end_of=False)
-
-                time.sleep(5)
-                
-                
-                # GET SPOON 
-                
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-                
-                object_in_gripper = False
-                while not object_in_gripper:
-                
-                    self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-
-                    # object_in_gripper, m = self.robot.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-                
-                        self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-                   
-                self.robot.set_speech(filename="serve_breakfast/found_the_milk", wait_for_end_of=False)  
-                
-                self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
-                
-                self.robot.set_arm(command="collect_spoon_to_tray", wait_for_end_of=True)
-
-                
-                # GET MILK 
-                
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-                
-                object_in_gripper = False
-                while not object_in_gripper:
-                
-                    self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-
-                    # object_in_gripper, m = self.robot.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-                
-                        self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-                   
-                self.robot.set_speech(filename="serve_breakfast/found_the_cornflakes", wait_for_end_of=False)  
-                
-                self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
-                
-                self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
-
-
-                # GET CORNFLAKES 
-                
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-                
-                object_in_gripper = False
-                while not object_in_gripper:
-                
-                    self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object_cornflakes", wait_for_end_of=True)
-
-                    # object_in_gripper, m = self.robot.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-                
-                        self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-                   
                 self.robot.set_speech(filename="serve_breakfast/found_the_bowl", wait_for_end_of=False)  
                 
                 self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
-                
-                self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
 
+                self.robot.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
-
-                # GET BOWL 
+                time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
                 
                 self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
 
                 self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+                self.robot.set_face("help_pick_bowl") 
                 
                 object_in_gripper = False
-                while not object_in_gripper:
-                
+                gripper_ctr = 0
+                while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+                    
+                    gripper_ctr += 1
+                    
                     self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
 
                     object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-
-                    # object_in_gripper, m = self.robot.set_arm(command="verify_if_object_is_grabbed", wait_for_end_of=True)
                     
                     if not object_in_gripper:
                 
-                        self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                        if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
+
+                            self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
                         
                         self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-                   
-                self.robot.set_arm(command="collect_bowl_to_initial_position", wait_for_end_of=True)
+
+                if not object_in_gripper and gripper_ctr >= self.ATTEMPTS_AT_RECEIVING:
+
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+
+                    self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
+                        
+                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+                
 
                 # example of arm function to say hello
                 # self.robot.set_arm(command="hello", wait_for_end_of=False)

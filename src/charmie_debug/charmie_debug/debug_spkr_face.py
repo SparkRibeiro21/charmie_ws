@@ -60,6 +60,8 @@ class TaskMain():
         Delivering_order_to_client = 6
         Final_State = 7
 
+        self.state = Waiting_for_start_button
+
         print("IN NEW MAIN")
         # time.sleep(2)
 
@@ -77,32 +79,30 @@ class TaskMain():
             if self.state == Waiting_for_start_button:
                 
                 ##### SAVE SPEAK
-                current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
-                self.robot.save_speech(command="This is just a test with a play command", filename=current_datetime, quick_voice=True, play_command=True, show_in_face=True, wait_for_end_of=True)
+                # current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+                # self.robot.save_speech(command="This is just a test with a play command", filename=current_datetime, quick_voice=True, play_command=True, show_in_face=True, wait_for_end_of=True)
 
                 ##### SPEAK: (repeats the command)
                 # self.robot.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True)
 
-                while True:
-                    pass
+                # while True:
+                #    pass
 
-                self.robot.set_speech(filename="receptionist/recep_drink_milk", command="", wait_for_end_of=True)
-                self.robot.set_face("help_pick_cup")
+                self.robot.set_face("help_pick_milk")
+                self.robot.set_speech(filename="receptionist/favourite_drink/recep_drink_milk", command="", wait_for_end_of=True)
                 time.sleep(3)
 
                 # self.robot.set_speech(filename="generic/introduction_ful", command="", wait_for_end_of=True)
 
-                self.robot.set_face("help_pick_bowl")
+                self.robot.set_face("help_pick_orange_juice")
                 time.sleep(3)
 
-                self.robot.set_speech(filename="receptionist/recep_drink_orange_juice", show_in_face=True, wait_for_end_of=True)
+                self.robot.set_speech(filename="receptionist/favourite_drink/recep_drink_orange_juice", show_in_face=True, wait_for_end_of=True)
 
 
 
-
-                self.robot.set_speech(filename="receptionist/recep_drink_red_wine", wait_for_end_of=True)
-
-                self.robot.set_face("help_pick_milk")
+                self.robot.set_face("help_pick_red_wine")
+                self.robot.set_speech(filename="receptionist/favourite_drink/recep_drink_red_wine", wait_for_end_of=True)
                 time.sleep(3)
 
                 self.robot.set_face("help_pick_spoon")
