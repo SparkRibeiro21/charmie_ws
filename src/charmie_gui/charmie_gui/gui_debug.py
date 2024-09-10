@@ -304,7 +304,7 @@ class DebugVisualNode(Node):
 
         self.last_hand_depth_camera_time = self.hand_depth_camera_time
         self.hand_depth_camera_time = time.time()
-        self.head_depth_fps = round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 1)
+        self.hand_depth_fps = round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 1)
 
 
     def get_aligned_depth_image_head_callback(self, img: Image):
@@ -313,7 +313,7 @@ class DebugVisualNode(Node):
         
         self.last_head_depth_camera_time = self.head_depth_camera_time
         self.head_depth_camera_time = time.time()
-        self.hand_depth_fps = round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 1)
+        self.head_depth_fps = round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 1)
 
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
