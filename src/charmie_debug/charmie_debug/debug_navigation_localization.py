@@ -22,7 +22,7 @@ ros2_modules = {
     "charmie_neck":             True,
     "charmie_obstacles":        True,
     "charmie_odometry":         True,
-    "charmie_point_cloud":      False,
+    "charmie_point_cloud":      True,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         False,
     "charmie_yolo_objects":     False,
@@ -65,6 +65,10 @@ class TaskMain():
         # navigation positions
         self.front_of_sofa = [-2.5, 1.5]
         self.sofa = [-2.5, 3.0]
+
+        # Neck Positions
+        self.look_forward = [0, 0]
+        self.look_navigation = [0, -30]
         
         # VARS ...
         self.state = Waiting_for_start_button
@@ -80,6 +84,16 @@ class TaskMain():
 
                 self.robot.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=True)
 
+                self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+
+                self.robot.wait_for_start_button()
+                
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
+                self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
+
+                self.robot.wait_for_door_start()
+
                 # time.sleep(5)
                 self.robot.set_neck(position=[0-0, -50.0], wait_for_end_of=True)
 
@@ -90,11 +104,11 @@ class TaskMain():
                 print('State 1 = Hand Raising Detect')
 
                 # time.sleep(5)
-                time.sleep(3)
+                # time.sleep(3)
                 
                 # self.set_navigation(movement="move", target=[-2.0, 2.1], max_speed=10, reached_radius=0.5, flag_not_obs=False, wait_for_end_of=True)
-                self.robot.set_navigation(movement="rotate", target=[-1.5, 5.1], wait_for_end_of=True)
-                self.robot.set_navigation(movement="move", target=[-1.5, 5.1], max_speed=15, reached_radius=0.5, flag_not_obs=False, wait_for_end_of=True)
+                self.robot.set_navigation(movement="rotate", target=[-0.5, 1.5], wait_for_end_of=True)
+                self.robot.set_navigation(movement="move", target=[-0.5, 1.5], max_speed=15, reached_radius=0.5, flag_not_obs=False, wait_for_end_of=False)
 
                 """
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=0.0, wait_for_end_of=True)
@@ -112,42 +126,9 @@ class TaskMain():
                 """
 
                 while True:
+                    print(self.robot.get_robot_localization())
+                    time.sleep(0.5)
                     pass    
-
-
-                #     self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=True, obstacles_camera_head=True)
-                #     time.sleep(5)
-                #     self.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False)
-                #     time.sleep(5)
-                #     self.activate_obstacles(obstacles_lidar_up=False, obstacles_lidar_bottom=False, obstacles_camera_head=True)
-                #     time.sleep(5)
-
-
-
-                # self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=8.0, adjust_direction=135.0, wait_for_end_of=True)
-
-                # self.set_navigation(movement="orientate", absolute_angle=-45.0, flag_not_obs=True, wait_for_end_of=True)
-
-                # self.set_navigation(movement="adjust_obstacle", flag_not_obs=True, adjust_distance=1.0, adjust_direction=-45.0+360, adjust_min_dist=0.5, wait_for_end_of=True)
-
-                # while True:
-                #     pass
-
-                # this gives an error because "orient" is a non-existing movement type and does not send anything to navigation 
-                
-                # print("2 move")
-
-                # self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
-
-                # print("3 move")
-
-                # self.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-
-                # print("4 move")
-
-                # self.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
-
-                # print("5 move")
 
                 # your code here ...
                                 
@@ -155,9 +136,7 @@ class TaskMain():
                 # self.state = Final_State
             
             elif self.state == Final_State:
-                # self.node.speech_str.command = "I have finished my restaurant task." 
-                # self.node.speaker_publisher.publish(self.node.speech_str)
-                # self.wait_for_end_of_speaking()  
+
                 self.state += 1
                 print("Finished task!!!")
 
