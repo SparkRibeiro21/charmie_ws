@@ -55,16 +55,12 @@ class TaskMain():
 
     def main(self):
         Waiting_for_start_button = 0
-        Searching_for_clients = 1
-        Navigation_to_person = 2
-        Receiving_order_speach = 3
-        Receiving_order_listen_and_confirm = 4
-        Collect_order_from_barman = 5
-        Delivering_order_to_client = 6
-        Final_State = 7
+        Search_for_bag = 1
+        Show_rgb_images = 2
+        Final_State = 3
         
         # VARS ...
-        self.state = Waiting_for_start_button
+        self.state = Search_for_bag
 
         self.floor_dist=600
         self.top_bag_dist=350
@@ -85,10 +81,10 @@ class TaskMain():
             if self.state == Waiting_for_start_button:
                 # print('State 0 = Initial')
 
-                self.state = Searching_for_clients
+                self.state = Search_for_bag
 
-            elif self.state == Searching_for_clients:
-                #print('State 1 = Hand Raising Detect')
+            elif self.state == Search_for_bag:
+                #print('State 1 = Search for bag')
 
                 s = False
                 while not s:
@@ -99,6 +95,11 @@ class TaskMain():
                 bag_coords = self.get_bag_pick_cordinates(current_frame_depth_head=cam) #half_image_zero_or_near_percentage=0.4, full_image_near_percentage=0.1, near_max_dist=800)
                 print(bag_coords)
                 
+            elif self.state == Show_rgb_images:
+
+                while True:
+                    self.show_rgb_images()
+                    time.sleep(0.1)
             
             elif self.state == Final_State:
                 print("Finished task!!!")
@@ -108,6 +109,18 @@ class TaskMain():
 
             else:
                 pass
+
+
+    def show_rgb_images(self):
+
+        s1, cam1 = self.robot.get_hand_rgb_image()
+        s2, cam2 = self.robot.get_head_rgb_image()
+
+        cv2.imshow("cam1", cam1)
+        cv2.imshow("cam2", cam2)
+
+        cv2.waitKey(10)
+
 
     def get_bag_pick_cordinates(self, current_frame_depth_head):
 

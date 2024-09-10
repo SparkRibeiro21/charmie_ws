@@ -61,6 +61,8 @@ class TaskMain():
         Delivering_order_to_client = 6
         Final_State = 7
 
+        self.state = Waiting_for_start_button
+
         print("IN NEW MAIN")
 
         while True:
