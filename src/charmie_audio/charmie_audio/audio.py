@@ -659,6 +659,52 @@ class WhisperAudio():
             return "ERROR"
 
 
+    def check_continuous_keywords(self, speech_nf, keywords):
+
+        speech = speech_nf.lower()
+        speech = speech.replace(",","")
+        speech = speech.replace(".","")
+        speech = speech.replace("?","")
+        speech = speech.replace("!","")
+        speech = speech.replace("'","")
+
+        self.node.get_logger().info(f"Command Filtered: {speech}")    
+
+        print("CONTINUOUS KEYWORDS!")
+        word_predicted = ''
+        word_ctr = 0
+
+        continuous_dict = {}
+
+        for words in keywords:
+            continuous_dict[words] = []
+            continuous_dict[words].append(words)
+
+        print(continuous_dict)
+
+        print("WORDS:")
+        for key in continuous_dict:
+            res, idx = self.compare_commands(continuous_dict, speech, [key])
+            print('    ', key, end='')
+            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                print('.', end='') 
+            print('->', res)
+            if res:
+                word_predicted = key
+                word_ctr += 1
+        print("Name Detected =", "(", word_ctr, ")", word_predicted)
+        print()
+
+        if word_ctr > 0:
+            print("HEAR A KEYWORD:'%s'" %  word_predicted)
+            self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
+            return True
+        else:
+            print("DID NOT HEAR A KEYWORD")
+            self.node.set_rgb(RED+BACK_AND_FORTH_8)
+            return False
+            
+
     def compare_commands(self, w_dict, predicted_text, lst):
 
         ctr_tot = 1
@@ -981,10 +1027,44 @@ class AudioNode(Node):
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages.
         print(request.keywords)
+        print(request.max_number_attempts)
 
-        time.sleep(5.0)
+        heard_keyword = False
+        hear_attempt_ctr = 0
+
+        while not heard_keyword:
+
+            self.charmie_audio.hear_speech()
+            self.get_logger().info("Finished Hearing, Start Processing")
+            
+            if not self.charmie_audio.ERRO_MAXIMO: # temp var unltil i fix the timeout when no speak start is detected
+                # publish rgb estou a criar o speech
+                speech_heard = self.charmie_audio.check_speech()
+                print("\tYou said: " + speech_heard)
+                self.get_logger().info("Finished Processing")
+
+                debug_interpreted_audio = String()
+                debug_interpreted_audio.data = speech_heard
+                self.audio_interpreted_publisher.publish(debug_interpreted_audio)
+                
+                # publish rgb estou a calcular as keywords
+                heard_keyword = self.charmie_audio.check_continuous_keywords(speech_heard, request.keywords)
+
+                if heard_keyword:
+                    break
+                # print("Keywords:", keywords)
+            # else:
+            #     self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
+            #     keywords = None
+            
+            hear_attempt_ctr += 1
+            if hear_attempt_ctr >= request.max_number_attempts:
+                break
+            # if keywords=="" or keywords=="ERROR" or keywords==None:
+            #     self.get_logger().info("Got error, have to retry the hearing")
+            #     keywords = "ERROR"
         
-        response.success = True
+        response.success = heard_keyword
         response.message = "Finished Continuous Audio Mode"
         return response
     

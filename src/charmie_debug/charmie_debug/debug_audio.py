@@ -204,14 +204,21 @@ class TaskMain():
             
             elif self.state == Continuous_audio:
 
-                ### CALIBRATION EXAMPLE
-                self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], wait_for_end_of=True)
+                ### CONTINUOUS AUDIO EXAMPLE
+                # WAIT FOR END OF = TRUE
+                s, m = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, wait_for_end_of=True)
+                print(s, m)
 
-                # while not self.robot.is_get_continuous_audio_done():
-                    # print(".")
-                    # time.sleep(0.5)
-                    # pass
-
+                # WAIT FOR END OF = FALSE
+                # s, m = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, wait_for_end_of=False)
+                # print(s, m)
+                
+                # message_received = False
+                # while not message_received:
+                #     message_received, s, m = self.robot.is_get_continuous_audio_done()
+                #     print(message_received, s, m)
+                #     time.sleep(0.5)
+                
                 print("Continuous Mode Audio Done")
                 
                 while True:

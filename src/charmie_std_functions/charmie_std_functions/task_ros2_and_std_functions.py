@@ -836,10 +836,11 @@ class RobotStdFunctions():
             self.node.get_logger().error("ERROR: No audio type selected")
             return "ERROR: No audio type selected" 
 
-    def get_continuous_audio(self, keywords=[], wait_for_end_of=True):
+    def get_continuous_audio(self, keywords=[], max_number_attempts=3, wait_for_end_of=True):
 
         request = ContinuousGetAudio.Request()
         request.keywords = keywords
+        request.max_number_attempts = max_number_attempts
             
         self.node.call_continuous_audio_server(request=request, wait_for_end_of=wait_for_end_of)
 
@@ -854,9 +855,9 @@ class RobotStdFunctions():
 
         if self.node.received_continuous_audio:
             self.node.received_continuous_audio = False
-            return True
+            return True, self.node.continuous_audio_success, self.node.continuous_audio_message
         
-        return False
+        return False, False, ""
     
     def calibrate_audio(self, wait_for_end_of=True):
 
