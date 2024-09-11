@@ -116,31 +116,6 @@ class NeckNode(Node):
         self.declare_parameter("speed_down", 2) 
         self.declare_parameter("speed_sides", 5) 
 
-        # receives two angles, pan and tilt - used when robot must look at something known in advance (ex: direction of navigation, forward, look right/left)
-        ########### self.neck_position_subscriber = self.create_subscription(NeckPosition, "neck_to_pos", self.neck_position_callback ,10)
-        # receives coordinates where the robot must look at, knowing its own position (ex: look at the couch, look at the table)
-        # self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.neck_to_coords_callback, 10)
-
-        # receives a person and the keypoint it must follow (ex: constantly looking at the person face, look at body center  to check hands and feet)
-        # self.neck_follow_person_subscriber = self.create_subscription(TrackPerson, "neck_follow_person", self.neck_follow_person_callback ,10)
-        # receives an object and it follows it, keeping it centered in the image (ex: constantly looking at a cup, plate, cereal box)
-        # self.neck_follow_object_subscriber = self.create_subscription(TrackObject, "neck_follow_object", self.neck_follow_object_callback, 10)
-
-        # sends the current position of the servos after every change made on the publisher topics
-        self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
-        
-        # Robot Localisation
-        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-
-        # SERVICES:
-        # Main receive commads 
-        self.server_set_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_set_neck_position) 
-        self.server_get_neck_position = self.create_service(GetNeckPosition, "get_neck_pos", self.callback_get_neck_position) 
-        self.server_set_neck_to_coordinates = self.create_service(SetNeckCoordinates, "neck_to_coords", self.callback_set_neck_to_coordinates) 
-        self.server_neck_track_person = self.create_service(TrackPerson, "neck_track_person", self.callback_neck_track_person)
-        self.server_neck_track_object = self.create_service(TrackObject, "neck_track_object", self.callback_neck_track_object)
-        self.get_logger().info("Neck Servers have been started")
-
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
         DEVICE_PARAM = self.get_parameter("device_name").value
         
@@ -157,21 +132,29 @@ class NeckNode(Node):
 
         ########## CHANGE TO LOGGER ##########
         print("Connected to Neck Board via:", DEVICENAME)  # check which port was really used
-        
-        # if DEBUG_DRAW:
-        #     self.img = Image()
-        #     self.first_img_ready = False
-        #     self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
-            
+                    
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.robot_t = 0.0
-         
-        self.flag_get_neck_position = False
+
+        # TOPICS:
+        # sends the current position of the servos after every change made on the publisher topics
+        self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
+        # Robot Localisation
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         self.initialise_servos()
-        
 
+        # SERVICES:
+        # Main receive commads 
+        self.server_set_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_set_neck_position) 
+        self.server_get_neck_position = self.create_service(GetNeckPosition, "get_neck_pos", self.callback_get_neck_position) 
+        self.server_set_neck_to_coordinates = self.create_service(SetNeckCoordinates, "neck_to_coords", self.callback_set_neck_to_coordinates) 
+        self.server_neck_track_person = self.create_service(TrackPerson, "neck_track_person", self.callback_neck_track_person)
+        self.server_neck_track_object = self.create_service(TrackObject, "neck_track_object", self.callback_neck_track_object)
+        self.get_logger().info("Neck Servers have been started")
+
+        
     ########## SERVICES ##########
     def callback_set_neck_position(self, request, response):
         
@@ -387,24 +370,37 @@ class NeckNode(Node):
             getch()
             quit()
 
-        # Enable Dynamixel Torque
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_TILT, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
-        if dxl_comm_result != COMM_SUCCESS:
-            print("TILT %s" % packetHandler.getTxRxResult(dxl_comm_result))
-        elif dxl_error != 0:
-            print("TILT %s" % packetHandler.getRxPacketError(dxl_error))
-        else:
-            print("Dynamixel TILT has been successfully connected")
+        comms_with_neck_servo_established = False
+        while not comms_with_neck_servo_established:
 
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
-        if dxl_comm_result != COMM_SUCCESS:
-            print("PAN %s" % packetHandler.getTxRxResult(dxl_comm_result))
-        elif dxl_error != 0:
-            print("PAN %s" % packetHandler.getRxPacketError(dxl_error))
-        else:
-            print("Dynamixel PAN has been successfully connected")
-        # self.get_logger().info("Set Torque Mode")
+            comms_pan = False
+            comms_tilt = False
 
+            # Enable Dynamixel Torque
+            dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_TILT, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+            if dxl_comm_result != COMM_SUCCESS:
+                print("TILT %s" % packetHandler.getTxRxResult(dxl_comm_result))
+            elif dxl_error != 0:
+                print("TILT %s" % packetHandler.getRxPacketError(dxl_error))
+            else:
+                print("Dynamixel TILT has been successfully connected")
+                comms_tilt = True
+
+            dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+            if dxl_comm_result != COMM_SUCCESS:
+                print("PAN %s" % packetHandler.getTxRxResult(dxl_comm_result))
+            elif dxl_error != 0:
+                print("PAN %s" % packetHandler.getRxPacketError(dxl_error))
+            else:
+                print("Dynamixel PAN has been successfully connected")
+                comms_pan = True
+
+            if comms_tilt and comms_pan:
+                comms_with_neck_servo_established = True
+            else:
+                self.get_logger().error("Neck Module not Powered!")
+                time.sleep(0.2)
+                
         # Set PID parameters for each servo (different params because of how smooth the movement must be on each axis)
         dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_D_GAIN, PAN_D_GAIN)
         dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_I_GAIN, PAN_I_GAIN)
