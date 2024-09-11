@@ -156,7 +156,21 @@ class NeckNode(Node):
         self.server_neck_track_object = self.create_service(TrackObject, "neck_track_object", self.callback_neck_track_object)
         self.get_logger().info("Neck Servers have been started")
 
-        
+        # timer that checks the controller every 50 ms 
+        self.create_timer(1.0, self.timer_callback)
+
+
+    ########## TIMER ##########
+    def timer_callback(self):
+
+        # if any of the modules that need neck info (calculate positions of any detected object/person)
+        # is turned on after the initial neck movement and no other neck movement is made, these variables are never updated
+        # this way, these are updated periodically
+        global read_pan_open_loop, read_tilt_open_loop
+
+        self.publish_get_neck_pos(read_pan_open_loop, read_tilt_open_loop)
+
+
     ########## SERVICES ##########
     def callback_set_neck_position(self, request, response):
         
