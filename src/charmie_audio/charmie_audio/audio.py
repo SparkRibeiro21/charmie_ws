@@ -480,6 +480,7 @@ class WhisperAudio():
         speech = speech.replace(".","")
         speech = speech.replace("?","")
         speech = speech.replace("!","")
+        speech = speech.replace("'","")
 
         self.node.get_logger().info(f"Command Filtered: {speech}")    
 
