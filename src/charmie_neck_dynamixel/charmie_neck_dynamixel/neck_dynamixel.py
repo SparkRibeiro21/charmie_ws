@@ -13,10 +13,6 @@ import tty
 import termios
 import os
 
-DEBUG_DRAW = True
-
-print(os.name)
-
 if os.name == 'nt':
     import msvcrt
 
@@ -102,15 +98,6 @@ read_pan_closed_loop = 180*DEGREES_TO_SERVO_TICKS_CONST
 read_tilt_closed_loop = 115*DEGREES_TO_SERVO_TICKS_CONST
 read_pan_open_loop = 180*DEGREES_TO_SERVO_TICKS_CONST
 read_tilt_open_loop = 115*DEGREES_TO_SERVO_TICKS_CONST
-
-# The servos start position (180, 180) does not make the robot look forward because of the camera and face angle.
-# These values are necessary to adjust to this position shift 
-# With recent changes to hardware, the neck part is now perpendicular to the floor, therefore this is no longer necessary
-# PAN_CONST_SHIFT = 0
-# TILT_CONST_SHIFT = 0  # (180 + 10 = 190)
-
-# index = 0
-# dxl_goal_position = [DXL_MINIMUM_POSITION_VALUE, DXL_MAXIMUM_POSITION_VALUE]  # Goal position
 
 # Initialize PacketHandler instance
 # Set the protocol version
@@ -367,100 +354,10 @@ class NeckNode(Node):
 
 
     ########## CALLBACKS ##########
-    # def neck_position_callback(self, neck_pos: NeckPosition):
-    #     self.get_logger().info("Received Neck Position, Adjusting the Neck Position")
-    #     # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
-    #     
-    #     # +180.0 on both values since for calculations (180, 180) is the middle position but is easier UI for center to be (0,0)
-    #     self.move_neck(neck_pos.pan+180.0, neck_pos.tilt+180.0)
-
-
-    # def neck_to_coords_callback(self, pose: Pose2D):
-    #     # calculate the angle according to last received odometry
-    #     neck_target_x = pose.x
-    #     neck_target_y = pose.y
-    #     neck_target_other_axis = pose.theta
-    # 
-    #     # print(math.degrees(self.robot_t))
-    #     
-    #     ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
-    #     # print("ang_rad:", ang)
-    #     ang = math.degrees(ang)
-    #     # print("ang_deg:", ang)
-    # 
-    #     pan_neck_to_coords = math.degrees(self.robot_t) - ang
-    #     if pan_neck_to_coords < -math.degrees(math.pi):
-    #         pan_neck_to_coords += math.degrees(2*math.pi)
-    # 
-    #     print("neck_to_coords:", pan_neck_to_coords, ang)
-    #     self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis)
-
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
         self.robot_y = pose.y
         self.robot_t = pose.theta
-
-    """
-    def callback_neck_track_person(self, pose: TrackPerson):
-        print("Folow person received")
-
-        # these are the only two points that will always exist independentely if the confidence of a keypoint is > MIN_CONFIDENCE_VALUE
-        if pose.body_part == "Head":
-            target_x = pose.head_center_x
-            target_y = pose.head_center_y
-        elif pose.body_part == "Torso":
-            target_x = pose.head_center_x
-            target_y = pose.head_center_y        
-            
-        global read_pan_open_loop, read_tilt_open_loop
-
-        img_width = 1280
-        img_height = 720
-
-        target_x = pose.person.kp_nose_x
-        target_y = pose.person.kp_nose_y
-
-        hor_fov = 91.2
-        ver_fov = 65.5
-
-        print(target_x, target_y)
-
-        error_x = -int(img_width/2 - pose.person.kp_nose_x)
-        error_y = -int(img_height/2 - pose.person.kp_nose_y)
-
-        perc_x = error_x/(img_width/2)
-        perc_y = error_y/(img_height/2)
-
-        new_a_x = (-perc_x*(hor_fov/2))
-        new_a_y = (-perc_y*(ver_fov/2))*0.75 # on the 'yes movement' axis, it tended to always overshoot a bit, the 0.75 factor fixes it
-
-        print("angs: ", new_a_x, new_a_y)
-
-        # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
-        self.send_neck_move(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
-        
-        # if DEBUG_DRAW and self.first_img_ready:
-        #     br = CvBridge()
-        #     current_frame = br.imgmsg_to_cv2(self.img, "bgr8")
-        # 
-        #     # cv2.line(current_frame, (img_width//2, img_height//2), (img_width//2+error_x, img_height//2+error_y), (255,0,0), 3)
-        #     cv2.line(current_frame, (img_width//2, img_height//2), (img_width//2, img_height//2+error_y), (255,0,0), 3)
-        #     cv2.line(current_frame, (img_width//2, img_height//2), (img_width//2+error_x, img_height//2), (255,0,0), 3)
-        # 
-        #     cv2.circle(current_frame, (img_width//2, img_height//2), 3, (0,0,255), -1)
-        #     cv2.circle(current_frame, (target_x, target_y), 3, (0,0,255), -1)
-        # 
-        #     cv2.imshow("Neck Debug", current_frame)
-        #     cv2.waitKey(1)
-    """
-
-    # def neck_follow_object_callback(self, pose: TrackObject):
-    #     pass
-
-    # def get_color_image_callback(self, img: Image):
-        # self.get_logger().info('Receiving color video frame')
-        # self.img = img
-        # self.first_img_ready = True
 
 
     ########## NECK CNOTROL FUNCTIONS ##########
@@ -521,28 +418,9 @@ class NeckNode(Node):
 
         self.get_logger().info("Set Neck to Initial Position, Looking Forward")
 
+        # changed to two different positions so that in any case it is visible the neck moving when is started 
+        self.move_neck(180, 135) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-
-        """
-        while True:
-            aaa = 4
-            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180-45, 180-45) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180+45, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180, 180-30) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180-45, 180-45) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(0, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-        """
 
         
     def read_servo_position(self):
