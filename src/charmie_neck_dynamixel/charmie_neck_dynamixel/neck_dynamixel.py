@@ -114,7 +114,8 @@ class NeckNode(Node):
         self.declare_parameter("device_name", "USB1") 
         self.declare_parameter("speed_up", 3) 
         self.declare_parameter("speed_down", 2) 
-        self.declare_parameter("speed_sides", 5) 
+        self.declare_parameter("speed_sides", 5)
+        self.declare_parameter("initial_position", [0, 0])  # Default value
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
         DEVICE_PARAM = self.get_parameter("device_name").value
@@ -122,6 +123,7 @@ class NeckNode(Node):
         self.u_tilt_up = self.get_parameter("speed_up").value
         self.u_tilt_down = self.get_parameter("speed_down").value
         self.u_pan = self.get_parameter("speed_sides").value
+        self.initial_position = self.get_parameter("initial_position").value
         
         DEVICENAME = "/dev/tty"+DEVICE_PARAM # "/dev/ttyUSB1"  # Check which port is being used on your controller
         # ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
@@ -416,7 +418,7 @@ class NeckNode(Node):
 
         # changed to two different positions so that in any case it is visible the neck moving when is started 
         self.move_neck(180, 135) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        self.move_neck(180+self.initial_position[0], 180+self.initial_position[1]) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
 
         
     def read_servo_position(self):
@@ -531,7 +533,7 @@ class NeckNode(Node):
         if t < MIN_TILT_ANGLE:
             t = MIN_TILT_ANGLE
         
-        print(p,t)
+        # print(p,t)
 
         p = int(p * DEGREES_TO_SERVO_TICKS_CONST + 0.5)
         t = int(t * DEGREES_TO_SERVO_TICKS_CONST + 0.5)
