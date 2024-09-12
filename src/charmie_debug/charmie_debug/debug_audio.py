@@ -25,7 +25,7 @@ ros2_modules = {
     "charmie_odometry":         False,
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         False, # True
+    "charmie_speakers":         True,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
@@ -61,7 +61,7 @@ class TaskMain():
         Final_State = 6
 
         # VARS ...
-        self.state = Continuous_audio
+        self.state = Audio_receptionist
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")
@@ -84,10 +84,15 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                 command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
                 print("Finished:", command)
-                keyword_list= command.split(" ")
-                print(keyword_list[0], keyword_list[1])
-                self.robot.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
-                self.robot.set_speech(filename="receptionist/favourite_drink/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
+                
+                if command == "ERR_MAX":
+                    print("MAX HEARING ATTEMPTS REACHED")
+                    self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
+                else:
+                    keyword_list= command.split(" ")
+                    print(keyword_list[0], keyword_list[1])
+                    self.robot.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
+                    self.robot.set_speech(filename="receptionist/favourite_drink/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
 
                 time.sleep(5)
                 

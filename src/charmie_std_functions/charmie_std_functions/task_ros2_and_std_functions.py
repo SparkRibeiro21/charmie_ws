@@ -793,7 +793,7 @@ class RobotStdFunctions():
         
         self.set_rgb(GREEN+ALTERNATE_QUARTERS)
 
-    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", face_hearing="charmie_face_green", wait_for_end_of=True):
+    def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", max_attempts=0, face_hearing="charmie_face_green", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
 
@@ -805,6 +805,7 @@ class RobotStdFunctions():
 
             # this code continuously asks for new audio info eveytime it gets an error for mishearing
             audio_error_counter = 0
+            total_audio_counter = 0
             keywords = "ERROR"
             while keywords=="ERROR":
                 
@@ -819,7 +820,15 @@ class RobotStdFunctions():
                 self.set_face("charmie_face")
 
                 keywords = self.node.audio_command  
-                
+
+                if keywords=="ERROR":
+                    total_audio_counter += 1
+
+                    if max_attempts > 0: # this way if is set to 0, it is intended to infinetely hear until a correct keyword is heard
+                        print("MAX HEAR ATTEMPTS: "+str(total_audio_counter)+"/"+str(max_attempts))
+                        if total_audio_counter >= max_attempts: # exceeds the maximum number of predefined hearing opportunities
+                            return "ERR_MAX"                            
+
                 if keywords=="ERROR":
                     audio_error_counter += 1
 
