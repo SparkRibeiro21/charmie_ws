@@ -4,7 +4,6 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D 
 from example_interfaces.msg import Bool
-from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import NeckPosition
 from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackPerson, TrackObject
 
@@ -12,6 +11,10 @@ import math
 import tty
 import termios
 import os
+import time
+
+# function to calculate zeros of non linear functions. In this case: to calculate the tilt (up/down) angle to look at coordinates
+from scipy.optimize import fsolve
 
 if os.name == 'nt':
     import msvcrt
@@ -221,6 +224,7 @@ class NeckNode(Node):
         # calculate the angle according to last received odometry
         neck_target_x = request.coords.x
         neck_target_y = request.coords.y
+        neck_target_z = request.coords.z
 
         if request.is_tilt:
             neck_target_other_axis = request.tilt
@@ -230,8 +234,9 @@ class NeckNode(Node):
             self.get_logger().warn("Not implemented yet... switch to x,y with tilt.")
             ##### STILL HAVE TO MAKE THE MATH FOR THIS CASE
 
-        # print(math.degrees(self.robot_t))
-       
+        ### PAN MOVEMENT (LEFT - RIGHT)
+
+        # print(math.degrees(self.robot_t))       
         ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
         # print("ang_rad:", ang)
         ang = math.degrees(ang)
@@ -248,13 +253,54 @@ class NeckNode(Node):
         # print("neck_to_coords:", pan_neck_to_coords, ang)
         # self.get_logger().info("neck back angle %d" %pan_neck_to_coords)
 
-        self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis+180.0)
+        ### TILT MOVEMENT (UP - DOWN)
+        dist = math.sqrt((self.robot_y - neck_target_y)**2 + (self.robot_x - neck_target_x)**2)
+
+        # Constants
+        h = 1.30 # height of rotation axis of bottom servo from the ground (should be automatic). Does not consider changes in torso.
+        c = 0.055 # distance from center rotation axis of bottom servo to face (horizontal when looking forward)
+        d = 0.125 # distance from c to center of face. This way the center of the face is looking at the person and not the camera or servo.
+        e = math.sqrt(c**2 + d**2)
+        a = neck_target_z # 1.425  # Adjust as needed
+        b = dist
+            
+        # Define the function based on the equation
+        def equation(alpha):
+            return alpha - math.atan(c / d) - math.atan((h + e * math.cos(alpha) - a) / (b - e * math.sin(alpha)))
+            # return alpha - np.arctan(c / d) - np.arctan((h + e * np.sin(alpha) - a) / (b - e * np.cos(alpha)))
+
+
+        # Initial guess for alpha
+        initial_guess = 0
+
+        initial_time = time.time() 
+
+        # Solve the equation
+        alpha_solution = fsolve(equation, initial_guess)
+
+        elapsed_time = time.time() - initial_time
+
+        phi = math.atan(d / c)
+
+        final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90)
+
+        print("Alpha:", math.degrees(alpha_solution[0]))
+
+        print("Phi:", math.degrees(phi))
+
+        print("Alpha+Phi:", round(final_x, 2))
+
+        print("Time:", elapsed_time)
+
+        ### por pan: pan+180 para ficar standard com o resto 
+
+        # self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis+180.0)
+        self.move_neck(180 - pan_neck_to_coords, final_x+180.0)
 
         # returns whether the message was played and some informations regarding status
         response.success = True
         response.message = "set to coordinates"
         return response
-    
 
     def callback_neck_track_person(self, request, response):
 
