@@ -5,8 +5,8 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
-from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
-from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
+from xarm_msgs.srv import MoveCartesian
+from charmie_interfaces.msg import Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -48,8 +48,8 @@ class DebugVisualNode(Node):
         self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
         
         # get yolo pose person detection filtered
-        self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
-        self.object_detected_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.get_object_detected_callback, 10)
+        # self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
+        # self.object_detected_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.get_object_detected_callback, 10)
 
         # lidar
         self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.lidar_callback , 10)
@@ -78,7 +78,7 @@ class DebugVisualNode(Node):
         self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_callback, 10)
 
         # Yolo Pose
-        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+        self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
@@ -142,7 +142,7 @@ class DebugVisualNode(Node):
         self.new_head_depth = False
         self.new_hand_depth = False
 
-        self.detected_people = Yolov8Pose()
+        self.detected_people = ListOfDetectedPerson()
         self.detected_objects = Yolov8Objects()
         self.detected_objects_hand = Yolov8Objects()
         self.detected_doors = Yolov8Objects()
@@ -197,8 +197,8 @@ class DebugVisualNode(Node):
 
         self.nodes_used = NodesUsed.Request()
         self.scan = LaserScan()
-        self.person_pose = Yolov8Pose()
-        self.object_detected = Yolov8Objects()
+        # self.person_pose = Yolov8Pose()
+        # self.object_detected = Yolov8Objects()
         self.search_for_person = ListOfDetectedPerson()
         self.search_for_object = ListOfDetectedObject()
         self.navigation = TarNavSDNL()
@@ -354,7 +354,7 @@ class DebugVisualNode(Node):
         self.activate_obstacles_client.call_async(request)
 
     
-    def person_pose_filtered_callback(self, det_people: Yolov8Pose):
+    def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
         self.new_detected_people = True
     
@@ -468,13 +468,13 @@ class DebugVisualNode(Node):
         self.neck_tilt = -math.radians(- pose.tilt)
 
 
-    def get_person_pose_callback(self, pose: Yolov8Pose):
-        # print("Received new yolo pose. Number of people = ", pose.num_person)
-        self.person_pose = pose
+    # def get_person_pose_callback(self, pose: Yolov8Pose):
+    #     # print("Received new yolo pose. Number of people = ", pose.num_person)
+    #     self.person_pose = pose
 
-    def get_object_detected_callback(self, obj: Yolov8Objects):
-        # print("Received new yolo objects. Number of objects = ", obj.num_person)
-        self.object_detected = obj
+    # def get_object_detected_callback(self, obj: Yolov8Objects):
+    #     # print("Received new yolo objects. Number of objects = ", obj.num_person)
+    #     self.object_detected = obj
 
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
@@ -1772,7 +1772,7 @@ class DebugVisualMain():
             
 
         ### PERSON DETECTED
-        for person in self.node.person_pose.persons:
+        for person in self.node.detected_people.persons:
             pygame.draw.circle(self.WIN, self.CYAN, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
 
         ### SEARCH FOR PERSON
@@ -1780,7 +1780,7 @@ class DebugVisualMain():
             pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
 
         ### OBJECT_DETECTED
-        for object in self.node.object_detected.objects:
+        for object in self.node.detected_objects.objects:
             temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
                                     self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-self.size_to_map(detected_object_radius), \
                                     2*self.size_to_map(detected_object_radius), 2*self.size_to_map(detected_object_radius))

@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, BoundingBox, BoundingBoxAndPoints, RGB, ListOfDetectedPerson
+from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, BoundingBox, BoundingBoxAndPoints, RGB
 from charmie_interfaces.srv import GetPointCloud, ActivateYoloPose
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
@@ -112,8 +112,7 @@ class YoloPoseNode(Node):
 
         # Publisher (Pose of People Detected Filtered and Non Filtered)
         # self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10) # test removed person_pose (non-filtered)
-        # self.person_pose_filtered_publisher = self.create_publisher(Yolov8Pose, "person_pose_filtered", 10)
-        self.person_pose_filtered_publisher = self.create_publisher(ListOfDetectedPerson, "person_pose_filtered", 10)
+        self.person_pose_filtered_publisher = self.create_publisher(Yolov8Pose, "person_pose_filtered", 10)
 
         # Subscriber (Yolov8_Pose TR Parameters)
         # self.only_detect_person_legs_visible_subscriber = self.create_subscription(Bool, "only_det_per_legs_vis", self.get_only_detect_person_legs_visible_callback, 10)
@@ -478,7 +477,7 @@ class YoloPoseNode(Node):
                 self.call_point_cloud_server(req2)
         
         else:
-            yolov8_pose_filtered = ListOfDetectedPerson()
+            yolov8_pose_filtered = Yolov8Pose()
             self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
         
@@ -501,8 +500,8 @@ class YoloPoseNode(Node):
             num_persons = 0
 
         # yolov8_pose = Yolov8Pose()  # test removed person_pose (non-filtered)
-        yolov8_pose_filtered = ListOfDetectedPerson()
-        # num_persons_filtered = 0
+        yolov8_pose_filtered = Yolov8Pose()
+        num_persons_filtered = 0
 
         for person_idx in range(num_persons):
             keypoints_id = self.results[0].keypoints[person_idx]
@@ -615,7 +614,7 @@ class YoloPoseNode(Node):
                 # print(" - Misses not being with their arm raised")
 
             if ALL_CONDITIONS_MET:
-                # num_persons_filtered+=1
+                num_persons_filtered+=1
 
                 # characteristics will only be updated after we confirm that the person is inside the filteredpersons
                 # otherwise the large amount of time spent getting the characteristics from the models is applied to
@@ -632,7 +631,7 @@ class YoloPoseNode(Node):
                         print(new_person.ethnicity, new_person.age_estimate, new_person.gender)        
                 # adds people to "person_pose_filtered" with selected filters
                 yolov8_pose_filtered.persons.append(new_person)
-              
+
                 if self.DEBUG_DRAW:
                     
                     red_yp = (56, 56, 255)
@@ -853,8 +852,8 @@ class YoloPoseNode(Node):
         # yolov8_pose.num_person = num_persons  # test removed person_pose (non-filtered)
         # self.person_pose_publisher.publish(yolov8_pose) # test removed person_pose (non-filtered)
 
-        # yolov8_pose_filtered.image_rgb = self.rgb_img
-        # yolov8_pose_filtered.num_person = num_persons_filtered
+        yolov8_pose_filtered.image_rgb = self.rgb_img
+        yolov8_pose_filtered.num_person = num_persons_filtered
         self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
         # print("____END____")
@@ -868,7 +867,7 @@ class YoloPoseNode(Node):
         if self.DEBUG_DRAW:
             # putting the FPS count on the frame
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-            cv2.putText(current_frame_draw, 'np:' + str(len(yolov8_pose_filtered.persons)) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.putText(current_frame_draw, 'np:' + str(num_persons_filtered) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
             # cv2.imshow("Yolo Pose Detection", annotated_frame)
             # cv2.imshow("Camera Image", current_frame)
