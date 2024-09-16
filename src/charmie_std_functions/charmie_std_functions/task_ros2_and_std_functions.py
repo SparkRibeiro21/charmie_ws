@@ -5,7 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
+from charmie_interfaces.msg import DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio
 
 import cv2 
@@ -48,7 +48,7 @@ class ROS2TaskNode(Node):
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
         # Yolo Pose
-        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+        self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
         self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
@@ -209,7 +209,7 @@ class ROS2TaskNode(Node):
         self.first_rgb_hand_image_received = False
         self.first_depth_head_image_received = False
         self.first_depth_hand_image_received = False
-        self.detected_people = Yolov8Pose()
+        self.detected_people = ListOfDetectedPerson()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
         self.flag_navigation_reached = False
@@ -283,7 +283,7 @@ class ROS2TaskNode(Node):
 
         self.nodes_used_client.call_async(nodes_used)
 
-    def person_pose_filtered_callback(self, det_people: Yolov8Pose):
+    def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
 
         # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")

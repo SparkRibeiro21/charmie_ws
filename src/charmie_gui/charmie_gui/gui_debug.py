@@ -868,8 +868,8 @@ class DebugVisualMain():
         self.curr_hand_depth = Image()
         self.last_hand_depth = Image()
 
-        self.curr_detected_people = Yolov8Pose()
-        self.last_detected_people = Yolov8Pose()
+        self.curr_detected_people = ListOfDetectedPerson()
+        self.last_detected_people = ListOfDetectedPerson()
     
         self.curr_detected_objects = Yolov8Objects()
         self.last_detected_objects = Yolov8Objects()
