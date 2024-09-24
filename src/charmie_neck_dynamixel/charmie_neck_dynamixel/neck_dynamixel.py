@@ -257,18 +257,17 @@ class NeckNode(Node):
         dist = math.sqrt((self.robot_y - neck_target_y)**2 + (self.robot_x - neck_target_x)**2)
 
         # Constants
-        h = 1.30 # height of rotation axis of bottom servo from the ground (should be automatic). Does not consider changes in torso.
-        c = 0.055 # distance from center rotation axis of bottom servo to face (horizontal when looking forward)
-        d = 0.125 # distance from c to center of face. This way the center of the face is looking at the person and not the camera or servo.
+        h = 1.30 # height of rotation axis of up/down servo from the ground (should be automatic). Does not consider changes in torso.
+        c = 0.06 # distance from center rotation axis of up/down servo to face (horizontal when looking forward)
+        d = 0.09 # distance from c to center of face. This way the center of the face is looking at the person and not the camera or servo.
         e = math.sqrt(c**2 + d**2)
-        a = neck_target_z # 1.425  # Adjust as needed
+        a = neck_target_z
         b = dist
             
         # Define the function based on the equation
         def equation(alpha):
             return alpha - math.atan(c / d) - math.atan((h + e * math.cos(alpha) - a) / (b - e * math.sin(alpha)))
             # return alpha - np.arctan(c / d) - np.arctan((h + e * np.sin(alpha) - a) / (b - e * np.cos(alpha)))
-
 
         # Initial guess for alpha
         initial_guess = 0

@@ -24,8 +24,8 @@ ros2_modules = {
     "charmie_odometry":         False,
     "charmie_point_cloud":      True,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
-    "charmie_yolo_objects":     True,
+    "charmie_speakers":         False,
+    "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        True,
 }
 
@@ -56,13 +56,16 @@ class TaskMain():
         Final_State = 3
 
         # VARS ...
-        self.state = Search_for_objects
+        self.state = Search_for_person
 
         print("IN NEW MAIN")
 
         while True:
 
             if self.state == Search_for_person:
+
+                # self.robot.set_neck_coords(position=[1.0, 1.1, 1.2], wait_for_end_of=True)
+                # time.sleep(10)
 
                 ### SEARCH FOR PERSON EXAMPLE ###
                 
@@ -79,15 +82,17 @@ class TaskMain():
                     print("ID:", p.index)
                 time.sleep(0.5)
 
-                for p in people_found:
-                    path = self.robot.detected_person_to_face_path(person=p, send_to_face=True)
-                    time.sleep(4)
+                # for p in people_found:
+                #     path = self.robot.detected_person_to_face_path(person=p, send_to_face=True)
+                #     time.sleep(4)
 
                 self.robot.set_rgb(CYAN+HALF_ROTATE)
                 time.sleep(0.5)
 
                 for p in people_found:
-                    self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
+                    print(p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z)
+                    # self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
+                    self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z], wait_for_end_of=True)
                     time.sleep(4)
                                 
                 # next state

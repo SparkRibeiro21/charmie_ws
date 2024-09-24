@@ -934,9 +934,8 @@ class RobotStdFunctions():
             request.is_tilt = False
             request.tilt = float(0.0)
 
-            pass
             # The following line is correct, however since the functionality is not implemented yet, should not be called
-            # self.node.call_neck_coordinates_server(request=request, wait_for_end_of=wait_for_end_of)
+            self.node.call_neck_coordinates_server(request=request, wait_for_end_of=wait_for_end_of)
 
         else:
             print("Something went wrong")
