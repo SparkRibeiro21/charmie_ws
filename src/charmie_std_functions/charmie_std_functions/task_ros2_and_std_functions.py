@@ -911,39 +911,24 @@ class RobotStdFunctions():
 
         return self.node.neck_success, self.node.neck_message
     
-    def set_neck_coords(self, position=[0.0, 0.0], ang=0.0, wait_for_end_of=True):
+    def set_neck_coords(self, position=[0.0, 0.0, 0.0], wait_for_end_of=True):
 
-        if len(position) == 2:
-
-            request = SetNeckCoordinates.Request()
-            request.coords.x = float(position[0])
-            request.coords.y = float(position[1])
-            request.coords.z = float(0.0)
-            request.is_tilt = True
-            request.tilt = float(ang)
-
-            self.node.call_neck_coordinates_server(request=request, wait_for_end_of=wait_for_end_of)
-
-        elif len(position) == 3:
-            print("You tried neck to coordintes using (x,y,z) please switch to (x,y,theta)")
+        if len(position) == 3:
 
             request = SetNeckCoordinates.Request()
             request.coords.x = float(position[0])
             request.coords.y = float(position[1])
             request.coords.z = float(position[2])
-            request.is_tilt = False
-            request.tilt = float(0.0)
-
-            # The following line is correct, however since the functionality is not implemented yet, should not be called
+            
             self.node.call_neck_coordinates_server(request=request, wait_for_end_of=wait_for_end_of)
+        
+            if wait_for_end_of:
+                while not self.node.waited_for_end_of_neck_coords:
+                    pass
+            self.node.waited_for_end_of_neck_coords = False
 
         else:
-            print("Something went wrong")
-        
-        if wait_for_end_of:
-          while not self.node.waited_for_end_of_neck_coords:
-            pass
-        self.node.waited_for_end_of_neck_coords = False
+            print("Something went wrong. Please check if position used is (x, y, z) and not (x, y)")
 
         return self.node.neck_success, self.node.neck_message
     

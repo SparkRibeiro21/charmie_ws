@@ -281,15 +281,13 @@ class NeckNode(Node):
 
         phi = math.atan(d / c)
 
-        final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90)
+        final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90 + 0.5)
 
-        print("Alpha:", math.degrees(alpha_solution[0]))
-
-        print("Phi:", math.degrees(phi))
-
+        # Debug prints of calculations of up/down movement:
+        # print("Alpha:", math.degrees(alpha_solution[0]))
+        # print("Phi:", math.degrees(phi))
         print("Alpha+Phi:", round(final_x, 2))
-
-        print("Time:", elapsed_time)
+        # print("Time:", elapsed_time)
 
         ### por pan: pan+180 para ficar standard com o resto 
 
