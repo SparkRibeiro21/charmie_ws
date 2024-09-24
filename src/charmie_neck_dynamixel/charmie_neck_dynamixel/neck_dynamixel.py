@@ -226,14 +226,8 @@ class NeckNode(Node):
         neck_target_y = request.coords.y
         neck_target_z = request.coords.z
 
-        if request.is_tilt:
-            neck_target_other_axis = request.tilt
-            self.get_logger().info("Received Neck Coordinates %s" %("("+str(request.coords.x)+", "+str(request.coords.y)+") - ["+str(request.tilt)+"]"))
-        else:
-            pass
-            self.get_logger().warn("Not implemented yet... switch to x,y with tilt.")
-            ##### STILL HAVE TO MAKE THE MATH FOR THIS CASE
-
+        self.get_logger().info("Received Neck Coordinates %s" %("("+str(request.coords.x)+", "+str(request.coords.y)+", "+str(request.coords.z)+")"))
+        
         ### PAN MOVEMENT (LEFT - RIGHT)
 
         # print(math.degrees(self.robot_t))       
@@ -281,7 +275,7 @@ class NeckNode(Node):
 
         phi = math.atan(d / c)
 
-        final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90 + 0.5)
+        final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90) + 0.5
 
         # Debug prints of calculations of up/down movement:
         # print("Alpha:", math.degrees(alpha_solution[0]))
