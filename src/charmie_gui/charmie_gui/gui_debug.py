@@ -197,10 +197,10 @@ class DebugVisualNode(Node):
 
         self.nodes_used = NodesUsed.Request()
         self.scan = LaserScan()
-        # self.person_pose = Yolov8Pose()
-        # self.object_detected = Yolov8Objects()
         self.search_for_person = ListOfDetectedPerson()
         self.search_for_object = ListOfDetectedObject()
+        self.new_search_for_person = False
+        self.new_search_for_object = False
         self.navigation = TarNavSDNL()
         self.is_navigating = False
 
@@ -488,9 +488,11 @@ class DebugVisualNode(Node):
         
     def search_for_person_detections_callback(self, points: ListOfDetectedPerson):
         self.search_for_person = points
+        self.new_search_for_person = True
         
     def search_for_object_detections_callback(self, points: ListOfDetectedObject):
         self.search_for_object = points
+        self.new_search_for_object = True
 
 
 class CheckNodesMain():
@@ -1366,13 +1368,14 @@ class DebugVisualMain():
         if self.node.is_yolo_pose_comm:
            
             if len(used_detected_people.persons) > 0:
-                print("DETECTED PEOPLE:")
+                # print("DETECTED PEOPLE:")
+                pass
 
             for p in used_detected_people.persons:
 
                 room_and_furn_str = str(p.room_location + " (" + p.furniture_location + ")")
                 relative_coords_str = str("("+str(round(p.position_relative.x,2))+", "+str(round(p.position_relative.y,2))+", "+str(round(p.position_relative.z,2))+")")
-                print("id:", p.index, "|", str(int(round(p.confidence,2)*100)) + "%", "|", room_and_furn_str.ljust(22), "|", relative_coords_str.ljust(22), "|", "wave:", p.arm_raised, "|", "point:", p.pointing_at)
+                # print("id:", p.index, "|", str(int(round(p.confidence,2)*100)) + "%", "|", room_and_furn_str.ljust(22), "|", relative_coords_str.ljust(22), "|", "wave:", p.arm_raised, "|", "point:", p.pointing_at)
 
                 PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio), int(p.box_width/2*self.camera_resize_ratio), int(p.box_height/2*self.camera_resize_ratio))
                 pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=self.BB_WIDTH)
@@ -1494,7 +1497,7 @@ class DebugVisualMain():
 
         if self.node.is_yolo_obj_head_comm:
             if len(used_detected_objects.objects) > 0 or len(used_detected_shoes.objects) > 0 or len(used_detected_furniture.objects) > 0:
-                print("DETECTED OBJECTS HEAD:")
+                # print("DETECTED OBJECTS HEAD:")
                 pass
             self.draw_object_bounding_boxes(used_detected_objects, "head")
             self.draw_object_bounding_boxes(used_detected_shoes, "head")
@@ -1502,7 +1505,7 @@ class DebugVisualMain():
 
         if self.node.is_yolo_obj_hand_comm:
             if len(used_detected_objects_hand.objects) > 0 or len(used_detected_shoes_hand.objects) > 0 or len(used_detected_furniture_hand.objects) > 0:
-                print("DETECTED OBJECTS HAND:")
+                # print("DETECTED OBJECTS HAND:")
                 pass
             self.draw_object_bounding_boxes(used_detected_objects_hand, "hand")
             self.draw_object_bounding_boxes(used_detected_shoes_hand, "hand")
@@ -1520,7 +1523,7 @@ class DebugVisualMain():
             name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
             room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
             relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
-            print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
+            # print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
             bb_color = self.object_class_to_bb_color(o.object_class)
             OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio), int(o.box_width/2*self.camera_resize_ratio), int(o.box_height/2*self.camera_resize_ratio))
             pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=self.BB_WIDTH)
@@ -1776,9 +1779,20 @@ class DebugVisualMain():
             pygame.draw.circle(self.WIN, self.CYAN, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
 
         ### SEARCH FOR PERSON
+        if self.node.new_search_for_person:
+            print("DETECTED SEARCH FOR PERSON:")
+
         for person in self.node.search_for_person.persons:
             pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
 
+            if self.node.new_search_for_person:            
+                room_and_furn_str = str(person.room_location + " (" + person.furniture_location + ")")
+                relative_coords_str = str("("+str(round(person.position_relative.x,2))+", "+str(round(person.position_relative.y,2))+", "+str(round(person.position_relative.z,2))+")")
+                print("id:", person.index, "|", str(int(round(person.confidence,2)*100)) + "%", "|", room_and_furn_str.ljust(22), "|", relative_coords_str.ljust(22), "|", "wave:", person.arm_raised, "|", "point:", person.pointing_at)
+
+        if self.node.new_search_for_person:
+            self.node.new_search_for_person = False
+        
         ### OBJECT_DETECTED
         for object in self.node.detected_objects.objects:
             temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
@@ -1787,12 +1801,23 @@ class DebugVisualMain():
             pygame.draw.rect(self.WIN, self.CYAN, temp_rect, width=0)
 
         ### SEARCH FOR OBJECT
+        if self.node.new_search_for_object:
+            print("DETECTED SEARCH FOR OBJECT:")
+
         for object in self.node.search_for_object.objects:
             temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
                                     self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-self.size_to_map(detected_object_radius), \
                                     2*self.size_to_map(detected_object_radius), 2*self.size_to_map(detected_object_radius))
             pygame.draw.rect(self.WIN, self.MAGENTA, temp_rect, width=0)
 
+            if self.node.new_search_for_object:
+                name_and_cat_str = str(object.object_name + " (" + object.object_class + ")")
+                room_and_furn_str = str(object.room_location + " (" + object.furniture_location + ")")
+                relative_coords_str = str("("+str(round(object.position_relative.x,2))+", "+str(round(object.position_relative.y,2))+", "+str(round(object.position_relative.z,2))+")")
+                print("id:", object.index, "|", str(int(round(object.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
+         
+        if self.node.new_search_for_object:
+            self.node.new_search_for_object = False    
 
         ### FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot))
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
