@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
-from charmie_interfaces.msg import Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
+from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -80,12 +80,15 @@ class DebugVisualNode(Node):
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
-        self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-        self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
-        self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
-        self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'doors_detected_filtered_hand', self.doors_detected_filtered_hand_callback, 10)
-        self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
-        self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
+        self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        self.objects_filtered_hand_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
+        
+        # self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
+        # self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
+        # self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
+        # self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'doors_detected_filtered_hand', self.doors_detected_filtered_hand_callback, 10)
+        # self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
+        # self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
 
         ### Services (Clients) ###
 		# Arm (Ufactory)
@@ -143,19 +146,19 @@ class DebugVisualNode(Node):
         self.new_hand_depth = False
 
         self.detected_people = ListOfDetectedPerson()
-        self.detected_objects = Yolov8Objects()
-        self.detected_objects_hand = Yolov8Objects()
-        self.detected_doors = Yolov8Objects()
-        self.detected_doors_hand = Yolov8Objects()
-        self.detected_shoes = Yolov8Objects()
-        self.detected_shoes_hand = Yolov8Objects()
+        self.detected_objects = ListOfDetectedObject()
+        self.detected_objects_hand = ListOfDetectedObject()
+        # self.detected_doors = Yolov8Objects()
+        # self.detected_doors_hand = Yolov8Objects()
+        # self.detected_shoes = Yolov8Objects()
+        # self.detected_shoes_hand = Yolov8Objects()
         self.new_detected_people = False
         self.new_detected_objects = False
         self.new_detected_objects_hand = False
-        self.new_detected_doors = False
-        self.new_detected_doors_hand = False
-        self.new_detected_shoes = False
-        self.new_detected_shoes_hand = False
+        # self.new_detected_doors = False
+        # self.new_detected_doors_hand = False
+        # self.new_detected_shoes = False
+        # self.new_detected_shoes_hand = False
 
         self.robot_x = 0.0
         self.robot_y = 0.0
@@ -227,18 +230,18 @@ class DebugVisualNode(Node):
         else:
             self.is_yolo_pose_comm = False
 
-        if self.new_detected_objects or self.new_detected_shoes or self.new_detected_doors:
+        if self.new_detected_objects: # or self.new_detected_shoes or self.new_detected_doors:
             self.new_detected_objects = False
-            self.new_detected_shoes = False
-            self.new_detected_doors = False
+            # self.new_detected_shoes = False
+            # self.new_detected_doors = False
             self.is_yolo_obj_head_comm = True
         else:
             self.is_yolo_obj_head_comm = False
     
-        if self.new_detected_objects_hand or self.new_detected_shoes_hand or self.new_detected_doors_hand:
+        if self.new_detected_objects_hand: # or self.new_detected_shoes_hand or self.new_detected_doors_hand:
             self.new_detected_objects_hand = False
-            self.new_detected_shoes_hand = False
-            self.new_detected_doors_hand = False
+            # self.new_detected_shoes_hand = False
+            # self.new_detected_doors_hand = False
             self.is_yolo_obj_hand_comm = True
         else:
             self.is_yolo_obj_hand_comm = False
@@ -362,7 +365,7 @@ class DebugVisualNode(Node):
         self.head_yp_time = time.time()
         self.head_yp_fps = round(1/(self.head_yp_time-self.last_head_yp_time), 1)
 
-    def object_detected_filtered_callback(self, det_object: Yolov8Objects):
+    def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
         self.new_detected_objects = True
 
@@ -370,7 +373,7 @@ class DebugVisualNode(Node):
         self.head_yo_time = time.time()
         self.head_yo_fps = round(1/(self.head_yo_time-self.last_head_yo_time), 1)
 
-    def object_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
+    def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects_hand = det_object
         self.new_detected_objects_hand = True
 
@@ -378,6 +381,7 @@ class DebugVisualNode(Node):
         self.hand_yo_time = time.time()
         self.hand_yo_fps = round(1/(self.hand_yo_time-self.last_hand_yo_time), 1)
 
+    """
     def doors_detected_filtered_callback(self, det_object: Yolov8Objects):
         self.detected_doors = det_object
         self.new_detected_doors = True
@@ -393,7 +397,7 @@ class DebugVisualNode(Node):
     def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
         self.detected_shoes_hand = det_object
         self.new_detected_shoes_hand = True
-
+    """
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
 
@@ -873,18 +877,18 @@ class DebugVisualMain():
         self.curr_detected_people = ListOfDetectedPerson()
         self.last_detected_people = ListOfDetectedPerson()
     
-        self.curr_detected_objects = Yolov8Objects()
-        self.last_detected_objects = Yolov8Objects()
-        self.curr_detected_objects_hand = Yolov8Objects()
-        self.last_detected_objects_hand = Yolov8Objects()
-        self.curr_detected_shoes = Yolov8Objects()
-        self.last_detected_shoes = Yolov8Objects()
-        self.curr_detected_shoes_hand = Yolov8Objects()
-        self.last_detected_shoes_hand = Yolov8Objects()
-        self.curr_detected_furniture = Yolov8Objects()
-        self.last_detected_furniture = Yolov8Objects()
-        self.curr_detected_furniture_hand = Yolov8Objects()
-        self.last_detected_furniture_hand = Yolov8Objects()
+        self.curr_detected_objects = ListOfDetectedObject()
+        self.last_detected_objects = ListOfDetectedObject()
+        # self.curr_detected_objects_hand = Yolov8Objects()
+        # self.last_detected_objects_hand = Yolov8Objects()
+        # self.curr_detected_shoes = Yolov8Objects()
+        # self.last_detected_shoes = Yolov8Objects()
+        # self.curr_detected_shoes_hand = Yolov8Objects()
+        # self.last_detected_shoes_hand = Yolov8Objects()
+        # self.curr_detected_furniture = Yolov8Objects()
+        # self.last_detected_furniture = Yolov8Objects()
+        # self.curr_detected_furniture_hand = Yolov8Objects()
+        # self.last_detected_furniture_hand = Yolov8Objects()
 
         # robot info
         self.robot_radius = self.node.robot_radius
@@ -1373,8 +1377,8 @@ class DebugVisualMain():
 
             for p in used_detected_people.persons:
 
-                room_and_furn_str = str(p.room_location + " (" + p.furniture_location + ")")
-                relative_coords_str = str("("+str(round(p.position_relative.x,2))+", "+str(round(p.position_relative.y,2))+", "+str(round(p.position_relative.z,2))+")")
+                # room_and_furn_str = str(p.room_location + " (" + p.furniture_location + ")")
+                # relative_coords_str = str("("+str(round(p.position_relative.x,2))+", "+str(round(p.position_relative.y,2))+", "+str(round(p.position_relative.z,2))+")")
                 # print("id:", p.index, "|", str(int(round(p.confidence,2)*100)) + "%", "|", room_and_furn_str.ljust(22), "|", relative_coords_str.ljust(22), "|", "wave:", p.arm_raised, "|", "point:", p.pointing_at)
 
                 PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio), int(p.box_width/2*self.camera_resize_ratio), int(p.box_height/2*self.camera_resize_ratio))
@@ -1468,48 +1472,48 @@ class DebugVisualMain():
 
         self.curr_detected_objects = self.node.detected_objects
         self.curr_detected_objects_hand = self.node.detected_objects_hand
-        self.curr_detected_shoes = self.node.detected_shoes
-        self.curr_detected_shoes_hand = self.node.detected_shoes_hand
-        self.curr_detected_furniture = self.node.detected_doors
-        self.curr_detected_furniture_hand = self.node.detected_doors_hand
+        # self.curr_detected_shoes = self.node.detected_shoes
+        # self.curr_detected_shoes_hand = self.node.detected_shoes_hand
+        # self.curr_detected_furniture = self.node.detected_doors
+        # self.curr_detected_furniture_hand = self.node.detected_doors_hand
 
         if self.toggle_pause_cams.getValue():
             used_detected_objects = self.last_detected_objects
             used_detected_objects_hand = self.last_detected_objects_hand
-            used_detected_shoes = self.last_detected_shoes
-            used_detected_shoes_hand = self.last_detected_shoes_hand
-            used_detected_furniture = self.last_detected_furniture
-            used_detected_furniture_hand = self.last_detected_furniture_hand
+            # used_detected_shoes = self.last_detected_shoes
+            # used_detected_shoes_hand = self.last_detected_shoes_hand
+            # used_detected_furniture = self.last_detected_furniture
+            # used_detected_furniture_hand = self.last_detected_furniture_hand
         else:
             used_detected_objects = self.curr_detected_objects 
             used_detected_objects_hand = self.curr_detected_objects_hand
-            used_detected_shoes = self.curr_detected_shoes
-            used_detected_shoes_hand = self.curr_detected_shoes_hand
-            used_detected_furniture = self.curr_detected_furniture
-            used_detected_furniture_hand = self.curr_detected_furniture_hand
+            # used_detected_shoes = self.curr_detected_shoes
+            # used_detected_shoes_hand = self.curr_detected_shoes_hand
+            # used_detected_furniture = self.curr_detected_furniture
+            # used_detected_furniture_hand = self.curr_detected_furniture_hand
 
         self.last_detected_objects = used_detected_objects 
         self.last_detected_objects_hand = used_detected_objects_hand
-        self.last_detected_shoes = used_detected_shoes
-        self.last_detected_shoes_hand = used_detected_shoes_hand
-        self.last_detected_furniture = used_detected_furniture
-        self.last_detected_furniture_hand = used_detected_furniture_hand
+        # self.last_detected_shoes = used_detected_shoes
+        # self.last_detected_shoes_hand = used_detected_shoes_hand
+        # self.last_detected_furniture = used_detected_furniture
+        # self.last_detected_furniture_hand = used_detected_furniture_hand
 
         if self.node.is_yolo_obj_head_comm:
-            if len(used_detected_objects.objects) > 0 or len(used_detected_shoes.objects) > 0 or len(used_detected_furniture.objects) > 0:
+            if len(used_detected_objects.objects) > 0: # or len(used_detected_shoes.objects) > 0 or len(used_detected_furniture.objects) > 0:
                 # print("DETECTED OBJECTS HEAD:")
                 pass
             self.draw_object_bounding_boxes(used_detected_objects, "head")
-            self.draw_object_bounding_boxes(used_detected_shoes, "head")
-            self.draw_object_bounding_boxes(used_detected_furniture, "head")
+            # self.draw_object_bounding_boxes(used_detected_shoes, "head")
+            # self.draw_object_bounding_boxes(used_detected_furniture, "head")
 
         if self.node.is_yolo_obj_hand_comm:
-            if len(used_detected_objects_hand.objects) > 0 or len(used_detected_shoes_hand.objects) > 0 or len(used_detected_furniture_hand.objects) > 0:
+            if len(used_detected_objects_hand.objects) > 0: # or len(used_detected_shoes_hand.objects) > 0 or len(used_detected_furniture_hand.objects) > 0:
                 # print("DETECTED OBJECTS HAND:")
                 pass
             self.draw_object_bounding_boxes(used_detected_objects_hand, "hand")
-            self.draw_object_bounding_boxes(used_detected_shoes_hand, "hand")
-            self.draw_object_bounding_boxes(used_detected_furniture_hand, "hand")
+            # self.draw_object_bounding_boxes(used_detected_shoes_hand, "hand")
+            # self.draw_object_bounding_boxes(used_detected_furniture_hand, "hand")
 
     def draw_object_bounding_boxes(self, objects, head_or_hand):
 
@@ -1520,9 +1524,9 @@ class DebugVisualMain():
 
         for o in objects.objects:
 
-            name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
-            room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
-            relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
+            # name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
+            # room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
+            # relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
             # print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
             bb_color = self.object_class_to_bb_color(o.object_class)
             OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio), int(o.box_width/2*self.camera_resize_ratio), int(o.box_height/2*self.camera_resize_ratio))

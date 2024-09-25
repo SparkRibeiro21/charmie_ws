@@ -5,7 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedObject, Yolov8Objects, BoundingBox, BoundingBoxAndPoints
+from charmie_interfaces.msg import DetectedObject, BoundingBox, BoundingBoxAndPoints, ListOfDetectedObject
 from charmie_interfaces.srv import GetPointCloud, ActivateYoloObjects
 from cv_bridge import CvBridge
 import cv2 
@@ -122,12 +122,15 @@ class Yolo_obj(Node):
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
          
         # Publish Results
-        self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
-        self.objects_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered_hand', 10)
-        self.doors_filtered_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered', 10)
-        self.doors_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered_hand', 10)
-        self.shoes_filtered_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered', 10)
-        self.shoes_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered_hand', 10)
+        # self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
+        # self.objects_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered_hand', 10)
+        # self.doors_filtered_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered', 10)
+        # self.doors_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered_hand', 10)
+        # self.shoes_filtered_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered', 10)
+        # self.shoes_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered_hand', 10)
+
+        self.objects_filtered_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered', 10)
+        self.objects_filtered_hand_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered_hand', 10)
         
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
@@ -432,8 +435,8 @@ class YoloObjectsMain():
 
         new_pcloud = self.node.point_cloud_response.coords
 
-        yolov8_obj_filtered = Yolov8Objects()
-        num_objects_filtered = 0
+        yolov8_obj_filtered = ListOfDetectedObject()
+        # num_objects_filtered = 0
 
         # print(num_obj)
         # print(object_results[0])
@@ -480,32 +483,32 @@ class YoloObjectsMain():
 
             # if the object detection passes all selected conditions, the detected object is added to the publishing list
             if ALL_CONDITIONS_MET:
-                num_objects_filtered+=1
+                # num_objects_filtered+=1
                 yolov8_obj_filtered.objects.append(new_object)
 
         # yolov8_obj_filtered.image_rgb = self.node.head_rgb
-        yolov8_obj_filtered.num_objects = num_objects_filtered
+        # yolov8_obj_filtered.num_objects = num_objects_filtered
 
-        if model == "objects" and camera == "head":
-            self.node.objects_filtered_publisher.publish(yolov8_obj_filtered)
-        if model == "objects" and camera == "hand":
-            self.node.objects_filtered_hand_publisher.publish(yolov8_obj_filtered)
-        if model == "doors" and camera == "head":
-            self.node.doors_filtered_publisher.publish(yolov8_obj_filtered)
-        if model == "doors" and camera == "hand":
-            self.node.doors_filtered_hand_publisher.publish(yolov8_obj_filtered)
-        if model == "shoes" and camera == "head":
-            self.node.shoes_filtered_publisher.publish(yolov8_obj_filtered)
-        if model == "shoes" and camera == "hand":
-            self.node.shoes_filtered_hand_publisher.publish(yolov8_obj_filtered)
+        # if model == "objects" and camera == "head":
+        #     self.node.objects_filtered_publisher.publish(yolov8_obj_filtered)
+        # if model == "objects" and camera == "hand":
+        #     self.node.objects_filtered_hand_publisher.publish(yolov8_obj_filtered)
+        # if model == "doors" and camera == "head":
+        #     self.node.doors_filtered_publisher.publish(yolov8_obj_filtered)
+        # if model == "doors" and camera == "hand":
+        #     self.node.doors_filtered_hand_publisher.publish(yolov8_obj_filtered)
+        # if model == "shoes" and camera == "head":
+        #     self.node.shoes_filtered_publisher.publish(yolov8_obj_filtered)
+        # if model == "shoes" and camera == "hand":
+        #     self.node.shoes_filtered_hand_publisher.publish(yolov8_obj_filtered)
         
-        self.node.get_logger().info(f"Objects detected: {num_obj}/{num_objects_filtered}")
+        self.node.get_logger().info(f"Objects detected: {num_obj}/{len(yolov8_obj_filtered.objects)}")
         self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
 
         if self.node.DEBUG_DRAW:
             self.draw_detected_objects(yolov8_obj_filtered, current_frame_draw)
 
-        return num_obj, num_objects_filtered
+        return yolov8_obj_filtered, num_obj
 
     def draw_detected_objects(self, yolov8_objects, current_frame_draw):
         
@@ -721,22 +724,36 @@ class YoloObjectsMain():
                 current_frame_draw = current_frame.copy()
                     
                 if self.node.ACTIVATE_YOLO_OBJECTS:
-                    to, tfo = self.detect_with_yolo_model(model="objects", camera="head", current_frame_draw=current_frame_draw)
+                    # to, tfo = self.detect_with_yolo_model(model="objects", camera="head", current_frame_draw=current_frame_draw)
+                    # total_obj += to
+                    # total_filtered_obj += tfo
+                    # print("should return head yolo objects")
+                    list_detected_objects, to = self.detect_with_yolo_model(model="objects", camera="head", current_frame_draw=current_frame_draw)
                     total_obj += to
-                    total_filtered_obj += tfo
-                    print("should return head yolo objects")
-                
+                    total_filtered_obj += len(list_detected_objects.objects)
+                    
                 if self.node.ACTIVATE_YOLO_DOORS:
-                    td, tfd = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw)
-                    total_obj += td
-                    total_filtered_obj += tfd
+                    # td, tfd = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw)
+                    # total_obj += td
+                    # total_filtered_obj += tfd
                     print("should return head yolo doors")
                 
                 if self.node.ACTIVATE_YOLO_SHOES:
-                    ts, tfs = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw)
-                    total_obj += ts
-                    total_filtered_obj += tfs
+                    # ts, tfs = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw)
+                    # total_obj += ts
+                    # total_filtered_obj += tfs
                     print("should return head yolo shoes")
+
+
+
+
+
+                # fundir as listas, para ja testar so com os detected objects
+
+
+
+
+
 
 
                 self.new_head_frame_time = time.time()
