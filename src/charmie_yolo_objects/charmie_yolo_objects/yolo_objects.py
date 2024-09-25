@@ -691,7 +691,6 @@ class YoloObjectsMain():
             if self.node.new_head_rgb:
 
                 total_obj = 0
-                total_filtered_obj = 0
                 current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
                 # current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape
@@ -736,29 +735,32 @@ class YoloObjectsMain():
             if self.node.new_hand_rgb:
 
                 total_obj = 0
-                total_filtered_obj = 0
                 current_frame = self.node.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
                 current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
+                list_all_objects_detected_hand = ListOfDetectedObject()
 
-                if self.node.ACTIVATE_YOLO_OBJECTS_HAND:
-                    to, tfo = self.detect_with_yolo_model(model="objects", camera="hand", current_frame_draw=current_frame_draw)
+                if self.node.ACTIVATE_YOLO_OBJECTS:
+                    list_detected_objects_hand, to = self.detect_with_yolo_model(model="objects", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += to
-                    total_filtered_obj += tfo
-                    print("should return hand yolo objects")
-                
-                if self.node.ACTIVATE_YOLO_DOORS_HAND:
-                    td, tfd = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw)
+                    for o in list_detected_objects_hand.objects:
+                        list_all_objects_detected_hand.objects.append(o)
+                    
+                if self.node.ACTIVATE_YOLO_DOORS:
+                    list_detected_doors_hand, td = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += td
-                    total_filtered_obj += tfd
-                    print("should return hand yolo doors")
+                    for o in list_detected_doors_hand.objects:
+                        list_all_objects_detected_hand.objects.append(o)
                 
-                if self.node.ACTIVATE_YOLO_SHOES_HAND:
-                    ts, tfs = self.detect_with_yolo_model(model="shoes", camera="hand", current_frame_draw=current_frame_draw)
+                if self.node.ACTIVATE_YOLO_SHOES:
+                    list_detected_shoes_hand, ts = self.detect_with_yolo_model(model="shoes", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += ts
-                    total_filtered_obj += tfs
-                    print("should return hand yolo shoes")
+                    for o in list_detected_shoes_hand.objects:
+                        list_all_objects_detected_hand.objects.append(o)
+
+                if len(list_all_objects_detected_hand.objects) > 0:
+                    self.node.objects_filtered_hand_publisher.publish(list_all_objects_detected_hand)
 
 
                 self.new_hand_frame_time = time.time()
@@ -767,7 +769,7 @@ class YoloObjectsMain():
 
                 if self.node.DEBUG_DRAW:
                     cv2.putText(current_frame_draw, 'fps:' + self.hand_fps, (0, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'np:' + str(len(list_all_objects_detected_hand.objects)) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
                     cv2.waitKey(1)
 
