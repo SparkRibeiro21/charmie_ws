@@ -26,8 +26,8 @@ objects_filename = "segmentation_M_size_model_600_epochs.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
 # objects_filename = "lar_dataset_post_fnr2024.pt"
 shoes_filename = "shoes_socks_v1.pt"
-# doors_filename = "door_bruno_2.pt"
-doors_filename = "furniture_robocup.pt"
+doors_filename = "door_bruno_2.pt"
+# doors_filename = "furniture_robocup.pt"
 
 MIN_OBJECT_CONF_VALUE = 0.5
 MIN_SHOES_CONF_VALUE = 0.5
@@ -122,13 +122,6 @@ class Yolo_obj(Node):
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
          
         # Publish Results
-        # self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
-        # self.objects_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered_hand', 10)
-        # self.doors_filtered_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered', 10)
-        # self.doors_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered_hand', 10)
-        # self.shoes_filtered_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered', 10)
-        # self.shoes_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered_hand', 10)
-
         self.objects_filtered_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered', 10)
         self.objects_filtered_hand_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered_hand', 10)
         
@@ -181,8 +174,8 @@ class Yolo_obj(Node):
         
         self.shoes_class_names = ['Shoe', 'Sock']
         
-        # self.doors_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
-        self.doors_class_names = ['Cabinet', 'Dishwasher']
+        self.doors_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
+        # self.doors_class_names = ['Cabinet', 'Dishwasher']
 
         self.objects_class_names_dict = {}
         self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
@@ -436,12 +429,10 @@ class YoloObjectsMain():
         new_pcloud = self.node.point_cloud_response.coords
 
         yolov8_obj_filtered = ListOfDetectedObject()
-        # num_objects_filtered = 0
-
+        
         # print(num_obj)
         # print(object_results[0])
-        # print(object_results[0].boxes)
-
+        
         for object_idx in range(num_obj):
             boxes_id = object_results[0].boxes[object_idx]
             # print(object_results[0].boxes)
@@ -483,25 +474,8 @@ class YoloObjectsMain():
 
             # if the object detection passes all selected conditions, the detected object is added to the publishing list
             if ALL_CONDITIONS_MET:
-                # num_objects_filtered+=1
                 yolov8_obj_filtered.objects.append(new_object)
-
-        # yolov8_obj_filtered.image_rgb = self.node.head_rgb
-        # yolov8_obj_filtered.num_objects = num_objects_filtered
-
-        # if model == "objects" and camera == "head":
-        #     self.node.objects_filtered_publisher.publish(yolov8_obj_filtered)
-        # if model == "objects" and camera == "hand":
-        #     self.node.objects_filtered_hand_publisher.publish(yolov8_obj_filtered)
-        # if model == "doors" and camera == "head":
-        #     self.node.doors_filtered_publisher.publish(yolov8_obj_filtered)
-        # if model == "doors" and camera == "hand":
-        #     self.node.doors_filtered_hand_publisher.publish(yolov8_obj_filtered)
-        # if model == "shoes" and camera == "head":
-        #     self.node.shoes_filtered_publisher.publish(yolov8_obj_filtered)
-        # if model == "shoes" and camera == "hand":
-        #     self.node.shoes_filtered_hand_publisher.publish(yolov8_obj_filtered)
-        
+ 
         self.node.get_logger().info(f"Objects detected: {num_obj}/{len(yolov8_obj_filtered.objects)}")
         self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
 
@@ -722,38 +696,29 @@ class YoloObjectsMain():
                 # current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
+                list_all_objects_detected = ListOfDetectedObject()
                     
+
                 if self.node.ACTIVATE_YOLO_OBJECTS:
-                    # to, tfo = self.detect_with_yolo_model(model="objects", camera="head", current_frame_draw=current_frame_draw)
-                    # total_obj += to
-                    # total_filtered_obj += tfo
-                    # print("should return head yolo objects")
                     list_detected_objects, to = self.detect_with_yolo_model(model="objects", camera="head", current_frame_draw=current_frame_draw)
                     total_obj += to
-                    total_filtered_obj += len(list_detected_objects.objects)
+                    for o in list_detected_objects.objects:
+                        list_all_objects_detected.objects.append(o)
                     
                 if self.node.ACTIVATE_YOLO_DOORS:
-                    # td, tfd = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw)
-                    # total_obj += td
-                    # total_filtered_obj += tfd
-                    print("should return head yolo doors")
+                    list_detected_doors, td = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw)
+                    total_obj += td
+                    for o in list_detected_doors.objects:
+                        list_all_objects_detected.objects.append(o)
                 
                 if self.node.ACTIVATE_YOLO_SHOES:
-                    # ts, tfs = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw)
-                    # total_obj += ts
-                    # total_filtered_obj += tfs
-                    print("should return head yolo shoes")
+                    list_detected_shoes, ts = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw)
+                    total_obj += ts
+                    for o in list_detected_shoes.objects:
+                        list_all_objects_detected.objects.append(o)
 
-
-
-
-
-                # fundir as listas, para ja testar so com os detected objects
-
-
-
-
-
+                if len(list_all_objects_detected.objects) > 0:
+                    self.node.objects_filtered_publisher.publish(list_all_objects_detected)
 
 
                 self.new_head_frame_time = time.time()
@@ -762,7 +727,7 @@ class YoloObjectsMain():
 
                 if self.node.DEBUG_DRAW:
                     cv2.putText(current_frame_draw, 'fps:' + self.head_fps, (0, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'np:' + str(len(list_all_objects_detected.objects)) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.imshow("Yolo Objects TR Detection HEAD", current_frame_draw)
                     cv2.waitKey(1)
 
@@ -808,4 +773,3 @@ class YoloObjectsMain():
 
                 self.node.new_hand_rgb = False
             
-            # time.sleep(0.05)
