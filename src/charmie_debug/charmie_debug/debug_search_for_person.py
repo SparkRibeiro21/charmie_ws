@@ -91,6 +91,7 @@ class TaskMain():
 
                 for p in people_found:
                     print(p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z)
+                    path = self.robot.detected_person_to_face_path(person=p, send_to_face=True)
                     # self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
                     self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z], wait_for_end_of=True)
                     time.sleep(4)

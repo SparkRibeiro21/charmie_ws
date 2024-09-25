@@ -230,8 +230,12 @@ class NeckNode(Node):
         
         ### PAN MOVEMENT (LEFT - RIGHT)
 
+        # 6.5 cm adjustement from bottom servo to robot center, this helps in cases where angle to coordinates are near 90 and 270 degrees
+        # where there was an error of 4/5 degrees because the axis were not alligned 
+        bottom_servo_to_robot_center = 0.065
+
         # print(math.degrees(self.robot_t))       
-        ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
+        ang = math.atan2(self.robot_y + bottom_servo_to_robot_center - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
         # print("ang_rad:", ang)
         ang = math.degrees(ang)
         # print("ang_deg:", ang)
