@@ -1522,6 +1522,10 @@ class DebugVisualMain():
         else: # "hand"
             window_cam_height = self.cam_height_+2*self.cams_initial_height
 
+        if len(objects.objects) > 0:
+            # print("DETECTED OBJECTS ("+head_or_hand.lower()+"):")
+            pass
+
         for o in objects.objects:
 
             # name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")

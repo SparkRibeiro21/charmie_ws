@@ -741,19 +741,19 @@ class YoloObjectsMain():
                 current_frame_draw = current_frame.copy()
                 list_all_objects_detected_hand = ListOfDetectedObject()
 
-                if self.node.ACTIVATE_YOLO_OBJECTS:
+                if self.node.ACTIVATE_YOLO_OBJECTS_HAND:
                     list_detected_objects_hand, to = self.detect_with_yolo_model(model="objects", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += to
                     for o in list_detected_objects_hand.objects:
                         list_all_objects_detected_hand.objects.append(o)
                     
-                if self.node.ACTIVATE_YOLO_DOORS:
+                if self.node.ACTIVATE_YOLO_DOORS_HAND:
                     list_detected_doors_hand, td = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += td
                     for o in list_detected_doors_hand.objects:
                         list_all_objects_detected_hand.objects.append(o)
                 
-                if self.node.ACTIVATE_YOLO_SHOES:
+                if self.node.ACTIVATE_YOLO_SHOES_HAND:
                     list_detected_shoes_hand, ts = self.detect_with_yolo_model(model="shoes", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += ts
                     for o in list_detected_shoes_hand.objects:
