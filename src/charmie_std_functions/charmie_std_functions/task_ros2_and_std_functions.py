@@ -5,7 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio
 
 import cv2 
@@ -50,12 +50,8 @@ class ROS2TaskNode(Node):
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
-        self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-        self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
-        self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
-        self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'doors_detected_filtered_hand', self.doors_detected_filtered_hand_callback, 10)
-        self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
-        self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
+        self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        self.objects_filtered_hand_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
@@ -210,7 +206,8 @@ class ROS2TaskNode(Node):
         self.first_depth_head_image_received = False
         self.first_depth_hand_image_received = False
         self.detected_people = ListOfDetectedPerson()
-        self.detected_objects = Yolov8Objects()
+        self.detected_objects = ListOfDetectedObject()
+        self.detected_objects_hand = ListOfDetectedObject()
         self.start_button_state = False
         self.flag_navigation_reached = False
         self.point_cloud_response = GetPointCloud.Response()
@@ -291,24 +288,12 @@ class ROS2TaskNode(Node):
         # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
         # cv2.waitKey(10)
 
-    def object_detected_filtered_callback(self, det_object: Yolov8Objects):
+    def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
 
-    def object_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
+    def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects_hand = det_object
 
-    def doors_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_doors = det_object
-
-    def doors_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_doors_hand = det_object
-
-    def shoes_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_shoes = det_object
-
-    def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_shoes_hand = det_object
-        
     def get_color_image_head_callback(self, img: Image):
         self.rgb_head_img = img
         self.first_rgb_head_image_received = True
@@ -1274,7 +1259,7 @@ class RobotStdFunctions():
         
         return face_path
 
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
+    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_shoes=False, detect_furniture=False, detect_objects_hand=False, detect_shoes_hand=False, detect_furniture_hand=False):
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -1301,12 +1286,10 @@ class RobotStdFunctions():
 
             total_objects_detected = []
             objects_detected = []
-            shoes_detected = []
-            doors_detected = []
             objects_ctr = 0
 
-            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_doors,
-                                        activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
+            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_furniture,
+                                        activate_objects_hand=detect_objects_hand, activate_shoes_hand=detect_shoes_hand, activate_doors_hand=detect_furniture_hand,
                                         minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             self.set_rgb(WHITE+ALTERNATE_QUARTERS)
@@ -1322,113 +1305,46 @@ class RobotStdFunctions():
                 start_time = time.time()
                 while (time.time() - start_time) < delta_t:      
 
-                    if detect_objects: 
-                        local_detected_objects = self.node.detected_objects
-                        for temp_objects in local_detected_objects.objects:
-                            
-                            is_already_in_list = False
-                            object_already_in_list = DetectedObject()
-                            for object in objects_detected:
-
-                                # filters by same index
-                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
-                                    is_already_in_list = True
-                                    object_already_in_list = object
-
-                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                                if temp_objects.object_name == object.object_name: # and 
-                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                    if dist < MIN_DIST_SAME_FRAME:
-                                        is_already_in_list = True
-                                        object_already_in_list = object
-
-                            if is_already_in_list:
-                                objects_detected.remove(object_already_in_list)
-                            else:
-                            # elif temp_objects.index > 0: # debug
-                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                                self.set_rgb(GREEN+SET_COLOUR)
-                            
-                            # if temp_objects.index > 0:
-                            objects_detected.append(temp_objects)
-                            objects_ctr+=1
-
+                    # if detect_objects: 
+                    local_detected_objects = self.node.detected_objects
+                    for temp_objects in local_detected_objects.objects:
                         
-                    if detect_shoes: 
-                        local_detected_objects = self.node.detected_shoes
-                        for temp_objects in local_detected_objects.objects:
-                            
-                            is_already_in_list = False
-                            object_already_in_list = DetectedObject()
-                            for object in shoes_detected:
+                        is_already_in_list = False
+                        object_already_in_list = DetectedObject()
+                        for object in objects_detected:
 
-                                # filters by same index
-                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
+                            # filters by same index
+                            if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
+                                is_already_in_list = True
+                                object_already_in_list = object
+
+                            # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
+                            if temp_objects.object_name == object.object_name: # and 
+                                dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
+                                if dist < MIN_DIST_SAME_FRAME:
                                     is_already_in_list = True
                                     object_already_in_list = object
 
-                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                                if temp_objects.object_name == object.object_name and temp_objects.index != object.index: 
-                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                    if dist < MIN_DIST_SAME_FRAME:
-                                        is_already_in_list = True
-                                        object_already_in_list = object
-
-                            if is_already_in_list:
-                                shoes_detected.remove(object_already_in_list)
-                            else:
-                            # elif temp_objects.index > 0: # debug
-                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                                self.set_rgb(GREEN+SET_COLOUR)
-                            
-                            # if temp_objects.index > 0:
-                            shoes_detected.append(temp_objects)
-                            objects_ctr+=1
-
+                        if is_already_in_list:
+                            objects_detected.remove(object_already_in_list)
+                        else:
+                        # elif temp_objects.index > 0: # debug
+                            # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
+                            self.set_rgb(GREEN+SET_COLOUR)
                         
-                    if detect_doors: 
-                        local_detected_objects = self.node.detected_doors
-                        for temp_objects in local_detected_objects.objects:
-                            
-                            is_already_in_list = False
-                            object_already_in_list = DetectedObject()
-                            for object in doors_detected:
-
-                                # filters by same index
-                                if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
-                                    is_already_in_list = True
-                                    object_already_in_list = object
-
-                                # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                                if temp_objects.object_name == object.object_name and temp_objects.index != object.index: 
-                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                    if dist < MIN_DIST_SAME_FRAME:
-                                        is_already_in_list = True
-                                        object_already_in_list = object
-
-                            if is_already_in_list:
-                                doors_detected.remove(object_already_in_list)
-                            else:
-                            # elif temp_objects.index > 0: # debug
-                                # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                                self.set_rgb(GREEN+SET_COLOUR)
-                            
-                            # if temp_objects.index > 0:
-                            doors_detected.append(temp_objects)
-                            objects_ctr+=1
-
+                        # if temp_objects.index > 0:
+                        objects_detected.append(temp_objects)
+                        objects_ctr+=1
 
                 # DEBUG
                 # print("objects in this neck pos:")
                 # for object in objects_detected:
                 #     print(object.index, object.position_absolute.x, object.position_absolute.y)
             
-                total_objects_detected.append(objects_detected.copy() + shoes_detected.copy() + doors_detected.copy())
+                total_objects_detected.append(objects_detected.copy())
                 # print("Total number of objects detected:", len(objects_detected), objects_ctr)
                 objects_detected.clear()   
-                shoes_detected.clear()
-                doors_detected.clear()
-
+                
                 if list_of_objects: #only does this if there are items in the list of mandatory detection objects
                     
                     mandatory_ctr = 0
@@ -1721,21 +1637,3 @@ class RobotStdFunctions():
             current_frame_depth_hand = np.zeros((360, 640), dtype=np.uint8)
         
         return self.node.first_depth_hand_image_received, current_frame_depth_hand
-
-
-
-
-
-
-
-
-
-class test_import_class():
-
-    def __init__(self, number):
-        # create a node instance so all variables ros related can be acessed
-        self.number = number
-        
-
-    def method_import(self):
-        return "Test Import Class: "+str(self.number)
