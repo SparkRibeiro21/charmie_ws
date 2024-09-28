@@ -103,18 +103,28 @@ class Yolo_obj(Node):
         # whether the activate doors flag starts as ON or OFF 
         self.ACTIVATE_YOLO_DOORS_HAND = self.get_parameter("activate_doors_hand").value
 
-        print(self.home+'/'+objects_filename)
+        # print(self.home+'/'+objects_filename)
+        yolo_models_sucessful_imported = False
 
-        # Import the models, one for each category
-        self.object_model = YOLO(self.home+'/'+objects_filename)
-        self.shoes_model = YOLO(self.complete_path + shoes_filename)
-        self.doors_model = YOLO(self.complete_path + doors_filename)
-        # it needs to have a different model for head and hand image because of the track parameter, otherwise it is always creating new track ids
-        self.object_model_hand = YOLO(self.home+'/'+objects_filename)
-        self.shoes_model_hand = YOLO(self.complete_path + shoes_filename)
-        self.doors_model_hand = YOLO(self.complete_path + doors_filename)
+        while not yolo_models_sucessful_imported:
+            
+            try: 
+                # Import the models, one for each category
+                self.object_model = YOLO(self.home+'/'+objects_filename)
+                self.shoes_model = YOLO(self.complete_path + shoes_filename)
+                self.doors_model = YOLO(self.complete_path + doors_filename)
+                # it needs to have a different model for head and hand image because of the track parameter, otherwise it is always creating new track ids
+                self.object_model_hand = YOLO(self.home+'/'+objects_filename)
+                self.shoes_model_hand = YOLO(self.complete_path + shoes_filename)
+                self.doors_model_hand = YOLO(self.complete_path + doors_filename)
 
-        print("Sucessfully imported YOLO models")
+                self.get_logger().info("Successfully imported YOLO models (objects, furniture, shoes)")
+
+                yolo_models_sucessful_imported = True
+
+            except:
+                self.get_logger().error("Could NOT import YOLO models (objects, furniture, shoes)")
+                time.sleep(1.0)
 
         ### Topics ###
         # Intel Realsense
