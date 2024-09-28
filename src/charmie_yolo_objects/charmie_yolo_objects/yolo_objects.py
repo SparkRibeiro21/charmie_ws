@@ -61,7 +61,7 @@ class Yolo_obj(Node):
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects"
-        self.complete_path = self.home+'/'+self.midpath+'/'
+        self.complete_path_yolo_models = self.home+'/'+self.midpath+'/'
 
         self.midpath_configuration_files = "charmie_ws/src/configuration_files"
         self.complete_path_configuration_files = self.home+'/'+self.midpath_configuration_files+'/'
@@ -111,12 +111,12 @@ class Yolo_obj(Node):
             try: 
                 # Import the models, one for each category
                 self.object_model = YOLO(self.home+'/'+objects_filename)
-                self.shoes_model = YOLO(self.complete_path + shoes_filename)
-                self.doors_model = YOLO(self.complete_path + doors_filename)
+                self.shoes_model = YOLO(self.complete_path_yolo_models + shoes_filename)
+                self.doors_model = YOLO(self.complete_path_yolo_models + doors_filename)
                 # it needs to have a different model for head and hand image because of the track parameter, otherwise it is always creating new track ids
                 self.object_model_hand = YOLO(self.home+'/'+objects_filename)
-                self.shoes_model_hand = YOLO(self.complete_path + shoes_filename)
-                self.doors_model_hand = YOLO(self.complete_path + doors_filename)
+                self.shoes_model_hand = YOLO(self.complete_path_yolo_models + shoes_filename)
+                self.doors_model_hand = YOLO(self.complete_path_yolo_models + doors_filename)
 
                 self.get_logger().info("Successfully imported YOLO models (objects, furniture, shoes)")
 
