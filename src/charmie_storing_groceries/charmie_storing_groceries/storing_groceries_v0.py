@@ -798,7 +798,7 @@ class StoringGroceriesMain():
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
+    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False):
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -829,7 +829,7 @@ class StoringGroceriesMain():
             doors_detected = []
             objects_ctr = 0
 
-            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_doors,
+            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_furniture,
                                         activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
                                         minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
@@ -910,7 +910,7 @@ class StoringGroceriesMain():
                             objects_ctr+=1
 
                         
-                    if detect_doors: 
+                    if detect_furniture: 
                         local_detected_objects = self.node.detected_doors
                         for temp_objects in local_detected_objects.objects:
                             
@@ -2605,7 +2605,7 @@ class StoringGroceriesMain():
 
             print('inside')
             tetas = [[0, 0]]
-            objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
+            objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_furniture=True)
             print('pos-search')
             for obj in objects_found:
                 if obj.object_name == 'Cabinet':
@@ -3188,7 +3188,7 @@ class StoringGroceriesMain():
                 # tetas = [[-30, -30], [0, -30], [30, -30]]
                 objects_found_table = []
                 while objects_found_table == []:
-                    objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                    objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
 
                 print('Objects found on table: ')
                 for obj in objects_found_table:
@@ -3218,7 +3218,7 @@ class StoringGroceriesMain():
                 while cabinet_found == False:
                     print('inside')
                     tetas = [[-20, -10]]
-                    objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
+                    objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_furniture=True)
                     print('pos-search')
                     for obj in objects_found:
                         if obj.object_name == 'Cabinet':
@@ -3241,7 +3241,7 @@ class StoringGroceriesMain():
                 data = []
                 real_data = []
                 tetas = [[0, -40], [0, -20], [0, 0]]
-                objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                 
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 
@@ -3312,7 +3312,7 @@ class StoringGroceriesMain():
                 # tetas = [[160, -20], [140, -20], [120, -20]]
                 # objects_found_table = []
                 # while objects_found_table == []:
-                #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
 
                 # print('Objects found on table: ')
                 # for obj in objects_found_table:
@@ -3356,7 +3356,7 @@ class StoringGroceriesMain():
                 
                     # objects_found_table = []
                     # while objects_found_table == []:
-                    #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                    #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
 
                     # for obj in objects_found_table:
                     #     obj_name_lower = obj.object_name.lower().replace(" ", "_")

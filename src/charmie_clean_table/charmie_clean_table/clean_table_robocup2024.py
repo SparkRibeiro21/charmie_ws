@@ -1184,7 +1184,7 @@ class CleanTableMain():
         
         return face_path
 
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
+    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False):
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -1215,7 +1215,7 @@ class CleanTableMain():
             doors_detected = []
             objects_ctr = 0
 
-            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_doors,
+            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_furniture,
                                         activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
                                         minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
@@ -1296,7 +1296,7 @@ class CleanTableMain():
                             objects_ctr+=1
 
                         
-                    if detect_doors: 
+                    if detect_furniture: 
                         local_detected_objects = self.node.detected_doors
                         for temp_objects in local_detected_objects.objects:
                             
@@ -1744,7 +1744,7 @@ class CleanTableMain():
                 
                     list_of_objects_copy = list_of_objects.copy()   
                     
-                    objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                    objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                     
                     print("while_start:", list_of_objects) 
                     print("while_start_copy:", list_of_objects_copy)    
@@ -1846,7 +1846,7 @@ class CleanTableMain():
                         else:
                             tetas = [[0, -30]]
                         # tetas = [[0, -30], [20, -30], [-20, -30], [-40, -30], [40, -30]]
-                        objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
+                        objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_furniture=True)
                         print('pos-search')
                         for obj in objects_found:
                             if obj.object_name == 'Dishwasher':
@@ -2318,7 +2318,7 @@ class CleanTableMain():
 
                     print(list_of_objects)    
                     
-                    objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                    objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                     
                     curr_obj = "Knife"
                     curr_obj_flag = False
