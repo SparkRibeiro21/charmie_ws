@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
 		"clean_table = charmie_clean_table.clean_table:main",
+		"clean_table_robocup2024 = charmie_clean_table.clean_table_robocup2024:main",
 		"clean_table_fnr2024 = charmie_clean_table.clean_table_fnr2024:main"
         ],
     },
