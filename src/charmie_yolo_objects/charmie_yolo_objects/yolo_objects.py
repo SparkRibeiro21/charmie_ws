@@ -413,6 +413,8 @@ class YoloObjectsMain():
         num_obj = len(object_results[0])
         # self.get_logger().info(f"Objects detected: {num_obj}")
 
+        # print(object_results[0])
+
         requested_objects = []
         for object_idx in range(num_obj):
 
