@@ -47,6 +47,7 @@ class ROS2TaskNode(Node):
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
+        self.torso_pos_publisher = self.create_publisher(Pose2D, "torso_pos", 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -225,6 +226,8 @@ class ROS2TaskNode(Node):
         self.save_speech_message = ""
         self.rgb_success = True
         self.rgb_message = ""
+        self.torso_success = True
+        self.torso_message = ""
         self.audio_success = True
         self.audio_message = ""
         self.continuous_audio_success = True
@@ -777,6 +780,18 @@ class RobotStdFunctions():
                 print("DOOR CLOSED", ctr)
         
         self.set_rgb(GREEN+ALTERNATE_QUARTERS)
+    
+    def set_torso(self, legs=0.0, torso=0.0, wait_for_end_of=True):
+        
+        temp = Pose2D()
+        temp.x = float(legs)
+        temp.y = float(torso)
+        self.node.torso_pos_publisher.publish(temp)
+
+        self.node.torso_success = True
+        self.node.torso_message = "Value Sucessfully Sent"
+
+        return self.node.torso_success, self.node.torso_message
 
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", max_attempts=0, face_hearing="charmie_face_green", wait_for_end_of=True):
 
