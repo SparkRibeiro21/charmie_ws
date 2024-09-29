@@ -133,6 +133,7 @@ HOW THE CODE OF A TASK SHOULD BE MADE:
 import rclpy
 import threading
 import time
+from charmie_interfaces.msg import DetectedObject, DetectedPerson
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
