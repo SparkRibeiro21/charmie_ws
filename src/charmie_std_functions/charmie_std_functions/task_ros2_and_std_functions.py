@@ -1124,8 +1124,8 @@ class RobotStdFunctions():
 
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
         self.set_speech(filename="generic/search_people", wait_for_end_of=False)
-        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-        time.sleep(0.5)
+        # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+        # time.sleep(0.5)
         
         total_person_detected = []
         person_detected = []
@@ -1137,6 +1137,7 @@ class RobotStdFunctions():
             self.set_rgb(RED+SET_COLOUR)
             self.set_neck(position=t, wait_for_end_of=True)
             time.sleep(1.0) # 0.5
+            self.node.detected_people.persons = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
             self.set_rgb(WHITE+SET_COLOUR)
 
             start_time = time.time()
@@ -1307,14 +1308,16 @@ class RobotStdFunctions():
                                         activate_objects_hand=detect_objects_hand, activate_shoes_hand=detect_shoes_hand, activate_doors_hand=detect_furniture_hand,
                                         minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
-            self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-            time.sleep(0.5)
+            # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+            # time.sleep(0.5)
 
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
             for t in tetas:
+                rgb_found_list_of_objects = False
                 self.set_rgb(RED+SET_COLOUR)
                 self.set_neck(position=t, wait_for_end_of=True)
                 time.sleep(1.0) # 0.5
+                self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
                 self.set_rgb(WHITE+SET_COLOUR)
 
                 start_time = time.time()
@@ -1342,14 +1345,22 @@ class RobotStdFunctions():
 
                         if is_already_in_list:
                             objects_detected.remove(object_already_in_list)
-                        else:
-                        # elif temp_objects.index > 0: # debug
+                        # else:
+                        elif temp_objects.index > 0: # debug
                             # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
-                            self.set_rgb(GREEN+SET_COLOUR)
+                            if list_of_objects: 
+                                if not rgb_found_list_of_objects:
+                                    for m_object in merged_lists:
+                                        if temp_objects.object_name.replace(" ","_").lower() in m_object:
+                                            rgb_found_list_of_objects = True
+                                if rgb_found_list_of_objects:
+                                    self.set_rgb(GREEN+SET_COLOUR)
+                            else:
+                                self.set_rgb(GREEN+SET_COLOUR)
                         
-                        # if temp_objects.index > 0:
-                        objects_detected.append(temp_objects)
-                        objects_ctr+=1
+                        if temp_objects.index > 0:
+                            objects_detected.append(temp_objects)
+                            objects_ctr+=1
 
                 # DEBUG
                 # print("objects in this neck pos:")
