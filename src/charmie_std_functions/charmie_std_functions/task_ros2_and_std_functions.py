@@ -1293,6 +1293,7 @@ class RobotStdFunctions():
         DETECTED_ALL_LIST_OF_OBJECTS = False
         MIN_DIST_DIFFERENT_FRAMES = 0.3 # maximum distance for the robot to assume it is the same objects
         MIN_DIST_SAME_FRAME = 0.2
+        is_break_list_of_objects = False
 
         merged_lists = []
         for obj, detected_as in zip(list_of_objects, list_of_objects_detected_as):
@@ -1369,6 +1370,46 @@ class RobotStdFunctions():
                             objects_detected.append(temp_objects)
                             objects_ctr+=1
 
+
+                    if list_of_objects: #only does this if there are items in the list of mandatory detection objects
+                        
+                        mandatory_ctr = 0
+                        # for m_object in list_of_objects:
+                        for m_object in merged_lists:
+                            is_in_mandatory_list = False
+                            
+                            # checks for previous tetas
+                            for frame in range(len(total_objects_detected)):
+                                for object in range(len(total_objects_detected[frame])):
+                                    
+                                    # compares to local detected frame
+                                    # if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
+                                    if total_objects_detected[frame][object].object_name.replace(" ","_").lower() in m_object:
+                                        is_in_mandatory_list = True
+                                        # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
+                        
+                                    # compares to overall final detected objects (multiple observations of multiple tetas)
+                                    for final_obj in final_objects:
+                                        # if final_obj.object_name.lower() == m_object.lower():
+                                        if final_obj.object_name.replace(" ","_").lower() in m_object:
+                                            is_in_mandatory_list = True
+                                            # print(m_object, final_obj.object_name, final_obj.index, is_in_mandatory_list)
+
+                            # checks for current teta (added to stop doing the full delta_t if all objects have already been detected)
+                            for curr_teta_obj in objects_detected:
+
+                                if curr_teta_obj.object_name.replace(" ","_").lower() in m_object:
+                                    is_in_mandatory_list = True
+
+
+                            if is_in_mandatory_list:
+                                mandatory_ctr += 1
+                            # print(m_object, is_in_mandatory_list)
+
+                        if mandatory_ctr == len(list_of_objects): # if all objects are already in the detected list 
+                            is_break_list_of_objects = True
+                            break
+
                 # DEBUG
                 # print("objects in this neck pos:")
                 # for object in objects_detected:
@@ -1378,42 +1419,13 @@ class RobotStdFunctions():
                 # print("Total number of objects detected:", len(objects_detected), objects_ctr)
                 objects_detected.clear()   
                 
-                if list_of_objects: #only does this if there are items in the list of mandatory detection objects
-                    
-                    mandatory_ctr = 0
-                    # for m_object in list_of_objects:
-                    for m_object in merged_lists:
-                        is_in_mandatory_list = False
-                        
-                        for frame in range(len(total_objects_detected)):
-                            for object in range(len(total_objects_detected[frame])):
-                                
-                                # compares to local detected frame
-                                # if total_objects_detected[frame][object].object_name.lower() == m_object.lower():
-                                if total_objects_detected[frame][object].object_name.replace(" ","_").lower() in m_object:
-                                    is_in_mandatory_list = True
-                                    # print(m_object, total_objects_detected[frame][object].object_name, total_objects_detected[frame][object].index, is_in_mandatory_list)
-                    
-                                # compares to overall final detected objects
-                                for final_obj in final_objects:
-                                    # if final_obj.object_name.lower() == m_object.lower():
-                                    if final_obj.object_name.replace(" ","_").lower() in m_object:
-                                        is_in_mandatory_list = True
-                                        # print(m_object, final_obj.object_name, final_obj.index, is_in_mandatory_list)
-
-                        if is_in_mandatory_list:
-                            mandatory_ctr += 1
-                        # print(m_object, is_in_mandatory_list)
-
-                    if mandatory_ctr == len(list_of_objects): # if all objects are already in the detected list 
-                        break
-
+                if is_break_list_of_objects: 
+                    break
 
             self.activate_yolo_objects(activate_objects=False, activate_shoes=False, activate_doors=False,
                                         activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
                                         minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
             
-
             # DEBUG
             # print("TOTAL objects in this neck pos:")
             # for frame in total_objects_detected:
