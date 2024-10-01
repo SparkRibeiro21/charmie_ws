@@ -1539,7 +1539,8 @@ class DebugVisualMain():
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in objects.objects:
 
-            text = str(o.object_name)
+            # text = str(o.object_name)
+            text = str(o.object_name)+" ("+str(o.index)+")"
             text_width, text_height = self.text_font_t.size(text)
             bb_color = self.object_class_to_bb_color(o.object_class)
 
