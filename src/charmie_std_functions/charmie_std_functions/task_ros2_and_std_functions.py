@@ -1163,7 +1163,7 @@ class RobotStdFunctions():
                         person_detected.append(temp_people)
                         people_ctr+=1
 
-                if break_if_detect and len(person_detected) > 0:
+                if break_if_detect and people_ctr > 0:
                     break
 
             # DEBUG
@@ -1175,7 +1175,8 @@ class RobotStdFunctions():
             # print("Total number of people detected:", len(person_detected), people_ctr)
             person_detected.clear()
 
-            if break_if_detect and len(person_detected) > 0:
+            if break_if_detect and people_ctr > 0:
+                time.sleep(0.5)
                 break
 
         self.activate_yolo_pose(activate=False)
