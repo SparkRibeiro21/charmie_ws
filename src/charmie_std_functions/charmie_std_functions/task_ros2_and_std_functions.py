@@ -1120,7 +1120,7 @@ class RobotStdFunctions():
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
-    def search_for_person(self, tetas, delta_t=3.0, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
+    def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
         self.set_speech(filename="generic/search_people", wait_for_end_of=False)
@@ -1163,6 +1163,9 @@ class RobotStdFunctions():
                         person_detected.append(temp_people)
                         people_ctr+=1
 
+                if break_if_detect and len(person_detected) > 0:
+                    break
+
             # DEBUG
             # print("people in this neck pos:")
             # for people in person_detected:
@@ -1170,7 +1173,10 @@ class RobotStdFunctions():
         
             total_person_detected.append(person_detected.copy())
             # print("Total number of people detected:", len(person_detected), people_ctr)
-            person_detected.clear()          
+            person_detected.clear()
+
+            if break_if_detect and len(person_detected) > 0:
+                break
 
         self.activate_yolo_pose(activate=False)
         # print(total_person_detected)
