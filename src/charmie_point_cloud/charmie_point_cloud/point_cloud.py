@@ -171,12 +171,28 @@ class PointCloud():
 
             # casos especiais, mas só em coordenadas especificas (não faz para a bounding box toda)
             # procuro a distancia mais próxima nos pixeis vizinhos
-            raio = 1
-            while np.all(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0):
-                raio += 1
-            nao_zeros = (self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
-            depth = np.min(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
+
+            # old version (pre bug inspection robocup 2024):
+            # raio = 1
+            # while np.all(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0)z:
+            #     raio += 1
+            # nao_zeros = (self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
+            # depth = np.min(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
             #print('u, v, min ', u, v, depth)
+
+            # new version (post bug inspection robocup 2024)
+            raio = 1
+            max_radius = 16
+            while np.all(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0) and raio <= max_radius:
+                raio += 1
+            
+            if raio < max_radius:
+                nao_zeros = (self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
+                depth = np.min(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
+                #print('u, v, min ', u, v, depth)
+            else: # error case
+                depth = self.MIN_DIST
+                # print("ERROR - BUG INSPECTION ROBOCUP 2024")
 
         Z = depth
         X = (v - self.cx) * depth / self.fx
