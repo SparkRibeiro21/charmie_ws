@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB
 
 import cv2 
 # import threading
@@ -44,7 +44,7 @@ class ROS2TaskNode(Node):
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
         self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)  
         # Low Level 
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
+        # self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
         self.torso_pos_publisher = self.create_publisher(Pose2D, "torso_pos", 10)
@@ -98,6 +98,7 @@ class ROS2TaskNode(Node):
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+        self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         #GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
 
@@ -141,7 +142,9 @@ class ROS2TaskNode(Node):
 
         if self.ros2_modules["charmie_low_level"]:
             while not self.set_acceleration_ramp_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Low Level Command...")
+                self.get_logger().warn("Waiting for Server Low Level Acceleration Command...")
+            while not self.set_rgb_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Low Level RGB Command...")
 
         if self.ros2_modules["charmie_navigation"]:
             while not self.nav_trigger_client.wait_for_service(1.0):
@@ -656,6 +659,12 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+    def call_rgb_command_server(self, request=SetRGB.Request(), wait_for_end_of=True):
+        
+        self.set_rgb_client.call_async(request)
+        
+        self.rgb_success = True
+        self.rgb_message = "Value Sucessfully Sent"
 
 
 
@@ -727,14 +736,12 @@ class RobotStdFunctions():
             self.node.get_logger().error("Could not generate save speech as as filename and command types are incompatible.")
             return False, "Could not generate save speech as as filename and command types are incompatible."
 
-    def set_rgb(self, command="", wait_for_end_of=True):
-        
-        temp = Int16()
-        temp.data = command
-        self.node.rgb_mode_publisher.publish(temp)
+    def set_rgb(self, command=0, wait_for_end_of=True):
 
-        self.node.rgb_success = True
-        self.node.rgb_message = "Value Sucessfully Sent"
+        request = SetRGB.Request()
+        request.colour = int(command)
+
+        self.node.call_rgb_command_server(request=request, wait_for_end_of=wait_for_end_of)
 
         return self.node.rgb_success, self.node.rgb_message
  

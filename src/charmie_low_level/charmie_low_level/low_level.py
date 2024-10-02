@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, Float32
 from charmie_interfaces.msg import Encoders
-from charmie_interfaces.srv import SetAcceleration
+from charmie_interfaces.srv import SetAcceleration, SetRGB, GetStartButton, GetVCCs
 import serial
 import time
 import struct
@@ -250,7 +250,7 @@ class LowLevelNode(Node):
         super().__init__("Low_Level")
         self.get_logger().info("Initialised CHARMIE Low Level Node")
         
-        self.rgb_mode_subscriber = self.create_subscription(Int16, "rgb_mode", self.rgb_mode_callback , 10)
+        # self.rgb_mode_subscriber = self.create_subscription(Int16, "rgb_mode", self.rgb_mode_callback , 10)
         
         self.start_button_publisher = self.create_publisher(Bool, "get_start_button", 10)
         self.flag_start_button_subscriber = self.create_subscription(Bool, "flag_start_button", self.flag_start_button_callback , 10)
@@ -277,8 +277,11 @@ class LowLevelNode(Node):
 
 
         ### Services (Clients) ###
-        # Set Acceleration
+        # Acceleration
         self.server_set_acceleration = self.create_service(SetAcceleration, "set_acceleration_ramp", self.callback_set_acceleration) 
+        # RGB 
+        self.server_set_rgb = self.create_service(SetRGB, "rgb_mode", self.callback_set_rgb) 
+        
 
         self.create_timer(0.1, self.timer_callback)
         # self.create_timer(1.0, self.timer_callback2)
@@ -329,7 +332,122 @@ class LowLevelNode(Node):
         response.message = "Set Acceleration Ramp for Motors to " + str(request.data)
         return response
 
+    def callback_set_rgb(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # int32 colour   # value of colour using the constant variables to ease RGB_MODE encoding 
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        if request.colour >= 0:
+            
+            colour_str = self.colour_to_string(request.colour)
+
+            self.get_logger().info("Received Set RGB: %s" %(colour_str+"("+str(request.colour)+")"))
+            
+            self.robot.set_omni_variables(self.robot.RGB, request.colour)
+
+            # returns whether the message was played and some informations regarding status
+            response.success = True
+            response.message = "Set RGB to " + colour_str
+
+        else:
+
+            # returns whether the message was played and some informations regarding status
+            response.success = False
+            response.message = "Error - Invalid RGB Value Received."
+
+        return response
     
+    def colour_to_string(self, colour=0):
+        
+        # Constant Variables to ease RGB_MODE coding
+        # RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+        # SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+        # CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+
+        final_str = ""
+
+        if colour < 100:
+            
+            temp_clr = (int)(colour/10)
+            temp_mode = (int)(colour%10)
+            # print(temp_clr, temp_mode)
+
+            match temp_clr:
+                case 0:
+                    colour_str = "Red"
+                case 1:
+                    colour_str = "Green"
+                case 2:
+                    colour_str = "Blue"
+                case 3:
+                    colour_str = "Yellow"
+                case 4:
+                    colour_str = "Magenta"
+                case 5:
+                    colour_str = "Cyan"
+                case 6:
+                    colour_str = "White"
+                case 7:
+                    colour_str = "Orange"
+                case 8:
+                    colour_str = "Pink"
+                case 9:
+                    colour_str = "Brown"
+
+            match temp_mode:
+                case 0:
+                    mode_str = "Set_Colour"
+                case 1:
+                    mode_str = "Blink_Long"
+                case 2:
+                    mode_str = "Blink_Quick"
+                case 3:
+                    mode_str = "Rotate"
+                case 4:
+                    mode_str = "Breath"
+                case 5:
+                    mode_str = "Alternate_Quarters"
+                case 6:
+                    mode_str = "Half_Rotate"
+                case 7:
+                    mode_str = "Moon"
+                case 8:
+                    mode_str = "Back_and_Forth_4"
+                case 9:
+                    mode_str = "Back_and_Forth_8"
+
+            final_str = colour_str + "+" + mode_str
+
+        else: # custom modes
+
+            match colour:
+                case 255:
+                    colour_str = "Clear"
+                case 100:
+                    colour_str = "Rainbow_Rotate"
+                case 101:
+                    colour_str = "Rainbow_All"
+                case 102:
+                    colour_str = "Police"
+                case 103:
+                    colour_str = "Moon_to_Colour"
+                case 104:
+                    colour_str = "Portugal_Flag"
+                case 105:
+                    colour_str = "France_Flag"
+                case 106:
+                    colour_str = "Netherlands_Flag"
+                case _: # default
+                    colour_str = "ERRROR:COLOUR_NOT_EXIST"
+
+            final_str = colour_str
+
+        return final_str
+
     def torso_test_callback(self, data: Pose2D):
 
         print("receiving torso position ")
@@ -512,9 +630,9 @@ class LowLevelNode(Node):
         self.robot.set_omni_flags(self.robot.MOVEMENT, flag.data)
         
 
-    def rgb_mode_callback(self, mode: Int16):
-        print("Received RGB mode: ", mode.data)
-        self.robot.set_omni_variables(self.robot.RGB, mode.data)
+    # def rgb_mode_callback(self, mode: Int16):
+    #     print("Received RGB mode: ", mode.data)
+    #     self.robot.set_omni_variables(self.robot.RGB, mode.data)
 
     def torso_pos_callback(self, pos: Pose2D):
         print("Received TORSO pos:", pos.x, pos.y)

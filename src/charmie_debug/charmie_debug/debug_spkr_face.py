@@ -13,19 +13,19 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              False,
     "charmie_audio":            False,
-    "charmie_face":             True,
+    "charmie_face":             False,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
     "charmie_lidar":            False,
     "charmie_localisation":     False,
-    "charmie_low_level":        False,
+    "charmie_low_level":        True,
     "charmie_navigation":       False,
     "charmie_neck":             False,
     "charmie_obstacles":        False,
     "charmie_odometry":         False,
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
@@ -87,6 +87,30 @@ class TaskMain():
 
                 # while True:
                 #    pass
+
+                self.robot.set_rgb(RED+ALTERNATE_QUARTERS)
+                time.sleep(0.5)
+                self.robot.set_rgb(BLUE+HALF_ROTATE)
+                time.sleep(0.5)
+                self.robot.set_rgb(POLICE)
+                time.sleep(0.5)
+                self.robot.set_rgb(0)
+                time.sleep(0.5)
+                self.robot.set_rgb(99)
+                time.sleep(0.5)
+                self.robot.set_rgb(100)
+                time.sleep(0.5)
+                self.robot.set_rgb(107)
+                time.sleep(0.5)
+                self.robot.set_rgb(-1)
+                time.sleep(0.5)
+                self.robot.set_rgb(59.4)
+                time.sleep(0.5)
+
+
+
+                while True:
+                    pass
 
                 self.robot.set_face("help_pick_milk")
                 self.robot.set_speech(filename="receptionist/favourite_drink/recep_drink_milk", command="", wait_for_end_of=True)
