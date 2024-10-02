@@ -7,7 +7,7 @@ from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, GetVCCs
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -47,10 +47,6 @@ class DebugVisualNode(Node):
         # get neck position
         self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
         
-        # get yolo pose person detection filtered
-        # self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
-        # self.object_detected_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.get_object_detected_callback, 10)
-
         # lidar
         self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.lidar_callback , 10)
 
@@ -83,13 +79,6 @@ class DebugVisualNode(Node):
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
         self.objects_filtered_hand_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
         
-        # self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-        # self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
-        # self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
-        # self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'doors_detected_filtered_hand', self.doors_detected_filtered_hand_callback, 10)
-        # self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
-        # self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
-
         ### Services (Clients) ###
 		# Arm (Ufactory)
         self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
@@ -121,6 +110,7 @@ class DebugVisualNode(Node):
         self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+        self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
 
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
@@ -136,6 +126,14 @@ class DebugVisualNode(Node):
         self.activate_obstacles_success = True
         self.activate_obstacles_message = ""
 
+        self.battery_voltage = 0.0
+        self.emergency_stop = False
+        self.waited_for_end_of_get_vccs = False
+        self.battery_timer_ctr = 0
+        self.previous_is_low_level_on = False
+        self.battery_timer()
+        self.create_timer(1.0, self.battery_timer)
+        
         self.head_rgb = Image()
         self.hand_rgb = Image()
         self.head_depth = Image()
@@ -148,17 +146,9 @@ class DebugVisualNode(Node):
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
         self.detected_objects_hand = ListOfDetectedObject()
-        # self.detected_doors = Yolov8Objects()
-        # self.detected_doors_hand = Yolov8Objects()
-        # self.detected_shoes = Yolov8Objects()
-        # self.detected_shoes_hand = Yolov8Objects()
         self.new_detected_people = False
         self.new_detected_objects = False
         self.new_detected_objects_hand = False
-        # self.new_detected_doors = False
-        # self.new_detected_doors_hand = False
-        # self.new_detected_shoes = False
-        # self.new_detected_shoes_hand = False
 
         self.robot_x = 0.0
         self.robot_y = 0.0
@@ -232,20 +222,35 @@ class DebugVisualNode(Node):
 
         if self.new_detected_objects: # or self.new_detected_shoes or self.new_detected_doors:
             self.new_detected_objects = False
-            # self.new_detected_shoes = False
-            # self.new_detected_doors = False
             self.is_yolo_obj_head_comm = True
         else:
             self.is_yolo_obj_head_comm = False
     
         if self.new_detected_objects_hand: # or self.new_detected_shoes_hand or self.new_detected_doors_hand:
             self.new_detected_objects_hand = False
-            # self.new_detected_shoes_hand = False
-            # self.new_detected_doors_hand = False
             self.is_yolo_obj_hand_comm = True
         else:
             self.is_yolo_obj_hand_comm = False
 
+    def battery_timer(self):
+        
+        self.battery_timer_ctr += 1
+        check = False
+        current_is_low_level_on = self.set_acceleration_ramp_client.wait_for_service(0.0)
+        
+        if current_is_low_level_on and not self.previous_is_low_level_on:
+            check = True
+            self.battery_timer_ctr = 0
+        elif self.battery_timer_ctr >= 60.0 and current_is_low_level_on:
+            check = True
+            self.battery_timer_ctr = 0
+
+        if check:
+            print("CHECKING BATTERY VOLTAGE")
+            request=GetVCCs.Request()
+            self.call_vccs_command_server(request=request)
+
+        self.previous_is_low_level_on = current_is_low_level_on
 
     def nodes_used_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
         # Type of service received: 
@@ -381,23 +386,6 @@ class DebugVisualNode(Node):
         self.hand_yo_time = time.time()
         self.hand_yo_fps = round(1/(self.hand_yo_time-self.last_hand_yo_time), 1)
 
-    """
-    def doors_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_doors = det_object
-        self.new_detected_doors = True
-
-    def doors_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_doors_hand = det_object
-        self.new_detected_doors_hand = True
-
-    def shoes_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_shoes = det_object
-        self.new_detected_shoes = True
-
-    def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_shoes_hand = det_object
-        self.new_detected_shoes_hand = True
-    """
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
 
@@ -461,24 +449,13 @@ class DebugVisualNode(Node):
         self.is_navigating = True
         print(nav)
 
-
     def flag_navigation_reached_callback(self, flag: Bool):
         self.is_navigating = False
-
 
     def get_neck_position_callback(self, pose: NeckPosition):
         # print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
         self.neck_pan = -math.radians(- pose.pan)
         self.neck_tilt = -math.radians(- pose.tilt)
-
-
-    # def get_person_pose_callback(self, pose: Yolov8Pose):
-    #     # print("Received new yolo pose. Number of people = ", pose.num_person)
-    #     self.person_pose = pose
-
-    # def get_object_detected_callback(self, obj: Yolov8Objects):
-    #     # print("Received new yolo objects. Number of objects = ", obj.num_person)
-    #     self.object_detected = obj
 
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
@@ -498,7 +475,26 @@ class DebugVisualNode(Node):
         self.search_for_object = points
         self.new_search_for_object = True
 
+    def call_vccs_command_server(self, request=GetVCCs.Request()):
+    
+        future = self.get_vccs_client.call_async(request)
+        future.add_done_callback(self.callback_call_vccs_command)
+        
+    def callback_call_vccs_command(self, future): 
 
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info("Battery_Voltage: "+str(response.battery_voltage) + ", Emergency_Button: " + str(response.emergency_stop))
+            self.battery_voltage = response.battery_voltage
+            self.emergency_stop = response.emergency_stop
+            self.waited_for_end_of_get_vccs = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
+
+    
 class CheckNodesMain():
 
     def __init__(self, node: DebugVisualNode):
@@ -593,6 +589,7 @@ class CheckNodesMain():
             if not self.node.set_acceleration_ramp_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
                 # self.node.get_logger().warn("Waiting for Server Navigation ...")
                 self.CHECK_LOW_LEVEL_NODE = False
+                self.node.battery_voltage = 0.0
             else:
                 self.CHECK_LOW_LEVEL_NODE = True
 
@@ -720,6 +717,8 @@ class DebugVisualMain():
 
         self.MAP_ZOOM_INC = 0.2
         self.MAP_SHIFT_INC = 1.0
+
+        self.first_pos_h = 18.1
         
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -824,10 +823,10 @@ class DebugVisualMain():
         self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*17, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
 
-        self.toggle_record = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(19.25)), 40, 16)
-        self.toggle_pause_cams = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*21.75), 40, 16)
-        self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.25), 40, 16)
-        self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*26.75), 40, 16)
+        self.toggle_record =         Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(19.25)), 40, 16)
+        self.toggle_pause_cams =     Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(21.75-0.2)), 40, 16)
+        self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(24.25-0.4)), 40, 16)
+        self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(26.75-0.6)), 40, 16)
 
         self.toggle_activate_objects_head =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+50, 40, 16)
         self.toggle_activate_furniture_head = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90,  self.cams_initial_height+50, 40, 16)
@@ -879,16 +878,8 @@ class DebugVisualMain():
     
         self.curr_detected_objects = ListOfDetectedObject()
         self.last_detected_objects = ListOfDetectedObject()
-        # self.curr_detected_objects_hand = Yolov8Objects()
-        # self.last_detected_objects_hand = Yolov8Objects()
-        # self.curr_detected_shoes = Yolov8Objects()
-        # self.last_detected_shoes = Yolov8Objects()
-        # self.curr_detected_shoes_hand = Yolov8Objects()
-        # self.last_detected_shoes_hand = Yolov8Objects()
-        # self.curr_detected_furniture = Yolov8Objects()
-        # self.last_detected_furniture = Yolov8Objects()
-        # self.curr_detected_furniture_hand = Yolov8Objects()
-        # self.last_detected_furniture_hand = Yolov8Objects()
+        self.curr_detected_objects_hand = ListOfDetectedObject()
+        self.last_detected_objects_hand = ListOfDetectedObject()
 
         # robot info
         self.robot_radius = self.node.robot_radius
@@ -1063,7 +1054,6 @@ class DebugVisualMain():
 
 
     def draw_cameras(self):
-        
 
         self.curr_head_rgb = self.node.head_rgb
         self.curr_head_depth = self.node.head_depth
@@ -1262,12 +1252,10 @@ class DebugVisualMain():
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
                 self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cam_height_+2*self.cams_initial_height+(self.cam_height_//2))
 
-
-        first_pos_h = 18.1
-        self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*first_pos_h)
-        self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+2.5))
-        self.draw_text("Depth Head:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+5))
-        self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+7.5))
+        self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*self.first_pos_h)
+        self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+2.5-0.2))
+        self.draw_text("Depth Head:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+5.0-0.4))
+        self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+7.5-0.6))
 
     def draw_activates(self):
 
@@ -1472,48 +1460,28 @@ class DebugVisualMain():
 
         self.curr_detected_objects = self.node.detected_objects
         self.curr_detected_objects_hand = self.node.detected_objects_hand
-        # self.curr_detected_shoes = self.node.detected_shoes
-        # self.curr_detected_shoes_hand = self.node.detected_shoes_hand
-        # self.curr_detected_furniture = self.node.detected_doors
-        # self.curr_detected_furniture_hand = self.node.detected_doors_hand
 
         if self.toggle_pause_cams.getValue():
             used_detected_objects = self.last_detected_objects
             used_detected_objects_hand = self.last_detected_objects_hand
-            # used_detected_shoes = self.last_detected_shoes
-            # used_detected_shoes_hand = self.last_detected_shoes_hand
-            # used_detected_furniture = self.last_detected_furniture
-            # used_detected_furniture_hand = self.last_detected_furniture_hand
         else:
             used_detected_objects = self.curr_detected_objects 
             used_detected_objects_hand = self.curr_detected_objects_hand
-            # used_detected_shoes = self.curr_detected_shoes
-            # used_detected_shoes_hand = self.curr_detected_shoes_hand
-            # used_detected_furniture = self.curr_detected_furniture
-            # used_detected_furniture_hand = self.curr_detected_furniture_hand
 
         self.last_detected_objects = used_detected_objects 
         self.last_detected_objects_hand = used_detected_objects_hand
-        # self.last_detected_shoes = used_detected_shoes
-        # self.last_detected_shoes_hand = used_detected_shoes_hand
-        # self.last_detected_furniture = used_detected_furniture
-        # self.last_detected_furniture_hand = used_detected_furniture_hand
 
         if self.node.is_yolo_obj_head_comm:
             if len(used_detected_objects.objects) > 0: # or len(used_detected_shoes.objects) > 0 or len(used_detected_furniture.objects) > 0:
                 # print("DETECTED OBJECTS HEAD:")
                 pass
             self.draw_object_bounding_boxes(used_detected_objects, "head")
-            # self.draw_object_bounding_boxes(used_detected_shoes, "head")
-            # self.draw_object_bounding_boxes(used_detected_furniture, "head")
 
         if self.node.is_yolo_obj_hand_comm:
             if len(used_detected_objects_hand.objects) > 0: # or len(used_detected_shoes_hand.objects) > 0 or len(used_detected_furniture_hand.objects) > 0:
                 # print("DETECTED OBJECTS HAND:")
                 pass
             self.draw_object_bounding_boxes(used_detected_objects_hand, "hand")
-            # self.draw_object_bounding_boxes(used_detected_shoes_hand, "hand")
-            # self.draw_object_bounding_boxes(used_detected_furniture_hand, "hand")
 
     def draw_object_bounding_boxes(self, objects, head_or_hand):
 
@@ -1843,6 +1811,18 @@ class DebugVisualMain():
         
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
 
+    def draw_battery(self):
+
+        battery_colour = self.WHITE
+
+        if self.node.battery_voltage > 37.0:
+            battery_colour = self.GREEN
+        elif self.node.battery_voltage > 35.0:
+            battery_colour = self.YELLOW
+        elif self.node.battery_voltage > 10.0:
+            battery_colour = self.RED
+
+        self.draw_text("Battery: "+str(self.node.battery_voltage)+"V", self.text_font_t, battery_colour, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+10.0-0.9))
 
     def coords_to_map(self, xx, yy):
         return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE)))
@@ -1909,6 +1889,7 @@ class DebugVisualMain():
             self.draw_map()
             self.adjust_window_size()  
             self.draw_nodes_check()
+            self.draw_battery()
             self.draw_cameras()
             self.draw_activates()
             self.draw_pose_detections()
