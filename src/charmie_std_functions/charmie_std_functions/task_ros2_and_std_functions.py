@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetStartButton
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons
 
 import cv2 
 # import threading
@@ -100,6 +100,7 @@ class ROS2TaskNode(Node):
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
+        self.get_low_level_buttons = self.create_client(GetLowLevelButtons, "get_start_button")
         #GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
 
@@ -200,6 +201,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
         self.waited_for_end_of_get_vccs = False
+        self.waited_for_end_of_get_low_level_buttons = False
         self.waiting_for_pcloud = False
 
         self.br = CvBridge()
@@ -264,6 +266,10 @@ class ROS2TaskNode(Node):
         self.get_neck_position = [1.0, 1.0]
         self.battery_voltage = 0.0
         self.emergency_stop = False
+        self.start_button  = False
+        self.debug_button1 = False
+        self.debug_button2 = False
+        self.debug_button3 = False
 
 
     def send_node_used_to_gui(self):
@@ -690,6 +696,32 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
 
+    def call_low_level_buttons_command_server(self, request=GetLowLevelButtons.Request()):
+    
+        future = self.get_low_level_buttons.call_async(request)
+        future.add_done_callback(self.callback_call_low_level_buttons_command)
+        
+    def callback_call_low_level_buttons_command(self, future): 
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info("Start_Button: "+str(response.start_button) + ", Debug_Button1: " + str(response.debug_button1) + \
+                                   ", Debug_Button2: " + str(response.debug_button2) + ", Debug_Button3: " + str(response.debug_button3))
+            self.start_button = response.start_button
+            self.debug_button1 = response.debug_button1
+            self.debug_button2 = response.debug_button2
+            self.debug_button3 = response.debug_button3
+            self.waited_for_end_of_get_low_level_buttons = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
+
+
+
+
+
 
 
 
@@ -777,6 +809,18 @@ class RobotStdFunctions():
 
         return self.node.battery_voltage, self.node.emergency_stop 
 
+    def get_low_level_buttons(self, wait_for_end_of=True):
+    
+        request=GetLowLevelButtons.Request()
+
+        self.node.call_low_level_buttons_command_server(request=request)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_get_low_level_buttons:
+            pass
+        self.node.waited_for_end_of_get_low_level_buttons = False
+
+        return self.node.start_button, self.node.debug_button1, self.node.debug_button2, self.node.debug_button3 
 
 
 

@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, Float32
 from charmie_interfaces.msg import Encoders
-from charmie_interfaces.srv import SetAcceleration, SetRGB, GetStartButton, GetVCCs
+from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs
 import serial
 import time
 import struct
@@ -252,8 +252,8 @@ class LowLevelNode(Node):
         
         # self.rgb_mode_subscriber = self.create_subscription(Int16, "rgb_mode", self.rgb_mode_callback , 10)
         
-        self.start_button_publisher = self.create_publisher(Bool, "get_start_button", 10)
-        self.flag_start_button_subscriber = self.create_subscription(Bool, "flag_start_button", self.flag_start_button_callback , 10)
+        # self.start_button_publisher = self.create_publisher(Bool, "get_start_button", 10)
+        # self.flag_start_button_subscriber = self.create_subscription(Bool, "flag_start_button", self.flag_start_button_callback , 10)
         
         # self.vccs_publisher = self.create_publisher(Pose2D, "get_vccs", 10)
         # self.flag_vccs_subscriber = self.create_subscription(Bool, "flag_vccs", self.flag_vccs_callback , 10)
@@ -283,7 +283,9 @@ class LowLevelNode(Node):
         self.server_set_rgb = self.create_service(SetRGB, "rgb_mode", self.callback_set_rgb) 
         # VCCs
         self.server_vccs = self.create_service(GetVCCs, "get_vccs", self.callback_get_vccs)
-        
+        # Start Button and Debug Buttons
+        self.server_start_button = self.create_service(GetLowLevelButtons, "get_start_button", self.callback_get_start_button)
+
 
         self.create_timer(0.1, self.timer_callback)
         # self.create_timer(1.0, self.timer_callback2)
@@ -306,7 +308,7 @@ class LowLevelNode(Node):
         else:
             self.get_logger().info(f"Connected to Motor Boards! Accel Ramp Lvl = {aaa[0]}")
 
-        self.flag_get_start_button = False
+        # self.flag_get_start_button = False
         # self.flag_get_vccs = False
         self.flag_get_torso_pos = False
         self.flag_get_encoders = False
@@ -371,15 +373,6 @@ class LowLevelNode(Node):
         # float64 battery_voltage # battery voltage level 
         # bool emergency_stop     # boolean info of the emergency stop button
 
-
-        #     aux_v = self.robot.get_omni_variables(self.robot.VCCS)
-        #     print("VCC: ", aux_v[0]/10, " Emergency: ", bool(aux_v[1]))
-        # 
-        #     cmd = Pose2D()
-        #     cmd.x = float(aux_v[0]/10)
-        #     cmd.y = float(aux_v[1])
-        #    self.vccs_publisher.publish(cmd)
-
         self.get_logger().info("Received Get VCCs")
         
         aux_v = self.robot.get_omni_variables(self.robot.VCCS)
@@ -387,6 +380,29 @@ class LowLevelNode(Node):
         # returns the values requested by the get_vccs
         response.battery_voltage = ((aux_v[0]/10)*2)+1.0
         response.emergency_stop = bool(aux_v[1])
+
+        return response
+
+    def callback_get_start_button(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # ---
+        # bool start_button  # start button state 
+        # bool debug_button1 # debug1 button state boolean
+        # bool debug_button2 # debug2 button state boolean
+        # bool debug_button3 # debug3 button state boolean
+
+        self.get_logger().info("Received Get Start and Debug Buttons")
+    
+        # aux_v = self.robot.get_omni_variables(self.robot.VCCS)
+        aux_b = self.robot.get_omni_variables(self.robot.START_BUTTON)
+
+        # returns the values requested by the get_vccs
+        response.start_button  = bool(aux_b[0])
+        response.debug_button1 = False
+        response.debug_button2 = False
+        response.debug_button3 = False
 
         return response
 
@@ -466,14 +482,14 @@ class LowLevelNode(Node):
 
     def timer_callback(self):
 
-        if  self.flag_get_start_button:
-            # request start button here
-            aux_b = self.robot.get_omni_variables(self.robot.START_BUTTON)
-            print("Start Button State: ", bool(aux_b[0]))
-
-            cmd = Bool()
-            cmd.data = bool(aux_b[0])
-            self.start_button_publisher.publish(cmd)
+        # if  self.flag_get_start_button:
+        #     # request start button here
+        #     aux_b = self.robot.get_omni_variables(self.robot.START_BUTTON)
+        #     print("Start Button State: ", bool(aux_b[0]))
+        # 
+        #     cmd = Bool()
+        #     cmd.data = bool(aux_b[0])
+        #     self.start_button_publisher.publish(cmd)
 
         # if  self.flag_get_vccs:
         #     # request vccs here
@@ -523,13 +539,13 @@ class LowLevelNode(Node):
             self.get_orientation_publisher.publish(orientation)
 
 
-    def flag_start_button_callback(self, flag: Bool):
-        # print("Flag Start Button Set To: ", flag.data)
-        if flag.data:
-            self.get_logger().info("Received Reading Start Button State True")
-        else:
-            self.get_logger().info("Received Reading Start Button State False")
-        self.flag_get_start_button = flag.data
+    # def flag_start_button_callback(self, flag: Bool):
+    #     # print("Flag Start Button Set To: ", flag.data)
+    #     if flag.data:
+    #         self.get_logger().info("Received Reading Start Button State True")
+    #    else:
+    #         self.get_logger().info("Received Reading Start Button State False")
+    #     self.flag_get_start_button = flag.data
 
     # def flag_vccs_callback(self, flag: Bool):
     #     # print("Flag VCCS Set To: ", flag.data)

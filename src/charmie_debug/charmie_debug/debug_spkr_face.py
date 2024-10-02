@@ -88,8 +88,12 @@ class TaskMain():
                 # while True:
                 #    pass
 
+                
                 print(self.robot.get_vccs())
 
+                sb, d1b, d2b, d3b = self.robot.get_low_level_buttons()
+                print(sb, d1b, d2b, d3b)
+                
                 self.robot.set_rgb(RED+ALTERNATE_QUARTERS)
                 time.sleep(0.5)
                 self.robot.set_rgb(BLUE+HALF_ROTATE)
@@ -101,6 +105,10 @@ class TaskMain():
                 self.robot.set_rgb(99)
                 time.sleep(0.5)
                 self.robot.set_rgb(100)
+
+                sb, d1b, d2b, d3b = self.robot.get_low_level_buttons()
+                print(sb, d1b, d2b, d3b)
+                
                 time.sleep(0.5)
                 self.robot.set_rgb(107)
                 time.sleep(0.5)
@@ -111,9 +119,12 @@ class TaskMain():
 
                 print(self.robot.get_vccs())
 
+                sb, d1b, d2b, d3b = self.robot.get_low_level_buttons()
+                print(sb, d1b, d2b, d3b)
+                
 
                 while True:
-                    pass
+                    time.sleep(0.1)
 
                 self.robot.set_face("help_pick_milk")
                 self.robot.set_speech(filename="receptionist/favourite_drink/recep_drink_milk", command="", wait_for_end_of=True)
