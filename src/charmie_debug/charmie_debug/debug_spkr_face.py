@@ -88,7 +88,16 @@ class TaskMain():
                 # while True:
                 #    pass
 
+                self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+
+                self.robot.wait_for_start_button()
+
+                self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
                 
+
+                while True:
+                   pass
+
                 print(self.robot.get_vccs())
 
                 sb, d1b, d2b, d3b = self.robot.get_low_level_buttons()

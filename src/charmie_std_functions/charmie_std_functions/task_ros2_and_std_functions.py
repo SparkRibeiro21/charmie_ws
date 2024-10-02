@@ -43,10 +43,7 @@ class ROS2TaskNode(Node):
         # Hand
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
         self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)  
-        # Low Level 
-        # self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
-        self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
-        self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10) 
+        # Low Level
         self.torso_pos_publisher = self.create_publisher(Pose2D, "torso_pos", 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
@@ -216,7 +213,6 @@ class ROS2TaskNode(Node):
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
         self.detected_objects_hand = ListOfDetectedObject()
-        self.start_button_state = False
         self.flag_navigation_reached = False
         self.point_cloud_response = GetPointCloud.Response()
         self.obstacles = Obstacles()
@@ -349,11 +345,6 @@ class ROS2TaskNode(Node):
             self.arm_message = "Wrong Movement Received"
 
         self.get_logger().info("Received Arm Finished")
-
-    ### LOW LEVEL START BUTTON ###
-    def get_start_button_callback(self, state: Bool):
-        self.start_button_state = state.data
-        # print("Received Start Button:", state.data)
 
     ### NAVIGATION ###
     def flag_navigation_reached_callback(self, flag: Bool):
@@ -708,8 +699,8 @@ class ROS2TaskNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info("Start_Button: "+str(response.start_button) + ", Debug_Button1: " + str(response.debug_button1) + \
-                                   ", Debug_Button2: " + str(response.debug_button2) + ", Debug_Button3: " + str(response.debug_button3))
+            # self.get_logger().info("Start_Button: "+str(response.start_button) + ", Debug_Button1: " + str(response.debug_button1) + \
+            #                        ", Debug_Button2: " + str(response.debug_button2) + ", Debug_Button3: " + str(response.debug_button3))
             self.start_button = response.start_button
             self.debug_button1 = response.debug_button1
             self.debug_button2 = response.debug_button2
@@ -822,33 +813,16 @@ class RobotStdFunctions():
 
         return self.node.start_button, self.node.debug_button1, self.node.debug_button2, self.node.debug_button3 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     def wait_for_start_button(self):
 
-        self.node.start_button_state = False
+        start_button_state = False
 
-        t = Bool()
-        t.data = True
-        self.node.flag_start_button_publisher.publish(t)
+        while not start_button_state:
+            start_button_state, d1b, d2b, d3b = self.get_low_level_buttons()
+            print("Start Button State:", start_button_state)
+            time.sleep(0.1)
 
-        while not self.node.start_button_state:
-            pass
 
-        t.data = False 
-        self.node.flag_start_button_publisher.publish(t)
-        
     def wait_for_door_start(self):
         
         # max angle considered to be a door (degrees)
