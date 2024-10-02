@@ -255,8 +255,8 @@ class LowLevelNode(Node):
         self.start_button_publisher = self.create_publisher(Bool, "get_start_button", 10)
         self.flag_start_button_subscriber = self.create_subscription(Bool, "flag_start_button", self.flag_start_button_callback , 10)
         
-        self.vccs_publisher = self.create_publisher(Pose2D, "get_vccs", 10)
-        self.flag_vccs_subscriber = self.create_subscription(Bool, "flag_vccs", self.flag_vccs_callback , 10)
+        # self.vccs_publisher = self.create_publisher(Pose2D, "get_vccs", 10)
+        # self.flag_vccs_subscriber = self.create_subscription(Bool, "flag_vccs", self.flag_vccs_callback , 10)
 
         self.torso_pos_subscriber = self.create_subscription(Pose2D, "torso_pos", self.torso_pos_callback , 10)
         self.get_torso_pos_publisher = self.create_publisher(Pose2D, "get_torso_pos", 10)
@@ -281,6 +281,8 @@ class LowLevelNode(Node):
         self.server_set_acceleration = self.create_service(SetAcceleration, "set_acceleration_ramp", self.callback_set_acceleration) 
         # RGB 
         self.server_set_rgb = self.create_service(SetRGB, "rgb_mode", self.callback_set_rgb) 
+        # VCCs
+        self.server_vccs = self.create_service(GetVCCs, "get_vccs", self.callback_get_vccs)
         
 
         self.create_timer(0.1, self.timer_callback)
@@ -305,7 +307,7 @@ class LowLevelNode(Node):
             self.get_logger().info(f"Connected to Motor Boards! Accel Ramp Lvl = {aaa[0]}")
 
         self.flag_get_start_button = False
-        self.flag_get_vccs = False
+        # self.flag_get_vccs = False
         self.flag_get_torso_pos = False
         self.flag_get_encoders = False
         self.flag_get_orientation = False
@@ -360,93 +362,33 @@ class LowLevelNode(Node):
             response.message = "Error - Invalid RGB Value Received."
 
         return response
-    
-    def colour_to_string(self, colour=0):
+
+    def callback_get_vccs(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # ---
+        # float64 battery_voltage # battery voltage level 
+        # bool emergency_stop     # boolean info of the emergency stop button
+
+
+        #     aux_v = self.robot.get_omni_variables(self.robot.VCCS)
+        #     print("VCC: ", aux_v[0]/10, " Emergency: ", bool(aux_v[1]))
+        # 
+        #     cmd = Pose2D()
+        #     cmd.x = float(aux_v[0]/10)
+        #     cmd.y = float(aux_v[1])
+        #    self.vccs_publisher.publish(cmd)
+
+        self.get_logger().info("Received Get VCCs")
         
-        # Constant Variables to ease RGB_MODE coding
-        # RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
-        # SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-        # CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+        aux_v = self.robot.get_omni_variables(self.robot.VCCS)
 
-        final_str = ""
+        # returns the values requested by the get_vccs
+        response.battery_voltage = ((aux_v[0]/10)*2)+1.0
+        response.emergency_stop = bool(aux_v[1])
 
-        if colour < 100:
-            
-            temp_clr = (int)(colour/10)
-            temp_mode = (int)(colour%10)
-            # print(temp_clr, temp_mode)
-
-            match temp_clr:
-                case 0:
-                    colour_str = "Red"
-                case 1:
-                    colour_str = "Green"
-                case 2:
-                    colour_str = "Blue"
-                case 3:
-                    colour_str = "Yellow"
-                case 4:
-                    colour_str = "Magenta"
-                case 5:
-                    colour_str = "Cyan"
-                case 6:
-                    colour_str = "White"
-                case 7:
-                    colour_str = "Orange"
-                case 8:
-                    colour_str = "Pink"
-                case 9:
-                    colour_str = "Brown"
-
-            match temp_mode:
-                case 0:
-                    mode_str = "Set_Colour"
-                case 1:
-                    mode_str = "Blink_Long"
-                case 2:
-                    mode_str = "Blink_Quick"
-                case 3:
-                    mode_str = "Rotate"
-                case 4:
-                    mode_str = "Breath"
-                case 5:
-                    mode_str = "Alternate_Quarters"
-                case 6:
-                    mode_str = "Half_Rotate"
-                case 7:
-                    mode_str = "Moon"
-                case 8:
-                    mode_str = "Back_and_Forth_4"
-                case 9:
-                    mode_str = "Back_and_Forth_8"
-
-            final_str = colour_str + "+" + mode_str
-
-        else: # custom modes
-
-            match colour:
-                case 255:
-                    colour_str = "Clear"
-                case 100:
-                    colour_str = "Rainbow_Rotate"
-                case 101:
-                    colour_str = "Rainbow_All"
-                case 102:
-                    colour_str = "Police"
-                case 103:
-                    colour_str = "Moon_to_Colour"
-                case 104:
-                    colour_str = "Portugal_Flag"
-                case 105:
-                    colour_str = "France_Flag"
-                case 106:
-                    colour_str = "Netherlands_Flag"
-                case _: # default
-                    colour_str = "ERRROR:COLOUR_NOT_EXIST"
-
-            final_str = colour_str
-
-        return final_str
+        return response
 
     def torso_test_callback(self, data: Pose2D):
 
@@ -533,15 +475,15 @@ class LowLevelNode(Node):
             cmd.data = bool(aux_b[0])
             self.start_button_publisher.publish(cmd)
 
-        if  self.flag_get_vccs:
-            # request vccs here
-            aux_v = self.robot.get_omni_variables(self.robot.VCCS)
-            print("VCC: ", aux_v[0]/10, " Emergency: ", bool(aux_v[1]))
-
-            cmd = Pose2D()
-            cmd.x = float(aux_v[0]/10)
-            cmd.y = float(aux_v[1])
-            self.vccs_publisher.publish(cmd)
+        # if  self.flag_get_vccs:
+        #     # request vccs here
+        #     aux_v = self.robot.get_omni_variables(self.robot.VCCS)
+        #     print("VCC: ", aux_v[0]/10, " Emergency: ", bool(aux_v[1]))
+        # 
+        #     cmd = Pose2D()
+        #     cmd.x = float(aux_v[0]/10)
+        #     cmd.y = float(aux_v[1])
+        #    self.vccs_publisher.publish(cmd)
 
         if  self.flag_get_torso_pos:
             # request torso pos here
@@ -589,13 +531,13 @@ class LowLevelNode(Node):
             self.get_logger().info("Received Reading Start Button State False")
         self.flag_get_start_button = flag.data
 
-    def flag_vccs_callback(self, flag: Bool):
-        # print("Flag VCCS Set To: ", flag.data)
-        if flag.data:
-            self.get_logger().info("Received Reading VCCs State True")
-        else:
-            self.get_logger().info("Received Reading VCCs State False")
-        self.flag_get_vccs = flag.data
+    # def flag_vccs_callback(self, flag: Bool):
+    #     # print("Flag VCCS Set To: ", flag.data)
+    #     if flag.data:
+    #         self.get_logger().info("Received Reading VCCs State True")
+    #     else:
+    #         self.get_logger().info("Received Reading VCCs State False")
+    #     self.flag_get_vccs = flag.data
 
     def flag_torso_pos_callback(self, flag: Bool):
         # print("Flag Torso Set To: ", flag.data)
@@ -644,6 +586,93 @@ class LowLevelNode(Node):
         # print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
         self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
 
+    def colour_to_string(self, colour=0):
+        
+        # Constant Variables to ease RGB_MODE coding
+        # RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+        # SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+        # CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+
+        final_str = ""
+
+        if colour < 100:
+            
+            temp_clr = (int)(colour/10)
+            temp_mode = (int)(colour%10)
+            # print(temp_clr, temp_mode)
+
+            match temp_clr:
+                case 0:
+                    colour_str = "Red"
+                case 1:
+                    colour_str = "Green"
+                case 2:
+                    colour_str = "Blue"
+                case 3:
+                    colour_str = "Yellow"
+                case 4:
+                    colour_str = "Magenta"
+                case 5:
+                    colour_str = "Cyan"
+                case 6:
+                    colour_str = "White"
+                case 7:
+                    colour_str = "Orange"
+                case 8:
+                    colour_str = "Pink"
+                case 9:
+                    colour_str = "Brown"
+
+            match temp_mode:
+                case 0:
+                    mode_str = "Set_Colour"
+                case 1:
+                    mode_str = "Blink_Long"
+                case 2:
+                    mode_str = "Blink_Quick"
+                case 3:
+                    mode_str = "Rotate"
+                case 4:
+                    mode_str = "Breath"
+                case 5:
+                    mode_str = "Alternate_Quarters"
+                case 6:
+                    mode_str = "Half_Rotate"
+                case 7:
+                    mode_str = "Moon"
+                case 8:
+                    mode_str = "Back_and_Forth_4"
+                case 9:
+                    mode_str = "Back_and_Forth_8"
+
+            final_str = colour_str + "+" + mode_str
+
+        else: # custom modes
+
+            match colour:
+                case 255:
+                    colour_str = "Clear"
+                case 100:
+                    colour_str = "Rainbow_Rotate"
+                case 101:
+                    colour_str = "Rainbow_All"
+                case 102:
+                    colour_str = "Police"
+                case 103:
+                    colour_str = "Moon_to_Colour"
+                case 104:
+                    colour_str = "Portugal_Flag"
+                case 105:
+                    colour_str = "France_Flag"
+                case 106:
+                    colour_str = "Netherlands_Flag"
+                case _: # default
+                    colour_str = "ERRROR:COLOUR_NOT_EXIST"
+
+            final_str = colour_str
+
+        return final_str
+    
 
 def main(args=None):
     rclpy.init(args=args)

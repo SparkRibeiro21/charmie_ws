@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetStartButton
 
 import cv2 
 # import threading
@@ -99,6 +99,7 @@ class ROS2TaskNode(Node):
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
+        self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
         #GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
 
@@ -198,6 +199,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_track_object = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
+        self.waited_for_end_of_get_vccs = False
         self.waiting_for_pcloud = False
 
         self.br = CvBridge()
@@ -260,6 +262,8 @@ class ROS2TaskNode(Node):
         self.received_continuous_audio = False
 
         self.get_neck_position = [1.0, 1.0]
+        self.battery_voltage = 0.0
+        self.emergency_stop = False
 
 
     def send_node_used_to_gui(self):
@@ -659,6 +663,7 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+    #### LOW LEVEL SERVER FUNCTIONS #####
     def call_rgb_command_server(self, request=SetRGB.Request(), wait_for_end_of=True):
         
         self.set_rgb_client.call_async(request)
@@ -666,10 +671,24 @@ class ROS2TaskNode(Node):
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
+    def call_vccs_command_server(self, request=GetVCCs.Request()):
+    
+        future = self.get_vccs_client.call_async(request)
+        future.add_done_callback(self.callback_call_vccs_command)
+        
+    def callback_call_vccs_command(self, future): 
 
-
-
-
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info("Battery_Voltage: "+str(response.battery_voltage) + ", Emergency_Button: " + str(response.emergency_stop))
+            self.battery_voltage = response.battery_voltage
+            self.emergency_stop = response.emergency_stop
+            self.waited_for_end_of_get_vccs = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
 
 
 
@@ -744,7 +763,34 @@ class RobotStdFunctions():
         self.node.call_rgb_command_server(request=request, wait_for_end_of=wait_for_end_of)
 
         return self.node.rgb_success, self.node.rgb_message
- 
+
+    def get_vccs(self, wait_for_end_of=True):
+    
+        request=GetVCCs.Request()
+
+        self.node.call_vccs_command_server(request=request)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_get_vccs:
+            pass
+        self.node.waited_for_end_of_get_vccs = False
+
+        return self.node.battery_voltage, self.node.emergency_stop 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def wait_for_start_button(self):
 
         self.node.start_button_state = False

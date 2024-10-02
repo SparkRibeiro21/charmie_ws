@@ -88,6 +88,8 @@ class TaskMain():
                 # while True:
                 #    pass
 
+                print(self.robot.get_vccs())
+
                 self.robot.set_rgb(RED+ALTERNATE_QUARTERS)
                 time.sleep(0.5)
                 self.robot.set_rgb(BLUE+HALF_ROTATE)
@@ -107,6 +109,7 @@ class TaskMain():
                 self.robot.set_rgb(59.4)
                 time.sleep(0.5)
 
+                print(self.robot.get_vccs())
 
 
                 while True:
