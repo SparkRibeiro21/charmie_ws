@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso
 
 import cv2 
 # import threading
@@ -97,7 +97,8 @@ class ROS2TaskNode(Node):
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
-        self.get_low_level_buttons = self.create_client(GetLowLevelButtons, "get_start_button")
+        self.get_low_level_buttons_client = self.create_client(GetLowLevelButtons, "get_start_button")
+        self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
         #GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
 
@@ -199,6 +200,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_face = False
         self.waited_for_end_of_get_vccs = False
         self.waited_for_end_of_get_low_level_buttons = False
+        self.waited_for_end_of_get_torso_position = False
         self.waiting_for_pcloud = False
 
         self.br = CvBridge()
@@ -260,6 +262,8 @@ class ROS2TaskNode(Node):
         self.received_continuous_audio = False
 
         self.get_neck_position = [1.0, 1.0]
+        self.legs_position = 0.0
+        self.torso_position = 0.0
         self.battery_voltage = 0.0
         self.emergency_stop = False
         self.start_button  = False
@@ -689,7 +693,7 @@ class ROS2TaskNode(Node):
 
     def call_low_level_buttons_command_server(self, request=GetLowLevelButtons.Request()):
     
-        future = self.get_low_level_buttons.call_async(request)
+        future = self.get_low_level_buttons_client.call_async(request)
         future.add_done_callback(self.callback_call_low_level_buttons_command)
         
     def callback_call_low_level_buttons_command(self, future): 
@@ -708,6 +712,38 @@ class ROS2TaskNode(Node):
             self.waited_for_end_of_get_low_level_buttons = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
+
+    def call_get_torso_position_server(self, request=GetTorso.Request()):
+    
+        future = self.get_torso_position_client.call_async(request)
+        future.add_done_callback(self.callback_call_get_torso_position)
+        
+    def callback_call_get_torso_position(self, future): 
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            # self.get_logger().info("Torso: "+str(response.legs) + ", Legs: " + str(response.torso))
+            self.legs_position = response.legs
+            self.torso_position = response.torso
+            self.waited_for_end_of_get_torso_position = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -822,7 +858,6 @@ class RobotStdFunctions():
             print("Start Button State:", start_button_state)
             time.sleep(0.1)
 
-
     def wait_for_door_start(self):
         
         # max angle considered to be a door (degrees)
@@ -863,6 +898,19 @@ class RobotStdFunctions():
         self.node.torso_message = "Value Sucessfully Sent"
 
         return self.node.torso_success, self.node.torso_message
+    
+    def get_torso_position(self,  wait_for_end_of=True):
+    
+        request=GetTorso.Request()
+
+        self.node.call_get_torso_position_server(request=request)
+        
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_get_torso_position:
+            pass
+        self.node.waited_for_end_of_get_torso_position = False
+
+        return self.node.legs_position, self.node.torso_position
 
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", max_attempts=0, face_hearing="charmie_face_green", wait_for_end_of=True):
 

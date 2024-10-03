@@ -88,18 +88,18 @@ class TaskMain():
                 # while True:
                 #    pass
 
-                self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
 
-                self.robot.wait_for_start_button()
+                # self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+                # self.robot.wait_for_start_button()
+                # self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
 
-                self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
-                
-
-                # while True:
-                #     sb, d1b, d2b, d3b = self.robot.get_low_level_buttons()
-                #     print(sb, d1b, d2b, d3b)
-                #     time.sleep(1.0)
-                #     pass
+                while True:
+                    # sb, d1b, d2b, d3b = self.robot.get_low_level_buttons()
+                    # print(sb, d1b, d2b, d3b)
+                    legs, torso = self.robot.get_torso_position()
+                    print(legs, torso)
+                    time.sleep(1.0)
+                    pass
 
                 print(self.robot.get_vccs())
 

@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, Float32
 from charmie_interfaces.msg import Encoders
-from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs
+from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs, GetTorso, SetTorso
 import serial
 import time
 import struct
@@ -278,8 +278,8 @@ class LowLevelNode(Node):
         # Start Button and Debug Buttons
         self.server_start_button = self.create_service(GetLowLevelButtons, "get_start_button", self.callback_get_start_button)
         # Torso
-        self.server_start_button = self.create_service(GetLowLevelButtons, "set_torso_position", self.callback_get_start_button)
-        self.server_start_button = self.create_service(GetLowLevelButtons, "get_torso_position", self.callback_get_start_button)
+        self.server_get_torso_position = self.create_service(GetTorso, "get_torso_position", self.callback_get_torso_position)
+        # self.server_set_torso_position = self.create_service(SetTorso, "set_torso_position", self.callback_set_torso_position)
 
 
         self.create_timer(0.1, self.timer_callback)
@@ -305,7 +305,7 @@ class LowLevelNode(Node):
 
         # self.flag_get_start_button = False
         # self.flag_get_vccs = False
-        self.flag_get_torso_pos = False
+        # self.flag_get_torso_pos = False
         self.flag_get_encoders = False
         self.flag_get_orientation = False
 
@@ -402,6 +402,46 @@ class LowLevelNode(Node):
 
         return response
 
+    def callback_get_torso_position(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # ---
+        # int32 legs  # up and down torso movement 
+        # int32 torso # take a bow torso movement 
+        
+        self.get_logger().info("Received Get Torso Position")
+    
+        aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
+        print("Legs_pos: ", aux_t[0], " Torso_pos: ", aux_t[1])
+
+        # returns the values requested by the get_torso_position
+        response.legs = aux_t[0] # up and down torso movement 
+        response.torso = aux_t[1] # take a bow torso movement 
+        # print(response.legs, response.torso)
+
+        return response
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
     def torso_move_callback(self, data: Pose2D):
 
         print("receiving torso position ")
@@ -497,15 +537,15 @@ class LowLevelNode(Node):
         #     cmd.y = float(aux_v[1])
         #    self.vccs_publisher.publish(cmd)
 
-        if  self.flag_get_torso_pos:
-            # request torso pos here
-            aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
-            print("Legs_pos: ", aux_t[0], " Torso_pos: ", aux_t[1])
-        
-            cmd = Pose2D()
-            cmd.x = float(aux_t[0])
-            cmd.y = float(aux_t[1])
-            self.get_torso_pos_publisher.publish(cmd)
+        # if  self.flag_get_torso_pos:
+        #     # request torso pos here
+        #     aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
+        #     print("Legs_pos: ", aux_t[0], " Torso_pos: ", aux_t[1])
+        # 
+        #     cmd = Pose2D()
+        #     cmd.x = float(aux_t[0])
+        #     cmd.y = float(aux_t[1])
+        #     self.get_torso_pos_publisher.publish(cmd)
 
         if  self.flag_get_encoders:
             # request encoders here
@@ -551,13 +591,13 @@ class LowLevelNode(Node):
     #         self.get_logger().info("Received Reading VCCs State False")
     #     self.flag_get_vccs = flag.data
 
-    def flag_torso_pos_callback(self, flag: Bool):
-        # print("Flag Torso Set To: ", flag.data)
-        if flag.data:
-            self.get_logger().info("Received Reading Torso State True")
-        else:
-            self.get_logger().info("Received Reading Torso State False")
-        self.flag_get_torso_pos = flag.data
+    # def flag_torso_pos_callback(self, flag: Bool):
+    #     # print("Flag Torso Set To: ", flag.data)
+    #     if flag.data:
+    #         self.get_logger().info("Received Reading Torso State True")
+    #     else:
+    #         self.get_logger().info("Received Reading Torso State False")
+    #     self.flag_get_torso_pos = flag.data
 
     def flag_encoders_callback(self, flag: Bool):
         # print("Flag Encoders Set To: ", flag.data)
@@ -583,15 +623,14 @@ class LowLevelNode(Node):
             self.get_logger().info("Received Set Movement State False")
         self.robot.set_omni_flags(self.robot.MOVEMENT, flag.data)
         
-
     # def rgb_mode_callback(self, mode: Int16):
     #     print("Received RGB mode: ", mode.data)
     #     self.robot.set_omni_variables(self.robot.RGB, mode.data)
 
-    def torso_pos_callback(self, pos: Pose2D):
-        print("Received TORSO pos:", pos.x, pos.y)
-        self.robot.set_omni_variables(self.robot.LEGS, int(pos.x))
-        self.robot.set_omni_variables(self.robot.TORSO, int(pos.y))
+    # def torso_pos_callback(self, pos: Pose2D):
+    #     print("Received TORSO pos:", pos.x, pos.y)
+    #     self.robot.set_omni_variables(self.robot.LEGS, int(pos.x))
+    #     self.robot.set_omni_variables(self.robot.TORSO, int(pos.y))
 
     def omni_move_callback(self, omni:Vector3):
         ### MUST UNCOMMENT LATER, TESTING DEBUG 
