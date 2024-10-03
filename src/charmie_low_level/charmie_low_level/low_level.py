@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, Float32
 from charmie_interfaces.msg import Encoders
-from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs, GetTorso, SetTorso
+from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs, GetTorso, SetTorso, ActivateBool
 import serial
 import time
 import struct
@@ -265,8 +265,9 @@ class LowLevelNode(Node):
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
 
+        # IMU
         self.get_orientation_publisher = self.create_publisher(Float32, "get_orientation", 10)
-        self.flag_orientation_subscriber = self.create_subscription(Bool, "flag_orientation", self.flag_orientation_callback , 10)
+        # self.flag_orientation_subscriber = self.create_subscription(Bool, "flag_orientation", self.flag_orientation_callback , 10)
 
         ### Services (Clients) ###
         # Acceleration
@@ -280,6 +281,12 @@ class LowLevelNode(Node):
         # Torso
         self.server_get_torso_position = self.create_service(GetTorso, "get_torso_position", self.callback_get_torso_position)
         self.server_set_torso_position = self.create_service(SetTorso, "set_torso_position", self.callback_set_torso_position)
+        # IMU
+        self.activate_orientation = self.create_service(ActivateBool, "activate_orientation", self.callback_activate_orientation)
+        # Encoders
+        # self.activate_encoders = self.create_service(ActivateBool, "activate_encoders", self.callback_activate_encoders)
+        # Set Movement
+        # self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
 
 
         self.create_timer(0.1, self.timer_callback)
@@ -444,6 +451,22 @@ class LowLevelNode(Node):
         response.message = "Set torso L: " + str(request.legs) + ", T: " + str(request.torso)
         return response
     
+    def callback_activate_orientation(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # bool activate   # activate or deactivate
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+
+        self.get_logger().info("Received Activate Orientation: %s" %(request.activate))
+        self.flag_get_orientation = request.activate
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Sucessfully Activated Orientation to: " + str(request.activate)
+        return response
 
 
 
@@ -464,7 +487,7 @@ class LowLevelNode(Node):
 
     
 
-    def torso_move_callback(self, data: Pose2D):
+    def torso_move_callback(self, data: Pose2D): # used by ps4 controller
 
         print("receiving torso position ")
         estado_legs = int(data.x)
@@ -508,35 +531,25 @@ class LowLevelNode(Node):
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, False)
             # nao amnda
 
+    # here for when we add topic for readings all 9 axis of localizatio n IMU
+    """
     def timer_callback2(self):
-            # request start button here
-            # aux_s = self.robot.get_omni_variables(self.robot.START_BUTTON)
-            # print("Start Button State: ", bool(aux_s[0]))
 
-            # aux_v = self.robot.get_omni_variables(self.robot.VCCS)
-            # print("VCC: ", aux_v[0]/5, " Emergency: ", bool(aux_v[1]))
+        aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
+        print("ORIENTATION:", (aux_o[0]<<8|aux_o[1])/10)
 
-            # aux_b = self.robot.get_omni_variables(self.robot.DEBUG_BUTTONS)
-            # print("DEBUG BUTTONS STATE: ", aux_b[0], (aux_b[0] >> 0)&1, (aux_b[0] >> 1)&1, (aux_b[0] >> 2)&1)
-
-            # aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
-            # print("LEGS HEIGHT:", aux_t[0], "TORSO ANGLE:", aux_t[1])
-
-            aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
-            print("ORIENTATION:", (aux_o[0]<<8|aux_o[1])/10)
-
-            aux_i = self.robot.get_omni_variables(self.robot.IMU)
-            print("MAGX:", struct.unpack('!h', struct.pack('!BB', aux_i[0], aux_i[1]))[0],
-                  "MAGY:", struct.unpack('!h', struct.pack('!BB', aux_i[2], aux_i[3]))[0],             
-                  "MAGZ:", struct.unpack('!h', struct.pack('!BB', aux_i[4], aux_i[5]))[0],
-                  "ACCX:", struct.unpack('!h', struct.pack('!BB', aux_i[6], aux_i[7]))[0],
-                  "ACCY:", struct.unpack('!h', struct.pack('!BB', aux_i[8], aux_i[9]))[0],
-                  "ACCZ:", struct.unpack('!h', struct.pack('!BB', aux_i[10], aux_i[11]))[0],
-                  "GYRX:", struct.unpack('!h', struct.pack('!BB', aux_i[12], aux_i[13]))[0],
-                  "GYRY:", struct.unpack('!h', struct.pack('!BB', aux_i[14], aux_i[15]))[0],
-                  "GYRZ:", struct.unpack('!h', struct.pack('!BB', aux_i[16], aux_i[17]))[0],
-                  )
-            
+        aux_i = self.robot.get_omni_variables(self.robot.IMU)
+        print("MAGX:", struct.unpack('!h', struct.pack('!BB', aux_i[0], aux_i[1]))[0],
+                "MAGY:", struct.unpack('!h', struct.pack('!BB', aux_i[2], aux_i[3]))[0],             
+                "MAGZ:", struct.unpack('!h', struct.pack('!BB', aux_i[4], aux_i[5]))[0],
+                "ACCX:", struct.unpack('!h', struct.pack('!BB', aux_i[6], aux_i[7]))[0],
+                "ACCY:", struct.unpack('!h', struct.pack('!BB', aux_i[8], aux_i[9]))[0],
+                "ACCZ:", struct.unpack('!h', struct.pack('!BB', aux_i[10], aux_i[11]))[0],
+                "GYRX:", struct.unpack('!h', struct.pack('!BB', aux_i[12], aux_i[13]))[0],
+                "GYRY:", struct.unpack('!h', struct.pack('!BB', aux_i[14], aux_i[15]))[0],
+                "GYRZ:", struct.unpack('!h', struct.pack('!BB', aux_i[16], aux_i[17]))[0],
+                )
+    """   
 
     def timer_callback(self):
 
@@ -629,13 +642,13 @@ class LowLevelNode(Node):
             self.get_logger().info("Received Reading Encoder State False")
         self.flag_get_encoders = flag.data
 
-    def flag_orientation_callback(self, flag: Bool):
-        # print("Flag Orientation Set To: ", flag.data)
-        if flag.data:
-            self.get_logger().info("Received Reading Orientation State True")
-        else:
-            self.get_logger().info("Received Reading Orientation State False")
-        self.flag_get_orientation = flag.data
+    # def flag_orientation_callback(self, flag: Bool):
+    #     # print("Flag Orientation Set To: ", flag.data)
+    #     if flag.data:
+    #         self.get_logger().info("Received Reading Orientation State True")
+    #     else:
+    #         self.get_logger().info("Received Reading Orientation State False")
+    #     self.flag_get_orientation = flag.data
 
     def set_movement_callback(self, flag: Bool):
         # print("Set Movement Set To: ", flag.data)

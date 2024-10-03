@@ -43,6 +43,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PS4Controller.msg"
   "msg/RGB.msg"
   "msg/TarNavSDNL.msg"
+  "srv/ActivateBool.srv"
   "srv/ActivateObstacles.srv"
   "srv/ActivateYoloObjects.srv"
   "srv/ActivateYoloPose.srv"
