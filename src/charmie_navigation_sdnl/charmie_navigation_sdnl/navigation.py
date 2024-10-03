@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, Float32, Int16
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3, Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.msg import TarNavSDNL, Obstacles, ListOfDetectedPerson, Obstacles
-from charmie_interfaces.srv import NavTrigger, SetAcceleration, ActivateBool
+from charmie_interfaces.srv import NavTrigger, SetAcceleration, ActivateBool, SetRGB
 from sensor_msgs.msg import Image
 
 import cv2
@@ -825,7 +825,6 @@ class NavSDNLNode(Node):
 
         ### TOPICS ###
         # Low Level 
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         # Create PUBs/SUBs
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
@@ -847,6 +846,7 @@ class NavSDNLNode(Node):
         # Low level
         self.activate_orientation_client = self.create_client(ActivateBool, "activate_orientation")
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+        self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
 
         while not self.set_acceleration_ramp_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Low Level...")
@@ -924,17 +924,16 @@ class NavSDNLNode(Node):
         # cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
         # cv2.waitKey(10)
 
-    def set_rgb(self, command="", wait_for_end_of=True):
-        
-        temp = Int16()
-        temp.data = command
-        self.rgb_mode_publisher.publish(temp)
+    def set_rgb(self, command=0, wait_for_end_of=True):
 
+        request = SetRGB.Request()
+        request.colour = int(command)
+
+        self.set_rgb_client.call_async(request)
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
         return self.rgb_success, self.rgb_message
-
 
     ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
     def call_set_acceleration_ramp_server(self, acceleration):

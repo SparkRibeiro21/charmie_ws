@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 from example_interfaces.msg import String, Float32, Int16
-from charmie_interfaces.srv import GetAudio, CalibrateAudio, ContinuousGetAudio
+from charmie_interfaces.srv import GetAudio, CalibrateAudio, ContinuousGetAudio, SetRGB
 
 import io
 from pydub import AudioSegment
@@ -133,7 +133,8 @@ class WhisperAudio():
         self.r.energy_threshold = self.energy
         self.r.pause_threshold = self.pause
         self.r.dynamic_energy_threshold = self.dynamic_energy
-        self.check_threshold = Float32()
+        # self.check_threshold = Float32()
+        self.check_threshold = 0.0
 
         self.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
         
@@ -758,7 +759,7 @@ class AudioNode(Node):
         self.get_logger().info("Initialised CHARMIE Audio v2 Node")
 
         # Low Level: RGB
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
+        self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         # Audio: Help in Debug
         self.audio_interpreted_publisher = self.create_publisher(String, "audio_interpreted", 10)
         self.audio_final_publisher = self.create_publisher(String, "audio_final", 10)
@@ -769,6 +770,9 @@ class AudioNode(Node):
         self.server_continuous_audio = self.create_service(ContinuousGetAudio, "continuous_audio", self.callback_continuous_audio)
         self.server_calibrate_ambient_noise = self.create_service(CalibrateAudio, "calibrate_audio", self.callback_calibrate_audio)
         self.get_logger().info("Audio Servers have been started")
+
+        self.rgb_success = True
+        self.rgb_message = ""
 
         self.check_microphone()
 
@@ -1068,13 +1072,16 @@ class AudioNode(Node):
         response.message = "Finished Continuous Audio Mode"
         return response
     
+    def set_rgb(self, command=0, wait_for_end_of=True):
 
-    def set_rgb(self, command):
-        
-        rgb = Int16()
-        rgb.data = command
-        self.rgb_mode_publisher.publish(rgb)
-        print("Published RGB:", command)
+        request = SetRGB.Request()
+        request.colour = int(command)
+
+        self.set_rgb_client.call_async(request)
+        self.rgb_success = True
+        self.rgb_message = "Value Sucessfully Sent"
+
+        return self.rgb_success, self.rgb_message
 
 
 def main(args=None):

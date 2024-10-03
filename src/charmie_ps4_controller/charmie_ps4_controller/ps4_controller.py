@@ -3,10 +3,10 @@
 import rclpy
 from rclpy.node import Node
 
-from charmie_interfaces.msg import PS4Controller, NeckPosition, ArmController
-from charmie_interfaces.srv import SpeechCommand, SetNeckPosition
 from geometry_msgs.msg import Pose2D, Vector3
 from example_interfaces.msg import Bool, Int16, String
+from charmie_interfaces.msg import PS4Controller, ArmController
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, SetRGB
 
 import math
 import numpy as np
@@ -339,7 +339,6 @@ class ControllerNode(Node):
         # Low Level 
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         self.set_movement_publisher = self.create_publisher(Bool, "set_movement", 10)
 
         # Navigation
@@ -358,9 +357,10 @@ class ControllerNode(Node):
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
-
         # Neck
         self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
+        # Low level
+        self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
 
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
@@ -390,6 +390,8 @@ class ControllerNode(Node):
         self.speech_message = ""
         self.arm_success = True
         self.arm_message = ""
+        self.rgb_success = True
+        self.rgb_message = ""
 
         self.wfeon = Bool()
         self.torso_pos = Pose2D()
@@ -408,21 +410,13 @@ class ControllerNode(Node):
             self.omni_move_publisher.publish(self.omni_move)
 
         if self.CONTROL_RGB:
-            self.rgb_mode = Int16()
-            self.rgb_mode.data = RAINBOW_ROT
-            self.rgb_mode_publisher.publish(self.rgb_mode)
+            self.set_rgb(RAINBOW_ROT)
 
         if self.CONTROL_NECK:
             self.neck_pos = SetNeckPosition.Request()
             self.neck_pos.pan = float(0)
             self.neck_pos.tilt = float(0)
             self.set_neck_position_client.call_async(self.neck_pos)
-
-            # self.neck_pos = NeckPosition()
-            # self.neck_pos.pan = 180.0
-            # self.neck_pos.tilt = 180.0
-            # self.neck_position_publisher.publish(self.neck_pos)
-            pass
 
         if self.CONTROL_FACE:
             self.face_mode = String()
@@ -461,8 +455,6 @@ class ControllerNode(Node):
             self.speech_success = True
             self.speech_message = "Wait for answer not needed"
 
-
-
     def callback_call_speech_command(self, future): #, a, b):
 
         try:
@@ -477,8 +469,6 @@ class ControllerNode(Node):
             self.waited_for_end_of_speaking = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
-
-
 
     ### SET FUNCTIONS ###
 
@@ -517,6 +507,16 @@ class ControllerNode(Node):
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.arm_success, self.arm_message
 
+    def set_rgb(self, command=0, wait_for_end_of=True):
+
+        request = SetRGB.Request()
+        request.colour = int(command)
+
+        self.set_rgb_client.call_async(request)
+        self.rgb_success = True
+        self.rgb_message = "Value Sucessfully Sent"
+
+        return self.rgb_success, self.rgb_message
 
     def timer_callback(self):
 
@@ -616,8 +616,7 @@ class ControllerNode(Node):
 
                 # changes to a red value to notify it entered in motors locked mode
                 if self.CONTROL_RGB:
-                    self.rgb_mode.data = RED+HALF_ROTATE
-                    self.rgb_mode_publisher.publish(self.rgb_mode)
+                    self.set_rgb(RED+HALF_ROTATE)
 
                 # in case it is not intended for the robot to speak since it may disturb other packages
                 if self.CONTROL_SPEAKERS:
@@ -625,7 +624,6 @@ class ControllerNode(Node):
 
         # print(self.watchdog_timer, end='')
         print(".", end='')
-
 
     # control code to send commands to other nodes if CONTROL variables are set to true (ros2 params)
     def control_robot(self, ps4_controller):
@@ -677,8 +675,7 @@ class ControllerNode(Node):
                         self.rgb_demo_index-=len(rgb_demonstration)
 
                     # print(self.rgb_demo_index)
-                    self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
-                    self.rgb_mode_publisher.publish(self.rgb_mode)
+                    self.set_rgb(rgb_demonstration[self.rgb_demo_index])
 
         if self.CONTROL_SPEAKERS:
             # examples of two different speech commands
@@ -743,8 +740,7 @@ class ControllerNode(Node):
 
                     # returns to the value it was previously
                     if self.CONTROL_RGB:
-                        self.rgb_mode.data = rgb_demonstration[self.rgb_demo_index]
-                        self.rgb_mode_publisher.publish(self.rgb_mode)
+                        self.set_rgb(rgb_demonstration[self.rgb_demo_index])
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:
@@ -764,8 +760,7 @@ class ControllerNode(Node):
                 
                     # changes to a red value to notify it entered in motors locked mode    
                     if self.CONTROL_RGB:
-                        self.rgb_mode.data = RED+HALF_ROTATE
-                        self.rgb_mode_publisher.publish(self.rgb_mode)
+                        self.set_rgb(RED+HALF_ROTATE)
 
                     # in case it is not intended for the robot to speak since it may disturb other packages
                     if self.CONTROL_SPEAKERS:

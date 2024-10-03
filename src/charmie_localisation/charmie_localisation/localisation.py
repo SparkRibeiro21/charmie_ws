@@ -39,10 +39,7 @@ class LocalisationNode(Node):
         self.localisation_publisher = self.create_publisher(Odometry, "amcl_tr", 10)
         # publisher_auxiliar só para testes:
         self.amcl_alone_localisation_publisher = self.create_publisher(Odometry, "odom_a", 10)
-
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-
-
+        
         self.odom_robot = Odometry()
         self.conv_amcl = Odometry()
         self.amcl_loc = PoseWithCovarianceStamped()
