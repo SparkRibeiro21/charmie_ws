@@ -93,21 +93,27 @@ class TaskMain():
                 # self.robot.wait_for_start_button()
                 # self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
 
-                s, m = self.robot.set_torso_position(legs = 135, torso=8, wait_for_end_of=True)
-                s, m = self.robot.set_torso_position(legs = 140, torso=8, wait_for_end_of=True)
-                s, m = self.robot.set_torso_position(legs = 110, torso=8, wait_for_end_of=True)
+                # s, m = self.robot.set_torso_position(legs = 135, torso=8, wait_for_end_of=True)
+                # s, m = self.robot.set_torso_position(legs = 140, torso=8, wait_for_end_of=True)
+                # s, m = self.robot.set_torso_position(legs = 110, torso=8, wait_for_end_of=True)
                 
-                print("FINISHED!!!")
-                print(s, m)
-                time.sleep(0.1)
+
+
+                # print("FINISHED!!!")
+                # print(s, m)
+                # time.sleep(0.1)
 
 
                 while True:
+                    self.robot.activate_motors(activate=True)
+                    time.sleep(1.0)
+                    self.robot.activate_motors(activate=False)
+                    time.sleep(1.0)
                     # sb, d1b, d2b, d3b = self.robot.get_low_level_buttons()
                     # print(sb, d1b, d2b, d3b)
                     # legs, torso = self.robot.get_torso_position()
                     # print(legs, torso)
-                    time.sleep(1.0)
+                    # time.sleep(1.0)
                     pass
 
                 print(self.robot.get_vccs())

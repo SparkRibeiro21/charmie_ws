@@ -259,8 +259,9 @@ class LowLevelNode(Node):
         # self.get_torso_pos_publisher = self.create_publisher(Pose2D, "get_torso_pos", 10)
         # self.flag_torso_pos_subscriber = self.create_subscription(Bool, "flag_torso_pos", self.flag_torso_pos_callback , 10)
 
+        # Motors
         self.omni_move_subscriber = self.create_subscription(Vector3, "omni_move", self.omni_move_callback , 10)
-        self.set_movement_subscriber = self.create_subscription(Bool, "set_movement", self.set_movement_callback , 10)
+        # self.set_movement_subscriber = self.create_subscription(Bool, "set_movement", self.set_movement_callback , 10)
 
         # Encoders
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
@@ -286,8 +287,8 @@ class LowLevelNode(Node):
         self.activate_orientation = self.create_service(ActivateBool, "activate_orientation", self.callback_activate_orientation)
         # Encoders
         self.activate_encoders = self.create_service(ActivateBool, "activate_encoders", self.callback_activate_encoders)
-        # Set Movement
-        # self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
+        # Motors
+        self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
 
 
         self.create_timer(0.1, self.timer_callback)
@@ -485,6 +486,24 @@ class LowLevelNode(Node):
         response.success = True
         response.message = "Sucessfully Activated Encoders to: " + str(request.activate)
         return response
+    
+    def callback_activate_motors(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # bool activate   # activate or deactivate
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+
+        self.get_logger().info("Received Activate Motors: %s" %(request.activate))
+        
+        self.robot.set_omni_flags(self.robot.MOVEMENT, request.activate)
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Sucessfully Activated Motors to: " + str(request.activate)
+        return response
 
 
 
@@ -668,13 +687,13 @@ class LowLevelNode(Node):
     #         self.get_logger().info("Received Reading Orientation State False")
     #     self.flag_get_orientation = flag.data
 
-    def set_movement_callback(self, flag: Bool):
-        # print("Set Movement Set To: ", flag.data)
-        if flag.data:
-            self.get_logger().info("Received Set Movement State True")
-        else:
-            self.get_logger().info("Received Set Movement State False")
-        self.robot.set_omni_flags(self.robot.MOVEMENT, flag.data)
+    # def set_movement_callback(self, flag: Bool):
+    #     # print("Set Movement Set To: ", flag.data)
+    #     if flag.data:
+    #         self.get_logger().info("Received Set Movement State True")
+    #     else:
+    #         self.get_logger().info("Received Set Movement State False")
+    #     self.robot.set_omni_flags(self.robot.MOVEMENT, flag.data)
         
     # def rgb_mode_callback(self, mode: Int16):
     #     print("Received RGB mode: ", mode.data)

@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool
 
 import cv2 
 # import threading
@@ -100,6 +100,7 @@ class ROS2TaskNode(Node):
         self.get_low_level_buttons_client = self.create_client(GetLowLevelButtons, "get_start_button")
         self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
+        self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
         #GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
 
@@ -259,6 +260,8 @@ class ROS2TaskNode(Node):
         self.navigation_message = ""
         self.activate_obstacles_success = True
         self.activate_obstacles_message = ""
+        self.activate_motors_success = True
+        self.activate_motors_message = ""
 
         self.audio_command = ""
         self.received_continuous_audio = False
@@ -753,6 +756,25 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
 
+    def call_activate_motors_server(self, request=ActivateBool.Request()):
+    
+        future = self.activate_motors_client.call_async(request)
+        future.add_done_callback(self.callback_call_activate_motors)
+        
+    def callback_call_activate_motors(self, future): 
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.activate_motors_success = response.success
+            self.activate_motors_message = response.message
+            # self.waited_for_end_of_set_torso_position = True # the wait for end of is done in the std_functions
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
+
 
 
 
@@ -1141,6 +1163,18 @@ class RobotStdFunctions():
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
+
+    def activate_motors(self, activate=True, wait_for_end_of=True):
+        
+        request = ActivateBool.Request()
+        request.activate = activate
+
+        self.node.call_activate_motors_server(request=request)
+
+        self.node.activate_motors_success = True
+        self.node.activate_motors_message = "Activated with selected parameters"
+
+        return self.node.activate_motors_success, self.node.activate_motors_message
 
     def track_person(self, person=DetectedPerson(), body_part="Head", wait_for_end_of=True):
 
