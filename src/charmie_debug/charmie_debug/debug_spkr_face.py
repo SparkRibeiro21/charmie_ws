@@ -95,8 +95,11 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
                 
 
-                while True:
-                   pass
+                # while True:
+                #     sb, d1b, d2b, d3b = self.robot.get_low_level_buttons()
+                #     print(sb, d1b, d2b, d3b)
+                #     time.sleep(1.0)
+                #     pass
 
                 print(self.robot.get_vccs())
 

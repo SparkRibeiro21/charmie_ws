@@ -17,12 +17,6 @@ import struct
 #   when setting torso and legs position i need to send two variables, but the way it is
 # made I can only send one command value, for MD49 I just needed to send one
 
-
-# TO DO WHEN CHANGING TO SRV:
-# - debug buttons
-
-
-
 class RobotControl:
 
     def __init__(self):
@@ -56,8 +50,9 @@ class RobotControl:
         # self.CURRENT = {'GetVar': 'i', 'Value': [0, 0, 0, 0], 'NoBytes': 2}
         # self.VI = {'GetVar': 'p', 'Value': [0, 0, 0, 0, 0, 0], 'NoBytes': 3}
         self.ENCODERS = {'GetVar': 'e', 'Value': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'NoBytes': 8}
-        self.START_BUTTON = {'GetVar': 's', 'Value': [0, 0], 'NoBytes': 1}        
-        self.DEBUG_BUTTONS = {'GetVar': 'b', 'Value': [0, 0], 'NoBytes': 1}
+        # self.START_BUTTON = {'GetVar': 's', 'Value': [0, 0], 'NoBytes': 1} # NOT USED BUT OPERATIONAL
+        # self.DEBUG_BUTTONS = {'GetVar': 'd', 'Value': [0, 0], 'NoBytes': 1} # NOT USED BUT OPERATIONAL
+        self.ALL_BUTTONS = {'GetVar': 'b', 'Value': [0, 0], 'NoBytes': 1}
         self.VCCS = {'GetVar': 'u', 'Value': [0, 0], 'NoBytes': 1}
         self.LIN_ACT = {'GetVar': 'h', 'Value': [0, 0], 'NoBytes': 1}
         self.ORIENTATION = {'GetVar': 'o', 'Value': [0, 0], 'NoBytes': 1}
@@ -395,14 +390,15 @@ class LowLevelNode(Node):
 
         self.get_logger().info("Received Get Start and Debug Buttons")
     
-        # aux_v = self.robot.get_omni_variables(self.robot.VCCS)
-        aux_b = self.robot.get_omni_variables(self.robot.START_BUTTON)
+        aux_b = self.robot.get_omni_variables(self.robot.ALL_BUTTONS)
+        # print(aux_b[0])
 
-        # returns the values requested by the get_vccs
-        response.start_button  = bool(aux_b[0])
-        response.debug_button1 = False
-        response.debug_button2 = False
-        response.debug_button3 = False
+        # returns the values requested by the get_low_level_buttons
+        response.start_button  = bool((aux_b[0] >> 3) & 1)
+        response.debug_button1 = bool((aux_b[0] >> 0) & 1)
+        response.debug_button2 = bool((aux_b[0] >> 1) & 1)
+        response.debug_button3 = bool((aux_b[0] >> 2) & 1)
+        # print(response.start_button, response.debug_button1, response.debug_button2, response.debug_button3)
 
         return response
 
