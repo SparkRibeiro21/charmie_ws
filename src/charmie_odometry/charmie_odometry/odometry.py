@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool
 from geometry_msgs.msg import Twist, TransformStamped, Pose2D, PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import Encoders
-from charmie_interfaces.srv import SetAcceleration
+from charmie_interfaces.srv import SetAcceleration, ActivateBool
 import rclpy.time
 import tf2_geometry_msgs
 
@@ -305,22 +305,28 @@ class OdometryNode(Node):
         super().__init__("Odometry")
         self.get_logger().info("Initialised CHARMIE Odometry Node")
 
+        ### TOPICS ###
+        # Low level
         self.encoders_subscriber = self.create_subscription(Encoders, "get_encoders", self.get_encoders_callback, 10)
-        self.flag_encoders_publisher = self.create_publisher(Bool, "flag_encoders", 10)
         self.odometry_publisher = self.create_publisher(Odometry, "odom", 10)
         self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 10)
-
+        # Initial Pose
         self.initialpose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "initialpose", self.get_initialpose_callback, 10)
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
-
+        # Localisation
         self.robot_localisation_publisher = self.create_publisher(Pose2D, "robot_localisation", 10)
-        self.robot_localisation = Pose2D()
 
-        # for now this is here just to make sure the request for odometry is sent to a node that is already responding
-        # not being used for anythin else
-        self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
-        while not self.set_acceleration_ramp_client.wait_for_service(1.0):
+        ### SERVICES ###
+        # Low level
+        self.activate_encoders_client = self.create_client(ActivateBool, "activate_encoders")
+
+        while not self.activate_encoders_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Low Level...")
+
+        self.robot_odom = RobotOdometry()
+        self.robot_localisation = Pose2D()
+        self.initialpose = Pose2D()
+        self.is_map_odom_link = False
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -328,19 +334,13 @@ class OdometryNode(Node):
 
         self.tf_broadcaster_odom_base_link = tf2_ros.TransformBroadcaster(self)
 
-        self.robot_odom = RobotOdometry()
-
-        time.sleep(0.100)
+        # time.sleep(0.100)
         
-        self.flag_enc = Bool()
-        self.flag_enc.data = True
-        self.flag_encoders_publisher.publish(self.flag_enc)
+        request = ActivateBool.Request()
+        request.activate = True
+        self.activate_encoders_client.call_async(request)
     
         # self.create_timer(1.0, self.timer_callback)
-
-        self.initialpose = Pose2D()
-
-        self.is_map_odom_link = False
 
         self.set_initial_position([0.0, 0.0, 0.0])
 

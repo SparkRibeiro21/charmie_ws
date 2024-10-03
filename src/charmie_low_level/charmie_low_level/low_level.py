@@ -262,8 +262,9 @@ class LowLevelNode(Node):
         self.omni_move_subscriber = self.create_subscription(Vector3, "omni_move", self.omni_move_callback , 10)
         self.set_movement_subscriber = self.create_subscription(Bool, "set_movement", self.set_movement_callback , 10)
 
+        # Encoders
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
-        self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
+        # self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
 
         # IMU
         self.get_orientation_publisher = self.create_publisher(Float32, "get_orientation", 10)
@@ -284,7 +285,7 @@ class LowLevelNode(Node):
         # IMU
         self.activate_orientation = self.create_service(ActivateBool, "activate_orientation", self.callback_activate_orientation)
         # Encoders
-        # self.activate_encoders = self.create_service(ActivateBool, "activate_encoders", self.callback_activate_encoders)
+        self.activate_encoders = self.create_service(ActivateBool, "activate_encoders", self.callback_activate_encoders)
         # Set Movement
         # self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
 
@@ -466,6 +467,23 @@ class LowLevelNode(Node):
         # returns whether the message was played and some informations regarding status
         response.success = True
         response.message = "Sucessfully Activated Orientation to: " + str(request.activate)
+        return response
+    
+    def callback_activate_encoders(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # bool activate   # activate or deactivate
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+
+        self.get_logger().info("Received Activate Encoders: %s" %(request.activate))
+        self.flag_get_encoders = request.activate
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Sucessfully Activated Encoders to: " + str(request.activate)
         return response
 
 
