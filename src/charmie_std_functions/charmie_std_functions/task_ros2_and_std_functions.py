@@ -99,6 +99,7 @@ class ROS2TaskNode(Node):
         self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
         self.get_low_level_buttons_client = self.create_client(GetLowLevelButtons, "get_start_button")
         self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
+        self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
         #GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
 
@@ -201,6 +202,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_get_vccs = False
         self.waited_for_end_of_get_low_level_buttons = False
         self.waited_for_end_of_get_torso_position = False
+        self.waited_for_end_of_set_torso_position = False
         self.waiting_for_pcloud = False
 
         self.br = CvBridge()
@@ -732,6 +734,24 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
 
+    def call_set_torso_position_server(self, request=SetTorso.Request()):
+    
+        future = self.set_torso_position_client.call_async(request)
+        future.add_done_callback(self.callback_call_set_torso_position)
+        
+    def callback_call_set_torso_position(self, future): 
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.torso_success = response.success
+            self.torso_message = response.message
+            self.waited_for_end_of_set_torso_position = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
 
 
 
@@ -887,15 +907,18 @@ class RobotStdFunctions():
         
         self.set_rgb(GREEN+ALTERNATE_QUARTERS)
     
-    def set_torso(self, legs=0.0, torso=0.0, wait_for_end_of=True):
+    def set_torso_position(self, legs=0.0, torso=0.0, wait_for_end_of=True):
         
-        temp = Pose2D()
-        temp.x = float(legs)
-        temp.y = float(torso)
-        self.node.torso_pos_publisher.publish(temp)
+        request = SetTorso.Request()
+        request.legs = int(legs)
+        request.torso = int(torso)
 
-        self.node.torso_success = True
-        self.node.torso_message = "Value Sucessfully Sent"
+        self.node.call_set_torso_position_server(request=request)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_set_torso_position:
+                pass
+        self.node.waited_for_end_of_set_torso_position = False
 
         return self.node.torso_success, self.node.torso_message
     
@@ -906,8 +929,8 @@ class RobotStdFunctions():
         self.node.call_get_torso_position_server(request=request)
         
         if wait_for_end_of:
-          while not self.node.waited_for_end_of_get_torso_position:
-            pass
+            while not self.node.waited_for_end_of_get_torso_position:
+                pass
         self.node.waited_for_end_of_get_torso_position = False
 
         return self.node.legs_position, self.node.torso_position

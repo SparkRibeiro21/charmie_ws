@@ -279,7 +279,7 @@ class LowLevelNode(Node):
         self.server_start_button = self.create_service(GetLowLevelButtons, "get_start_button", self.callback_get_start_button)
         # Torso
         self.server_get_torso_position = self.create_service(GetTorso, "get_torso_position", self.callback_get_torso_position)
-        # self.server_set_torso_position = self.create_service(SetTorso, "set_torso_position", self.callback_set_torso_position)
+        self.server_set_torso_position = self.create_service(SetTorso, "set_torso_position", self.callback_set_torso_position)
 
 
         self.create_timer(0.1, self.timer_callback)
@@ -420,6 +420,28 @@ class LowLevelNode(Node):
         response.torso = aux_t[1] # take a bow torso movement 
         # print(response.legs, response.torso)
 
+        return response
+    
+    def callback_set_torso_position(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # int32 legs  # up and down torso movement 
+        # int32 torso # take a bow torso movement 
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        self.get_logger().info("Received Set Torso Position")
+    
+        self.robot.set_omni_variables(self.robot.LEGS, request.legs)
+        self.robot.set_omni_variables(self.robot.TORSO, request.torso)
+        
+        print("Legs_pos: ", request.legs, " Torso_pos: ", request.torso)
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Set torso L: " + str(request.legs) + ", T: " + str(request.torso)
         return response
     
 
