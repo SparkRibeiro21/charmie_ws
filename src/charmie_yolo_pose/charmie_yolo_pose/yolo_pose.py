@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, BoundingBox, BoundingBoxAndPoints, RGB, ListOfDetectedPerson
+from charmie_interfaces.msg import DetectedPerson, BoundingBox, BoundingBoxAndPoints, RGB, ListOfDetectedPerson
 from charmie_interfaces.srv import GetPointCloud, ActivateYoloPose
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
@@ -111,8 +111,6 @@ class YoloPoseNode(Node):
         self.model = YOLO(full_yolo_model)
 
         # Publisher (Pose of People Detected Filtered and Non Filtered)
-        # self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10) # test removed person_pose (non-filtered)
-        # self.person_pose_filtered_publisher = self.create_publisher(Yolov8Pose, "person_pose_filtered", 10)
         self.person_pose_filtered_publisher = self.create_publisher(ListOfDetectedPerson, "person_pose_filtered", 10)
 
         # Subscriber (Yolov8_Pose TR Parameters)
@@ -500,7 +498,7 @@ class YoloPoseNode(Node):
         if not self.results[0].keypoints.has_visible:
             num_persons = 0
 
-        # yolov8_pose = Yolov8Pose()  # test removed person_pose (non-filtered)
+        # yolov8_pose = ListOfDetectedPerson()  # test removed person_pose (non-filtered)
         yolov8_pose_filtered = ListOfDetectedPerson()
         # num_persons_filtered = 0
 
@@ -849,12 +847,7 @@ class YoloPoseNode(Node):
 
             # print("===")
 
-        # yolov8_pose.image_rgb = self.rgb_img  # test removed person_pose (non-filtered)
-        # yolov8_pose.num_person = num_persons  # test removed person_pose (non-filtered)
         # self.person_pose_publisher.publish(yolov8_pose) # test removed person_pose (non-filtered)
-
-        # yolov8_pose_filtered.image_rgb = self.rgb_img
-        # yolov8_pose_filtered.num_person = num_persons_filtered
         self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
         # print("____END____")
