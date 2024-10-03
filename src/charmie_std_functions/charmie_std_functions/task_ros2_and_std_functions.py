@@ -749,7 +749,7 @@ class ROS2TaskNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.torso_success = response.success
             self.torso_message = response.message
-            self.waited_for_end_of_set_torso_position = True
+            # self.waited_for_end_of_set_torso_position = True # the wait for end of is done in the std_functions
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
 
@@ -913,11 +913,27 @@ class RobotStdFunctions():
         request.legs = int(legs)
         request.torso = int(torso)
 
+        MAX_ERROR_TORSO_READING = 3
+        MAX_ERROR_LEGS_READING = 3
+
         self.node.call_set_torso_position_server(request=request)
 
         if wait_for_end_of:
+            # must check the position until it has arrived 
             while not self.node.waited_for_end_of_set_torso_position:
-                pass
+                
+                l, t = self.get_torso_position()
+                error_l = abs(request.legs - l)
+                error_t = abs(request.torso - t)
+                # print(l, t, error_l, error_t)
+
+                if error_l <= MAX_ERROR_LEGS_READING and error_t<=MAX_ERROR_TORSO_READING:
+                    self.node.waited_for_end_of_set_torso_position = True
+                else:
+                    time.sleep(0.25)
+        
+            # time.sleep(0.5) # the max error may make robot think it has reached before it has acutally reached
+
         self.node.waited_for_end_of_set_torso_position = False
 
         return self.node.torso_success, self.node.torso_message

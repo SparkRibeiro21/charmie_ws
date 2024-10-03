@@ -93,8 +93,11 @@ class TaskMain():
                 # self.robot.wait_for_start_button()
                 # self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
 
-                # s, m = self.robot.set_torso_position(legs = 140, torso=8, wait_for_end_of=True)
-                s, m = self.robot.set_torso_position(legs = 130, torso=15, wait_for_end_of=False)
+                s, m = self.robot.set_torso_position(legs = 135, torso=8, wait_for_end_of=True)
+                s, m = self.robot.set_torso_position(legs = 140, torso=8, wait_for_end_of=True)
+                s, m = self.robot.set_torso_position(legs = 110, torso=8, wait_for_end_of=True)
+                
+                print("FINISHED!!!")
                 print(s, m)
                 time.sleep(0.1)
 
@@ -102,8 +105,8 @@ class TaskMain():
                 while True:
                     # sb, d1b, d2b, d3b = self.robot.get_low_level_buttons()
                     # print(sb, d1b, d2b, d3b)
-                    legs, torso = self.robot.get_torso_position()
-                    print(legs, torso)
+                    # legs, torso = self.robot.get_torso_position()
+                    # print(legs, torso)
                     time.sleep(1.0)
                     pass
 
