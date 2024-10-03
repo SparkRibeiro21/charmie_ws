@@ -1,0 +1,5 @@
+# Service to read the two torso angles  
+
+---
+int32 legs  # up and down torso movement 
+int32 torso # take a bow torso movement 

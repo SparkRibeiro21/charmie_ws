@@ -253,9 +253,11 @@ class LowLevelNode(Node):
         # self.vccs_publisher = self.create_publisher(Pose2D, "get_vccs", 10)
         # self.flag_vccs_subscriber = self.create_subscription(Bool, "flag_vccs", self.flag_vccs_callback , 10)
 
-        self.torso_pos_subscriber = self.create_subscription(Pose2D, "torso_pos", self.torso_pos_callback , 10)
-        self.get_torso_pos_publisher = self.create_publisher(Pose2D, "get_torso_pos", 10)
-        self.flag_torso_pos_subscriber = self.create_subscription(Bool, "flag_torso_pos", self.flag_torso_pos_callback , 10)
+        # Torso
+        self.torso_move_subscriber = self.create_subscription(Pose2D, "torso_move", self.torso_move_callback , 10)
+        # self.torso_pos_subscriber = self.create_subscription(Pose2D, "torso_pos", self.torso_pos_callback , 10)
+        # self.get_torso_pos_publisher = self.create_publisher(Pose2D, "get_torso_pos", 10)
+        # self.flag_torso_pos_subscriber = self.create_subscription(Bool, "flag_torso_pos", self.flag_torso_pos_callback , 10)
 
         self.omni_move_subscriber = self.create_subscription(Vector3, "omni_move", self.omni_move_callback , 10)
         self.set_movement_subscriber = self.create_subscription(Bool, "set_movement", self.set_movement_callback , 10)
@@ -266,11 +268,6 @@ class LowLevelNode(Node):
         self.get_orientation_publisher = self.create_publisher(Float32, "get_orientation", 10)
         self.flag_orientation_subscriber = self.create_subscription(Bool, "flag_orientation", self.flag_orientation_callback , 10)
 
-
-        ### TEMP
-        self.torso_test_subscriber = self.create_subscription(Pose2D, "torso_test", self.torso_test_callback , 10)
-
-
         ### Services (Clients) ###
         # Acceleration
         self.server_set_acceleration = self.create_service(SetAcceleration, "set_acceleration_ramp", self.callback_set_acceleration) 
@@ -280,6 +277,9 @@ class LowLevelNode(Node):
         self.server_vccs = self.create_service(GetVCCs, "get_vccs", self.callback_get_vccs)
         # Start Button and Debug Buttons
         self.server_start_button = self.create_service(GetLowLevelButtons, "get_start_button", self.callback_get_start_button)
+        # Torso
+        self.server_start_button = self.create_service(GetLowLevelButtons, "set_torso_position", self.callback_get_start_button)
+        self.server_start_button = self.create_service(GetLowLevelButtons, "get_torso_position", self.callback_get_start_button)
 
 
         self.create_timer(0.1, self.timer_callback)
@@ -402,7 +402,7 @@ class LowLevelNode(Node):
 
         return response
 
-    def torso_test_callback(self, data: Pose2D):
+    def torso_move_callback(self, data: Pose2D):
 
         print("receiving torso position ")
         estado_legs = int(data.x)

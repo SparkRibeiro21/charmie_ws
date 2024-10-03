@@ -66,7 +66,7 @@ class TestNode(Node):
 
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
+        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_move" , 10)
 
         # Navigation
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)

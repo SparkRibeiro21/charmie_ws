@@ -30,7 +30,7 @@ class CarryMyLuggageNode(Node):
 
         ### Topics (Publisher and Subscribers) ###   
         # Low Level 
-        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
+        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_move" , 10)
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.start_button_subscriber = self.create_subscription(Bool, "get_start_button", self.get_start_button_callback, 10)
         self.flag_start_button_publisher = self.create_publisher(Bool, "flag_start_button", 10)

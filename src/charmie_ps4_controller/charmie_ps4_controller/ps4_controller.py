@@ -337,7 +337,7 @@ class ControllerNode(Node):
 
         ### Topics (Publisher and Subscribers) ###   
         # Low Level 
-        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
+        self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10)
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
         self.set_movement_publisher = self.create_publisher(Bool, "set_movement", 10)
