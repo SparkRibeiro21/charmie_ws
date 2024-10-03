@@ -10,7 +10,6 @@ import serial
 import time
 import struct
 
-
 # TO DO:
 #   change the way NumBytes work, these only make sense for variables that are requested
 # to the MD49 boards, not for variables that are requested just to the low level board
@@ -245,32 +244,15 @@ class LowLevelNode(Node):
         super().__init__("Low_Level")
         self.get_logger().info("Initialised CHARMIE Low Level Node")
         
-        # self.rgb_mode_subscriber = self.create_subscription(Int16, "rgb_mode", self.rgb_mode_callback , 10)
-        
-        # self.start_button_publisher = self.create_publisher(Bool, "get_start_button", 10)
-        # self.flag_start_button_subscriber = self.create_subscription(Bool, "flag_start_button", self.flag_start_button_callback , 10)
-        
-        # self.vccs_publisher = self.create_publisher(Pose2D, "get_vccs", 10)
-        # self.flag_vccs_subscriber = self.create_subscription(Bool, "flag_vccs", self.flag_vccs_callback , 10)
-
         # Torso
         self.torso_move_subscriber = self.create_subscription(Pose2D, "torso_move", self.torso_move_callback , 10)
-        # self.torso_pos_subscriber = self.create_subscription(Pose2D, "torso_pos", self.torso_pos_callback , 10)
-        # self.get_torso_pos_publisher = self.create_publisher(Pose2D, "get_torso_pos", 10)
-        # self.flag_torso_pos_subscriber = self.create_subscription(Bool, "flag_torso_pos", self.flag_torso_pos_callback , 10)
-
         # Motors
         self.omni_move_subscriber = self.create_subscription(Vector3, "omni_move", self.omni_move_callback , 10)
-        # self.set_movement_subscriber = self.create_subscription(Bool, "set_movement", self.set_movement_callback , 10)
-
         # Encoders
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
-        # self.flag_encoders_subscriber = self.create_subscription(Bool, "flag_encoders", self.flag_encoders_callback , 10)
-
         # IMU
         self.get_orientation_publisher = self.create_publisher(Float32, "get_orientation", 10)
-        # self.flag_orientation_subscriber = self.create_subscription(Bool, "flag_orientation", self.flag_orientation_callback , 10)
-
+        
         ### Services (Clients) ###
         # Acceleration
         self.server_set_acceleration = self.create_service(SetAcceleration, "set_acceleration_ramp", self.callback_set_acceleration) 
@@ -303,18 +285,13 @@ class LowLevelNode(Node):
 
         # test and reorganize
         aaa = self.robot.get_omni_variables(self.robot.ACCELERATION)
-
-        print(aaa)
-        # print(type(aaa))
-
+        # print(aaa)
+        
         if aaa[0] == 100:
             self.get_logger().warning(f"Motors are not being powered!")
         else:
             self.get_logger().info(f"Connected to Motor Boards! Accel Ramp Lvl = {aaa[0]}")
 
-        # self.flag_get_start_button = False
-        # self.flag_get_vccs = False
-        # self.flag_get_torso_pos = False
         self.flag_get_encoders = False
         self.flag_get_orientation = False
 
@@ -330,9 +307,7 @@ class LowLevelNode(Node):
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages.
         self.get_logger().info("Received Set Acceleration Ramp %s" %("("+str(request.data)+")"))
-        
         self.robot.set_omni_variables(self.robot.ACCELERATION, request.data)
-
         print(self.robot.get_omni_variables(self.robot.ACCELERATION))
 
         # returns whether the message was played and some informations regarding status
@@ -352,9 +327,7 @@ class LowLevelNode(Node):
         if request.colour >= 0:
             
             colour_str = self.colour_to_string(request.colour)
-
             self.get_logger().info("Received Set RGB: %s" %(colour_str+"("+str(request.colour)+")"))
-            
             self.robot.set_omni_variables(self.robot.RGB, request.colour)
 
             # returns whether the message was played and some informations regarding status
@@ -378,7 +351,6 @@ class LowLevelNode(Node):
         # bool emergency_stop     # boolean info of the emergency stop button
 
         self.get_logger().info("Received Get VCCs")
-        
         aux_v = self.robot.get_omni_variables(self.robot.VCCS)
 
         # returns the values requested by the get_vccs
@@ -398,7 +370,6 @@ class LowLevelNode(Node):
         # bool debug_button3 # debug3 button state boolean
 
         self.get_logger().info("Received Get Start and Debug Buttons")
-    
         aux_b = self.robot.get_omni_variables(self.robot.ALL_BUTTONS)
         # print(aux_b[0])
 
@@ -420,7 +391,6 @@ class LowLevelNode(Node):
         # int32 torso # take a bow torso movement 
         
         self.get_logger().info("Received Get Torso Position")
-    
         aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
         print("Legs_pos: ", aux_t[0], " Torso_pos: ", aux_t[1])
 
@@ -442,10 +412,8 @@ class LowLevelNode(Node):
         # string message # informational, e.g. for error messages.
 
         self.get_logger().info("Received Set Torso Position")
-    
         self.robot.set_omni_variables(self.robot.LEGS, request.legs)
         self.robot.set_omni_variables(self.robot.TORSO, request.torso)
-        
         print("Legs_pos: ", request.legs, " Torso_pos: ", request.torso)
 
         # returns whether the message was played and some informations regarding status
@@ -497,7 +465,6 @@ class LowLevelNode(Node):
         # string message  # informational, e.g. for error messages.
 
         self.get_logger().info("Received Activate Motors: %s" %(request.activate))
-        
         self.robot.set_omni_flags(self.robot.MOVEMENT, request.activate)
 
         # returns whether the message was played and some informations regarding status
@@ -505,24 +472,33 @@ class LowLevelNode(Node):
         response.message = "Sucessfully Activated Motors to: " + str(request.activate)
         return response
 
+    def omni_move_callback(self, omni:Vector3):
+        ### MUST UNCOMMENT LATER, TESTING DEBUG 
+        # print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
+        self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
 
 
+    def timer_callback(self):
 
+        if  self.flag_get_encoders:
+            aux_e = self.robot.get_omni_variables(self.robot.ENCODERS)
+            # print(aux_e)
+            cmd = Encoders()
+            cmd.enc_m1 = (aux_e[0] << 24) + (aux_e[1] << 16) + (aux_e[2] << 8) + aux_e[3]
+            cmd.enc_m2 = (aux_e[4] << 24) + (aux_e[5] << 16) + (aux_e[6] << 8) + aux_e[7]
+            cmd.enc_m3 = (aux_e[8] << 24) + (aux_e[9] << 16) + (aux_e[10] << 8) + aux_e[11]
+            cmd.enc_m4 = (aux_e[12] << 24) + (aux_e[13] << 16) + (aux_e[14] << 8) + aux_e[15]
+            # print(aux_e[0], aux_e[1], aux_e[2], aux_e[3], "|", aux_e[4], aux_e[5], aux_e[6], aux_e[7], "|", aux_e[8], aux_e[9], aux_e[10], aux_e[11], "|", aux_e[12], aux_e[13], aux_e[14], aux_e[15])
+            # print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
+            self.get_encoders_publisher.publish(cmd)
 
+        if self.flag_get_orientation:
+            aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
+            orientation = Float32()
+            orientation.data = (aux_o[0]<<8|aux_o[1])/10
+            # print("ORIENTATION:", orientation.data)
+            self.get_orientation_publisher.publish(orientation)
 
-
-
-
-
-
-
-
-
-
-
-
-
-    
 
     def torso_move_callback(self, data: Pose2D): # used by ps4 controller
 
@@ -587,127 +563,6 @@ class LowLevelNode(Node):
                 "GYRZ:", struct.unpack('!h', struct.pack('!BB', aux_i[16], aux_i[17]))[0],
                 )
     """   
-
-    def timer_callback(self):
-
-        # if  self.flag_get_start_button:
-        #     # request start button here
-        #     aux_b = self.robot.get_omni_variables(self.robot.START_BUTTON)
-        #     print("Start Button State: ", bool(aux_b[0]))
-        # 
-        #     cmd = Bool()
-        #     cmd.data = bool(aux_b[0])
-        #     self.start_button_publisher.publish(cmd)
-
-        # if  self.flag_get_vccs:
-        #     # request vccs here
-        #     aux_v = self.robot.get_omni_variables(self.robot.VCCS)
-        #     print("VCC: ", aux_v[0]/10, " Emergency: ", bool(aux_v[1]))
-        # 
-        #     cmd = Pose2D()
-        #     cmd.x = float(aux_v[0]/10)
-        #     cmd.y = float(aux_v[1])
-        #    self.vccs_publisher.publish(cmd)
-
-        # if  self.flag_get_torso_pos:
-        #     # request torso pos here
-        #     aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
-        #     print("Legs_pos: ", aux_t[0], " Torso_pos: ", aux_t[1])
-        # 
-        #     cmd = Pose2D()
-        #     cmd.x = float(aux_t[0])
-        #     cmd.y = float(aux_t[1])
-        #     self.get_torso_pos_publisher.publish(cmd)
-
-        if  self.flag_get_encoders:
-            # request encoders here
-            aux_e = self.robot.get_omni_variables(self.robot.ENCODERS)
-            # print(aux_e)
-            
-            cmd = Encoders()
-            cmd.enc_m1 = (aux_e[0] << 24) + (aux_e[1] << 16) + (aux_e[2] << 8) + aux_e[3]
-            cmd.enc_m2 = (aux_e[4] << 24) + (aux_e[5] << 16) + (aux_e[6] << 8) + aux_e[7]
-            cmd.enc_m3 = (aux_e[8] << 24) + (aux_e[9] << 16) + (aux_e[10] << 8) + aux_e[11]
-            cmd.enc_m4 = (aux_e[12] << 24) + (aux_e[13] << 16) + (aux_e[14] << 8) + aux_e[15]
-
-            # print(aux_e[0], aux_e[1], aux_e[2], aux_e[3], "|", aux_e[4], aux_e[5], aux_e[6], aux_e[7], "|", aux_e[8], aux_e[9], aux_e[10], aux_e[11], "|", aux_e[12], aux_e[13], aux_e[14], aux_e[15])
-
-            # print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
-            self.get_encoders_publisher.publish(cmd)
-
-        if self.flag_get_orientation:
-
-            aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
-            
-            orientation = Float32()
-            orientation.data = (aux_o[0]<<8|aux_o[1])/10
-            
-            # print("ORIENTATION:", orientation.data)
-
-            self.get_orientation_publisher.publish(orientation)
-
-
-    # def flag_start_button_callback(self, flag: Bool):
-    #     # print("Flag Start Button Set To: ", flag.data)
-    #     if flag.data:
-    #         self.get_logger().info("Received Reading Start Button State True")
-    #    else:
-    #         self.get_logger().info("Received Reading Start Button State False")
-    #     self.flag_get_start_button = flag.data
-
-    # def flag_vccs_callback(self, flag: Bool):
-    #     # print("Flag VCCS Set To: ", flag.data)
-    #     if flag.data:
-    #         self.get_logger().info("Received Reading VCCs State True")
-    #     else:
-    #         self.get_logger().info("Received Reading VCCs State False")
-    #     self.flag_get_vccs = flag.data
-
-    # def flag_torso_pos_callback(self, flag: Bool):
-    #     # print("Flag Torso Set To: ", flag.data)
-    #     if flag.data:
-    #         self.get_logger().info("Received Reading Torso State True")
-    #     else:
-    #         self.get_logger().info("Received Reading Torso State False")
-    #     self.flag_get_torso_pos = flag.data
-
-    def flag_encoders_callback(self, flag: Bool):
-        # print("Flag Encoders Set To: ", flag.data)
-        if flag.data:
-            self.get_logger().info("Received Reading Encoder State True")
-        else:
-            self.get_logger().info("Received Reading Encoder State False")
-        self.flag_get_encoders = flag.data
-
-    # def flag_orientation_callback(self, flag: Bool):
-    #     # print("Flag Orientation Set To: ", flag.data)
-    #     if flag.data:
-    #         self.get_logger().info("Received Reading Orientation State True")
-    #     else:
-    #         self.get_logger().info("Received Reading Orientation State False")
-    #     self.flag_get_orientation = flag.data
-
-    # def set_movement_callback(self, flag: Bool):
-    #     # print("Set Movement Set To: ", flag.data)
-    #     if flag.data:
-    #         self.get_logger().info("Received Set Movement State True")
-    #     else:
-    #         self.get_logger().info("Received Set Movement State False")
-    #     self.robot.set_omni_flags(self.robot.MOVEMENT, flag.data)
-        
-    # def rgb_mode_callback(self, mode: Int16):
-    #     print("Received RGB mode: ", mode.data)
-    #     self.robot.set_omni_variables(self.robot.RGB, mode.data)
-
-    # def torso_pos_callback(self, pos: Pose2D):
-    #     print("Received TORSO pos:", pos.x, pos.y)
-    #     self.robot.set_omni_variables(self.robot.LEGS, int(pos.x))
-    #     self.robot.set_omni_variables(self.robot.TORSO, int(pos.y))
-
-    def omni_move_callback(self, omni:Vector3):
-        ### MUST UNCOMMENT LATER, TESTING DEBUG 
-        # print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
-        self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
 
     def colour_to_string(self, colour=0):
         
