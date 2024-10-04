@@ -345,7 +345,7 @@ class ControllerNode(Node):
         self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
 
         # PS4 Controller
-        self.controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
+        self.ps4_controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
 
         # Face
         self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
@@ -577,7 +577,7 @@ class ControllerNode(Node):
                   end='')
 
             # publishes ps4 controller object so if any other needs it, can use controller data  
-            self.controller_publisher.publish(ps_con)
+            self.ps4_controller_publisher.publish(ps_con)
             
             # control code to send commands to other nodes if CONTROL variables are set to true (ros2 params)
             self.control_robot(ps_con)

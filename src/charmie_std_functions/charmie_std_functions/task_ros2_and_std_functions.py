@@ -5,7 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool
 
 import cv2 
@@ -37,14 +37,12 @@ class ROS2TaskNode(Node):
         self.complete_path_custom_face = home+'/'+midpath+'/'
 
         # Intel Realsense Subscribers 
-        # Head
+        # Head Camera
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
-        # Hand
+        # Hand Camera
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
         self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)  
-        # Low Level
-        self.torso_pos_publisher = self.create_publisher(Pose2D, "torso_pos", 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -65,6 +63,9 @@ class ROS2TaskNode(Node):
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
         # Obstacles
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
+        # PS4 Controller (both pub and sub, pub so that ps4 controller node can use std_functions and sub for get_controller_state)
+        self.ps4_controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
+        self.ps4_controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_state_callback, 10)
         
         ### Services (Clients) ###
         # Speakers
@@ -223,6 +224,7 @@ class ROS2TaskNode(Node):
         self.flag_target_pos_check_answer = False
         self.point_cloud_response = GetPointCloud.Response()
         self.obstacles = Obstacles()
+        self.ps4_controller_state = PS4Controller()
 
         # robot localization
         self.robot_x = 0.0
@@ -277,7 +279,6 @@ class ROS2TaskNode(Node):
         self.debug_button1 = False
         self.debug_button2 = False
         self.debug_button3 = False
-
 
     def send_node_used_to_gui(self):
 
@@ -363,7 +364,11 @@ class ROS2TaskNode(Node):
 
     def target_pos_check_answer_callback(self, flag: Bool):
         self.flag_target_pos_check_answer = flag.data
-        print("RECEIVED NAVIGATION CONFIRMATION")
+        # print("RECEIVED NAVIGATION CONFIRMATION")
+    
+    ### PS4 Controller ###
+    def ps4_controller_state_callback(self, controller: PS4Controller):
+        self.ps4_controller_state = controller
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, request=GetPointCloud.Request()):
@@ -1882,3 +1887,7 @@ class RobotStdFunctions():
             current_frame_depth_hand = np.zeros((360, 640), dtype=np.uint8)
         
         return self.node.first_depth_hand_image_received, current_frame_depth_hand
+
+    def get_controller_state(self):
+
+        return self.node.ps4_controller_state
