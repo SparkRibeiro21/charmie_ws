@@ -832,10 +832,10 @@ class NavSDNLNode(Node):
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         self.initialpose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "initialpose", self.get_initialpose_callback, 10)
         # Orientation
-        # self.flag_orientation_publisher = self.create_publisher(Bool, "flag_orientation", 10)
         self.get_orientation_subscribrer = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
-        # Navigation        
+        # Navigation
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
+        self.target_pos_check_answer_publisher = self.create_publisher(Bool, "target_pos_check_answer", 10)
         self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) 
         # Camera
         self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
@@ -878,7 +878,6 @@ class NavSDNLNode(Node):
         # ori = Bool()
         # ori.data = True
         # self.flag_orientation_publisher.publish(ori) 
-
 
 
     # def obstacles_callback(self, obs:Obstacles):
@@ -1038,6 +1037,14 @@ class NavSDNLNode(Node):
 
         if self.nav.nav_target.move_or_rotate.lower() == "move":
             self.call_set_acceleration_ramp_server(10)
+
+        # since we can not use services (actually we should be using actions)
+        # because it gets the code stuck if we need to adjust the navigation information during a navigation
+        # we use a topic to provide confirmation that the navigation was sucessfully received.
+        # On the "other side" should be a checking system that the confirmation was received and resent if not. 
+        temp = Bool()
+        temp.data = True
+        self.target_pos_check_answer_publisher.publish(temp)
         
         # time.sleep(1.0)
 

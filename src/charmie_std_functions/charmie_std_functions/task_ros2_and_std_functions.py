@@ -55,6 +55,7 @@ class ROS2TaskNode(Node):
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
         # Navigation
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
+        self.target_pos_check_answer_subscriber = self.create_subscription(Bool, "target_pos_check_answer", self.target_pos_check_answer_callback, 10)
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
@@ -219,6 +220,7 @@ class ROS2TaskNode(Node):
         self.detected_objects = ListOfDetectedObject()
         self.detected_objects_hand = ListOfDetectedObject()
         self.flag_navigation_reached = False
+        self.flag_target_pos_check_answer = False
         self.point_cloud_response = GetPointCloud.Response()
         self.obstacles = Obstacles()
 
@@ -358,6 +360,10 @@ class ROS2TaskNode(Node):
     ### NAVIGATION ###
     def flag_navigation_reached_callback(self, flag: Bool):
         self.flag_navigation_reached = flag
+
+    def target_pos_check_answer_callback(self, flag: Bool):
+        self.flag_target_pos_check_answer = flag.data
+        print("RECEIVED NAVIGATION CONFIRMATION")
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, request=GetPointCloud.Request()):
@@ -1236,38 +1242,40 @@ class RobotStdFunctions():
             self.navigation_message = "Wrong Movement Name"
 
         else:
-            
-            navigation = TarNavSDNL()
 
-            # Pose2D target_coordinates
-            # string move_or_rotate
-            # float32 orientation_absolute
-            # bool flag_not_obs
-            # float32 reached_radius
-            # bool avoid_people
-            # float32 adjust_distance
-            # float32 adjust_direction
-            # float32 adjust_min_dist
-            # float32 max_speed
+            self.node.flag_target_pos_check_answer = False
+            while not self.node.flag_target_pos_check_answer:
+                navigation = TarNavSDNL()
 
-            if adjust_direction < 0:
-                adjust_direction += 360
+                # Pose2D target_coordinates
+                # string move_or_rotate
+                # float32 orientation_absolute
+                # bool flag_not_obs
+                # float32 reached_radius
+                # bool avoid_people
+                # float32 adjust_distance
+                # float32 adjust_direction
+                # float32 adjust_min_dist
+                # float32 max_speed
 
-            navigation.target_coordinates.x = float(target[0])
-            navigation.target_coordinates.y = float(target[1])
-            navigation.move_or_rotate = movement
-            navigation.orientation_absolute = float(absolute_angle)
-            navigation.flag_not_obs = flag_not_obs
-            navigation.reached_radius = float(reached_radius)
-            navigation.avoid_people = avoid_people
-            navigation.adjust_distance = float(adjust_distance)
-            navigation.adjust_direction = float(adjust_direction)
-            navigation.adjust_min_dist = float(adjust_min_dist)
-            navigation.max_speed = float(max_speed)
+                if adjust_direction < 0:
+                    adjust_direction += 360
 
-            self.node.flag_navigation_reached = False
-            
-            self.node.target_pos_publisher.publish(navigation)
+                navigation.target_coordinates.x = float(target[0])
+                navigation.target_coordinates.y = float(target[1])
+                navigation.move_or_rotate = movement
+                navigation.orientation_absolute = float(absolute_angle)
+                navigation.flag_not_obs = flag_not_obs
+                navigation.reached_radius = float(reached_radius)
+                navigation.avoid_people = avoid_people
+                navigation.adjust_distance = float(adjust_distance)
+                navigation.adjust_direction = float(adjust_direction)
+                navigation.adjust_min_dist = float(adjust_min_dist)
+                navigation.max_speed = float(max_speed)
+
+                self.node.flag_navigation_reached = False                
+                self.node.target_pos_publisher.publish(navigation)
+                time.sleep(0.1)
 
             if wait_for_end_of:
                 while not self.node.flag_navigation_reached:
