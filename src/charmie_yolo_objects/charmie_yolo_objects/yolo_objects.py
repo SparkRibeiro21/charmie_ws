@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 from ultralytics import YOLO
+from ultralytics.utils.plotting import Annotator, colors
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedObject, BoundingBox, BoundingBoxAndPoints, ListOfDetectedObject
+from charmie_interfaces.msg import DetectedObject, BoundingBox, BoundingBoxAndPoints, ListOfDetectedObject, MaskDetection
 from charmie_interfaces.srv import GetPointCloud, ActivateYoloObjects
 from cv_bridge import CvBridge
 import cv2 
@@ -17,10 +18,10 @@ from pathlib import Path
 import math
 import time
 
-objects_filename = "segmentation_M_size_model_600_epochs.pt"
+# objects_filename = "segmentation_M_size_model_600_epochs.pt"
 # objects_filename = "epoch20.pt"
 # objects_filename = "new_best.pt"
-# objects_filename = "new_best_2.pt"
+objects_filename = "new_best_2.pt"
 # objects_filename = "detect_hands_2.pt"
 # objects_filename = "50_epochs.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
@@ -414,6 +415,7 @@ class YoloObjectsMain():
         # self.get_logger().info(f"Objects detected: {num_obj}")
 
         # print(object_results[0])
+        print(object_results[0].masks)
 
         requested_objects = []
         for object_idx in range(num_obj):
@@ -493,6 +495,28 @@ class YoloObjectsMain():
 
         if self.node.DEBUG_DRAW:
             self.draw_detected_objects(yolov8_obj_filtered, current_frame_draw)
+
+
+        # Added to test segmentation in yolo_objects
+
+        annotator = Annotator(current_frame_draw, line_width=1)
+        # results = model.track(current_frame_draw, persist=True)
+
+        # print(object_results[0])
+
+        if object_results[0].boxes.id is not None and object_results[0].masks is not None:
+            masks = object_results[0].masks.xy
+            track_ids = object_results[0].boxes.id.int().cpu().tolist()
+
+            for mask, track_id in zip(masks, track_ids):
+                color = colors(int(track_id), True)
+                txt_color = annotator.get_txt_color(color)
+                annotator.seg_bbox(mask=mask, mask_color=color, label=str(track_id), txt_color=txt_color)
+
+        cv2.imshow("instance-segmentation-object-tracking", current_frame_draw)
+        cv2.waitKey(10)
+
+
 
         return yolov8_obj_filtered, num_obj
 
@@ -737,6 +761,9 @@ class YoloObjectsMain():
                 self.prev_head_frame_time = self.new_head_frame_time
 
                 if self.node.DEBUG_DRAW:
+
+                    annotator = Annotator(current_frame_draw, line_width=1)
+            
                     cv2.putText(current_frame_draw, 'fps:' + self.head_fps, (0, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.putText(current_frame_draw, 'np:' + str(len(list_all_objects_detected.objects)) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.imshow("Yolo Objects TR Detection HEAD", current_frame_draw)

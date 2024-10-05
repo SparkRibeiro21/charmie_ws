@@ -36,6 +36,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ListOfFloats.msg"
   "msg/ListOfPoints.msg"
   "msg/ListOfStrings.msg"
+  "msg/MaskDetection.msg"
   "msg/NeckPosition.msg"
   "msg/ObstacleInfo.msg"
   "msg/Obstacles.msg"

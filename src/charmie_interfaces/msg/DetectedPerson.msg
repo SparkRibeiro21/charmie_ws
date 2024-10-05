@@ -13,6 +13,8 @@ int32 box_top_left_y
 int32 box_width
 int32 box_height
 
+MaskDetection mask # not implemented yet for detected people (only for objects)
+
 string room_location
 string furniture_location
 
