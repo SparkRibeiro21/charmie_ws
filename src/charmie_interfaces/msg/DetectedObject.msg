@@ -14,6 +14,7 @@ int32 box_width
 int32 box_height
 
 MaskDetection mask
+MaskDetection mask_norm
 
 string room_location
 string furniture_location

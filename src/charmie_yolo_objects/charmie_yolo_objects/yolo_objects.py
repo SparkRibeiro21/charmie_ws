@@ -264,7 +264,7 @@ class Yolo_obj(Node):
         self.head_rgb = img
         self.new_head_rgb = True
 
-    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates, camera):
+    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates, camera, mask):
 
         object_id = boxes_id.id
         if boxes_id.id == None:
@@ -285,7 +285,41 @@ class Yolo_obj(Node):
         object_rel_pos.y =  center_object_coordinates.x/1000
         object_rel_pos.z =  center_object_coordinates.z/1000
         new_object.position_relative = object_rel_pos
+
+        new_mask = MaskDetection()
+        new_mask_norm = MaskDetection()
         
+        # print("PRE")
+        # print(mask.xy[0])
+        # print("---")
+
+        if mask is not None:
+            print("MASKS")
+            for p, p_n in zip(mask.xy[0], mask.xyn[0]):
+
+                points_mask = Point()
+                points_mask.x = float(p[0])
+                points_mask.y = float(p[1])
+                points_mask.z = 0.0
+                new_mask.point.append(points_mask)
+
+                # print(points_mask)
+                # print(new_mask)
+
+
+                points_mask_norm = Point()
+                points_mask_norm.x = float(p_n[0])
+                points_mask_norm.y = float(p_n[1])
+                points_mask_norm.z = 0.0
+                new_mask_norm.point.append(points_mask_norm)
+
+
+        # print("POS")
+        # print(new_mask)
+
+        new_object.mask = new_mask
+        new_object.mask_norm = new_mask_norm
+
         # calculate the absolute position according to the robot localisation
         angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
         dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
@@ -415,108 +449,104 @@ class YoloObjectsMain():
         # self.get_logger().info(f"Objects detected: {num_obj}")
 
         # print(object_results[0])
-        print(object_results[0].masks)
-
-        requested_objects = []
-        for object_idx in range(num_obj):
-
-            boxes_id = object_results[0].boxes[object_idx]
-            
-            bb = BoundingBox()
-            bb.box_top_left_x = int(boxes_id.xyxy[0][0])
-            bb.box_top_left_y = int(boxes_id.xyxy[0][1])
-            bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
-            bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
-
-            get_pc = BoundingBoxAndPoints()
-            get_pc.bbox = bb
-
-            requested_objects.append(get_pc)
-
-
-        self.node.waiting_for_pcloud = True
-        self.node.call_point_cloud_server(requested_objects, camera)
-
-        while self.node.waiting_for_pcloud:
-            pass
-
-        new_pcloud = self.node.point_cloud_response.coords
-
+        # print(object_results[0].masks)
         yolov8_obj_filtered = ListOfDetectedObject()
-        
-        # print(num_obj)
-        # print(object_results[0])
-        
-        for object_idx in range(num_obj):
-            boxes_id = object_results[0].boxes[object_idx]
-            # print(object_results[0].boxes)
-
-            if model == "objects":  
-                object_name = self.node.objects_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
-                object_class = self.node.objects_class_names_dict[object_name]
-            elif model == "shoes":  
-                object_name = self.node.shoes_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
-                object_class = "Footwear"
-            elif model == "doors":  
-                object_name = self.node.doors_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
-                object_class = "Furniture"
-        
-            # adds object to "object_pose" without any restriction
-            new_object = DetectedObject()
-            self.node.get_logger().info(f"Objects detected: {new_pcloud[object_idx].center_coords}")
-            new_object = self.node.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, new_pcloud[object_idx].center_coords, camera)
-
-            ALL_CONDITIONS_MET = 1
-
-            if model == "objects":   
-                # checks whether the object confidence is above a selected level
-                if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
-                    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                    # print("- Misses minimum object confidence level")
-
-            elif model == "shoes":     
-                # checks whether the shoes confidence is above a selected level
-                if not boxes_id.conf >= MIN_SHOES_CONF_VALUE:
-                    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                    # print("- Misses minimum shoe confidence level")
-
-            elif model == "doors":  
-                # checks whether the doors confidence is above a selected level
-                if not boxes_id.conf >= MIN_DOORS_CONF_VALUE:
-                    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                    # print("- Misses minimum door confidence level")
-
-            # if the object detection passes all selected conditions, the detected object is added to the publishing list
-            if ALL_CONDITIONS_MET:
-                yolov8_obj_filtered.objects.append(new_object)
- 
-        self.node.get_logger().info(f"Objects detected: {num_obj}/{len(yolov8_obj_filtered.objects)}")
-        self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
-
-        if self.node.DEBUG_DRAW:
-            self.draw_detected_objects(yolov8_obj_filtered, current_frame_draw)
-
-
-        # Added to test segmentation in yolo_objects
-
         annotator = Annotator(current_frame_draw, line_width=1)
-        # results = model.track(current_frame_draw, persist=True)
 
-        # print(object_results[0])
+        if object_results[0].boxes.id is not None:
 
-        if object_results[0].boxes.id is not None and object_results[0].masks is not None:
-            masks = object_results[0].masks.xy
+            boxes = object_results[0].boxes
+            masks = object_results[0].masks
             track_ids = object_results[0].boxes.id.int().cpu().tolist()
 
-            for mask, track_id in zip(masks, track_ids):
+            requested_objects = []
+            for box in boxes:
+            # for object_idx in range(num_obj):
+
+                # boxes_id = object_results[0].boxes[object_idx]
+                
+                bb = BoundingBox()
+                bb.box_top_left_x = int(box.xyxy[0][0])
+                bb.box_top_left_y = int(box.xyxy[0][1])
+                bb.box_width = int(box.xyxy[0][2]) - int(box.xyxy[0][0])
+                bb.box_height = int(box.xyxy[0][3]) - int(box.xyxy[0][1])
+
+                get_pc = BoundingBoxAndPoints()
+                get_pc.bbox = bb
+
+                requested_objects.append(get_pc)
+
+
+            self.node.waiting_for_pcloud = True
+            self.node.call_point_cloud_server(requested_objects, camera)
+
+            while self.node.waiting_for_pcloud:
+                pass
+
+            new_pcloud = self.node.point_cloud_response.coords
+
+            
+            # print(num_obj)
+            # print(object_results[0])
+            
+
+            for box, mask, mask_d, track_id, pcloud in zip(boxes, masks, masks.xy, track_ids, new_pcloud):
+            # for object_idx in range(num_obj):
+                # boxes_id = object_results[0].boxes[object_idx]
+                # print(object_results[0].boxes)
+
+                if model == "objects":  
+                    object_name = self.node.objects_class_names[int(box.cls[0])].replace("_", " ").title()
+                    object_class = self.node.objects_class_names_dict[object_name]
+                elif model == "shoes":  
+                    object_name = self.node.shoes_class_names[int(box.cls[0])].replace("_", " ").title()
+                    object_class = "Footwear"
+                elif model == "doors":  
+                    object_name = self.node.doors_class_names[int(box.cls[0])].replace("_", " ").title()
+                    object_class = "Furniture"
+            
+                # adds object to "object_pose" without any restriction
+                new_object = DetectedObject()
+                self.node.get_logger().info(f"Objects detected: {pcloud.center_coords}")
+                new_object = self.node.add_object_to_detectedobject_msg(box, object_name, object_class, pcloud.center_coords, camera, mask)
+
+                #new for segmentation 
                 color = colors(int(track_id), True)
                 txt_color = annotator.get_txt_color(color)
-                annotator.seg_bbox(mask=mask, mask_color=color, label=str(track_id), txt_color=txt_color)
+                annotator.seg_bbox(mask=mask_d, mask_color=color, label=str(track_id), txt_color=txt_color)
 
-        cv2.imshow("instance-segmentation-object-tracking", current_frame_draw)
-        cv2.waitKey(10)
+                ALL_CONDITIONS_MET = 1
 
+                if model == "objects":   
+                    # checks whether the object confidence is above a selected level
+                    if not box.conf >= MIN_OBJECT_CONF_VALUE:
+                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                        # print("- Misses minimum object confidence level")
 
+                elif model == "shoes":     
+                    # checks whether the shoes confidence is above a selected level
+                    if not box.conf >= MIN_SHOES_CONF_VALUE:
+                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                        # print("- Misses minimum shoe confidence level")
+
+                elif model == "doors":  
+                    # checks whether the doors confidence is above a selected level
+                    if not box.conf >= MIN_DOORS_CONF_VALUE:
+                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                        # print("- Misses minimum door confidence level")
+
+                # if the object detection passes all selected conditions, the detected object is added to the publishing list
+                if ALL_CONDITIONS_MET:
+                    yolov8_obj_filtered.objects.append(new_object)
+    
+            self.node.get_logger().info(f"Objects detected: {num_obj}/{len(yolov8_obj_filtered.objects)}")
+            self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
+
+            cv2.imshow("instance-segmentation-object-tracking", current_frame_draw)
+            cv2.waitKey(10)
+
+            if self.node.DEBUG_DRAW:
+                self.draw_detected_objects(yolov8_obj_filtered, current_frame_draw)
 
         return yolov8_obj_filtered, num_obj
 
@@ -723,6 +753,16 @@ class YoloObjectsMain():
             # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
             # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
             # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
+
+            # /*** ultralytics.engine.results.Masks ***/
+            # A class for storing and manipulating detection masks.
+            # Attributes:
+            # Name	Type	Description
+            # data	Tensor | ndarray	The raw tensor or array containing mask data.
+            # orig_shape	tuple	Original image shape in (height, width) format.
+            # xy	List[ndarray]	A list of segments in pixel coordinates.
+            # xyn	List[ndarray]	A list of normalized segments.
+            
 
             if self.node.new_head_rgb:
 

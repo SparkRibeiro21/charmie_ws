@@ -1496,6 +1496,9 @@ class DebugVisualMain():
 
         for o in objects.objects:
 
+            print(o.mask)
+            print(o.mask_norm)
+
             # name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
             # room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
             # relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
