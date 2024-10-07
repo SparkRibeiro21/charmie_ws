@@ -12,6 +12,7 @@ from cv_bridge import CvBridge
 import cv2 
 import json
 import threading
+import numpy as np
 
 from pathlib import Path
 
@@ -294,7 +295,7 @@ class Yolo_obj(Node):
         # print("---")
 
         if mask is not None:
-            print("MASKS")
+            # print("MASKS")
             for p, p_n in zip(mask.xy[0], mask.xyn[0]):
 
                 points_mask = Point()
@@ -538,11 +539,50 @@ class YoloObjectsMain():
                 # if the object detection passes all selected conditions, the detected object is added to the publishing list
                 if ALL_CONDITIONS_MET:
                     yolov8_obj_filtered.objects.append(new_object)
+
+                _height, _width, _ = current_frame_draw.shape
+                print(_height, _width, _)
+
+
+                print(mask_d)
+                print(type(mask_d))
+
+                b_mask = np.zeros(current_frame_draw.shape[:2], np.uint8)
+                contour = mask_d
+                contour = contour.astype(np.int32)
+                contour = contour.reshape(-1, 1, 2)
+
+                # current_frame_draw_draw = current_frame_draw.copy()
+
+                cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED)
+
+                cv2.imshow("mask", b_mask)
+                cv2.waitKey(10)
+
+                current_frame_draw[b_mask != 0] = (255, 255, 255)
+
+                # i = 0
+                # for p in new_object.mask.point:
+                #     if i == 0:
+                #         print("point:", int(p.y), int(p.x))
+                #         i+=1
+                #     current_frame_draw[int(p.y)-1][int(p.x)-1] = [0, 0, 0]
+
     
             self.node.get_logger().info(f"Objects detected: {num_obj}/{len(yolov8_obj_filtered.objects)}")
             self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
 
-            cv2.imshow("instance-segmentation-object-tracking", current_frame_draw)
+
+            # print(mask.data.cpu().numpy())
+            # mask_pixels = np.nonzero(masks.data.cpu().numpy())
+
+            # print(mask_pixels)
+
+            #  mask_temp = (mask.data.cpu().numpy() > 0)
+            # current_frame_draw[mask_pixels] = [255, 255, 255]
+        
+
+            cv2.imshow("instance-segmentation-object-tracking2", current_frame_draw)
             cv2.waitKey(10)
 
             if self.node.DEBUG_DRAW:

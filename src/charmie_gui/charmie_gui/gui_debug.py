@@ -705,8 +705,6 @@ class DebugVisualMain():
         self.cams_initial_height = 10
         self.cams_initial_width = 165
 
-        self.camera_resize_ratio = 1.0
-
         self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
         self.map_init_height = 260
 
@@ -1493,12 +1491,9 @@ class DebugVisualMain():
         if len(objects.objects) > 0:
             # print("DETECTED OBJECTS ("+head_or_hand.lower()+"):")
             pass
-
+        
+        """
         for o in objects.objects:
-
-            print(o.mask)
-            print(o.mask_norm)
-
             # name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
             # room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
             # relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
@@ -1506,7 +1501,22 @@ class DebugVisualMain():
             bb_color = self.object_class_to_bb_color(o.object_class)
             OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio), int(o.box_width/2*self.camera_resize_ratio), int(o.box_height/2*self.camera_resize_ratio))
             pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=self.BB_WIDTH)
-        
+        """
+
+        for o in objects.objects:
+            
+            temp_mask = []
+            for p in o.mask.point: # converts received mask into local coordinates and numpy array
+                p_list = []
+                p_list.append(int(self.cams_initial_width+(p.x/2)*self.camera_resize_ratio))
+                p_list.append(int(window_cam_height+(p.y/2)*self.camera_resize_ratio))
+                temp_mask.append(p_list)
+
+            np_mask = np.array(temp_mask)
+            bb_color = self.object_class_to_bb_color(o.object_class)
+            pygame.draw.polygon(self.WIN, bb_color, np_mask, self.BB_WIDTH) # outside line (darker)
+            self.draw_polygon_alpha(self.WIN, bb_color+(128,), np_mask) # inside fill with transparecny
+
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in objects.objects:
 
@@ -1521,6 +1531,14 @@ class DebugVisualMain():
             else:
                 self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
                 self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2))
+
+    def draw_polygon_alpha(self, surface, color, points):
+        lx, ly = zip(*points)
+        min_x, min_y, max_x, max_y = min(lx), min(ly), max(lx), max(ly)
+        target_rect = pygame.Rect(min_x, min_y, max_x-min_x, max_y-min_y)
+        shape_surf = pygame.Surface(target_rect.size, pygame.SRCALPHA)
+        pygame.draw.polygon(shape_surf, color, [(x-min_x, y-min_y) for x,y in points])
+        surface.blit(shape_surf, target_rect)
 
     def object_class_to_bb_color(self, object_class):
 
