@@ -7,7 +7,7 @@ from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedObject, BoundingBox, BoundingBoxAndPoints, ListOfDetectedObject, MaskDetection
-from charmie_interfaces.srv import GetPointCloud, ActivateYoloObjects
+from charmie_interfaces.srv import GetPointCloudBB, ActivateYoloObjects
 from cv_bridge import CvBridge
 import cv2 
 import json
@@ -142,7 +142,7 @@ class Yolo_obj(Node):
 
         ### Services (Clients) ###
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
@@ -163,7 +163,7 @@ class Yolo_obj(Node):
         self.new_head_rgb = False
         self.new_hand_rgb = False
         self.waiting_for_pcloud = False
-        self.point_cloud_response = GetPointCloud.Response()
+        self.point_cloud_response = GetPointCloudBB.Response()
 
         self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
                                    'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
@@ -195,7 +195,7 @@ class Yolo_obj(Node):
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, req, camera):
-        request = GetPointCloud.Request()
+        request = GetPointCloudBB.Request()
         request.data = req
         request.retrieve_bbox = False
         request.camera = camera

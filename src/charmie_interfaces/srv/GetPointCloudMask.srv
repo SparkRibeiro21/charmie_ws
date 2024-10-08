@@ -1,0 +1,6 @@
+# Service to get the point cloud from a predefined segmentation mask
+
+MaskDetection[] data # detection segmentation mask 
+string camera # which camera is being used (head or hand camera)
+---
+PointCloudCoordinates[] coords # returns the selected 3D points

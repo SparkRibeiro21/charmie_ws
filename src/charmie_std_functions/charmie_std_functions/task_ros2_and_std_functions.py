@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool
 
 import cv2 
 # import threading
@@ -94,7 +94,7 @@ class ROS2TaskNode(Node):
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
@@ -222,7 +222,7 @@ class ROS2TaskNode(Node):
         self.detected_objects_hand = ListOfDetectedObject()
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
-        self.point_cloud_response = GetPointCloud.Response()
+        self.point_cloud_response = GetPointCloudBB.Response()
         self.obstacles = Obstacles()
         self.ps4_controller_state = PS4Controller()
 
@@ -371,7 +371,7 @@ class ROS2TaskNode(Node):
         self.ps4_controller_state = controller
 
     # request point cloud information from point cloud node
-    def call_point_cloud_server(self, request=GetPointCloud.Request()):
+    def call_point_cloud_server(self, request=GetPointCloudBB.Request()):
     
         future = self.point_cloud_client.call_async(request)
         future.add_done_callback(self.callback_call_point_cloud)
@@ -1820,7 +1820,7 @@ class RobotStdFunctions():
 
         requested_objects.append(get_pc)
 
-        request = GetPointCloud.Request()
+        request = GetPointCloudBB.Request()
         request.data = requested_objects
         request.retrieve_bbox = False
         request.camera = camera

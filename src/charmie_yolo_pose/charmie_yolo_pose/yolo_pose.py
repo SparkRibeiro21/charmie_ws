@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, BoundingBox, BoundingBoxAndPoints, RGB, ListOfDetectedPerson
-from charmie_interfaces.srv import GetPointCloud, ActivateYoloPose
+from charmie_interfaces.srv import GetPointCloudBB, ActivateYoloPose
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
@@ -128,7 +128,7 @@ class YoloPoseNode(Node):
 
         ### Services (Clients) ###
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
@@ -178,7 +178,7 @@ class YoloPoseNode(Node):
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, req):
-        request = GetPointCloud.Request()
+        request = GetPointCloudBB.Request()
         request.data = req
         request.retrieve_bbox = False
         request.camera = "head"

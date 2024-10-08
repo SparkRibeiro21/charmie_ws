@@ -8,7 +8,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Point, PoseWithCovarianceStamped, Pose2D
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ArmController, ListOfDetectedPerson, ListOfDetectedObject, Obstacles
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, GetPointCloud, SetFace, ActivateObstacles
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, GetPointCloudBB, SetFace, ActivateObstacles
 
 import cv2 
 import threading
@@ -91,7 +91,7 @@ class CarryMyLuggageNode(Node):
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
         
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Neck 
@@ -145,7 +145,7 @@ class CarryMyLuggageNode(Node):
         self.detected_people = Yolov8Pose()
         self.detected_objects = Yolov8Objects()
         self.start_button_state = False
-        self.point_cloud_response = GetPointCloud.Response()
+        self.point_cloud_response = GetPointCloudBB.Response()
         self.obstacles = Obstacles()
 
         # robot localization
@@ -249,7 +249,7 @@ class CarryMyLuggageNode(Node):
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, req, camera):
-        request = GetPointCloud.Request()
+        request = GetPointCloudBB.Request()
         request.data = req
         request.retrieve_bbox = False
         request.camera = camera

@@ -7,7 +7,7 @@ from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import DetectedObject, Yolov8Objects, ListOfImages, ListOfStrings, PointCloudCoordinates, BoundingBox, BoundingBoxAndPoints
-from charmie_interfaces.srv import GetPointCloud, ActivateYoloObjects
+from charmie_interfaces.srv import GetPointCloudBB, ActivateYoloObjects
 from cv_bridge import CvBridge
 import cv2 
 import cvzone
@@ -122,7 +122,7 @@ class Yolo_obj(Node):
 
         ### Services (Clients) ###
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
@@ -185,7 +185,7 @@ class Yolo_obj(Node):
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, req):
-        request = GetPointCloud.Request()
+        request = GetPointCloudBB.Request()
         request.data = req
         request.retrieve_bbox = False
     

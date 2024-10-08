@@ -6,7 +6,7 @@ from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
 from geometry_msgs.msg import Point, Pose2D
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints, BoundingBox, TarNavSDNL, ArmController
-from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, GetPointCloud
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, GetPointCloudBB
 from xarm_msgs.srv import GetFloat32List, PlanPose, PlanExec, PlanJoint
 from sensor_msgs.msg import Image
 
@@ -81,7 +81,7 @@ class TestNode(Node):
         self.arm_set_height_publisher = self.create_publisher(Float32, 'arm_set_desired_height', 10)
 
         # Point cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
@@ -158,7 +158,7 @@ class TestNode(Node):
         self.detected_doors = Yolov8Objects()
         self.detected_doors_hand= Yolov8Objects()
         self.waiting_for_pcloud = False
-        self.point_cloud_response = GetPointCloud.Response()
+        self.point_cloud_response = GetPointCloudBB.Response()
 
         self.wardrobe_width = 0.9
         self.door_width = self.wardrobe_width // 2
@@ -170,7 +170,7 @@ class TestNode(Node):
         self.arm_current_pose = arm_pose.pose
 
     def call_point_cloud_server(self, req, camera):
-        request = GetPointCloud.Request()
+        request = GetPointCloudBB.Request()
         request.data = req
         request.retrieve_bbox = False
         request.camera = camera    

@@ -4,7 +4,7 @@ from rclpy.node import Node
 
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import NeckPosition, PointCloudCoordinates, BoundingBox, BoundingBoxAndPoints
-from charmie_interfaces.srv import GetPointCloud, ActivateObstacles
+from charmie_interfaces.srv import GetPointCloudBB, ActivateObstacles
 from geometry_msgs.msg import Point
 from cv_bridge import CvBridge
 
@@ -262,8 +262,8 @@ class PointCloudNode(Node):
         
         # SERVICES:
         # Main receive commads 
-        self.server_point_cloud_head = self.create_service(GetPointCloud, "get_point_cloud", self.callback_point_cloud_head) 
-        # self.server_point_cloud_hand = self.create_service(GetPointCloud, "get_point_cloud_hand", self.callback_point_cloud_hand) 
+        self.server_point_cloud_head = self.create_service(GetPointCloudBB, "get_point_cloud", self.callback_point_cloud_head) 
+        # self.server_point_cloud_hand = self.create_service(GetPointCloudBB, "get_point_cloud_hand", self.callback_point_cloud_hand) 
         # Activate Obstacles Head Camera Depth
         self.server_activate_obstacles = self.create_service(ActivateObstacles, "activate_obstacles_head_depth", self.callback_activate_head_depth_obstacles) 
         
@@ -336,8 +336,8 @@ class PointCloudNode(Node):
         # print("INSIDE DEPTH HEAD OBSTACLES FUNCTION")
 
         # using the same nomenclature as the service requests
-        request = GetPointCloud.Request()
-        response = GetPointCloud.Response()
+        request = GetPointCloudBB.Request()
+        response = GetPointCloudBB.Response()
         
         request.retrieve_bbox = True
 
@@ -462,7 +462,7 @@ class PointCloudNode(Node):
                 temp.append(uteis)
                 self.pcloud_head.ENVIO.append(temp)
 
-            # convert ENVIO into GetPointCloud.Response()
+            # convert ENVIO into GetPointCloudBB.Response()
             ret = []
             if len(self.pcloud_head.ENVIO) > 0:
                 for cc in self.pcloud_head.ENVIO:
@@ -650,7 +650,7 @@ class PointCloudNode(Node):
                     temp.append(uteis)
                     self.pcloud_head.ENVIO.append(temp)
                     
-                # convert ENVIO into GetPointCloud.Response()
+                # convert ENVIO into GetPointCloudBB.Response()
                 ret = []
                 if len(self.pcloud_head.ENVIO) > 0:
                     for cc in self.pcloud_head.ENVIO:
@@ -814,7 +814,7 @@ class PointCloudNode(Node):
                     temp.append(uteis)
                     self.pcloud_hand.ENVIO.append(temp)
 
-                # convert ENVIO into GetPointCloud.Response()
+                # convert ENVIO into GetPointCloudBB.Response()
                 ret = []
                 if len(self.pcloud_hand.ENVIO) > 0:
                     for cc in self.pcloud_hand.ENVIO:
