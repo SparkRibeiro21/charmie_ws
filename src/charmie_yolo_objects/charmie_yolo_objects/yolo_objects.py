@@ -452,7 +452,10 @@ class YoloObjectsMain():
         # print(object_results[0])
         # print(object_results[0].masks)
         yolov8_obj_filtered = ListOfDetectedObject()
-        annotator = Annotator(current_frame_draw, line_width=1)
+        if self.node.DEBUG_DRAW:
+            current_frame_draw_a = cv2.cvtColor(current_frame_draw, cv2.COLOR_BGR2BGRA)
+            annotator = Annotator(current_frame_draw_a, line_width=1)
+            b_mask = np.zeros(current_frame_draw.shape[:2], np.uint8)
 
         if object_results[0].boxes.id is not None:
 
@@ -486,15 +489,7 @@ class YoloObjectsMain():
 
             new_pcloud = self.node.point_cloud_response.coords
 
-            
-            # print(num_obj)
-            # print(object_results[0])
-            
-
             for box, mask, mask_d, track_id, pcloud in zip(boxes, masks, masks.xy, track_ids, new_pcloud):
-            # for object_idx in range(num_obj):
-                # boxes_id = object_results[0].boxes[object_idx]
-                # print(object_results[0].boxes)
 
                 if model == "objects":  
                     object_name = self.node.objects_class_names[int(box.cls[0])].replace("_", " ").title()
@@ -510,11 +505,6 @@ class YoloObjectsMain():
                 new_object = DetectedObject()
                 self.node.get_logger().info(f"Objects detected: {pcloud.center_coords}")
                 new_object = self.node.add_object_to_detectedobject_msg(box, object_name, object_class, pcloud.center_coords, camera, mask)
-
-                #new for segmentation 
-                color = colors(int(track_id), True)
-                txt_color = annotator.get_txt_color(color)
-                annotator.seg_bbox(mask=mask_d, mask_color=color, label=str(track_id), txt_color=txt_color)
 
                 ALL_CONDITIONS_MET = 1
 
@@ -540,52 +530,31 @@ class YoloObjectsMain():
                 if ALL_CONDITIONS_MET:
                     yolov8_obj_filtered.objects.append(new_object)
 
-                _height, _width, _ = current_frame_draw.shape
-                print(_height, _width, _)
-
-
-                print(mask_d)
-                print(type(mask_d))
-
-                b_mask = np.zeros(current_frame_draw.shape[:2], np.uint8)
-                contour = mask_d
-                contour = contour.astype(np.int32)
-                contour = contour.reshape(-1, 1, 2)
-
-                # current_frame_draw_draw = current_frame_draw.copy()
-
-                cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED)
-
-                cv2.imshow("mask", b_mask)
-                cv2.waitKey(10)
-
-                current_frame_draw[b_mask != 0] = (255, 255, 255)
-
-                # i = 0
-                # for p in new_object.mask.point:
-                #     if i == 0:
-                #         print("point:", int(p.y), int(p.x))
-                #         i+=1
-                #     current_frame_draw[int(p.y)-1][int(p.x)-1] = [0, 0, 0]
-
+                if self.node.DEBUG_DRAW:
+                    #new for segmentation 
+                    color = colors(int(track_id), True)
+                    txt_color = annotator.get_txt_color(color)
+                    annotator.seg_bbox(mask=mask_d, mask_color=color, label=str(track_id), txt_color=txt_color)
+                    
+                    # print(mask_d)
+                    # print(type(mask_d))
+                    contour = mask_d
+                    contour = contour.astype(np.int32)
+                    contour = contour.reshape(-1, 1, 2)
+                    cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED)
     
             self.node.get_logger().info(f"Objects detected: {num_obj}/{len(yolov8_obj_filtered.objects)}")
             self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
 
 
-            # print(mask.data.cpu().numpy())
-            # mask_pixels = np.nonzero(masks.data.cpu().numpy())
-
-            # print(mask_pixels)
-
-            #  mask_temp = (mask.data.cpu().numpy() > 0)
-            # current_frame_draw[mask_pixels] = [255, 255, 255]
-        
-
-            cv2.imshow("instance-segmentation-object-tracking2", current_frame_draw)
-            cv2.waitKey(10)
-
             if self.node.DEBUG_DRAW:
+                new_color = np.array([255, 255, 255, 128])
+                for c in range(0,3):
+                    current_frame_draw_a[:, :, c][b_mask != 0] = (current_frame_draw_a[:, :, c][b_mask != 0] * (1 - new_color[3]/255)) + (new_color[c]*(new_color[3]/255))
+                
+                # cv2.imshow("mask", b_mask)
+                cv2.imshow("instance-segmentation-object-tracking2", current_frame_draw_a)
+                cv2.waitKey(10)
                 self.draw_detected_objects(yolov8_obj_filtered, current_frame_draw)
 
         return yolov8_obj_filtered, num_obj
