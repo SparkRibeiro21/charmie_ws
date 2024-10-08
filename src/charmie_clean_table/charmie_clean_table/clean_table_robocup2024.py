@@ -95,7 +95,7 @@ class CleanTableNode(Node):
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
         
         # Speakers
         while not self.speech_command_client.wait_for_service(1.0):

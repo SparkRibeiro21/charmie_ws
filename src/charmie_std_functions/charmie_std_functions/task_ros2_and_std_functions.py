@@ -94,7 +94,7 @@ class ROS2TaskNode(Node):
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")

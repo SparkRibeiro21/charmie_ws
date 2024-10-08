@@ -81,7 +81,7 @@ class TestNode(Node):
         self.arm_set_height_publisher = self.create_publisher(Float32, 'arm_set_desired_height', 10)
 
         # Point cloud
-        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")

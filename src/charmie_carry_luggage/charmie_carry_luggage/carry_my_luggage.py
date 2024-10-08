@@ -91,7 +91,7 @@ class CarryMyLuggageNode(Node):
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
         
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
         # Neck 

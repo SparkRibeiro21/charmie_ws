@@ -7,7 +7,7 @@ from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedObject, BoundingBox, BoundingBoxAndPoints, ListOfDetectedObject, MaskDetection
-from charmie_interfaces.srv import GetPointCloudBB, ActivateYoloObjects
+from charmie_interfaces.srv import GetPointCloudBB, GetPointCloudMask, ActivateYoloObjects
 from cv_bridge import CvBridge
 import cv2 
 import json
@@ -142,10 +142,13 @@ class Yolo_obj(Node):
 
         ### Services (Clients) ###
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud")
+        self.point_cloud_bb_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
+        self.point_cloud_mask_client = self.create_client(GetPointCloudMask, "get_point_cloud_mask")
 
-        while not self.point_cloud_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Point Cloud...")
+        while not self.point_cloud_bb_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud BB...")
+        while not self.point_cloud_mask_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud Mask...")
 
         ### Services ###
         self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
@@ -163,7 +166,8 @@ class Yolo_obj(Node):
         self.new_head_rgb = False
         self.new_hand_rgb = False
         self.waiting_for_pcloud = False
-        self.point_cloud_response = GetPointCloudBB.Response()
+        self.point_cloud_bb_response = GetPointCloudBB.Response()
+        self.point_cloud_mask_response = GetPointCloudMask.Response()
 
         self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
                                    'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
@@ -194,22 +198,43 @@ class Yolo_obj(Node):
     
 
     # request point cloud information from point cloud node
-    def call_point_cloud_server(self, req, camera):
+    def call_point_cloud_bb_server(self, req, camera):
         request = GetPointCloudBB.Request()
         request.data = req
         request.retrieve_bbox = False
         request.camera = camera
     
-        future = self.point_cloud_client.call_async(request)
-        future.add_done_callback(self.callback_call_point_cloud)
+        future = self.point_cloud_bb_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud_bb)
 
-    def callback_call_point_cloud(self, future):
+    def callback_call_point_cloud_bb(self, future):
 
         try:
             # in this function the order of the line of codes matter
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            self.point_cloud_response = future.result()
+            self.point_cloud_bb_response = future.result()
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    # request point cloud information from point cloud node
+    def call_point_cloud_mask_server(self, req, camera):
+        request = GetPointCloudMask.Request()
+        request.data = req
+        request.camera = camera
+    
+        future = self.point_cloud_mask_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud_mask)
+
+    def callback_call_point_cloud_mask(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            self.point_cloud_mask_response = future.result()
             self.waiting_for_pcloud = False
             # print("Received Back")
         except Exception as e:
@@ -440,6 +465,7 @@ class YoloObjectsMain():
         # print(object_results[0])
         # print(object_results[0].masks)
         yolov8_obj_filtered = ListOfDetectedObject()
+
         if self.node.DEBUG_DRAW:
             current_frame_draw_a = cv2.cvtColor(current_frame_draw, cv2.COLOR_BGR2BGRA)
             annotator = Annotator(current_frame_draw_a, line_width=1)
@@ -451,33 +477,34 @@ class YoloObjectsMain():
             masks = object_results[0].masks
             track_ids = object_results[0].boxes.id.int().cpu().tolist()
 
-            requested_objects = []
-            for box in boxes:
+            if masks is not None: # if model has segmentation mask
                 
-                bb = BoundingBox()
-                bb.box_top_left_x = int(box.xyxy[0][0])
-                bb.box_top_left_y = int(box.xyxy[0][1])
-                bb.box_width = int(box.xyxy[0][2]) - int(box.xyxy[0][0])
-                bb.box_height = int(box.xyxy[0][3]) - int(box.xyxy[0][1])
+                requested_objects = []
+                for mask in masks:
+                    m = MaskDetection()
+                    for p in mask.xy[0]:
 
-                get_pc = BoundingBoxAndPoints()
-                get_pc.bbox = bb
+                        points_mask = Point()
+                        points_mask.x = float(p[0])
+                        points_mask.y = float(p[1])
+                        points_mask.z = 0.0
+                        m.point.append(points_mask)
 
-                requested_objects.append(get_pc)
+                    requested_objects.append(m)
 
-            self.node.waiting_for_pcloud = True
-            self.node.call_point_cloud_server(requested_objects, camera)
+                self.node.waiting_for_pcloud = True
+                self.node.call_point_cloud_mask_server(requested_objects, camera)
 
-            while self.node.waiting_for_pcloud:
-                pass
+                while self.node.waiting_for_pcloud:
+                    pass
 
-            new_pcloud = self.node.point_cloud_response.coords
+                new_pcloud = self.node.point_cloud_mask_response.coords
 
-
-            if masks is not None:
-                # nos modelos em que não há mask, consideramos só as boxes. RESOLVER BUG
+                print("hey")
+                
                 for box, mask, mask_d, track_id, pcloud in zip(boxes, masks, masks.xy, track_ids, new_pcloud):
 
+                    print("ho")
                     if model == "objects":
                         object_name = self.node.objects_class_names[int(box.cls[0])].replace("_", " ").title()
                         object_class = self.node.objects_class_names_dict[object_name]
@@ -490,7 +517,7 @@ class YoloObjectsMain():
                 
                     # adds object to "object_pose" without any restriction
                     new_object = DetectedObject()
-                    self.node.get_logger().info(f"Objects detected: {pcloud.center_coords}")
+                    self.node.get_logger().info(f"Object detected mask coords: {pcloud.center_coords}")
                     new_object = self.node.add_object_to_detectedobject_msg(box, object_name, object_class, pcloud.center_coords, camera, mask)
 
                     ALL_CONDITIONS_MET = 1
@@ -532,7 +559,28 @@ class YoloObjectsMain():
 
             else: # if for some reason, a used model does not have 'segmentation' masks
 
-                # nos modelos em que não há mask, consideramos só as boxes. RESOLVER BUG
+                requested_objects = []
+                for box in boxes:
+                    
+                    bb = BoundingBox()
+                    bb.box_top_left_x = int(box.xyxy[0][0])
+                    bb.box_top_left_y = int(box.xyxy[0][1])
+                    bb.box_width = int(box.xyxy[0][2]) - int(box.xyxy[0][0])
+                    bb.box_height = int(box.xyxy[0][3]) - int(box.xyxy[0][1])
+
+                    get_pc = BoundingBoxAndPoints()
+                    get_pc.bbox = bb
+
+                    requested_objects.append(get_pc)
+
+                self.node.waiting_for_pcloud = True
+                self.node.call_point_cloud_bb_server(requested_objects, camera)
+
+                while self.node.waiting_for_pcloud:
+                    pass
+
+                new_pcloud = self.node.point_cloud_bb_response.coords
+                
                 for box, track_id, pcloud in zip(boxes, track_ids, new_pcloud):
 
                     if model == "objects":
@@ -547,7 +595,7 @@ class YoloObjectsMain():
                 
                     # adds object to "object_pose" without any restriction
                     new_object = DetectedObject()
-                    self.node.get_logger().info(f"Objects detected: {pcloud.center_coords}")
+                    self.node.get_logger().info(f"Object detected BB coords: {pcloud.center_coords}")
                     new_object = self.node.add_object_to_detectedobject_msg(box, object_name, object_class, pcloud.center_coords, camera)
 
                     ALL_CONDITIONS_MET = 1
@@ -574,7 +622,7 @@ class YoloObjectsMain():
                     if ALL_CONDITIONS_MET:
                         yolov8_obj_filtered.objects.append(new_object)
 
-            self.node.get_logger().info(f"Objects detected: {num_obj}/{len(yolov8_obj_filtered.objects)}")
+            self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
             self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
 
 
