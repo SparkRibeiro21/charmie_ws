@@ -492,6 +492,8 @@ class YoloObjectsMain():
 
                     requested_objects.append(m)
 
+                # print(requested_objects)
+
                 self.node.waiting_for_pcloud = True
                 self.node.call_point_cloud_mask_server(requested_objects, camera)
 

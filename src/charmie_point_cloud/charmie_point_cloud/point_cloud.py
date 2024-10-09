@@ -167,7 +167,7 @@ class PointCloud():
         # print(u, v)
 
         depth = self.depth_img_pc[u][v]
-        if depth == 0:      # Só faz os cálculos de o ponto for válido (OPTIMIZAÇÃO)
+        if depth == 0:      # Só faz os cálculos se o ponto for válido (OPTIMIZAÇÃO)
 
             # casos especiais, mas só em coordenadas especificas (não faz para a bounding box toda)
             # procuro a distancia mais próxima nos pixeis vizinhos
@@ -210,6 +210,43 @@ class PointCloud():
         result = result.tolist()
         return result
 
+    def converter_2D_3D_mask(self, depth_with_mask):
+        
+        s = time.time()
+        non_zero_indices = np.nonzero(depth_with_mask)
+        non_zero_values = depth_with_mask[non_zero_indices] 
+        # print(non_zero_values)
+        final_coords = []
+
+        if non_zero_values.size:
+
+            depth = np.mean(non_zero_values)
+            u = np.mean(non_zero_indices[0])
+            v = np.mean(non_zero_indices[1])
+            # print("avg np:", depth, u, v)
+
+            Z = depth
+            X = (v - self.cx) * depth / self.fx
+            Y = (u - self.cy) * depth / self.fy
+
+            xn = Z
+            yn = -X
+            zn = -Y
+            result = np.dot(self.T, [xn, yn, zn, 1])
+            result[0] += self.X_SHIFT
+            result[1] += self.Y_SHIFT
+            result[2] += self.Z_SHIFT  # Z=0 is the floor
+
+            result = result[0:3].astype(np.int16)
+            final_coords = result.tolist()
+
+        else:   
+            # there are no elements on the non_zero_indices from the mask
+            final_coords = [0, 0, 0]         
+
+        elapsed = time.time() - s
+        # print(elapsed)
+        return final_coords
     
     def converter_2D_3D(self, u, v, height, width):
         
@@ -881,21 +918,6 @@ class PointCloudNode(Node):
         # ---
         # PointCloudCoordinates[] coords # returns the selected 3D points
         
-        # Small example so that all code that waits for this service can still run (with wrong info) and don't be stopped waiting
-        for p in request.data:
-            t_p = Point()
-            t_p.x = 1.0
-            t_p.y = 2.0
-            t_p.z = 3.0
-            t_coords = PointCloudCoordinates()
-            t_coords.center_coords = t_p
-            response.coords.append(t_coords)
-
-        self.get_logger().info(f"Point Cloud Time (Hand Maks): {0.0}")
-
-        return response  
-
-        """
         if request.camera == "head":
 
             if self.head_depth_img.height > 0 and self.head_rgb_img.height > 0: # prevents doing this code before receiving images
@@ -914,17 +936,102 @@ class PointCloudNode(Node):
                 # self.pcloud_head.rgb_img_pc = rgb_frame
                 self.pcloud_head.depth_img_pc = depth_frame_res
                 self.pcloud_head.RECEBO = []
-                for i in range(len(request.data)):
-                    aux = []
-                    aux.append([request.data[i].bbox.box_top_left_y, request.data[i].bbox.box_top_left_x, request.data[i].bbox.box_height, request.data[i].bbox.box_width])
 
-                    a = []
-                    for j in range(len(request.data[i].requested_point_coords)):
-                        a.append([int(request.data[i].requested_point_coords[j].y), int(request.data[i].requested_point_coords[j].x)])
+                print(len(request.data))
+                for r in request.data:
+                    temp_mask = []
+                    for p in r.point: # converts received mask into local coordinates and numpy array
+                        p_list = []
+                        p_list.append(int(p.x))
+                        p_list.append(int(p.y))
+                        
+                        temp_mask.append(p_list)
 
-                    aux.append(a)
-                    self.pcloud_head.RECEBO.append(aux)
+                    # print(temp_mask)
+                    self.pcloud_head.RECEBO.append(np.array(temp_mask))
+                
+                # print(self.pcloud_head.RECEBO)
 
+                self.pcloud_head.ENVIO = []
+
+                for mask in self.pcloud_head.RECEBO:
+                    b_mask = np.zeros(depth_frame_res.shape[:2], np.uint8)
+                    contour = mask
+                    contour = contour.astype(np.int32)
+                    contour = contour.reshape(-1, 1, 2)
+                    cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED)
+                    depth_frame_res_mask = depth_frame_res.copy()
+                    depth_frame_res_mask[b_mask == 0] = [0]
+                    self.pcloud_head.ENVIO.append(self.pcloud_head.converter_2D_3D_mask(depth_frame_res_mask))
+
+                print(self.pcloud_head.ENVIO)
+
+                # cv2.imshow("mask", b_mask)
+                # cv2.waitKey(10)
+
+                # convert ENVIO into GetPointCloudMask.Response()
+                ret = []
+                if len(self.pcloud_head.ENVIO) > 0:
+                    for cc in self.pcloud_head.ENVIO:
+                        
+                        # print(cc)
+                        pcc = PointCloudCoordinates()
+
+                        point_c = Point()
+                        point_c.x = float(cc[0])
+                        point_c.y = float(cc[1])
+                        point_c.z = float(cc[2])
+
+                        print(cc)
+                        print(float(cc[0]))
+
+                        pcc.center_coords = point_c
+
+                        ret.append(pcc)
+
+                print(ret)
+
+                response.coords = ret
+                # imprime os tempos de processamento e da frame
+                self.get_logger().info(f"Point Cloud Time (Head Mask): {time.perf_counter() - self.tempo_calculo}")
+                # print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
+                # print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
+                # self.tempo_frame = time.perf_counter()
+
+                # cv2.imshow("test depth", depth_frame_res_mask)
+                # cv2.waitKey(10)
+    
+    
+    
+    
+                # r = np.array(received)
+
+                # print("TEST")
+                # for p in received:
+                #     print(p)
+                #     print("\n")
+                # print("END")
+
+                # print(r)
+
+                # self.pcloud_head.RECEBO = np.array(received)
+
+                # print(self.pcloud_head.RECEBO)
+
+                # for para as as varias mascaras que tenho
+
+                # for i in range(len(request.data)):
+                #     aux = []
+                #     aux.append([request.data[i].bbox.box_top_left_y, request.data[i].bbox.box_top_left_x, request.data[i].bbox.box_height, request.data[i].bbox.box_width])
+                # 
+                #     a = []
+                #    for j in range(len(request.data[i].requested_point_coords)):
+                #         a.append([int(request.data[i].requested_point_coords[j].y), int(request.data[i].requested_point_coords[j].x)])
+                # 
+                #     aux.append(a)
+                #     self.pcloud_head.RECEBO.append(aux)
+
+                """
                 self.pcloud_head.ENVIO = []      # limpo a variavel onde vou guardar as minhas respostas, para este novo ciclo
                 self.tempo_calculo = time.perf_counter()
 
@@ -1052,17 +1159,18 @@ class PointCloudNode(Node):
                 # print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
                 # print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
                 # self.tempo_frame = time.perf_counter()
+                """
             
             else:
                 # this prevents an error that sometimes on a low computational power PC that the rgb image arrives at yolo node 
                 # but the depth has not yet arrived. This is a rare bug, but it crashes the yolos nodes being used.
                 self.get_logger().error(f"Depth Image was not received. Please restart...")
             
-            # print(response)
+            print(response)
             return response
-        
+        """
         else:
-
+            
             if self.hand_depth_img.height > 0 and self.hand_rgb_img.height > 0: # prevents doing this code before receiving images
 
                 depth_frame = self.br.imgmsg_to_cv2(self.hand_depth_img, desired_encoding="passthrough")
@@ -1226,6 +1334,20 @@ class PointCloudNode(Node):
             # print(response)
             return response
             """
+        
+        # Small example so that all code that waits for this service can still run (with wrong info) and don't be stopped waiting
+        """
+        for p in request.data:
+            t_p = Point()
+            t_p.x = 1.0
+            t_p.y = 2.0
+            t_p.z = 3.0
+            t_coords = PointCloudCoordinates()
+            t_coords.center_coords = t_p
+            response.coords.append(t_coords)
+        self.get_logger().info(f"Point Cloud Time (Hand Maks): {0.0}")
+        return response  
+        """
 
 def main(args=None):
     rclpy.init(args=args)
