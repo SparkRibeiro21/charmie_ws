@@ -501,12 +501,9 @@ class YoloObjectsMain():
                     pass
 
                 new_pcloud = self.node.point_cloud_mask_response.coords
-
-                print("hey")
                 
                 for box, mask, mask_d, track_id, pcloud in zip(boxes, masks, masks.xy, track_ids, new_pcloud):
 
-                    print("ho")
                     if model == "objects":
                         object_name = self.node.objects_class_names[int(box.cls[0])].replace("_", " ").title()
                         object_class = self.node.objects_class_names_dict[object_name]
@@ -519,10 +516,13 @@ class YoloObjectsMain():
                 
                     # adds object to "object_pose" without any restriction
                     new_object = DetectedObject()
-                    self.node.get_logger().info(f"Object detected mask coords: {pcloud.center_coords}")
+                    self.node.get_logger().info(f"'{object_name}' Mask Coords. x:{pcloud.center_coords.x}, y:{pcloud.center_coords.y}, z:{pcloud.center_coords.z}")
                     new_object = self.node.add_object_to_detectedobject_msg(box, object_name, object_class, pcloud.center_coords, camera, mask)
 
                     ALL_CONDITIONS_MET = 1
+
+                    if pcloud.center_coords.x == 0 and pcloud.center_coords.y == 0 and pcloud.center_coords.x == 0: # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
+                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
 
                     if model == "objects":   
                         # checks whether the object confidence is above a selected level
@@ -597,7 +597,7 @@ class YoloObjectsMain():
                 
                     # adds object to "object_pose" without any restriction
                     new_object = DetectedObject()
-                    self.node.get_logger().info(f"Object detected BB coords: {pcloud.center_coords}")
+                    self.node.get_logger().info(f"'{object_name}' BB Coords. x:{pcloud.center_coords.x}, y:{pcloud.center_coords.y}, z:{pcloud.center_coords.z}")
                     new_object = self.node.add_object_to_detectedobject_msg(box, object_name, object_class, pcloud.center_coords, camera)
 
                     ALL_CONDITIONS_MET = 1

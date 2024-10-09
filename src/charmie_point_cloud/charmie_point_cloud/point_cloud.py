@@ -212,7 +212,7 @@ class PointCloud():
 
     def converter_2D_3D_mask(self, depth_with_mask):
         
-        s = time.time()
+        # s = time.time()
         non_zero_indices = np.nonzero(depth_with_mask)
         non_zero_values = depth_with_mask[non_zero_indices] 
         # print(non_zero_values)
@@ -244,7 +244,7 @@ class PointCloud():
             # there are no elements on the non_zero_indices from the mask
             final_coords = [0, 0, 0]         
 
-        elapsed = time.time() - s
+        # elapsed = time.time() - s
         # print(elapsed)
         return final_coords
     
@@ -937,7 +937,7 @@ class PointCloudNode(Node):
                 self.pcloud_head.depth_img_pc = depth_frame_res
                 self.pcloud_head.RECEBO = []
 
-                print(len(request.data))
+                # print(len(request.data))
                 for r in request.data:
                     temp_mask = []
                     for p in r.point: # converts received mask into local coordinates and numpy array
@@ -947,19 +947,17 @@ class PointCloudNode(Node):
                         
                         temp_mask.append(p_list)
 
-                    # print(temp_mask)
                     self.pcloud_head.RECEBO.append(np.array(temp_mask))
-                
                 # print(self.pcloud_head.RECEBO)
 
                 self.pcloud_head.ENVIO = []
-
+                self.tempo_calculo = time.perf_counter()
                 for mask in self.pcloud_head.RECEBO:
-                    b_mask = np.zeros(depth_frame_res.shape[:2], np.uint8)
+                    b_mask = np.zeros(depth_frame_res.shape[:2], np.uint8) # creates new empty window
                     contour = mask
                     contour = contour.astype(np.int32)
                     contour = contour.reshape(-1, 1, 2)
-                    cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED)
+                    cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED) # creates mask window with just the inside pixesl of the detected objects
                     depth_frame_res_mask = depth_frame_res.copy()
                     depth_frame_res_mask[b_mask == 0] = [0]
                     self.pcloud_head.ENVIO.append(self.pcloud_head.converter_2D_3D_mask(depth_frame_res_mask))
@@ -967,8 +965,9 @@ class PointCloudNode(Node):
                 print(self.pcloud_head.ENVIO)
 
                 # cv2.imshow("mask", b_mask)
+                # cv2.imshow("test depth", depth_frame_res_mask)
                 # cv2.waitKey(10)
-
+    
                 # convert ENVIO into GetPointCloudMask.Response()
                 ret = []
                 if len(self.pcloud_head.ENVIO) > 0:
@@ -982,193 +981,23 @@ class PointCloudNode(Node):
                         point_c.y = float(cc[1])
                         point_c.z = float(cc[2])
 
-                        print(cc)
-                        print(float(cc[0]))
-
                         pcc.center_coords = point_c
 
                         ret.append(pcc)
 
-                print(ret)
-
+                # print(ret)
                 response.coords = ret
                 # imprime os tempos de processamento e da frame
                 self.get_logger().info(f"Point Cloud Time (Head Mask): {time.perf_counter() - self.tempo_calculo}")
-                # print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
-                # print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
-                # self.tempo_frame = time.perf_counter()
 
-                # cv2.imshow("test depth", depth_frame_res_mask)
-                # cv2.waitKey(10)
-    
-    
-    
-    
-                # r = np.array(received)
-
-                # print("TEST")
-                # for p in received:
-                #     print(p)
-                #     print("\n")
-                # print("END")
-
-                # print(r)
-
-                # self.pcloud_head.RECEBO = np.array(received)
-
-                # print(self.pcloud_head.RECEBO)
-
-                # for para as as varias mascaras que tenho
-
-                # for i in range(len(request.data)):
-                #     aux = []
-                #     aux.append([request.data[i].bbox.box_top_left_y, request.data[i].bbox.box_top_left_x, request.data[i].bbox.box_height, request.data[i].bbox.box_width])
-                # 
-                #     a = []
-                #    for j in range(len(request.data[i].requested_point_coords)):
-                #         a.append([int(request.data[i].requested_point_coords[j].y), int(request.data[i].requested_point_coords[j].x)])
-                # 
-                #     aux.append(a)
-                #     self.pcloud_head.RECEBO.append(aux)
-
-                """
-                self.pcloud_head.ENVIO = []      # limpo a variavel onde vou guardar as minhas respostas, para este novo ciclo
-                self.tempo_calculo = time.perf_counter()
-
-                # calculo dos vários Bounding Boxes
-                self.pcloud_head.robo_head() 
-                for bbox in self.pcloud_head.RECEBO:
-
-                    # le os dados da BouundingBox
-                    # u_inicial, v_inicial, HEIGHT, WIDTH = bbox[0]
-                    u_inicial, v_inicial, bb_height, bb_width = bbox[0]
-
-                    # print("CENTER")
-                    # calcula o ponto do centro
-                    # this is still a change in progess. Rather than returning the x,y,z of the center point of the bounding box, 
-                    # we are trying to compute the mean of the points that interest us, since the center point of the bounding box may
-                    # be in the object/person we are tryng to get the position
-                    # old version - using the center of the bounding box:
-                    # resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2)
-                    # new version:
-
-                    resp_todos = []
-                    resp_todos = self.pcloud_head.converter_2D_3D(u_inicial, v_inicial, bb_height, bb_width)
-                    uteis = [row for row in resp_todos if (row[0]!=0 or row[1]!=0 or row[2]!=0)] # limpa os elementos [0, 0, 0]
-                    # print(uteis, len(uteis))
-                    
-                    if len(uteis) == 0:
-                        resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
-                    else:
-                        x_coord = np.array(uteis)[:, 0]                             # Extrai a coordenada X
-                        y_coord = np.array(uteis)[:, 1]  # Extrai a coordenada X
-                        z_coord = np.array(uteis)[:, 2]  # Extrai a coordenada X
-                        x_min, x_max, _, _ = cv2.minMaxLoc(x_coord)
-                        y_min, y_max, _, _ = cv2.minMaxLoc(y_coord)
-                        z_min, z_max, _, _ = cv2.minMaxLoc(z_coord)
-                        y_min = y_min + (y_max-y_min)*0.05
-                        y_max = y_max - (y_max-y_min)*0.05
-                        z_min = z_min + (z_max-z_min)*0.05
-                        z_max = z_max - (z_max-z_min)*0.05
-                        uteis = [row for row in uteis if ((row[1]>y_min and row[1]<y_max) and (row[2]>z_min and row[2]<z_max))] # limpa os elementos [0, 0, 0]
-                        if len(uteis) == 0:
-                            resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
-                        else:
-                            bin_edges = np.arange(min(x_coord), max(x_coord) + 100, 100)    # Cria a lista de limites para o histograma
-                            hist, bin_edges = np.histogram(x_coord, bins=bin_edges)     # Usa np.histogram para contar as ocorrencias
-                            _, maior, _, posicao = cv2.minMaxLoc(hist)                  # calcula o máximo
-                            if posicao[1]>0:
-                                Xmin = bin_edges[posicao[1] - 1]  # calcula a coordenada X ao objeto
-                            else:
-                                Xmin = bin_edges[posicao[1]    ]  # calcula a coordenada X ao objeto
-                            # print('len posicao', len(bin_edges))
-                            if posicao[1]<len(bin_edges)-2:
-                                Xmax = bin_edges[posicao[1] + 2]
-                            else:
-                                Xmax = bin_edges[posicao[1] + 1]
-                            uteis_uteis = [row for row in uteis if (row[0]>=Xmin and row[0]<=Xmax)] # filtro apenas os elementos no pico do histograma
-                            # for i in uteis_uteis:
-                                # print(i[0], '\t', i[1], '\t', i[2])
-                            centroid = np.mean(uteis_uteis, axis=0)
-
-                            if np.isnan(centroid).any():
-                                resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
-                            else:
-                                resp_centro = centroid
-                                        
-                            # print("centroid:", centroid)
-                            # self.get_logger().info(f"Centroid: {centroid}")
-
-                    # print("REQUESTED")
-                    # calcula a lista de pontos
-                    resp_outros = []
-                    for i in bbox[1]:
-                        temp = self.pcloud_head.converter_2D_3D_unico(i[0], i[1])
-                        resp_outros.append(temp)
-
-                    # Guarda todas as respostas na variavel ENVIO
-                    temp = []
-                    temp.append(resp_centro)
-                    temp.append(resp_outros)
-                    temp.append(uteis)
-                    self.pcloud_head.ENVIO.append(temp)
-                    
-                # convert ENVIO into GetPointCloudBB.Response()
-                ret = []
-                if len(self.pcloud_head.ENVIO) > 0:
-                    for cc in self.pcloud_head.ENVIO:
-                        # print(cc)
-
-                        pcc = PointCloudCoordinates()
-
-                        point_c = Point()
-                        point_c.x = float(cc[0][0])
-                        point_c.y = float(cc[0][1])
-                        point_c.z = float(cc[0][2])
-
-                        pcc.center_coords = point_c
-
-                        kp_list = []
-                        for kp in cc[1]:
-                            # print("kp:", kp)
-                            point_kp = Point()
-                            point_kp.x = float(kp[0])
-                            point_kp.y = float(kp[1])
-                            point_kp.z = float(kp[2])
-                            kp_list.append(point_kp)
-
-                        pcc.requested_point_coords = kp_list
-
-                        bb_list = []
-                        if request.retrieve_bbox:
-                            for bb in cc[2]:
-                                # print("bb:", bb)
-                                point_bb = Point()
-                                point_bb.x = float(bb[0])
-                                point_bb.y = float(bb[1])
-                                point_bb.z = float(bb[2])
-                                bb_list.append(point_bb)
-
-                        pcc.bbox_point_coords = bb_list
-
-                        ret.append(pcc)
-
-                response.coords = ret
-                # imprime os tempos de processamento e da frame
-                self.get_logger().info(f"Point Cloud Time (Head Mask): {time.perf_counter() - self.tempo_calculo}")
-                # print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
-                # print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
-                # self.tempo_frame = time.perf_counter()
-                """
-            
             else:
                 # this prevents an error that sometimes on a low computational power PC that the rgb image arrives at yolo node 
                 # but the depth has not yet arrived. This is a rare bug, but it crashes the yolos nodes being used.
                 self.get_logger().error(f"Depth Image was not received. Please restart...")
             
-            print(response)
+            # print(response)
             return response
-        """
+        
         else:
             
             if self.hand_depth_img.height > 0 and self.hand_rgb_img.height > 0: # prevents doing this code before receiving images
@@ -1184,148 +1013,61 @@ class PointCloudNode(Node):
                 depth_frame_res[depth_frame_res < self.pcloud_hand.MIN_DIST] = 0
 
                 self.pcloud_hand.depth_img_pc = depth_frame_res
-            
                 self.pcloud_hand.RECEBO = []
-                for i in range(len(request.data)):
-                    aux = []
-                    aux.append([request.data[i].bbox.box_top_left_y, request.data[i].bbox.box_top_left_x, request.data[i].bbox.box_height, request.data[i].bbox.box_width])
 
-                    a = []
-                    for j in range(len(request.data[i].requested_point_coords)):
-                        a.append([int(request.data[i].requested_point_coords[j].y), int(request.data[i].requested_point_coords[j].x)])
+                # print(len(request.data))
+                for r in request.data:
+                    temp_mask = []
+                    for p in r.point: # converts received mask into local coordinates and numpy array
+                        p_list = []
+                        p_list.append(int(p.x))
+                        p_list.append(int(p.y))
+                        
+                        temp_mask.append(p_list)
 
-                    aux.append(a)
-                    self.pcloud_hand.RECEBO.append(aux)
+                    self.pcloud_hand.RECEBO.append(np.array(temp_mask))
+                # print(self.pcloud_hand.RECEBO)
 
-                self.pcloud_hand.ENVIO = []      # limpo a variavel onde vou guardar as minhas respostas, para este novo ciclo
+                self.pcloud_hand.ENVIO = []
                 self.tempo_calculo = time.perf_counter()
+                for mask in self.pcloud_hand.RECEBO:
+                    b_mask = np.zeros(depth_frame_res.shape[:2], np.uint8) # creates new empty window
+                    contour = mask
+                    contour = contour.astype(np.int32)
+                    contour = contour.reshape(-1, 1, 2)
+                    cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED) # creates mask window with just the inside pixesl of the detected objects
+                    depth_frame_res_mask = depth_frame_res.copy()
+                    depth_frame_res_mask[b_mask == 0] = [0]
+                    self.pcloud_hand.ENVIO.append(self.pcloud_hand.converter_2D_3D_mask(depth_frame_res_mask))
 
-                # calculo dos vários Bounding Boxes
-                self.pcloud_hand.robo_hand() 
-                for bbox in self.pcloud_hand.RECEBO:
+                print(self.pcloud_hand.ENVIO)
 
-                    # le os dados da BouundingBox
-                    # u_inicial, v_inicial, HEIGHT, WIDTH = bbox[0]
-                    u_inicial, v_inicial, bb_height, bb_width = bbox[0]
-
-                    # print("CENTER")
-                    # calcula o ponto do centro
-                    # this is still a change in progess. Rather than returning the x,y,z of the center point of the bounding box, 
-                    # we are trying to compute the mean of the points that interest us, since the center point of the bounding box may
-                    # be in the object/person we are tryng to get the position
-                    # old version - using the center of the bounding box:
-                    # resp_centro = self.pcloud_hand.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2)
-                    # new version:
-
-                    resp_todos = []
-                    resp_todos = self.pcloud_hand.converter_2D_3D(u_inicial, v_inicial, bb_height, bb_width)
-                    uteis = [row for row in resp_todos if (row[0]!=0 or row[1]!=0 or row[2]!=0)] # limpa os elementos [0, 0, 0]
-                    # print(uteis, len(uteis))
-                    
-                    if len(uteis) == 0:
-                        resp_centro = self.pcloud_hand.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
-                    else:
-                        x_coord = np.array(uteis)[:, 0]                             # Extrai a coordenada X
-                        y_coord = np.array(uteis)[:, 1]  # Extrai a coordenada X
-                        z_coord = np.array(uteis)[:, 2]  # Extrai a coordenada X
-                        x_min, x_max, _, _ = cv2.minMaxLoc(x_coord)
-                        y_min, y_max, _, _ = cv2.minMaxLoc(y_coord)
-                        z_min, z_max, _, _ = cv2.minMaxLoc(z_coord)
-                        y_min = y_min + (y_max-y_min)*0.05
-                        y_max = y_max - (y_max-y_min)*0.05
-                        z_min = z_min + (z_max-z_min)*0.05
-                        z_max = z_max - (z_max-z_min)*0.05
-                        uteis = [row for row in uteis if ((row[1]>y_min and row[1]<y_max) and (row[2]>z_min and row[2]<z_max))] # limpa os elementos [0, 0, 0]
-                        if len(uteis) == 0:
-                            resp_centro = self.pcloud_hand.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
-                        else:
-                            bin_edges = np.arange(min(x_coord), max(x_coord) + 100, 100)    # Cria a lista de limites para o histograma
-                            hist, bin_edges = np.histogram(x_coord, bins=bin_edges)     # Usa np.histogram para contar as ocorrencias
-                            _, maior, _, posicao = cv2.minMaxLoc(hist)                  # calcula o máximo
-                            if posicao[1]>0:
-                                Xmin = bin_edges[posicao[1] - 1]  # calcula a coordenada X ao objeto
-                            else:
-                                Xmin = bin_edges[posicao[1]    ]  # calcula a coordenada X ao objeto
-                            # print('len posicao', len(bin_edges))
-                            if posicao[1]<len(bin_edges)-2:
-                                Xmax = bin_edges[posicao[1] + 2]
-                            else:
-                                Xmax = bin_edges[posicao[1] + 1]
-                            uteis_uteis = [row for row in uteis if (row[0]>=Xmin and row[0]<=Xmax)] # filtro apenas os elementos no pico do histograma
-                            # for i in uteis_uteis:
-                                # print(i[0], '\t', i[1], '\t', i[2])
-                            centroid = np.mean(uteis_uteis, axis=0)
-
-                            if np.isnan(centroid).any():
-                                resp_centro = self.pcloud_hand.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
-                            else:
-                                resp_centro = centroid
-                                        
-                            # print("centroid:", centroid)
-                            # self.get_logger().info(f"Centroid: {centroid}")
-
-                    # print("REQUESTED")
-                    # calcula a lista de pontos
-                    resp_outros = []
-                    for i in bbox[1]:
-                        temp = self.pcloud_hand.converter_2D_3D_unico(i[0], i[1])
-                        resp_outros.append(temp)
-
-                    # Guarda todas as respostas na variavel ENVIO
-                    temp = []
-                    temp.append(resp_centro)
-                    temp.append(resp_outros)
-                    temp.append(uteis)
-                    self.pcloud_hand.ENVIO.append(temp)
-
-                # convert ENVIO into GetPointCloudBB.Response()
+                # cv2.imshow("mask", b_mask)
+                # cv2.imshow("test depth", depth_frame_res_mask)
+                # cv2.waitKey(10)
+    
+                # convert ENVIO into GetPointCloudMask.Response()
                 ret = []
                 if len(self.pcloud_hand.ENVIO) > 0:
                     for cc in self.pcloud_hand.ENVIO:
+                        
                         # print(cc)
-
                         pcc = PointCloudCoordinates()
 
                         point_c = Point()
-                        point_c.x = float(cc[0][0])
-                        point_c.y = float(cc[0][1])
-                        point_c.z = float(cc[0][2])
+                        point_c.x = float(cc[0])
+                        point_c.y = float(cc[1])
+                        point_c.z = float(cc[2])
 
                         pcc.center_coords = point_c
 
-                        kp_list = []
-                        for kp in cc[1]:
-                            # print("kp:", kp)
-                            point_kp = Point()
-                            point_kp.x = float(kp[0])
-                            point_kp.y = float(kp[1])
-                            point_kp.z = float(kp[2])
-                            kp_list.append(point_kp)
-
-                        pcc.requested_point_coords = kp_list
-
-                        bb_list = []
-                        if request.retrieve_bbox:
-                            for bb in cc[2]:
-                                # print("bb:", bb)
-                                point_bb = Point()
-                                point_bb.x = float(bb[0])
-                                point_bb.y = float(bb[1])
-                                point_bb.z = float(bb[2])
-                                bb_list.append(point_bb)
-
-                        pcc.bbox_point_coords = bb_list
-
                         ret.append(pcc)
 
+                # print(ret)
                 response.coords = ret
-                
                 # imprime os tempos de processamento e da frame
-                self.get_logger().info(f"Point Cloud Time (Hand Maks): {time.perf_counter() - self.tempo_calculo}")
-                # print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
-                # print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
-                # self.tempo_frame = time.perf_counter()
-            
+                self.get_logger().info(f"Point Cloud Time (Hand Mask): {time.perf_counter() - self.tempo_calculo}")
+
             else:
                 # this prevents an error that sometimes on a low computational power PC that the rgb image arrives at yolo node 
                 # but the depth has not yet arrived. This is a rare bug, but it crashes the yolos nodes being used.
@@ -1333,21 +1075,7 @@ class PointCloudNode(Node):
 
             # print(response)
             return response
-            """
-        
-        # Small example so that all code that waits for this service can still run (with wrong info) and don't be stopped waiting
-        """
-        for p in request.data:
-            t_p = Point()
-            t_p.x = 1.0
-            t_p.y = 2.0
-            t_p.z = 3.0
-            t_coords = PointCloudCoordinates()
-            t_coords.center_coords = t_p
-            response.coords.append(t_coords)
-        self.get_logger().info(f"Point Cloud Time (Hand Maks): {0.0}")
-        return response  
-        """
+
 
 def main(args=None):
     rclpy.init(args=args)
