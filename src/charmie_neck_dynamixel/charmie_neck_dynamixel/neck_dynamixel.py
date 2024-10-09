@@ -119,6 +119,7 @@ class NeckNode(Node):
         self.declare_parameter("speed_down", 2) 
         self.declare_parameter("speed_sides", 5)
         self.declare_parameter("initial_position", [0, 0])  # Default value
+        # example of initial_position param: --ros-args -p initial_position:="[0, 10]"
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
         DEVICE_PARAM = self.get_parameter("device_name").value

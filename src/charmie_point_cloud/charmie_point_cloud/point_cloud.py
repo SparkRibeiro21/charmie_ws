@@ -72,9 +72,14 @@ class PointCloud():
             # self.Z_SHIFT = 1260
 
             # had to come back to originals
-            self.X_SHIFT = 50
+            # self.X_SHIFT = 50
+            # self.Y_SHIFT = 0
+            # self.Z_SHIFT = 1260
+            
+            # after hardware neck 2.0
+            self.X_SHIFT = 60
             self.Y_SHIFT = 0
-            self.Z_SHIFT = 1260
+            self.Z_SHIFT = 1300
         
 
         else: #  self.camera == "hand":
@@ -135,7 +140,7 @@ class PointCloud():
 
 
     def robo_head(self):
-        A4 = self.Trans(90, 11.5, 195)
+        A4 = self.Trans(100, 11.5, 195)
         A3 = self.Rot('y', self.teta[1])
         A2 = self.Trans(30, 0, 25)
         A1 = self.Rot('z', self.teta[0])
@@ -952,6 +957,8 @@ class PointCloudNode(Node):
 
                 self.pcloud_head.ENVIO = []
                 self.tempo_calculo = time.perf_counter()
+
+                self.pcloud_head.robo_head()
                 for mask in self.pcloud_head.RECEBO:
                     b_mask = np.zeros(depth_frame_res.shape[:2], np.uint8) # creates new empty window
                     contour = mask
@@ -1030,6 +1037,8 @@ class PointCloudNode(Node):
 
                 self.pcloud_hand.ENVIO = []
                 self.tempo_calculo = time.perf_counter()
+
+                self.pcloud_hand.robo_hand()
                 for mask in self.pcloud_hand.RECEBO:
                     b_mask = np.zeros(depth_frame_res.shape[:2], np.uint8) # creates new empty window
                     contour = mask
