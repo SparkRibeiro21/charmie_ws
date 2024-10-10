@@ -131,8 +131,6 @@ class TaskMain():
         
                 # self.robot.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
 
-                self.robot.activate_yolo_objects(activate_objects=False)
-
                 self.robot.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=False)
 
                 self.robot.set_face("charmie_face")
@@ -141,13 +139,9 @@ class TaskMain():
 
                 self.robot.set_speech(filename="clean_the_table/ready_start_ct", wait_for_end_of=True)
 
-                self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
-
                 self.robot.wait_for_start_button()
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-
-                self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
 
                 self.robot.wait_for_door_start()
 

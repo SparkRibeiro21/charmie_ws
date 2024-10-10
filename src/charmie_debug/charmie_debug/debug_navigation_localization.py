@@ -84,13 +84,9 @@ class TaskMain():
 
                 self.robot.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=True)
 
-                self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
-
                 self.robot.wait_for_start_button()
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-
-                self.robot.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
 
                 self.robot.wait_for_door_start()
 

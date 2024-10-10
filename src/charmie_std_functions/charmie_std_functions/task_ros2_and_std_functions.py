@@ -904,6 +904,8 @@ class RobotStdFunctions():
 
     def wait_for_start_button(self):
 
+        self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+        
         start_button_state = False
 
         while not start_button_state:
@@ -912,6 +914,8 @@ class RobotStdFunctions():
             time.sleep(0.1)
 
     def wait_for_door_start(self):
+        
+        self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
         
         # max angle considered to be a door (degrees)
         MAX_DOOR_ANGLE = math.radians(10.0)
