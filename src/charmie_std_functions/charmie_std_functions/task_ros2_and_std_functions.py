@@ -3,7 +3,7 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool
@@ -55,6 +55,7 @@ class ROS2TaskNode(Node):
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
         self.target_pos_check_answer_subscriber = self.create_subscription(Bool, "target_pos_check_answer", self.target_pos_check_answer_callback, 10)
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
+        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) # used only for ps4 controller
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
@@ -64,8 +65,11 @@ class ROS2TaskNode(Node):
         # Obstacles
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
         # PS4 Controller (both pub and sub, pub so that ps4 controller node can use std_functions and sub for get_controller_state)
-        self.ps4_controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
+        self.ps4_controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10) # used only for ps4 controller
         self.ps4_controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_state_callback, 10)
+        # Low level
+        self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for ps4 controller
+        self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for ps4 controller
         
         ### Services (Clients) ###
         # Speakers
