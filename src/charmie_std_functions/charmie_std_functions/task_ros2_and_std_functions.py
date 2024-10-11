@@ -64,8 +64,7 @@ class ROS2TaskNode(Node):
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
         # Obstacles
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
-        # PS4 Controller (both pub and sub, pub so that ps4 controller node can use std_functions and sub for get_controller_state)
-        self.ps4_controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10) # used only for ps4 controller
+        # PS4 Controller
         self.ps4_controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_state_callback, 10)
         # Low level
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for ps4 controller
