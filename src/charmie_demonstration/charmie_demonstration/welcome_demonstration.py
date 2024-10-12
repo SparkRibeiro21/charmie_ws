@@ -20,11 +20,11 @@ ros2_modules = {
     "charmie_localisation":     False,
     "charmie_low_level":        False,
     "charmie_navigation":       False,
-    "charmie_neck":             False,
+    "charmie_neck":             True,
     "charmie_obstacles":        False,
     "charmie_odometry":         False,
     "charmie_point_cloud":      False,
-    "charmie_ps4_controller":   False,
+    "charmie_ps4_controller":   True,
     "charmie_speakers":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -55,31 +55,33 @@ class TaskMain():
         
         # Task States
         self.Waiting_for_task_start = 0
-        self.Approach_kitchen_counter = 1
-        self.Picking_up_spoon = 2
-        self.Picking_up_milk = 3
-        self.Picking_up_cereal = 4
-        self.Picking_up_bowl = 5
-        self.Approach_kitchen_table = 6
-        self.Placing_bowl = 7
-        self.Placing_cereal = 8
-        self.Placing_milk = 9
-        self.Placing_spoon = 10
-        self.Final_State = 11
+        self.Demo_actuators = 1
+        self.Final_State = 10
         
         # Neck Positions
-        self.look_forward = [0, 0]
-        self.look_navigation = [0, -30]
-        self.look_judge = [45, 0]
-        self.look_table_objects = [-45, -45]
-        self.look_tray = [0, -60]
-        
+        self.look_forward = [0, 30]
+        # self.look_navigation = [0, -30]
+        # self.look_judge = [45, 0]
+        # self.look_table_objects = [-45, -45]
+        # self.look_tray = [0, -60]
+
+        self.OFF = 0     # LOW  -> LOW
+        self.FALLING = 1 # HIGH -> LOW
+        self.RISING = 2  # LOW  -> HIGH
+        self.ON = 3      # HIGH -> HIGH
+
+        self.ON_AND_RISING = 2   # used with <= 
+        self.OFF_AND_FALLING = 1 # used with >=
+
+        self.neck_pos_pan = self.look_forward[0]
+        self.neck_pos_tilt = self.look_forward[1]
+
         # Start localisation position
-        self.initial_position = [-1.0, 1.5, -90.0]
+        # self.initial_position = [-1.0, 1.5, -90.0]
 
         # navigation positions
-        self.front_of_sofa = [-2.5, 1.5]
-        self.sofa = [-2.5, 3.0]
+        # self.front_of_sofa = [-2.5, 1.5]
+        # self.sofa = [-2.5, 3.0]
         
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
@@ -87,234 +89,62 @@ class TaskMain():
         while True:
 
             if self.state == self.Waiting_for_task_start:
-                print("State:", self.state, "- Waiting_for_task_start")
+                # Initialization State
 
-                # your code here ...
-                
-                # moves the neck to look down for navigation
-                # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                """
-                # send speech command to speakers voice, intrucing the robot 
-                self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
-                
-                # sends RGB value for debug
-                self.set_rgb(command=CYAN+HALF_ROTATE)
+                if ros2_modules["charmie_neck"]:
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=True)
 
-                # change face, to face picking up cup
-                # self.set_face("help_pick_cup")
-                
-                # waiting for start button
-                self.wait_for_door_start()
 
-                self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
 
-                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
 
-                print("DONE2 - ", self.node.start_button_state)
-                # calibrate the background noise for better voice recognition
-                # self.calibrate_audio(wait_for_end_of=True)
+                self.state = self.Demo_actuators
 
-                # moves the neck to look to absolute cordinates in the map
-                # self.set_neck_coords(position=[1.0, 1.0], ang=30, wait_for_end_of=True)
-                """
-                self.robot.set_initial_position(self.initial_position)
+            elif self.state == self.Demo_actuators:
 
-                time.sleep(3)
-                
-                # this gives an error because "orient" is a non-existing movement type and does not send anything to navigation 
-                self.robot.set_navigation(movement="orient", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
+                ps4_controller = self.robot.get_controller_state()
 
-                print("2 move")
+                # print(ps4_controller)
+                # print(self.neck_pos_pan, self.neck_pos_tilt, ps4_controller.triangle, ps4_controller.cross)
 
-                self.robot.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
 
-                print("3 move")
-
-                self.robot.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-
-                print("4 move")
-
-                self.robot.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
-
-                print("5 move")
-
-                while True:
-                    pass
-
-                ### RECEPTIONIST AUDIO EXAMPLE
-                # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
-                # print("Finished:", command)
-                # keyword_list= command.split(" ")
-                # print(keyword_list[0], keyword_list[1])
-                # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
-                # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)  
-
-                # change face, to standard face
-                # self.set_face("charmie_face")
-
-                # moves the neck to look forward
-                # self.set_neck(position=self.look_forward, wait_for_end_of=False)
-
-                """
-                ### EXAMPLES TO ACTIVATE/DEACTIVATE AND CONFIGURE YOLO POSE AND TOLO OBJECTS 
-                self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
-                print("activated yolo pose")
-                time.sleep(5)
-                # self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
-                # time.sleep(0.5)
-                while self.node.detected_people.num_person == 0:
-                    pass
-                self.track_person(self.node.detected_people.persons[0], body_part="Head", wait_for_end_of=True)
-                time.sleep(3)
-                self.activate_yolo_pose(activate=False)
-                self.activate_yolo_objects(activate_objects=True)
-                time.sleep(5)
-                while self.node.detected_objects.num_objects == 0:
-                    pass
-                self.track_object(self.node.detected_objects.objects[0], wait_for_end_of=True)
-                time.sleep(3)
-                # self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.3)
-                # print("deactivated yolo pose - 0.8")
-                # time.sleep(5)
-                # self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=10)
-                # self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.8)
-                # print("deactivated yolo pose - right in front")
-                # time.sleep(5)
-                """
-
-                # example of arm function to say hello
-                # self.set_arm(command="hello", wait_for_end_of=False)
-
-                # next state
-                # self.state = self.Approach_kitchen_counter
-
-            elif self.state == self.Approach_kitchen_counter:
-                print("State:", self.state, "- Approach_kitchen_counter")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Picking_up_spoon
-
-            elif self.state == self.Picking_up_spoon:
-                print("State:", self.state, "- Picking_up_spoon")
-
-                ##### NECK LOOKS AT TABLE
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-
-                ##### MOVES ARM TO TOP OF TABLE POSITION
-
-                ##### SPEAK: Searching for objects
-                # self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-
-                ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                ##### SPEAK: Found spoon
-                # self.set_speech(filename="serve_breakfast/sb_found_spoon", show_in_face=True, wait_for_end_of=True)
-                
-                ##### SPEAK: Check face to see object detected
-                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
-
-                ##### SHOW FACE DETECTED OBJECT (CUSTOM)
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                ##### IF AN ERROR IS DETECTED:
-
-                    ##### SPEAK: There is a problem picking up the object
-                    # self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                    ##### NECK LOOK JUDGE
-                    # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                    ##### SPEAK: Need help, put object on my hand as it is on my face
-                    # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                    ##### SHOW FACE GRIPPER SPOON 
-                    # self.set_face("help_pick_spoon") 
-
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-
-                        ##### SPEAK: Close gripper in 3 2 1 
-                        # self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                        ##### ARM: CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED: 
-
-                            ##### SPEAK: There seems to be a problem, please retry.
-                            # self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
-
-                            ##### ARM OPEN GRIPPER
-                
-                ##### SET FACE TO STANDARD FACE
-                # self.set_face("charmie_face")
+                if ros2_modules["charmie_neck"]:
+                    
+                    # circle and square to move neck left and right
+                    # triangle and cross to move the neck up and down
+                    neck_inc_hor = 2
+                    neck_inc_ver = 1
+                    if ps4_controller.circle >= self.ON_AND_RISING:
+                        self.neck_pos_pan -= neck_inc_hor
+                        if self.neck_pos_pan < -180:
+                            self.neck_pos_pan = -180
+                        self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
                         
-                ##### NECK LOOK TRAY
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                        
-                ##### ARM PLACE OBJECT IN TRAY
+                    elif ps4_controller.square >= self.ON_AND_RISING:
+                        self.neck_pos_pan += neck_inc_hor
+                        if self.neck_pos_pan > 180:
+                            self.neck_pos_pan = 180
+                        self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
+                        # print(self.neck_pos)
 
-                self.state = self.Picking_up_milk
+                    if ps4_controller.cross >= self.ON_AND_RISING:
+                        self.neck_pos_tilt -= neck_inc_ver
+                        print("DOWN")
+                        if self.neck_pos_tilt < -60:
+                            self.neck_pos_tilt = -60
+                        self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
+                        # print(self.neck_pos)
 
-            elif self.state == self.Picking_up_milk:
-                print("State:", self.state, "- Picking_up_milk")
-                # your code here ...
-                                                
-                # next state
-                self.state = self.Picking_up_cereal
-           
-            elif self.state == self.Picking_up_cereal:
-                print("State:", self.state, "- Picking_up_cereal")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Picking_up_bowl
+                    elif ps4_controller.triangle >= self.ON_AND_RISING:
+                        self.neck_pos_tilt += neck_inc_ver
+                        print("UP")
+                        if self.neck_pos_tilt > 45:
+                            self.neck_pos_tilt = 45
+                        self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
+                        # print(self.neck_pos)
+                    
+                    time.sleep(0.025)
 
-            elif self.state == self.Picking_up_bowl:
-                print("State:", self.state, "- Picking_up_bowl")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Approach_kitchen_table
 
-            elif self.state == self.Approach_kitchen_table:
-                print("State:", self.state, "- Approach_kitchen_table")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Placing_bowl
-
-            elif self.state == self.Placing_bowl:
-                print("State:", self.state, "- Placing_bowl")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Placing_cereal 
-
-            elif self.state == self.Placing_cereal:
-                print("State:", self.state, "- Placing_cereal")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Placing_milk
-           
-            elif self.state == self.Placing_milk:
-                print("State:", self.state, "- Placing_milk")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Placing_spoon
-
-            elif self.state == self.Placing_spoon:
-                print("State:", self.state, "- Placing_spoon")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Final_State 
-                
             elif self.state == self.Final_State:
                 
                 self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
@@ -326,87 +156,7 @@ class TaskMain():
             else:
                 pass
 
-
-
-
-
-# class ControllerNode(Node):
-
-    # def __init__(self):
-        # super().__init__("PS4_Controller")
-        # self.get_logger().info("Initialised CHARMIE PS4 Controller Node")
-
-        ### ROS2 Parameters ###
-        # when declaring a ros2 parameter the second argument of the function is the default value 
-        # self.declare_parameter("control_arm", True) 
-        # self.declare_parameter("control_face", True)
-        # self.declare_parameter("control_motors", True)
-        # self.declare_parameter("control_neck", True) 
-        # self.declare_parameter("control_rgb", True) 
-        # self.declare_parameter("control_set_movement", True) 
-        # self.declare_parameter("control_speakers", True)
-        # self.declare_parameter("control_torso", True)
-        # self.declare_parameter("control_wait_for_end_of_navigation", True)
-
-        # Create Controller object
-        # self.controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
-
-        ### Topics (Publisher and Subscribers) ###   
-        # Low Level 
-        # self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10)
-        # self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
-        # self.set_movement_publisher = self.create_publisher(Bool, "set_movement", 10)
-
-        # Navigation
-        # self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10)
-
-        # PS4 Controller
-        # self.ps4_controller_publisher = self.create_publisher(PS4Controller, "controller_state", 10)
-
-        # Face
-        # self.image_to_face_publisher = self.create_publisher(String, "display_image_face", 10)
-        
-        # Arm 
-        # self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
-        # self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
-
-        ### Services (Clients) ###
-        # Speakers
-        # self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
-        # Neck
-        # self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
-        # Low level
-        # self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
-
-
-        # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
-        # self.CONTROL_ARM = self.get_parameter("control_arm").value
-        # self.CONTROL_FACE = self.get_parameter("control_face").value
-        # self.CONTROL_MOTORS = self.get_parameter("control_motors").value
-        # self.CONTROL_NECK = self.get_parameter("control_neck").value
-        # self.CONTROL_RGB = self.get_parameter("control_rgb").value
-        # self.CONTROL_SET_MOVEMENT = self.get_parameter("control_set_movement").value
-        # self.CONTROL_SPEAKERS = self.get_parameter("control_speakers").value
-        # self.CONTROL_TORSO = self.get_parameter("control_torso").value
-        # self.CONTROL_WAIT_FOR_END_OF_NAVIGATION = self.get_parameter("control_wait_for_end_of_navigation").value
-
-        # timer that checks the controller every 50 ms 
-        # self.create_timer(0.05, self.timer_callback)
-
-
-
-
-
-
-
-
-"""
-
-
-
-
-
-
+    """
 
 
     def init(self):
@@ -452,12 +202,6 @@ class TaskMain():
 
         if self.CONTROL_RGB:
             self.set_rgb(RAINBOW_ROT)
-
-        if self.CONTROL_NECK:
-            self.neck_pos = SetNeckPosition.Request()
-            self.neck_pos.pan = float(0)
-            self.neck_pos.tilt = float(0)
-            self.set_neck_position_client.call_async(self.neck_pos)
 
         if self.CONTROL_FACE:
             self.face_mode = String()
@@ -649,37 +393,6 @@ def timer_callback(self):
                 # success, message = self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=False)
                 # print(success, message)
                 
-        if self.CONTROL_NECK:
-            # circle and square to move neck left and right
-            # triangle and cross to move the neck up and down
-            neck_inc = 5.0
-            if ps4_controller.circle >= 2:
-                self.neck_pos.pan -= neck_inc
-                if self.neck_pos.pan < -180.0:
-                    self.neck_pos.pan = -180.0
-                self.set_neck_position_client.call_async(self.neck_pos)
-                # print(self.neck_pos)
-
-            elif ps4_controller.square >= 2:
-                self.neck_pos.pan += neck_inc
-                if self.neck_pos.pan > 180.0:
-                    self.neck_pos.pan = 180.0
-                self.set_neck_position_client.call_async(self.neck_pos)
-                # print(self.neck_pos)
-
-            if ps4_controller.cross >= 2:
-                self.neck_pos.tilt -= neck_inc
-                if self.neck_pos.tilt < -60.0:
-                    self.neck_pos.tilt = -60.0
-                self.set_neck_position_client.call_async(self.neck_pos)
-                # print(self.neck_pos)
-
-            elif ps4_controller.triangle >= 2:
-                self.neck_pos.tilt += neck_inc
-                if self.neck_pos.tilt > 45.0:
-                    self.neck_pos.tilt = 45.0
-                self.set_neck_position_client.call_async(self.neck_pos)
-                # print(self.neck_pos)
 
         if self.CONTROL_SET_MOVEMENT:
             if ps4_controller.ps == 2:
