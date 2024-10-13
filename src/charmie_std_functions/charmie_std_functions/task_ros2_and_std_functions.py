@@ -282,6 +282,7 @@ class ROS2TaskNode(Node):
         self.debug_button1 = False
         self.debug_button2 = False
         self.debug_button3 = False
+        self.new_controller_msg = False
 
     def send_node_used_to_gui(self):
 
@@ -372,6 +373,7 @@ class ROS2TaskNode(Node):
     ### PS4 Controller ###
     def ps4_controller_state_callback(self, controller: PS4Controller):
         self.ps4_controller_state = controller
+        self.new_controller_msg = True
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, request=GetPointCloudBB.Request()):
@@ -1897,4 +1899,14 @@ class RobotStdFunctions():
 
     def get_controller_state(self):
 
-        return self.node.ps4_controller_state
+        temp = self.node.new_controller_msg
+        self.node.new_controller_msg = False
+
+        return self.node.ps4_controller_state, temp 
+
+        # if self.node.new_controller_msg:
+        #     self.node.new_controller_msg = False
+        #     return self.node.ps4_controller_state
+        # else:
+        #     empty_ps4_controller = PS4Controller()
+        #     return empty_ps4_controller

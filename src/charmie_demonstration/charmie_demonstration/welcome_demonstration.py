@@ -2,7 +2,7 @@
 import rclpy
 import threading
 import time
-from charmie_interfaces.msg import DetectedObject, DetectedPerson
+from charmie_interfaces.msg import DetectedObject, DetectedPerson, PS4Controller
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
@@ -18,7 +18,7 @@ ros2_modules = {
     "charmie_hand_camera":      False,
     "charmie_lidar":            False,
     "charmie_localisation":     False,
-    "charmie_low_level":        False,
+    "charmie_low_level":        True,
     "charmie_navigation":       False,
     "charmie_neck":             True,
     "charmie_obstacles":        False,
@@ -59,7 +59,7 @@ class TaskMain():
         self.Final_State = 10
         
         # Neck Positions
-        self.look_forward = [0, 30]
+        self.look_forward = [0, 0]
         # self.look_navigation = [0, -30]
         # self.look_judge = [45, 0]
         # self.look_table_objects = [-45, -45]
@@ -76,6 +76,13 @@ class TaskMain():
         self.neck_pos_pan = self.look_forward[0]
         self.neck_pos_tilt = self.look_forward[1]
 
+        # self.previous_message = False
+        self.PREVIOUS_WATCHDOG_SAFETY_FLAG = True # just for RGB debug
+        self.WATCHDOG_SAFETY_FLAG = True
+        self.WATCHDOG_CUT_TIME = 1.0
+        self.iteration_time = 0.025
+        self.watchdog_timer_ctr = self.WATCHDOG_CUT_TIME/self.iteration_time
+
         # Start localisation position
         # self.initial_position = [-1.0, 1.5, -90.0]
 
@@ -91,21 +98,54 @@ class TaskMain():
             if self.state == self.Waiting_for_task_start:
                 # Initialization State
 
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(CLEAR)
+
                 if ros2_modules["charmie_neck"]:
                     self.robot.set_neck(self.look_forward, wait_for_end_of=True)
 
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(RAINBOW_ROT)
 
+                time.sleep(1.0)
 
+                # to initially set WATCHDOG TIMER FLAGS and RGB 
+                ps4_controller, new_message = self.robot.get_controller_state()
+
+                self.controller_watchdog_timer(new_message)
+
+                if not self.WATCHDOG_SAFETY_FLAG:
+                    self.robot.set_rgb(BLUE+HALF_ROTATE)
+                elif self.WATCHDOG_SAFETY_FLAG:
+                    self.robot.set_rgb(RED+HALF_ROTATE)
 
                 self.state = self.Demo_actuators
 
             elif self.state == self.Demo_actuators:
 
-                ps4_controller = self.robot.get_controller_state()
+                ps4_controller, new_message = self.robot.get_controller_state()
+
+                self.controller_watchdog_timer(new_message)
+
+                if self.WATCHDOG_SAFETY_FLAG:
+                    ps4_controller = PS4Controller() # cleans ps4_controller -> sets everything to 0
+
+
+                # just for RGB visual debug  
+                if not self.WATCHDOG_SAFETY_FLAG and self.PREVIOUS_WATCHDOG_SAFETY_FLAG:
+                    self.robot.set_rgb(BLUE+HALF_ROTATE)
+                elif self.WATCHDOG_SAFETY_FLAG and not self.PREVIOUS_WATCHDOG_SAFETY_FLAG:
+                    self.robot.set_rgb(RED+HALF_ROTATE)
+
+                # self.previous_message = new_message
 
                 # print(ps4_controller)
                 # print(self.neck_pos_pan, self.neck_pos_tilt, ps4_controller.triangle, ps4_controller.cross)
 
+                # if ps4_controller.r1 >= self.ON_AND_RISING:
+                #     self.robot.set_rgb(GREEN+HALF_ROTATE)
+                # else:
+                #     self.robot.set_rgb(MAGENTA+HALF_ROTATE)
 
                 if ros2_modules["charmie_neck"]:
                     
@@ -141,8 +181,9 @@ class TaskMain():
                             self.neck_pos_tilt = 45
                         self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
                         # print(self.neck_pos)
-                    
-                    time.sleep(0.025)
+                
+                time.sleep(self.iteration_time)
+                3
 
 
             elif self.state == self.Final_State:
@@ -155,6 +196,23 @@ class TaskMain():
 
             else:
                 pass
+
+
+    def controller_watchdog_timer(self, new_message):
+
+        if new_message:
+            self.watchdog_timer_ctr = 0
+        else:
+            self.watchdog_timer_ctr += 1
+
+        self.PREVIOUS_WATCHDOG_SAFETY_FLAG = self.WATCHDOG_SAFETY_FLAG
+
+        if self.watchdog_timer_ctr > (self.WATCHDOG_CUT_TIME/self.iteration_time):
+            self.WATCHDOG_SAFETY_FLAG = True
+        else:
+            self.WATCHDOG_SAFETY_FLAG = False
+
+
 
     """
 
@@ -199,9 +257,6 @@ class TaskMain():
             self.omni_move.y = 0.0
             self.omni_move.z = 100.0
             self.omni_move_publisher.publish(self.omni_move)
-
-        if self.CONTROL_RGB:
-            self.set_rgb(RAINBOW_ROT)
 
         if self.CONTROL_FACE:
             self.face_mode = String()
