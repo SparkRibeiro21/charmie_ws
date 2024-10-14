@@ -183,7 +183,7 @@ class TaskMain():
                         # print(self.neck_pos)
                 
                 time.sleep(self.iteration_time)
-                3
+                
 
 
             elif self.state == self.Final_State:

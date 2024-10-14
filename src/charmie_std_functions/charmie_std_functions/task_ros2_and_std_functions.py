@@ -1899,14 +1899,7 @@ class RobotStdFunctions():
 
     def get_controller_state(self):
 
-        temp = self.node.new_controller_msg
+        temp_has_new_message = self.node.new_controller_msg
         self.node.new_controller_msg = False
 
-        return self.node.ps4_controller_state, temp 
-
-        # if self.node.new_controller_msg:
-        #     self.node.new_controller_msg = False
-        #     return self.node.ps4_controller_state
-        # else:
-        #     empty_ps4_controller = PS4Controller()
-        #     return empty_ps4_controller
+        return self.node.ps4_controller_state, temp_has_new_message
