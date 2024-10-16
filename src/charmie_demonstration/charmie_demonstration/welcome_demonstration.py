@@ -14,7 +14,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              False,
     "charmie_audio":            False,
-    "charmie_face":             False,
+    "charmie_face":             True,
     "charmie_head_camera":      True,
     "charmie_hand_camera":      False,
     "charmie_lidar":            False,
@@ -112,7 +112,10 @@ class TaskMain():
 
                 if ros2_modules["charmie_low_level"]:
                     self.robot.node.torso_movement_publisher.publish(self.torso_pos)
-                    
+
+                if ros2_modules["charmie_face"]:
+                    self.robot.set_face("charmie_face")
+
                 if ros2_modules["charmie_neck"]:
                     self.robot.set_neck(self.look_forward, wait_for_end_of=True)
 
@@ -156,14 +159,9 @@ class TaskMain():
                 elif self.WATCHDOG_SAFETY_FLAG and not self.PREVIOUS_WATCHDOG_SAFETY_FLAG:
                     if ros2_modules["charmie_low_level"]:
                         self.robot.set_rgb(RED+HALF_ROTATE)
-                        self.motors_active = False
-                        self.robot.activate_motors(activate=self.motors_active)
-
-                    if ros2_modules["charmie_low_level"]:
-                        self.torso_pos.x = 0.0
-                        self.torso_pos.y = 0.0
-                        self.robot.node.torso_movement_publisher.publish(self.torso_pos)
-                        
+                    
+                    self.safety_stop_modules()
+    
                     if ros2_modules["charmie_speakers"]:
                         self.robot.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
 
@@ -265,13 +263,14 @@ class TaskMain():
                     if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
                         if ps4_controller.r1 == self.RISING:
                             self.state = self.Search_for_objects_demonstration
-
-                    
+    
                 time.sleep(self.iteration_time)
+
 
             elif self.state == self.Search_for_objects_demonstration:
                 
-
+                self.safety_stop_modules()
+    
                 tetas = [[35, -35], [45, -15], [55, -35]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                 objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
@@ -288,12 +287,19 @@ class TaskMain():
                 
                 for o in objects_found:
                     if ros2_modules["charmie_face"]:
-                        path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,0,255))
+                        path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(255,255,0))
+                        time.sleep(0.5)
                     # print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
                     self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
                     if ros2_modules["charmie_face"]:
-                        time.sleep(3.0) # time to people check face
-                
+                        time.sleep(2.5) # time to people check face
+               
+                if ros2_modules["charmie_face"]:
+                    self.robot.set_face("charmie_face")
+    
+                self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
                 self.state = self.Demo_actuators_with_tasks
 
             else:
@@ -314,7 +320,17 @@ class TaskMain():
         else:
             self.WATCHDOG_SAFETY_FLAG = False
 
+    def safety_stop_modules(self):
+        
+        if ros2_modules["charmie_low_level"]:
+            
+            self.motors_active = False
+            self.robot.activate_motors(activate=self.motors_active)
 
+            self.torso_pos.x = 0.0
+            self.torso_pos.y = 0.0
+            self.robot.node.torso_movement_publisher.publish(self.torso_pos)
+        
 
 """
 
