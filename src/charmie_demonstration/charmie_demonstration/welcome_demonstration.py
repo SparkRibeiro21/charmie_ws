@@ -15,7 +15,7 @@ ros2_modules = {
     "charmie_arm":              False,
     "charmie_audio":            False,
     "charmie_face":             False,
-    "charmie_head_camera":      False,
+    "charmie_head_camera":      True,
     "charmie_hand_camera":      False,
     "charmie_lidar":            False,
     "charmie_localisation":     False,
@@ -24,10 +24,10 @@ ros2_modules = {
     "charmie_neck":             True,
     "charmie_obstacles":        False,
     "charmie_odometry":         False,
-    "charmie_point_cloud":      False,
+    "charmie_point_cloud":      True,
     "charmie_ps4_controller":   True,
     "charmie_speakers":         True,
-    "charmie_yolo_objects":     False,
+    "charmie_yolo_objects":     True,
     "charmie_yolo_pose":        False,
 }
 
@@ -58,6 +58,7 @@ class TaskMain():
         self.Waiting_for_task_start = 0
         self.Demo_actuators_with_tasks = 1
         self.Demo_actuators_without_tasks = 2
+        self.Search_for_objects_demonstration = 3
         self.Final_State = 10
         
         # Neck Positions
@@ -259,17 +260,42 @@ class TaskMain():
                             if self.neck_pos_tilt > 45:
                                 self.neck_pos_tilt = 45
                             self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
-                        
+
+
+                    if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"]:
+                        if ps4_controller.r1 == self.RISING:
+                            self.state = self.Search_for_objects_demonstration
+
+                    
                 time.sleep(self.iteration_time)
 
-
-            elif self.state == self.Final_State:
+            elif self.state == self.Search_for_objects_demonstration:
                 
-                self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
 
-                # Lock after finishing task
-                while True:
-                    pass
+                # self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
+                # time.sleep(2.0)
+
+                # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
+                tetas = [[-15, -45], [-15, -15], [-15, 15]]
+                # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                
+                ### SPEAK O QUE VIU
+                # print("LIST OF DETECTED OBJECTS:")
+                for o in objects_found:
+                    # print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
+                    self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+
+
+                
+                self.robot.set_rgb(MAGENTA+HALF_ROTATE)
+                time.sleep(3.0)
+
+                # for o in objects_found:
+                #     path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
+                #     time.sleep(4)
+                
+                self.state = self.Demo_actuators_with_tasks
 
             else:
                 pass
