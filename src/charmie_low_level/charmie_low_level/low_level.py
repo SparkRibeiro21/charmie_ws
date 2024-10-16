@@ -502,45 +502,45 @@ class LowLevelNode(Node):
 
     def torso_move_callback(self, data: Pose2D): # used by ps4 controller
 
-        print("receiving torso position ")
+        # print("receiving torso position ")
         estado_legs = int(data.x)
         estado_torso = int(data.y) 
 
         if estado_legs == 0:
-            print("Legs Stopped")
+            # print("Legs Stopped")
             self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_ACTIVE, False)
             # nao anda
         elif estado_legs == 1:
-            print("Legs Up")
+            # print("Legs Up")
             self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_ACTIVE, True)
             self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_MOVEM, True)
             # cima
         elif estado_legs == -1:
-            print("Legs Down")
+            # print("Legs Down")
             self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_ACTIVE, True)
             self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_MOVEM, False)
             # baixo
         else:
-            print("Legs Stopped 2")
+            # print("Legs Stopped 2")
             self.robot.set_omni_flags(self.robot.LIN_ACT_LEGS_ACTIVE, False)
             # nao amnda
 
         if estado_torso == 0:
-            print("Torso Stopped")
+            # print("Torso Stopped")
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, False)
             # nao anda
         elif estado_torso == 1:
-            print("Torso Up")
+            # print("Torso Up")
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, True)
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_MOVEM, True)
             # cima
         elif estado_torso == -1:
-            print("Torso Down")
+            # print("Torso Down")
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, True)
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_MOVEM, False)
             # baixo
         else:
-            print("Torso Stopped 2")
+            # print("Torso Stopped 2")
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, False)
             # nao amnda
 

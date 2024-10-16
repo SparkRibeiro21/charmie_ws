@@ -193,7 +193,7 @@ class NeckNode(Node):
 
         # returns whether the message was played and some informations regarding status
         response.success = True
-        response.message = "set neck position"
+        response.message = "Set Neck Position"
         return response
 
     def callback_get_neck_position(self, request, response):
@@ -298,7 +298,7 @@ class NeckNode(Node):
 
         # returns whether the message was played and some informations regarding status
         response.success = True
-        response.message = "set to coordinates"
+        response.message = "Set Neck to (x,y,z) Coordinates"
         return response
 
     def callback_neck_track_person(self, request, response):
@@ -348,7 +348,7 @@ class NeckNode(Node):
         self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
     
         response.success = True
-        response.message = "neck track person"
+        response.message = "Neck Track Person"
         return response
 
     
@@ -393,7 +393,7 @@ class NeckNode(Node):
         self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
     
         response.success = True
-        response.message = "neck track object"
+        response.message = "Neck Track Object"
         return response
 
 

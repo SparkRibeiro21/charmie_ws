@@ -2,7 +2,7 @@
 import rclpy
 import threading
 import time
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3, Pose2D
 from charmie_interfaces.msg import DetectedObject, DetectedPerson, PS4Controller
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
@@ -56,7 +56,8 @@ class TaskMain():
         
         # Task States
         self.Waiting_for_task_start = 0
-        self.Demo_actuators = 1
+        self.Demo_actuators_with_tasks = 1
+        self.Demo_actuators_without_tasks = 2
         self.Final_State = 10
         
         # Neck Positions
@@ -84,9 +85,9 @@ class TaskMain():
         self.iteration_time = 0.01
         self.watchdog_timer_ctr = self.WATCHDOG_CUT_TIME/self.iteration_time
 
-
         self.motors_active = False
         self.omni_move = Vector3()
+        self.torso_pos = Pose2D()
 
         # Start localisation position
         # self.initial_position = [-1.0, 1.5, -90.0]
@@ -108,6 +109,9 @@ class TaskMain():
                     self.motors_active = False
                     self.robot.activate_motors(activate=self.motors_active)
 
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.node.torso_movement_publisher.publish(self.torso_pos)
+                    
                 if ros2_modules["charmie_neck"]:
                     self.robot.set_neck(self.look_forward, wait_for_end_of=True)
 
@@ -128,9 +132,9 @@ class TaskMain():
                         self.motors_active = False
                         self.robot.activate_motors(activate=self.motors_active)
 
-                self.state = self.Demo_actuators
+                self.state = self.Demo_actuators_with_tasks
 
-            elif self.state == self.Demo_actuators:
+            elif self.state == self.Demo_actuators_with_tasks:
 
                 ps4_controller, new_message = self.robot.get_controller_state()
                 self.controller_watchdog_timer(new_message)
@@ -138,8 +142,7 @@ class TaskMain():
                 if self.WATCHDOG_SAFETY_FLAG:
                     ps4_controller = PS4Controller() # cleans ps4_controller -> sets everything to 0
 
-
-                print(self.WATCHDOG_SAFETY_FLAG, self.PREVIOUS_WATCHDOG_SAFETY_FLAG)
+                # print(self.WATCHDOG_SAFETY_FLAG, self.PREVIOUS_WATCHDOG_SAFETY_FLAG)
                 
                 # WATCHDOG VERIFICATIONS
                 if not self.WATCHDOG_SAFETY_FLAG and self.PREVIOUS_WATCHDOG_SAFETY_FLAG:
@@ -155,12 +158,10 @@ class TaskMain():
                         self.motors_active = False
                         self.robot.activate_motors(activate=self.motors_active)
 
-                        # MISSING TORSO
-                        # if self.CONTROL_TORSO:
-                        # self.torso_pos.x = 0.0
-                        # self.torso_pos.y = 0.0
-                        # self.torso_movement_publisher.publish(self.torso_pos)
-
+                    if ros2_modules["charmie_low_level"]:
+                        self.torso_pos.x = 0.0
+                        self.torso_pos.y = 0.0
+                        self.robot.node.torso_movement_publisher.publish(self.torso_pos)
                         
                     if ros2_modules["charmie_speakers"]:
                         self.robot.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
@@ -177,10 +178,9 @@ class TaskMain():
                                 self.motors_active = not self.motors_active
                                 self.robot.activate_motors(activate=self.motors_active)
 
-                                # MISSING TORSO
-                                # self.torso_pos.x = 0.0
-                                # self.torso_pos.y = 0.0
-                                # self.torso_movement_publisher.publish(self.torso_pos)
+                                self.torso_pos.x = 0.0
+                                self.torso_pos.y = 0.0
+                                self.robot.node.torso_movement_publisher.publish(self.torso_pos)
 
                                 if self.motors_active:
                                     if ros2_modules["charmie_speakers"]:
@@ -210,9 +210,10 @@ class TaskMain():
                             self.robot.node.omni_move_publisher.publish(self.omni_move)
 
                     if ros2_modules["charmie_low_level"]:
-                        pass
-                        """
-                        if self.CONTROL_TORSO:
+
+                        if self.motors_active:
+
+                            # Torso Movement
                             if ps4_controller.arrow_up >= 2:
                                 self.torso_pos.x = 1.0
                             elif ps4_controller.arrow_down >= 2:
@@ -227,15 +228,8 @@ class TaskMain():
                             else:
                                 self.torso_pos.y = 0.0
 
-                            self.torso_movement_publisher.publish(self.torso_pos)
+                            self.robot.node.torso_movement_publisher.publish(self.torso_pos)
 
-                            # if self.CONTROL_WAIT_FOR_END_OF_NAVIGATION:
-                            # self.wfeon.data = True
-                            # if ps4_controller.options:
-                            #     self.flag_pos_reached_publisher.publish(self.wfeon)
-                        """
-                        
-                
                     if ros2_modules["charmie_neck"]:
                         
                         # circle and square to move neck left and right
