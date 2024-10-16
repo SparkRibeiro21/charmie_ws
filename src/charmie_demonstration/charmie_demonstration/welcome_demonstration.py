@@ -28,7 +28,7 @@ ros2_modules = {
     "charmie_ps4_controller":   True,
     "charmie_speakers":         True,
     "charmie_yolo_objects":     True,
-    "charmie_yolo_pose":        False,
+    "charmie_yolo_pose":        True,
 }
 
 # main function that already creates the thread for the task state machine
@@ -64,6 +64,7 @@ class TaskMain():
         
         # Neck Positions
         self.look_forward = [0, 0]
+        self.look_forward_down = [0, 0]
         # self.look_navigation = [0, -30]
         # self.look_judge = [45, 0]
         # self.look_table_objects = [-45, -45]
@@ -304,6 +305,8 @@ class TaskMain():
     
                 else:
                     self.robot.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+                
+                self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
@@ -342,6 +345,7 @@ class TaskMain():
                 else:
                     self.robot.set_speech(filename="generic/could_not_find_any_people", wait_for_end_of=True) ###
 
+                self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
