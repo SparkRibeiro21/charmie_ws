@@ -1,5 +1,6 @@
 {
-"ready_new_task": "I am ready for a new task.",
-"how_can_i_help": "How can I help?"
+"could_not_find_any_people": "I could not find any people.",
+"found_some_people": "I have found some people.",
+"check_face_person_detected":"Please check my face to see the detected person."
 }
 

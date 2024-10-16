@@ -59,6 +59,7 @@ class TaskMain():
         self.Demo_actuators_with_tasks = 1
         self.Demo_actuators_without_tasks = 2
         self.Search_for_objects_demonstration = 3
+        self.Search_for_people_demonstration = 4
         self.Final_State = 10
         
         # Neck Positions
@@ -263,6 +264,10 @@ class TaskMain():
                     if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
                         if ps4_controller.r1 == self.RISING:
                             self.state = self.Search_for_objects_demonstration
+                    
+                    if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                        if ps4_controller.l1 == self.RISING:
+                            self.state = self.Search_for_people_demonstration
     
                 time.sleep(self.iteration_time)
 
@@ -275,32 +280,73 @@ class TaskMain():
                 # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                 objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                 
-                ### SPEAK O QUE VIU
-                # print("LIST OF DETECTED OBJECTS:")
                 self.robot.set_neck(self.look_forward, wait_for_end_of=True)
-                if ros2_modules["charmie_face"]:
-                    self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/i_have_found", wait_for_end_of=True)
-                
-                if ros2_modules["charmie_low_level"]:
-                    self.robot.set_rgb(RAINBOW_ROT)
-                
-                for o in objects_found:
+
+                if len(objects_found):
                     if ros2_modules["charmie_face"]:
-                        path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(255,255,0))
-                        time.sleep(0.5)
-                    # print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
-                    self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                        self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/i_have_found", wait_for_end_of=True)
+                    
+                    if ros2_modules["charmie_low_level"]:
+                        self.robot.set_rgb(RAINBOW_ROT)
+                    
+                    for o in objects_found:
+                        if ros2_modules["charmie_face"]:
+                            path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(255,255,0))
+                            time.sleep(0.5)
+                        
+                        self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                        if ros2_modules["charmie_face"]:
+                            time.sleep(2.5) # time to people check face
+                
                     if ros2_modules["charmie_face"]:
-                        time.sleep(2.5) # time to people check face
-               
-                if ros2_modules["charmie_face"]:
-                    self.robot.set_face("charmie_face")
+                        self.robot.set_face("charmie_face")
     
+                else:
+                    self.robot.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
                 self.state = self.Demo_actuators_with_tasks
+
+
+            elif self.state == self.Search_for_people_demonstration:
+                
+                self.safety_stop_modules()
+
+                tetas = [[-60, -10], [0, -10], [60, -10]]
+                people_found = self.robot.search_for_person(tetas=tetas, delta_t=2.0)
+
+                self.robot.set_neck(self.look_forward, wait_for_end_of=True)
+
+                if len(people_found):
+                    if ros2_modules["charmie_face"]:
+                        self.robot.set_speech(filename="generic/check_face_person_detected", wait_for_end_of=True) ###
+                    
+                    if ros2_modules["charmie_low_level"]:
+                        self.robot.set_rgb(RAINBOW_ROT)
+                    
+                    for p in people_found:
+                        if ros2_modules["charmie_face"]:
+                            path = self.robot.detected_person_to_face_path(person=p, send_to_face=True)
+                            # time.sleep(0.5)
+                        
+                        self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z], wait_for_end_of=True)
+                    
+                        if ros2_modules["charmie_face"]:
+                            time.sleep(2.5) # time to people check face
+                
+                    if ros2_modules["charmie_face"]:
+                        self.robot.set_face("charmie_face")
+    
+                else:
+                    self.robot.set_speech(filename="generic/could_not_find_any_people", wait_for_end_of=True) ###
+
+                self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.state = self.Demo_actuators_with_tasks
+
 
             else:
                 pass
