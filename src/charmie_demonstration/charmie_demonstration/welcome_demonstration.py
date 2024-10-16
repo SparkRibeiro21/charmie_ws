@@ -64,7 +64,7 @@ class TaskMain():
         
         # Neck Positions
         self.look_forward = [0, 0]
-        self.look_forward_down = [0, 0]
+        self.look_forward_down = [0, -20]
         # self.look_navigation = [0, -30]
         # self.look_judge = [45, 0]
         # self.look_table_objects = [-45, -45]
@@ -84,7 +84,7 @@ class TaskMain():
         # self.previous_message = False
         self.PREVIOUS_WATCHDOG_SAFETY_FLAG = True # just for RGB debug
         self.WATCHDOG_SAFETY_FLAG = True
-        self.WATCHDOG_CUT_TIME = 1.0
+        self.WATCHDOG_CUT_TIME = 1.5
         self.iteration_time = 0.01
         self.watchdog_timer_ctr = self.WATCHDOG_CUT_TIME/self.iteration_time
 
@@ -139,6 +139,7 @@ class TaskMain():
                         self.robot.activate_motors(activate=self.motors_active)
 
                 self.state = self.Demo_actuators_with_tasks
+
 
             elif self.state == self.Demo_actuators_with_tasks:
 
@@ -275,6 +276,7 @@ class TaskMain():
 
             elif self.state == self.Search_for_objects_demonstration:
                 
+                temp_active_motors = self.motors_active
                 self.safety_stop_modules()
     
                 tetas = [[35, -35], [45, -15], [55, -35]]
@@ -310,11 +312,15 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
                 self.state = self.Demo_actuators_with_tasks
 
 
             elif self.state == self.Search_for_people_demonstration:
                 
+                temp_active_motors = self.motors_active
                 self.safety_stop_modules()
 
                 tetas = [[-60, -10], [0, -10], [60, -10]]
@@ -349,6 +355,9 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
                 self.state = self.Demo_actuators_with_tasks
 
 
@@ -374,6 +383,11 @@ class TaskMain():
         
         if ros2_modules["charmie_low_level"]:
             
+            self.omni_move.x = 0.0
+            self.omni_move.y = 0.0
+            self.omni_move.z = 100.0
+            self.robot.node.omni_move_publisher.publish(self.omni_move)
+
             self.motors_active = False
             self.robot.activate_motors(activate=self.motors_active)
 
