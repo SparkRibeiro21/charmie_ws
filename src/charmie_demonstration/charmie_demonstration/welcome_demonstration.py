@@ -262,7 +262,7 @@ class TaskMain():
                             self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
 
 
-                    if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"]:
+                    if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
                         if ps4_controller.r1 == self.RISING:
                             self.state = self.Search_for_objects_demonstration
 
@@ -272,28 +272,27 @@ class TaskMain():
             elif self.state == self.Search_for_objects_demonstration:
                 
 
-                # self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
-                # time.sleep(2.0)
-
-                # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                tetas = [[-15, -45], [-15, -15], [-15, 15]]
+                tetas = [[35, -35], [45, -15], [55, -35]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                 
                 ### SPEAK O QUE VIU
                 # print("LIST OF DETECTED OBJECTS:")
+                self.robot.set_neck(self.look_forward, wait_for_end_of=True)
+                if ros2_modules["charmie_face"]:
+                    self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/i_have_found", wait_for_end_of=True)
+                
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(RAINBOW_ROT)
+                
                 for o in objects_found:
+                    if ros2_modules["charmie_face"]:
+                        path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,0,255))
                     # print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
                     self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
-
-
-                
-                self.robot.set_rgb(MAGENTA+HALF_ROTATE)
-                time.sleep(3.0)
-
-                # for o in objects_found:
-                #     path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
-                #     time.sleep(4)
+                    if ros2_modules["charmie_face"]:
+                        time.sleep(3.0) # time to people check face
                 
                 self.state = self.Demo_actuators_with_tasks
 
