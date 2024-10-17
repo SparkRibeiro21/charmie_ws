@@ -222,7 +222,7 @@ class TaskMain():
                 if self.GET_CORNFLAKES:
                     
                     self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                    self.robot.set_speech(filename="generic/sb_moving_kitchen_counter", wait_for_end_of=False)
+                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=False)
 
                     
                     self.robot.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
@@ -248,7 +248,7 @@ class TaskMain():
                     # debug
                     # self.set_initial_position([0.0, 0.0, 90.0])
 
-                    self.robot.set_speech(filename="generic/sb_arrived_kitchen_counter", wait_for_end_of=False)
+                    self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=False)
                     self.robot.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
                     
                     

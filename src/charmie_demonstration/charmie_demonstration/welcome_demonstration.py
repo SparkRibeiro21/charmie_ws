@@ -61,8 +61,13 @@ class TaskMain():
         self.Search_for_objects_demonstration = 3
         self.Search_for_people_demonstration = 4
         self.Introduction_demonstration = 5
+        self.Serve_breakfast_demonstration = 6
         self.Final_State = 10
         
+        self.SB_Waiting_for_task_start = 0
+        self.SB_Detect_and_receive_objects = 1
+        self.SB_Place_and_pour_objects = 2
+
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_forward_down = [0, -20]
@@ -99,9 +104,11 @@ class TaskMain():
         # navigation positions
         # self.front_of_sofa = [-2.5, 1.5]
         # self.sofa = [-2.5, 3.0]
-        
+        self.current_task = 0
+
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
+        self.state_SB = self.SB_Waiting_for_task_start
 
         while True:
 
@@ -270,18 +277,34 @@ class TaskMain():
                             self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
 
 
-                    if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
-                        if ps4_controller.r1 == self.RISING:
-                            self.state = self.Search_for_objects_demonstration
-                    
-                    if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
-                        if ps4_controller.l1 == self.RISING:
-                            self.state = self.Search_for_people_demonstration
+                    if not self.current_task:
+                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                            if ps4_controller.r1 == self.RISING:
+                                self.state = self.Search_for_objects_demonstration
+                        
+                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                            if ps4_controller.l1 == self.RISING:
+                                self.state = self.Search_for_people_demonstration
 
-                    if ros2_modules["charmie_speakers"]:
-                        if ps4_controller.r3 == self.RISING:
-                            self.state = self.Introduction_demonstration
+                        if ros2_modules["charmie_speakers"]:
+                            if ps4_controller.r3 == self.RISING:
+                                self.state = self.Introduction_demonstration
 
+                        if ros2_modules["charmie_speakers"]:
+                            if ps4_controller.l3 == self.RISING:
+                                self.state = self.Serve_breakfast_demonstration
+                                self.current_task = self.Serve_breakfast_demonstration
+                                self.state_SB = self.SB_Waiting_for_task_start
+                    else:
+                        # Similar to wait_for_end_of_navigation, allows navigation between subparts of task
+                        if ps4_controller.l1 >= self.ON_AND_RISING and ps4_controller.r1 >= self.ON_AND_RISING:
+                            self.state = self.current_task
+
+                        # Allows to cancel a task midway (in navigation part)
+                        if ps4_controller.share >= self.ON_AND_RISING and ps4_controller.options >= self.ON_AND_RISING:
+                            self.robot.set_speech(filename="demonstration/stopped_task_demo", wait_for_end_of=False)
+                            self.current_task = 0
+    
     
                 time.sleep(self.iteration_time)
 
@@ -396,8 +419,59 @@ class TaskMain():
                 ### MISSING: ARM WAVING
 
                 # self.robot.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
-                self.robot.set_speech(filename="demonstration/introduction_demo", wait_for_end_of=False)
+                self.robot.set_speech(filename="demonstration/introduction_demo", wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+
+
+            elif self.state == self.Serve_breakfast_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                # if ros2_modules["charmie_low_level"]:
+                #     self.robot.set_rgb(RAINBOW_ROT)
+
+                if self.state_SB == self.SB_Waiting_for_task_start:
+                    
+                    self.robot.set_speech(filename="serve_breakfast/sb_ready_start", wait_for_end_of=True)
+                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
+
+                    self.state_SB = self.SB_Detect_and_receive_objects
+
+                elif self.state_SB == self.SB_Detect_and_receive_objects:
+                    
+                    self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=False)
+                    
+                    ### SEARCH FOR OBJECTS
+                    ### RECEIVE OBJECTS
+
+                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=True)
+
+                    self.state_SB = self.SB_Place_and_pour_objects
+
+                elif self.state_SB == self.SB_Place_and_pour_objects:
+                    
+                    self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=False)
+                    
+                    ### PLACE OBEJCTS
+                    ### POUR OBJECTS
+                    
+                    self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
+
+                    self.state_SB = self.SB_Waiting_for_task_start
+                    self.current_task = 0
+
 
                 self.motors_active = temp_active_motors
                 self.robot.activate_motors(activate=self.motors_active)
