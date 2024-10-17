@@ -60,6 +60,7 @@ class TaskMain():
         self.Demo_actuators_without_tasks = 2
         self.Search_for_objects_demonstration = 3
         self.Search_for_people_demonstration = 4
+        self.Introduction_demonstration = 5
         self.Final_State = 10
         
         # Neck Positions
@@ -121,8 +122,14 @@ class TaskMain():
                 if ros2_modules["charmie_neck"]:
                     self.robot.set_neck(self.look_forward, wait_for_end_of=True)
 
-                # if ros2_modules["charmie_low_level"]:
-                #     self.robot.set_rgb(RAINBOW_ROT)
+                time.sleep(0.5)
+
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(RAINBOW_ROT)
+
+                if ros2_modules["charmie_speakers"]:
+                    self.robot.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
                 # to initially set WATCHDOG TIMER FLAGS and RGB 
                 ps4_controller, new_message = self.robot.get_controller_state()
@@ -270,6 +277,11 @@ class TaskMain():
                     if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
                         if ps4_controller.l1 == self.RISING:
                             self.state = self.Search_for_people_demonstration
+
+                    if ros2_modules["charmie_speakers"]:
+                        if ps4_controller.r3 == self.RISING:
+                            self.state = self.Introduction_demonstration
+
     
                 time.sleep(self.iteration_time)
 
@@ -315,6 +327,12 @@ class TaskMain():
                 self.motors_active = temp_active_motors
                 self.robot.activate_motors(activate=self.motors_active)
 
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
                 self.state = self.Demo_actuators_with_tasks
 
 
@@ -358,9 +376,65 @@ class TaskMain():
                 self.motors_active = temp_active_motors
                 self.robot.activate_motors(activate=self.motors_active)
 
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
                 self.state = self.Demo_actuators_with_tasks
 
 
+            elif self.state == self.Introduction_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(RAINBOW_ROT)
+
+                ### MISSING: ARM WAVING
+
+                # self.robot.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
+                self.robot.set_speech(filename="demonstration/introduction_demo", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+
+
+                """
+            elif self.state == self.Example_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                ### your code here
+
+                self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+                """
+            
             else:
                 pass
 
@@ -394,251 +468,3 @@ class TaskMain():
             self.torso_pos.x = 0.0
             self.torso_pos.y = 0.0
             self.robot.node.torso_movement_publisher.publish(self.torso_pos)
-        
-
-"""
-
-def timer_callback(self):
-
-        # create ps4 controller object
-        ps_con = PS4Controller()
-
-        if self.controller.values_updated == True:
-            self.watchdog_timer = 0            
-            self.watchdog_flag = False
-
-            # attribute controller data to ps4 controller object   
-            ps_con.arrow_up = int(self.controller.button_state(self.controller.ARROW_UP))
-            ps_con.arrow_right = int(self.controller.button_state(self.controller.ARROW_RIGHT))
-            ps_con.arrow_down = int(self.controller.button_state(self.controller.ARROW_DOWN))
-            ps_con.arrow_left = int(self.controller.button_state(self.controller.ARROW_LEFT))
-
-            ps_con.triangle = int(self.controller.button_state(self.controller.TRIANGLE))
-            ps_con.circle = int(self.controller.button_state(self.controller.CIRCLE))
-            ps_con.cross = int(self.controller.button_state(self.controller.CROSS))
-            ps_con.square = int(self.controller.button_state(self.controller.SQUARE))
-
-            ps_con.l1 = int(self.controller.button_state(self.controller.L1))
-            ps_con.r1 = int(self.controller.button_state(self.controller.R1))
-            ps_con.l3 = int(self.controller.button_state(self.controller.L3))
-            ps_con.r3 = int(self.controller.button_state(self.controller.R3))
-
-            ps_con.share = int(self.controller.button_state(self.controller.SHARE))
-            ps_con.options = int(self.controller.button_state(self.controller.OPTIONS))
-            ps_con.ps = int(self.controller.button_state(self.controller.PS))
-
-            ps_con.l2 = float(self.controller.L2dist)
-            ps_con.r2 = float(self.controller.R2dist)
-
-            ps_con.l3_ang = float(self.controller.L3ang)
-            ps_con.l3_dist = float(self.controller.L3dist)
-            ps_con.l3_xx = float(self.controller.L3xx)
-            ps_con.l3_yy = float(self.controller.L3yy)
-
-            ps_con.r3_ang = float(self.controller.R3ang)
-            ps_con.r3_dist = float(self.controller.R3dist)
-            ps_con.r3_xx = float(self.controller.R3xx)
-            ps_con.r3_yy = float(self.controller.R3yy)
-
-            # prevents small noises in joy sticks
-            if ps_con.l3_dist < 0.1:
-                ps_con.l3_ang = 0.0
-
-            if ps_con.r3_dist < 0.1:
-                ps_con.r3_ang = 0.0
-            
-            # overall debug print
-            print("\n", ps_con.arrow_up, ps_con.arrow_right, ps_con.arrow_down, ps_con.arrow_left, "|",
-                  ps_con.triangle, ps_con.circle, ps_con.cross, ps_con.square, "|",
-                  ps_con.l1, ps_con.r1, round(ps_con.l2, 1), round(ps_con.r2, 1), ps_con.l3, ps_con.r3, "|",
-                  ps_con.share, ps_con.ps, ps_con.options, "|",
-                  str(round(ps_con.l3_ang)).rjust(3), round(ps_con.l3_dist, 1), str(round(ps_con.l3_xx, 1)).rjust(4), str(round(ps_con.l3_yy, 1)).rjust(4), "|", 
-                  str(round(ps_con.r3_ang)).rjust(3), round(ps_con.r3_dist, 1), str(round(ps_con.r3_xx, 1)).rjust(4), str(round(ps_con.r3_yy, 1)).rjust(4), "|",
-                  end='')
-
-            # publishes ps4 controller object so if any other needs it, can use controller data  
-            self.ps4_controller_publisher.publish(ps_con)
-            
-            # control code to send commands to other nodes if CONTROL variables are set to true (ros2 params)
-            self.control_robot(ps_con)
-
-            # gets values ready for next iteration
-            self.controller.every_button_update()
-            self.controller.values_updated = False
-
-        else:
-            if not self.watchdog_flag:
-                self.watchdog_timer += 1
-
-
-        if self.watchdog_timer == 40: # since the ps4 controller checks every 50 ms. 20*50ms is 1 second. 40 is 2 seconds.
-            # this is set if in any kind of emergency the controller stops communicating. 
-            # If the system continues with the last received variables it may result in physical damages.
-            # Therefore, to every moving part that may continue moving is set stop commands
-            self.watchdog_flag = True
-            self.watchdog_timer += 1
-
-            print("WATCHDOG BLOCK - NO COMMUNICATIONS IN THE LAST 2 SECONDS")
-
-            # only does this if not in locked motors mode, this prevents always sending the following commands continuously even when it is already locked (mainly stops speaking a lot of times)
-            if self.set_movement.data == True:
-                    
-                # locks motors
-                if self.CONTROL_SET_MOVEMENT:
-                    self.set_movement.data = False
-                    self.set_movement_publisher.publish(self.set_movement)
-
-                # sends command to stop torso
-                if self.CONTROL_TORSO:
-                    self.torso_pos.x = 0.0
-                    self.torso_pos.y = 0.0
-                    self.torso_movement_publisher.publish(self.torso_pos)
-
-                # changes to a red value to notify it entered in motors locked mode
-                if self.CONTROL_RGB:
-                    self.set_rgb(RED+HALF_ROTATE)
-
-                # in case it is not intended for the robot to speak since it may disturb other packages
-                if self.CONTROL_SPEAKERS:
-                    self.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
-
-        # print(self.watchdog_timer, end='')
-        print(".", end='')
-
-    # control code to send commands to other nodes if CONTROL variables are set to true (ros2 params)
-    def control_robot(self, ps4_controller):
-        if self.CONTROL_TORSO:
-            if ps4_controller.arrow_up >= 2:
-                self.torso_pos.x = 1.0
-            elif ps4_controller.arrow_down >= 2:
-                self.torso_pos.x = -1.0
-            else:
-                self.torso_pos.x = 0.0
-
-            if ps4_controller.arrow_right >= 2:
-                self.torso_pos.y = 1.0
-            elif ps4_controller.arrow_left >= 2:
-                self.torso_pos.y = -1.0
-            else:
-                self.torso_pos.y = 0.0
-
-            self.torso_movement_publisher.publish(self.torso_pos)
-
-            # if self.CONTROL_WAIT_FOR_END_OF_NAVIGATION:
-            # self.wfeon.data = True
-            # if ps4_controller.options:
-            #     self.flag_pos_reached_publisher.publish(self.wfeon)
-
-        if self.CONTROL_MOTORS:
-            # left joy stick to control x and y movement (direction and linear speed) 
-            if ps4_controller.l3_dist >= 0.1:
-                self.omni_move.x = ps4_controller.l3_ang
-                self.omni_move.y = ps4_controller.l3_dist*100/5
-            else:
-                self.omni_move.x = 0.0
-                self.omni_move.y = 0.0
-
-            # right joy stick to control angular speed
-            if ps4_controller.r3_dist >= 0.1:
-                self.omni_move.z = 100 + ps4_controller.r3_xx*10
-            else:
-                self.omni_move.z = 100.0
-                       
-            self.omni_move_publisher.publish(self.omni_move)
-
-        if self.CONTROL_RGB:
-            # only does this if not in locked motors mode, otherwise it will change the rgb and being in this mode might be unoticed
-            if self.set_movement.data == True:
-                if ps4_controller.r1 == 2:
-                    self.rgb_demo_index+=1
-                    if self.rgb_demo_index >= len(rgb_demonstration):
-                        self.rgb_demo_index-=len(rgb_demonstration)
-
-                    # print(self.rgb_demo_index)
-                    self.set_rgb(rgb_demonstration[self.rgb_demo_index])
-
-        if self.CONTROL_SPEAKERS:
-            # examples of two different speech commands
-            if ps4_controller.r3 == 2:
-                self.i += 1
-                if self.i == 1:
-                    success, message = self.set_speech(filename="generic/introduction_full", wait_for_end_of=False)
-                    # success, message = self.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
-
-                    print(success, message)
-                    # elif self.i == 2:
-                    # success, message = self.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
-                    # print(success, message)
-                else: 
-                    success, message = self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=False)
-                    # success, message = self.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
-                    print(success, message)
-                    self.i = 0
-            # elif ps4_controller.l3 == 2:
-                # success, message = self.set_speech(filename="receptionist/receptionist_question", wait_for_end_of=False)
-                # print(success, message)
-                
-
-        if self.CONTROL_SET_MOVEMENT:
-            if ps4_controller.ps == 2:
-                if self.set_movement.data == False:
-                    
-                    # stops locked motor mode, motors can now run
-                    self.set_movement.data = True
-                    self.set_movement_publisher.publish(self.set_movement)
-
-                    # returns to the value it was previously
-                    if self.CONTROL_RGB:
-                        self.set_rgb(rgb_demonstration[self.rgb_demo_index])
-
-                    # in case it is not intended for the robot to speak since it may disturb other packages
-                    if self.CONTROL_SPEAKERS:
-                        self.set_speech(filename="demonstration/motors_unlocked", wait_for_end_of=False)
-
-                else:
-
-                    # locks motors
-                    self.set_movement.data = False
-                    self.set_movement_publisher.publish(self.set_movement)
-
-                    # sends command to stop torso
-                    if self.CONTROL_RGB:
-                        self.torso_pos.x = 0.0
-                        self.torso_pos.y = 0.0
-                        self.torso_movement_publisher.publish(self.torso_pos)
-                
-                    # changes to a red value to notify it entered in motors locked mode    
-                    if self.CONTROL_RGB:
-                        self.set_rgb(RED+HALF_ROTATE)
-
-                    # in case it is not intended for the robot to speak since it may disturb other packages
-                    if self.CONTROL_SPEAKERS:
-                        self.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
-
-        if self.CONTROL_FACE:
-            if ps4_controller.l1 == 2:
-                self.face_demo_index+=1
-                if self.face_demo_index >= len(face_demonstration):
-                    self.face_demo_index-=len(face_demonstration)
-
-                # print(self.rgb_demo_index)
-                self.face_mode.data = face_demonstration[self.face_demo_index]
-                self.image_to_face_publisher.publish(self.face_mode)
-
-        if self.CONTROL_ARM:
-            if self.arm_ready: 
-                if ps4_controller.share == 2:
-                    # self.arm_ready = False
-                    # Command to say hello 
-                    # success, message = self.set_arm(command="hello", wait_for_end_of=False)
-                    # success, message = self.set_arm(command="place_objects", wait_for_end_of=False)
-                    success, message = self.set_arm(command="pick_objects", wait_for_end_of=False)
-                    print(success, message)
-                if ps4_controller.options == 2:
-                    # Command to say hello 
-                    success, message = self.set_arm(command="hello", wait_for_end_of=False)
-
-                if ps4_controller.l3 == 2:
-                    # self.arm_ready = False
-                    success, message = self.set_arm(command="place_objects", wait_for_end_of=False)
-"""
