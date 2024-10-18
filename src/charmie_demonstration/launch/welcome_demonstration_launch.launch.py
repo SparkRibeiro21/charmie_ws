@@ -129,8 +129,8 @@ def generate_launch_description():
                         )
 
     arm = Node(package='charmie_arm_ufactory',
-                        executable='arm_demonstration',
-                        name='arm_demonstration',
+                        executable='arm_serve_breakfast',
+                        name='arm_serve_breakfast',
                         )
     
     neck = Node(package='charmie_neck_dynamixel',

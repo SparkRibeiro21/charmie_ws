@@ -12,11 +12,11 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
+    "charmie_arm":              True,
     "charmie_audio":            False,
     "charmie_face":             True,
     "charmie_head_camera":      True,
-    "charmie_hand_camera":      False,
+    "charmie_hand_camera":      True,
     "charmie_lidar":            False,
     "charmie_localisation":     False,
     "charmie_low_level":        True,
@@ -416,10 +416,16 @@ class TaskMain():
                 if ros2_modules["charmie_low_level"]:
                     self.robot.set_rgb(RAINBOW_ROT)
 
-                ### MISSING: ARM WAVING
+                if ros2_modules["charmie_arm"]:
+                    self.robot.set_arm(command="hello", wait_for_end_of=False)
+                    time.sleep(7.0)
 
                 # self.robot.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
                 self.robot.set_speech(filename="demonstration/introduction_demo", wait_for_end_of=True)
+
+                if ros2_modules["charmie_arm"]: # the delays only make sense when arm is operational 
+                    time.sleep(10.2)
+                
                 self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
                 self.motors_active = temp_active_motors
