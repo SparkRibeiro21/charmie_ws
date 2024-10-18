@@ -62,11 +62,15 @@ class TaskMain():
         self.Search_for_people_demonstration = 4
         self.Introduction_demonstration = 5
         self.Serve_breakfast_demonstration = 6
+        self.Audio_receptionist_and_restaurant_demonstration = 7
         self.Final_State = 10
         
         self.SB_Waiting_for_task_start = 0
         self.SB_Detect_and_receive_objects = 1
         self.SB_Place_and_pour_objects = 2
+
+        self.A_Receptionist = 0
+        self.A_Restaurant = 1
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -109,6 +113,7 @@ class TaskMain():
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
         self.state_SB = self.SB_Waiting_for_task_start
+        self.state_A = self.A_Receptionist
 
         while True:
 
@@ -279,12 +284,16 @@ class TaskMain():
 
                     if not self.current_task:
                         if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
-                            if ps4_controller.r1 == self.RISING:
+                            if ps4_controller.share == self.RISING:
                                 self.state = self.Search_for_objects_demonstration
                         
                         if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
-                            if ps4_controller.l1 == self.RISING:
+                            if ps4_controller.options == self.RISING:
                                 self.state = self.Search_for_people_demonstration
+
+                        if ros2_modules["charmie_audio"] and ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                            if ps4_controller.r1 == self.RISING:
+                                self.state = self.Audio_receptionist_and_restaurant_demonstration
 
                         if ros2_modules["charmie_speakers"]:
                             if ps4_controller.r3 == self.RISING:
@@ -439,6 +448,66 @@ class TaskMain():
 
                 self.state = self.Demo_actuators_with_tasks
 
+
+            elif self.state == self.Audio_receptionist_and_restaurant_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                if self.state_A == self.A_Receptionist:
+                
+                    ### audio receptionist code here
+                    self.robot.set_speech(filename="receptionist/start_receptionist", wait_for_end_of=True)
+
+                    # Pedir para se colocar à frente do robô
+                    # Reconhecer a pessoa
+                    # Olhar para a pessoa
+                    # Perguntar o nome e a bebida preferida
+                    # Ouvir 
+                    # Nice to meet you: (nome)
+                    # If i could have a drink, I think I would also enjoy (drinks)
+                    # Do you want to know some characteristics I have detected from you?
+                    # Robot Yes ou Robot No
+                    # Ok, You are ... OU ok, i understand
+                    # It was very nice to meet.
+
+                    self.state_A = self.A_Restaurant
+
+                elif self.state_A == self.A_Restaurant:
+
+                    # I will help people get some food or drinks
+                    # If you need my help please wave
+                    # SFP
+                    # Olhar e mostrar cara da pessoa
+                    # Is this a guest?
+                    # Yes or No (continua para o próximo)
+                    # Yes: Olha para ele
+                    # Yes: please stand in front of me. What is your order?
+                    # Ouve
+                    # confirma 
+                    # Ok, I will try to get you (pedido)
+                    # (continua para o próximo pedido)
+                    # Now i should pick the foods and drinks and bring to my friends. See you soon my friends
+                
+                    ### audio restaurant code here
+                    self.robot.set_speech(filename="restaurant/start_restaurant_task", wait_for_end_of=True)
+
+                    self.state_A = self.A_Receptionist
+
+                self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
 
             elif self.state == self.Serve_breakfast_demonstration:
                 
