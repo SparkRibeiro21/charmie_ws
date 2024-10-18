@@ -305,7 +305,7 @@ class TaskMain():
                             self.robot.set_speech(filename="demonstration/stopped_task_demo", wait_for_end_of=False)
                             self.current_task = 0
     
-    
+
                 time.sleep(self.iteration_time)
 
 
@@ -464,7 +464,7 @@ class TaskMain():
                     
                     self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=False)
                     
-                    ### PLACE OBEJCTS
+                    ### PLACE OBJECTS
                     ### POUR OBJECTS
                     
                     self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
