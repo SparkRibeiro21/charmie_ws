@@ -12,8 +12,8 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              True,
-    "charmie_audio":            False,
+    "charmie_arm":              False,
+    "charmie_audio":            True,
     "charmie_face":             True,
     "charmie_head_camera":      True,
     "charmie_hand_camera":      True,
@@ -490,7 +490,7 @@ class TaskMain():
                     # Now i should pick the foods and drinks and bring to my friends. See you soon my friends
                 
                     ### audio restaurant code here
-                    self.robot.set_speech(filename="restaurant/start_restaurant_task", wait_for_end_of=True)
+                    self.robot.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
 
                     self.state_A = self.A_Receptionist
 

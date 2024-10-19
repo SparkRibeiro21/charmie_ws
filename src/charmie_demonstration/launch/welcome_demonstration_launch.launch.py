@@ -7,10 +7,10 @@ def generate_launch_description():
     
     return LaunchDescription([
         std_lf.gui,
-        # std_lf.audio,
-        LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
+        std_lf.audio,
+        # LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
+        # std_lf.arm,
         std_lf.speakers,
-        std_lf.arm,
         std_lf.charmie_multi_camera_launch_description,
         std_lf.low_level,
         std_lf.face,
