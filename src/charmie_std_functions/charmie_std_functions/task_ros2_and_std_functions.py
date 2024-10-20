@@ -106,8 +106,12 @@ class ROS2TaskNode(Node):
         self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
         self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
-        #GUI
+        # GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
+        # LLM
+        self.llm_demonstration_client = self.create_client(ArmTrigger, "llm_demonstration")
+        self.llm_gpsr_client = self.create_client(ArmTrigger, "llm_gpsr")
+
 
     
         self.send_node_used_to_gui()
@@ -149,9 +153,10 @@ class ROS2TaskNode(Node):
                 self.get_logger().warn("Waiting for Server Face Command...")
 
         if self.ros2_modules["charmie_llm"]:
-            pass
-            # while not self.face_command_client.wait_for_service(1.0):
-            #     self.get_logger().warn("Waiting for Server LLM ...")
+            while not self.llm_demonstration_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server LLM ...")
+            while not self.llm_gpsr_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server LLM ...")
 
         if self.ros2_modules["charmie_low_level"]:
             while not self.set_acceleration_ramp_client.wait_for_service(1.0):

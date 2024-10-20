@@ -111,6 +111,10 @@ class DebugVisualNode(Node):
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
+        # LLM
+        self.llm_demonstration_client = self.create_client(ArmTrigger, "llm_demonstration")
+        self.llm_gpsr_client = self.create_client(ArmTrigger, "llm_gpsr")
+
 
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
@@ -579,7 +583,7 @@ class CheckNodesMain():
                 self.CHECK_LIDAR_NODE = True
 
             # LLM
-            if not self.node.get_audio_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+            if not self.node.llm_demonstration_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
                 # self.node.get_logger().warn("Waiting for Server Face ...")
                 self.CHECK_LLM_NODE = False
             else:
