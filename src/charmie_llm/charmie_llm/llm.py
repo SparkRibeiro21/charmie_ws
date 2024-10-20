@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
+from rclpy.node import Node
 import rclpy
 import threading
 import time
-from charmie_interfaces.msg import DetectedObject, DetectedPerson
-from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
-
-##### Imports for Special Case LLM #####
-from rclpy.node import Node
 from charmie_interfaces.srv import ArmTrigger
-
 
 ##### Slender Imports #####
 import json
@@ -18,36 +13,6 @@ import os
 #import playsound
 #import PyMuPDF
 
-# Constant Variables to ease RGB_MODE coding
-RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
-SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
-
-
-
-##### MISSING CHECK MODES TO LLM ##### TR
-ros2_modules = {
-    "charmie_arm":              False,
-    "charmie_audio":            False,
-    "charmie_face":             False,
-    "charmie_head_camera":      False,
-    "charmie_hand_camera":      False,
-    "charmie_lidar":            False,
-    "charmie_llm":              False,
-    "charmie_localisation":     False,
-    "charmie_low_level":        False,
-    "charmie_navigation":       False,
-    "charmie_neck":             False,
-    "charmie_obstacles":        False,
-    "charmie_odometry":         False,
-    "charmie_point_cloud":      False,
-    "charmie_ps4_controller":   False,
-    "charmie_speakers":         False,
-    "charmie_yolo_objects":     False,
-    "charmie_yolo_pose":        False,
-}
-
-##### Slender Global Variables #####
 
 api_key = "yourkey"
 # Define the instructions text
@@ -143,21 +108,14 @@ math_tools = [
 # main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
-    node = ROS2TaskNode(ros2_modules)
-    robot = RobotStdFunctions(node)
-    llm = TaskMain(robot)
-    while rclpy.ok():
-        rclpy.spin_once(node)
-        rclpy.spin_once(llm)
-        time.sleep(0.01)
+    node = LLMNode()
+    rclpy.spin()
     rclpy.shutdown()
 
-class TaskMain(Node):
+class LLMNode(Node):
 
-    def __init__(self, robot: RobotStdFunctions):
+    def __init__(self):
         # create a robot instance so use all standard CHARMIE functions
-        self.robot = robot
-
         super().__init__("LLM")
         self.get_logger().info("Initialised CHARMIE LLM Node")
 
@@ -191,6 +149,7 @@ class TaskMain(Node):
         self.get_logger().info("LLM DEMO REQUEST RECEIVED")
         
         ### YOUR CODE HERE
+        """
         print("Started")
         self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
         print("Partial")
@@ -205,7 +164,7 @@ class TaskMain(Node):
             print(keyword_list[0], keyword_list[1])
             self.robot.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
             self.robot.set_speech(filename="receptionist/favourite_drink/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
-
+        """
             
         response.success = True
         response.message = "Sucessfully Done LLM Demo"
