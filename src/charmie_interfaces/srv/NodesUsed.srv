@@ -6,6 +6,7 @@ bool charmie_face
 bool charmie_head_camera
 bool charmie_hand_camera
 bool charmie_lidar
+bool charmie_llm
 bool charmie_localisation
 bool charmie_low_level
 bool charmie_navigation
