@@ -19,6 +19,7 @@ ros2_modules = {
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
     "charmie_lidar":            False,
+    "charmie_llm":              False,
     "charmie_localisation":     False,
     "charmie_low_level":        False,
     "charmie_navigation":       False,

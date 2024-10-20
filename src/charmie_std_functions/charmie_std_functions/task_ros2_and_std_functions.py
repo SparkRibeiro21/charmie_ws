@@ -113,23 +113,24 @@ class ROS2TaskNode(Node):
         self.send_node_used_to_gui()
 
         """
-            "charmie_arm": False,
-            "charmie_audio": True,
-            "charmie_face": False,
-        "charmie_head_camera": False,
-        "charmie_hand_camera": False,
-        "charmie_lidar": False,
-        "charmie_localisation": False,
-            "charmie_low_level": False,
-            "charmie_navigation": False,
-            "charmie_neck": False,
-            "charmie_obstacles": False,
-        "charmie_odometry": False,
-            "charmie_point_cloud": False,
-        "charmie_ps4_controller": False,
-            "charmie_speakers": False,
-            "charmie_yolo_objects": False,
-            "charmie_yolo_pose": False,
+            "charmie_arm":              True,
+            "charmie_audio":            True,
+            "charmie_face":             True,
+        "charmie_head_camera":      True,
+        "charmie_hand_camera":      True,
+        "charmie_lidar":            True,
+            "charmie_llm":              False,
+        "charmie_localisation":     False,
+            "charmie_low_level":        True,
+            "charmie_navigation":       True,
+            "charmie_neck":             True,
+            "charmie_obstacles":        True,
+        "charmie_odometry":         True,
+            "charmie_point_cloud":      True,
+        "charmie_ps4_controller":   False,
+            "charmie_speakers":         True,
+            "charmie_yolo_objects":     True,
+            "charmie_yolo_pose":        False,
         """
 
         # waits until all modules are correctly turned ON
@@ -146,6 +147,11 @@ class ROS2TaskNode(Node):
         if self.ros2_modules["charmie_face"]:
             while not self.face_command_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Face Command...")
+
+        if self.ros2_modules["charmie_llm"]:
+            pass
+            # while not self.face_command_client.wait_for_service(1.0):
+            #     self.get_logger().warn("Waiting for Server LLM ...")
 
         if self.ros2_modules["charmie_low_level"]:
             while not self.set_acceleration_ramp_client.wait_for_service(1.0):
