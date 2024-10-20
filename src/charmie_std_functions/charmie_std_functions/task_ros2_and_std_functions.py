@@ -112,7 +112,6 @@ class ROS2TaskNode(Node):
         self.llm_demonstration_client = self.create_client(ArmTrigger, "llm_demonstration")
         self.llm_gpsr_client = self.create_client(ArmTrigger, "llm_gpsr")
 
-
     
         self.send_node_used_to_gui()
 
@@ -221,6 +220,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_get_torso_position = False
         self.waited_for_end_of_set_torso_position = False
         self.waiting_for_pcloud = False
+        self.waited_for_end_of_llm_demonstration = True
 
         self.br = CvBridge()
         self.rgb_head_img = Image()
@@ -276,6 +276,8 @@ class ROS2TaskNode(Node):
         self.arm_message = ""
         self.navigation_success = True
         self.navigation_message = ""
+        self.llm_demonstration_success = True
+        self.llm_demonstration_message = ""
         self.activate_obstacles_success = True
         self.activate_obstacles_message = ""
         self.activate_motors_success = True
@@ -803,6 +805,29 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
 
+    def call_llm_demonstration_server(self, request=ArmTrigger.Request(), wait_for_end_of=True):
+
+        future = self.llm_demonstration_client.call_async(request)
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_llm_demonstration)
+        else:
+            self.llm_demonstration_success = True
+            self.llm_demonstration_message = "Wait for answer not needed"
+    
+    def callback_call_llm_demonstration(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.llm_demonstration_success = response.success
+            self.llm_demonstration_message = response.message
+            self.waited_for_end_of_llm_demonstration = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
 
 
@@ -1915,3 +1940,9 @@ class RobotStdFunctions():
         self.node.new_controller_msg = False
 
         return self.node.ps4_controller_state, temp_has_new_message
+    
+    def get_llm_demonstration(self, wait_for_end_of=True):
+
+        request = ArmTrigger.Request()
+        self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
+

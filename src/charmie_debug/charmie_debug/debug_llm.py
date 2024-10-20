@@ -12,7 +12,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 
 ros2_modules = {
     "charmie_arm":              False,
-    "charmie_audio":            False,
+    "charmie_audio":            True,
     "charmie_face":             False,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
@@ -26,7 +26,7 @@ ros2_modules = {
     "charmie_odometry":         False,
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         False,
+    "charmie_speakers":         True,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
@@ -78,6 +78,11 @@ class TaskMain():
             # State 5 = Final Speech
 
             if self.state == Audio_receptionist:
+
+                self.robot.get_llm_demonstration()
+
+                while True:
+                    pass
                 print('State 1 = Audio Receptionist')
 
                 ### RECEPTIONIST EXAMPLE

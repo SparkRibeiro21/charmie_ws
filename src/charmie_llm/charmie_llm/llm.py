@@ -193,6 +193,7 @@ class TaskMain(Node):
         ### YOUR CODE HERE
         print("Started")
         self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+        print("Partial")
         command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
         print("Finished:", command)
         
