@@ -20,6 +20,7 @@ def generate_launch_description():
         std_lf.yolo_objects,
         std_lf.yolo_pose,
         std_lf.lidar,
+        # std_lf.llm
         # std_lf.obstacles,
         # std_lf.odometry,
         # std_lf.navigation

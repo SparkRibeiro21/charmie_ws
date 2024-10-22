@@ -109,7 +109,7 @@ math_tools = [
 def main(args=None):
     rclpy.init(args=args)
     node = LLMNode()
-    rclpy.spin()
+    rclpy.spin(node)
     rclpy.shutdown()
 
 class LLMNode(Node):

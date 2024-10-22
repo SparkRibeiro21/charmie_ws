@@ -190,4 +190,7 @@ class LaunchStdFunctions():
                     name='ps4_controller',
                     )
         
-        # missing LLM node
+        self.llm = Node(package='charmie_llm',
+                    executable='llm',
+                    name='llm',
+                    )
