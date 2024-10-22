@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo
 
 import cv2 
 # import threading
@@ -109,8 +109,8 @@ class ROS2TaskNode(Node):
         # GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
         # LLM
-        self.llm_demonstration_client = self.create_client(Trigger, "llm_demonstration")
-        self.llm_gpsr_client = self.create_client(Trigger, "llm_gpsr")
+        self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
+        self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
 
     
         self.send_node_used_to_gui()
@@ -805,7 +805,7 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
 
-    def call_llm_demonstration_server(self, request=Trigger.Request(), wait_for_end_of=True):
+    def call_llm_demonstration_server(self, request=GetLLMDemo.Request(), wait_for_end_of=True):
 
         future = self.llm_demonstration_client.call_async(request)
 
@@ -1943,6 +1943,6 @@ class RobotStdFunctions():
     
     def get_llm_demonstration(self, wait_for_end_of=True):
 
-        request = Trigger.Request()
+        request = GetLLMDemo.Request()
         self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
 

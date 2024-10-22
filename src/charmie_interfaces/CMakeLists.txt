@@ -51,6 +51,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/CalibrateAudio.srv"
   "srv/ContinuousGetAudio.srv"
   "srv/GetAudio.srv"
+  "srv/GetLLMDemo.srv"
+  "srv/GetLLMGPSR.srv"
   "srv/GetLowLevelButtons.srv"
   "srv/GetNeckPosition.srv"
   "srv/GetPointCloudBB.srv"

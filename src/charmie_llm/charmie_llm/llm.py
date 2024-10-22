@@ -3,7 +3,7 @@ from rclpy.node import Node
 import rclpy
 import threading
 import time
-from charmie_interfaces.srv import Trigger
+from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR
 
 ##### Slender Imports #####
 import json
@@ -119,8 +119,8 @@ class LLMNode(Node):
         super().__init__("LLM")
         self.get_logger().info("Initialised CHARMIE LLM Node")
 
-        self.llm_demonstration_server = self.create_service(Trigger, "llm_demonstration", self.llm_demonstration_callback)
-        self.llm_gpsr_server = self.create_service(Trigger, "llm_gpsr", self.llm_gpsr_callback)
+        self.llm_demonstration_server = self.create_service(GetLLMDemo, "llm_demonstration", self.llm_demonstration_callback)
+        self.llm_gpsr_server = self.create_service(GetLLMGPSR, "llm_gpsr", self.llm_gpsr_callback)
 
         
     def llm_gpsr_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
