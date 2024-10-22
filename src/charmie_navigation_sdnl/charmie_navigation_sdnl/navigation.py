@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, Float32, Int16
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3, Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.msg import TarNavSDNL, Obstacles, ListOfDetectedPerson, Obstacles
-from charmie_interfaces.srv import NavTrigger, SetAcceleration, ActivateBool, SetRGB
+from charmie_interfaces.srv import Trigger, SetAcceleration, ActivateBool, SetRGB
 from sensor_msgs.msg import Image
 
 import cv2
@@ -873,7 +873,7 @@ class NavSDNLNode(Node):
         request.activate = True
         self.activate_orientation_client.call_async(request)
 
-        self.create_service(NavTrigger, 'nav_trigger', self.navigation_trigger_callback)
+        self.create_service(Trigger, 'nav_trigger', self.navigation_trigger_callback)
 
         # ori = Bool()
         # ori.data = True

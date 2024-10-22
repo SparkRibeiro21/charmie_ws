@@ -7,7 +7,7 @@ from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, GetVCCs
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, GetVCCs
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -101,9 +101,9 @@ class DebugVisualNode(Node):
         # Yolo Objects
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
-        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Navigation
-        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+        self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Point Cloud
@@ -112,8 +112,8 @@ class DebugVisualNode(Node):
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
         # LLM
-        self.llm_demonstration_client = self.create_client(ArmTrigger, "llm_demonstration")
-        self.llm_gpsr_client = self.create_client(ArmTrigger, "llm_gpsr")
+        self.llm_demonstration_client = self.create_client(Trigger, "llm_demonstration")
+        self.llm_gpsr_client = self.create_client(Trigger, "llm_gpsr")
 
 
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)

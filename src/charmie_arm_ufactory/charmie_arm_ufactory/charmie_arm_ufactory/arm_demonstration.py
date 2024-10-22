@@ -3,7 +3,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, Int16
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint, Call
 from geometry_msgs.msg import Pose, Point, Quaternion
-from charmie_interfaces.srv import ArmTrigger
+from charmie_interfaces.srv import Trigger
 from std_srvs.srv import SetBool
 from functools import partial
 import numpy as np 
@@ -69,7 +69,7 @@ class ArmUfactory(Node):
 		while not self.clean_errrors_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Clean Errors...")
 
-		self.create_service(ArmTrigger, 'arm_trigger', self.arm_trigger_callback)
+		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
 
 		print("Bool TR Service is ready")
   

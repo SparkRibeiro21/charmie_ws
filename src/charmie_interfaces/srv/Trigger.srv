@@ -1,4 +1,4 @@
-# Service to trigger the charmie arm file necessary to communicate with the xarm nodes 
+# Generic service to trigger any process 
 
 ---
 bool success    # indicate successful run of triggered service

@@ -48,7 +48,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ActivateObstacles.srv"
   "srv/ActivateYoloObjects.srv"
   "srv/ActivateYoloPose.srv"
-  "srv/ArmTrigger.srv"
   "srv/CalibrateAudio.srv"
   "srv/ContinuousGetAudio.srv"
   "srv/GetAudio.srv"
@@ -58,7 +57,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetPointCloudMask.srv"
   "srv/GetTorso.srv"
   "srv/GetVCCs.srv"
-  "srv/NavTrigger.srv"
   "srv/NodesUsed.srv"
   "srv/SaveSpeechCommand.srv"
   "srv/SetAcceleration.srv"
@@ -70,6 +68,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SpeechCommand.srv"
   "srv/TrackObject.srv"
   "srv/TrackPerson.srv"
+  "srv/Trigger.srv"
   DEPENDENCIES example_interfaces geometry_msgs sensor_msgs
 )
 

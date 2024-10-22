@@ -3,7 +3,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from charmie_interfaces.msg import ArmController
-from charmie_interfaces.srv import ArmTrigger
+from charmie_interfaces.srv import Trigger
 from functools import partial
 import math
 import time
@@ -71,7 +71,7 @@ class ArmUfactory(Node):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
 		
 
-		self.create_service(ArmTrigger, 'arm_trigger', self.arm_trigger_callback)
+		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
 		
 		print("Bool TR Service is ready")
 

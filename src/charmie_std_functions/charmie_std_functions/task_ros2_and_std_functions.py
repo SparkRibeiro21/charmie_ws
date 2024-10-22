@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool
 
 import cv2 
 # import threading
@@ -91,9 +91,9 @@ class ROS2TaskNode(Node):
         # Yolo Objects
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
-        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Navigation
-        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+        self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Point Cloud
@@ -109,8 +109,8 @@ class ROS2TaskNode(Node):
         # GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
         # LLM
-        self.llm_demonstration_client = self.create_client(ArmTrigger, "llm_demonstration")
-        self.llm_gpsr_client = self.create_client(ArmTrigger, "llm_gpsr")
+        self.llm_demonstration_client = self.create_client(Trigger, "llm_demonstration")
+        self.llm_gpsr_client = self.create_client(Trigger, "llm_gpsr")
 
     
         self.send_node_used_to_gui()
@@ -805,7 +805,7 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
 
-    def call_llm_demonstration_server(self, request=ArmTrigger.Request(), wait_for_end_of=True):
+    def call_llm_demonstration_server(self, request=Trigger.Request(), wait_for_end_of=True):
 
         future = self.llm_demonstration_client.call_async(request)
 
@@ -1943,6 +1943,6 @@ class RobotStdFunctions():
     
     def get_llm_demonstration(self, wait_for_end_of=True):
 
-        request = ArmTrigger.Request()
+        request = Trigger.Request()
         self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
 
