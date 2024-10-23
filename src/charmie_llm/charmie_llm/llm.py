@@ -6,6 +6,12 @@ import time
 from charmie_interfaces.msg import ListOfStrings
 from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR
 
+##### NOTAS: #####
+# temos de adicioanr infos sobre:
+# - que dia, mês, ano, dia da semana em que estamos (pode sair no GPSR)
+# - Que horas são (pode sair no GPSR)
+# - Onde é que o robô está, local, cidade e país, mas também o evento e o charmie saber dizer o que é o evento (RoboParty, RoboCup)
+
 ##### Slender Imports #####
 import json
 from openai import OpenAI
