@@ -97,13 +97,9 @@ def main(args=None):
         charmie_speech.convert_command(charmie_speech.json_commands, play_sound=True)
     elif MODE == "RECEPTIONIST":
         receptionist_commands = {}
-        receptionist_commands['receptionist/names/recep_host_name'] = 'The host name is '+host_name+'.'
         # for name in names_list:
-        #     receptionist_commands['receptionist/names/recep_dear_'+name.lower()] = 'Dear '+name+'.'
-        #     # receptionist_commands['receptionist/recep_host_'+name.lower()] = 'The host name is '+name+'.'
-        #     receptionist_commands['receptionist/names/recep_first_guest_'+name.lower()] = 'The first guest name is '+name+'.'
-        #     receptionist_commands['receptionist/names/recep_second_guest_'+name.lower()] = 'The second guest name is '+name+'.'
+        #     receptionist_commands['receptionist/names/'+name.replace(" ","_").lower()] = name
         # for drink in drinks_list:
-        #     receptionist_commands['receptionist/favourite_drink/recep_drink_'+drink.lower().replace(' ', '_')] = 'The favourite drink is '+drink+'.'
-
+        #     receptionist_commands['objects_names/_'+drink.lower().replace(' ', '_')] = drink+'.'
+        
         charmie_speech.convert_command(receptionist_commands, play_sound=True)

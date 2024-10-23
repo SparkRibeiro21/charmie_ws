@@ -458,16 +458,45 @@ class TaskMain():
                 if self.state_A == self.A_Receptionist:
                 
                     ### audio receptionist code here
-                    self.robot.set_speech(filename="receptionist/start_receptionist", wait_for_end_of=True)
+                    # self.robot.set_speech(filename="receptionist/start_receptionist", wait_for_end_of=True)
 
                     # Pedir para se colocar à frente do robô
+                    self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
+                    
+                    
                     # Reconhecer a pessoa
                     # Olhar para a pessoa
+                    
                     # Perguntar o nome e a bebida preferida
                     # Ouvir 
+                    self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                    command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+                    print("Finished:", command)
+                    keyword_list= command.split(" ")
+                    guest_name = keyword_list[0] 
+                    guest_drink = keyword_list[1]
+                    
+                    print(guest_name, guest_drink)
+
+                    self.robot.set_speech(filename="receptionist/host_name_is", wait_for_end_of=True)
+                    self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    
+                    self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
+                    self.robot.set_speech(filename="objects_names/"+keyword_list[1].lower(), wait_for_end_of=True)
+
                     # Nice to meet you: (nome)
                     # If i could have a drink, I think I would also enjoy (drinks)
                     # Do you want to know some characteristics I have detected from you?
+                    confirmation = self.robot.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+
+                    ##### Verifica a resposta recebida
+                    if confirmation.lower() == "yes":
+                        self.robot.set_rgb(command=GREEN+BLINK_LONG)
+
+                    else: #  confirmation.lower() == "no":
+                        self.robot.set_rgb(command=RED+BLINK_LONG)
+                        
                     # Robot Yes ou Robot No
                     # Ok, You are ... OU ok, i understand
                     # It was very nice to meet.
