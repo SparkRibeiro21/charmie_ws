@@ -1,4 +1,5 @@
 # Service to get the LLM response of a GPSR task
 
+string command
 ---
-ListOfStrings command # List of sub tasks divisions the robot must perform to complete a GPSR task
+ListOfStrings answer # List of sub tasks divisions the robot must perform to complete a GPSR task

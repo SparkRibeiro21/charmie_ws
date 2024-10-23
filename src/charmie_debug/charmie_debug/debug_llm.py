@@ -79,7 +79,9 @@ class TaskMain():
 
             if self.state == Audio_receptionist:
 
-                self.robot.get_llm_demonstration()
+                self.robot.get_llm_gpsr()
+                
+                # self.robot.get_llm_demonstration()
 
                 while True:
                     pass

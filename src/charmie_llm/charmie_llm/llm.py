@@ -126,16 +126,18 @@ class LLMNode(Node):
 
     def llm_demonstration_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
         # Type of service received: 
-        #         
+        # 
+        # string command        
         # ---
-        # string command # LLM Response to the question asked to the robot 
+        # string answer # LLM Response to the question asked to the robot 
         
         self.get_logger().info("LLM DEMO REQUEST RECEIVED")
+        print("Received:", request.command)
 
         time.sleep(3.0)
         
         ### YOUR CODE HERE
-        response.command = "The capital of Brazil is Brasilia."
+        response.answer = "The capital of Brazil is Brasilia."
             
         return response
 
@@ -143,10 +145,12 @@ class LLMNode(Node):
     def llm_gpsr_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
         # Type of service received: 
         # 
+        # string command
         # ---
-        # ListOfStrings command # List of sub tasks divisions the robot must perform to complete a GPSR task
+        # ListOfStrings answer # List of sub tasks divisions the robot must perform to complete a GPSR task
         
         self.get_logger().info("LLM GPSR REQUEST RECEIVED")
+        print("Received:", request.command)
         
         time.sleep(3.0)
         
@@ -159,7 +163,7 @@ class LLMNode(Node):
         example.strings.append("ArmPlace-SideTable")
         example.strings.append("Navigation-LivingRoom")
         example.strings.append("Speak-/gpsr/arrived_living_room")
-        response.command = example
+        response.answer = example
         
         return response    
 

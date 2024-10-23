@@ -16,6 +16,7 @@ import math
 import numpy as np
 from pathlib import Path
 from datetime import datetime
+import random
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -220,8 +221,8 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_get_torso_position = False
         self.waited_for_end_of_set_torso_position = False
         self.waiting_for_pcloud = False
-        self.waited_for_end_of_llm_demonstration = True
-        self.waited_for_end_of_llm_gpsr = True
+        self.waited_for_end_of_llm_demonstration = False
+        self.waited_for_end_of_llm_gpsr = False
 
         self.br = CvBridge()
         self.rgb_head_img = Image()
@@ -809,13 +810,8 @@ class ROS2TaskNode(Node):
     def call_llm_demonstration_server(self, request=GetLLMDemo.Request(), wait_for_end_of=True):
 
         future = self.llm_demonstration_client.call_async(request)
-
-        if wait_for_end_of:
-            future.add_done_callback(self.callback_call_llm_demonstration)
-        else:
-            self.llm_demonstration_success = True
-            self.llm_demonstration_message = "Wait for answer not needed"
-    
+        future.add_done_callback(self.callback_call_llm_demonstration)
+        
     def callback_call_llm_demonstration(self, future):
 
         try:
@@ -823,10 +819,8 @@ class ROS2TaskNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.llm_demonstration_response = response.command
-            self.get_logger().info(str(response.command))
-            # self.llm_demonstration_success = response.success
-            # self.llm_demonstration_message = response.message
+            self.llm_demonstration_response = response.answer
+            self.get_logger().info("Received LLM Demo Answer:"+str(self.llm_demonstration_response))
             self.waited_for_end_of_llm_demonstration = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
@@ -834,13 +828,8 @@ class ROS2TaskNode(Node):
     def call_llm_gpsr_server(self, request=GetLLMGPSR.Request(), wait_for_end_of=True):
 
         future = self.llm_gpsr_client.call_async(request)
-
-        if wait_for_end_of:
-            future.add_done_callback(self.callback_call_llm_gpsr)
-        else:
-            self.llm_gpsr_success = True
-            self.llm_gpsr_message = "Wait for answer not needed"
-    
+        future.add_done_callback(self.callback_call_llm_gpsr)
+        
     def callback_call_llm_gpsr(self, future):
 
         try:
@@ -848,11 +837,10 @@ class ROS2TaskNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.llm_gpsr_response = response.command
-            for cmd in self.llm_gpsr_response:
-                self.get_logger().info(str(cmd))
-            # self.llm_gpsr_success = response.success
-            # self.llm_gpsr_message = response.message
+            self.llm_gpsr_response = response.answer
+            self.get_logger().info("Received LLM GPSR Answer:"+str(self.llm_gpsr_response))
+            # for cmd in self.llm_gpsr_response.strings:
+            #     self.get_logger().info(str(cmd))
             self.waited_for_end_of_llm_gpsr = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
@@ -1969,19 +1957,78 @@ class RobotStdFunctions():
     
     def get_llm_demonstration(self, wait_for_end_of=True):
 
+        self.calibrate_audio(wait_for_end_of=True)
+        # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+        random_question = str(random.randint(1, 3))
+        command = self.get_audio(gpsr=True, question="demonstration/llm_get_question_"+random_question, wait_for_end_of=True)
+
+        # add generic sentence so it is not so long quiet
+        self.set_speech(filename="generic/uhm", wait_for_end_of=False)
+        random_wait = str(random.randint(1, 3))
+        self.set_speech(filename="demonstration/llm_wait_for_answer_"+random_wait, wait_for_end_of=False)
+
         request = GetLLMDemo.Request()
+        request.command = command
         self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
-            while self.node.waited_for_end_of_llm_demonstration:
+            while not self.node.waited_for_end_of_llm_demonstration:
                 pass
-        
+            self.node.waited_for_end_of_llm_demonstration = False
+
+        print(self.node.llm_demonstration_response)
+
+        self.set_speech(command=self.node.llm_demonstration_response, quick_voice=True, wait_for_end_of=True)
 
     def get_llm_gpsr(self, wait_for_end_of=True):
 
+        self.calibrate_audio(wait_for_end_of=True)
+        # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+        random_question = str(random.randint(1, 3))
+        command = self.get_audio(gpsr=True, question="demonstration/llm_get_question_"+random_question, wait_for_end_of=True)
+
+        # add generic sentence so it is not so long quiet
+        self.set_speech(filename="generic/uhm", wait_for_end_of=False)
+        random_wait = str(random.randint(1, 3))
+        self.set_speech(filename="gpsr/llm_wait_for_gpsr_"+random_wait, wait_for_end_of=False)
+
         request = GetLLMGPSR.Request()
-        self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
+        request.command = command
+        self.node.call_llm_gpsr_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
-            while self.node.waited_for_end_of_llm_gpsr:
+            while not self.node.waited_for_end_of_llm_gpsr:
                 pass
+            self.node.waited_for_end_of_llm_gpsr = False
+
+        # print(self.node.llm_gpsr_response)
+        for task in self.node.llm_gpsr_response.strings:
+            task_split = task.split("-")
+            
+            print("Task type:", task_split[0], " Task info:", task_split[1])
+
+            match task_split[0]:
+
+                case "Navigation":
+                    # self.set_navigation() ...
+                    pass 
+
+                case "SearchForObject":
+                    # self.search_for_object() ...
+                    pass
+                
+                case "SearchForPerson":
+                    # self.search_for_person() ...
+                    pass
+                
+                case "Speak":
+                    # self.set_speech() ...
+                    pass
+                
+                case "ArmPick":
+                    # self.set_arm() ...
+                    pass
+                
+                case "ArmPlace":
+                    # self.set_arm() ...
+                    pass
