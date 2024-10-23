@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from rclpy.node import Node
 import rclpy
-import threading
+# import threading
 import time
+from charmie_interfaces.msg import ListOfStrings
 from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR
 
 ##### Slender Imports #####
@@ -122,54 +123,46 @@ class LLMNode(Node):
         self.llm_demonstration_server = self.create_service(GetLLMDemo, "llm_demonstration", self.llm_demonstration_callback)
         self.llm_gpsr_server = self.create_service(GetLLMGPSR, "llm_gpsr", self.llm_gpsr_callback)
 
+
+    def llm_demonstration_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
+        # Type of service received: 
+        #         
+        # ---
+        # string command # LLM Response to the question asked to the robot 
         
+        self.get_logger().info("LLM DEMO REQUEST RECEIVED")
+
+        time.sleep(3.0)
+        
+        ### YOUR CODE HERE
+        response.command = "The capital of Brazil is Brasilia."
+            
+        return response
+
+
     def llm_gpsr_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
         # Type of service received: 
         # 
         # ---
-        # bool success    # indicate successful run of triggered service
-        # string message  # informational, e.g. for error messages.
+        # ListOfStrings command # List of sub tasks divisions the robot must perform to complete a GPSR task
         
         self.get_logger().info("LLM GPSR REQUEST RECEIVED")
-        self.nodes_used = request
+        
+        time.sleep(3.0)
         
         ### YOUR CODE HERE
+        example = ListOfStrings()
+        example.strings.append("Navigation-KitchenTable")
+        example.strings.append("SearchForObject-Milk")
+        example.strings.append("ArmPick-Milk")
+        example.strings.append("Navigation-SideTable")
+        example.strings.append("ArmPlace-SideTable")
+        example.strings.append("Navigation-LivingRoom")
+        example.strings.append("Speak-/gpsr/arrived_living_room")
+        response.command = example
         
-        response.success = True
-        response.message = "Sucessfully Done LLM GPSR"
-        return response
-    
-    def llm_demonstration_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
-        # Type of service received: 
-        # 
-        # ---
-        # bool success    # indicate successful run of triggered service
-        # string message  # informational, e.g. for error messages.
-        
-        self.get_logger().info("LLM DEMO REQUEST RECEIVED")
-        
-        ### YOUR CODE HERE
-        """
-        print("Started")
-        self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-        print("Partial")
-        command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
-        print("Finished:", command)
-        
-        if command == "ERR_MAX":
-            print("MAX HEARING ATTEMPTS REACHED")
-            self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
-        else:
-            keyword_list= command.split(" ")
-            print(keyword_list[0], keyword_list[1])
-            self.robot.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
-            self.robot.set_speech(filename="receptionist/favourite_drink/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)
-        """
-            
-        response.success = True
-        response.message = "Sucessfully Done LLM Demo"
-        return response
-    
+        return response    
+
 
         ##### Slender Main #####
         """

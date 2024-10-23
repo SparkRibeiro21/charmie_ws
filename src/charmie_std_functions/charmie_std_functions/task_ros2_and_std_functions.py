@@ -5,7 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller, ListOfStrings
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo
 
 import cv2 
@@ -221,6 +221,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_set_torso_position = False
         self.waiting_for_pcloud = False
         self.waited_for_end_of_llm_demonstration = True
+        self.waited_for_end_of_llm_gpsr = True
 
         self.br = CvBridge()
         self.rgb_head_img = Image()
@@ -276,8 +277,6 @@ class ROS2TaskNode(Node):
         self.arm_message = ""
         self.navigation_success = True
         self.navigation_message = ""
-        self.llm_demonstration_success = True
-        self.llm_demonstration_message = ""
         self.activate_obstacles_success = True
         self.activate_obstacles_message = ""
         self.activate_motors_success = True
@@ -296,6 +295,8 @@ class ROS2TaskNode(Node):
         self.debug_button2 = False
         self.debug_button3 = False
         self.new_controller_msg = False
+        self.llm_demonstration_response = ""
+        self.llm_gpsr_response = ListOfStrings()
 
     def send_node_used_to_gui(self):
 
@@ -822,14 +823,39 @@ class ROS2TaskNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info(str(response.success) + " - " + str(response.message))
-            self.llm_demonstration_success = response.success
-            self.llm_demonstration_message = response.message
+            self.llm_demonstration_response = response.command
+            self.get_logger().info(str(response.command))
+            # self.llm_demonstration_success = response.success
+            # self.llm_demonstration_message = response.message
             self.waited_for_end_of_llm_demonstration = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+    def call_llm_gpsr_server(self, request=GetLLMGPSR.Request(), wait_for_end_of=True):
 
+        future = self.llm_gpsr_client.call_async(request)
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_llm_gpsr)
+        else:
+            self.llm_gpsr_success = True
+            self.llm_gpsr_message = "Wait for answer not needed"
+    
+    def callback_call_llm_gpsr(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.llm_gpsr_response = response.command
+            for cmd in self.llm_gpsr_response:
+                self.get_logger().info(str(cmd))
+            # self.llm_gpsr_success = response.success
+            # self.llm_gpsr_message = response.message
+            self.waited_for_end_of_llm_gpsr = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
 
 
@@ -1946,3 +1972,16 @@ class RobotStdFunctions():
         request = GetLLMDemo.Request()
         self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
 
+        if wait_for_end_of:
+            while self.node.waited_for_end_of_llm_demonstration:
+                pass
+        
+
+    def get_llm_gpsr(self, wait_for_end_of=True):
+
+        request = GetLLMGPSR.Request()
+        self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while self.node.waited_for_end_of_llm_gpsr:
+                pass
