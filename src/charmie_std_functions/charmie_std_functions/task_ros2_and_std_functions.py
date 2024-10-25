@@ -2032,3 +2032,8 @@ class RobotStdFunctions():
                 case "ArmPlace":
                     # self.set_arm() ...
                     pass
+
+
+# Missing Functions:
+# get detected_person_characteristics
+# count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
