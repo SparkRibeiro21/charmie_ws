@@ -2033,7 +2033,74 @@ class RobotStdFunctions():
                     # self.set_arm() ...
                     pass
 
+    def get_detected_person_characteristics(self, detected_person=DetectedPerson(), first_sentence="", ethnicity=False, age=False, gender=False, height=False, shirt_color=False, pants_color=False):
+
+        # Still need to add percentages to ethnicity, gender and age_estimate. If too low than don't say.
+
+        if detected_person.ethnicity != "None" and detected_person.ethnicity != "": # Minor corrections to value received
+            if detected_person.ethnicity == "Middle Eastern" or detected_person.ethnicity == "Hispanic" or detected_person.ethnicity == "Indian":
+                detected_person.ethnicity = "Caucasian"
+        else: # If the robot can not compute, it guesses the following
+            detected_person.ethnicity = "Caucasian"
+        
+        if detected_person.age_estimate != "None" and detected_person.age_estimate != "": # Minor corrections to value received
+            if detected_person.age_estimate == "Over 60":
+                detected_person.age_estimate = "Between 40 and 60"
+            elif detected_person.age_estimate == "Under 20":
+                detected_person.age_estimate = "Between 18 and 32"
+            # detected_person.age_estimate = detected_person.age_estimate.replace(' ', '_')
+        else: # If the robot can not compute, it guesses the following
+            detected_person.age_estimate = "Between 18 and 32"
+        detected_person.age_estimate = detected_person.age_estimate.replace(' ', '_')
+        
+        if detected_person.gender != "None" and detected_person.gender != "": # Minor corrections to value received
+            pass
+        else: # If the robot can not compute, it guesses the following
+            detected_person.gender = "Male"
+        
+        # print("height is ", height)
+        temp_height_string = ""
+        if detected_person.height != 0.0: # Minor corrections to value received
+            if detected_person.height > 1.55: 
+                temp_height_string='taller'
+            elif detected_person.height < 1.40:
+                temp_height_string='smaller'
+            else:
+                temp_height_string='equal'
+        else: # If the robot can not compute, it guesses the following
+            temp_height_string = "taller"
+        
+        if detected_person.shirt_color != "None" and detected_person.shirt_color != "": # Minor corrections to value received
+            pass
+        else: # If the robot can not compute, it guesses the following
+            detected_person.shirt_color = "White"
+        
+        if detected_person.pants_color != "None" and detected_person.pants_color != "": # Minor corrections to value received
+            pass
+        else: # If the robot can not compute, it guesses the following
+            detected_person.pants_color = "Blue"
+        
+        if height or age or gender or ethnicity: # characteristics that require an introduction by a generic first sentence
+            if first_sentence == "":
+                self.set_speech(filename="receptionist/the_first_guest_is", wait_for_end_of=True)
+            else:
+                self.set_speech(filename=first_sentence, wait_for_end_of=True)
+        
+        if height:
+            self.set_speech(filename="receptionist/characteristics/height_"+temp_height_string.lower(), wait_for_end_of=True)
+        if age:
+            self.set_speech(filename="receptionist/characteristics/age_"+detected_person.age_estimate.lower(), wait_for_end_of=True)
+        if gender:
+            self.set_speech(filename="receptionist/characteristics/gender_"+detected_person.gender.lower(), wait_for_end_of=True)
+        if ethnicity:
+            self.set_speech(filename="receptionist/characteristics/race_"+detected_person.ethnicity.lower(), wait_for_end_of=True)
+        if shirt_color:
+            self.set_speech(filename="receptionist/the_shirt_color_is", wait_for_end_of=True)
+            self.set_speech(filename="receptionist/characteristics/color_"+detected_person.shirt_color.lower(), wait_for_end_of=True)
+        if pants_color:
+            self.set_speech(filename="receptionist/the_pants_color_is", wait_for_end_of=True)
+            self.set_speech(filename="receptionist/characteristics/color_"+detected_person.pants_color.lower(), wait_for_end_of=True)
+
 
 # Missing Functions:
-# get detected_person_characteristics
 # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)

@@ -19,14 +19,14 @@ ros2_modules = {
     "charmie_lidar":            False,
     "charmie_llm":              False,
     "charmie_localisation":     False,
-    "charmie_low_level":        True,
+    "charmie_low_level":        False,
     "charmie_navigation":       False,
     "charmie_neck":             False,
     "charmie_obstacles":        False,
     "charmie_odometry":         False,
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         False,
+    "charmie_speakers":         True,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
@@ -78,6 +78,11 @@ class TaskMain():
             # State 6 = Final Speech
 
             if self.state == Waiting_for_start_button:
+
+                self.robot.get_detected_person_characteristics(first_sentence="demonstration/demo_characteristics_first_sentence", shirt_color=True, age=True)
+
+                while True:
+                    pass
                 
                 ##### SAVE SPEAK
                 # current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
