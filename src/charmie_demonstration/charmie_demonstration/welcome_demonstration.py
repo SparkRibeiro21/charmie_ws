@@ -465,6 +465,11 @@ class TaskMain():
                     time.sleep(1.0)
                     # Reconhecer a pessoa
                     # Olhar para a pessoa
+                    # person with characteristics received from search for person (closest person + ...)
+                    recep_detected_person = DetectedPerson()
+                    recep_detected_person.height = 1.00
+                    recep_detected_person.gender = "Female"
+                    recep_detected_person.shirt_color = "Pink"
                     
                     self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                     command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
@@ -487,9 +492,10 @@ class TaskMain():
 
                     ##### Verifica a resposta recebida
                     if confirmation.lower() == "yes":
-                        self.robot.set_rgb(command=GREEN+BLINK_LONG)
-                        # get_person_characteristics
-
+                        self.robot.get_detected_person_characteristics(detected_person=recep_detected_person, first_sentence="demonstration/demo_characteristics_first_sentence", \
+                                                                       ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=True)
+                        time.sleep(1.0)
+                        
                     else: #  confirmation.lower() == "no":
                         self.robot.set_speech(filename="demonstration/ok_i_understand", wait_for_end_of=True)
                     
