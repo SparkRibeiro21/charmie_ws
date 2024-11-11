@@ -3,6 +3,8 @@ from rclpy.node import Node
 import rclpy
 # import threading
 import time
+import sys
+from pathlib import Path
 from charmie_interfaces.msg import ListOfStrings
 from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR
 
@@ -13,6 +15,19 @@ from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR
 # - Onde é que o robô está, local, cidade e país, mas também o evento e o charmie saber dizer o que é o evento (RoboParty, RoboCup)
 
 from llm_demo_description import LLM_Demo_description
+
+# by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+home = str(Path.home())
+api_key_path = home+'/'+"charmie_ws/src/charmie_llm/charmie_llm/api_key/api_key.txt"
+api_key = ""
+
+try:
+    with open(api_key_path, "r") as file:
+        api_key = file.read()
+    print(api_key)
+except FileNotFoundError:
+    print(f"The file api_key.txt does not exist.")
+    sys.exit()  # Ends the program if the file is not found
 
 # main function that already creates the thread for the task state machine
 def main(args=None):

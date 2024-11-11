@@ -1,0 +1,2 @@
+1) Create the file: api_key.txt
+2) Paste the LLM api key inside api_key.txt: fileinsertyourkeyhere
