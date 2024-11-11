@@ -7,4 +7,3 @@ src/charmie_yolo_pose/charmie_yolo_pose/characteristics_models/modelo_gender.h5
 src/charmie_yolo_pose/charmie_yolo_pose/characteristics_models/modelo_raca.h5
 src/configuration_files/save_speaker_files.json
 src/charmie_yolo_objects/charmie_yolo_objects/yolo_models/
-src/charmie_llm/charmie_llm/api_key/
