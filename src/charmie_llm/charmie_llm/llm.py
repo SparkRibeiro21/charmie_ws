@@ -12,105 +12,10 @@ from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR
 # - Que horas são (pode sair no GPSR)
 # - Onde é que o robô está, local, cidade e país, mas também o evento e o charmie saber dizer o que é o evento (RoboParty, RoboCup)
 
-##### Slender Imports #####
-import json
-from openai import OpenAI
-#from gtts import gTTS
-import os
-#import playsound
-#import PyMuPDF
-
-
+from llm_demo_description import LLM_Demo_description
 api_key = "yourkey"
 # Define the instructions text
-instructions_text = """
-You are a Home Assistant, your name is Charmie, and your task is to talk with people. Your body was made by the Laboratory of Automation and Robotics (LAR), which is a laboratory of the University of Minho. Your principal developer is Tiago Ribeiro. Your main tasks are: Following people, you can help them carry things since you have a manipulable arm. You can serve at tables, making your applicability vast. Or just talking. 
 
-Try to be pleasant and fun.
-
-If people talk to you in portuguese, you will speak European Portuguese, so instead of "você," use "tu," and do not use gerunds. If people talk to you in English, you will talk English(UK). People approach you with fear and hesitation, so try to break the ice and speak more at first contact. Always engage more conversation, even if they only say "olá." What you say is converted to voice, so you should write as if you are speaking and do not use special characters or emojis, except for "[]" that you can use for task commands.
-Don't use itemize or lists of data as output because your text will be transformed in Speech (Text-to-Speech). Make your message as short as possible.
-
-The Team Members are on "Actual Team Members.txt" file.
-The Tasks that you can perform are on "Assistant Tasks.txt" file.
-Your hardware overview is on "Hardware Overview.txt" file.
-Your actual local(spot), language to use and some other configs are on "Actualk Config.txt"
-You have two .pdf files that is the Team Description Paper of Charmie, read to know yourself better.
-You don't talk or mention about upload files!
-You are at RoboCup 2024 in Eindhoven! You are in the building called Eureka Hall.
-"""
-
-"""
-def pdf_to_text(pdf_path):
-    doc = fitz.open(pdf_path)
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    return text
-
-class MaxTurnsReachedException(Exception):
-    def __init__(self):
-        super().__init__("Reached maximum number of turns")
-        
-# Define the functions which will be the part of the LLM toolkit
-def follow() -> bool:
-    print("Follow me")
-    return True
-
-def stop() -> bool:
-    print("Stop")
-    return True
-
-def multiply(a: float, b: float) -> float:
-    return a * b
-
-tool_callables = {
-    "follow": follow,
-    "stop": stop,
-    "grab": multiply
-}
-
-# declaration of tools (functions) to be passed into the OpenAI assistant
-math_tools = [
-    {
-        "function": {
-            "name": "follow",
-            "description": "Called when you want to follow a person. Returns True if following False if not.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-            },
-        },
-        "type": "function",
-    },
-    {
-        "function": {
-            "name": "stop",
-            "description": "Called when some one want to stop the task. Returns True if stop False if not. ",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-            },
-        },
-        "type": "function",
-    },
-    {
-        "function": {
-            "name": "grab",
-            "description": "Returns the product of two numbers.",
-            "parameters": {
-                "type": "object",
-                "properties": {"a": {"type": "number"}, "b": {"type": "number"}},
-                "required": ["a", "b"],
-            },
-        },
-        "type": "function",
-    },
-    {"type": "file_search"}
-]
-"""
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
@@ -125,7 +30,7 @@ class LLMNode(Node):
         # create a robot instance so use all standard CHARMIE functions
         super().__init__("LLM")
         self.get_logger().info("Initialised CHARMIE LLM Node")
-
+        self.llm_demo_description =LLM_Demo_description () # TODO: add gpsr and question_debug
         self.llm_demonstration_server = self.create_service(GetLLMDemo, "llm_demonstration", self.llm_demonstration_callback)
         self.llm_gpsr_server = self.create_service(GetLLMGPSR, "llm_gpsr", self.llm_gpsr_callback)
 
@@ -139,12 +44,7 @@ class LLMNode(Node):
         
         self.get_logger().info("LLM DEMO REQUEST RECEIVED")
         print("Received:", request.command)
-
-        time.sleep(3.0)
-        
-        ### YOUR CODE HERE
-        response.answer = "The capital of Brazil is Brasilia."
-            
+        response.answer = self.llm_demo.run(request.command) 
         return response
 
 
