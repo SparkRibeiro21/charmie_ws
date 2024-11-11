@@ -505,9 +505,14 @@ class TaskMain():
 
                 elif self.state_A == self.A_Restaurant:
 
-                    # I will help people get some food or drinks
-                    # If you need my help please wave
+                    self.robot.set_speech(filename="demonstration/restaurant_demo_intro", wait_for_end_of=True)
+                    self.robot.set_speech(filename="demonstration/demo_please_wave", wait_for_end_of=True)
+
+                    list_customers = []                     
                     # SFP
+
+                    list_filtered_customers = []
+
                     # Olhar e mostrar cara da pessoa
                     # Is this a guest?
                     # Yes or No (continua para o próximo)
