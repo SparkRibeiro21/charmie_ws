@@ -13,9 +13,6 @@ from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR
 # - Onde é que o robô está, local, cidade e país, mas também o evento e o charmie saber dizer o que é o evento (RoboParty, RoboCup)
 
 from llm_demo_description import LLM_Demo_description
-api_key = "yourkey"
-# Define the instructions text
-
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
