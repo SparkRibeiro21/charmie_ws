@@ -95,5 +95,5 @@ class LLM_demo_description:
             return assistant_res
         # Handle errors if terminal state is "failed" 
         else:
-            print("ERRO LLM") #TODO: add Log Node
-            return "Info to Programmer: LLM not working"
+            print("ERRO LLM "+run.status) #TODO: add Log Node
+            return "Info to Programmer: LLM not working "+run.status
