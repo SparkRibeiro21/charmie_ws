@@ -1,7 +1,24 @@
 from openai import OpenAI
+import sys
+from pathlib import Path
+
 class LLM_demo_description:
     def __init__(self):
         # Define the instructions text
+
+        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.home = str(Path.home())
+        api_key_path = self.home+'/'+"charmie_ws/src/charmie_llm/charmie_llm/api_key/api_key.txt"
+        
+        try:
+            with open(api_key_path, "r") as file:
+                self.api_key = file.read().strip()
+            print(self.api_key)
+            print(type(self.api_key))
+        except FileNotFoundError:
+            print(f"The file api_key.txt does not exist.")
+            sys.exit()  # Ends the program if the file is not found
+
         instructions_text = """
         You are a Home Assistant, your name is Charmie, and your task is to talk with people. Your body was made by the Laboratory of Automation and Robotics (LAR), which is a laboratory of the University of Minho. Your principal developer is Tiago Ribeiro. Your main tasks are: Following people, you can help them carry things since you have a manipulable arm. You can serve at tables, making your applicability vast. Or just talking. 
 
@@ -16,20 +33,21 @@ class LLM_demo_description:
         Your actual local(spot), language to use and some other configs are on "Actual Config.txt"
         You have two .pdf files that is the Team Description Paper of Charmie, read to know yourself better.
         """
-    # Create a vector store caled "Financial Statements"
-        self.client = OpenAI(api_key="api_key") #TODO: CHANGE TO SECRETS
+        # Create a vector store caled "Financial Statements"
+
+        self.client = OpenAI(api_key=self.api_key) #TODO: CHANGE TO SECRETS
         
         vector_store = self.client.beta.vector_stores.create(name="Documentation")
         self.thread = self.client.beta.threads.create()
         # Ready the files for upload to OpenAI
-        folder_path="/home/martins/charmie_ws/src/charmie_llm/charmie_llm/Files/"
+        folder_path = self.home+"/charmie_ws/src/charmie_llm/charmie_llm/Files/"
         file_paths = ["tdp2023.pdf", "tdp2024.pdf","Actual Config.txt","Actual Team Members.txt", "Assistant Tasks.txt","Hardware Overview.txt"]  # List of your PDF files
         file_streams = [open(folder_path+path, "rb") for path in file_paths]
 
         # Use the upload and poll SDK helper to upload the files, add them to the vector store,
         # and poll the status of the file batch for completion.
         self.client.beta.vector_stores.file_batches.upload_and_poll(
-        vector_store_id=self.vector_store.id, files=file_streams
+        vector_store_id=vector_store.id, files=file_streams
         )
         self.assistant = self.client.beta.assistants.create(
             name="Charmie",
