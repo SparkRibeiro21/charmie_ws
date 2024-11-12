@@ -2102,5 +2102,49 @@ class RobotStdFunctions():
             self.set_speech(filename="receptionist/characteristics/color_"+detected_person.pants_color.lower(), wait_for_end_of=True)
 
 
-# Missing Functions:
-# count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
+    def receive_object_in_hand(self, help_face="", wait_time=0.0, attempts_at_receiving=2):
+
+        # help_face = "", wait_time = 0.0, attempts_at_receiving = 2, 
+        # return sucessfull or not (redo the detection or place in tray)
+
+        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+
+        time.sleep(wait_time)
+
+        self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
+
+        self.set_face(help_face)
+        
+        object_in_gripper = False
+        gripper_ctr = 0
+        while not object_in_gripper and gripper_ctr < attempts_at_receiving:
+            
+            gripper_ctr += 1
+            
+            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+            
+            if not object_in_gripper:
+        
+                if gripper_ctr < attempts_at_receiving:
+
+                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+        if not object_in_gripper and gripper_ctr >= attempts_at_receiving:
+
+            self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+
+            self.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
+                
+        self.set_face("charmie_face")
+
+        return object_in_gripper
+
+
+    # Missing Functions:
+    # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)

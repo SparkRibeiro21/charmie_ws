@@ -14,13 +14,13 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
+    "charmie_arm":              True,
     "charmie_audio":            True,
     "charmie_face":             True,
     "charmie_head_camera":      True,
     "charmie_hand_camera":      True,
     "charmie_lidar":            False,
-    "charmie_llm":              False,
+    "charmie_llm":              True,
     "charmie_localisation":     False,
     "charmie_low_level":        True,
     "charmie_navigation":       False,

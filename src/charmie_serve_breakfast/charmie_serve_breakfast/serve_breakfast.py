@@ -171,9 +171,9 @@ class TaskMain():
 
                         self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
 
-                        self.robot.set_speech(filename="serve_breakfast/found_the_milk", wait_for_end_of=False)  
+                        self.robot.set_speech(filename="serve_breakfast/found_the_milk", wait_for_end_of=False)
                         
-                        self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
+                        self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
 
                         self.robot.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
@@ -183,7 +183,7 @@ class TaskMain():
 
                         self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-                        self.robot.set_face("help_pick_milk") 
+                        self.robot.set_face("help_pick_milk")
                         
                         object_in_gripper = False
                         gripper_ctr = 0
