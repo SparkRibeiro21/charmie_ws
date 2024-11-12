@@ -16,10 +16,10 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              True,
     "charmie_audio":            True,
-    "charmie_face":             True,
+    "charmie_face":             False,
     "charmie_head_camera":      True,
     "charmie_hand_camera":      True,
-    "charmie_lidar":            False,
+    "charmie_lidar":            True,
     "charmie_llm":              True,
     "charmie_localisation":     False,
     "charmie_low_level":        True,
@@ -66,6 +66,7 @@ class TaskMain():
         self.Introduction_demonstration = 5
         self.Serve_breakfast_demonstration = 6
         self.Audio_receptionist_and_restaurant_demonstration = 7
+        self.LLM_demonstration = 8
         self.Final_State = 10
         
         self.SB_Waiting_for_task_start = 0
@@ -307,6 +308,11 @@ class TaskMain():
                                 self.state = self.Serve_breakfast_demonstration
                                 self.current_task = self.Serve_breakfast_demonstration
                                 self.state_SB = self.SB_Waiting_for_task_start
+
+                        if ros2_modules["charmie_llm"] and ros2_modules["charmie_speakers"]:
+                            if ps4_controller.r2 > 0.8:
+                                self.state = self.LLM_demonstration
+
                     else:
                         # Similar to wait_for_end_of_navigation, allows navigation between subparts of task
                         if ps4_controller.l1 >= self.ON_AND_RISING and ps4_controller.r1 >= self.ON_AND_RISING:
@@ -451,6 +457,27 @@ class TaskMain():
 
                 self.state = self.Demo_actuators_with_tasks
 
+            elif self.state == self.LLM_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(RAINBOW_ROT)
+
+                if ros2_modules["charmie_llm"]:
+                    self.robot.get_llm_demonstration(wait_for_end_of=True)
+                    
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
 
             elif self.state == self.Audio_receptionist_and_restaurant_demonstration:
                 
