@@ -297,8 +297,8 @@ class TaskMain():
 
                     self.robot.set_face("charmie_face")
 
-                self.state = self.Approach_kitchen_table
-                # self.state = self.Placing_bowl # debug without NAV
+                # self.state = self.Approach_kitchen_table
+                self.state = self.Placing_bowl # debug without NAV
 
 
             elif self.state == self.Approach_kitchen_table:
