@@ -168,7 +168,7 @@ class TaskMain():
 
                         objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                         
-                        object_in_gripper = self.robot.ask_help_pick_object(object_d=objects_found[0], help_face="help_pick_milk", speak_found="serve_breakfast/found_the_milk", look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
+                        object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
 
                     self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
                     
@@ -225,7 +225,7 @@ class TaskMain():
 
                         objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                     
-                        object_in_gripper = self.robot.ask_help_pick_object(object_d=objects_found[0], help_face="help_pick_cornflakes", speak_found="serve_breakfast/found_the_cornflakes", look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
+                        object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
 
                     self.robot.set_arm(command="collect_cornflakes_to_tray_alternative_robocup_cornflakes", wait_for_end_of=True)
                     
@@ -274,7 +274,7 @@ class TaskMain():
                         print("correct_spoon:", correct_object_spoon.object_name, correct_object_spoon.index)
 
                         # BOWL
-                        object_in_gripper = self.robot.ask_help_pick_object(object_d=correct_object_bowl, help_face="help_pick_bowl", speak_found="serve_breakfast/found_the_bowl", look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
+                        object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=correct_object_bowl, look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
                                 
                     self.robot.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=False)
 

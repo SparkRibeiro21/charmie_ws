@@ -2102,13 +2102,16 @@ class RobotStdFunctions():
             self.set_speech(filename="receptionist/characteristics/color_"+detected_person.pants_color.lower(), wait_for_end_of=True)
 
 
-    def ask_help_pick_object(self, object_d=DetectedObject(), help_face="", speak_found="", look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, attempts_at_receiving=2, bb_color=(0, 255, 0)):
+    def ask_help_pick_object_gripper(self, object_d=DetectedObject(), look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, attempts_at_receiving=2, bb_color=(0, 255, 0)):
+
+        object_name_for_files = object_d.object_name.replace(" ","_").lower()
+        print("ask_help_pick_object:", object_name_for_files)
 
         self.detected_object_to_face_path(object=object_d, send_to_face=True, bb_color=bb_color)
 
         self.set_neck(position=look_judge, wait_for_end_of=False)
 
-        self.set_speech(filename=speak_found, wait_for_end_of=False)
+        self.set_speech(filename="serve_breakfast/found_the_"+object_name_for_files, wait_for_end_of=False)
         
         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
 
@@ -2122,7 +2125,7 @@ class RobotStdFunctions():
 
         self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
-        self.set_face(help_face)
+        self.set_face("help_pick_"+object_name_for_files)
 
         time.sleep(wait_time_show_help_face)
     
@@ -2157,3 +2160,4 @@ class RobotStdFunctions():
 
     # Missing Functions:
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
+    # ask_help_pick_object_tray -> aimilar to gripper but without hand movement and with audio confirmation (used in CT) audio confirmation may be optional (SG does not need audio confirmation, takes too long...)
