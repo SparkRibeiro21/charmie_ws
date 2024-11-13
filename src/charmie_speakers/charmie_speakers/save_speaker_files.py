@@ -37,7 +37,7 @@ class RobotSpeak():
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
-        self.midpath_configuration = "charmie_ws/src/configuration_files"
+        self.midpath_configuration = "charmie_ws/src/configuration_files/save_speaker"
         self.complete_path_configuration = self.home+'/'+self.midpath_configuration+'/'
 
         # Open all configuration files
