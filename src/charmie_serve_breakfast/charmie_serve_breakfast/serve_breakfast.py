@@ -20,10 +20,10 @@ ros2_modules = {
     "charmie_llm":              False,
     "charmie_localisation":     False,
     "charmie_low_level":        True,
-    "charmie_navigation":       True,
+    "charmie_navigation":       False, # 
     "charmie_neck":             True,
-    "charmie_obstacles":        True,
-    "charmie_odometry":         True,
+    "charmie_obstacles":        False, # 
+    "charmie_odometry":         False, #
     "charmie_point_cloud":      True,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         True,
@@ -137,8 +137,8 @@ class TaskMain():
 
                 self.robot.wait_for_door_start()
 
-                self.state = self.Approach_cornflakes_location
-                # self.state = self.Detect_and_pick_milk # debug without NAV
+                # self.state = self.Approach_cornflakes_location
+                self.state = self.Detect_and_pick_milk # debug without NAV
 
 
             elif self.state == self.Approach_milk_location:
@@ -174,8 +174,8 @@ class TaskMain():
                     
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
-                self.state = self.Approach_cornflakes_location
-                # self.state = self.Detect_and_pick_cornflakes # debug without NAV
+                # self.state = self.Approach_cornflakes_location
+                self.state = self.Detect_and_pick_cornflakes # debug without NAV
 
 
             elif self.state == self.Approach_cornflakes_location:
@@ -231,8 +231,8 @@ class TaskMain():
                     
                     self.robot.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=True)
 
-                self.state = self.Detect_and_pick_dishes
-                # self.state = self.Detect_and_pick_dishes # debug without NAV
+                # self.state = self.Detect_and_pick_dishes
+                self.state = self.Detect_and_pick_dishes # debug without NAV
 
 
             elif self.state == self.Approach_dishes_location:

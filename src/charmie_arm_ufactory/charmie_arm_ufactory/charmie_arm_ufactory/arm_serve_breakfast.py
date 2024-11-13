@@ -17,7 +17,8 @@ class ArmUfactory(Node):
 		# THIS VALUE HAS TO BE IN "cm" 1cm = 0.01m
 		# self.HEIGHT_TABLE_PLACE_OBJECTS = 91.0
 		# self.HEIGHT_TABLE_PLACE_OBJECTS = 58.0
-		self.HEIGHT_TABLE_PLACE_OBJECTS = 78.0
+		# self.HEIGHT_TABLE_PLACE_OBJECTS = 78.0
+		self.HEIGHT_TABLE_PLACE_OBJECTS = 74.0
 
 		# ARM TOPICS
 		self.arm_command_subscriber = self.create_subscription(ArmController, "arm_command", self.arm_command_callback, 10)
