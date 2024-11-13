@@ -2102,21 +2102,30 @@ class RobotStdFunctions():
             self.set_speech(filename="receptionist/characteristics/color_"+detected_person.pants_color.lower(), wait_for_end_of=True)
 
 
-    def receive_object_in_hand(self, help_face="", wait_time=0.0, attempts_at_receiving=2):
+    def ask_help_pick_object(self, object_d=DetectedObject(), help_face="", speak_found="", look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, attempts_at_receiving=2, bb_color=(0, 255, 0)):
 
-        # help_face = "", wait_time = 0.0, attempts_at_receiving = 2, 
-        # return sucessfull or not (redo the detection or place in tray)
+        self.detected_object_to_face_path(object=object_d, send_to_face=True, bb_color=bb_color)
+
+        self.set_neck(position=look_judge, wait_for_end_of=False)
+
+        self.set_speech(filename=speak_found, wait_for_end_of=False)
+        
+        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
 
         self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
-        time.sleep(wait_time)
-
+        # 3.0 is the amount of time necessary for previous speak to end, so 3 will always exist even if dont use sleep, 
+        # this way is more natural, since it only opens the gripper before asking to receive object
+        time.sleep(3.0 + wait_time_show_detection) 
+        
         self.set_arm(command="open_gripper", wait_for_end_of=False)
 
         self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
 
         self.set_face(help_face)
-        
+
+        time.sleep(wait_time_show_help_face)
+    
         object_in_gripper = False
         gripper_ctr = 0
         while not object_in_gripper and gripper_ctr < attempts_at_receiving:
