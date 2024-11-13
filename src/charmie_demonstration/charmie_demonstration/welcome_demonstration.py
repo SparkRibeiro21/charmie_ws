@@ -67,6 +67,7 @@ class TaskMain():
         self.Serve_breakfast_demonstration = 6
         self.Audio_receptionist_and_restaurant_demonstration = 7
         self.LLM_demonstration = 8
+        self.Open_door = 9
         self.Final_State = 10
         
         self.SB_Waiting_for_task_start = 0
@@ -313,6 +314,10 @@ class TaskMain():
                             if ps4_controller.r2 > 0.8:
                                 self.state = self.LLM_demonstration
 
+                        if ros2_modules["charmie_arm"] and ros2_modules["charmie_speakers"]:
+                            if ps4_controller.l2 > 0.8:
+                                # self.state = self.Open_door
+                                pass
                     else:
                         # Similar to wait_for_end_of_navigation, allows navigation between subparts of task
                         if ps4_controller.l1 >= self.ON_AND_RISING and ps4_controller.r1 >= self.ON_AND_RISING:

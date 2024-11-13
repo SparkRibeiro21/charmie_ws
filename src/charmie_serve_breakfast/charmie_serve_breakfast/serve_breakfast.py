@@ -138,6 +138,7 @@ class TaskMain():
                 self.robot.wait_for_door_start()
 
                 self.state = self.Approach_cornflakes_location
+                # self.state = self.Detect_and_pick_milk # debug without NAV
 
 
             elif self.state == self.Approach_milk_location:
@@ -175,47 +176,14 @@ class TaskMain():
                         
                         self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
 
-                        self.robot.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
-
-                        time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
-
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                        self.robot.set_face("help_pick_milk")
-                        
-                        object_in_gripper = False
-                        gripper_ctr = 0
-                        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-                            
-                            gripper_ctr += 1
-                            
-                            self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                            object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                            
-                            if not object_in_gripper:
-                        
-                                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-
-                                    self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                                
-                                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        if not object_in_gripper and gripper_ctr >= self.ATTEMPTS_AT_RECEIVING:
-
-                            self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
-
-                            self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
-                                
-                    self.robot.set_face("charmie_face")
+                        object_in_gripper = self.robot.receive_object_in_hand(help_face="help_pick_milk", wait_time=3.0, attempts_at_receiving=2)
 
                     self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
                     
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 self.state = self.Approach_cornflakes_location
+                # self.state = self.Detect_and_pick_cornflakes # debug without NAV
 
 
             elif self.state == self.Approach_cornflakes_location:
@@ -273,47 +241,14 @@ class TaskMain():
                         
                         self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
 
-                        self.robot.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
-
-                        time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
-                        
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                        self.robot.set_face("help_pick_cornflakes") 
-
-                        object_in_gripper = False
-                        gripper_ctr = 0
-                        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-                            
-                            gripper_ctr += 1
-                            
-                            self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                            
-                            if not object_in_gripper:
-                        
-                                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-
-                                    self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                                
-                                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        if not object_in_gripper and gripper_ctr >= self.ATTEMPTS_AT_RECEIVING:
-
-                            self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
-
-                            self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
-                                
-                    self.robot.set_face("charmie_face")
+                        object_in_gripper = self.robot.receive_object_in_hand(help_face="help_pick_cornflakes", wait_time=3.0, attempts_at_receiving=2)
                         
                     self.robot.set_arm(command="collect_cornflakes_to_tray_alternative_robocup_cornflakes", wait_for_end_of=True)
                     
                     self.robot.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=True)
 
                 self.state = self.Detect_and_pick_dishes
+                # self.state = self.Detect_and_pick_dishes # debug without NAV
 
 
             elif self.state == self.Approach_dishes_location:
@@ -363,39 +298,7 @@ class TaskMain():
                         
                         self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
 
-                        self.robot.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
-
-                        time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
-                        
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                        self.robot.set_face("help_pick_bowl") 
-                        
-                        object_in_gripper = False
-                        gripper_ctr = 0
-                        while not object_in_gripper and gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-                            
-                            gripper_ctr += 1
-                            
-                            self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                            
-                            if not object_in_gripper:
-                        
-                                if gripper_ctr < self.ATTEMPTS_AT_RECEIVING:
-
-                                    self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                                
-                                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                        if not object_in_gripper and gripper_ctr >= self.ATTEMPTS_AT_RECEIVING:
-
-                            self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
-
-                            self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
+                        object_in_gripper = self.robot.receive_object_in_hand(help_face="help_pick_bowl", wait_time=3.0, attempts_at_receiving=2)
                                 
                     self.robot.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=False)
 
@@ -405,7 +308,7 @@ class TaskMain():
                     self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                     self.robot.set_speech(filename="serve_breakfast/found_the_spoon", wait_for_end_of=False)  
-                    
+
                     self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
 
                     time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
@@ -419,9 +322,7 @@ class TaskMain():
                     self.robot.set_face("charmie_face")
 
                 self.state = self.Approach_kitchen_table
-                
-                # debug
-                # self.state = self.Placing_bowl
+                # self.state = self.Placing_bowl # debug without NAV
 
 
             elif self.state == self.Approach_kitchen_table:
