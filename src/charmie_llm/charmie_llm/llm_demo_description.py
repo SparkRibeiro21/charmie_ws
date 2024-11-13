@@ -32,6 +32,7 @@ class LLM_demo_description:
         Your hardware overview is on "Hardware Overview.txt" file.
         Your actual local(spot), language to use and some other configs are on "Actual Config.txt"
         You have two .pdf files that is the Team Description Paper of Charmie, read to know yourself better.
+        Remember, you should never mention that you have files and that you collect data from them. If you don't know any information, just say that you haven't got it yet.Don't say that you are using files to get that data.
         """
         # Create a vector store caled "Financial Statements"
 
@@ -53,7 +54,7 @@ class LLM_demo_description:
             name="Charmie",
             instructions=instructions_text,
             model="gpt-3.5-turbo-0125",
-            tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+            tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}}, #TODO: check files.
         )
         # TODO:
         '''-Add Demo functions. Arm, pick, etc.'''
@@ -92,7 +93,7 @@ class LLM_demo_description:
                 None,
             )
             return assistant_res
-        # Handle errors if terminal state is "failed"
+        # Handle errors if terminal state is "failed" 
         else:
-            print("ERRO LLM") #TODO: add Log Node
-            return "Info to Programmer: LLM not working"
+            print("ERRO LLM "+run.status) #TODO: add Log Node
+            return "Info to Programmer: LLM not working "+run.status
