@@ -179,7 +179,7 @@ To setup the realsense package in your workspace, please follow the installation
 |RoboCup Portugal Open 2023|-|-|400|-|-|-|400|-|-|-|-|0|400|
 
 
-### :technologist: Contributors:
+## :technologist: Contributors:
 
 <a href="https://github.com/SparkRibeiro21/charmie_ws"> 
   <img src="https://contrib.rocks/image?repo=SparkRibeiro21/charmie_ws" alt="contrib.rocks image" />
