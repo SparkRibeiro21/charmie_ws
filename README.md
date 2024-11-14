@@ -91,9 +91,9 @@ To setup the realsense package in your workspace, please follow the installation
 
   ### Furniture Interactions (RoboCup 2024)
 
-  [![Video Title](https://img.youtube.com/vi/_MC85YfgHG8c/0.jpg)](https://www.youtube.com/watch?v=_MC85YfgHG8c)
+  [![Video Title](https://img.youtube.com/vi/MC85YfgHG8c/0.jpg)](https://www.youtube.com/watch?v=MC85YfgHG8c)
 
-  [Youtube Link for Furniture Interactions from RoboCup 2024](https://www.youtube.com/watch?v=_MC85YfgHG8c)
+  [Youtube Link for Furniture Interactions from RoboCup 2024](https://www.youtube.com/watch?v=MC85YfgHG8c)
 
 </details>
 
