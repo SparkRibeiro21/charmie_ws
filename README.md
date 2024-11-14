@@ -89,11 +89,11 @@ To setup the realsense package in your workspace, please follow the installation
 
   [Youtube Link for Receptionist Task from RoboCup 2024](https://www.youtube.com/watch?v=h5yJNZq_GOI)
 
-  ### Carry my Luggage (RoboCup 2024)
+  ### Furniture Interactions (RoboCup 2024)
 
-  [![Video Title](https://img.youtube.com/vi/_v8LrWhjgxY/0.jpg)](https://www.youtube.com/watch?v=_v8LrWhjgxY)
+  [![Video Title](https://img.youtube.com/vi/_MC85YfgHG8c/0.jpg)](https://www.youtube.com/watch?v=_MC85YfgHG8c)
 
-  [Youtube Link for Carry my Luggage Task from RoboCup 2024](https://www.youtube.com/watch?v=_v8LrWhjgxY)
+  [Youtube Link for Furniture Interactions from RoboCup 2024](https://www.youtube.com/watch?v=_MC85YfgHG8c)
 
 </details>
 
