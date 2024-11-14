@@ -18,6 +18,7 @@
   * [RoboCup@Home 2023 :fr:](#robocup-2023-fr)
 * [Results :trophy:](#trophy-results)
 * [Extended Scores :chart_with_upwards_trend:](#chart_with_upwards_trend-extended-scores)
+* [Contributors :technologist:](#technologist-contributors)
 * [Social Media :handshake:](#handshake-connect-with-us)
 
 ## :book: Project Description
@@ -176,6 +177,13 @@ To setup the realsense package in your workspace, please follow the installation
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 |RoboCup 2023|32|0|800|-|-|-|832|-|0|100|-|100|932|
 |RoboCup Portugal Open 2023|-|-|400|-|-|-|400|-|-|-|-|0|400|
+
+
+### :technologist: Contributors:
+
+<a href="https://github.com/SparkRibeiro21/charmie_ws"> 
+  <img src="https://contrib.rocks/image?repo=SparkRibeiro21/charmie_ws" alt="contrib.rocks image" />
+</a>
 
 
 ## :handshake: Connect with us
