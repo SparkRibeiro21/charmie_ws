@@ -22,7 +22,9 @@ None.
  
 None.
  
-<!-- ⬇️🔴
+
+⬇️🔴
+
  
 ### Topic changes
  
@@ -54,7 +56,10 @@ None.
 | Old     | old_param_name | double | 1.0         | Param description |
 | New     | new_param_name | double | 1.0         | Param description |
  
-🔴⬆️ -->
+ 
+ 
+ 
+🔴⬆️
  
 ## Effects on system behavior
  
