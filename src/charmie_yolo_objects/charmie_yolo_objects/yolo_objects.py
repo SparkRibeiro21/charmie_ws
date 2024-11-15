@@ -73,7 +73,7 @@ class Yolo_obj(Node):
         try:
             with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
-            # print(self.objects_file) """
+            # print(self.objects_file)
             # with open(self.complete_path_configuration_files + 'objects_robocup.json', encoding='utf-8') as json_file:
             #     self.objects_file = json.load(json_file)
             # print(self.objects_file)

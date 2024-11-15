@@ -25,13 +25,14 @@ from pathlib import Path
 
 # create COMPETITION mode where updates all speaker files
 
-#drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
-drinks_list = ["Big Coke", "Cola", "Dubblefris", "Milk", "Iced Tea", "Fanta", "Water"] # the 7up is weird, must be redone manually
+# drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
+# drinks_list = ["Big Coke", "Cola", "Dubblefris", "Milk", "Iced Tea", "Fanta", "Water"] # the 7up is weird, must be redone manually
 
 # MODE can be the following commands:
-# "STANDARD": convert one command into wav and txt 
-# "RECEPTIONIST": reads names and drinks arrays and generates all commands for first guest names, second guest names and favourite drinks
-MODE = "STANDARD"
+# "STANDARD": convert save_speaker command into wav(speaker) and txt(show face) 
+# "NAMES": reads names from json file and exports all names to list_of_sentences/person_names
+
+MODE = "NAMES"
 
 class RobotSpeak():
     def __init__(self):
@@ -44,23 +45,47 @@ class RobotSpeak():
         pygame.mixer.music.set_volume(1.0) 
 
         # info regarding the paths for the recorded files intended to be played
-        self.home = str(Path.home())
-        self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
-        self.complete_path = self.home+'/'+self.midpath+'/'
-
-        # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
-        self.midpath_configuration = "charmie_ws/src/configuration_files/save_speaker"
-        self.complete_path_configuration = self.home+'/'+self.midpath_configuration+'/'
+        midpath_list_of_sentences = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
+        self.complete_path = self.home+'/'+midpath_list_of_sentences+'/'
 
-        # Open all configuration files
+        # info regarding the paths for the recorded files intended to be played
+        midpath_configuration_save_speaker = "charmie_ws/src/configuration_files/save_speaker"
+        self.complete_path_configuration_save_speaker = self.home+'/'+midpath_configuration_save_speaker+'/'
+
+        # info regarding the paths for the names, objects, objects_class, furniture, rooms to create speaker files
+        midpath_configuration_files = "charmie_ws/src/configuration_files"
+        self.complete_path_configuration_files = self.home+'/'+midpath_configuration_files+'/'
+
+        # Open the save_speaker configuration files
         try:
-            with open(self.complete_path_configuration + 'save_speaker_files.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_save_speaker + 'save_speaker_files.json', encoding='utf-8') as json_file:
                 self.json_commands = json.load(json_file)
                 print(self.json_commands)
         except:
             print("Could NOT import data from json configuration files. (save_speaker_files)")
+
+        # Opens files with objects, objects_classes, rooms, furniture, names
+        try:
+            with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
+                self.objects_file = json.load(json_file)
+            # print(self.objects_file)
+            with open(self.complete_path_configuration_files + 'objects_classes.json', encoding='utf-8') as json_file:
+                self.objects_classes_file = json.load(json_file)
+            # print(self.objects_classes_file)
+            with open(self.complete_path_configuration_files + 'rooms.json', encoding='utf-8') as json_file:
+                self.rooms_file = json.load(json_file)
+            # print(self.rooms_file)
+            with open(self.complete_path_configuration_files + 'furniture.json', encoding='utf-8') as json_file:
+                self.furniture_file = json.load(json_file)
+            # print(self.furniture_file)
+            with open(self.complete_path_configuration_files + 'names.json', encoding='utf-8') as json_file:
+                self.names_file = json.load(json_file)
+            # print(self.names_file)
+            print("Successfully Imported data from json configuration files. (objects, objects_classes, rooms, furniture, names)")
+        except:
+            print("Could NOT import data from json configuration files. (objects, objects_classes, rooms, furniture, names)")
         
         # TTS synthetiser models path 
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -108,12 +133,18 @@ def main(args=None):
     # STANDARD is used for all alone sentences. Just edit src/configuration_files/save_speaker_files.json
     # RECEPTIONIST is used for receptionist task. Just edit names_list and drinks_list
     if MODE == "STANDARD":
-        charmie_speech.convert_command(charmie_speech.json_commands, play_sound=True)
-    elif MODE == "RECEPTIONIST":
-        receptionist_commands = {}
+        charmie_speech.convert_command(commands=charmie_speech.json_commands, play_sound=True)
+    
+    elif MODE == "NAMES":
+        names_commands = {}
+        for names in charmie_speech.names_file:
+            print(names['name'])
+            names_commands['person_names/'+names['name'].replace(" ","_").lower()] = names['name']
+        charmie_speech.convert_command(names_commands, play_sound=True)
+
+        # receptionist_commands = {}
         # for name in names_list:
         #     receptionist_commands['receptionist/names/'+name.replace(" ","_").lower()] = name
         # for drink in drinks_list:
         #     receptionist_commands['objects_names/_'+drink.lower().replace(' ', '_')] = drink+'.'
-        
-        charmie_speech.convert_command(receptionist_commands, play_sound=True)
+        # charmie_speech.convert_command(receptionist_commands, play_sound=True)
