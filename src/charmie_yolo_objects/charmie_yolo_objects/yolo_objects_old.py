@@ -62,13 +62,13 @@ class Yolo_obj(Node):
 
         # Opens files with objects names and categories
         try:
-            with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
             # print(self.objects_file)
-            with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'rooms.json', encoding='utf-8') as json_file:
                 self.house_rooms = json.load(json_file)
             # print(self.house_rooms)
-            with open(self.complete_path_configuration_files + 'furniture_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'furniture.json', encoding='utf-8') as json_file:
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
             self.get_logger().info("Successfully Imported data from json configuration files. (objects_list, house_rooms and house_furniture)")

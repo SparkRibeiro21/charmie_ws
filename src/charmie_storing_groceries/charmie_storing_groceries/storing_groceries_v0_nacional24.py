@@ -138,7 +138,7 @@ class StoringGroceriesNode(Node):
             self.get_logger().warn("Waiting for Server Arm Trigger Command...") """
         
         try:
-            with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
                 # print(self.objects_file)
         except:

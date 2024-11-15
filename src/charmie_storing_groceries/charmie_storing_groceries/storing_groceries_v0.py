@@ -167,7 +167,7 @@ class StoringGroceriesNode(Node):
             self.get_logger().warn("Waiting for Server Arm Trigger Command...") """
         
         try:
-            with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
                 # print(self.objects_file)
         except:
@@ -1405,7 +1405,7 @@ class StoringGroceriesMain():
         # Este nível fica para a versão 1. Para a versão 0 faço ver o que está na prateleira, guardar essas classes e ficam essas como high
 
         try:
-            with open(self.node.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            with open(self.node.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 objects = json.load(json_file)
                 # print(self.objects_file)
         except:

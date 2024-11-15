@@ -74,10 +74,10 @@ class YoloPoseNode(Node):
 
         # Open all configuration files
         try:
-            with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'rooms.json', encoding='utf-8') as json_file:
                 self.house_rooms = json.load(json_file)
             # print(self.house_rooms)
-            with open(self.complete_path_configuration_files + 'furniture_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'furniture.json', encoding='utf-8') as json_file:
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
             self.get_logger().info("Successfully Imported data from json configuration files. (house_rooms and house_furniture)")

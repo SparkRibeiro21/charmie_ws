@@ -733,7 +733,7 @@ class DebugVisualMain():
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
-        logo_midpath = "/charmie_ws/src/configuration_files/logos/"
+        logo_midpath = "/charmie_ws/src/configuration_files/docs/logos/"
         configuration_files_midpath = "/charmie_ws/src/configuration_files/"
         self.save_recordings_midpath = "/charmie_ws/src/charmie_gui/charmie_gui/saved_gui_recordings/"
 
@@ -792,15 +792,15 @@ class DebugVisualMain():
 
         # Open all configuration files
         try:
-            with open(self.home + configuration_files_midpath + 'rooms_location.json', encoding='utf-8') as json_file:
+            with open(self.home + configuration_files_midpath + 'rooms.json', encoding='utf-8') as json_file:
                 self.house_rooms = json.load(json_file)
             # print(self.house_rooms)
 
-            with open(self.home + configuration_files_midpath + 'furniture_location.json', encoding='utf-8') as json_file:
+            with open(self.home + configuration_files_midpath + 'furniture.json', encoding='utf-8') as json_file:
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
 
-            with open(self.home + configuration_files_midpath + 'doors_location.json', encoding='utf-8') as json_file:
+            with open(self.home + configuration_files_midpath + 'doors.json', encoding='utf-8') as json_file:
                 self.house_doors = json.load(json_file)
             # print(self.house_doors)
         except:

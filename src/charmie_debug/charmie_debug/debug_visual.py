@@ -62,15 +62,15 @@ class Robot():
 
         # Open all configuration files
         try:
-            with open(self.complete_path + 'rooms_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path + 'rooms.json', encoding='utf-8') as json_file:
                 self.house_rooms = json.load(json_file)
             # print(self.house_rooms)
 
-            with open(self.complete_path + 'furniture_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path + 'furniture.json', encoding='utf-8') as json_file:
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
 
-            with open(self.complete_path + 'doors_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path + 'doors.json', encoding='utf-8') as json_file:
                 self.house_doors = json.load(json_file)
             # print(self.house_doors)
         except:
