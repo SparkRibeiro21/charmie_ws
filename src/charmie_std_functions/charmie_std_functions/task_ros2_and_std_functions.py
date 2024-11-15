@@ -2111,7 +2111,8 @@ class RobotStdFunctions():
 
         self.set_neck(position=look_judge, wait_for_end_of=False)
 
-        self.set_speech(filename="serve_breakfast/found_the_"+object_name_for_files, wait_for_end_of=False)
+        self.set_speech(filename="generic/found_the", wait_for_end_of=False)
+        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
         
         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
 
