@@ -44,9 +44,9 @@ To setup the realsense package in your workspace, please follow the installation
 
 ### RoboCup@Home 2025 :brazil:
 
-[![Video Title](https://img.youtube.com/vi/RNr9uOhubqw/0.jpg)](https://www.youtube.com/watch?v=RNr9uOhubqw)
+[![Video Title](https://img.youtube.com/vi/tgTzuuzeos8/0.jpg)](https://www.youtube.com/watch?v=tgTzuuzeos8)
 
-[Youtube Link for 2024 Qualification Video](https://m.youtube.com/watch?v=RNr9uOhubqw)
+[Youtube Link for 2025 Qualification Video](https://m.youtube.com/watch?v=tgTzuuzeos8)
 
 ### RoboCup@Home 2024 :netherlands:
 
