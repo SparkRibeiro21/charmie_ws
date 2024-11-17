@@ -10,6 +10,7 @@
 * [Project Description :book:](#book-project-description)
 * [Requirements :rocket:](#rocket-requirements)
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
+ * [RoboCup@Home 2025 :brazil:](#robocuphome-2025-brazil)
   * [RoboCup@Home 2024 :netherlands:](#robocuphome-2024-netherlands)
   * [RoboCup@Home 2023 :fr:](#robocuphome-2023-fr)
 * [Videos from Pevious Events :gear:](#gear-videos-from-previous-events)
