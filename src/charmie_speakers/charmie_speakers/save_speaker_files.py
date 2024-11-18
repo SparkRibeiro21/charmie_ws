@@ -7,22 +7,21 @@ import time
 import pygame
 from pathlib import Path
 
-# read names.json
-# read objects.json
-# read object_categories.json
+    # read names.json
+    # read objects.json
+    # read object_categories.json
 # read furniture.json
 # read rooms.json
 
-# create all speaker files in respective folder for names
+    # create all speaker files in respective folder for names
 # create all speaker files in respective folder for objects
 # create all speaker files in respective folder for object_categories
 # create all speaker files in respective folder for rooms
 # create all speaker files in respective folder for furniture
 
-# create mode just for names
+    # create mode just for names
 # create mode just for objects and object categories
 # create mode just for rooms and furniture
-
 # create COMPETITION mode where updates all speaker files
 
 # drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
@@ -31,8 +30,9 @@ from pathlib import Path
 # MODE can be the following commands:
 # "STANDARD": convert save_speaker command into wav(speaker) and txt(show face) 
 # "NAMES": reads names from json file and exports all names to list_of_sentences/person_names
+# "OBJECTS": reads objects and objects_classe from json file and exports all objects to list_of_sentences/objects_names and objects_classes to list_of_sentences/objects_classes 
 
-MODE = "NAMES"
+MODE = "STANDARD"
 
 class RobotSpeak():
     def __init__(self):
@@ -142,6 +142,21 @@ def main(args=None):
             names_commands['person_names/'+names['name'].replace(" ","_").lower()] = names['name']
         charmie_speech.convert_command(names_commands, play_sound=True)
 
+    elif MODE == "OBJECTS":
+        objects_commands = {}
+        for objects in charmie_speech.objects_file:
+            print(objects['name'])
+            objects_commands['objects_names2/'+objects['name'].replace(" ","_").lower()] = objects['name']
+        # charmie_speech.convert_command(objects_commands, play_sound=True)
+        
+        objects_class_commands = {}
+        for objects_c in charmie_speech.objects_classes_file:
+            print(objects_c['name'])
+            objects_class_commands['objects_classes2/'+objects_c['name'].replace(" ","_").lower()] = objects_c['name']
+        # charmie_speech.convert_command(objects_class_commands, play_sound=True)
+        
+        
+        
         # receptionist_commands = {}
         # for name in names_list:
         #     receptionist_commands['receptionist/names/'+name.replace(" ","_").lower()] = name
