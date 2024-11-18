@@ -22,6 +22,13 @@ class Robot():
     def __init__(self):
         print("New Robot Class Initialised")
 
+        self.test_variable = 0        
+
+
+
+
+
+
         self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
         self.xc = 400
         self.yc = 400
