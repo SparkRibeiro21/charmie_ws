@@ -20,13 +20,15 @@ class LLM_confirmation_description:
             print(f"The file api_key.txt does not exist.")
             sys.exit()  # Ends the program if the file is not found
 
+        self.ask="Do you mean ..."
         instructions_text = """
         Your name is Charmie for the user, you are a robotic assistant.
         You are a speech-to-text debugger. 
         The messages you receive from the user will have to be simplified by you in the input (string) of the Task function. 
-        After using the function, which is always mandatory, you must ask the user if is the task that you understand, if the user confirm, call the Confirm function.
-        If the user deny, the user will repeat the sentence in the same message and call the Task function again with the task already corrected and ask again for confirmation.
+        After using the function, you must call the funtion to ask the user if is the task that you understand, when the input (string) is your question, example: Do you mean to go to the Hall and count the number of people?, if the user confirm (yes), you need to call the Confirm function.
+        If the user deny, the user will repeat the sentence in the same message and call the Task function again with the task already corrected and ask again for confirmation if the confirmation. When the user confirm, you need to call the function Confirm.
         """
+
         #TODO add list of objects, furniture, rooms, names, etc...
 
 
@@ -47,6 +49,18 @@ class LLM_confirmation_description:
             "function": {
                 "name": "Confirm",
                 "description": "Called when the user confirm the last Task submited",
+            },
+            "type": "function",
+        },
+        {
+            "function": {
+                "name": "Ask",
+                "description": "Called when the system wants to ask something to the user question",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"question": {"type": "string"}},
+                    "required": ["question"],
+                },
             },
             "type": "function",
         }
@@ -76,10 +90,22 @@ class LLM_confirmation_description:
         self.tools = {
         "Task": self.Task,
         "Confirm": self.Confirm,
+        "Ask": self.Ask,
         }
     
     def run(self,command="What is the first capital of Portugal?"):
         max_turns=2
+        # Send user input as a message in the thread
+        self.client.beta.threads.messages.create(
+            thread_id=self.thread.id,
+            role="user",
+            content=command
+        )
+        # Wait for the assistant's response
+        run = self.client.beta.threads.runs.create_and_poll(
+            thread_id=self.thread.id,
+            assistant_id=self.assistant.id
+        )
         for turn in range(max_turns):
             # Send user input as a message in the thread
             # Fetch the last message from the thread
@@ -90,19 +116,6 @@ class LLM_confirmation_description:
                 limit=1,
             )
 
-            # Check for the terminal state of the Run.
-            # If state is "completed", exit agent loop and return the LLM response.
-            if run.status == "completed":
-                assistant_res: str = next(
-                    (
-                        content.text.value
-                        for content in messages.data[0].content
-                        if content.type == "text"
-                    ),
-                    None,
-                )
-                print(assistant_res)
-                return assistant_res
 
             # If state is "requires_action", function calls are required. Execute the functions and send their outputs to the LLM.
             if run.status == "requires_action":
@@ -117,13 +130,18 @@ class LLM_confirmation_description:
                         if tool.function.arguments
                         else {}
                     )
-                    print(args)
+                    #print(args)
                     func_output = self.tools[tool.function.name](**args)
 
                     # OpenAI needs the output of the function call against the tool_call_id
                     func_tool_outputs.append(
                         {"tool_call_id": tool.id, "output": str(func_output)}
                     )
+                    if tool.function.name=="Ask":
+                        run = self.client.beta.threads.runs.submit_tool_outputs_and_poll(
+                        thread_id=self.thread.id, run_id=run.id, tool_outputs=func_tool_outputs
+                        )
+                        return self.ask, self.confirm
 
                 # Submit the function call outputs back to OpenAI
                 run = self.client.beta.threads.runs.submit_tool_outputs_and_poll(
@@ -133,24 +151,45 @@ class LLM_confirmation_description:
                 # Continue the agent loop.
                 # Agent will check the output of the function output submission as part of next iteration.
                 continue
+            # Check for the terminal state of the Run.
+            # If state is "completed", exit agent loop and return the LLM response.
+            if run.status == "completed":
+                assistant_res: str = next(
+                    (
+                        content.text.value
+                        for content in messages.data[0].content
+                        if content.type == "text"
+                    ),
+                    None,
+                )
+                #print(assistant_res)
+                return assistant_res, self.confirm
 
             # Handle errors if terminal state is "failed"
             else:
                 if run.status == "failed":
                     print("ERRO LLM "+run.status) #TODO: add Log Node
-                return "Info to Programmer: LLM Confirmation not working "+run.status
+                return "Info to Programmer: LLM Confirmation not working "+run.status, False
+            time.sleep(1)
     
     def Task(self,simplified: str) -> bool:
         # do something
         self.confirm=False
-        print("TASK: "+simplified+ " "+self.confirm)
+        print("TASK: "+simplified+ " "+str(self.confirm))
         return True
 
-    def Confirm(self) -> bool:
-        
+    def Confirm(self) -> bool:    
         self.confirm=True
-        print("CONFIRM! "+self.confirm)
+        #print("CONFIRM! "+str(self.confirm))
         # do something
         return True
+    
+    def Ask(self,question: str) -> bool:
+        self.ask=question
+        #print(question+"CONFIRM: "+str(self.confirm))
+        # do something
+        return True
+
+
 
 
