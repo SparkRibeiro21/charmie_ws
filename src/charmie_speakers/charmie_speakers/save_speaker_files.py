@@ -27,6 +27,11 @@ from pathlib import Path
     # only create audios for new objects, don't recreate audios from already existing audios (some of them were edited to sound better)
 
 # add objects, object classes, names, etc... from previous competitions
+# names
+    # objects
+    # object classes
+    # rooms 
+# furniture
 
 
 # MODE can be the following commands:
