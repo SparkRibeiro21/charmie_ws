@@ -10,29 +10,34 @@ from pathlib import Path
     # read names.json
     # read objects.json
     # read object_categories.json
-# read furniture.json
-# read rooms.json
+    # read furniture.json
+    # read rooms.json
 
     # create all speaker files in respective folder for names
-# create all speaker files in respective folder for objects
-# create all speaker files in respective folder for object_categories
-# create all speaker files in respective folder for rooms
-# create all speaker files in respective folder for furniture
+    # create all speaker files in respective folder for objects
+    # create all speaker files in respective folder for object_categories
+    # create all speaker files in respective folder for rooms
+    # create all speaker files in respective folder for furniture
 
     # create mode just for names
-# create mode just for objects and object categories
-# create mode just for rooms and furniture
-# create COMPETITION mode where updates all speaker files
+    # create mode just for objects and object categories
+    # create mode just for rooms and furniture
+    # create COMPETITION mode where updates all speaker files
 
-# drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
-# drinks_list = ["Big Coke", "Cola", "Dubblefris", "Milk", "Iced Tea", "Fanta", "Water"] # the 7up is weird, must be redone manually
+    # only create audios for new objects, don't recreate audios from already existing audios (some of them were edited to sound better)
+
+# add objects, object classes, names, etc... from previous competitions
+
 
 # MODE can be the following commands:
 # "STANDARD": convert save_speaker command into wav(speaker) and txt(show face) 
 # "NAMES": reads names from json file and exports all names to list_of_sentences/person_names
 # "OBJECTS": reads objects and objects_classe from json file and exports all objects to list_of_sentences/objects_names and objects_classes to list_of_sentences/objects_classes 
+# "HOUSE": reads rooms and furniture from json file and exports all rooms to list_of_sentences/rooms and furniture to list_of_sentences/furniture 
+# "COMPETITION": to improve time-efficiency in competitions, this mode does NAMES, OBJECTS and HOUSE modes 
 
-MODE = "STANDARD"
+
+MODE = "COMPETITION"
 
 class RobotSpeak():
     def __init__(self):
@@ -48,7 +53,7 @@ class RobotSpeak():
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
         midpath_list_of_sentences = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
-        self.complete_path = self.home+'/'+midpath_list_of_sentences+'/'
+        self.complete_path_list_of_sentences = self.home+'/'+midpath_list_of_sentences+'/'
 
         # info regarding the paths for the recorded files intended to be played
         midpath_configuration_save_speaker = "charmie_ws/src/configuration_files/save_speaker"
@@ -107,7 +112,7 @@ class RobotSpeak():
             self.filename = filename+".wav"
 
             # create txt file with command for face package 
-            f = open(self.complete_path+filename+".txt", "w")
+            f = open(self.complete_path_list_of_sentences+filename+".txt", "w")
             f.write(command)
             f.close()
 
@@ -115,51 +120,57 @@ class RobotSpeak():
             print("Initialised synthetisation.")
             init_time = time.time()
             outputs = self.syn.tts(command)
-            self.syn.save_wav(outputs, self.complete_path+self.filename)
+            self.syn.save_wav(outputs, self.complete_path_list_of_sentences+self.filename)
             print(time.time()-init_time)
 
             # play wav file in speakers
             if play_sound:
-                pygame.mixer.music.load(self.complete_path+self.filename)
+                pygame.mixer.music.load(self.complete_path_list_of_sentences+self.filename)
                 pygame.mixer.music.play()
                 while pygame.mixer.music.get_busy():
                     pass
+
+    def generate_speaker_files_from_configuration_files(self, folder, config_file):
+        
+        commands = {}
+        for command in config_file:
+            message = command['name']
+            filename = folder+'/'+message.replace(" ","_").lower()
+            
+            full_path = Path.home() / (self.complete_path_list_of_sentences+filename+".wav")
+            if not full_path.is_file():
+                commands[filename] = message
+                print(message, "- NEW FILE!")
+            else:
+                print(message)
+
+        print(commands)
+        self.convert_command(commands, play_sound=True)
+
 
 def main(args=None):
 
     charmie_speech = RobotSpeak()
 
-    # select which mode you want to use to save audios:
-    # STANDARD is used for all alone sentences. Just edit src/configuration_files/save_speaker_files.json
-    # RECEPTIONIST is used for receptionist task. Just edit names_list and drinks_list
-    if MODE == "STANDARD":
+    if MODE == "STANDARD": # from save_speaker_files
         charmie_speech.convert_command(commands=charmie_speech.json_commands, play_sound=True)
     
-    elif MODE == "NAMES":
-        names_commands = {}
-        for names in charmie_speech.names_file:
-            print(names['name'])
-            names_commands['person_names/'+names['name'].replace(" ","_").lower()] = names['name']
-        charmie_speech.convert_command(names_commands, play_sound=True)
+    elif MODE == "NAMES": # people names
+        charmie_speech.generate_speaker_files_from_configuration_files(folder="person_names", config_file=charmie_speech.names_file)
 
-    elif MODE == "OBJECTS":
-        objects_commands = {}
-        for objects in charmie_speech.objects_file:
-            print(objects['name'])
-            objects_commands['objects_names2/'+objects['name'].replace(" ","_").lower()] = objects['name']
-        # charmie_speech.convert_command(objects_commands, play_sound=True)
-        
-        objects_class_commands = {}
-        for objects_c in charmie_speech.objects_classes_file:
-            print(objects_c['name'])
-            objects_class_commands['objects_classes2/'+objects_c['name'].replace(" ","_").lower()] = objects_c['name']
-        # charmie_speech.convert_command(objects_class_commands, play_sound=True)
-        
-        
-        
-        # receptionist_commands = {}
-        # for name in names_list:
-        #     receptionist_commands['receptionist/names/'+name.replace(" ","_").lower()] = name
-        # for drink in drinks_list:
-        #     receptionist_commands['objects_names/_'+drink.lower().replace(' ', '_')] = drink+'.'
-        # charmie_speech.convert_command(receptionist_commands, play_sound=True)
+    elif MODE == "OBJECTS": # object names and classes
+        charmie_speech.generate_speaker_files_from_configuration_files(folder="objects_names", config_file=charmie_speech.objects_file)
+        charmie_speech.generate_speaker_files_from_configuration_files(folder="objects_classes", config_file=charmie_speech.objects_classes_file)
+
+    elif MODE == "HOUSE": # furniture and rooms
+        charmie_speech.generate_speaker_files_from_configuration_files(folder="rooms", config_file=charmie_speech.rooms_file)
+        charmie_speech.generate_speaker_files_from_configuration_files(folder="furniture", config_file=charmie_speech.furniture_file)
+    
+    elif MODE == "COMPETITION": # furniture and rooms
+        charmie_speech.generate_speaker_files_from_configuration_files(folder="person_names", config_file=charmie_speech.names_file)
+        charmie_speech.generate_speaker_files_from_configuration_files(folder="objects_names", config_file=charmie_speech.objects_file)
+        charmie_speech.generate_speaker_files_from_configuration_files(folder="objects_classes", config_file=charmie_speech.objects_classes_file)
+        charmie_speech.generate_speaker_files_from_configuration_files(folder="rooms", config_file=charmie_speech.rooms_file)
+        charmie_speech.generate_speaker_files_from_configuration_files(folder="furniture", config_file=charmie_speech.furniture_file)
+
+
