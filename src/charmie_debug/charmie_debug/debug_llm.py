@@ -31,7 +31,6 @@ ros2_modules = {
     "charmie_yolo_pose":        False,
 }
 
-
 # main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
